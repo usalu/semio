@@ -737,14 +737,7 @@ public static class Utility
 
         var importedContext = ImportRhinoModelContextFromBlob(fileBlob);
         var importedObjectId = importedModelObject.Attributes?.GetUserString(SemioImportModelObjectIdKey);
-        if (string.IsNullOrWhiteSpace(importedObjectId))
-        {
-            rhinoModelObject = importedContext;
-            return true;
-        }
-
-        var matchingModelObject = importedContext.Model.Objects
-            .FirstOrDefault(modelObject => ResolveRhinoObjectId(modelObject, -1) == importedObjectId);
+        var matchingModelObject = ResolveModelObjectByImportedId(importedContext.Model, importedObjectId);
         rhinoModelObject = matchingModelObject is null
             ? importedContext
             : new RhinoModelObject(importedContext.Model, matchingModelObject);
@@ -776,19 +769,47 @@ public static class Utility
             return false;
 
         var importedContext = ImportRhinoModelContextFromBlob(fileBlob);
-        if (string.IsNullOrWhiteSpace(importedObjectId))
-        {
-            rhinoModelObject = importedContext;
-            return true;
-        }
-
-        var matchingModelObject = importedContext.Model.Objects
-            .FirstOrDefault(modelObject => ResolveRhinoObjectId(modelObject, -1) == importedObjectId);
+        var matchingModelObject = ResolveModelObjectByImportedId(importedContext.Model, importedObjectId);
         rhinoModelObject = matchingModelObject is null
             ? importedContext
             : new RhinoModelObject(importedContext.Model, matchingModelObject);
         return true;
     }
+
+    //#region 🔖ImportedRhinoObjectResolution
+    /// <summary>
+    /// Resolves a single imported Rhino model object by metadata identifier.
+    ///
+    /// Specs:
+    /// Tries native object IDs first, then deterministic fallback IDs ("rhino-object-{index}") used by import metadata.
+    /// Returns null when no matching source model object can be found.
+    /// </summary>
+    private static Rhino.FileIO.File3dmObject? ResolveModelObjectByImportedId(Rhino.FileIO.File3dm model, string? importedObjectId)
+    {
+        var nonNullModelObjects = model.Objects.Where(modelObject => modelObject is not null).ToList();
+        if (nonNullModelObjects.Count == 0)
+            return null;
+
+        if (string.IsNullOrWhiteSpace(importedObjectId))
+            return nonNullModelObjects.FirstOrDefault();
+
+        var objectByNativeId = nonNullModelObjects
+            .FirstOrDefault(modelObject => ResolveRhinoObjectId(modelObject, -1) == importedObjectId);
+        if (objectByNativeId is not null)
+            return objectByNativeId;
+
+        const string fallbackObjectIdPrefix = "rhino-object-";
+        if (importedObjectId.StartsWith(fallbackObjectIdPrefix, StringComparison.OrdinalIgnoreCase) &&
+            int.TryParse(importedObjectId.Substring(fallbackObjectIdPrefix.Length), out var objectIndex) &&
+            objectIndex >= 0 &&
+            objectIndex < nonNullModelObjects.Count)
+        {
+            return nonNullModelObjects[objectIndex];
+        }
+
+        return null;
+    }
+    //#endregion 🔖ImportedRhinoObjectResolution
 
     public static List<Attribute> ToAttributesList(AttributesDiff? attributesDiff)
     {
@@ -9542,7 +9563,6 @@ public class ModelObjectToGroupComponent : ScriptingComponent
     private static GH_GeometryGroup BuildNativeRhinoGeometryGroup(List<Utility.RhinoModelObject> rhinoModelObjects)
     {
         var rootNode = new LayerGroupNode(BuildNativeRootGroupName(rhinoModelObjects));
-        var objectCounter = 0;
         foreach (var rhinoModelObject in rhinoModelObjects)
         {
             var model = rhinoModelObject.Model;
@@ -9560,7 +9580,7 @@ public class ModelObjectToGroupComponent : ScriptingComponent
                 if (geometricGoo is null)
                     continue;
 
-                var layerPath = ResolveLayerPath(model, modelObject, objectCounter++);
+                var layerPath = ResolveLayerPath(model, modelObject);
                 AddGeometryToLayerTree(rootNode, layerPath, geometricGoo);
             }
         }
@@ -9581,20 +9601,20 @@ public class ModelObjectToGroupComponent : ScriptingComponent
         return $"Imported Rhino Group ({modelCount} model object{(modelCount == 1 ? string.Empty : "s")})";
     }
 
-    private static string ResolveLayerPath(Rhino.FileIO.File3dm model, Rhino.FileIO.File3dmObject modelObject, int fallbackIndex)
+    private static string ResolveLayerPath(Rhino.FileIO.File3dm model, Rhino.FileIO.File3dmObject modelObject)
     {
         var layerIndex = modelObject.Attributes?.LayerIndex ?? -1;
         if (layerIndex < 0 || layerIndex >= model.Layers.Count)
-            return $"Unlayered::{fallbackIndex}";
+            return string.Empty;
 
         var layer = model.Layers[layerIndex];
         if (layer is null || layer.IsDeleted)
-            return $"Unlayered::{fallbackIndex}";
+            return string.Empty;
         if (!string.IsNullOrWhiteSpace(layer.FullPath))
             return layer.FullPath;
         if (!string.IsNullOrWhiteSpace(layer.Name))
             return layer.Name;
-        return $"Layer::{fallbackIndex}";
+        return string.Empty;
     }
 
     private static void AddGeometryToLayerTree(LayerGroupNode rootNode, string layerPath, IGH_GeometricGoo geometry)

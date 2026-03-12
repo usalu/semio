@@ -254,7 +254,9 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
     if (!canReset) return undefined;
     return () => {
       actor.send({ type: "FEEDBACK.RESET_FORM" });
+    };
   }, [actor, canReset]);
+  return [reset, canReset];
 }
 
 // #endregion Triadic Hooks
@@ -479,6 +481,8 @@ const FeedbackForm: FC = () => {
       <Button id="semio.sketchpad.app.feedback.form.submit" onClick={handleSubmit} disabled={isSubmitting} className="mt-4">
         {isSubmitting ? t("semio.sketchpad.app.feedback.form.submitting.label.normal", "Submitting...") : submitLabel}
       </Button>
+    </div>
+  );
 };
 
 // #endregion Form
@@ -566,6 +570,8 @@ export default Feedback;
  * Feedback app configuration with routing, component, and panel definitions.
  *
  *  * [👤semio📚js🗃️sketchpad💻feedback🔖config🪨config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Config/d/i/config)
+ **/
+export const config = {
   id: "feedback",
   component: Feedback,
   routeSegments: [{ path: "feedback" }],

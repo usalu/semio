@@ -17,10 +17,10 @@
 		},
 		"semio": {
 			"type": "stdio",
-			"command": "uv",
+			"command": "/usr/local/bin/uv",
 			"args": [
 				"--directory",
-				"py/engine",
+				"/workspaces/semio/semio/engine",
 				"run",
 				"engine.py",
 				"--mcp-stdio"

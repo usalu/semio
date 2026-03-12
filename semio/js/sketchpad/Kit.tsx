@@ -1784,6 +1784,8 @@ export function useKitAppCommands(id?: KitAppId) {
     updateTypes: (updates: { type: { guid: Guid }; diff: TypeDiff }[]) => controller.execute("semio.kitApp.updateTypes", getOrigin(), updates),
     updateDesign: (guid: Guid, designDiff: DesignDiff) => controller.execute("semio.kitApp.updateDesign", getOrigin(), guid, designDiff),
     updateDesigns: (updates: { design: { guid: Guid }; diff: DesignDiff }[]) => controller.execute("semio.kitApp.updateDesigns", getOrigin(), updates),
+    togglePanel: (panelKey: string) => {
+      const current = controller.snapshot().panelVisibility || {};
       controller.change({
         panelVisibility: {
           [panelKey]: !current[panelKey],
@@ -2000,6 +2002,8 @@ function createDimensionSelectionHooks<K extends keyof KitAppSelection>(dimensio
         const newSelection = replaceSelectionDimension(selection || {}, dimensionKey, values as KitAppSelection[K]);
         setSelection(newSelection);
       };
+    }, [selection, setSelection, canAct]);
+    return [action, canAct];
   }
 
   function useClear(): ActionHookResult<[]> {
@@ -3422,6 +3426,7 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
     opacity = 1;
   }
 
+  if (isSelected) {
     if (status === DiffStatus.Added) {
       fill = "var(--color-selected-added)";
     } else if (status === DiffStatus.Removed) {
@@ -3513,6 +3518,7 @@ export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fil
     opacity = 1;
   }
 
+  if (isSelected) {
     if (status === DiffStatus.Added) {
       fill = "var(--color-selected-added)";
     } else if (status === DiffStatus.Removed) {
@@ -4260,14 +4266,20 @@ export const commands = {
   "semio.kitApp.setSortDirection": (context: KitAppCommandContext, direction: KitAppSortDirection): KitAppCommandResult => {
     return {
       diff: {
+        sortDirection: direction,
       },
     };
   },
+  "semio.kitApp.toggleSort": (context: KitAppCommandContext, column: KitAppSortColumn): KitAppCommandResult => {
+    const current = context.kitApp;
     if (current.sortColumn === column) {
       return {
         diff: {
+          sortDirection: current.sortDirection === "asc" ? "desc" : "asc",
+        },
       };
     }
+    return {
       diff: {
         sortColumn: column,
         sortDirection: "asc",
@@ -8257,6 +8269,7 @@ const MultiWindowApp: FC = () => {
     () => ({
       root: {
         type: "row",
+        content: [
           {
             type: "stack",
             size: "50%",
@@ -8400,6 +8413,8 @@ const MultiWindowApp: FC = () => {
           </Canvas>
         </KitDropZone>
       </TransactionProvider>
+    </ErrorBoundary>
+  );
 };
 
 export default MultiWindowApp;

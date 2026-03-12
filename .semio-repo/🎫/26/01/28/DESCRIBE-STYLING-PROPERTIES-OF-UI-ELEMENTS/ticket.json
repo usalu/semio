@@ -1,5 +1,5 @@
 {
   "title": "Describe Styling Properties of UI Elements",
-  "status": "open",
-  "summary": "Documented styling-property mappings for the provided elements (AvatarFallback span and ReactFlow edge path), including CSS variable resolution."
+  "status": "closed",
+  "summary": "Bulk close"
 }

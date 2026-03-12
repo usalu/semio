@@ -80,14 +80,6 @@
               {
                 "guid": "c5465220-19ba-4443-8f1d-617c832dd13c",
                 "name": "c0",
-                "attributes": [
-                  {
-                    "value": "east",
-                    "key": "core",
-                    "definition": "",
-                    "guid": "43555719-0b24-4069-bd92-20f3539f1577"
-                  }
-                ],
                 "mandatory": false,
                 "point": {
                   "y": -7.7,
@@ -103,7 +95,16 @@
                 },
                 "port": {
                   "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
-                }
+                },
+                "props": [
+                  {
+                    "guid": "43555719-0b24-4069-bd92-20f3539f1577",
+                    "quality": {
+                      "guid": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d"
+                    },
+                    "value": "east"
+                  }
+                ]
               }
             ],
             "removed": [
@@ -136,9 +137,7 @@
                       {
                         "guid": "019caa00-0000-7000-a000-000000000002"
                       }
-                    ],
-                    "updated": [],
-                    "added": []
+                    ]
                   }
                 }
               }
@@ -148,93 +147,6 @@
             "removed": [
               {
                 "guid": "019caa00-0000-7000-a000-000000000004"
-              }
-            ],
-            "updated": [],
-            "added": [
-              {
-                "value": "2",
-                "key": "storey",
-                "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey",
-                "guid": "d177f31d-7bc7-418a-8cfd-3b0f8fb15160"
-              },
-              {
-                "value": "3.5",
-                "key": "floor height",
-                "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
-                "guid": "d1929d72-af63-4116-820e-174e850cb262"
-              },
-              {
-                "value": "4",
-                "key": "ground floor height",
-                "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight",
-                "guid": "893abeaf-17cc-44a4-a47a-4a1586c7e6ee"
-              },
-              {
-                "value": "2",
-                "key": "cores",
-                "definition": "",
-                "guid": "b6ac915c-ff43-49c9-a39d-d0b1b28def8b"
-              },
-              {
-                "value": "5.5",
-                "key": "core length",
-                "definition": "",
-                "guid": "7ab87aec-d58f-443c-9ff2-9886a4e2390b"
-              },
-              {
-                "value": "5.5",
-                "key": "core width",
-                "definition": "",
-                "guid": "4de94232-b930-477d-9fb4-5736102e5bf2"
-              },
-              {
-                "value": "519.37",
-                "key": "effective floor area",
-                "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-                "guid": "7fb7e5db-4eb9-4db0-82c2-a4410c744228"
-              },
-              {
-                "value": "2856480",
-                "key": "construction cost",
-                "definition": "",
-                "guid": "63951292-1192-4d83-8555-cfad64fcd20c"
-              },
-              {
-                "value": "12984",
-                "key": "heating energy demand",
-                "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-                "guid": "8cda3ff1-9eae-4013-a020-483ceb8f7d27"
-              },
-              {
-                "value": "18178",
-                "key": "cooling energy demand",
-                "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-                "guid": "d0235adf-4190-47f5-8492-8e38b3ccb0d0"
-              },
-              {
-                "value": "20774",
-                "key": "technical equipment energy demand",
-                "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-                "guid": "c401968b-8c86-4abb-a542-a31cf55afc41"
-              },
-              {
-                "value": "467424",
-                "key": "income",
-                "definition": "",
-                "guid": "1445d70d-ff49-4a5b-8afd-18b46339ade5"
-              },
-              {
-                "value": "46742",
-                "key": "maintenance expenses",
-                "definition": "",
-                "guid": "d15584c8-3101-4ae8-8bab-179615760a5e"
-              },
-              {
-                "value": "415488",
-                "key": "construction global warming potential",
-                "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-                "guid": "aea2eede-67d3-4de2-b5db-48e2e02e67f7"
               }
             ]
           }
@@ -7091,96 +7003,124 @@
         ],
         "icon": "icons/nakagin-capsule-tower.svg",
         "updatedAt": "2025-11-23T01:10:21.335Z",
-        "attributes": [
-          {
-            "value": "2349.53",
-            "key": "effective floor area",
-            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea",
-            "guid": "eba97667-7429-4433-a503-cc75d9c882e7"
-          },
-          {
-            "value": "22.890446",
-            "key": "specific operational global warming potential",
-            "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-            "guid": "10ffebf8-08b9-4336-8048-ebe517995cea"
-          },
-          {
-            "value": "2.0311e+7",
-            "key": "construction cost",
-            "definition": "",
-            "guid": "ab2254b4-8b33-4c8d-a935-21450d9e6541"
-          },
-          {
-            "value": "2.2088e+6",
-            "key": "return",
-            "definition": "",
-            "guid": "41509944-6a7f-42a1-8e42-b3d0c784e98f"
-          },
-          {
-            "value": "1.818e+6",
-            "key": "construction global warming potential",
-            "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-            "guid": "2f5d203d-bacb-479e-9ac7-fb393d609614"
-          },
-          {
-            "value": "276616.911111",
-            "key": "operational cost",
-            "definition": "",
-            "guid": "861d5d56-7fae-4946-8a41-2e403e87f757"
-          },
-          {
-            "value": "53781.79",
-            "key": "operational global warming potential",
-            "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979",
-            "guid": "3bb54d02-d519-4dd4-96b6-c8286cdbc929"
-          },
-          {
-            "value": "2.4854e+6",
-            "key": "income",
-            "definition": "",
-            "guid": "e9f76ed6-8bd5-4338-8aa9-57807034f8cd"
-          },
-          {
-            "value": "232534",
-            "key": "maintenance expenses",
-            "definition": "",
-            "guid": "65b8d53e-2637-43de-a1e6-0fa108859284"
-          },
-          {
-            "value": "99.440124",
-            "key": "specific energy demand",
-            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-            "guid": "2f7abca4-ed29-4909-9154-6f2cea5f48d2"
-          },
-          {
-            "value": "44082.911111",
-            "key": "operational energy cost",
-            "definition": "",
-            "guid": "7b5eece9-5177-493e-a981-8a01564b5354"
-          },
-          {
-            "value": "83186",
-            "key": "heating energy demand",
-            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-            "guid": "53a3625c-3448-402c-b0b8-79d86677aa8e"
-          },
-          {
-            "value": "63366",
-            "key": "cooling energy demand",
-            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-            "guid": "15f54c26-d9f0-45d9-bed0-f0c4c50164a0"
-          },
-          {
-            "value": "70802",
-            "key": "technical equipment energy demand",
-            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption",
-            "guid": "d72207fa-c991-4c71-b498-2acb17234d31"
-          }
-        ],
         "createdAt": "2025-11-23T01:10:21.335Z",
         "description": "The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
         "unit": "m",
-        "image": "images/nakagin-capsule-tower.png"
+        "image": "images/nakagin-capsule-tower.png",
+        "props": [
+          {
+            "guid": "eba97667-7429-4433-a503-cc75d9c882e7",
+            "quality": {
+              "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
+            },
+            "value": "2349.53",
+            "unit": "m²"
+          },
+          {
+            "guid": "10ffebf8-08b9-4336-8048-ebe517995cea",
+            "quality": {
+              "guid": "65d42370-990c-533d-a2ed-386714af2f46"
+            },
+            "value": "22.890446",
+            "unit": "kgCO2e/m²a"
+          },
+          {
+            "guid": "ab2254b4-8b33-4c8d-a935-21450d9e6541",
+            "quality": {
+              "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
+            },
+            "value": "2.0311e+7",
+            "unit": "€"
+          },
+          {
+            "guid": "41509944-6a7f-42a1-8e42-b3d0c784e98f",
+            "quality": {
+              "guid": "eded115b-256c-5752-8756-923d0aecf8fd"
+            },
+            "value": "2.2088e+6",
+            "unit": "€/a"
+          },
+          {
+            "guid": "2f5d203d-bacb-479e-9ac7-fb393d609614",
+            "quality": {
+              "guid": "7ed15c6b-b191-5da7-94a8-4443649d3593"
+            },
+            "value": "1.818e+6",
+            "unit": "kgCO2e"
+          },
+          {
+            "guid": "861d5d56-7fae-4946-8a41-2e403e87f757",
+            "quality": {
+              "guid": "cebf60ec-cdac-50be-947a-227fbe6ffae7"
+            },
+            "value": "276616.911111",
+            "unit": "€/a"
+          },
+          {
+            "guid": "3bb54d02-d519-4dd4-96b6-c8286cdbc929",
+            "quality": {
+              "guid": "ab3f6488-2804-5a2a-af74-65618a218f44"
+            },
+            "value": "53781.79",
+            "unit": "kgCO2e/a"
+          },
+          {
+            "guid": "e9f76ed6-8bd5-4338-8aa9-57807034f8cd",
+            "quality": {
+              "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
+            },
+            "value": "2.4854e+6",
+            "unit": "€/a"
+          },
+          {
+            "guid": "65b8d53e-2637-43de-a1e6-0fa108859284",
+            "quality": {
+              "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
+            },
+            "value": "232534",
+            "unit": "€/a"
+          },
+          {
+            "guid": "2f7abca4-ed29-4909-9154-6f2cea5f48d2",
+            "quality": {
+              "guid": "aed5edc4-5c23-5d5e-852b-e8670ad517ee"
+            },
+            "value": "99.440124",
+            "unit": "kWh/m²a"
+          },
+          {
+            "guid": "7b5eece9-5177-493e-a981-8a01564b5354",
+            "quality": {
+              "guid": "6d49703d-3f1a-5657-be01-bb9893094695"
+            },
+            "value": "44082.911111",
+            "unit": "€/a"
+          },
+          {
+            "guid": "53a3625c-3448-402c-b0b8-79d86677aa8e",
+            "quality": {
+              "guid": "64cc900f-72ec-5e7b-91af-78251b681bde"
+            },
+            "value": "83186",
+            "unit": "kWh/a"
+          },
+          {
+            "guid": "15f54c26-d9f0-45d9-bed0-f0c4c50164a0",
+            "quality": {
+              "guid": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
+            },
+            "value": "63366",
+            "unit": "kWh/a"
+          },
+          {
+            "guid": "d72207fa-c991-4c71-b498-2acb17234d31",
+            "quality": {
+              "guid": "dba0671e-04a8-5545-a083-eb28b44d3453"
+            },
+            "value": "70802",
+            "unit": "kWh/a"
+          }
+        ]
       }
     ],
     "removed": [
@@ -7373,9 +7313,7 @@
               {
                 "guid": "019caa00-0000-7000-a000-000000000012"
               }
-            ],
-            "updated": [],
-            "added": []
+            ]
           }
         }
       }

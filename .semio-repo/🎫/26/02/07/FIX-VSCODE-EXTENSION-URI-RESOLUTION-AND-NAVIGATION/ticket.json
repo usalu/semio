@@ -1,8 +1,8 @@
 {
   "title": "Fix Vscode Extension Uri Resolution and Navigation",
-  "status": "open",
+  "status": "closed",
   "description": "The semio repo vscode extension should properly resolve all URIs and navigate to them. Clicking on a URI should navigate to the resource, clicking on a tree item should navigate to the resource, the `semio-repo: Navigate to` command should navigate to the resource.",
-  "summary": "Fixed bundle tree items showing raw kind strings (e.g. 'librarysemio/js') instead of emoji-prefixed short names (e.g. '📚js'). Added bundleKindEmoji() mapping function matching the Go CLI's bundleKindEmoji() (schema→🛂, binary→⌨️️️, ui→🖱️️️, site→🌐, assets→🏪, library→📚). Fixed label to extract short name after '/' from full bundle name. Also removed leftover duplicate constructor/refresh in FilterTreeDataProvider. Added bundleKindEmoji tests.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/441"
   },

@@ -366,7 +366,7 @@
       },
       "pathMappings": [
         {
-          "localRoot": "${workspaceFolder}/py/engine",
+          "localRoot": "${workspaceFolder}/semio/engine",
           "remoteRoot": "."
         }
       ]

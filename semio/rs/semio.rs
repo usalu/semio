@@ -3898,23 +3898,34 @@ pub fn drag_pieces_in_design(
     offset: &Coord,
 ) -> DesignDiff {
     let selected_guids: HashSet<&str> = selected_pieces.iter().map(|p| p.guid.as_str()).collect();
-    let design_piece_map: HashMap<&str, &Piece> = design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+    let design_piece_map: HashMap<&str, &Piece> =
+        design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
     let mut children_map: HashMap<&str, Vec<&str>> = HashMap::new();
     let mut connection_by_child: HashMap<&str, &Connection> = HashMap::new();
     for conn in design_connections {
         let connecting_guid = conn.connecting.piece.guid.as_str();
         let connected_guid = conn.connected.piece.guid.as_str();
-        children_map.entry(connecting_guid).or_default().push(connected_guid);
+        children_map
+            .entry(connecting_guid)
+            .or_default()
+            .push(connected_guid);
         connection_by_child.insert(connected_guid, conn);
     }
-    let root_movers: Vec<&str> = selected_guids.iter()
-        .filter(|&&guid| design_piece_map.get(guid).map_or(false, |p| p.center.is_some()))
+    let root_movers: Vec<&str> = selected_guids
+        .iter()
+        .filter(|&&guid| {
+            design_piece_map
+                .get(guid)
+                .map_or(false, |p| p.center.is_some())
+        })
         .copied()
         .collect();
     let mut moving_set: HashSet<&str> = HashSet::new();
     let mut queue: VecDeque<&str> = root_movers.iter().copied().collect();
     while let Some(current) = queue.pop_front() {
-        if !moving_set.insert(current) { continue; }
+        if !moving_set.insert(current) {
+            continue;
+        }
         if let Some(children) = children_map.get(current) {
             for &child in children {
                 if !moving_set.contains(child) {
@@ -3923,18 +3934,23 @@ pub fn drag_pieces_in_design(
             }
         }
     }
-    let piece_updates: Vec<DiffUpdate<PieceDiff>> = root_movers.iter().map(|&guid| {
-        DiffUpdate {
+    let piece_updates: Vec<DiffUpdate<PieceDiff>> = root_movers
+        .iter()
+        .map(|&guid| DiffUpdate {
             key: "piece".to_string(),
             guid: guid.to_string(),
             diff: PieceDiff {
                 guid: guid.to_string(),
-                center: Some(Some(Coord { u: offset.u, v: offset.v })),
+                center: Some(Some(Coord {
+                    u: offset.u,
+                    v: offset.v,
+                })),
                 ..Default::default()
             },
-        }
-    }).collect();
-    let connection_updates: Vec<DiffUpdate<ConnectionDiff>> = selected_guids.iter()
+        })
+        .collect();
+    let connection_updates: Vec<DiffUpdate<ConnectionDiff>> = selected_guids
+        .iter()
         .filter(|&&guid| !moving_set.contains(guid) && connection_by_child.contains_key(guid))
         .map(|&guid| {
             let conn = connection_by_child[guid];
@@ -3948,8 +3964,12 @@ pub fn drag_pieces_in_design(
                     ..Default::default()
                 },
             }
-        }).collect();
-    let mut diff = DesignDiff { guid: String::new(), ..Default::default() };
+        })
+        .collect();
+    let mut diff = DesignDiff {
+        guid: String::new(),
+        ..Default::default()
+    };
     if !piece_updates.is_empty() {
         diff.pieces = Some(CollectionDiff {
             added: None,
@@ -5421,7 +5441,11 @@ pub mod zip_roundtrip {
             for (i, f) in kit_files.iter_mut().enumerate() {
                 if let Some(data) = files.get(&file_paths[i]) {
                     let mime = crate::mime_from_filename(&f.name);
-                    f.blob = Some(format!("data:{};base64,{}", mime, base64::engine::general_purpose::STANDARD.encode(data)));
+                    f.blob = Some(format!(
+                        "data:{};base64,{}",
+                        mime,
+                        base64::engine::general_purpose::STANDARD.encode(data)
+                    ));
                 }
             }
         }
@@ -5656,6 +5680,7 @@ pub mod wasm {
 /// </remarks>
 mod tests {
     use super::*;
+    use serde::Deserialize;
     use std::fs;
     use std::path::Path;
 
@@ -5810,6 +5835,113 @@ mod tests {
         }
     }
 
+    #[derive(Debug, Deserialize)]
+    struct ModelSelectionAsset {
+        cases: Vec<ModelSelectionCase>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct ModelSelectionCase {
+        name: String,
+        #[serde(rename = "selectedTagGuids")]
+        selected_tag_guids: Vec<String>,
+        #[serde(rename = "expectedGuid")]
+        expected_guid: Option<String>,
+        models: Vec<ModelSelectionModel>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct ModelSelectionModel {
+        guid: String,
+        #[serde(rename = "fileGuid")]
+        file_guid: String,
+        #[serde(rename = "tagGuids")]
+        tag_guids: Vec<String>,
+    }
+
+    fn contains_all_tags(model: &Model, selected_tag_guids: &[String]) -> bool {
+        let model_tag_guids: Vec<String> = model
+            .tags
+            .as_ref()
+            .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
+            .unwrap_or_default();
+        selected_tag_guids.iter().all(|selected| {
+            model_tag_guids
+                .iter()
+                .any(|model_tag| model_tag == selected)
+        })
+    }
+
+    fn jaccard_tag_guids(model_tag_guids: &[String], selected_tag_guids: &[String]) -> f64 {
+        if model_tag_guids.is_empty() && selected_tag_guids.is_empty() {
+            return 1.0;
+        }
+        let set_a: std::collections::HashSet<&String> = model_tag_guids.iter().collect();
+        let set_b: std::collections::HashSet<&String> = selected_tag_guids.iter().collect();
+        let intersection = set_a.intersection(&set_b).count();
+        let union = set_a.union(&set_b).count();
+        if union == 0 {
+            0.0
+        } else {
+            intersection as f64 / union as f64
+        }
+    }
+
+    fn select_best_model_like_semio_ts(
+        models: &[Model],
+        selected_tag_guids: &[String],
+    ) -> Option<Model> {
+        if models.is_empty() {
+            return None;
+        }
+        if selected_tag_guids.is_empty() {
+            if let Some(default_model) = models.iter().find(|model| {
+                model
+                    .tags
+                    .as_ref()
+                    .map(|tags| tags.is_empty())
+                    .unwrap_or(true)
+            }) {
+                return Some(default_model.clone());
+            }
+            return Some(models[0].clone());
+        }
+
+        let filtered: Vec<Model> = models
+            .iter()
+            .filter(|model| contains_all_tags(model, selected_tag_guids))
+            .cloned()
+            .collect();
+        if filtered.is_empty() {
+            return None;
+        }
+
+        let mut max_index = 0usize;
+        let mut max_score = {
+            let guids: Vec<String> = filtered[0]
+                .tags
+                .as_ref()
+                .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
+                .unwrap_or_default();
+            jaccard_tag_guids(&guids, selected_tag_guids)
+        };
+
+        for (i, model) in filtered.iter().enumerate().skip(1) {
+            let guids: Vec<String> = model
+                .tags
+                .as_ref()
+                .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
+                .unwrap_or_default();
+            let score = jaccard_tag_guids(&guids, selected_tag_guids);
+            if score > max_score {
+                max_score = score;
+                max_index = i;
+            }
+        }
+
+        Some(filtered[max_index].clone())
+    }
+
     // #region 🔖Roundtrip Tests
     // [👤semio📚rs💻semio🔖tests🔖roundtriptests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Roundtrip%20Tests)
     // Roundtrip Tests MUST provide the roundtrip tests functionality.
@@ -5865,6 +5997,55 @@ mod tests {
     }
 
     // #endregion 🔖Roundtrip Tests
+
+    // #region 🔖DesignModel Tests
+    // [👤semio📚rs💻semio🔖tests🔖designmodeltests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/DesignModel%20Tests)
+    // DesignModel Tests MUST provide model-selection regression checks.
+
+    mod design_model {
+        use super::*;
+
+        #[test]
+        fn model_selection_from_shared_semio_assets() {
+            let path = Path::new(ASSETS_DIR).join("model_selection.json");
+            let data = fs::read_to_string(&path).expect("Failed to read model_selection.json");
+            let payload: ModelSelectionAsset =
+                serde_json::from_str(&data).expect("Failed to deserialize model_selection.json");
+
+            for case in payload.cases {
+                let models: Vec<Model> = case
+                    .models
+                    .iter()
+                    .map(|model| Model {
+                        guid: model.guid.clone(),
+                        file: FileId {
+                            guid: model.file_guid.clone(),
+                        },
+                        name: None,
+                        description: None,
+                        tags: Some(
+                            model
+                                .tag_guids
+                                .iter()
+                                .map(|guid| TagId { guid: guid.clone() })
+                                .collect(),
+                        ),
+                        attributes: None,
+                    })
+                    .collect();
+
+                let selected = select_best_model_like_semio_ts(&models, &case.selected_tag_guids);
+                let selected_guid = selected.map(|model| model.guid);
+                assert_eq!(
+                    selected_guid, case.expected_guid,
+                    "Case {} failed",
+                    case.name
+                );
+            }
+        }
+    }
+
+    // #endregion 🔖DesignModel Tests
 
     // #region 🔖Flatten Tests
     // [👤semio📚rs💻semio🔖tests🔖flattentests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Flatten%20Tests)

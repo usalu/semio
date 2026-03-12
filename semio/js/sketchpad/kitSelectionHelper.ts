@@ -432,6 +432,7 @@ export const kitDiagramInferSnapSide = (point: KitDiagramPoint, frame: Partial<K
 };
 
 // [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createcirclesnappoints](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createCircleSnapPoints)
+/**
  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createcirclesnappoints](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createCircleSnapPoints)
  * createCircleSnapPoints holds the data fields for a createCircleSnapPoints record.
  **/
@@ -447,6 +448,7 @@ const createCircleSnapPoints = (frame?: Partial<KitDiagramFrame>): KitDiagramSna
 };
 
 // [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createrectanglesnappoints](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createRectangleSnapPoints)
+/**
  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createrectanglesnappoints](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createRectangleSnapPoints)
  * createRectangleSnapPoints holds the data fields for a createRectangleSnapPoints record.
  **/
@@ -462,6 +464,7 @@ const createRectangleSnapPoints = (frame?: Partial<KitDiagramFrame>, fallback: K
 };
 
 // [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createtrianglesnappoints](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createTriangleSnapPoints)
+/**
  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createtrianglesnappoints](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createTriangleSnapPoints)
  * createTriangleSnapPoints holds the data fields for a createTriangleSnapPoints record.
  **/
@@ -521,6 +524,7 @@ export const resolveNearestKitDiagramSnapPoint = (points: KitDiagramSnapPoint[],
 };
 
 // [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createstrategy](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createStrategy)
+/**
  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨createstrategy](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/createStrategy)
  * createStrategy holds the data fields for a createStrategy record.
  **/

@@ -1377,6 +1377,8 @@ export const commands = {
     };
   },
   "semio.typeApp.clearModelTags": (context: TypeAppCommandContext): TypeAppCommandResult => {
+    return {
+      diff: {
         selectedModelTags: [],
       },
     };
@@ -1387,6 +1389,8 @@ export const commands = {
         selectedModelTags: tags,
       },
     };
+  },
+};
 
 // #endregion Commands
 
@@ -2051,6 +2055,8 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
           <meshBasicMaterial color="#4f46e5" opacity={0.2} transparent />
         </mesh>
       )}
+    </SceneComponent>
+  );
 };
 
 // #endregion Scene
@@ -3143,6 +3149,8 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               value={commonPointY}
               onChange={(value: number) => {
                 updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.y", { point: { y: value } });
+              }}
+              step={0.1}
             />
           </TreeRow>
         <TreeRow>
@@ -3188,7 +3196,9 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
             />
           </TreeRow>
       </TreeItem>
+    </>
   );
+};
 
 // #endregion Details
 
@@ -3237,6 +3247,7 @@ const TypeSettingsContent: FC = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="en">{languageEnLabel}</SelectItem>
+            </SelectContent>
           </Select>
         </TreeRow>
       <TreeRow>
@@ -3900,7 +3911,9 @@ const TypeApp: FC = () => {
 
     addSection("toolbar", {
       id: "semio.sketchpad.app.type.tools.connector",
+      specificity: 20,
       order: 10,
+      toolbarGroup: {
         id: "create",
         labelId: "semio.sketchpad.toolbar.parent.create",
         order: 40,
@@ -3969,6 +3982,8 @@ function useTypeAppInitialize() {
       },
     });
     initializedKeyRef.current = initKey;
+  }, [kitGuid, typeGuid, actor]);
+}
 
 export default TypeApp;
 
@@ -4056,6 +4071,8 @@ export const TypeAppFooter: FC = () => {
         removeFooterItem(`semio.sketchpad.app.type.footer.tag.${tagGuid}`);
       });
     };
+  }, [appType, allModelTagGuids, tagNameMap, selectedModelTags, addFooterItem, removeFooterItem]);
+
   return null;
 };
 

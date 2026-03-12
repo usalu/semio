@@ -864,6 +864,10 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
       const doStep: KitDiffAppStep<TSelectionDiff> = { kitDiff: result.kitDiff, selectionDiff: result.diff?.selection };
       const undoStep: KitDiffAppStep<TSelectionDiff> = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
       const edit = { do: doStep, undo: undoStep };
+      currentStack.push([edit]);
+    }
+  }
+}
 
 // #region Plain App Store (No YJS)
 
@@ -1172,9 +1176,16 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
       this.lastDeletedTransactionEdit = undefined;
       const selection = this.getSelection();
       const inversedSelectionDiff = res.diff?.selection ? this.inverseSelectionDiff(selection, res.diff.selection) : undefined;
+      const kitStore = this.kit();
       const kitState = kitStore.snapshot();
+      const inversedKitDiff = res.kitDiff ? inverseKitDiff(kitState, res.kitDiff) : undefined;
+      const doStep = { kitDiff: res.kitDiff, selectionDiff: res.diff?.selection };
       const undoStep = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
       const edit = { do: doStep, undo: undoStep } as TEdit;
+      this._currentTransactionStack.push(edit);
+    }
+  }
+}
 
 // #endregion Plain App Store (No YJS)
 
@@ -1227,6 +1238,11 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
         storage.delete(key);
         return `memory://${getKey(kitId, fileId, path)}`;
       },
+
+      getUrl: (kitId, fileId, path) => {
+        return `memory://${getKey(kitId, fileId, path)}`;
+      },
+    };
   };
 }
 
@@ -1331,7 +1347,12 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
           };
           request.onerror = () => reject(request.error);
 
+          transaction.oncomplete = () => db.close();
+        });
+      },
+
       getUrl: (kitId, fileId, path) => {
+        return `local://${kitId}/${fileId}/${path}`;
       },
     };
   };
@@ -1401,10 +1422,13 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
           method: "DELETE",
           headers,
         });
+        if (!response.ok) {
           throw new Error(`Remote delete failed: ${response.statusText}`);
         }
+      },
 
       getUrl: (kitId, fileId, path) => {
+        return getUrl(kitId, fileId, path);
       },
     };
   };
@@ -1472,12 +1496,16 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
           }
         }
         throw new Error(`All providers failed to download file ${path}`);
+      },
+
       delete: async (kitId, fileId, path) => {
         await Promise.allSettled(providers.map((p) => p.delete(kitId, fileId, path)));
       },
 
+      getUrl: (kitId, fileId, path) => {
         return providers[providers.length - 1].getUrl(kitId, fileId, path);
       },
+    };
   };
 }
 
@@ -1565,11 +1593,15 @@ class AttributeStore {
     const currentHash = this.hash(currentData);
     if (!this.cache || this.cacheHash !== currentHash) {
       this.cacheHash = currentHash;
+      this.cache = currentData;
     }
     return this.cache;
   };
 
+  change = (diff: Partial<Attribute>) => {
     if (diff.key !== undefined) this.key = diff.key;
+    if (diff.value !== undefined) this.value = diff.value;
+    if (diff.definition !== undefined) this.definition = diff.definition;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -1687,11 +1719,7 @@ type YVecVal = number;
 type YVec = Y.Map<YVecVal>;
 
 /**
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec🛠️yvecstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVecStore)
-/**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point🛠️ypointstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/YPointStore)
- *
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec🛠️yvecstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVecStore)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec🛠️yvecstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/YVecStore)
  **/
 class YVecStore {
   private yVec: YVec;
@@ -1722,9 +1750,12 @@ class YVecStore {
     return JSON.stringify(vec);
   };
 
+  snapshot = (): Vec => {
     const currentData = {
+      u: this.u,
       v: this.v,
     };
+    const currentHash = this.hash(currentData);
 
     if (!this.cache || this.cacheHash !== currentHash) {
       this.cache = currentData;
@@ -1807,10 +1838,13 @@ class YPointStore {
 
   hash = (point: Point): string => {
     return JSON.stringify(point);
+  };
 
   snapshot = (): Point => {
+    const currentData = {
       x: this.x,
       y: this.y,
+      z: this.z,
     };
     const currentHash = this.hash(currentData);
 
@@ -1857,11 +1891,7 @@ type YVectorVal = number;
 type YVector = Y.Map<YVectorVal>;
 
 /**
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector🛠️yvectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/YVectorStore)
-/**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane🛠️yplaneval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/YPlaneVal)
- *
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vector🛠️yvectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/YVectorStore)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector🛠️yvectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/YVectorStore)
  **/
 class YVectorStore {
   private yVector: YVector;
@@ -1892,14 +1922,17 @@ class YVectorStore {
   get z(): number {
     return this.yVector.get("z") as number;
   }
+  set z(z: number) {
     this.yVector.set("z", z);
   }
+
   hash = (vector: Vector): string => {
     return JSON.stringify(vector);
   };
 
   snapshot = (): Vector => {
     const currentData = {
+      x: this.x,
       y: this.y,
       z: this.z,
     };
@@ -2041,8 +2074,10 @@ class YCameraStore {
   private cache?: Camera;
   private cacheHash?: string;
 
+  constructor(yCamera: YCamera, camera: Camera) {
     this.yCamera = yCamera;
 
+    const yPosition = new Y.Map<YPointVal>();
     this.yCamera.set("position", yPosition);
     this.position = new YPointStore(yPosition, camera.position);
 
@@ -2059,6 +2094,7 @@ class YCameraStore {
     return JSON.stringify(camera);
   };
 
+  snapshot = (): Camera => {
     const currentData = {
       position: this.position.snapshot(),
       forward: this.forward.snapshot(),
@@ -2095,8 +2131,6 @@ class YCameraStore {
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖location](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Location)
 // Yjs-backed location store managing geographical and licensing metadata.
 
-/**
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/YLocationVal)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/YLocationVal)
  *
@@ -2142,8 +2176,10 @@ class YLocationStore {
   }
   set latitude(latitude: number) {
     this.yLocation.set("latitude", latitude);
+  }
 
   get longitude(): number {
+    return this.yLocation.get("longitude") as number;
   }
   set longitude(longitude: number) {
     this.yLocation.set("longitude", longitude);
@@ -2164,6 +2200,7 @@ class YLocationStore {
     return JSON.stringify(location);
   };
 
+  snapshot = (): Location => {
     const currentData = {
       guid: this.guid,
       latitude: this.latitude,
@@ -2388,6 +2425,7 @@ function useAuthorStore<T>(selector?: (store: AuthorStore) => T, guid?: string):
   return selector ? selector(authorStore) : authorStore;
 }
 
+/**
  * Hook for accessing author data with optional selector.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author🛠️useauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/useAuthor)
@@ -2758,8 +2796,10 @@ class BenchmarkStore {
 
   get guid(): string {
     return this.yBenchmark.get("guid") as string;
+  }
   set guid(guid: string) {
     this.yBenchmark.set("guid", guid);
+  }
 
   get name(): string {
     return this.yBenchmark.get("name") as string;
@@ -2800,6 +2840,7 @@ class BenchmarkStore {
     return this.yBenchmark.get("maxExcluded") as boolean | undefined;
   }
   set maxExcluded(maxExcluded: boolean | undefined) {
+    this.yBenchmark.set("maxExcluded", maxExcluded || false);
   }
 
   hash = (benchmark: Benchmark): string => {
@@ -2892,6 +2933,7 @@ export class QualityStore {
     this.name = quality.name;
   }
 
+  get guid(): string {
     return this.yQuality.get("guid") as string;
   }
   set guid(guid: string) {
@@ -2930,6 +2972,9 @@ export class QualityStore {
   get description(): string | undefined {
     return this.yQuality.get("description") as string | undefined;
   }
+  set description(description: string | undefined) {
+    if (description) this.yQuality.set("description", description);
+    else this.yQuality.delete("description");
   }
 
   id(): Guid {
@@ -2966,6 +3011,8 @@ export class QualityStore {
     this.cache = quality;
     this.cacheHash = currentHash;
     return quality;
+  }
+
   change = (diff: QualityDiff) => {
     if (diff.key !== undefined) this.key = diff.key;
     if (diff.name !== undefined) this.name = diff.name;
@@ -2990,19 +3037,13 @@ export class QualityStore {
 // [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖prop](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PROP)
 // Yjs-backed prop store managing design property definitions.
 /**
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProp)
-/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProp)
  *
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProp)
  **/
 type YProp = Y.Map<string | number | boolean | YAttributes>;
 /**
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProps)
-/**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️propstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PropStore)
- *
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs✂️yprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProps)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/YProps)
  **/
 type YProps = Y.Array<YProp>;
 
@@ -3102,24 +3143,19 @@ class PropStore {
 // Yjs-backed model store managing 3D model representations.
 
 type YModelVal = string | Y.Array<string> | YAttributes;
-/** YModel holds the data fields for a YModel record.
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities✂️ymodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/d/i/YModel)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/YModel)
  **/
 type YModel = Y.Map<YModelVal>;
-/** YModels holds the data fields for a YModels record.
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities✂️ymodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/d/i/YModels)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/YModels)
  **/
 type YModels = Y.Array<YModel>;
 
 /**
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖connector🛠️yconnectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector/d/i/YConnectorVal)
-/**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model🛠️modelstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/ModelStore)
  **/
+export class ModelStore {
   private yModel: YModel;
   private yTags: Y.Array<string>;
   private attributes: Map<string, AttributeStore>;
@@ -3255,16 +3291,10 @@ type YConnector = Y.Map<YConnectorVal>;
  **/
 type YConnectors = Y.Array<YConnector>;
 
- * ConnectorStore holds the data fields for a ConnectorStore record.
- **/
-/**
- * ConnectorStore holds the data fields for a ConnectorStore record.
- **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖type🛠️ytypeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type/d/i/YTypeVal)
-/**
- * ConnectorStore holds the data fields for a ConnectorStore record.
- **/
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connector🛠️connectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connector/d/i/ConnectorStore)
+/**
+ * ConnectorStore holds the data fields for a ConnectorStore record.
+ **/
 class ConnectorStore {
   private yConnector: YConnector;
   private yPoint: YPoint;
@@ -3320,6 +3350,7 @@ class ConnectorStore {
     this.yConnector.set("port", port_ || "");
   }
 
+  get mandatory(): boolean | undefined {
     return this.yConnector.get("mandatory") as boolean | undefined;
   }
   set mandatory(mandatory: boolean | undefined) {
@@ -3783,6 +3814,7 @@ export class TypeStore {
             const attr = this.findAttributeStore(attribute.guid);
             if (!attr) return;
             attr.change(attributeDiff);
+          });
         }
       }
 
@@ -3910,6 +3942,7 @@ function useQualityStore<T>(selector?: (store: QualityStore) => T, guid?: string
   const qualityStore = kitStore.quality(qualityGuid);
   if (!qualityStore) return null;
   return selector ? selector(qualityStore) : qualityStore;
+}
 
 /** useQuality holds the data fields for a useQuality record.
  *
@@ -3997,6 +4030,7 @@ class LayerStore {
   }
   set color(color: string | undefined) {
     this.yLayer.set("color", color || "");
+  }
 
   get description(): string | undefined {
     return this.yLayer.get("description") as string | undefined;
@@ -4070,21 +4104,15 @@ class LayerStore {
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypieceval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/YPieceVal)
  **/
 type YPieceVal = string | number | boolean | YPlane | YAttributes | YCoord;
-/** YPiece holds the data fields for a YPiece record.
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖piece✂️ypiece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/YPiece)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypiece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/YPiece)
  **/
 type YPiece = Y.Map<YPieceVal>;
-/** YPieces holds the data fields for a YPieces record.
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖piece✂️ypieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/YPieces)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/YPieces)
  **/
 type YPieces = Y.Array<YPiece>;
 
-/** PieceStore holds the data fields for a PieceStore record.
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖piece🛠️piecescope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/PieceScope)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece🛠️piecestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/PieceStore)
  **/
@@ -4479,6 +4507,11 @@ export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
   const compute = useCallback(() => {
     if (!kitStore || !designScope) return new Map<string, PieceMetadata>();
     const kit = kitStore.snapshot();
+    const design = designStore?.snapshot();
+    if (!design) return new Map<string, PieceMetadata>();
+    return new Map<string, PieceMetadata>();
+  }, [kitStore, designStore, designScope]);
+  return useComputedValue(key, deps, compute, emptyMap);
 }
 
 /**
@@ -4518,6 +4551,10 @@ export function useFlatPieceCenter(id?: Guid): Coord {
  *
  **/
 export function useIsConnectedPiece(id?: Guid): boolean {
+  const meta = usePieceMetadata(id);
+  return meta?.parentPieceId !== null && meta?.parentPieceId !== undefined;
+}
+
 /**
  * Hook returning the nesting depth of a piece in the hierarchy.
  *
@@ -4538,10 +4575,12 @@ export function useFixedPieceId(id?: Guid): string | undefined {
   return meta?.fixedPieceId;
 }
 
-/** useParentPieceId holds the data fields for a useParentPieceId record.
+/**
+ * Hook returning the parent piece ID of a given piece.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖piece🛠️useparentpieceid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Piece/d/i/useParentPieceId)
  **/
+export function useParentPieceId(id?: Guid): string | null {
   const meta = usePieceMetadata(id);
   return meta?.parentPieceId ?? null;
 }
@@ -4556,6 +4595,7 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
   const pieceGuid = (typeof id === "string" ? id : (pieceScope?.guid ?? null)) as string | null;
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
+  const subscribe = useCallback(
     (callback: () => void) => {
       if (!designStore) return () => {};
       return designStore.onConnectionsChanged((cb: () => void) => {
@@ -4648,6 +4688,7 @@ class GroupStore {
   }
   set name(name: string | undefined) {
     this.yGroup.set("name", name || "");
+  }
 
   get description(): string | undefined {
     return this.yGroup.get("description") as string | undefined;
@@ -4687,7 +4728,9 @@ class GroupStore {
     };
     const currentHash = this.hash(currentData);
     if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
       this.cacheHash = currentHash;
+    }
 
     return this.cache;
   };
@@ -4832,6 +4875,7 @@ class SideStore {
     }
 
     return this.cache;
+  };
 
   id = (): string => {
     return this.piece;
@@ -4943,7 +4987,9 @@ class ConnectionStore {
   }
 
   get guid(): string {
+    return this.yConnection.get("guid") as string;
   }
+  set guid(guid: string) {
     this.yConnection.set("guid", guid);
   }
 
@@ -5254,6 +5300,7 @@ class StatStore {
       this.cacheHash = currentHash;
     }
     return this.cache;
+  }
 
   change = (diff: StatDiff) => {
     if (diff.guid !== undefined) this.guid = diff.guid;
@@ -5826,12 +5873,12 @@ export class DesignStore {
 
     if (diff.layers !== undefined) {
       if (diff.layers.removed) {
+        diff.layers.removed.forEach((layerId) => {
           const guid = layerId.guid;
           this.layers.delete(guid);
           const yLayers = this.yDesign.get("layers") as Y.Array<YLayer>;
-            const index = yLayers.toArray().findIndex((yLayer) => (yLayer as Y.Map<unknown>).get("guid") === guid);
-            if (index >= 0) yLayers.delete(index, 1);
-          }
+          const index = yLayers.toArray().findIndex((yLayer) => (yLayer as Y.Map<unknown>).get("guid") === guid);
+          if (index >= 0) yLayers.delete(index, 1);
         });
       }
       if (diff.layers.updated) {
@@ -5929,13 +5976,14 @@ export class DesignStore {
       if (diff.attributes && typeof diff.attributes === "object" && ("added" in diff.attributes || "removed" in diff.attributes || "updated" in diff.attributes)) {
         if (diff.attributes.removed) {
           diff.attributes.removed.forEach((attrId) => {
-                return yMap.get("guid") === guid;
-              });
-              if (yAttrIndex !== -1) {
-                this.yAttributes.delete(yAttrIndex, 1);
-              }
-              this.attributes.delete(guid);
+            const guid = attrId.guid;
+            const yAttrIndex = this.yAttributes.toArray().findIndex((yMap) => {
+              return (yMap as Y.Map<unknown>).get("guid") === guid;
+            });
+            if (yAttrIndex !== -1) {
+              this.yAttributes.delete(yAttrIndex, 1);
             }
+            this.attributes.delete(guid);
           });
         }
         if (diff.attributes.updated) {
@@ -5959,6 +6007,7 @@ export class DesignStore {
           }
         }
       }
+    }
 
     this.cache = undefined;
     this.cacheHash = undefined;
@@ -6046,6 +6095,9 @@ export class DesignStore {
     const subscribers = this.pathSubscribers.get(pathKey)!;
     subscribers.add(subscriberCallback);
     return () => {
+      subscribers.delete(subscriberCallback);
+    };
+  };
 
   getPathSnapshot = (path: YPath): any => {
     return getValueAtPath(this.yDesign, path);
@@ -6099,6 +6151,8 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string):
 
 /**
  * Hook for accessing design data with optional selector.
+ **/
+export function useDesign<T = Design>(selector?: (design: Design) => T, deep?: boolean, id?: string): T | Design | DesignShallow | null {
   const designScope = useDesignScope();
   const designGuid = designScope?.guid ?? id;
   const store = useDesignStore(identitySelector, designGuid ?? undefined) as DesignStore | null;
@@ -6125,6 +6179,7 @@ const EMPTY_CONNECTIONS: Connection[] = [];
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design🛠️usepieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/usePieces)
  **/
+export function usePieces(): Piece[] {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
   const subscribe = useCallback(
@@ -6270,6 +6325,7 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
       };
     });
   }, [pieceIds, piecesMap, includedDesignMap]);
+}
 
 /**
  * Hook returning replaceable types for the specified pieces with optional variant filtering.
@@ -7125,6 +7181,8 @@ export class KitStore {
       updatedAt: this.updatedAt.toISOString(),
     };
     const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
       this.cache = currentData;
       this.cacheHash = currentHash;
     }
@@ -7289,6 +7347,7 @@ export class KitStore {
             const folderStore = this.folders.get(folder.guid);
             if (folderStore) {
               folderStore.change(folderDiff);
+            }
           });
         }
         if (diff.folders.removed) {
@@ -7329,6 +7388,7 @@ export class KitStore {
               const index = Array.from(this.yQualities).findIndex((yQuality: any) => {
                 const yMap = yQuality[0] as Y.Map<any>;
                 return yMap.get("guid") === guid;
+              });
               if (index !== -1) {
                 this.yQualities.delete(index, 1);
               }
@@ -7664,6 +7724,7 @@ export class KitStore {
       register: this.registerCommand.bind(this),
     };
   }
+}
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️kitscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/KitScope)
 /**
@@ -8431,6 +8492,7 @@ export const kitCommands = {
     };
   },
   "semio.kit.moveToFolder": (context: KitCommandContext, artifactGuid: Guid, artifactKind: "type" | "design" | "quality" | "file" | "folder", folderGuid?: Guid): KitCommandResult => {
+    switch (artifactKind) {
       case "type": {
         const type = context.kit.types?.find((t) => t.guid === artifactGuid);
         if (!type) throw new Error(`Type ${artifactGuid} not found`);
@@ -8438,6 +8500,7 @@ export const kitCommands = {
       }
       case "design": {
         const design = context.kit.designs?.find((d) => d.guid === artifactGuid);
+        if (!design) throw new Error(`Design ${artifactGuid} not found`);
         if (design.parent) throw new Error("Only protodesigns (designs without parent) can be moved to folders");
         const folderDiff = { folder: folderGuid };
         return { diff: { designs: { updated: [{ design: { guid: artifactGuid }, diff: folderDiff }] } } };
@@ -8453,7 +8516,10 @@ export const kitCommands = {
       case "folder": {
         return { diff: { folders: { updated: [{ folder: { guid: artifactGuid }, diff: parentDiff }] } } };
       }
+      default:
+        throw new Error(`Unknown artifact kind: ${artifactKind}`);
     }
+  },
   "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {
     (async () => {
       try {
@@ -8632,9 +8698,11 @@ export const kitCommands = {
             },
           ],
         },
+      },
     };
   },
   "semio.kit.addConnection": (context: KitCommandContext, guid: Guid, connection: Connection): KitCommandResult => {
+    return {
       diff: {
         designs: {
           updated: [
@@ -8652,6 +8720,7 @@ export const kitCommands = {
       diff: {
         designs: {
           updated: [
+            {
               design: { guid },
               diff: { connections: { added: connections } },
             },
@@ -8672,9 +8741,11 @@ export const kitCommands = {
               design: { guid },
               diff: { connections: { removed: [{ guid: connection.guid }] } },
             },
+          ],
         },
       },
     };
+  },
   "semio.kit.removeConnections": (context: KitCommandContext, guid: Guid, connectionGuids: Guid[]): KitCommandResult => {
     return {
       diff: {
@@ -9883,6 +9954,7 @@ export const sketchpadMachine = setup({
     "DESIGN.INIT": {
       target: ".navigation.design",
       actions: "designInit",
+    },
     "TYPE.INIT": {
       target: ".navigation.type",
       actions: "typeInit",
@@ -10424,6 +10496,7 @@ export const createQualityAppSelector = (kitGuid: Guid, qualityGuid: Guid) => {
     }
     return app;
   };
+};
 
 /**
  * Creates a selector for the quality panel visibility.
@@ -10630,6 +10703,7 @@ export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
   const match = path.match(/\/kit\/([^/]+)/);
   return match ? match[1] : undefined;
+};
 /**
  * Selector extracting the active design guid from the navigation path.
  *
@@ -10637,6 +10711,7 @@ export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
  **/
 export const selectUiActiveDesignGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
+  const match = path.match(/\/design\/([^/]+)/);
   return match ? match[1] : undefined;
 };
 /**
@@ -10677,6 +10752,7 @@ export const selectUiIsInKit = selectIsInKit;
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🪨selectuiisindesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/d/i/selectUiIsInDesign)
  **/
 export const selectUiIsInDesign = selectIsInDesign;
+/**
  * Selector alias for checking type navigation.
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🪨selectuiisintype](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/d/i/selectUiIsInType)
  **/
@@ -10904,13 +10980,16 @@ export function selectPanelSizes(context: SketchpadContext): PanelSizes {
   return context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
 }
 
+/**
  * Legacy selector returning the kit guid from kit context.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖legacytypeexports🛠️selectkitguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Legacy%20Type%20Exports/d/i/selectKitGuid)
  **/
+export function selectKitGuid(context: KitContext): Guid {
   return context.yKit.get("guid") as Guid;
 }
 
+/**
  * Legacy selector returning the kit name from kit context.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖legacytypeexports🛠️selectkitname](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Legacy%20Type%20Exports/d/i/selectKitName)
@@ -10951,6 +11030,7 @@ export type SketchpadActorRef = ActorRefFrom<typeof sketchpadMachine>;
  **/
 export type SketchpadSnapshot = SnapshotFrom<typeof sketchpadMachine>;
 
+/**
  * State type alias for the sketchpad context.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖actortypes🛠️sketchpadstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Actor%20Types/d/i/SketchpadState)
@@ -11298,6 +11378,7 @@ export function useConnectionStatus(): DiffStatus {
 
   for (const designUpdate of kitDiff.designs.updated) {
     if (designUpdate.diff.connections?.added) {
+      for (const conn of designUpdate.diff.connections.added) {
         if (conn.guid === connection.guid) {
           return DiffStatus.Added;
         }
@@ -11305,6 +11386,7 @@ export function useConnectionStatus(): DiffStatus {
     }
     if (designUpdate.diff.connections?.removed) {
       for (const removedConn of designUpdate.diff.connections.removed) {
+        if (removedConn.guid === connection.guid) {
           return DiffStatus.Removed;
         }
       }
@@ -11590,6 +11672,7 @@ export function useConnectionColor(): { stroke: string; fill: string } {
           }
         }
       }
+    }
   }
 
   const stroke = diffStatus === DiffStatus.Added ? "#00ff00" : diffStatus === DiffStatus.Removed ? "#ff0000" : diffStatus === DiffStatus.Modified ? "#ffff00" : "#ffffff";
@@ -13678,6 +13761,7 @@ export class SketchpadStore {
                   return concept;
                 })
               : conceptGuids?.map((g) => ({ guid: g, name: g }));
+          const kit: Partial<Kit> = {
             guid: yKit.get("guid") as string,
             name: yKit.get("name") as string,
             version: yKit.get("version") as string,
@@ -14041,6 +14125,7 @@ export function useActiveInteraction(): string | undefined {
  **/
 export function useIsMobile(): boolean {
   return useSketchpad((s) => s.isMobile) as boolean;
+}
 
 /**
  * Hook returning the navigation history with forward and back capabilities.
@@ -14547,6 +14632,7 @@ export function usePanelSizes(): PanelSizes {
   return useSketchpad((state) => state.panelSizes) as PanelSizes;
 }
 
+/**
  * Hook returning the current settings.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️usesettings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/useSettings)
@@ -14759,6 +14845,7 @@ export function useNavigate() {
   );
 }
 
+/**
  * Hook returning memoized sketchpad command dispatchers.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️usesketchpadcommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/useSketchpadCommands)
@@ -15043,6 +15130,7 @@ export const commands = {
           navigation: navigationHistory[newIndex],
           navigationHistoryIndex: newIndex,
         },
+      };
     }
     return {};
   },
@@ -15068,6 +15156,7 @@ export const commands = {
   "semio.sketchpad.resetHotkey": (context: SketchpadCommandContext, path: string): SketchpadCommandResult => {
     const overrides = { ...context.sketchpad.hotkeyOverrides };
     delete overrides[path];
+    return {
       diff: { hotkeyOverrides: overrides },
     };
   },
@@ -15218,6 +15307,7 @@ class AppRegistry {
       this.cachedApps = Array.from(this.apps.values()).sort((a, b) => (a.order || 0) - (b.order || 0));
     }
     return this.cachedApps;
+  }
 
   getAppForPath(pathParts: string[]): AppRegistration | undefined {
     const matches = this.getAllApps().filter((app) => app.matchesPath && app.matchesPath(pathParts));
@@ -15334,6 +15424,7 @@ export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }, []);
 
   const triggerFocusItem = useCallback((itemId: string) => {
+    if (onFocusItemCallbackRef.current) {
       onFocusItemCallbackRef.current(itemId);
     }
   }, []);
@@ -15434,6 +15525,7 @@ export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
   const sections = context.sections[panelKey];
   return sections;
 };
+/**
  * Hook returning a callback to add a section to a panel.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖navbar🪨useaddpanelsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Navbar/d/i/useAddPanelSection)
@@ -15489,6 +15581,7 @@ interface SidePanelTabContextValue {
  **/
 const SidePanelTabContext = createContext<SidePanelTabContextValue | null>(null);
 
+export const SidePanelTabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sidePanelTabs, setSidePanelTabs] = useState<SidePanelTabsState>({ left: [], right: [] });
   const [activeLeftTabId, setActiveLeftTabId] = useState<string | undefined>(undefined);
   const [activeRightTabId, setActiveRightTabId] = useState<string | undefined>(undefined);
@@ -15536,6 +15629,7 @@ export const useSidePanelTabs = (position: "left" | "right"): SidePanelTab[] => 
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sidepaneltabs🪨useaddsidepaneltab](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/SidePanel%20Tabs/d/i/useAddSidePanelTab)
  **/
+export const useAddSidePanelTab = () => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useAddSidePanelTab must be used within SidePanelTabProvider");
   return context.addSidePanelTab;
@@ -15662,6 +15756,7 @@ export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => {
     };
   }, []);
   return <OriginContext.Provider value={storeRef.current}>{children}</OriginContext.Provider>;
+};
 
 /**
  * Hook returning a callback that resolves the current origin string.
@@ -15702,6 +15797,7 @@ interface FooterItemContextValue {
   items: FooterItem[];
   addItem: (item: FooterItem) => void;
   removeItem: (itemId: string) => void;
+}
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖footeritems🪨footeritemcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Footer%20Items/d/i/FooterItemContext)
 /**
@@ -15864,6 +15960,7 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
  * Component rendering a tool group with mode selection popover.
  *
  *  * [👤semio📚js🗃️sketchpad💻sketchpad🔖toolgroup🪨toolgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/ToolGroup/d/i/ToolGroup)
+ **/
 export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange }) => {
   const getActiveToolDefinition = () => {
     for (const tool of tools) {
@@ -15878,6 +15975,10 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
   const activeToolDef = getActiveToolDefinition();
   const currentTool = activeToolDef?.tool || tools[0];
   const currentMode = activeToolDef?.mode || currentTool.modes[0];
+
+  const handleToolClick = (tool: (typeof tools)[0]) => {
+    if (tool.modes.length === 1) {
+      onToolChange(tool.modes[0].id);
     } else {
       const currentIndex = tool.modes.findIndex((m) => m.id === activeTool);
       const nextIndex = currentIndex >= 0 && currentIndex < tool.modes.length - 1 ? currentIndex + 1 : 0;
@@ -15899,12 +16000,14 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
 
         if (tool.modes.length > 1) {
           return (
+            <Toggle
               key={tool.id}
               kind="dropdown"
               id={`semio.sketchpad.tool.${tool.id}`}
               items={tool.modes.map((mode) => ({
                 value: mode.id,
                 label: mode.icon || mode.label || mode.id,
+              }))}
               value={activeMode.id}
               onValueChange={handleModeSelect}
               pressed={isActive}
@@ -15929,10 +16032,9 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖dragdrop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/DragDrop)
 // Context provider for drag-and-drop type placement interactions.
 
-/** DragDropContextValue holds the data fields for a DragDropContextValue record.
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖dragdrop✂️dragdropcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/DragDrop/d/i/DragDropContextValue)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖dragdrop✂️dragdropcontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/DragDrop/d/i/DragDropContextValue)
+ * Interface for drag-and-drop context value.
  **/
 interface DragDropContextValue {
   activeDraggedType: Type | null;
@@ -15941,11 +16043,11 @@ interface DragDropContextValue {
   setActiveDraggedDesign: (design: Design | null) => void;
 }
 
-/** DragDropContext holds the data fields for a DragDropContext record.
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖dragdrop🪨dragdropcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/DragDrop/d/i/DragDropContext)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖dragdrop🪨dragdropcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/DragDrop/d/i/DragDropContext)
+ * React context for drag-and-drop type and design state.
  **/
+const DragDropContext = createContext<DragDropContextValue | null>(null);
 
 /**
  * React context provider for drag-and-drop type and design placement.
@@ -16890,7 +16992,17 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     breadcrumbItems.push({
       id: "semio.sketchpad.navbar.breadcrumb.qualities",
       content: (
-        </a>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigate(`/kits/${kitGuid}?kind=qualities`);
+          }}
+          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
+        >
+          Qualities
+        </button>
       ),
     });
     breadcrumbItems.push({
@@ -17655,6 +17767,7 @@ export const LayoutCanvas: FC<{
         const findAllItems = (item: any): any[] => {
           const items = [item];
           if (item.contentItems && Array.isArray(item.contentItems)) {
+            item.contentItems.forEach((child: any) => {
               items.push(...findAllItems(child));
             });
           }
@@ -17728,6 +17841,7 @@ export const LayoutCanvas: FC<{
         const goldenLayoutModule = await import("golden-layout");
         const GoldenLayout = (goldenLayoutModule as any).GoldenLayout;
 
+        if (!GoldenLayout || typeof GoldenLayout !== "function") {
           console.error("GoldenLayout is not a constructor", { goldenLayoutModule, GoldenLayout });
           return;
         }

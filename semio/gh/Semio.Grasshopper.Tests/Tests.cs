@@ -21,6 +21,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
+using Grasshopper.Kernel.Types;
 using Grasshopper.Rhinoceros.Model;
 using Grasshopper.Rhinoceros.Model.Params;
 using Rhino.FileIO;
@@ -236,6 +237,45 @@ public class ModelObjectToGroupComponentTests
         Assert.Single(component.Params.Output);
         Assert.Equal("Gr", component.Params.Output[0].NickName);
         Assert.IsType<Param_Group>(component.Params.Output[0]);
+    }
+
+    [Fact]
+    public void BuildNativeRhinoGeometryGroup_ShouldKeepUnlayeredImportedObjectsAsFlatGeometryItems()
+    {
+        var model = new File3dm();
+        const int expectedObjectCount = 459;
+        for (var index = 0; index < expectedObjectCount; index++)
+        {
+            var unlayeredAttributes = new Rhino.DocObjects.ObjectAttributes { LayerIndex = -1 };
+            model.Objects.AddPoint(new Point3d(index, 0, 0), unlayeredAttributes);
+        }
+
+        var file = new Semio.File
+        {
+            Guid = "unlayered-import",
+            Name = "unlayered.3dm",
+            Blob = Convert.ToBase64String(model.ToByteArray())
+        };
+
+        var importedRhinoObjects = Utility.ImportRhinoDocumentObjectsFromSemioFile(file);
+        Assert.Equal(expectedObjectCount, importedRhinoObjects.Count);
+
+        var resolvedContexts = new List<Utility.RhinoModelObject>();
+        foreach (var importedRhinoObject in importedRhinoObjects)
+        {
+            var didResolve = Utility.TryResolveRhinoModelContext(new ModelObject(importedRhinoObject), out var resolvedContext);
+            Assert.True(didResolve);
+            Assert.NotNull(resolvedContext.ModelObject);
+            resolvedContexts.Add(resolvedContext);
+        }
+
+        var buildNativeGroupMethod = typeof(ModelObjectToGroupComponent)
+            .GetMethod("BuildNativeRhinoGeometryGroup", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(buildNativeGroupMethod);
+
+        var nativeGroup = Assert.IsType<GH_GeometryGroup>(buildNativeGroupMethod!.Invoke(null, new object[] { resolvedContexts }));
+        Assert.Equal(0, nativeGroup.Objects.Count(geometryItem => geometryItem is GH_GeometryGroup));
+        Assert.Equal(expectedObjectCount, nativeGroup.Objects.Count(geometryItem => geometryItem is not GH_GeometryGroup));
     }
 }
 #endregion 🔖ModelObjectToGroupComponentTests

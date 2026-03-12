@@ -543,6 +543,8 @@ const SettingsContent: FC = () => {
 // [👤semio📚js🗃️sketchpad💻hometsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/FOOTER)
 // Footer component MUST manage Home app footer items.
 
+const HomeFooter: FC = () => {
+  const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
 
@@ -656,6 +658,12 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   return (
+    <div
+      className="relative h-full w-full"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {children}
       {isDragging && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm">
@@ -1590,6 +1598,8 @@ const HomeTableContent: FC = () => {
         data={rows}
         onRowClick={(row, _, e) => {
           const isDocsRow = row.type === "docs";
+          if (isDocsRow && row.docsPath) {
+            navigate(`/${row.docsPath}`);
           } else if (row.kit) {
             handleRowClick(row.kit.guid, e);
           }

@@ -208,7 +208,9 @@ const LevelContext = React.createContext<Level>("base");
 export const LevelProvider: React.FC<{
   level: Level;
   children: React.ReactNode;
+}> = ({ level, children }) => {
   return <LevelContext.Provider value={level}>{children}</LevelContext.Provider>;
+};
 
 /**
  * Hook returning the current UI depth level.
@@ -379,7 +381,9 @@ export const getLevelBorderElementClass = (level: Level): string => {
  **/
 export const getLevelDivideElementClass = (level: Level): string => {
   switch (level) {
+    case "window":
       return "divide-hover-window";
+    case "panel":
       return "divide-hover-panel";
     case "overlay":
       return "divide-hover-overlay";
@@ -483,6 +487,8 @@ function CommandGroup({ className, ...props }: React.ComponentProps<typeof Comma
     />
   );
 }
+
+function CommandSeparator({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
   return <CommandPrimitive.Separator data-slot="command-separator" className={cn("bg-border -mx-single h-px", className)} {...props} />;
 }
 
@@ -595,6 +601,7 @@ export interface LayoutProps {
   rightSidePanel?: SidePanelProps;
   canvas: React.ReactNode;
   toolbar?: React.ReactNode;
+  className?: string;
 }
 
 const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, canvas, toolbar, className = "" }) => (
@@ -881,6 +888,8 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const tutorialLabel = useLabel("tooltip.tutorial");
   const value = t(id as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
+  const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
+  const label = typeof value === "string" ? value : typeof value === "object" && value?.label ? value.label : undefined;
 
   let hotkey: string | undefined;
   if (typeof value === "object" && value?.hotkey) {
@@ -899,7 +908,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;
   const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;
 
-  const displayText = label;
+  const hasLinks = showManual || showTutorial || hotkey;
 
   const handleHotkeyClick = () => {
     window.dispatchEvent(
@@ -911,6 +920,8 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
 
   return (
     <div className="flex flex-col gap-single">
+      {label && <span className="text-sm">{label}</span>}
+      {hasLinks ? (
         <div className="flex w-full items-center border-t border-accent-foreground pt-single gap-single">
           {showManual && fullManualPath && (
             <Link to={fullManualPath} className="flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary">
@@ -949,9 +960,13 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
  **/
 interface LabelProps {
   id: string;
+  labelElementId?: string;
+  className?: string;
   children: React.ReactNode;
-// Label holds the data fields for a Label record.
+}
+
 // [👤semio📚js🗃️sketchpad💻elements🔖basecomponents🪨label](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
+function Label({ id, labelElementId, className, children }: LabelProps) {
   const label = useLabel(id);
   const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
   const treeLabelCellPaddingLeft = `${detailPanelIndentPx(level) + 20}px`;
@@ -1026,12 +1041,14 @@ function SemioTooltip({ children, config }: SemioTooltipProps) {
  * IdSemioTooltipProps holds the data fields for a IdSemioTooltipProps record.
  **/
 interface IdSemioTooltipProps {
+  id: string;
+  children: React.ReactNode;
 }
-// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🛠️idsemiotooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/d/i/IdSemioTooltip)
+
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🪨idsemiotooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/d/i/IdSemioTooltip)
- * IdSemioTooltip holds the data fields for a IdSemioTooltip record.
  **/
+function IdSemioTooltip({ id, children }: IdSemioTooltipProps) {
   const mode = useTooltipMode();
   if (mode === Expertise.EXPERT) return children;
   return (
@@ -1161,8 +1178,10 @@ AvatarFallback.displayName = "AvatarFallback";
 export interface DraggableAvatarProps {
   content: string;
   isSelected?: boolean;
+  isHovered?: boolean;
   shouldFade?: boolean;
   title?: string;
+  dragRef?: (element: HTMLElement | null) => void;
   dragListeners?: any;
   dragAttributes?: any;
   onClick?: () => void;
@@ -1247,12 +1266,12 @@ export interface TableAvatarProps {
  *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar🪨tableavatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar/d/i/TableAvatar)
  **/
 export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle }) => {
-  const normalizedName = nameStr.trim();
+  const normalizedName = (name ?? "").trim();
   const initials = normalizedName
     ? normalizedName
         .split(" ")
         .slice(0, 2)
-        .map((word) => word.charAt(0))
+        .map((word: string) => word.charAt(0))
         .join("")
         .toUpperCase()
         .substring(0, 2)
@@ -1318,8 +1337,11 @@ export const Card: React.FC<CardProps> = ({ title, icon, children, className = "
  **/
 export interface CardGridProps {
   stagger?: boolean;
+  className?: string;
   children: React.ReactNode;
- * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card🪨cardgrid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card/d/i/CardGrid)
+}
+
+/** [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card🪨cardgrid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card/d/i/CardGrid)
  **/
 export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, className = "" }) => {
   return <div className={`grid grid-cols-1 md:grid-cols-2 gap-medium my-medium ${className}`}>{children}</div>;
@@ -1347,10 +1369,6 @@ export interface SpinnerProps {
  * Animated SVG loading spinner.
  *
  *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖spinner🪨spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Spinner/d/i/Spinner)
-/**
-// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖spinner🪨spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Spinner/d/i/Spinner)
-/**
- * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖spinner🪨spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Spinner/d/i/Spinner)
  **/
 export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "" }) => {
   const sizeClass = size === "small" ? "size-small" : size === "large" ? "size-large" : "size-medium";
@@ -1358,6 +1376,8 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
     <svg className={`animate-spin ${sizeClass} ${className}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
+  );
 };
 
 // #endregion Spinner
@@ -1400,6 +1420,7 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
         </button>
       )}
     </div>
+  );
 };
 
 // #endregion NotFound
@@ -1435,6 +1456,7 @@ export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = 
       {icon && <span className="shrink-0">{icon}</span>}
       <span className="flex-1 truncate">{name}</span>
     </div>
+  );
 };
 
 // #endregion LoadingRow
@@ -1456,7 +1478,9 @@ export interface DiagramNodeProps {
   hovered?: boolean;
   isPlaceholder?: boolean;
   showTopHandle?: boolean;
+  showBottomHandle?: boolean;
   className?: string;
+  onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   onClick?: () => void;
 }
@@ -1529,13 +1553,18 @@ function HoverCardTrigger({ className, ...props }: React.ComponentProps<typeof H
  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖hovercard🛠️hovercardcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/HoverCard/d/i/HoverCardContent)
  **/
 function HoverCardContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
+  return (
     <HoverCardPrimitive.Portal data-slot="hover-card-portal">
+      <HoverCardPrimitive.Content
         data-slot="hover-card-content"
         align={align}
         sideOffset={sideOffset}
         className={cn(
           "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
           className,
+        )}
+        {...props}
+      />
     </HoverCardPrimitive.Portal>
   );
 }
@@ -1554,11 +1583,13 @@ export { HoverCard, HoverCardContent, HoverCardTrigger };
  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖hovercard🛠️cursor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/HoverCard/d/i/Cursor)
  * CursorProps holds the data fields for a CursorProps record.
  **/
+interface CursorProps {
   color: string;
   x?: number;
+  y?: number;
 }
-// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖icons🪨cursor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Icons/d/i/Cursor)
-// Cursor holds the data fields for a Cursor record.
+
+/**
  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖icons🪨cursor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Icons/d/i/Cursor)
  **/
 const Cursor: React.FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
@@ -1577,6 +1608,8 @@ const Cursor: React.FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
       xmlns="http://www.w3.org/2000/svg"
     >
       <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill={color} />
+    </svg>
+  );
 };
 
 export { Cursor };
@@ -1601,8 +1634,6 @@ export interface SectionProps {
   className?: string;
 }
 
-/** Section holds the data fields for a Section record.
-// [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖section🪨section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Section/d/i/Section)
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖section🪨section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Section/d/i/Section)
  **/
@@ -1615,6 +1646,8 @@ const Section: React.FC<SectionProps> = ({ id, title, children, className = "" }
         </h2>
       )}
       <div>{children}</div>
+    </section>
+  );
 };
 
 export { Section };
@@ -1641,7 +1674,9 @@ export interface StepsProps {
  * Ordered step list container rendering numbered children.
  *
  *  * [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖steps🪨steps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Steps/d/i/Steps)
+ **/
 export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
+  return <ol className={`flex flex-col gap-medium ${className}`}>{children}</ol>;
 };
 
 // #endregion Steps
@@ -1973,10 +2008,12 @@ function ButtonGroup({ className, id, showLabel, children, ...props }: ButtonGro
   const divideClass = getLevelDivideElementClass(level);
   const buttonGroupElement = (
     <div data-slot="button-group" id={id} data-level={level} className={cn("group/button-group flex w-fit shrink-0 items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)} {...props}>
+      {children}
     </div>
   );
 
   if (showLabel && id) {
+    return (
       <Label id={id} labelElementId={`${id}-label`}>
         {buttonGroupElement}
       </Label>
@@ -2063,7 +2100,8 @@ type ButtonProps = React.ComponentProps<"button"> &
  **/
 interface ButtonCycleItem<T extends string> {
   value: T;
-  label: React.ReactNode;
+  label: string;
+  icon?: React.ReactNode;
   text?: string;
   id?: string;
 }
@@ -2110,7 +2148,11 @@ function ButtonCycle<T extends string = string>({ className, id, showLabel, valu
   };
 
   return (
-    <ButtonGroup showLabel={showLabel} className={className}>
+    <ButtonGroup id={id} showLabel={showLabel} className={className}>
+      <ButtonGroupItem id={id} onClick={handleCycle} text={currentItem?.label} {...props}>
+        {currentItem?.icon}
+      </ButtonGroupItem>
+    </ButtonGroup>
   );
 }
 
@@ -2206,6 +2248,7 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
                 </CommandItem>
               ))}
             </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
@@ -2216,6 +2259,8 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
       <Label id={id} labelElementId={`${id}-label`} className={cn("h-medium", className)}>
         {comboboxElement}
       </Label>
+    );
+  }
 
   return comboboxElement;
 };
@@ -2385,6 +2430,7 @@ function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ..
     return findValue(React.Children.toArray(children));
   }, [children]);
 
+  const handleOpenChange = (open: boolean) => {
     if (open) {
       transaction?.start?.();
     } else {
@@ -2395,6 +2441,7 @@ function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ..
 
   const selectElement = (
     <SelectPrimitive.Root
+      onOpenChange={handleOpenChange}
       data-slot="select"
       {...(value !== null && value !== undefined ? { value } : defaultValue !== null && defaultValue !== undefined ? { defaultValue } : fallbackValue !== undefined ? { defaultValue: fallbackValue } : {})}
       {...props}
@@ -2560,8 +2607,8 @@ function SelectScrollDownButton({ className, ...props }: React.ComponentProps<ty
 
 /**
  * ChevronUpIcon holds the data fields for a ChevronUpIcon record.
-// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🪨chevronupicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/ChevronUpIcon)
-// ChevronUpIcon holds the data fields for a ChevronUpIcon record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select🪨chevronupicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/ChevronUpIcon)
+ **/
 const ChevronUpIcon = ChevronDownIconAlt;
 
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue };
@@ -2619,6 +2666,7 @@ function Slider({
   const findNearestSnapValue = React.useCallback(
     (val: number): number => {
       if (!snapValues || snapValues.length === 0) return val;
+      let nearest = snapValues[0];
       let minDistance = Math.abs(val - nearest);
       for (const snapValue of snapValues) {
         const distance = Math.abs(val - snapValue);
@@ -2626,6 +2674,7 @@ function Slider({
           minDistance = distance;
           nearest = snapValue;
         }
+      }
       return nearest;
     },
     [snapValues],
@@ -2782,8 +2831,10 @@ function Slider({
       <Label id={id} labelElementId={`${id}-label`} className={className}>
         {sliderContent}
       </Label>
+    );
   }
 
+  return sliderContent;
 }
 
 export { Slider };
@@ -2811,6 +2862,7 @@ interface StepperProps extends ElementProps {
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
   interactionId?: string;
+  showLabel?: boolean;
 }
 
 /**
@@ -2818,7 +2870,7 @@ interface StepperProps extends ElementProps {
  *
  *  * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖stepper🪨stepper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Stepper/d/i/Stepper)
  **/
-export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id }) => {
+export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel }) => {
   const transaction = useTransaction();
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
@@ -2855,6 +2907,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     [clampValue, onChange],
   );
 
+  const startContinuousChange = React.useCallback(
     (increment: number) => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -3022,10 +3075,20 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         disabled={!canStepUp}
         className={cn("flex h-[22px] w-[22px] cursor-pointer items-center justify-center border-l hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
+        <AddIcon className="size-[10px]" />
       </button>
     </div>
+  );
 
-  return <Label id={id}>{stepperElement}</Label>;
+  if (showLabel && id) {
+    return (
+      <Label id={id} labelElementId={labelElementId}>
+        {stepperElement}
+      </Label>
+    );
+  }
+
+  return stepperElement;
 };
 
 // #endregion Stepper
@@ -3042,13 +3105,14 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
  **/
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;
+  value?: string | number | readonly string[];
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onLazyChange?: (value: string) => void;
   showLabel?: boolean;
   placeholderId?: string;
+  readOnly?: boolean;
+}
 
-/** Textarea holds the data fields for a Textarea record.
-// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖textarea🛠️textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Textarea/d/i/Textarea)
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖textarea🪨textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Textarea/d/i/Textarea)
  **/
@@ -3126,8 +3190,10 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
       <Label id={id} labelElementId={`${id}-label`} className="items-start">
         {textareaElement}
       </Label>
+    );
   }
 
+  return textareaElement;
 }
 
 export { Textarea };
@@ -3224,10 +3290,7 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   onOpenChange?: (open: boolean) => void;
 }
 
- * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle✂️toggleprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/ToggleProps)
- * ToggleProps holds the data fields for a ToggleProps record.
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle✂️toggleprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/ToggleProps)
-// ToggleProps holds the data fields for a ToggleProps record.
 type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleWithActionProps | ToggleDropdownProps<T>;
 
 export type { ToggleProps };
@@ -3360,12 +3423,12 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
   return toggleGroupItemElement;
 }
 
+/**
  * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup🪨addiconsize](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup/d/i/addIconSize)
- * addIconSize holds the data fields for a addIconSize record.
  **/
 const addIconSize = (element: React.ReactNode): React.ReactNode => {
   if (React.isValidElement(element)) {
-
+    const existingClassName = (element.props as any).className || "";
     if (!existingClassName.includes("size-")) {
       return React.cloneElement(element, {
         className: cn(existingClassName, "size-small"),
@@ -3424,6 +3487,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       dropdownContentClassName,
       open: controlledOpen,
       onOpenChange,
+      onValueChange,
     } = dropdownProps;
     const [internalValue, setInternalValue] = React.useState<T | undefined>(defaultValue);
     const [internalOpen, setInternalOpen] = React.useState(false);
@@ -3433,9 +3497,11 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const selectedItem = items.find((item) => item.value === value) || items[0];
     const isOpenControlled = controlledOpen !== undefined;
     const open = isOpenControlled ? controlledOpen : internalOpen;
+    const setOpen = (nextOpen: boolean) => {
       if (!isOpenControlled) {
         setInternalOpen(nextOpen);
       }
+      onOpenChange?.(nextOpen);
     };
 
     const handleSelect = (itemValue: string) => {
@@ -3517,6 +3583,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
           id: selectedItem.id,
         },
+      ],
     };
 
     if (isPressedControlled) {
@@ -3546,6 +3613,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         },
       ]}
     />
+  );
 }
 export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 
@@ -3810,10 +3878,16 @@ function AccordionTrigger({ className, children, ...props }: React.ComponentProp
   );
 }
 
+/**
+ * AccordionContent wraps collapsible accordion body content.
  **/
 function AccordionContent({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Content>) {
   return (
-    <AccordionPrimitive.Content data-slot="accordion-content" className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm" {...props}>
+    <AccordionPrimitive.Content data-slot="accordion-content" className={cn("data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm", className)} {...props}>
+      <div className="pb-4 pt-0">{children}</div>
+    </AccordionPrimitive.Content>
+  );
+}
 
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
 
@@ -3842,14 +3916,8 @@ function CollapsibleTrigger({ className, ...props }: React.ComponentProps<typeof
 }
 
 /**
- * CollapsibleContent holds the data fields for a CollapsibleContent record.
+ * [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖collapsible🛠️collapsiblecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Collapsible/d/i/CollapsibleContent)
  **/
- * CollapsibleContent holds the data fields for a CollapsibleContent record.
-// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🛠️collapsiblecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/d/i/CollapsibleContent)
-/**
- * CollapsibleContent holds the data fields for a CollapsibleContent record.
- **/
-// [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖collapsible🛠️collapsiblecontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Collapsible/d/i/CollapsibleContent)
 function CollapsibleContent({ ...props }: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleContent>) {
   return <CollapsiblePrimitive.CollapsibleContent data-slot="collapsible-content" {...props} />;
 }
@@ -3932,7 +4000,7 @@ function DialogContent({
         )}
         {...props}
       >
-        {children as React.ReactNode}
+        {(props as { children?: React.ReactNode }).children}
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
@@ -3963,8 +4031,13 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dialog-footer" className={cn("flex flex-col-reverse gap-single sm:flex-row sm:justify-end", className)} {...props} />;
 }
 
+/**
+ * DialogTitle holds the data fields for a DialogTitle record.
  **/
 function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  return <DialogPrimitive.Title data-slot="dialog-title" className={cn("text-lg font-semibold leading-none tracking-tight", className)} {...props} />;
+}
+
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖dialog🛠️dialogdescription](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog/d/i/DialogDescription)
  * DialogDescription holds the data fields for a DialogDescription record.
@@ -4014,6 +4087,8 @@ function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseE
 
   const handleMouseLeave: React.MouseEventHandler<HTMLDivElement> = (e) => {
     if (!isDragging) {
+      setIsHovered(false);
+    }
     externalOnMouseLeave?.(e as any);
   };
 
@@ -4034,6 +4109,8 @@ function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseE
       onMouseLeave={handleMouseLeave as any}
       {...(props as any)}
     />
+  );
+}
 
 export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 
@@ -4045,8 +4122,11 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 // Custom scrollable area built on Radix ScrollArea.
 // Consumers MUST wrap content in Scrollable.
 
-// Scrollable holds the data fields for a Scrollable record.
 // [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖scrollable🪨scrollable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Scrollable/d/i/Scrollable)
+const Scrollable = React.forwardRef<
+  React.ElementRef<typeof ScrollAreaPrimitive.Viewport>,
+  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }
+>(({ className, children, orientation = "vertical", ...props }, ref) => {
   return (
     <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
       <ScrollAreaPrimitive.Viewport
@@ -4056,6 +4136,7 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
           "focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0",
           orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
         )}
+      >
         {children}
       </ScrollAreaPrimitive.Viewport>
       {(orientation === "vertical" || orientation === "both") && <ScrollBar />}
@@ -4072,11 +4153,18 @@ Scrollable.displayName = "Scrollable";
  **/
 function ScrollBar({ className, orientation = "vertical", ...props }: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
   return (
+    <ScrollAreaPrimitive.ScrollAreaScrollbar
       data-slot="scroll-area-scrollbar"
       orientation={orientation}
+      className={cn(
+        "flex touch-none select-none transition-colors",
+        orientation === "vertical" && "h-full w-2.5 border-l border-l-transparent p-[1px]",
+        orientation === "horizontal" && "h-2.5 flex-col border-t border-t-transparent p-[1px]",
+        className,
+      )}
       {...props}
     >
-      <ScrollAreaPrimitive.ScrollAreaThumb data-slot="scroll-area-thumb" className="bg-border relative flex-1" />
+      <ScrollAreaPrimitive.ScrollAreaThumb data-slot="scroll-area-thumb" className="bg-border relative flex-1 rounded-full" />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   );
 }
@@ -4131,8 +4219,10 @@ function Band({ items, scrollable = true, className, id }: BandProps) {
         </div>
       ))}
     </div>
+  );
 
   if (scrollable)
+    return (
       <Scrollable orientation="horizontal" className={cn("border-b h-large", borderClass, bgClass, className)}>
         {itemsElement}
       </Scrollable>
@@ -4190,8 +4280,10 @@ function Strip({ items, scrollable = true, className, id }: StripProps) {
         </div>
       ))}
     </div>
+  );
 
   if (scrollable)
+    return (
       <Scrollable orientation="horizontal" className={cn("border-b h-medium", borderClass, bgClass, className)}>
         {itemsElement}
       </Scrollable>
@@ -4239,12 +4331,12 @@ function Navbar({ items, className }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   return (
-    <nav id="semio.sketchpad.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar", bgClass, className)}>
+    <nav id="semio.sketchpad.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar flex items-center", bgClass, className)}>
         {items.map((item, index) => (
           <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
+            {item.content}
           </div>
         ))}
-      </div>
     </nav>
   );
 }
@@ -4298,10 +4390,11 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
       )}
       {...props}
     />
+  );
 }
 
+/**
  * [👤semio📚js🗃️sketchpad💻elements🔖tabs🛠️tabscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs/d/i/TabsContent)
- * TabsContent holds the data fields for a TabsContent record.
  **/
 function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
   return <TabsPrimitive.Content data-slot="tabs-content" className={cn("flex-1 outline-none", className)} {...props} />;
@@ -4864,9 +4957,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const resolvedLabel = id ? useLabel(id) : label;
   if (sortable && sortableId) {
     return (
+      <SortableTreeItem
+        id={sortableId}
         label={resolvedLabel}
         icon={icon}
-        children={children}
         className={className}
         isSelected={isSelected}
         isHighlighted={isHighlighted}
@@ -4875,7 +4969,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         isLastItem={isLastItem}
         actions={actions}
         onDoubleClick={onDoubleClick}
-      />
+      >
+        {children}
+      </SortableTreeItem>
     );
   }
 
@@ -5249,7 +5345,9 @@ interface TreeFilesProps {
   className?: string;
 }
 
+const TreeFiles: React.FC<TreeFilesProps> = ({ title, nodes, currentPath, onNavigate, as = "a", className = "" }) => {
   return (
+    <TreeStateProvider>
       <div className={`not-prose my-medium p-medium rounded-lg border border-element bg-card ${className}`}>
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false, isTree: true }}>
@@ -5261,15 +5359,15 @@ interface TreeFilesProps {
         </TreeContext.Provider>
       </div>
     </TreeStateProvider>
+  );
 };
 
 Tree.Section = Tree.Files;
- * Alias for Tree.Files rendering a file tree from FileTreeNode data.
- *
- *
+
+/** Alias for Tree.Files rendering a file tree from FileTreeNode data.
  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨filetree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/FileTree)
  **/
-export const FileTree = Tree.Files;
+export const FileTree = TreeFiles;
 
 // #region ControlTree
 
@@ -5744,6 +5842,7 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
         <DropdownMenuPrimitive.Trigger asChild>
           <div>
             <Action id={id && !isOpen ? id : undefined} icon={icon} className="cursor-foldable" />
+          </div>
         </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
           <DropdownMenuPrimitive.Content align="center" sideOffset={8} className="bg-transparent backdrop-blur-sm w-auto overflow-hidden border p-single z-temporary">
@@ -5766,17 +5865,16 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
                     <DescriptionTooltipContent id={item.id} />
                   </TooltipContent>
                 </Tooltip>
+              ) : (
                 menuItem
               );
 
-                return (
-                  <React.Fragment key={index}>
-                    {wrappedItem}
-                    <DropdownMenuPrimitive.Separator className="h-px bg-border my-single" />
-                  </React.Fragment>
-                );
-              }
-              return wrappedItem;
+              return (
+                <React.Fragment key={index}>
+                  {wrappedItem}
+                  {index < options.length - 1 && <DropdownMenuPrimitive.Separator className="h-px bg-border my-single" />}
+                </React.Fragment>
+              );
             })}
           </DropdownMenuPrimitive.Content>
         </DropdownMenuPrimitive.Portal>
@@ -5801,9 +5899,8 @@ export interface PageNavigationLink {
   title: string;
   section?: string;
 }
- * Props interface for the PageNavigation component.
- *
- *  * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖pagenavigation🛠️pagenavigationprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/PageNavigation/d/i/PageNavigationProps)
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents🔖pagenavigation🛠️pagenavigationprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components/s/PageNavigation/d/i/PageNavigationProps)
  **/
 export interface PageNavigationProps {
   prev?: PageNavigationLink;
@@ -5823,6 +5920,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
 
   return (
     <div className="flex items-center justify-between border-t border-element pt-4 mt-8">
+      {prev ? (
         <Button id="semio.sketchpad.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single">
           <div className="text-left">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.previous")}</div>
@@ -5833,13 +5931,18 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
         <div />
       )}
       {next ? (
+        <Button id="semio.sketchpad.docs.navigation.next" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single">
           <div className="text-right">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.next")}</div>
             <div className="font-medium">{next.title}</div>
+          </div>
         </Button>
+      ) : (
         <div />
+      )}
     </div>
   );
+};
 
 export { PageNavigation };
 
@@ -5961,17 +6064,19 @@ const Panel: React.FC<PanelProps> = ({
   const borderClass =
     resizeSide === "left"
       ? isResizing || isResizeHovered
+        ? "border-l-accent"
         : "border-l"
       : resizeSide === "right"
-          ? "border-r-accent"
-          : "border-r"
-        : resizeSide === "top"
           ? isResizing || isResizeHovered
-            ? "border-t-accent"
-            : "border-t"
-          : isResizing || isResizeHovered
-            ? "border-b-accent"
-            : "border-b";
+            ? "border-r-accent"
+            : "border-r"
+          : resizeSide === "top"
+            ? isResizing || isResizeHovered
+              ? "border-t-accent"
+              : "border-t"
+            : isResizing || isResizeHovered
+              ? "border-b-accent"
+              : "border-b";
   const containerClass = `absolute text-foreground border min-w-0 overflow-hidden ${borderClass} ${className}`;
   const hasContent = sortedSections.length > 0 || additionalContent;
   const isHorizontal = resizeSide === "left" || resizeSide === "right";
@@ -6045,6 +6150,7 @@ export interface PanelGroupProps {
   position?: "left" | "right" | "middle" | "bottom";
 }
 
+/**
  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panelgroup🪨panelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/PanelGroup/d/i/PanelGroup)
  * PanelGroup holds the data fields for a PanelGroup record.
  **/
@@ -6106,6 +6212,7 @@ export { RightPanel };
  *
  *  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖middlepanel🛠️middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MiddlePanel/d/i/MiddlePanel)
  **/
+export interface MiddlePanelProps extends Omit<PanelProps, "resizeSide"> {
   resizeSide?: "left" | "right";
 };
 
@@ -6265,6 +6372,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
                   <DescriptionTooltipContent id={tab.id} />
                 </TooltipContent>
               </Tooltip>
+            );
           })}
         </div>
         <Scrollable className="flex-1 min-h-0">
@@ -6273,6 +6381,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
         {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
       </div>
     </LevelProvider>
+  );
 };
 export { SidePanel };
 
@@ -6432,6 +6541,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           {onClose && (
             <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose}>
               <CloseIcon />
+            </ActionGroupItem>
           )}
         </ActionGroup>
       )}
@@ -6440,6 +6550,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   return (
     <LevelProvider level="window">
+      <div ref={windowRef} onDoubleClick={onDoubleClick} className={cn(`relative w-full h-full overflow-hidden ${bgClass}`, className)}>
         {headerElement
           ? createPortal(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
           : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}
@@ -7215,6 +7326,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
         animated: false,
       })),
     [edgeCount, nodeCount],
+  );
   return (
     <div className={`relative w-full h-full ${className}`}>
       <ReactFlow
@@ -7524,12 +7636,14 @@ interface GeometryFileProps {
   environment?: string;
   roughness?: number;
   metalness?: number;
+}
 /** GeometryFile holds the data fields for a GeometryFile record.
 // [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨geometryfile](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/GeometryFile)
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨geometryfile](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/GeometryFile)
  **/
 const GeometryFile: React.FC<GeometryFileProps> = ({ src, environment, roughness, metalness }) => {
+  return (
     <div className="w-full h-full">
       <Geometry>
         <React.Suspense fallback={null}>
@@ -7870,6 +7984,7 @@ export const Scene: React.FC<SceneProps> = ({
         <SceneFrameControl />
         <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
           {children}
+        </SceneInner>
       </ThreeCanvas>
     </div>
   );

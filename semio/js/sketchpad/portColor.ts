@@ -69,15 +69,6 @@ const DEFAULT_PORT_GUID = "__default__";
  * MUST return undefined for null, undefined, or whitespace-only input.
  **/
 // [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizeGuid)
- * normalizeGuid holds the data fields for a normalizeGuid record.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizeGuid)
- * normalizeGuid holds the data fields for a normalizeGuid record.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizeGuid)
- * normalizeGuid holds the data fields for a normalizeGuid record.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizeGuid)
 const normalizeGuid = (value: string | undefined | null): string | undefined => {
   if (!value) return undefined;
   const normalized = value.trim();
@@ -88,15 +79,6 @@ const normalizeGuid = (value: string | undefined | null): string | undefined => 
  * Extracts a GUID from a string or object with a guid property.
  *
  * MUST handle both direct string GUIDs and port reference objects.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeportref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizePortRef)
- * normalizePortRef holds the data fields for a normalizePortRef record.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeportref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizePortRef)
- * normalizePortRef holds the data fields for a normalizePortRef record.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeportref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizePortRef)
- * normalizePortRef holds the data fields for a normalizePortRef record.
  **/
 // [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeportref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizePortRef)
 const normalizePortRef = (value: unknown): string | undefined => {
@@ -157,15 +139,6 @@ const getToneForKey = (key: string): PortTone => {
  * Builds a union-find map grouping compatible ports by root GUID.
  *
  * MUST union ports linked via compatiblePorts relationships.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨createportgroupmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/createPortGroupMap)
- * createPortGroupMap holds the data fields for a createPortGroupMap record.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨createportgroupmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/createPortGroupMap)
- * createPortGroupMap holds the data fields for a createPortGroupMap record.
- **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨createportgroupmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/createPortGroupMap)
- * createPortGroupMap holds the data fields for a createPortGroupMap record.
  **/
 // [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨createportgroupmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/createPortGroupMap)
 const createPortGroupMap = (ports: Port[]): Map<string, string> => {

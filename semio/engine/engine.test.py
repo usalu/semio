@@ -217,14 +217,181 @@ class TestMcp:
     def test_mcp_instance_exists(self):
         assert engine.mcp is not None
 
-    def test_get_kit_not_found(self, tempKitPath: pathlib.Path):
-        nonExistentPath = str(tempKitPath / "nonexistent")
-        result = engine.get_kit(nonExistentPath)
-        assert "error" in result
+    def test_flatten_design_tool(self, minimalKitJson: dict):
+        result = engine.flatten_design(minimalKitJson, "test-design-guid")
+        assert isinstance(result, dict)
 
-    def test_put_kit_tool(self, tempKitPath: pathlib.Path, minimalKitJson: dict):
-        result = engine.put_kit(str(tempKitPath), minimalKitJson)
-        assert result.get("success") is True or "error" in result
+    def test_pieces_metadata_tool(self, minimalKitJson: dict):
+        result = engine.pieces_metadata(minimalKitJson, "test-design-guid")
+        assert isinstance(result, dict)
+
+    def test_get_primitive_design_tool(self):
+        kit = {"name": "test", "designs": [{"guid": "d1", "name": "Design1"}]}
+        result = engine.get_primitive_design(kit, "d1")
+        assert result.get("guid") == "d1"
+
+    def test_get_design_family_tool(self):
+        kit = {"name": "test", "designs": [
+            {"guid": "d1", "name": "Root"},
+            {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+        ]}
+        result = engine.get_design_family(kit, "d2")
+        assert isinstance(result, list)
+        assert len(result) == 2
+
+    def test_get_design_siblings_tool(self):
+        kit = {"name": "test", "designs": [
+            {"guid": "d1", "name": "Root"},
+            {"guid": "d2", "name": "Child1", "parent": {"guid": "d1"}},
+            {"guid": "d3", "name": "Child2", "parent": {"guid": "d1"}},
+        ]}
+        result = engine.get_design_siblings(kit, "d2")
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0].get("guid") == "d3"
+
+    def test_get_design_children_tool(self):
+        kit = {"name": "test", "designs": [
+            {"guid": "d1", "name": "Root"},
+            {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+        ]}
+        result = engine.get_design_children(kit, "d1")
+        assert isinstance(result, list)
+        assert len(result) == 1
+
+    def test_are_designs_in_same_family_tool(self):
+        kit = {"name": "test", "designs": [
+            {"guid": "d1", "name": "Root"},
+            {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+        ]}
+        result = engine.are_designs_in_same_family(kit, "d1", "d2")
+        assert result.get("result") is True
+
+    def test_can_use_design_as_piece_tool(self):
+        kit = {"name": "test", "designs": [
+            {"guid": "d1", "name": "Root"},
+            {"guid": "d2", "name": "Other"},
+        ]}
+        result = engine.can_use_design_as_piece(kit, "d1", "d2")
+        assert result.get("result") is True
+
+    def test_find_same_family_design_pieces_tool(self):
+        kit = {"name": "test", "designs": [
+            {"guid": "d1", "name": "Design1", "pieces": [
+                {"guid": "p1", "name": "Piece1", "design": {"guid": "d1"}},
+            ]},
+        ]}
+        result = engine.find_same_family_design_pieces(kit, "d1")
+        assert isinstance(result, list)
+
+    def test_get_primitive_type_tool(self):
+        kit = {"name": "test", "types": [{"guid": "t1", "name": "Type1"}]}
+        result = engine.get_primitive_type(kit, "t1")
+        assert result.get("guid") == "t1"
+
+    def test_get_type_family_tool(self):
+        kit = {"name": "test", "types": [
+            {"guid": "t1", "name": "Root"},
+            {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+        ]}
+        result = engine.get_type_family(kit, "t2")
+        assert isinstance(result, list)
+        assert len(result) == 2
+
+    def test_get_type_siblings_tool(self):
+        kit = {"name": "test", "types": [
+            {"guid": "t1", "name": "Root"},
+            {"guid": "t2", "name": "ChildA", "parent": {"guid": "t1"}},
+            {"guid": "t3", "name": "ChildB", "parent": {"guid": "t1"}},
+        ]}
+        result = engine.get_type_siblings(kit, "t2")
+        assert isinstance(result, list)
+        assert len(result) == 1
+
+    def test_get_type_children_tool(self):
+        kit = {"name": "test", "types": [
+            {"guid": "t1", "name": "Root"},
+            {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+        ]}
+        result = engine.get_type_children(kit, "t1")
+        assert isinstance(result, list)
+        assert len(result) == 1
+
+    def test_are_types_in_same_family_tool(self):
+        kit = {"name": "test", "types": [
+            {"guid": "t1", "name": "Root"},
+            {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+        ]}
+        result = engine.are_types_in_same_family(kit, "t1", "t2")
+        assert result.get("result") is True
+
+    def test_find_piece_type_in_design_tool(self):
+        kit = {"name": "test", "types": [{"guid": "t1", "name": "Type1"}], "designs": [
+            {"guid": "d1", "name": "Design1", "pieces": [
+                {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
+            ]},
+        ]}
+        result = engine.find_piece_type_in_design(kit, "d1", "p1")
+        assert result.get("guid") == "t1"
+
+    def test_find_used_connectors_by_piece_in_design_tool(self):
+        kit = {"name": "test", "types": [
+            {"guid": "t1", "name": "Type1", "connectors": [{"guid": "c1", "name": "Con1"}]},
+        ], "designs": [
+            {"guid": "d1", "name": "Design1", "pieces": [
+                {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
+                {"guid": "p2", "name": "Piece2", "type": {"guid": "t1"}},
+            ], "connections": [
+                {"guid": "conn1", "connected": {"piece": {"guid": "p1"}, "connector": {"guid": "c1"}}, "connecting": {"piece": {"guid": "p2"}, "connector": {"guid": "c1"}}},
+            ]},
+        ]}
+        result = engine.find_used_connectors_by_piece_in_design(kit, "d1", "p1")
+        assert isinstance(result, list)
+        assert len(result) == 1
+
+    def test_create_clustered_design_tool(self):
+        design = {"name": "test", "pieces": [
+            {"guid": "p1", "name": "P1"},
+            {"guid": "p2", "name": "P2"},
+        ], "connections": [
+            {"guid": "c1", "connected": {"piece": {"guid": "p1"}}, "connecting": {"piece": {"guid": "p2"}}},
+        ]}
+        result = engine.create_clustered_design(design, ["p1", "p2"], "Cluster")
+        assert "clusteredDesign" in result
+        assert "externalConnections" in result
+
+    def test_get_clusterable_groups_tool(self):
+        design = {"pieces": [
+            {"guid": "p1", "name": "P1"},
+            {"guid": "p2", "name": "P2"},
+        ], "connections": [
+            {"guid": "c1", "connected": {"piece": {"guid": "p1"}}, "connecting": {"piece": {"guid": "p2"}}},
+        ]}
+        result = engine.get_clusterable_groups(design, ["p1", "p2"])
+        assert isinstance(result, list)
+
+    def test_expand_design_pieces_tool(self):
+        design = {"name": "test", "pieces": [{"guid": "p1"}], "connections": []}
+        kit = {"name": "kit", "designs": [design]}
+        result = engine.expand_design_pieces(design, kit)
+        assert isinstance(result, dict)
+
+    def test_find_attribute_value_tool(self):
+        entity = {"attributes": [{"key": "color", "value": "red"}]}
+        result = engine.find_attribute_value(entity, "color")
+        assert result.get("value") == "red"
+
+    def test_find_replaceable_types_for_piece_in_design_tool(self):
+        kit = {"name": "test", "types": [
+            {"guid": "t1", "name": "Type1", "connectors": [{"guid": "c1"}]},
+            {"guid": "t2", "name": "Type2", "connectors": [{"guid": "c2"}]},
+        ], "designs": [
+            {"guid": "d1", "name": "Design1", "pieces": [
+                {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
+            ], "connections": []},
+        ]}
+        result = engine.find_replaceable_types_for_piece_in_design(kit, "d1", "p1")
+        assert isinstance(result, list)
 
     def test_validate_kit_tool(self, minimalKitJson: dict):
         result = engine.validate_kit(minimalKitJson)

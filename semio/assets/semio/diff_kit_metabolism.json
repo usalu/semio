@@ -130,50 +130,6 @@
             ]
           },
           "attributes": {
-            "removed": [
-              {
-                "guid": "d177f31d-7bc7-418a-8cfd-3b0f8fb15160"
-              },
-              {
-                "guid": "d1929d72-af63-4116-820e-174e850cb262"
-              },
-              {
-                "guid": "893abeaf-17cc-44a4-a47a-4a1586c7e6ee"
-              },
-              {
-                "guid": "b6ac915c-ff43-49c9-a39d-d0b1b28def8b"
-              },
-              {
-                "guid": "7ab87aec-d58f-443c-9ff2-9886a4e2390b"
-              },
-              {
-                "guid": "4de94232-b930-477d-9fb4-5736102e5bf2"
-              },
-              {
-                "guid": "7fb7e5db-4eb9-4db0-82c2-a4410c744228"
-              },
-              {
-                "guid": "63951292-1192-4d83-8555-cfad64fcd20c"
-              },
-              {
-                "guid": "8cda3ff1-9eae-4013-a020-483ceb8f7d27"
-              },
-              {
-                "guid": "d0235adf-4190-47f5-8492-8e38b3ccb0d0"
-              },
-              {
-                "guid": "c401968b-8c86-4abb-a542-a31cf55afc41"
-              },
-              {
-                "guid": "1445d70d-ff49-4a5b-8afd-18b46339ade5"
-              },
-              {
-                "guid": "d15584c8-3101-4ae8-8bab-179615760a5e"
-              },
-              {
-                "guid": "aea2eede-67d3-4de2-b5db-48e2e02e67f7"
-              }
-            ],
             "added": [
               {
                 "guid": "019caa00-0000-7000-a000-000000000004",

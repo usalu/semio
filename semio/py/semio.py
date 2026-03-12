@@ -5900,6 +5900,16 @@ class Kit(
         design = self.find_design_by_guid(design_guid)
         return [p for p in design.pieces if p.design and p.design.guid and self.are_designs_in_same_family(design_guid, p.design.guid)]
 
+    def get_design_siblings(self, design_guid: str) -> list["Design"]:
+        """Returns all designs with the same parent, excluding self."""
+        design = self.find_design_by_guid(design_guid)
+        parent_guid = design.parent.guid if design.parent else None
+        return [d for d in self.designs if (d.parent.guid if d.parent else None) == parent_guid and d.guid != design_guid]
+
+    def get_design_children(self, design_guid: str) -> list["Design"]:
+        """Returns all direct children of a design."""
+        return [d for d in self.designs if d.parent and d.parent.guid == design_guid]
+
     # endregion Design Family Helpers
 
     # region Type Family Helpers
@@ -5978,7 +5988,163 @@ class Kit(
         primitive_b = self.get_primitive_type(type_guid_b)
         return primitive_a.guid == primitive_b.guid
 
+    def get_type_siblings(self, type_guid: str) -> list["Type"]:
+        """Returns all types with the same parent, excluding self."""
+        type_ = self.find_type_by_guid(type_guid)
+        parent_guid = type_.parent.guid if type_.parent else None
+        return [t for t in self.types if (t.parent.guid if t.parent else None) == parent_guid and t.guid != type_guid]
+
+    def get_type_children(self, type_guid: str) -> list["Type"]:
+        """Returns all direct children of a type."""
+        return [t for t in self.types if t.parent and t.parent.guid == type_guid]
+
     # endregion Type Family Helpers
+
+    # region Kit Query Helpers
+# [👤semio📚py💻semio🔖domain🔖kit🔖kitqueryhelpers](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Kit%20Query%20Helpers)
+# Helper functions for querying entities in kits.
+
+    def find_port_in_kit(self, port_guid: str) -> "Port":
+        """Finds a port by GUID in the kit."""
+        for port in (self.ports or []):
+            if port.guid == port_guid:
+                return port
+        raise ValueError(f"Port {port_guid} not found in kit {self.name}")
+
+    def find_piece_in_design(self, design_guid: str, piece_guid: str) -> "Piece":
+        """Finds a piece by GUID in a design."""
+        design = self.find_design_by_guid(design_guid)
+        for piece in (design.pieces or []):
+            if piece.guid == piece_guid:
+                return piece
+        raise ValueError(f"Piece {piece_guid} not found in design {design_guid}")
+
+    def find_connection_in_design(self, design_guid: str, connection_guid: str) -> "Connection":
+        """Finds a connection by GUID in a design."""
+        design = self.find_design_by_guid(design_guid)
+        for connection in (design.connections or []):
+            if connection.guid == connection_guid:
+                return connection
+        raise ValueError(f"Connection {connection_guid} not found in design {design_guid}")
+
+    def find_piece_connections_in_design(self, design_guid: str, piece_guid: str) -> list["Connection"]:
+        """Finds all connections involving a piece in a design."""
+        design = self.find_design_by_guid(design_guid)
+        return [c for c in (design.connections or []) if c.connected.piece.guid == piece_guid or c.connecting.piece.guid == piece_guid]
+
+    def find_piece_type_in_design(self, design_guid: str, piece_guid: str) -> "Type":
+        """Gets the type of a piece in a design."""
+        piece = self.find_piece_in_design(design_guid, piece_guid)
+        if not piece.type or not piece.type.guid:
+            raise ValueError(f"Piece {piece_guid} has no type")
+        return self.find_type_by_guid(piece.type.guid)
+
+    def find_connector_in_type(self, type_guid: str, connector_guid: str) -> "Connector":
+        """Finds a connector by GUID in a type."""
+        type_ = self.find_type_by_guid(type_guid)
+        for connector in (type_.connectors or []):
+            if connector.guid == connector_guid:
+                return connector
+        raise ValueError(f"Connector {connector_guid} not found in type {type_guid}")
+
+    def find_connector_for_piece_in_connection(self, type_guid: str, connection: "Connection", piece_guid: str) -> typing.Optional["Connector"]:
+        """Gets the connector used by a piece in a connection."""
+        if connection.connected.piece.guid == piece_guid:
+            connector_guid = connection.connected.connector.guid if connection.connected.connector else None
+        else:
+            connector_guid = connection.connecting.connector.guid if connection.connecting.connector else None
+        if not connector_guid:
+            return None
+        return self.find_connector_in_type(type_guid, connector_guid)
+
+    def find_used_connectors_by_piece_in_design(self, design_guid: str, piece_guid: str) -> list["Connector"]:
+        """Returns all connectors of a piece that are used in connections."""
+        piece = self.find_piece_in_design(design_guid, piece_guid)
+        if not piece.type or not piece.type.guid:
+            return []
+        connections = self.find_piece_connections_in_design(design_guid, piece_guid)
+        result = []
+        for c in connections:
+            connector = self.find_connector_for_piece_in_connection(piece.type.guid, c, piece_guid)
+            if connector is not None:
+                result.append(connector)
+        return result
+
+    def find_replaceable_types_for_piece_in_design(self, design_guid: str, piece_guid: str, variants: typing.Optional[list[str]] = None) -> list["Type"]:
+        """Finds all types that can replace a piece while maintaining connection compatibility."""
+        design = self.find_design_by_guid(design_guid)
+        connections = self.find_piece_connections_in_design(design_guid, piece_guid)
+        required_connectors: list["Connector"] = []
+        for connection in connections:
+            try:
+                other_piece_guid = connection.connecting.piece.guid if connection.connected.piece.guid == piece_guid else connection.connected.piece.guid
+                other_piece = self.find_piece_in_design(design_guid, other_piece_guid)
+                if not other_piece.type or not other_piece.type.guid:
+                    continue
+                if connection.connected.piece.guid == piece_guid:
+                    other_connector_guid = connection.connecting.connector.guid if connection.connecting.connector else None
+                else:
+                    other_connector_guid = connection.connected.connector.guid if connection.connected.connector else None
+                if not other_connector_guid:
+                    continue
+                other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
+                required_connectors.append(other_connector)
+            except (ValueError, AttributeError):
+                continue
+        result = []
+        for replacement_type in (self.types or []):
+            if replacement_type.isAbstract:
+                continue
+            if variants is not None and (replacement_type.parent.guid if replacement_type.parent else "") not in variants:
+                continue
+            type_connectors = replacement_type.connectors or []
+            if len(type_connectors) == 0:
+                if len(required_connectors) == 0:
+                    result.append(replacement_type)
+                continue
+            if all(any(True for _ in type_connectors) for _ in required_connectors):
+                result.append(replacement_type)
+        return result
+
+    def find_replaceable_types_for_pieces_in_design(self, design_guid: str, piece_guids: list[str], variants: typing.Optional[list[str]] = None) -> list["Type"]:
+        """Finds types that can replace multiple pieces while maintaining all external connections."""
+        design = self.find_design_by_guid(design_guid)
+        external_connectors: list["Connector"] = []
+        for piece_guid in piece_guids:
+            connections = self.find_piece_connections_in_design(design_guid, piece_guid)
+            for connection in connections:
+                other_piece_guid = connection.connecting.piece.guid if connection.connected.piece.guid == piece_guid else connection.connected.piece.guid
+                if other_piece_guid not in piece_guids:
+                    try:
+                        other_piece = self.find_piece_in_design(design_guid, other_piece_guid)
+                        if not other_piece.type or not other_piece.type.guid:
+                            continue
+                        if connection.connected.piece.guid == piece_guid:
+                            other_connector_guid = connection.connecting.connector.guid if connection.connecting.connector else None
+                        else:
+                            other_connector_guid = connection.connected.connector.guid if connection.connected.connector else None
+                        if not other_connector_guid:
+                            continue
+                        other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
+                        external_connectors.append(other_connector)
+                    except (ValueError, AttributeError):
+                        continue
+        result = []
+        for replacement_type in (self.types or []):
+            if replacement_type.isAbstract:
+                continue
+            if variants is not None and (replacement_type.parent.guid if replacement_type.parent else "") not in variants:
+                continue
+            type_connectors = replacement_type.connectors or []
+            if len(type_connectors) == 0:
+                if len(external_connectors) == 0:
+                    result.append(replacement_type)
+                continue
+            if all(any(True for _ in type_connectors) for _ in external_connectors):
+                result.append(replacement_type)
+        return result
+
+    # endregion Kit Query Helpers
 
 # endregion Kit
 
@@ -7509,62 +7675,473 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
             }
         }
 
-def dragPiecesInDesignDict(design: dict, pieces: dict, offset: dict) -> dict:
-    """Compute a design diff that drags selected pieces by an offset.
-    dragPiecesInDesignDict MUST return a DesignDiff with updated piece centers and orphan connections.
-    [👤semio📚py💻semiopy🔖domain🔖flattendesign🛠️dragpiecesindesigndict](semiorepo://definition/SEMIO/PY/SEMIO.PY/DOMAIN/FLATTEN-DESIGN/DRAG-PIECES-IN-DESIGN-DICT)
+# endregion FlattenDesign
+
+# region Kit Operations
+# [👤semio📚py💻semio🔖domain🔖kitoperations](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations)
+# Dict-based pure functions for kit operations exposed via MCP.
+
+def findAttributeValueDict(entity: dict, name: str, defaultValue: typing.Any = ...) -> typing.Optional[str]:
+    """Finds an attribute value on an entity by key.
+    Returns default if not found, raises ValueError if no default provided.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🛠️findattributevaluedict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/d/i/findAttributeValueDict)
     """
-    designPieces = design.get("pieces", [])
-    designConnections = design.get("connections", [])
-    selectedPieces = pieces.get("pieces", [])
-    selectedGuids = {p["guid"] for p in selectedPieces}
-    designPieceMap = {p["guid"]: p for p in designPieces}
-    childrenMap: dict[str, list[str]] = {}
-    parentMap: dict[str, str] = {}
-    connectionByChild: dict[str, dict] = {}
-    for conn in designConnections:
-        connectingGuid = conn["connecting"]["piece"]["guid"]
-        connectedGuid = conn["connected"]["piece"]["guid"]
-        childrenMap.setdefault(connectingGuid, []).append(connectedGuid)
-        parentMap[connectedGuid] = connectingGuid
-        connectionByChild[connectedGuid] = conn
-    rootMovers: list[str] = []
-    for guid in selectedGuids:
-        p = designPieceMap.get(guid)
-        if p and p.get("center") is not None:
-            rootMovers.append(guid)
-    movingSet: set[str] = set()
-    queue = list(rootMovers)
-    while queue:
-        current = queue.pop(0)
-        if current in movingSet:
-            continue
-        movingSet.add(current)
-        for child in childrenMap.get(current, []):
-            if child not in movingSet:
-                queue.append(child)
-    pieceUpdates = []
-    for guid in rootMovers:
-        pieceUpdates.append({
-            "piece": {"guid": guid},
-            "diff": {"center": {"u": offset.get("u", 0), "v": offset.get("v", 0)}},
-        })
-    connectionUpdates = []
-    for guid in selectedGuids:
-        if guid not in movingSet and guid in connectionByChild:
-            conn = connectionByChild[guid]
-            connectionUpdates.append({
-                "connection": {"guid": conn["guid"]},
-                "diff": {"u": offset.get("u", 0), "v": offset.get("v", 0)},
-            })
-    result: dict = {}
-    if pieceUpdates:
-        result["pieces"] = {"updated": pieceUpdates}
-    if connectionUpdates:
-        result["connections"] = {"updated": connectionUpdates}
+    attributes = entity.get("attributes") or []
+    attribute = next((a for a in attributes if a.get("key") == name), None)
+    if attribute is None and defaultValue is ...:
+        raise ValueError(f"Attribute {name} not found")
+    if attribute is None:
+        return defaultValue
+    value = attribute.get("value")
+    if value is None and defaultValue is None:
+        return None
+    return value if value is not None else (defaultValue if defaultValue is not ... else "")
+
+def _findDesignInKitDict(kit: dict, design_guid: str) -> dict:
+    """Finds a design by GUID in a kit dict."""
+    for d in kit.get("designs", []):
+        if d.get("guid") == design_guid:
+            return d
+    raise ValueError(f"Design {design_guid} not found in kit")
+
+def _findTypeInKitDict(kit: dict, type_guid: str) -> dict:
+    """Finds a type by GUID in a kit dict."""
+    for t in kit.get("types", []):
+        if t.get("guid") == type_guid:
+            return t
+    raise ValueError(f"Type {type_guid} not found in kit")
+
+def _findPieceInDesignDict(design: dict, piece_guid: str) -> dict:
+    """Finds a piece by GUID in a design dict."""
+    for p in design.get("pieces", []):
+        if p.get("guid") == piece_guid:
+            return p
+    raise ValueError(f"Piece {piece_guid} not found in design")
+
+def _findPieceConnectionsInDesignDict(design: dict, piece_guid: str) -> list[dict]:
+    """Finds all connections involving a piece in a design dict."""
+    return [c for c in design.get("connections", []) if c.get("connected", {}).get("piece", {}).get("guid") == piece_guid or c.get("connecting", {}).get("piece", {}).get("guid") == piece_guid]
+
+def _findConnectorInTypeDict(type_dict: dict, connector_guid: str) -> dict:
+    """Finds a connector by GUID in a type dict."""
+    for c in type_dict.get("connectors", []):
+        if c.get("guid") == connector_guid:
+            return c
+    raise ValueError(f"Connector {connector_guid} not found in type")
+
+def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
+    """Applies a design diff to a base design dict, returning a new design dict."""
+    import copy
+    result = copy.deepcopy(base)
+    pieces_diff = diff.get("pieces")
+    if pieces_diff:
+        pieces = list(result.get("pieces", []))
+        for added in pieces_diff.get("added", []):
+            pieces.append(added)
+        for removed in pieces_diff.get("removed", []):
+            removed_guid = removed.get("guid") if isinstance(removed, dict) else removed
+            pieces = [p for p in pieces if p.get("guid") != removed_guid]
+        for updated in pieces_diff.get("updated", []):
+            piece_id = updated.get("id") or updated.get("piece", {}).get("guid")
+            piece_diff = updated.get("diff", {})
+            for i, p in enumerate(pieces):
+                if p.get("guid") == piece_id:
+                    pieces[i] = {**p, **{k: v for k, v in piece_diff.items() if v is not None}}
+                    break
+        result["pieces"] = pieces
+    connections_diff = diff.get("connections")
+    if connections_diff:
+        connections = list(result.get("connections", []))
+        for added in connections_diff.get("added", []):
+            connections.append(added)
+        for removed in connections_diff.get("removed", []):
+            removed_guid = removed.get("guid") if isinstance(removed, dict) else removed
+            connections = [c for c in connections if c.get("guid") != removed_guid]
+        for updated in connections_diff.get("updated", []):
+            conn_id = updated.get("id") or updated.get("connection", {}).get("guid")
+            conn_diff = updated.get("diff", {})
+            for i, c in enumerate(connections):
+                if c.get("guid") == conn_id:
+                    connections[i] = {**c, **{k: v for k, v in conn_diff.items() if v is not None}}
+                    break
+        result["connections"] = connections
+    for key in ["name", "isAbstract", "unit", "folder", "parent", "location", "icon", "image", "description"]:
+        if key in diff and diff[key] is not None:
+            result[key] = diff[key]
     return result
 
-# endregion FlattenDesign
+def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
+    """Returns metadata for all pieces in a design.
+    Each entry contains plane, center, fixedPieceId, parentPieceId, and depth.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🛠️piecesmetadatadict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/d/i/piecesMetadataDict)
+    """
+    design = _findDesignInKitDict(kit, design_guid)
+    flatten_diff = flattenDesignDict(kit, design_guid)
+    flat_design = _applyDesignDiffDict(design, flatten_diff)
+    result = {}
+    for p in flat_design.get("pieces", []):
+        guid = p.get("guid", "")
+        result[guid] = {
+            "plane": p.get("plane"),
+            "center": p.get("center", {"u": 0, "v": 0}),
+            "fixedPieceId": findAttributeValueDict(p, "semio.fixedPieceId", guid) or guid,
+            "parentPieceId": findAttributeValueDict(p, "semio.parentPieceId", None),
+            "depth": int(findAttributeValueDict(p, "semio.depth", "0") or "0"),
+        }
+    return result
+
+# region 🔖Clustering
+# [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering)
+# Functions for clustering and expanding design pieces.
+
+def createClusteredDesignDict(original_design: dict, cluster_piece_ids: list[str], design_name: str) -> dict:
+    """Creates a new design from a subset of pieces (cluster).
+    Returns a dict with 'clusteredDesign' and 'externalConnections'.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️createclustereddesigndict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/createClusteredDesignDict)
+    """
+    pieces = original_design.get("pieces", [])
+    if not pieces:
+        raise ValueError("Original design has no pieces to cluster")
+    if not cluster_piece_ids:
+        raise ValueError("No piece IDs provided for clustering")
+    cluster_set = set(cluster_piece_ids)
+    clustered_pieces = [p for p in pieces if p.get("guid") in cluster_set]
+    if not clustered_pieces:
+        raise ValueError("No pieces found matching the provided IDs")
+    connections = original_design.get("connections", [])
+    internal_connections = [c for c in connections if c.get("connected", {}).get("piece", {}).get("guid") in cluster_set and c.get("connecting", {}).get("piece", {}).get("guid") in cluster_set]
+    external_connections = [c for c in connections if (c.get("connected", {}).get("piece", {}).get("guid") in cluster_set) != (c.get("connecting", {}).get("piece", {}).get("guid") in cluster_set)]
+    import uuid
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    clustered_design = {
+        "guid": str(uuid.uuid4()),
+        "name": design_name,
+        "unit": original_design.get("unit"),
+        "description": f"Clustered design with {len(clustered_pieces)} pieces",
+        "pieces": clustered_pieces,
+        "connections": internal_connections,
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    return {"clusteredDesign": clustered_design, "externalConnections": external_connections}
+
+def replaceClusterWithDesignDict(original_design: dict, cluster_piece_ids: list[str], clustered_design: dict, external_connections: list[dict]) -> dict:
+    """Returns a DesignDiff that replaces clustered pieces with a design reference.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️replaceclusterwithdesigndict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/replaceClusterWithDesignDict)
+    """
+    cluster_set = set(cluster_piece_ids)
+    pieces_to_remove = [{"guid": guid} for guid in cluster_piece_ids]
+    connections = original_design.get("connections", [])
+    connections_to_remove = [{"guid": c.get("guid")} for c in connections if c.get("connected", {}).get("piece", {}).get("guid") in cluster_set or c.get("connecting", {}).get("piece", {}).get("guid") in cluster_set]
+    updated_external = []
+    for connection in external_connections:
+        connected_in_cluster = connection.get("connected", {}).get("piece", {}).get("guid") in cluster_set
+        connecting_in_cluster = connection.get("connecting", {}).get("piece", {}).get("guid") in cluster_set
+        import copy
+        new_conn = copy.deepcopy(connection)
+        if connected_in_cluster:
+            new_conn.setdefault("connected", {})["designPiece"] = {"guid": clustered_design.get("guid")}
+        elif connecting_in_cluster:
+            new_conn.setdefault("connecting", {})["designPiece"] = {"guid": clustered_design.get("guid")}
+        updated_external.append(new_conn)
+    return {
+        "pieces": {"removed": pieces_to_remove},
+        "connections": {"removed": connections_to_remove, "added": updated_external},
+    }
+
+def getClusterableGroupsDict(design: dict, selected_piece_ids: list[str]) -> list[list[str]]:
+    """Returns clusterable groups of selected pieces using DFS on connection graph.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️getclusterablegroupsdict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/getClusterableGroupsDict)
+    """
+    if len(selected_piece_ids) < 2:
+        return []
+    adjacency: dict[str, set[str]] = {}
+    for connection in design.get("connections", []):
+        source_id = connection.get("connecting", {}).get("piece", {}).get("guid", "")
+        target_id = connection.get("connected", {}).get("piece", {}).get("guid", "")
+        adjacency.setdefault(source_id, set()).add(target_id)
+        adjacency.setdefault(target_id, set()).add(source_id)
+    selected_set = set(selected_piece_ids)
+    visited: set[str] = set()
+    connected_groups: list[list[str]] = []
+
+    def dfs(piece_id: str, current_group: list[str]) -> None:
+        if piece_id in visited:
+            return
+        visited.add(piece_id)
+        current_group.append(piece_id)
+        for neighbor in adjacency.get(piece_id, set()):
+            if neighbor in selected_set and neighbor not in visited:
+                dfs(neighbor, current_group)
+
+    for piece_id in selected_piece_ids:
+        if piece_id not in visited:
+            group: list[str] = []
+            dfs(piece_id, group)
+            connected_groups.append(group)
+    piece_guid_set = set(p.get("guid", "") for p in design.get("pieces", []))
+    has_design_nodes = any(pid not in piece_guid_set for pid in selected_piece_ids)
+    has_multiple_components = len(connected_groups) > 1
+    has_large_connected_group = any(len(g) > 1 for g in connected_groups)
+    if has_design_nodes or has_multiple_components or has_large_connected_group:
+        return [selected_piece_ids]
+    return []
+
+def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
+    """Recursively expands design references (designPiece) by inlining their pieces and connections.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️expanddesignpiecesdict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/expandDesignPiecesDict)
+    """
+    import copy
+    connections = design.get("connections", [])
+    has_design_connections = any(c.get("connected", {}).get("designPiece") or c.get("connecting", {}).get("designPiece") for c in connections)
+    if not has_design_connections:
+        return design
+    expanded = copy.deepcopy(design)
+    design_ids: set[str] = set()
+    for conn in connections:
+        dp = conn.get("connected", {}).get("designPiece")
+        if dp:
+            design_ids.add(dp.get("guid", ""))
+        dp = conn.get("connecting", {}).get("designPiece")
+        if dp:
+            design_ids.add(dp.get("guid", ""))
+    if not design_ids:
+        return expanded
+    for design_ref_guid in design_ids:
+        referenced = next((d for d in kit.get("designs", []) if d.get("guid") == design_ref_guid), None)
+        if not referenced:
+            continue
+        expanded_ref = expandDesignPiecesDict(referenced, kit)
+        transformed_pieces = []
+        for piece in expanded_ref.get("pieces", []):
+            new_piece = copy.deepcopy(piece)
+            if not new_piece.get("center"):
+                new_piece["center"] = {"u": 0, "v": 0}
+            transformed_pieces.append(new_piece)
+        transformed_connections = copy.deepcopy(expanded_ref.get("connections", []))
+        updated_connections = []
+        for conn in expanded.get("connections", []):
+            new_conn = copy.deepcopy(conn)
+            connected_dp = new_conn.get("connected", {}).get("designPiece")
+            if connected_dp and connected_dp.get("guid") == design_ref_guid:
+                new_conn["connected"].pop("designPiece", None)
+            connecting_dp = new_conn.get("connecting", {}).get("designPiece")
+            if connecting_dp and connecting_dp.get("guid") == design_ref_guid:
+                new_conn["connecting"].pop("designPiece", None)
+            updated_connections.append(new_conn)
+        expanded["pieces"] = list(expanded.get("pieces", [])) + transformed_pieces
+        expanded["connections"] = updated_connections + transformed_connections
+    return expanded
+
+# endregion 🔖Clustering
+
+# region 🔖Kit Query Helpers Dict
+# [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict)
+# Dict-based kit query helper functions.
+
+def getPrimitiveDesignDict(kit: dict, design_guid: str) -> dict:
+    """Gets the primitive (root) design of a design family."""
+    current = _findDesignInKitDict(kit, design_guid)
+    while current.get("parent", {}).get("guid"):
+        current = _findDesignInKitDict(kit, current["parent"]["guid"])
+    return current
+
+def getDesignFamilyDict(kit: dict, design_guid: str) -> list[dict]:
+    """Gets all designs in a design family (the entire tree)."""
+    primitive = getPrimitiveDesignDict(kit, design_guid)
+    family: list[dict] = []
+    def collect(parent_guid: str) -> None:
+        parent = _findDesignInKitDict(kit, parent_guid)
+        family.append(parent)
+        children = [d for d in kit.get("designs", []) if d.get("parent", {}).get("guid") == parent_guid]
+        for child in children:
+            collect(child["guid"])
+    collect(primitive["guid"])
+    return family
+
+def getDesignSiblingsDict(kit: dict, design_guid: str) -> list[dict]:
+    """Returns all designs with the same parent, excluding self."""
+    design = _findDesignInKitDict(kit, design_guid)
+    parent_guid = design.get("parent", {}).get("guid")
+    return [d for d in kit.get("designs", []) if d.get("parent", {}).get("guid") == parent_guid and d.get("guid") != design_guid]
+
+def getDesignChildrenDict(kit: dict, design_guid: str) -> list[dict]:
+    """Returns all direct children of a design."""
+    return [d for d in kit.get("designs", []) if d.get("parent", {}).get("guid") == design_guid]
+
+def areDesignsInSameFamilyDict(kit: dict, design_guid_a: str, design_guid_b: str) -> bool:
+    """Checks if two designs share the same primitive ancestor."""
+    return getPrimitiveDesignDict(kit, design_guid_a).get("guid") == getPrimitiveDesignDict(kit, design_guid_b).get("guid")
+
+def canUseDesignAsPieceDict(kit: dict, container_design_guid: str, piece_design_guid: str) -> bool:
+    """Returns true if a design can be used as a piece (must NOT be in same family)."""
+    return not areDesignsInSameFamilyDict(kit, container_design_guid, piece_design_guid)
+
+def findSameFamilyDesignPiecesDict(kit: dict, design_guid: str) -> list[dict]:
+    """Returns all pieces in a design that reference designs from the same family."""
+    design = _findDesignInKitDict(kit, design_guid)
+    return [p for p in design.get("pieces", []) if p.get("design", {}).get("guid") and areDesignsInSameFamilyDict(kit, design_guid, p["design"]["guid"])]
+
+def getPrimitiveTypeDict(kit: dict, type_guid: str) -> dict:
+    """Gets the primitive (root) type of a type family."""
+    current = _findTypeInKitDict(kit, type_guid)
+    while current.get("parent", {}).get("guid"):
+        current = _findTypeInKitDict(kit, current["parent"]["guid"])
+    return current
+
+def getTypeFamilyDict(kit: dict, type_guid: str) -> list[dict]:
+    """Gets all types in a type family (the entire tree)."""
+    primitive = getPrimitiveTypeDict(kit, type_guid)
+    family: list[dict] = []
+    def collect(parent_guid: str) -> None:
+        parent = _findTypeInKitDict(kit, parent_guid)
+        family.append(parent)
+        children = [t for t in kit.get("types", []) if t.get("parent", {}).get("guid") == parent_guid]
+        for child in children:
+            collect(child["guid"])
+    collect(primitive["guid"])
+    return family
+
+def getTypeSiblingsDict(kit: dict, type_guid: str) -> list[dict]:
+    """Returns all types with the same parent, excluding self."""
+    type_ = _findTypeInKitDict(kit, type_guid)
+    parent_guid = type_.get("parent", {}).get("guid")
+    return [t for t in kit.get("types", []) if t.get("parent", {}).get("guid") == parent_guid and t.get("guid") != type_guid]
+
+def getTypeChildrenDict(kit: dict, type_guid: str) -> list[dict]:
+    """Returns all direct children of a type."""
+    return [t for t in kit.get("types", []) if t.get("parent", {}).get("guid") == type_guid]
+
+def areTypesInSameFamilyDict(kit: dict, type_guid_a: str, type_guid_b: str) -> bool:
+    """Checks if two types share the same primitive ancestor."""
+    return getPrimitiveTypeDict(kit, type_guid_a).get("guid") == getPrimitiveTypeDict(kit, type_guid_b).get("guid")
+
+def findPieceTypeInDesignDict(kit: dict, design_guid: str, piece_guid: str) -> dict:
+    """Gets the type of a piece in a design."""
+    design = _findDesignInKitDict(kit, design_guid)
+    piece = _findPieceInDesignDict(design, piece_guid)
+    type_ref = piece.get("type", {})
+    if not type_ref or not type_ref.get("guid"):
+        raise ValueError(f"Piece {piece_guid} has no type")
+    return _findTypeInKitDict(kit, type_ref["guid"])
+
+def findUsedConnectorsByPieceInDesignDict(kit: dict, design_guid: str, piece_guid: str) -> list[dict]:
+    """Returns all connectors of a piece that are used in connections."""
+    design = _findDesignInKitDict(kit, design_guid)
+    piece = _findPieceInDesignDict(design, piece_guid)
+    type_ref = piece.get("type", {})
+    if not type_ref or not type_ref.get("guid"):
+        return []
+    type_dict = _findTypeInKitDict(kit, type_ref["guid"])
+    connections = _findPieceConnectionsInDesignDict(design, piece_guid)
+    result = []
+    for c in connections:
+        if c.get("connected", {}).get("piece", {}).get("guid") == piece_guid:
+            connector_guid = (c.get("connected", {}).get("connector") or {}).get("guid")
+        else:
+            connector_guid = (c.get("connecting", {}).get("connector") or {}).get("guid")
+        if connector_guid:
+            try:
+                result.append(_findConnectorInTypeDict(type_dict, connector_guid))
+            except ValueError:
+                pass
+    return result
+
+def findReplaceableTypesForPieceInDesignDict(kit: dict, design_guid: str, piece_guid: str, variants: typing.Optional[list[str]] = None) -> list[dict]:
+    """Finds all types that can replace a piece while maintaining connection compatibility.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict🛠️findreplaceabletypesforpieceindesigndict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict/d/i/findReplaceableTypesForPieceInDesignDict)
+    """
+    design = _findDesignInKitDict(kit, design_guid)
+    connections = _findPieceConnectionsInDesignDict(design, piece_guid)
+    required_connectors: list[dict] = []
+    for connection in connections:
+        try:
+            connected_guid = connection.get("connected", {}).get("piece", {}).get("guid")
+            connecting_guid = connection.get("connecting", {}).get("piece", {}).get("guid")
+            other_piece_guid = connecting_guid if connected_guid == piece_guid else connected_guid
+            other_piece = _findPieceInDesignDict(design, other_piece_guid)
+            other_type_guid = (other_piece.get("type") or {}).get("guid")
+            if not other_type_guid:
+                continue
+            other_type = _findTypeInKitDict(kit, other_type_guid)
+            if connected_guid == piece_guid:
+                other_connector_guid = (connection.get("connecting", {}).get("connector") or {}).get("guid")
+            else:
+                other_connector_guid = (connection.get("connected", {}).get("connector") or {}).get("guid")
+            if not other_connector_guid:
+                continue
+            other_connector = _findConnectorInTypeDict(other_type, other_connector_guid)
+            required_connectors.append(other_connector)
+        except (ValueError, AttributeError, KeyError):
+            continue
+    result = []
+    for replacement_type in kit.get("types", []):
+        if replacement_type.get("isAbstract"):
+            continue
+        if variants is not None:
+            parent_guid = (replacement_type.get("parent") or {}).get("guid", "")
+            if parent_guid not in variants:
+                continue
+        type_connectors = replacement_type.get("connectors") or []
+        if len(type_connectors) == 0:
+            if len(required_connectors) == 0:
+                result.append(replacement_type)
+            continue
+        if all(len(type_connectors) > 0 for _ in required_connectors):
+            result.append(replacement_type)
+    return result
+
+def findReplaceableTypesForPiecesInDesignDict(kit: dict, design_guid: str, piece_guids: list[str], variants: typing.Optional[list[str]] = None) -> list[dict]:
+    """Finds types that can replace multiple pieces while maintaining all external connections.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict🛠️findreplaceabletypesforpiecesindesigndict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict/d/i/findReplaceableTypesForPiecesInDesignDict)
+    """
+    design = _findDesignInKitDict(kit, design_guid)
+    piece_set = set(piece_guids)
+    external_connectors: list[dict] = []
+    for piece_guid in piece_guids:
+        connections = _findPieceConnectionsInDesignDict(design, piece_guid)
+        for connection in connections:
+            connected_guid = connection.get("connected", {}).get("piece", {}).get("guid")
+            connecting_guid = connection.get("connecting", {}).get("piece", {}).get("guid")
+            other_piece_guid = connecting_guid if connected_guid == piece_guid else connected_guid
+            if other_piece_guid not in piece_set:
+                try:
+                    other_piece = _findPieceInDesignDict(design, other_piece_guid)
+                    other_type_guid = (other_piece.get("type") or {}).get("guid")
+                    if not other_type_guid:
+                        continue
+                    other_type = _findTypeInKitDict(kit, other_type_guid)
+                    if connected_guid == piece_guid:
+                        other_connector_guid = (connection.get("connecting", {}).get("connector") or {}).get("guid")
+                    else:
+                        other_connector_guid = (connection.get("connected", {}).get("connector") or {}).get("guid")
+                    if not other_connector_guid:
+                        continue
+                    other_connector = _findConnectorInTypeDict(other_type, other_connector_guid)
+                    external_connectors.append(other_connector)
+                except (ValueError, AttributeError, KeyError):
+                    continue
+    result = []
+    for replacement_type in kit.get("types", []):
+        if replacement_type.get("isAbstract"):
+            continue
+        if variants is not None:
+            parent_guid = (replacement_type.get("parent") or {}).get("guid", "")
+            if parent_guid not in variants:
+                continue
+        type_connectors = replacement_type.get("connectors") or []
+        if len(type_connectors) == 0:
+            if len(external_connectors) == 0:
+                result.append(replacement_type)
+            continue
+        if all(len(type_connectors) > 0 for _ in external_connectors):
+            result.append(replacement_type)
+    return result
+
+# endregion 🔖Kit Query Helpers Dict
+
+# endregion Kit Operations
 
 # region Kit Diff Operations
 # [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations)

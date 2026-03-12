@@ -10784,9 +10784,11 @@ const App: FC<AppProps> = () => {
           }}
           onPointerLeave={() => {
             if (clearHover) clearHover();
+          }}
         >
           <TreeItem
             id="semio.sketchpad.app.kit.designs"
+            actions={[
               {
                 id: "semio.sketchpad.common.addDesign",
                 icon: <AddIcon size={12} />,

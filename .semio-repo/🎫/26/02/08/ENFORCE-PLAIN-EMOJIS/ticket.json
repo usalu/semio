@@ -1,7 +1,8 @@
 {
   "title": "Enforce Plain Emojis",
-  "status": "open",
+  "status": "closed",
   "description": "The emoji system is not consistent. Use plain emojis everywhere. Add a statute to code policy and autofix it by replacing the unicode string with actual plain emojis. Strip things like variation selector (e.g. VS15 / text presentation). Fix the codebase.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/444"
   },

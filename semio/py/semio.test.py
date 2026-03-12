@@ -20,6 +20,7 @@ import json
 import os
 import sys
 import tempfile
+from typing import Any
 
 import pytest
 
@@ -130,6 +131,40 @@ def flatten_test(design_name, parent_name=None):
         assert centers_equal(piece.get("center"), expected_piece.get("center"))
 
 
+def _contains_all_tags(model: dict[str, Any], selected_tag_guids: list[str]) -> bool:
+    model_tag_guids = [t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])]
+    return all(guid in model_tag_guids for guid in selected_tag_guids)
+
+
+def _jaccard_tag_guids(model_tag_guids: list[str], selected_tag_guids: list[str]) -> float:
+    if len(model_tag_guids) == 0 and len(selected_tag_guids) == 0:
+        return 1.0
+    set_a = set(model_tag_guids)
+    set_b = set(selected_tag_guids)
+    union = set_a | set_b
+    if len(union) == 0:
+        return 0.0
+    return len(set_a & set_b) / len(union)
+
+
+def _select_best_model_like_semio_ts(models: list[dict[str, Any]], selected_tag_guids: list[str]) -> dict[str, Any] | None:
+    if len(models) == 0:
+        return None
+    if len(selected_tag_guids) == 0:
+        default_model = next((model for model in models if len(model.get("tags", [])) == 0), None)
+        return default_model if default_model is not None else models[0]
+    filtered_models = [model for model in models if _contains_all_tags(model, selected_tag_guids)]
+    if len(filtered_models) == 0:
+        return None
+    indexed_scores = [
+        _jaccard_tag_guids([t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])], selected_tag_guids)
+        for model in filtered_models
+    ]
+    max_score = max(indexed_scores)
+    max_score_index = indexed_scores.index(max_score)
+    return filtered_models[max_score_index]
+
+
 class TestRoundtrip:
     class TestMetabolism:
         def test_roundtrip(self):
@@ -216,3 +251,20 @@ class TestValidation:
             result = validateKitDict(invalid_kit)
             expected = parseValidationResult(json.dumps(load_json("validation.json")))
             assert areValidationResultsEqual(result, expected)
+
+
+class TestDesignModel:
+    def test_model_selection_from_shared_semio_assets(self):
+        payload = load_json("model_selection.json")
+        for case in payload.get("cases", []):
+            models = [
+                {
+                    "guid": model["guid"],
+                    "file": {"guid": model["fileGuid"]},
+                    "tags": [{"guid": guid} for guid in model.get("tagGuids", [])],
+                }
+                for model in case.get("models", [])
+            ]
+            selected = _select_best_model_like_semio_ts(models, case.get("selectedTagGuids", []))
+            selected_guid = selected.get("guid") if selected else None
+            assert selected_guid == case.get("expectedGuid"), f"Case {case.get('name')} failed"

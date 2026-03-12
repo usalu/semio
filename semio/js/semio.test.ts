@@ -16,7 +16,7 @@
 
 // #endregion 🔖Header
 
-import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign } from "@semio/assets";
+import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from "@semio/assets";
 import { describe, expect, it } from "vitest";
 import { detectStorybookLaunchKind, isStorybookIndexPayload, readLaunchKind } from "./dev";
 import { buildControlTree, ControlDef } from "./sketchpad/elements";
@@ -39,8 +39,10 @@ import {
   importKit,
   inverseKitDiff,
   Kit,
+  Model,
   Plane,
   replaceClusterWithDesign,
+  selectBestModel,
   serializeKit,
   validateKit,
   ValidationResult,
@@ -101,6 +103,28 @@ describe("Change", () => {
       expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);
       const appliedInverse = applyKitDiff(kitDiffed, change.backward);
       expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);
+    });
+
+    describe("Design/Model", () => {
+      it("selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases", () => {
+        const payload = ModelSelectionCases as {
+          cases: Array<{
+            name: string;
+            selectedTagGuids: string[];
+            expectedGuid: string | null;
+            models: Array<{ guid: string; fileGuid: string; tagGuids: string[] }>;
+          }>;
+        };
+        payload.cases.forEach((testCase) => {
+          const models: Model[] = testCase.models.map((model) => ({
+            guid: model.guid,
+            file: { guid: model.fileGuid },
+            tags: model.tagGuids.map((guid) => ({ guid })),
+          }));
+          const selected = selectBestModel(models, testCase.selectedTagGuids);
+          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);
+        });
+      });
     });
   });
 });
@@ -286,9 +310,9 @@ describe("Sketchpad Selection Composition", () => {
 describe("Sketchpad ControlTree", () => {
   it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
     const controls: ControlDef[] = [
-      { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
-      { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
-      { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
+      { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
+      { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
+      { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
     ];
     const folderSettings = {
       Transform: { path: "Transform", order: 2 },

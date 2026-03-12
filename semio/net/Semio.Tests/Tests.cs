@@ -31,6 +31,26 @@ public class Tests
     public static readonly string AssetsPath = "../../../../../assets/semio";
     private const double Tolerance = 0.001;
 
+    private sealed class ModelSelectionAsset
+    {
+        public List<ModelSelectionCase> Cases { get; set; } = new();
+    }
+
+    private sealed class ModelSelectionCase
+    {
+        public string Name { get; set; } = "";
+        public List<string> SelectedTagGuids { get; set; } = new();
+        public string? ExpectedGuid { get; set; }
+        public List<ModelSelectionModel> Models { get; set; } = new();
+    }
+
+    private sealed class ModelSelectionModel
+    {
+        public string Guid { get; set; } = "";
+        public string FileGuid { get; set; } = "";
+        public List<string> TagGuids { get; set; } = new();
+    }
+
     public static T LoadAsset<T>(string filename)
     {
         var path = Path.Combine(AssetsPath, filename);
@@ -308,6 +328,45 @@ public class Tests
                 var expected = expectedConnMap[u.Connection.Guid];
                 Assert.Equal(expected!.U!.Value, u.Diff!.U!.Value, 3);
                 Assert.Equal(expected.V!.Value, u.Diff.V!.Value, 3);
+            }
+        }
+    }
+
+    public class DesignModel
+    {
+        private static Model? SelectBestModelLikeSemioTs(List<Model> models, List<string> selectedTagGuids)
+        {
+            if (models.Count == 0) return null;
+            if (selectedTagGuids.Count == 0)
+            {
+                var defaultModel = models.FirstOrDefault(r => r.Tags == null || r.Tags.Count == 0);
+                return defaultModel ?? models[0];
+            }
+
+            var filtered = models.Where(r => selectedTagGuids.All(tag => r.Tags.Any(t => t.Guid == tag))).ToList();
+            if (filtered.Count == 0) return null;
+
+            var type = new Type { Name = "selection-test", Models = filtered };
+            return type.FindModel(selectedTagGuids);
+        }
+
+        [Fact]
+        public void Model_Selection_From_Shared_Semio_Assets()
+        {
+            var payload = Tests.LoadAsset<ModelSelectionAsset>("model_selection.json");
+            foreach (var testCase in payload.Cases)
+            {
+                var models = testCase.Models
+                    .Select(model => new Model
+                    {
+                        Guid = model.Guid,
+                        File = new FileId { Guid = model.FileGuid },
+                        Tags = model.TagGuids.Select(tagGuid => new TagId { Guid = tagGuid }).ToList(),
+                    })
+                    .ToList();
+
+                var selected = SelectBestModelLikeSemioTs(models, testCase.SelectedTagGuids);
+                Assert.Equal(testCase.ExpectedGuid, selected?.Guid);
             }
         }
     }

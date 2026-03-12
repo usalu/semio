@@ -772,9 +772,10 @@ class DocsRegistry {
             icon: childNode.page.icon,
             isFolder: false,
             children: [],
+          });
         }
       });
-
+      return items.sort((a, b) => {
         const pageA = sectionPages.find((p) => p.path === a.path);
         const pageB = sectionPages.find((p) => p.path === b.path);
         return (pageA?.order ?? 999) - (pageB?.order ?? 999);
@@ -789,8 +790,10 @@ class DocsRegistry {
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+  }
 }
 
+/**
  * Singleton docs registry instance for page and section lookups.
  *
  *  * [👤semio📚js🗃️sketchpad💻docs🔖registry🪨docsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Registry/d/i/docsRegistry)
@@ -873,6 +876,7 @@ export interface DocsAppDiff {
   panelVisibility?: Partial<PanelVisibility>;
   selection?: DocsAppSelectionDiff;
   sectionStatesDiff?: Record<string, Partial<DocsAppSectionState>>;
+}
 
 export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> {}
 
@@ -1033,8 +1037,10 @@ export const docsCommands = {
       diff: {
         sectionStatesDiff: {
           [section]: { progress },
+        },
       },
     };
+  },
   "semio.docsApp.markPageComplete": async (context: DocsCommandContext, section: string, page: string): Promise<DocsCommandResult> => {
     const currentState = context.docs.sectionStates?.[section] || { isExpanded: false, completedPages: [] };
     const completedPages = currentState.completedPages || [];
@@ -1059,6 +1065,7 @@ if (typeof window !== "undefined") {
     });
     return store;
   });
+}
 
 // #region Docs App Plugin Registration
 
@@ -1067,15 +1074,14 @@ if (typeof window !== "undefined") {
 
 const docsAppPlugin: AppPlugin = {
   namespace: "DOCS",
-    actions: {},
-    guards: {},
-    selectors: {},
-    createDefaultState: (): DocsAppState => ({
-      panelVisibility: { leftSidePanel: true, rightSidePanel: true, details: true },
-      selection: undefined,
-      sectionStates: {},
-    }),
-  },
+  actions: {},
+  guards: {},
+  selectors: {},
+  createDefaultState: (): DocsAppState => ({
+    panelVisibility: { leftSidePanel: true, rightSidePanel: true, details: true },
+    selection: undefined,
+    sectionStates: {},
+  }),
 };
 
 if (typeof window !== "undefined") {
@@ -1316,6 +1322,7 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
           </TreeStateProvider>
         )}
       </Page>
+    </div>
   );
 };
 
@@ -1614,8 +1621,10 @@ const App: FC = () => {
   const windowConfig: AppWindowConfig = useMemo(
     () => ({
       windowKinds: [
+        {
           id: DocsAppWindowKind.Page,
           label: "page",
+          render: () => {
             if (loading) return <PageCanvas frontmatter={{ title: "Loading...", description: "" }} />;
             if (error || !mdxModule) return <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />;
             return <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />;

@@ -583,6 +583,8 @@ function inverseQualityAppSelectionDiff(selection: QualityAppSelection, diff: Qu
       added: diff.formulaNodes.removed ?? [],
       removed: diff.formulaNodes.added ?? [],
     };
+  }
+  return inverse;
 }
 
 // #endregion Functions
@@ -695,6 +697,8 @@ const qualityAppCommands = {
     });
     return {
       diff: {
+        formulaNodes: updatedNodes,
+      },
     };
   },
 };
@@ -857,8 +861,6 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
       kitStore.change(qualityKitDiff);
     }
     return result as T;
-  }
-    return this.executeCommand(command, ...rest);
   }
 }
 
@@ -1876,7 +1878,9 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
       return (
         <TreeItem key={key} label={key}>
           <TreeContent>
+              {node.qualities.length > 0 && (
               <div className="flex flex-wrap gap-single p-single">
+                {node.qualities.map((quality) => (
                   <QualityAvatar key={quality.guid} quality={quality} showHoverCard={true} />
                 ))}
               </div>
@@ -2273,6 +2277,8 @@ const App: FC<AppProps> = () => {
         finalizeTransaction("semio.sketchpad.app.quality.drag");
       }
     }
+  };
+
   useEffect(() => {
     const listener = (e: Event) => {
       const customEvent = e as CustomEvent<DragEndEvent>;
@@ -2402,6 +2408,7 @@ const App: FC<AppProps> = () => {
 };
 
 export default App;
+
 
 // #endregion App
 

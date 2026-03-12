@@ -1,7 +1,8 @@
 {
   "title": "Fix Windsurf Hooks Configuration",
-  "status": "open",
+  "status": "closed",
   "description": "The .windsurf/hooks.json file is missing, so Windsurf's native hook system never calls the semio-repo CLI hooks. Need to create the file with the correct Windsurf hook format (snake_case events) that pipes stdin JSON to the CLI for blocking checks (pre_run_command for git checkout/stash/reset blocking).",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/613"
   },

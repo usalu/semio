@@ -35,6 +35,7 @@ export { default as DragPieces } from "./semio/drag/pieces.json";
 export { default as DragOffset } from "./semio/drag/offset.json";
 export { default as DragDiffDesign } from "./semio/drag/diff_design.json";
 export { default as DragDiffDesignFree } from "./semio/drag/diff_design_free.json";
+export { default as ModelSelectionCases } from "./semio/model_selection.json";
 
 /**
  * Metabolism kit types array

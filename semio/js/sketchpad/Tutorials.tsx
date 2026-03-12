@@ -655,6 +655,8 @@ export const devCommands = {
     context.tutorialStore.pauseRecording();
     return { success: true };
   },
+  "semio.recording.resume": (context: TutorialCommandContext): TutorialCommandResult => {
+    context.tutorialStore.resumeRecording();
     return { success: true };
   },
   "semio.recording.stop": (context: TutorialCommandContext): TutorialCommandResult => {
@@ -683,6 +685,8 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
   const store = useTutorialStore();
   const isRecording = useIsRecording();
   return useCallback(
+    (command: string, origin?: string, args?: any) => {
+      if (isRecording) {
         store.recordEvent({
           type: "command",
           data: { command, origin, args },
@@ -775,6 +779,7 @@ export const useIsTutorialActive = () => {
   const state = useTutorialContext().state;
   return state.playbackState !== TutorialPlaybackState.IDLE && state.playbackState !== TutorialPlaybackState.COMPLETED;
 };
+/**
  *
  *  * [👤semio📚js🗃️sketchpad💻tutorials🔖hooks🪨usetutorialprogress](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Hooks/d/i/useTutorialProgress)
  **/
@@ -826,9 +831,9 @@ export const TutorialProvider: FC<{ store: TutorialStore; children: ReactNode }>
 
   useEffect(() => {
     const existingIds = new Set(state.availableTutorials.map((t) => t.id));
-    }
     if (!existingIds.has(sketchpadTour.id)) {
       store.addTutorial(sketchpadTour);
+    }
   }, [state.availableTutorials, store]);
   return <TutorialContext.Provider value={{ store, state }}>{children}</TutorialContext.Provider>;
 };

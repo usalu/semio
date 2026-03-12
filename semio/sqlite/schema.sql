@@ -104,6 +104,7 @@ CREATE TABLE folder (
 CREATE TABLE file (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256) NOT NULL,
+	mime TEXT,
 	folder_guid VARCHAR(36),
 	size INTEGER,
 	hash VARCHAR(256),

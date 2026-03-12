@@ -25,6 +25,23 @@ import (
 	"testing"
 )
 
+type modelSelectionAsset struct {
+	Cases []modelSelectionCase `json:"cases"`
+}
+
+type modelSelectionCase struct {
+	Name             string                `json:"name"`
+	SelectedTagGuids []string              `json:"selectedTagGuids"`
+	ExpectedGuid     *string               `json:"expectedGuid"`
+	Models           []modelSelectionModel `json:"models"`
+}
+
+type modelSelectionModel struct {
+	Guid     string   `json:"guid"`
+	FileGuid string   `json:"fileGuid"`
+	TagGuids []string `json:"tagGuids"`
+}
+
 func loadJSON(t *testing.T, filename string, v interface{}) {
 	path := filepath.Join(AssetsPath, filename)
 	data, err := os.ReadFile(path)
@@ -34,6 +51,85 @@ func loadJSON(t *testing.T, filename string, v interface{}) {
 	if err := json.Unmarshal(data, v); err != nil {
 		t.Fatalf("Failed to parse %s: %v", filename, err)
 	}
+}
+
+func containsAllTags(model Model, selectedTagGuids []string) bool {
+	for _, selectedGuid := range selectedTagGuids {
+		found := false
+		for _, tag := range model.Tags {
+			if tag.Guid == selectedGuid {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+func jaccardTagGuids(a []TagId, b []string) float64 {
+	if len(a) == 0 && len(b) == 0 {
+		return 1
+	}
+	setA := make(map[string]bool)
+	setB := make(map[string]bool)
+	for _, tag := range a {
+		setA[tag.Guid] = true
+	}
+	for _, guid := range b {
+		setB[guid] = true
+	}
+	intersection := 0
+	for guid := range setA {
+		if setB[guid] {
+			intersection++
+		}
+	}
+	union := len(setA)
+	for guid := range setB {
+		if !setA[guid] {
+			union++
+		}
+	}
+	if union == 0 {
+		return 0
+	}
+	return float64(intersection) / float64(union)
+}
+
+func selectBestModelLikeSemioTS(models []Model, selectedTagGuids []string) *Model {
+	if len(models) == 0 {
+		return nil
+	}
+	if len(selectedTagGuids) == 0 {
+		for i := range models {
+			if len(models[i].Tags) == 0 {
+				return &models[i]
+			}
+		}
+		return &models[0]
+	}
+	filtered := make([]Model, 0)
+	for _, model := range models {
+		if containsAllTags(model, selectedTagGuids) {
+			filtered = append(filtered, model)
+		}
+	}
+	if len(filtered) == 0 {
+		return nil
+	}
+	maxIndex := 0
+	maxScore := jaccardTagGuids(filtered[0].Tags, selectedTagGuids)
+	for i := 1; i < len(filtered); i++ {
+		score := jaccardTagGuids(filtered[i].Tags, selectedTagGuids)
+		if score > maxScore {
+			maxScore = score
+			maxIndex = i
+		}
+	}
+	return &filtered[maxIndex]
 }
 
 func planesEqual(p1, p2 *Plane, tolerance float64) bool {
@@ -187,6 +283,41 @@ func TestRoundtrip(t *testing.T) {
 		}
 		if len(files2) != len(files) {
 			t.Errorf("Expected %d files, got %d", len(files), len(files2))
+		}
+	})
+}
+
+func TestDesignModel(t *testing.T) {
+	t.Run("Model selection cases from shared semio assets", func(t *testing.T) {
+		var payload modelSelectionAsset
+		loadJSON(t, "model_selection.json", &payload)
+		for _, testCase := range payload.Cases {
+			models := make([]Model, 0, len(testCase.Models))
+			for _, model := range testCase.Models {
+				tags := make([]TagId, 0, len(model.TagGuids))
+				for _, guid := range model.TagGuids {
+					tags = append(tags, TagId{Guid: guid})
+				}
+				models = append(models, Model{
+					Guid: model.Guid,
+					File: FileId{Guid: model.FileGuid},
+					Tags: tags,
+				})
+			}
+			selected := selectBestModelLikeSemioTS(models, testCase.SelectedTagGuids)
+			if testCase.ExpectedGuid == nil {
+				if selected != nil {
+					t.Fatalf("Case %q failed: got %q expected nil", testCase.Name, selected.Guid)
+				}
+				continue
+			}
+			if selected == nil || selected.Guid != *testCase.ExpectedGuid {
+				got := "<nil>"
+				if selected != nil {
+					got = selected.Guid
+				}
+				t.Fatalf("Case %q failed: got %q expected %q", testCase.Name, got, *testCase.ExpectedGuid)
+			}
 		}
 	})
 }

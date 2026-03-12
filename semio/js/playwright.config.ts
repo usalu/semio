@@ -36,11 +36,6 @@ export default defineConfig({
     baseURL: "http://localhost:5173",
     trace: "on-first-retry",
   },
-  webServer: {
-    command: "npx nx run @semio/js:dev:sketchpad",
-    url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
-  },
   projects: [
     {
       name: "chromium",

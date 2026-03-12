@@ -137,6 +137,7 @@ export interface ActionField {
 }
 
 // [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🪨noopsetter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/d/i/NOOP_SETTER)
+/**
  * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🪨noopsetter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/d/i/NOOP_SETTER)
  * NOOP_SETTER holds the data fields for a NOOP_SETTER record.
  **/
@@ -2843,8 +2844,10 @@ export function getRegisteredNamespaces(): string[] {
     const dotIndex = eventType.indexOf(".");
     if (dotIndex > 0) {
       namespaces.add(eventType.substring(0, dotIndex));
+    }
   }
   return Array.from(namespaces);
+}
 
 /**
  * Returns all registered event type strings.
@@ -3573,8 +3576,10 @@ export function createSingleKeySetFullscreenWindowHandler<TAppKey extends string
  *
  *  * [👤semio📚js🗃️sketchpad💻shared🔖appeventhandlerfactories🛠️registersinglekeyappeventhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Event%20Handler%20Factories/d/i/registerSingleKeyAppEventHandlers)
  **/
+export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppState extends object>(
   config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>,
   hoverMapper: (event: any) => any = (e) => e.hover,
+) {
   createSingleKeyInitHandler(config);
   createSingleKeySyncHandler(config);
   createSingleKeyTogglePanelHandler(config);
@@ -3805,8 +3810,10 @@ export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionH
       const tx = app.transaction;
       const redoStack = [...tx.redoStack];
       const edit = redoStack.pop()!;
+      const pastStack = [...tx.pastTransactionStack, edit];
       return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
     },
+  });
 
   registerEventHandler(`${namespace}.TRANSACTION.RECORD_EDIT`, {
     action: (context: any, event: any) => {
@@ -3866,6 +3873,7 @@ export function createKeyedAppPropertySelectorFactory<TAppState>(appKey: string)
  *
  *  * [👤semio📚js🗃️sketchpad💻shared🔖selectorfactorypattern🛠️getappkey](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Selector%20Factory%20Pattern/d/i/getAppKey)
  **/
+export function getAppKey(...scopes: string[]): string {
   return scopes.join(":");
 }
 /**
@@ -3970,6 +3978,7 @@ export function registerDesignAppHooks(hooks: DesignAppHooks): void {
  **/
 export function registerKitAppHooks(hooks: KitAppHooks): void {
   registeredKitAppHooks = hooks;
+}
 
 /** getDesignAppHooks holds the data fields for a getDesignAppHooks record.
  *

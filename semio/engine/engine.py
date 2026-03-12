@@ -132,17 +132,39 @@ from semio import (
     areValidationResultsEqual,
     changeKeys,
     changeValues,
+    createClusteredDesignDict,
     decode,
     dragPiecesInDesignDict,
     encode,
+    expandDesignPiecesDict,
+    findAttributeValueDict,
+    findReplaceableTypesForPieceInDesignDict,
+    findReplaceableTypesForPiecesInDesignDict,
+    findSameFamilyDesignPiecesDict,
+    findUsedConnectorsByPieceInDesignDict,
     flattenDesignDict,
+    getClusterableGroupsDict,
+    getDesignChildrenDict,
+    getDesignFamilyDict,
+    getDesignSiblingsDict,
     getKitDiffDict,
+    getPrimitiveDesignDict,
+    getPrimitiveTypeDict,
+    getTypeChildrenDict,
+    getTypeFamilyDict,
+    getTypeSiblingsDict,
     inverseKitDiffDict,
     logger,
     normalizeAngle,
     parseValidationResult,
+    piecesMetadataDict,
     planeFromYAxis,
+    replaceClusterWithDesignDict,
     validateKitDict,
+    areDesignsInSameFamilyDict,
+    areTypesInSameFamilyDict,
+    canUseDesignAsPieceDict,
+    findPieceTypeInDesignDict,
 )
 
 # endregion Imports
@@ -1497,150 +1519,10 @@ rest.openapi = custom_openapi
 
 # region Mcp
 # [👤semio📚engine💻engine🔖mcp](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp)
-# Mcp MUST expose kit, type, design, validation, and diff tools via Model Context Protocol.
+# Mcp MUST expose pure, stateless kit operations via Model Context Protocol.
+# All tools take kit dicts as input and return results or diffs.
 
 mcp = FastMCP("semio", stateless_http=True, json_response=True)
-
-
-@mcp.tool()
-def get_kit(uri: str) -> dict:
-    """Get a kit from a URI. The URI can be a file path or a URL.
-    Callers MUST provide a valid file path or URL as the URI.
-    [👤semio📚engine💻engine🔖mcp🛠️getkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit)
-    """
-    try:
-        result = get(encode(uri))
-        return result.model_dump() if hasattr(result, "model_dump") else result
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def put_kit(uri: str, kit: dict) -> dict:
-    """Put a kit at a URI. Creates or updates the kit.
-    Callers MUST provide a valid URI and a dict matching KitInput schema.
-    [👤semio📚engine💻engine🔖mcp🛠️putkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/put_kit)
-    """
-    try:
-        kitInput = KitInput.model_validate(kit)
-        put(encode(uri), kitInput)
-        return {"success": True}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def mcp_delete_kit(uri: str) -> dict:
-    """Delete a kit at a URI.
-    Callers MUST provide a URI referencing an existing kit.
-    [👤semio📚engine💻engine🔖mcp🛠️mcpdeletekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/mcp_delete_kit)
-    """
-    try:
-        delete(encode(uri))
-        return {"success": True}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
-    """Get a type from a kit by name and variant.
-    Callers MUST provide a valid kit URI and type name.
-    [👤semio📚engine💻engine🔖mcp🛠️gettypefromkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_from_kit)
-    """
-    try:
-        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
-        result = get(code)
-        return result.model_dump() if hasattr(result, "model_dump") else result
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
-    """Put a type in a kit.
-    Callers MUST provide a valid URI, name, variant, and TypeInput-compatible dict.
-    [👤semio📚engine💻engine🔖mcp🛠️puttypeinkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/put_type_in_kit)
-    """
-    try:
-        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
-        typeInput = TypeInput.model_validate(type_data)
-        put(code, typeInput)
-        return {"success": True}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
-    """Delete a type from a kit.
-    Callers MUST provide a valid kit URI and existing type name.
-    [👤semio📚engine💻engine🔖mcp🛠️deletetypefromkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/delete_type_from_kit)
-    """
-    try:
-        code = encode(uri) + "/types/" + encode(f"{name}~{variant}" if variant else name)
-        delete(code)
-        return {"success": True}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
-    """Get a design from a kit by name, variant, and view.
-    Callers MUST provide a valid kit URI and design name.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignfromkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_from_kit)
-    """
-    try:
-        nameVariantView = name
-        if variant:
-            nameVariantView += f"~{variant}"
-        if view:
-            nameVariantView += f"@{view}"
-        code = encode(uri) + "/designs/" + encode(nameVariantView)
-        result = get(code)
-        return result.model_dump() if hasattr(result, "model_dump") else result
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def put_design_in_kit(uri: str, name: str, variant: str, view: str, design_data: dict) -> dict:
-    """Put a design in a kit.
-    Callers MUST provide a valid URI, name, variant, view, and DesignInput-compatible dict.
-    [👤semio📚engine💻engine🔖mcp🛠️putdesigninkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/put_design_in_kit)
-    """
-    try:
-        nameVariantView = name
-        if variant:
-            nameVariantView += f"~{variant}"
-        if view:
-            nameVariantView += f"@{view}"
-        code = encode(uri) + "/designs/" + encode(nameVariantView)
-        designInput = DesignInput.model_validate(design_data)
-        put(code, designInput)
-        return {"success": True}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@mcp.tool()
-def delete_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
-    """Delete a design from a kit.
-    Callers MUST provide a valid kit URI and existing design name.
-    [👤semio📚engine💻engine🔖mcp🛠️deletedesignfromkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/delete_design_from_kit)
-    """
-    try:
-        nameVariantView = name
-        if variant:
-            nameVariantView += f"~{variant}"
-        if view:
-            nameVariantView += f"@{view}"
-        code = encode(uri) + "/designs/" + encode(nameVariantView)
-        delete(code)
-        return {"success": True}
-    except Exception as e:
-        return {"error": str(e)}
 
 
 @mcp.tool()
@@ -1672,12 +1554,13 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
 def drag_pieces_in_design(design: dict, pieces: dict, offset: dict) -> dict:
     """Compute a design diff that drags selected pieces by an offset.
     Callers MUST provide a valid design dict, a pieces dict with selected pieces, and an offset dict with u/v.
-    [👤semio📚engine💻enginepy🔖mcp🛠️dragpiecesindesign](semiorepo://definition/SEMIO/ENGINE/ENGINE.PY/MCP/DRAG-PIECES-IN-DESIGN)
+    [👤semio📚engine💻engine🔖mcp🛠️dragpiecesindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/drag_pieces_in_design)
     """
     try:
         return dragPiecesInDesignDict(design, pieces, offset)
     except Exception as e:
         return {"error": str(e)}
+
 
 @mcp.tool()
 def get_kit_diff(before: dict, after: dict) -> dict:
@@ -1711,6 +1594,273 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
     """
     try:
         return inverseKitDiffDict(original, applied_diff)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def pieces_metadata(kit: dict, design_guid: str) -> dict:
+    """Get metadata for all pieces in a design (plane, center, fixedPieceId, parentPieceId, depth).
+    Callers MUST provide a valid kit dict and an existing design GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️piecesmetadata](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/pieces_metadata)
+    """
+    try:
+        return piecesMetadataDict(kit, design_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_primitive_design(kit: dict, design_guid: str) -> dict:
+    """Get the root/primitive design of a design family.
+    Callers MUST provide a valid kit dict and an existing design GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️getprimitivedesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_design)
+    """
+    try:
+        return getPrimitiveDesignDict(kit, design_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_design_family(kit: dict, design_guid: str) -> list:
+    """Get all designs in a design family tree.
+    Callers MUST provide a valid kit dict and an existing design GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignfamily](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_family)
+    """
+    try:
+        return getDesignFamilyDict(kit, design_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_design_siblings(kit: dict, design_guid: str) -> list:
+    """Get all sibling designs (same parent, excluding self).
+    Callers MUST provide a valid kit dict and an existing design GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignsiblings](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_siblings)
+    """
+    try:
+        return getDesignSiblingsDict(kit, design_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_design_children(kit: dict, design_guid: str) -> list:
+    """Get all direct children of a design.
+    Callers MUST provide a valid kit dict and an existing design GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignchildren](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_children)
+    """
+    try:
+        return getDesignChildrenDict(kit, design_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def are_designs_in_same_family(kit: dict, design_guid_a: str, design_guid_b: str) -> dict:
+    """Check if two designs belong to the same family.
+    Callers MUST provide a valid kit dict and two existing design GUIDs.
+    [👤semio📚engine💻engine🔖mcp🛠️aredesignsinsamefamily](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/are_designs_in_same_family)
+    """
+    try:
+        return {"result": areDesignsInSameFamilyDict(kit, design_guid_a, design_guid_b)}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def can_use_design_as_piece(kit: dict, container_design_guid: str, piece_design_guid: str) -> dict:
+    """Check if a design can be used as a piece in another design.
+    Callers MUST provide a valid kit dict and two existing design GUIDs.
+    [👤semio📚engine💻engine🔖mcp🛠️canusedesignaspiece](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/can_use_design_as_piece)
+    """
+    try:
+        return {"result": canUseDesignAsPieceDict(kit, container_design_guid, piece_design_guid)}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
+    """Find pieces in a design that reference designs from the same family.
+    Callers MUST provide a valid kit dict and an existing design GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️findsamefamilydesignpieces](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_same_family_design_pieces)
+    """
+    try:
+        return findSameFamilyDesignPiecesDict(kit, design_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_primitive_type(kit: dict, type_guid: str) -> dict:
+    """Get the root/primitive type of a type family.
+    Callers MUST provide a valid kit dict and an existing type GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️getprimitivetype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_type)
+    """
+    try:
+        return getPrimitiveTypeDict(kit, type_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_type_family(kit: dict, type_guid: str) -> list:
+    """Get all types in a type family tree.
+    Callers MUST provide a valid kit dict and an existing type GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️gettypefamily](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_family)
+    """
+    try:
+        return getTypeFamilyDict(kit, type_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_type_siblings(kit: dict, type_guid: str) -> list:
+    """Get all sibling types (same parent, excluding self).
+    Callers MUST provide a valid kit dict and an existing type GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️gettypesiblings](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_siblings)
+    """
+    try:
+        return getTypeSiblingsDict(kit, type_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_type_children(kit: dict, type_guid: str) -> list:
+    """Get all direct children of a type.
+    Callers MUST provide a valid kit dict and an existing type GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️gettypechildren](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_children)
+    """
+    try:
+        return getTypeChildrenDict(kit, type_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def are_types_in_same_family(kit: dict, type_guid_a: str, type_guid_b: str) -> dict:
+    """Check if two types belong to the same family.
+    Callers MUST provide a valid kit dict and two existing type GUIDs.
+    [👤semio📚engine💻engine🔖mcp🛠️aretypesinsamefamily](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/are_types_in_same_family)
+    """
+    try:
+        return {"result": areTypesInSameFamilyDict(kit, type_guid_a, type_guid_b)}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> dict:
+    """Get the type of a piece in a design.
+    Callers MUST provide a valid kit dict, design GUID, and piece GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️findpiecetypeindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_piece_type_in_design)
+    """
+    try:
+        return findPieceTypeInDesignDict(kit, design_guid, piece_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_guid: str) -> list:
+    """Get all connectors of a piece that are used in connections.
+    Callers MUST provide a valid kit dict, design GUID, and piece GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️findusedconnectorsbypieceindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_used_connectors_by_piece_in_design)
+    """
+    try:
+        return findUsedConnectorsByPieceInDesignDict(kit, design_guid, piece_guid)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piece_guid: str, variants: list[str] = None) -> list:
+    """Find all types that can replace a piece while maintaining connection compatibility.
+    Callers MUST provide a valid kit dict, design GUID, and piece GUID. Optionally filter by variant parent GUIDs.
+    [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpieceindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_piece_in_design)
+    """
+    try:
+        return findReplaceableTypesForPieceInDesignDict(kit, design_guid, piece_guid, variants)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def find_replaceable_types_for_pieces_in_design(kit: dict, design_guid: str, piece_guids: list[str], variants: list[str] = None) -> list:
+    """Find types that can replace multiple pieces while maintaining all external connections.
+    Callers MUST provide a valid kit dict, design GUID, and list of piece GUIDs.
+    [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpiecesindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_pieces_in_design)
+    """
+    try:
+        return findReplaceableTypesForPiecesInDesignDict(kit, design_guid, piece_guids, variants)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def create_clustered_design(original_design: dict, cluster_piece_ids: list[str], design_name: str) -> dict:
+    """Create a new design from a subset of pieces (cluster).
+    Returns clusteredDesign and externalConnections.
+    Callers MUST provide a valid design dict, list of piece GUIDs, and a name for the new design.
+    [👤semio📚engine💻engine🔖mcp🛠️createclustereddesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/create_clustered_design)
+    """
+    try:
+        return createClusteredDesignDict(original_design, cluster_piece_ids, design_name)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[str], clustered_design: dict, external_connections: list[dict]) -> dict:
+    """Get a DesignDiff that replaces clustered pieces with a design reference.
+    Callers MUST provide the original design, cluster piece IDs, the new clustered design, and external connections.
+    [👤semio📚engine💻engine🔖mcp🛠️replaceclusterwithdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/replace_cluster_with_design)
+    """
+    try:
+        return replaceClusterWithDesignDict(original_design, cluster_piece_ids, clustered_design, external_connections)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
+    """Get clusterable groups of selected pieces.
+    Callers MUST provide a valid design dict and list of selected piece GUIDs.
+    [👤semio📚engine💻engine🔖mcp🛠️getclusterablegroups](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_clusterable_groups)
+    """
+    try:
+        return getClusterableGroupsDict(design, selected_piece_ids)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def expand_design_pieces(design: dict, kit: dict) -> dict:
+    """Recursively expand design references by inlining their pieces and connections.
+    Callers MUST provide a valid design dict and kit dict.
+    [👤semio📚engine💻engine🔖mcp🛠️expanddesignpieces](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/expand_design_pieces)
+    """
+    try:
+        return expandDesignPiecesDict(design, kit)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def find_attribute_value(entity: dict, name: str, default_value: str = None) -> dict:
+    """Find an attribute value on an entity by key.
+    Callers MUST provide an entity dict (kit, type, design, piece, etc.) and attribute key name.
+    [👤semio📚engine💻engine🔖mcp🛠️findattributevalue](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_attribute_value)
+    """
+    try:
+        sentinel = ... if default_value is None else default_value
+        result = findAttributeValueDict(entity, name, sentinel)
+        return {"value": result}
     except Exception as e:
         return {"error": str(e)}
 

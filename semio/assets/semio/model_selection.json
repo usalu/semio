@@ -1,0 +1,82 @@
+{
+  "cases": [
+    {
+      "name": "default_model_when_no_tags_are_selected",
+      "selectedTagGuids": [],
+      "models": [
+        {
+          "guid": "model-default",
+          "fileGuid": "file-default",
+          "tagGuids": []
+        },
+        {
+          "guid": "model-a",
+          "fileGuid": "file-a",
+          "tagGuids": ["tag-a"]
+        }
+      ],
+      "expectedGuid": "model-default"
+    },
+    {
+      "name": "exact_match_beats_partial_overlap",
+      "selectedTagGuids": ["tag-a", "tag-b"],
+      "models": [
+        {
+          "guid": "model-a",
+          "fileGuid": "file-a",
+          "tagGuids": ["tag-a"]
+        },
+        {
+          "guid": "model-ab",
+          "fileGuid": "file-ab",
+          "tagGuids": ["tag-a", "tag-b"]
+        },
+        {
+          "guid": "model-ac",
+          "fileGuid": "file-ac",
+          "tagGuids": ["tag-a", "tag-c"]
+        }
+      ],
+      "expectedGuid": "model-ab"
+    },
+    {
+      "name": "subset_filter_then_best_match",
+      "selectedTagGuids": ["tag-a"],
+      "models": [
+        {
+          "guid": "model-a",
+          "fileGuid": "file-a",
+          "tagGuids": ["tag-a"]
+        },
+        {
+          "guid": "model-ab",
+          "fileGuid": "file-ab",
+          "tagGuids": ["tag-a", "tag-b"]
+        },
+        {
+          "guid": "model-b",
+          "fileGuid": "file-b",
+          "tagGuids": ["tag-b"]
+        }
+      ],
+      "expectedGuid": "model-a"
+    },
+    {
+      "name": "no_model_matches_all_selected_tags",
+      "selectedTagGuids": ["tag-z"],
+      "models": [
+        {
+          "guid": "model-a",
+          "fileGuid": "file-a",
+          "tagGuids": ["tag-a"]
+        },
+        {
+          "guid": "model-b",
+          "fileGuid": "file-b",
+          "tagGuids": ["tag-b"]
+        }
+      ],
+      "expectedGuid": null
+    }
+  ]
+}
