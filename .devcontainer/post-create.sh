@@ -74,6 +74,40 @@ echo "Installing Antigravity server..."
 curl -sL "https://raw.githubusercontent.com/hucaico/demo-devcontainer/main/server-install.sh" -o /tmp/server-install.sh
 chmod +x /tmp/server-install.sh
 /tmp/server-install.sh || true
+echo "Configuring Antigravity MCP Server..."
+mkdir -p /home/vscode/.gemini/antigravity
+cat << 'MCPCONFIG' > /home/vscode/.gemini/antigravity/mcp_config.json
+{
+  "mcpServers": {
+    "semio-repo": {
+      "command": "/workspaces/semio/semio-repo/cli/cli",
+      "args": [
+        "mcp"
+      ]
+    },
+    "semio": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/workspaces/semio/semio/engine",
+        "run",
+        "engine.py",
+        "--mcp-stdio"
+      ]
+    },
+    "coda": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/workspaces/semio/semio-coda/py",
+        "run",
+        "coda.py",
+        "--mcp-stdio"
+      ]
+    }
+  }
+}
+MCPCONFIG
 #endregion 🔖Antigravity
 echo "Development environment ready!"
 #endregion 🔖PostCreate

@@ -41,6 +41,7 @@ from semio import (
     inverseKitDiffDict,
     KitData,
     parseValidationResult,
+    sumQualityInDesignDict,
     validateKitDict,
 )
 
@@ -268,3 +269,13 @@ class TestDesignModel:
             selected = _select_best_model_like_semio_ts(models, case.get("selectedTagGuids", []))
             selected_guid = selected.get("guid") if selected else None
             assert selected_guid == case.get("expectedGuid"), f"Case {case.get('name')} failed"
+
+
+class TestDesignQualitySum:
+    class TestNakaginCapsuleTower:
+        def test_sum_effective_floor_area(self):
+            kit_dict = load_json("kit_metabolism.json")
+            design = find_design(kit_dict, "Nakagin Capsule Tower")
+            quality = next(q for q in kit_dict.get("qualities", []) if q.get("name") == "effective floor area")
+            result = sumQualityInDesignDict(kit_dict, design["guid"], quality["guid"])
+            assert abs(result - 2349.53) < TOLERANCE

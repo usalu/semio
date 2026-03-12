@@ -11048,3 +11048,38 @@ public class FindConnectionPiecesInDesignComponent : ScriptingComponent
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
     }
 }
+
+public class SumQualityInDesignComponent : ScriptingComponent
+{
+    public SumQualityInDesignComponent() : base("SumQualityInDesign", "SQID", "Sums the values of a quality across all pieces in a design.") { }
+    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123457B");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("QualityGuid", "Q", "QualityGuid", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Sum", "S", "Sum of quality values", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo in0 = null;
+        if (!DA.GetData(0, ref in0) && !Params.Input[0].Optional) return;
+        string in1 = "";
+        if (!DA.GetData(1, ref in1) && !Params.Input[1].Optional) return;
+        string in2 = "";
+        if (!DA.GetData(2, ref in2) && !Params.Input[2].Optional) return;
+
+        try
+        {
+            var result = Kit.SumQualityInDesign(in0.Value, in1, in2);
+            DA.SetData(0, result);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}

@@ -138,6 +138,7 @@ export async function loadMDXFile(path: string): Promise<MDXModule | null> {
 }
 
 /** pathToSection holds the data fields for a pathToSection record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🛠️pathtosection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/pathToSection)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨pathtosection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/pathToSection)
@@ -148,6 +149,7 @@ function pathToSection(filePath: string): string {
 }
 
 /** pathToTitle holds the data fields for a pathToTitle record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🛠️pathtotitle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/pathToTitle)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨pathtotitle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/pathToTitle)
@@ -306,6 +308,7 @@ export interface HeadingNode {
 }
 
 /** headingsState holds the data fields for a headingsState record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨headingsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/headingsState)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨headingsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/headingsState)
@@ -341,6 +344,7 @@ const headingsState = {
 };
 
 /** subscribeHeadings holds the data fields for a subscribeHeadings record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨subscribeheadings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/subscribeHeadings)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨subscribeheadings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/subscribeHeadings)
@@ -373,6 +377,7 @@ export const useHeadings = () => {
 };
 
 /** HeadingsContextValue holds the data fields for a HeadingsContextValue record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader✂️headingscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/HeadingsContext)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider✂️headingscontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/HeadingsContextValue)
@@ -398,6 +403,7 @@ const HeadingsContext = createContext<HeadingsContextValue | null>(null);
 const TabItem: FC<{ label: string; children: ReactNode }> = ({ children }) => <>{children}</>;
 
 /** Tabs holds the data fields for a Tabs record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/Tabs)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/Tabs)
@@ -425,6 +431,7 @@ const Tabs: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 /** createComponents holds the data fields for a createComponents record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader🪨createcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/createComponents)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨createcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/createComponents)
@@ -595,6 +602,7 @@ const createComponents = () => ({
 });
 
 /** HeadingsProviderProps holds the data fields for a HeadingsProviderProps record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader✂️headingsproviderprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/HeadingsProviderProps)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider✂️headingsproviderprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/HeadingsProviderProps)
@@ -1367,6 +1375,7 @@ export const DocsAppFooter: FC = () => {
 // Panel components MUST render sidebar content for the docs app.
 
 /** Workbench holds the data fields for a Workbench record.
+ **/
 // [👤semio📚js🗃️sketchpad💻docs🔖panels🪨workbench](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Workbench)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨workbench](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Workbench)

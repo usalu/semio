@@ -25,7 +25,7 @@ import React, { createContext, FC, memo, useCallback, useContext, useEffect, use
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useLabel } from "../i18n";
-import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
+import { guid, Guid, Kit, Quality, QualityDiff, sumQualityInDesign } from "../semio";
 import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "./elements";
 import {
     Diagram as BaseDiagram,
@@ -445,6 +445,15 @@ export const formulaFunctions: Record<string, FormulaFunction> = {
     calculate: (key: any, dict: any) => typeof dict === "object" && dict !== null && key in dict,
     toLatex: (key: string, dict: string) => `${key} \\in \\text{keys}(${dict})`,
   },
+  SumQualityInDesign: {
+    name: "SumQualityInDesign",
+    category: "data",
+    arity: 3,
+    icon: "sigma",
+    description: "Sum the values of a quality across all pieces in a design",
+    calculate: (kit: any, designGuid: string, qualityGuid: string) => sumQualityInDesign(kit, designGuid, qualityGuid),
+    toLatex: (kit: string, designGuid: string, qualityGuid: string) => `\\sum_{\\text{pieces}} \\text{Quality}(${qualityGuid})`,
+  },
 };
 
 /**
@@ -461,6 +470,7 @@ export function parseFormula(formula: string): any {
 }
 
 /** tokenizeFormula holds the data fields for a tokenizeFormula record.
+ **/
 // [👤semio📚js🗃️sketchpad💻quality🔖functions🛠️tokenizeformula](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/tokenizeFormula)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖functions🪨tokenizeformula](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/tokenizeFormula)
@@ -941,6 +951,7 @@ export const QualityAppScopeProvider = (props: { guid: string; children: React.R
   return React.createElement(QualityAppScopeContext.Provider, { value }, props.children as any);
 };
 /** useQualityAppScope holds the data fields for a useQualityAppScope record.
+ **/
 // [👤semio📚js🗃️sketchpad💻quality🔖store🪨usequalityappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store/d/i/useQualityAppScope)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖store🪨usequalityappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Store/d/i/useQualityAppScope)
@@ -1319,6 +1330,7 @@ declare global {
 }
 
 /** FunctionNodeComponent holds the data fields for a FunctionNodeComponent record.
+ **/
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨functionnodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNodeComponent)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨functionnodecomponent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNodeComponent)
@@ -1395,6 +1407,7 @@ interface QualityDiagramProps {
 }
 
 /** QualityDiagram holds the data fields for a QualityDiagram record.
+ **/
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitydiagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityDiagram)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitydiagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityDiagram)
@@ -1524,6 +1537,7 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
 };
 
 /** Formula holds the data fields for a Formula record.
+ **/
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨formula](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/Formula)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨formula](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/Formula)

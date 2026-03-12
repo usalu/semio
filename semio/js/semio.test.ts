@@ -44,6 +44,7 @@ import {
   replaceClusterWithDesign,
   selectBestModel,
   serializeKit,
+  sumQualityInDesign,
   validateKit,
   ValidationResult,
 } from "./semio";
@@ -371,5 +372,19 @@ describe("JS Dev Launcher", () => {
     expect(isStorybookIndexPayload("{\"hello\":\"world\"}")).toBe(false);
     expect(readLaunchKind(["storybook"])).toBe("storybook");
     expect(readLaunchKind([])).toBe("workspace");
+  });
+});
+
+describe("Design/Quality/Sum", () => {
+  const kit = MetabolismKit as Kit;
+  describe("Nakagin Capsule Tower", () => {
+    it("sums effective floor area to ~2349.53", () => {
+      const design = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
+      expect(design).toBeDefined();
+      const quality = kit.qualities?.find((q) => q.name === "effective floor area");
+      expect(quality).toBeDefined();
+      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);
+      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);
+    });
   });
 });

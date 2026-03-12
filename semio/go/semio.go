@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 
 	"gonum.org/v1/gonum/mat"
@@ -1967,6 +1968,50 @@ func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
 		}
 	}
 	return nil
+}
+
+// SumQualityInDesign MUST sum up the values of a quality across all pieces in a design.
+// For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
+// [👤semio📚go💻semio🔖helpers🛠️sumqualityindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Helpers/d/i/SumQualityInDesign)
+func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64 {
+	design := FindDesignInKit(kit, designGuid)
+	if design == nil {
+		return 0
+	}
+	total := 0.0
+	for _, piece := range design.Pieces {
+		var found bool
+		for _, prop := range piece.Props {
+			if prop.Quality.Guid == qualityGuid {
+				val, err := strconv.ParseFloat(prop.Value, 64)
+				if err == nil {
+					total += val
+				}
+				found = true
+				break
+			}
+		}
+		if found {
+			continue
+		}
+		if piece.Type == nil {
+			continue
+		}
+		typ := FindTypeInKit(kit, piece.Type.Guid)
+		if typ == nil {
+			continue
+		}
+		for _, prop := range typ.Props {
+			if prop.Quality.Guid == qualityGuid {
+				val, err := strconv.ParseFloat(prop.Value, 64)
+				if err == nil {
+					total += val
+				}
+				break
+			}
+		}
+	}
+	return total
 }
 
 // #endregion 🔖Helpers

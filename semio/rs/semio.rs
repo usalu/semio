@@ -1362,6 +1362,43 @@ pub fn find_stat_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Sta
     design.stats.as_ref()?.iter().find(|s| s.guid == guid)
 }
 
+/// sum_quality_in_design MUST sum all quality values for a given quality across all pieces in a design.
+/// For each piece, it checks piece-level props first, then falls back to type-level props.
+pub fn sum_quality_in_design(kit: &Kit, design_guid: &str, quality_guid: &str) -> f64 {
+    let design = match find_design_in_kit(kit, design_guid) {
+        Some(d) => d,
+        None => return 0.0,
+    };
+    let pieces = match &design.pieces {
+        Some(p) => p,
+        None => return 0.0,
+    };
+    let mut sum = 0.0;
+    for piece in pieces {
+        let piece_prop = piece.props.as_ref().and_then(|props| {
+            props.iter().find(|p| p.quality.guid == quality_guid)
+        });
+        if let Some(prop) = piece_prop {
+            if let Ok(val) = prop.value.parse::<f64>() {
+                sum += val;
+            }
+            continue;
+        }
+        if let Some(type_ref) = &piece.type_ref {
+            if let Some(t) = find_type_in_kit(kit, &type_ref.guid) {
+                if let Some(prop) = t.props.as_ref().and_then(|props| {
+                    props.iter().find(|p| p.quality.guid == quality_guid)
+                }) {
+                    if let Ok(val) = prop.value.parse::<f64>() {
+                        sum += val;
+                    }
+                }
+            }
+        }
+    }
+    sum
+}
+
 // #endregion 🔖Finder Functions
 
 // #region 🔖Serialization
@@ -6195,6 +6232,43 @@ mod tests {
     }
 
     // #endregion 🔖Validation Tests
+
+    // #region 🔖Design Quality Sum Tests
+
+    mod design_quality_sum {
+        use super::*;
+
+        mod nakagin_capsule_tower {
+            use super::*;
+
+            #[test]
+            fn sum_effective_floor_area() {
+                let kit = load_kit("kit_metabolism.json");
+                let design = kit
+                    .designs
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                    .expect("Nakagin Capsule Tower design not found");
+                let quality = kit
+                    .qualities
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .find(|q| q.name == "effective floor area")
+                    .expect("effective floor area quality not found");
+                let result = sum_quality_in_design(&kit, &design.guid, &quality.guid);
+                assert!(
+                    (result - 2349.53).abs() < 0.01,
+                    "Expected ~2349.53, got {}",
+                    result
+                );
+            }
+        }
+    }
+
+    // #endregion 🔖Design Quality Sum Tests
 }
 
 // #endregion 🔖Tests

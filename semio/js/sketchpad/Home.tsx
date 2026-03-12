@@ -212,6 +212,7 @@ export interface HomeCommandResult {
 // Home app plugin and event handler registration MUST initialize XState context.
 
 /** createDefaultHomeState holds the data fields for a createDefaultHomeState record.
+ **/
 // [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖homeapppluginregistration🪨createdefaulthomestate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Home%20App%20Plugin%20Registration/d/i/createDefaultHomeState)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖homeapppluginregistration🪨createdefaulthomestate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Home%20App%20Plugin%20Registration/d/i/createDefaultHomeState)
@@ -565,6 +566,7 @@ const HomeFooter: FC = () => {
 // DropZone component MUST handle drag-and-drop kit imports.
 
 /** HomeDropZone holds the data fields for a HomeDropZone record.
+ **/
 // [👤semio📚js🗃️sketchpad💻home🔖imports🔖dropzone🪨homedropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/DropZone/d/i/HomeDropZone)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖dropzone🪨homedropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/DropZone/d/i/HomeDropZone)

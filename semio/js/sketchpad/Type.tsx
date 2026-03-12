@@ -1221,11 +1221,13 @@ export const TypeAppScopeProvider = (props: { id: string; children: React.ReactN
   const value = { id: props.id };
   return React.createElement(TypeAppScopeContext.Provider, { value }, props.children as any);
 };
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨usetypeappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/useTypeAppScope)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖xstatehooks🪨usetypeappscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/XState%20Hooks/d/i/useTypeAppScope)
  * useTypeAppScope holds the data fields for a useTypeAppScope record.
 
+ **/
 // #endregion XState Hooks
 
 // #region Commands
@@ -1556,6 +1558,7 @@ const GLTFMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointe
 };
 
 /** FBXMesh holds the data fields for a FBXMesh record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨fbxmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/FBXMesh)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨fbxmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/FBXMesh)
@@ -1593,6 +1596,7 @@ const FBXMesh: FC<{ url: string; onPointerDown: any; onPointerUp: any; onPointer
 };
 
 /** OBJMesh holds the data fields for a OBJMesh record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨objmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/OBJMesh)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨objmesh](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/OBJMesh)
@@ -1655,6 +1659,7 @@ const LoadedTypeMesh: FC<{
 };
 
 /** selectTypeModels holds the data fields for a selectTypeModels record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨selecttypemodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/selectTypeModels)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypemodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeModels)
@@ -1667,6 +1672,7 @@ const selectTypeModels = (type: Type) => type.models;
  **/
 const selectTypeConcepts = (type: Type) => type.concepts;
 /** selectTypeMeshGuid holds the data fields for a selectTypeMeshGuid record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene🪨selecttypemeshguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene/d/i/selectTypeMeshGuid)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypemeshguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypeMeshGuid)
@@ -2082,6 +2088,7 @@ export const TypeDetails: FC = () => {
 };
 
 /** TypeDetailsForm holds the data fields for a TypeDetailsForm record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨typedetailsform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/TypeDetailsForm)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨typedetailsform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/TypeDetailsForm)
@@ -2149,6 +2156,7 @@ export const ModelsSection: FC = () => {
 };
 
 /** ModelsSectionForm holds the data fields for a ModelsSectionForm record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨modelssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ModelsSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨modelssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ModelsSectionForm)
@@ -2320,6 +2328,7 @@ export const ConnectorsListSection: FC = () => {
 };
 
 /** ConnectorsListSectionForm holds the data fields for a ConnectorsListSectionForm record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨connectorslistsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/ConnectorsListSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorslistsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsListSectionForm)
@@ -2621,6 +2630,7 @@ export const AuthorsSection: FC = () => {
 };
 
 /** AuthorsSectionForm holds the data fields for a AuthorsSectionForm record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖details🪨authorssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Details/d/i/AuthorsSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨authorssectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AuthorsSectionForm)
@@ -3315,6 +3325,7 @@ const TypeSettingsContent: FC = () => {
 const toolModules = import.meta.glob<Record<string, Tool<TypeAppState>>>("./*Tool.tsx", { eager: true });
 
 /** ConnectorToolContent holds the data fields for a ConnectorToolContent record.
+ **/
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖tools🪨connectortoolcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Tools/d/i/ConnectorToolContent)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖tools🪨connectortoolcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Tools/d/i/ConnectorToolContent)

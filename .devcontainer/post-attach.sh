@@ -198,6 +198,26 @@ cat > "$WINDSURF_MCP_FILE" <<'EOF'
             "args": [
                 "mcp"
             ]
+        },
+        "semio": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "semio/engine",
+                "run",
+                "engine.py",
+                "--mcp-stdio"
+            ]
+        },
+        "coda": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "semio-coda/py",
+                "run",
+                "coda.py",
+                "--mcp-stdio"
+            ]
         }
     }
 }

@@ -371,4 +371,17 @@ public class Tests
         }
     }
 
+    public class DesignQualitySum
+    {
+        [Fact]
+        public void Nakagin_Capsule_Tower_Sum_Effective_Floor_Area()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var quality = kit.Qualities.First(q => q.Name == "effective floor area");
+            var result = Kit.SumQualityInDesign(kit, design.Guid, quality.Guid);
+            Assert.True(Math.Abs(result - 2349.53) < 0.01, $"Expected ~2349.53, got {result}");
+        }
+    }
+
 }

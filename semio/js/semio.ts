@@ -8394,6 +8394,36 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
 };
 
 /**
+ * Sums the values of a quality across all pieces in a design.
+ * For each piece, checks piece-level props first, then falls back to type-level props.
+ *
+ *  * [👤semio📚js💻semio🔖kit🪨sumqualityindesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/sumQualityInDesign)
+ **/
+export const sumQualityInDesign = (kit: Kit, designGuid: string, qualityGuid: string): number => {
+  const design = findDesignInKit(kit, designGuid);
+  let sum = 0;
+  for (const piece of design.pieces ?? []) {
+    const pieceProp = piece.props?.find((p) => p.quality?.guid === qualityGuid);
+    if (pieceProp) {
+      const val = parseFloat(pieceProp.value);
+      if (!isNaN(val)) sum += val;
+      continue;
+    }
+    if (piece.type) {
+      const type = kit.types?.find((t) => t.guid === piece.type!.guid);
+      if (type) {
+        const typeProp = type.props?.find((p) => p.quality?.guid === qualityGuid);
+        if (typeProp) {
+          const val = parseFloat(typeProp.value);
+          if (!isNaN(val)) sum += val;
+        }
+      }
+    }
+  }
+  return sum;
+};
+
+/**
  * Definition of piecesMetadata.
  *
  *  * [👤semio📚js💻semio🔖kit🪨piecesmetadata](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/piecesMetadata)

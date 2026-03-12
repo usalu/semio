@@ -23,8 +23,14 @@
 // Vite configuration for the 3dm React UI embedded in Rhino WebView2.
 // Configuration MUST include React and Tailwind CSS plugins.
 
+import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
+import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
@@ -43,6 +49,14 @@ export default defineConfig(async () => {
     },
     plugins: [
       tailwind.default(),
+      {
+        ...mdx({
+          remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
+          rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+          providerImportSource: "@mdx-js/react",
+        }),
+        enforce: "pre",
+      },
       react(),
       wasm(),
       topLevelAwait(),

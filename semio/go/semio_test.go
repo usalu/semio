@@ -20,6 +20,7 @@ package semio
 
 import (
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -418,6 +419,39 @@ func TestValidation(t *testing.T) {
 			if !AreValidationResultsEqual(serializedResult, expected) {
 				t.Errorf("Validation mismatch. Got %d problems, expected %d",
 					len(serializedResult.Problems), len(expected.Problems))
+			}
+		})
+	})
+}
+
+func TestDesignQualitySum(t *testing.T) {
+	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
+		t.Run("Sum Effective Floor Area", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "kit_metabolism.json", &kit)
+			var designGuid string
+			for _, d := range kit.Designs {
+				if d.Name == "Nakagin Capsule Tower" && d.Parent == nil {
+					designGuid = d.Guid
+					break
+				}
+			}
+			if designGuid == "" {
+				t.Fatal("Nakagin Capsule Tower design not found")
+			}
+			var qualityGuid string
+			for _, q := range kit.Qualities {
+				if q.Name == "effective floor area" {
+					qualityGuid = q.Guid
+					break
+				}
+			}
+			if qualityGuid == "" {
+				t.Fatal("effective floor area quality not found")
+			}
+			result := SumQualityInDesign(&kit, designGuid, qualityGuid)
+			if math.Abs(result-2349.53) > 0.01 {
+				t.Errorf("Expected ~2349.53, got %f", result)
 			}
 		})
 	})

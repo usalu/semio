@@ -2,12 +2,13 @@
   "title": "Implement Coda MCP Server and Configure Agent Files",
   "status": "closed",
   "description": "Implement the coda MCP server fully: fix bugs, implement proper subagent orchestration tools, configure the agent files for the example project, and update the mcp.json path.",
-  "summary": "Implemented coda MCP server: fixed _get_latest_run bug, added validate/save_translation/save_report tools, enhanced translate and fix tools with subagent invocation, added platforms/breachs/translation resources, configured all 4 agent files with proper tool restrictions and instructions, updated SPECS.md.",
+  "summary": "Added semio and coda MCP server entries across monorepo settings and devcontainer-generated MCP configs.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/848"
   },
-  "goal": "🎯r2603",
+  "goal": "🎯aioptimizedrepo",
   "sessions": [
-    "🔀60dfe07aee2143680c0313abaff78931f318b398⚪17732977801884655357297471079637180620"
+    "🔀60dfe07aee2143680c0313abaff78931f318b398⚪17732977801884655357297471079637180620",
+    "🔀68ae08219bbd3a68d8a72d460e05c86376d98380⚪019ce17b9f127cb2af87841922e3e343"
   ]
 }

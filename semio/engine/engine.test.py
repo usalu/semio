@@ -414,6 +414,24 @@ class TestMcp:
         result = engine.inverse_kit_diff(minimalKitJson, diff)
         assert isinstance(result, dict)
 
+    def test_sum_quality_in_design_tool(self):
+        kit = {"name": "test", "types": [
+            {"guid": "t1", "name": "TypeA", "props": [
+                {"guid": "p1", "quality": {"guid": "q1"}, "value": "10.5"},
+            ]},
+            {"guid": "t2", "name": "TypeB", "props": [
+                {"guid": "p2", "quality": {"guid": "q1"}, "value": "20.0"},
+            ]},
+        ], "designs": [
+            {"guid": "d1", "name": "Design1", "pieces": [
+                {"guid": "pc1", "name": "Piece1", "type": {"guid": "t1"}},
+                {"guid": "pc2", "name": "Piece2", "type": {"guid": "t2"}},
+                {"guid": "pc3", "name": "Piece3", "type": {"guid": "t1"}},
+            ]},
+        ]}
+        result = engine.sum_quality_in_design(kit, "d1", "q1")
+        assert abs(result.get("result") - 41.0) < 0.001
+
 
 # endregion MCP Tests
 

@@ -8139,6 +8139,29 @@ def findReplaceableTypesForPiecesInDesignDict(kit: dict, design_guid: str, piece
             result.append(replacement_type)
     return result
 
+def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> float:
+    """Sums up the values of a quality across all pieces in a design.
+    For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
+    [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict🛠️sumqualityindesigndict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict/d/i/sumQualityInDesignDict)
+    """
+    design = _findDesignInKitDict(kit, design_guid)
+    total = 0.0
+    for piece in design.get("pieces", []):
+        piece_prop = next((p for p in piece.get("props", []) if p.get("quality", {}).get("guid") == quality_guid), None)
+        if piece_prop is not None:
+            total += float(piece_prop.get("value", 0))
+            continue
+        type_ref = piece.get("type", {})
+        if type_ref and type_ref.get("guid"):
+            try:
+                type_dict = _findTypeInKitDict(kit, type_ref["guid"])
+                type_prop = next((p for p in type_dict.get("props", []) if p.get("quality", {}).get("guid") == quality_guid), None)
+                if type_prop is not None:
+                    total += float(type_prop.get("value", 0))
+            except ValueError:
+                pass
+    return total
+
 # endregion 🔖Kit Query Helpers Dict
 
 # endregion Kit Operations

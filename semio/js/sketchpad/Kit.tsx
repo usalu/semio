@@ -226,6 +226,7 @@ import {
 // Design family helper functions MUST traverse the design hierarchy to collect related design GUIDs.
 
 /** getDesignFamilyGuids holds the data fields for a getDesignFamilyGuids record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🪨getdesignfamilyguids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/d/i/getDesignFamilyGuids)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🪨getdesignfamilyguids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/d/i/getDesignFamilyGuids)
@@ -4366,6 +4367,7 @@ const KitKindToggles: FC = () => {
 };
 
 /** KitCreateActions holds the data fields for a KitCreateActions record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖table🪨kitcreateactions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/KitCreateActions)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨kitcreateactions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/KitCreateActions)
@@ -4622,6 +4624,7 @@ const getRowIcon = (row: TableRow): string | React.ReactNode | undefined => {
 };
 
 /** DroppableTableWrapper holds the data fields for a DroppableTableWrapper record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖table🪨droppabletablewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/DroppableTableWrapper)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨droppabletablewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/DroppableTableWrapper)
@@ -4640,6 +4643,7 @@ const DroppableTableWrapper: FC<{ children: React.ReactNode }> = ({ children }) 
 };
 
 /** KitDropZone holds the data fields for a KitDropZone record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖table🪨kitdropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/KitDropZone)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨kitdropzone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/KitDropZone)
@@ -4685,6 +4689,7 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 /** AppContent holds the data fields for a AppContent record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖table🪨appcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/AppContent)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨appcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/AppContent)
@@ -6924,6 +6929,7 @@ function useKitAppYjsToXStateSync() {
 }
 
 /** App holds the data fields for a App record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖table🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/App)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/App)
@@ -6990,6 +6996,7 @@ interface KitDiagramEdge {
 }
 
 /** KitArtifactNode holds the data fields for a KitArtifactNode record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨kitartifactnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitArtifactNode)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨kitartifactnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitArtifactNode)
@@ -7117,6 +7124,7 @@ const KIT_DIAGRAM_FALLBACK_KIND: KitDiagramNodeKind = "quality";
 const KIT_DIAGRAM_PROXIMITY_CONNECT_DISTANCE = Math.max(KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY.frame.width, KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY.frame.height) * 0.55;
 
 /** isKitDiagramNodeKind holds the data fields for a isKitDiagramNodeKind record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramedgeanchors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramEdgeAnchors)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨iskitdiagramnodekind](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/isKitDiagramNodeKind)
@@ -7194,6 +7202,7 @@ const resolveDiagramEdgeAnchors = (sourceNode: any, targetNode: any) => {
 };
 
 /** FloatingEdge holds the data fields for a FloatingEdge record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨floatingedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/FloatingEdge)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨floatingedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/FloatingEdge)
@@ -8562,6 +8571,7 @@ export const KitSection: FC = () => {
 };
 
 /** KitSectionForm holds the data fields for a KitSectionForm record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨kitsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/KitSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨kitsectionform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/KitSectionForm)
@@ -8670,6 +8680,7 @@ export const TypeSection: FC = () => {
 };
 
 /** SingleTypeSection holds the data fields for a SingleTypeSection record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨singletypesection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/SingleTypeSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singletypesection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleTypeSection)
@@ -8708,6 +8719,7 @@ const SingleTypeSection: FC<{ typeGuid: string }> = ({ typeGuid }) => {
 };
 
 /** MultipleTypesSection holds the data fields for a MultipleTypesSection record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨multipletypessection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/MultipleTypesSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipletypessection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleTypesSection)
@@ -8878,6 +8890,7 @@ export const ConceptSection: FC = () => {
 };
 
 /** SingleConceptSection holds the data fields for a SingleConceptSection record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨singleconceptsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/SingleConceptSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singleconceptsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleConceptSection)
@@ -9014,6 +9027,7 @@ const SingleDesignSection: FC<{ designGuid: string }> = ({ designGuid }) => {
 };
 
 /** MultipleDesignsSection holds the data fields for a MultipleDesignsSection record.
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨multipledesignssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/MultipleDesignsSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipledesignssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleDesignsSection)
@@ -9110,6 +9124,7 @@ export const FileSection: FC = () => {
  *
  *  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨foldersection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/FolderSection)
 /**
+ **/
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨foldersection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/FolderSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨foldersection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/FolderSection)

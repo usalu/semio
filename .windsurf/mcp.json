@@ -14,6 +14,28 @@
         "mcp"
       ],
       "disabled": false
+    },
+    "semio": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "semio/engine",
+        "run",
+        "engine.py",
+        "--mcp-stdio"
+      ],
+      "disabled": false
+    },
+    "coda": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "semio-coda/py",
+        "run",
+        "coda.py",
+        "--mcp-stdio"
+      ],
+      "disabled": false
     }
   }
 }

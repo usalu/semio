@@ -13,6 +13,28 @@
       "args": [
         "mcp"
       ]
+    },
+    "semio": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "semio/engine",
+        "run",
+        "engine.py",
+        "--mcp-stdio"
+      ]
+    },
+    "coda": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "semio-coda/py",
+        "run",
+        "coda.py",
+        "--mcp-stdio"
+      ]
     }
   }
 }

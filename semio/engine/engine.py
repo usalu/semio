@@ -165,6 +165,7 @@ from semio import (
     areTypesInSameFamilyDict,
     canUseDesignAsPieceDict,
     findPieceTypeInDesignDict,
+    sumQualityInDesignDict,
 )
 
 # endregion Imports
@@ -1861,6 +1862,19 @@ def find_attribute_value(entity: dict, name: str, default_value: str = None) -> 
         sentinel = ... if default_value is None else default_value
         result = findAttributeValueDict(entity, name, sentinel)
         return {"value": result}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def sum_quality_in_design(kit: dict, design_guid: str, quality_guid: str) -> dict:
+    """Sum up the values of a quality across all pieces in a design.
+    For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
+    Callers MUST provide a valid kit dict, design GUID, and quality GUID.
+    [👤semio📚engine💻engine🔖mcp🛠️sumqualityindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/sum_quality_in_design)
+    """
+    try:
+        return {"result": sumQualityInDesignDict(kit, design_guid, quality_guid)}
     except Exception as e:
         return {"error": str(e)}
 

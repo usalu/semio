@@ -10,3 +10,13 @@ enabled = true
 command = "./semio-repo/cli/cli"
 args = ["mcp"]
 enabled = true
+
+[mcp_servers.semio]
+command = "uv"
+args = ["--directory", "semio/engine", "run", "engine.py", "--mcp-stdio"]
+enabled = true
+
+[mcp_servers.coda]
+command = "uv"
+args = ["--directory", "semio-coda/py", "run", "coda.py", "--mcp-stdio"]
+enabled = true

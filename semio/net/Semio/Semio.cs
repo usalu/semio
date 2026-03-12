@@ -6874,6 +6874,33 @@ public class Kit : Entity<Kit>
         }).ToArray();
     }
 
+    public static double SumQualityInDesign(Kit kit, string designGuid, string qualityGuid)
+    {
+        var design = FindDesign(kit, designGuid);
+        double sum = 0;
+        foreach (var piece in design.Pieces ?? new List<Piece>())
+        {
+            var pieceProp = piece.Props?.FirstOrDefault(p => p.Quality?.Guid == qualityGuid);
+            if (pieceProp != null)
+            {
+                if (double.TryParse(pieceProp.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var val))
+                    sum += val;
+                continue;
+            }
+            if (piece.Type != null)
+            {
+                var type = kit.Types?.FirstOrDefault(t => t.Guid == piece.Type.Guid);
+                if (type != null)
+                {
+                    var typeProp = type.Props?.FirstOrDefault(p => p.Quality?.Guid == qualityGuid);
+                    if (typeProp != null && double.TryParse(typeProp.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var val))
+                        sum += val;
+                }
+            }
+        }
+        return sum;
+    }
+
     #endregion 🔖Kit Finders
 
     #region 🔖Flatten Design
