@@ -7207,143 +7207,179 @@ func FilterDesignsWithoutParent(designs []Design) []Design {
 
 // #endregion 🔖Kit Operations
 
-// #region 🔖Kit Diff Helpers
-// [👤semio📚go💻semio🔖kitdiffhelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers)
-// Kit Diff Helpers MUST provide convenience functions for single-entity kit diffs.
+// #region 🔖Kit Change Helpers
+// [👤semio📚go💻semio🔖kitchangehelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers)
+// Kit Change Helpers MUST provide convenience functions for single-entity kit changes.
 
-// AddTypeToKit MUST return a diff with exactly one added type.
-// AddTypeToKit creates a diff that adds a single type to a kit.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddTypeToKit)
-func AddTypeToKit(typ Type) KitDiff {
-	return KitDiff{
+// AddTypeToKit MUST return a change with exactly one added type.
+// AddTypeToKit creates a change that adds a single type to a kit.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddTypeToKit)
+func AddTypeToKit(kit Kit, typ Type) KitChange {
+	forward := KitDiff{
 		Types: &TypesDiff{
 			Added: []Type{typ},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// RemoveTypeFromKit MUST return a diff with exactly one removed type ID.
-// RemoveTypeFromKit creates a diff that removes a type by GUID.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveTypeFromKit)
-func RemoveTypeFromKit(typeGuid string) KitDiff {
-	return KitDiff{
+// RemoveTypeFromKit MUST return a change with exactly one removed type ID.
+// RemoveTypeFromKit creates a change that removes a type by GUID.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveTypeFromKit)
+func RemoveTypeFromKit(kit Kit, typeGuid string) KitChange {
+	forward := KitDiff{
 		Types: &TypesDiff{
 			Removed: []TypeId{{Guid: typeGuid}},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// AddDesignToKit MUST return a diff with exactly one added design.
-// AddDesignToKit creates a diff that adds a single design to a kit.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddDesignToKit)
-func AddDesignToKit(design Design) KitDiff {
-	return KitDiff{
+// AddDesignToKit MUST return a change with exactly one added design.
+// AddDesignToKit creates a change that adds a single design to a kit.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddDesignToKit)
+func AddDesignToKit(kit Kit, design Design) KitChange {
+	forward := KitDiff{
 		Designs: &DesignsDiff{
 			Added: []Design{design},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// RemoveDesignFromKit MUST return a diff with exactly one removed design ID.
-// RemoveDesignFromKit creates a diff that removes a design by GUID.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveDesignFromKit)
-func RemoveDesignFromKit(designGuid string) KitDiff {
-	return KitDiff{
+// RemoveDesignFromKit MUST return a change with exactly one removed design ID.
+// RemoveDesignFromKit creates a change that removes a design by GUID.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveDesignFromKit)
+func RemoveDesignFromKit(kit Kit, designGuid string) KitChange {
+	forward := KitDiff{
 		Designs: &DesignsDiff{
 			Removed: []DesignId{{Guid: designGuid}},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// AddFileToKit MUST return a diff with exactly one added file.
-// AddFileToKit creates a diff that adds a single file to a kit.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddFileToKit)
-func AddFileToKit(file File) KitDiff {
-	return KitDiff{
+// AddFileToKit MUST return a change with exactly one added file.
+// AddFileToKit creates a change that adds a single file to a kit.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddFileToKit)
+func AddFileToKit(kit Kit, file File) KitChange {
+	forward := KitDiff{
 		Files: &FilesDiff{
 			Added: []File{file},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// RemoveFileFromKit MUST return a diff with exactly one removed file ID.
-// RemoveFileFromKit creates a diff that removes a file by GUID.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveFileFromKit)
-func RemoveFileFromKit(fileGuid string) KitDiff {
-	return KitDiff{
+// RemoveFileFromKit MUST return a change with exactly one removed file ID.
+// RemoveFileFromKit creates a change that removes a file by GUID.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveFileFromKit)
+func RemoveFileFromKit(kit Kit, fileGuid string) KitChange {
+	forward := KitDiff{
 		Files: &FilesDiff{
 			Removed: []FileId{{Guid: fileGuid}},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// AddPortToKit MUST return a diff with exactly one added port.
-// AddPortToKit creates a diff that adds a single port to a kit.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddPortToKit)
-func AddPortToKit(iface Port) KitDiff {
-	return KitDiff{
+// AddPortToKit MUST return a change with exactly one added port.
+// AddPortToKit creates a change that adds a single port to a kit.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddPortToKit)
+func AddPortToKit(kit Kit, iface Port) KitChange {
+	forward := KitDiff{
 		Ports: &PortsDiff{
 			Added: []Port{iface},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// RemovePortFromKit MUST return a diff with exactly one removed port ID.
-// RemovePortFromKit creates a diff that removes a port by GUID.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemovePortFromKit)
-func RemovePortFromKit(interfaceGuid string) KitDiff {
-	return KitDiff{
+// RemovePortFromKit MUST return a change with exactly one removed port ID.
+// RemovePortFromKit creates a change that removes a port by GUID.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemovePortFromKit)
+func RemovePortFromKit(kit Kit, interfaceGuid string) KitChange {
+	forward := KitDiff{
 		Ports: &PortsDiff{
 			Removed: []PortId{{Guid: interfaceGuid}},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// AddTagToKit MUST return a diff with exactly one added tag.
-// AddTagToKit creates a diff that adds a single tag to a kit.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddTagToKit)
-func AddTagToKit(tag Tag) KitDiff {
-	return KitDiff{
+// AddTagToKit MUST return a change with exactly one added tag.
+// AddTagToKit creates a change that adds a single tag to a kit.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddTagToKit)
+func AddTagToKit(kit Kit, tag Tag) KitChange {
+	forward := KitDiff{
 		Tags: &TagsDiff{
 			Added: []Tag{tag},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// RemoveTagFromKit MUST return a diff with exactly one removed tag ID.
-// RemoveTagFromKit creates a diff that removes a tag by GUID.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveTagFromKit)
-func RemoveTagFromKit(tagGuid string) KitDiff {
-	return KitDiff{
+// RemoveTagFromKit MUST return a change with exactly one removed tag ID.
+// RemoveTagFromKit creates a change that removes a tag by GUID.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveTagFromKit)
+func RemoveTagFromKit(kit Kit, tagGuid string) KitChange {
+	forward := KitDiff{
 		Tags: &TagsDiff{
 			Removed: []TagId{{Guid: tagGuid}},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// AddConceptToKit MUST return a diff with exactly one added concept.
-// AddConceptToKit creates a diff that adds a single concept to a kit.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddConceptToKit)
-func AddConceptToKit(concept Concept) KitDiff {
-	return KitDiff{
+// AddConceptToKit MUST return a change with exactly one added concept.
+// AddConceptToKit creates a change that adds a single concept to a kit.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddConceptToKit)
+func AddConceptToKit(kit Kit, concept Concept) KitChange {
+	forward := KitDiff{
 		Concepts: &ConceptsDiff{
 			Added: []Concept{concept},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// RemoveConceptFromKit MUST return a diff with exactly one removed concept ID.
-// RemoveConceptFromKit creates a diff that removes a concept by GUID.
-// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveConceptFromKit)
-func RemoveConceptFromKit(conceptGuid string) KitDiff {
-	return KitDiff{
+// RemoveConceptFromKit MUST return a change with exactly one removed concept ID.
+// RemoveConceptFromKit creates a change that removes a concept by GUID.
+// [👤semio📚go💻semio🔖kitchangehelpers🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveConceptFromKit)
+func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
+	forward := KitDiff{
 		Concepts: &ConceptsDiff{
 			Removed: []ConceptId{{Guid: conceptGuid}},
 		},
 	}
+	after := ApplyKitDiff(kit, forward)
+	backward := InverseKitDiff(kit, forward)
+	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// #endregion 🔖Kit Diff Helpers
+// #endregion 🔖Kit Change Helpers
 
 // #region 🔖Validation
 // [👤semio📚go💻semio🔖validation](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Validation)

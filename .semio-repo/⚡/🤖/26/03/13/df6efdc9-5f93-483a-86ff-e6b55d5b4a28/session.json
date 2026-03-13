@@ -1,0 +1,43 @@
+{
+  "id": "df6efdc9-5f93-483a-86ff-e6b55d5b4a28",
+  "uri": "semiorepo://s/df6efdc9-5f93-483a-86ff-e6b55d5b4a28",
+  "contributor": "🧑‍💻ueli",
+  "client": "cursor-chat",
+  "second": "2026-03-13T12:38:27Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "conversation_id": "df6efdc9-5f93-483a-86ff-e6b55d5b4a28",
+          "generation_id": "df6efdc9-5f93-483a-86ff-e6b55d5b4a28",
+          "model": "tab",
+          "file_path": "\\workspaces\\semio\\semio-coda\\programming\\AGENTS.md",
+          "content": "# 🧾 Specification\n\n## Systems\n\n### Space, Quality Program\n\n## 🛠️ Mechanisms\n\n## 📛 Concepts\n\n## Project\n\n### Program\n",
+          "hook_event_name": "beforeTabFileRead",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": null
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "llm": "tab",
+        "parent": "",
+        "ranges": [
+          "🛅🗃️workspaces🗃️semio🗃️semiocoda🗃️programming📃agents📌1"
+        ],
+        "second": "🎆26🌙03☀️13⏰12⌚38⏱️27",
+        "session": "⚪df6efdc95f93483a86ffe6b55d5b4a28"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

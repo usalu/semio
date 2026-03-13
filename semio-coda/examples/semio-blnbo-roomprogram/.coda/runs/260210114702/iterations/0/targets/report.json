@@ -1,55 +1,112 @@
 {
-    "rules": [
+    "properties": [
         {
-            "id": "staircase-in-separate-stairwell",
-            "status": "violated",
-            "clauses": [
-                {
-                    "id": "not-external-staircase",
-                    "status": "compliant"
+            "id": "building",
+            "value": {
+                "area": {
+                    "value": 255,
+                    "unit": "m²"
                 },
-                {
-                    "id": "not-in-building-classes-1-and-2",
-                    "status": "compliant"
-                },
-                {
-                    "id": "not-connecting-two-storeys-within-same-usage-unit-with-total-gross-floor-area-of-no-more-than-200-m²-if-different-escape-route-can-be-reached-on-each-storey",
-                    "status": "violated"
-                }
-            ]
-        },
-        {
-            "id": "enough-buro-space",
-            "status": "violated",
-            "clauses": [
-                {
-                    "id": ">300m²",
-                    "actual": "255m²",
-                    "should": "300m²"
-                }
-            ]
-        },
-        {
-            "id": "building-height-limit",
-            "status": "compliant",
-            "clauses": [
-                {
-                    "id": "<21m",
-                    "status": "compliant",
-                    "actual": "20.5m"
-                }
-            ]
-        },
-        {
-            "id": "smoething-to-be-irrelevant",
-            "status": "not-applicable",
-            "clauses": [
-                {
-                    "id": "<21m",
-                    "status": "compliant",
-                    "actual": "20.5m"
-                }
-            ]
+                "floors": [
+                    {
+                        "area": {
+                            "value": 150,
+                            "unit": "m²"
+                        },
+                        "zones": [
+                            {
+                                "area": {
+                                    "value": 75,
+                                    "unit": "m²"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
         }
-    ]
-}
+    ],
+    "targets": [
+        {
+            "id": "programming",
+            "properties": [
+                {
+                    "id": "program"
+                }
+            }
+        {
+                "id": "berlin-building-code",
+                "properties": [
+                    {
+                        "id": "building-class",
+                        "value": "3"
+                    }
+                ]
+            }
+        ],
+        "rules": [
+            {
+                "id": "staircase-in-separate-stairwell",
+                "clauses": [
+                    {
+                        "operator": "and",
+                        "operands": [
+                            {
+                                "id": "not-in-building-classes-1",
+                                "status": "compliant"
+                            },
+                            {
+                                "id": "not-in-building-classes-2",
+                                "status": "compliant"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "not-external-staircase",
+                        "status": "compliant"
+                    },
+                    {
+                        "id": "not-in-building-classes-1-and-2",
+                        "clauses": []
+                    },
+                    {
+                        "id": "not-connecting-two-storeys-within-same-usage-unit-with-total-gross-floor-area-of-no-more-than-200-m²-if-different-escape-route-can-be-reached-on-each-storey",
+                        "status": "violated"
+                    }
+                ]
+            },
+            {
+                "id": "enough-buro-space",
+                "status": "violated",
+                "clauses": [
+                    {
+                        "id": ">300m²",
+                        "actual": "255m²",
+                        "should": "300m²"
+                    }
+                ]
+            },
+            {
+                "id": "building-height-limit",
+                "status": "compliant",
+                "clauses": [
+                    {
+                        "id": "<21m",
+                        "status": "compliant",
+                        "actual": "20.5m"
+                    }
+                ]
+            },
+            {
+                "id": "smoething-to-be-irrelevant",
+                "status": "not-applicable",
+                "clauses": [
+                    {
+                        "id": "<21m",
+                        "status": "compliant",
+                        "actual": "20.5m"
+                    }
+                ]
+            }
+        ]
+    }

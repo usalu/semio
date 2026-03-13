@@ -86,7 +86,7 @@ Add request IDs for request/response correlation
 Add timeouts, heartbeats, and auto-restart
 Keep the renderer isolated from native details
 
-## [👤semio](semiorepo://project/semio)
+## 👤semio
 
 TODO: Rename tilt to slope, Add rotation to piece node
 TODO: Rename scene to model
@@ -100,6 +100,10 @@ TODO: Introduce version to artifacts (design,type,shape)
 
 semio:
 Add a new
+
+Replace the keys with semantic keys:
+e.g. "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Wohnen und Aufenthalt.Wohnzimmerfläche.Wohnfläche"
+@config.json
 
 Introduce a new concept: Operation
 An Operation always takes an artifact (kit|design|type) and returns an Edit.

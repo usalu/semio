@@ -1,0 +1,416 @@
+{
+    "properties": [
+        {
+            "id": "building-energy-demand",
+            "name": "Building Energy Demand",
+            "type": "Number",
+            "description": "The energy demand of the building."
+        }
+    ],
+    "measures": [
+        {
+            "id": "add-building",
+            "description": "Add a building"
+        },
+        {
+            "id": "remove-building",
+            "description": "Remove a building"
+        },
+        {
+            "id": "change-building-usage",
+            "description": "Change the usage of a building"
+        },
+        {
+            "id": "add-storey",
+            "description": "Add a storey"
+        },
+        {
+            "id": "remove-storey",
+            "description": "Remove a storey"
+        },
+        {
+            "id": "increase-floor-height",
+            "description": "Increase the floor height"
+        },
+        {
+            "id": "decrease-floor-height",
+            "description": "Decrease the floor height"
+        },
+        {
+            "id": "increase-gross-floor-area",
+            "description": "Increase the gross floor area"
+        },
+        {
+            "id": "decrease-gross-floor-area",
+            "description": "Decrease the gross floor area"
+        },
+        {
+            "id": "add-space",
+            "description": "Add a space"
+        },
+        {
+            "id": "remove-space",
+            "description": "Remove a space"
+        },
+        {
+            "id": "change-space-usage",
+            "description": "Change the usage of a space"
+        },
+        {
+            "id": "increase-insulation-thickness-external-walls",
+            "description": "Increase the insulation thickness of external walls"
+        },
+        {
+            ""
+        }
+    ],
+    "strategy": [
+        {
+            "increase-energy-efficiency",
+            "property": "building-energy-demand",
+            "approaches": [
+                "id": "increase-insulation-thickness-external-walls-increase-floor-area",
+            ]
+            "instruction": "Try to increase  ""measures": [
+                {
+                    "id": "increase-insulation-thickness-external-walls",
+                }
+            ]
+        }
+    ],
+    "platforms": [
+        {
+            "id": "semio",
+            "measures": [
+                {
+                    "id": "increase-gross-floor-area",
+                    "instructions": "Increase the floor area by eiter adding pieces or changing the type of existing pieces. Connect the new pieces to the existing pieces.",
+                    "mcp": {
+                        "resources": [
+                            {
+                                "id": "qualities",
+                                "instruction": "Try to find qualities that are related the gross floor area."
+                            },
+                            {
+                                "id": "quality",
+                                "instruction": "Access the value of the gross floor-related qualities."
+                            }
+                        ],
+                        "tools": [
+                            {
+                                "id": "add_piece",
+                                "instruction": "Add a piece to the building.",
+                                "parameters": [
+                                    {
+                                        "id": "piece_id",
+                                        "instruction": "The id of the piece to add. Make sure that the parameters of the piece are contributing to the gross floor area."
+                                    },
+                                    {
+                                        "id": "piece_type",
+                                        "instruction": "The type of the piece to add. Make sure the type is contributing to the gross floor area."
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "add_connection",
+                                "instruction": "Connect every new piece to the existing pieces.",
+                                "parameters": [
+                                    {
+                                        "id": "connecting_piece_id",
+                                        "instruction": "The id of the piece to connect to."
+                                    },
+                                    {
+                                        "id": "connected_piece_id",
+                                        "instruction": "The id of the piece to connect to."
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "change_piece_type",
+                                "instruction": "Change the type of the piece.",
+                                "parameters": [
+                                    {
+                                        "id": "piece_id",
+                                        "instruction": "The id of the piece to change the type of."
+                                    },
+                                    {
+                                        "id": "piece_type",
+                                        "instruction": "The new type of the piece with more gross floor area than the old type of the piece."
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "update_type",
+                                "instruction": "Update the type of the piece.",
+                                "parameters": [
+                                    {
+                                        "id": "piece_type",
+                                        "instruction": "The type of the piece to update."
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "id": "archicad"
+        }
+    ],
+    "targets": [
+        {
+            "id": "programming",
+            "properties": [
+                {
+                    "id": "program",
+                    "name": "Program",
+                    "type": "Number",
+                    "description": "The sum of areas of the same program."
+                }
+            ],
+            "rules": [
+                {
+                    "id": "not-enough-program-area",
+                    "description": "Not enough area for the program.",
+                    "data": {
+                        "program": "string",
+                        "target-area": "number",
+                        "actual-area": "number"
+                    },
+                    "measures": [
+                        "increase-gross-floor-area"
+                    ]
+                },
+                {
+                    "id": "too-much-program-area",
+                    "description": "Too much area for the program.",
+                    "measures": [
+                        "decrease-gross-floor-area"
+                    ]
+                }
+            ]
+        },
+        {
+            // (1) Anlagen sind bauliche Anlagen und sonstige Anlagen und Einrichtungen im Sinne des § 1 Abs. 1 Satz 2. Bauliche Anlagen sind mit dem Erdboden verbundene, aus Bauprodukten hergestellte Anlagen; eine Verbindung mit dem Boden besteht auch dann, wenn die Anlage durch eigene Schwere auf dem Boden ruht oder auf ortsfesten Bahnen begrenzt beweglich ist oder wenn die Anlage nach ihrem Verwendungszweck dazu bestimmt ist, überwiegend ortsfest benutzt zu werden. Bauliche Anlagen sind auch
+            // 	1. Aufschüttungen und Abgrabungen,
+            // 	2. Lagerplätze, Abstellplätze und Ausstellungsplätze,
+            // 	3. Sport- und Spielflächen,
+            // 	4. Campingplätze, Wochenendplätze und Zeltplätze,
+            // 	5. Freizeit- und Vergnügungsparks,
+            // 	6. Stellplätze für Kraftfahrzeuge, und Abstellplätze für Fahrräder
+            // 	7. Gerüste,
+            // 	8. Hilfseinrichtungen zur statischen Sicherung von Bauzuständen.
+            // (2) Gebäude sind selbständig benutzbare, überdeckte bauliche Anlagen, die von Menschen betreten werden können und geeignet oder bestimmt sind, dem Schutz von Menschen, Tieren oder Sachen zu dienen.
+            // (3) Gebäude werden in folgende Gebäudeklassen eingeteilt:
+            // 	1. Gebäudeklasse 1:
+            // 		a) freistehende Gebäude mit einer Höhe bis zu 7 m und nicht mehr als zwei Nutzungseinheiten von insgesamt nicht mehr als 400 m² Brutto-Grundfläche und
+            // 		b) freistehende land- oder forstwirtschaftlich genutzte Gebäude.
+            // 	2. Gebäudeklasse 2:
+            // 	Gebäude mit einer Höhe bis zu 7 m und nicht mehr als zwei Nutzungseinheiten von insgesamt nicht mehr als 400 m² Brutto-Grundfläche,
+            // 	3. Gebäudeklasse 3:
+            // 	sonstige Gebäude mit einer Höhe bis zu 7 m,
+            // 	4. Gebäudeklasse 4:
+            // 	Gebäude mit einer Höhe bis zu 13 m und Nutzungseinheiten mit jeweils nicht mehr als 400 m² Brutto-Grundfläche,
+            // 	5. Gebäudeklasse 5:
+            // 	sonstige Gebäude einschließlich unterirdischer Gebäude.
+            // Höhe im Sinne des Satzes 1 ist das Maß der Fußbodenoberkante des höchstgelegenen Geschosses, in dem ein Aufenthaltsraum möglich ist, über der Geländeoberfläche im Mittel. Die Brutto-Grundfläche umfasst die gesamte Fläche der Nutzungseinheit einschließlich der Umfassungswände; bei der Berechnung der Brutto-Grundfläche nach Satz 1 bleiben Flächen in Kellergeschossen außer Betracht. Wird ein Nebengebäude an Gebäude der Gebäudeklasse 1 angebaut, verändert sich die Gebäudeklasse nicht, wenn das Nebengebäude nach § 61 Absatz 1 Nummer 1 Buchstabe a oder b verfahrensfrei ist.
+            // (4) Sonderbauten sind Anlagen und Räume besonderer Art oder Nutzung, die einen der nachfolgenden Tatbestände erfüllen:
+            // 	1. Hochhäuser (Gebäude mit einer Höhe nach Absatz 3 Satz 2 von mehr als 22 m),
+            // 	2. bauliche Anlagen mit einer Höhe von mehr als 30 m,
+            // 	3. Gebäude mit mehr als 1 600 m² Brutto-Grundfläche des Geschosses mit der größten Ausdehnung, ausgenommen Wohngebäude, Garagen sowie Räume und Gebäude für Abstellplätze für Fahrräder,
+            // 	4. Verkaufsstätten, deren Verkaufsräume und Ladenstraßen eine Brutto-Grundfläche von insgesamt mehr als 800 m² haben,
+            // 	5. Gebäude mit Räumen, die einer Büro- oder Verwaltungsnutzung dienen und einzeln eine Brutto-Grundfläche von mehr als 400 m² haben,
+            // 	6. Gebäude mit Räumen, die einzeln für die Nutzung durch mehr als 100 Personen bestimmt sind,
+            // 	7. Versammlungsstätten
+            // 		a) mit Versammlungsräumen, die insgesamt mehr als 200 Besucherinnen und Besucher fassen, wenn diese Versammlungsräume gemeinsame Rettungswege haben,
+            // 		b) im Freien mit Szenenflächen sowie Freisportanlagen jeweils mit Tribünen, die keine Fliegenden Bauten sind und insgesamt mehr als 1000 Besucherinnen und Besucher fassen,
+            // 	8. Schank- und Speisegaststätten mit mehr als 40 Gastplätzen in Gebäuden oder mehr als 1000 Gastplätzen im Freien, Beherbergungsstätten mit mehr als 12 Betten und Spielhallen sowie Wettbüros mit jeweils mehr als 150 Quadratmeter Brutto-Grundfläche,
+            // 	9. Gebäude mit Nutzungseinheiten zum Zwecke der Pflege oder Betreuung von Personen mit Pflegebedürftigkeit oder Behinderung, deren Selbstrettungsfähigkeit eingeschränkt ist, wenn die Nutzungseinheiten
+            // 		a) einzeln für mehr als acht Personen, oder
+            // 		b) für Personen mit Intensivpflegebedarf bestimmt sind, oder
+            // 		c) einen gemeinsamen Rettungsweg haben und für insgesamt mehr als 16 Personen bestimmt sind,
+            // 	10. Krankenhäuser,
+            // 	11. Wohnheime,
+            // 	12. Tageseinrichtungen für Kinder, Menschen mit Behinderung und alte Menschen, sonstige Einrichtungen zur Unterbringung von Personen, ausgenommen Tageseinrichtungen einschließlich Tagespflege für nicht mehr als zehn Kinder,
+            // 	13. Schulen, Hochschulen und ähnliche Einrichtungen,
+            // 	14. Justizvollzugsanstalten und bauliche Anlagen für den Maßregelvollzug,
+            // 	15. Camping- und Wochenendplätze,
+            // 	16. Freizeit- und Vergnügungsparks,
+            // 	17. Fliegende Bauten, soweit sie einer Ausführungsgenehmigung bedürfen,
+            // 	18. Regallager mit einer Oberkante Lagerguthöhe von mehr als 7,
+            //             50 m,
+            // 	19. bauliche Anlagen, deren Nutzung durch Umgang mit oder Lagerung von Stoffen mit Explosions- oder erhöhter Brandgefahr verbunden ist,
+            // 	20. Anlagen und Räume, die in den Nummern 1 bis 19 nicht aufgeführt und deren Art oder Nutzung mit vergleichbaren Gefahren verbunden sind.
+            // (5) Aufenthaltsräume sind Räume, die zum nicht nur vorübergehenden Aufenthalt von Menschen bestimmt oder geeignet sind.
+            // (6) Geschosse sind oberirdische Geschosse, wenn ihre Deckenoberkanten im Mittel mehr als 1,
+            //             40 m über die Geländeoberfläche hinausragen; im Übrigen sind sie Kellergeschosse. Hohlräume zwischen der obersten Decke und der Bedachung, in denen Aufenthaltsräume nicht möglich sind, sind keine Geschosse.
+            // (7) Stellplätze sind Flächen, die dem Abstellen von Kraftfahrzeugen außerhalb der öffentlichen Verkehrsflächen dienen. Garagen sind Gebäude oder Gebäudeteile zum Abstellen von Kraftfahrzeugen. Ausstellungs-, Verkaufs-, Werk- und Lagerräume für Kraftfahrzeuge sind keine Stellplätze oder Garagen.
+            // (8) Feuerstätten sind in oder an Gebäuden ortsfest benutzte Anlagen oder Einrichtungen, die dazu bestimmt sind, durch Verbrennung Wärme zu erzeugen.
+            // (9) Barrierefrei sind bauliche Anlagen, wenn sie für Menschen mit Behinderung in der allgemein üblichen Weise ohne besondere Erschwernisse und grundsätzlich ohne fremde Hilfe auffindbar, zugänglich und nutzbar sind.
+            // (10) Bauprodukte sind
+            // 	1. Produkte, Baustoffe, Bauteile und Anlagen sowie Bausätze gemäß Artikel 2 Nummer 2 der Verordnung (EU) Nr. 305/2011 des Europäischen Parlaments und des Rates vom 9. März 2011 zur Festlegung harmonisierter Bedingungen für die Vermarktung von Bauprodukten und zur Aufhebung der Richtlinie 89/106/EWG des Rates (ABl. L 88 vom 4.4.2011, S. 5) die hergestellt werden, um dauerhaft in bauliche Anlagen eingebaut zu werden,
+            // 	2. aus Produkten, Baustoffen, Bauteilen sowie Bausätzen gemäß Artikel 2 Nummer 2 der Verordnung (EU) Nr. 305/2011 vorgefertigte Anlagen, die hergestellt werden, um mit dem Erdboden verbunden zu werden und deren Verwendung sich auf die Anforderungen nach § 3 Satz 1 auswirken kann.
+            // (11) Bauart ist das Zusammenfügen von Bauprodukten zu baulichen Anlagen oder Teilen von baulichen Anlagen.
+            // (12) Vollgeschosse sind Geschosse, deren Oberkante im Mittel mehr als 1,
+            //             40 m über die Geländeoberfläche hinausragt und die über mindestens zwei Drittel ihrer Grundfläche eine lichte Höhe von mindestens 2,
+            //             30 m haben. Ein gegenüber den Außenwänden zurückgesetztes oberstes Geschoss (Staffelgeschoss) und Geschosse im Dachraum sind nur dann Vollgeschosse, wenn sie die lichte Höhe gemäß Satz 1 über mindestens zwei Drittel der Grundfläche des darunter liegenden Geschosses haben.
+            "id": "berlin-building-code",
+            "properties": [
+                {
+                    "id": "height",
+                    "name": "Height",
+                    "type": "Number",
+                    "description": "Height is the distance from the average ground surface to the top edge of the finished floor of the highest storey in which a habitable room is possible.",
+                    "url": "https://gesetze.berlin.de/perma?d=jlr-BauOBE2005V11P2"
+                },
+                {
+                    "id": "building-class",
+                    "name": "Building Class",
+                    "type": "Level",
+                    "levels": [
+                        {
+                            "value": "1",
+                            "name": "Building Class 1",
+                            "description": "Either free standing building with a height up to 7m and not more than two usage units with a total gross floor area of not more than 400m², or a land or forest usage building.",
+                            "instructions": {
+                                "higher": [
+                                    {
+                                        "id": "change-building-usage",
+                                        "instruction": "Change the land or forest usage to something else."
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "value": "2",
+                            "name": "Building Class 2",
+                            "description": "Building with a height up to 7m and not more than two usage units with a total gross floor area of not more than 400m².",
+                            "measures": {
+                                "lower": [
+                                    {
+                                        "id": "change-building-usage",
+                                        "instruction": "Change the usage of the building to land or forest usage."
+                                    }
+                                ],
+                                "higher": [
+                                    {
+                                        "id": "add-space",
+                                        "instruction": "Add a space to have more than two usage units."
+                                    },
+                                    {
+                                        "id": "increase-gross-floor-area",
+                                        "instruction": "Increase the gross floor area of the building to be above the limit of 400m²."
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "value": "3",
+                            "description": "Other building with a height up to 7m.",
+                            "measures": {
+                                "lower": [
+                                    {
+                                        "id": "remove-space",
+                                        "instruction": "Remove a space to have less than two usage units."
+                                    },
+                                    {
+                                        "id": "decrease-gross-floor-area",
+                                        "instruction": "Decrease the gross floor area of the building to be below the limit of 400m²."
+                                    }
+                                ],
+                                "higher": [
+                                    {
+                                        "id": "increase-floor-height",
+                                        "instruction": "Increase the floor heigh to be above the limit of 7m of the building."
+                                    },
+                                    {
+                                        "id": "add-storey",
+                                        "instruction": "Add a storey to the building to be above the limit of 7m."
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "value": "4",
+                            "name": "Building Class 4",
+                            "description": "Building with a height up to 13m and usage units with a gross floor area of not more than 400m².",
+                            "measures": {
+                                "lower": [
+                                    {
+                                        "id": "decrease-floor-height",
+                                        "instruction": "Decrease building height to maximum of 7m."
+                                    },
+                                    {
+                                        "id": "remove-storey",
+                                        "instruction": "Remove a storey to be below 7m building height."
+                                    }
+                                ],
+                                "higher": [
+                                    {
+                                        "id": "increase-floor-height",
+                                        "instruction": "Increase the floor heigh to be above the limit of 13m of the building."
+                                    },
+                                    {
+                                        "id": "add-storey",
+                                        "instruction": "Add a storey to the building to be above the limit of 13m."
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "value": "5",
+                            "name": "Building Class 5",
+                            "description": "Other building including underground buildings.",
+                            "measures": {
+                                "lower": [
+                                    {
+                                        "id": "decrease-floor-height",
+                                        "instruction": "Decrease the floor height to be below the limit of 13m of the building."
+                                    },
+                                    {
+                                        "id": "remove-space",
+                                        "instruction": "Remove a space to have less than two usage units."
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ],
+            "rules": [
+                {
+                    "id": "staircase-located",
+                    "description": "Must be located in a separate stairwell",
+                    "clauses": [
+                        {
+                            "id": "not-external-staircase",
+                            "description": "Not an external staircase"
+                        },
+                        {
+                            "id": "not-in-building-classes-1-and-2",
+                            "description": "Not in buildings of building classes 1 and 2",
+                            "properties": [
+                                {
+                                    "id": "building-class",
+                                    "value": "1"
+                                },
+                                {
+                                    "id": "building-class",
+                                    "value": "2"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "building-height-limit",
+                    "description": "The building height must be less than 21m.",
+                    "measures": [
+                        "remove-storey"
+                    ]
+                }
+            ]
+        }
+    ]
+}

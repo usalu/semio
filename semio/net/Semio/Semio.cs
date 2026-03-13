@@ -8737,109 +8737,110 @@ public static class KitSqlite
 
     #endregion 🔖KitSqliteSave
 
-    #region 🔖KitSqliteDiff
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitediff](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteDiff)
-    // Diff-based CRUD commands matching semio.ts patterns.
+    #region 🔖KitSqliteChange
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitechange](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteChange)
+    // Change-based CRUD commands returning KitChange for undo/redo support.
 
-    public static Kit ApplyKitDiff(string kitDirectory, KitDiff diff)
+    public static KitChange ApplyKitDiff(string kitDirectory, KitDiff diff)
     {
-        var kit = LoadKit(kitDirectory);
-        var updated = SemioDiff.ApplyKitDiff(kit, diff);
-        SaveKit(kitDirectory, updated);
-        return updated;
+        var before = LoadKit(kitDirectory);
+        var after = SemioDiff.ApplyKitDiff(before, diff);
+        SaveKit(kitDirectory, after);
+        var backward = SemioDiff.InverseKitDiff(before, diff);
+        return new KitChange { Forward = diff, Backward = backward, Before = before, After = after };
     }
 
-    public static Kit AddTypeToKit(string kitDirectory, Type type)
+    public static KitChange AddTypeToKit(string kitDirectory, Type type)
     {
         var diff = new KitDiff { Types = new TypesDiff { Added = new List<Type> { type } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit RemoveTypeFromKit(string kitDirectory, string typeGuid)
+    public static KitChange RemoveTypeFromKit(string kitDirectory, string typeGuid)
     {
         var diff = new KitDiff { Types = new TypesDiff { Removed = new List<TypeId> { new() { Guid = typeGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit SetTypeInKit(string kitDirectory, Type type)
+    public static KitChange SetTypeInKit(string kitDirectory, Type type)
     {
         var diff = new KitDiff { Types = new TypesDiff { Added = new List<Type> { type } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit AddDesignToKit(string kitDirectory, Design design)
+    public static KitChange AddDesignToKit(string kitDirectory, Design design)
     {
         var diff = new KitDiff { Designs = new DesignsDiff { Added = new List<Design> { design } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit RemoveDesignFromKit(string kitDirectory, string designGuid)
+    public static KitChange RemoveDesignFromKit(string kitDirectory, string designGuid)
     {
         var diff = new KitDiff { Designs = new DesignsDiff { Removed = new List<DesignId> { new() { Guid = designGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit SetDesignInKit(string kitDirectory, Design design)
+    public static KitChange SetDesignInKit(string kitDirectory, Design design)
     {
         var diff = new KitDiff { Designs = new DesignsDiff { Added = new List<Design> { design } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit AddPortToKit(string kitDirectory, Port port)
+    public static KitChange AddPortToKit(string kitDirectory, Port port)
     {
         var diff = new KitDiff { Ports = new PortsDiff { Added = new List<Port> { port } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit RemovePortFromKit(string kitDirectory, string portGuid)
+    public static KitChange RemovePortFromKit(string kitDirectory, string portGuid)
     {
         var diff = new KitDiff { Ports = new PortsDiff { Removed = new List<PortId> { new() { Guid = portGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit AddTagToKit(string kitDirectory, Tag tag)
+    public static KitChange AddTagToKit(string kitDirectory, Tag tag)
     {
         var diff = new KitDiff { Tags = new TagsDiff { Added = new List<Tag> { tag } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit RemoveTagFromKit(string kitDirectory, string tagGuid)
+    public static KitChange RemoveTagFromKit(string kitDirectory, string tagGuid)
     {
         var diff = new KitDiff { Tags = new TagsDiff { Removed = new List<TagId> { new() { Guid = tagGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit AddConceptToKit(string kitDirectory, Concept concept)
+    public static KitChange AddConceptToKit(string kitDirectory, Concept concept)
     {
         var diff = new KitDiff { Concepts = new ConceptsDiff { Added = new List<Concept> { concept } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit RemoveConceptFromKit(string kitDirectory, string conceptGuid)
+    public static KitChange RemoveConceptFromKit(string kitDirectory, string conceptGuid)
     {
         var diff = new KitDiff { Concepts = new ConceptsDiff { Removed = new List<ConceptId> { new() { Guid = conceptGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit AddFileToKit(string kitDirectory, File file)
+    public static KitChange AddFileToKit(string kitDirectory, File file)
     {
         var diff = new KitDiff { Files = new FilesDiff { Added = new List<File> { file } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit RemoveFileFromKit(string kitDirectory, string fileGuid)
+    public static KitChange RemoveFileFromKit(string kitDirectory, string fileGuid)
     {
         var diff = new KitDiff { Files = new FilesDiff { Removed = new List<FileId> { new() { Guid = fileGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit AddAttributeToKit(string kitDirectory, Attribute attribute)
+    public static KitChange AddAttributeToKit(string kitDirectory, Attribute attribute)
     {
         var diff = new KitDiff { Attributes = new AttributesDiff { Added = new List<Attribute> { attribute } } };
         return ApplyKitDiff(kitDirectory, diff);
     }
 
-    public static Kit RemoveAttributeFromKit(string kitDirectory, string attributeGuid)
+    public static KitChange RemoveAttributeFromKit(string kitDirectory, string attributeGuid)
     {
         var diff = new KitDiff { Attributes = new AttributesDiff { Removed = new List<AttributeId> { new() { Guid = attributeGuid } } } };
         return ApplyKitDiff(kitDirectory, diff);
@@ -8863,7 +8864,7 @@ public static class KitSqlite
             System.IO.File.Delete(dbPath);
     }
 
-    #endregion 🔖KitSqliteDiff
+    #endregion 🔖KitSqliteChange
 }
 
 #endregion 🔖KitSqlite

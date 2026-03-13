@@ -124,8 +124,51 @@ pub fn jaccard<T: Eq + std::hash::Hash>(a: &HashSet<T>, b: &HashSet<T>) -> f64 {
 /// deep_equal MUST perform the deep_equal operation.
 /// [👤semio📚rs💻semio🔖utilityfunctions🛠️deepequal](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/deep_equal)
 pub fn deep_equal<T: Serialize>(a: &T, b: &T) -> bool {
+    fn normalize_json(v: &mut serde_json::Value) {
+        match v {
+            serde_json::Value::Array(arr) => {
+                for item in arr.iter_mut() {
+                    normalize_json(item);
+                }
+                arr.sort_by(|a, b| {
+                    let a_guid = a.get("guid").and_then(|g| g.as_str()).unwrap_or("");
+                    let b_guid = b.get("guid").and_then(|g| g.as_str()).unwrap_or("");
+                    a_guid.cmp(b_guid)
+                });
+            }
+            serde_json::Value::Object(map) => {
+                for (_, val) in map.iter_mut() {
+                    normalize_json(val);
+                }
+            }
+            _ => {}
+        }
+    }
+    fn json_approx_eq(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+        use serde_json::Value;
+        match (a, b) {
+            (Value::Number(na), Value::Number(nb)) => {
+                match (na.as_f64(), nb.as_f64()) {
+                    (Some(fa), Some(fb)) => (fa - fb).abs() < 1e-10,
+                    _ => na == nb,
+                }
+            }
+            (Value::Array(aa), Value::Array(ab)) => {
+                aa.len() == ab.len() && aa.iter().zip(ab.iter()).all(|(x, y)| json_approx_eq(x, y))
+            }
+            (Value::Object(ma), Value::Object(mb)) => {
+                ma.len() == mb.len()
+                    && ma.iter().all(|(k, v)| mb.get(k).map_or(false, |v2| json_approx_eq(v, v2)))
+            }
+            _ => a == b,
+        }
+    }
     match (serde_json::to_value(a), serde_json::to_value(b)) {
-        (Ok(va), Ok(vb)) => va == vb,
+        (Ok(mut va), Ok(mut vb)) => {
+            normalize_json(&mut va);
+            normalize_json(&mut vb);
+            json_approx_eq(&va, &vb)
+        }
         _ => false,
     }
 }
@@ -810,7 +853,7 @@ pub struct Type {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location: Option<LocationId>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub concepts: Option<Vec<String>>,
+    pub concepts: Option<Vec<ConceptId>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authors: Option<Vec<AuthorId>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1088,7 +1131,7 @@ pub struct Design {
     #[serde(rename = "canMirror", skip_serializing_if = "Option::is_none")]
     pub can_mirror: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub concepts: Option<Vec<String>>,
+    pub concepts: Option<Vec<ConceptId>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authors: Option<Vec<AuthorId>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1769,7 +1812,7 @@ pub struct TypeDiff {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location: Option<Option<LocationId>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub concepts: Option<Option<Vec<String>>>,
+    pub concepts: Option<Option<Vec<ConceptId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authors: Option<Option<Vec<AuthorId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1967,7 +2010,7 @@ pub struct DesignDiff {
     #[serde(rename = "canMirror", skip_serializing_if = "Option::is_none")]
     pub can_mirror: Option<Option<bool>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub concepts: Option<Option<Vec<String>>>,
+    pub concepts: Option<Option<Vec<ConceptId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authors: Option<Option<Vec<AuthorId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2840,10 +2883,14 @@ pub fn apply_prop_diff(item: &mut Prop, diff: &PropDiff) {
 /// </remarks>
 pub fn apply_connector_diff(item: &mut Connector, diff: &ConnectorDiff) {
     if let Some(value) = &diff.point {
-        item.point = value.clone();
+        item.point.x += value.x;
+        item.point.y += value.y;
+        item.point.z += value.z;
     }
     if let Some(value) = &diff.direction {
-        item.direction = value.clone();
+        item.direction.x += value.x;
+        item.direction.y += value.y;
+        item.direction.z += value.z;
     }
     if let Some(value) = &diff.t {
         item.t = *value;
@@ -3083,28 +3130,42 @@ pub fn apply_connection_diff(item: &mut Connection, diff: &ConnectionDiff) {
         }
     }
     if let Some(value) = &diff.gap {
-        item.gap = *value;
+        item.gap += value;
     }
     if let Some(value) = &diff.shift {
-        item.shift = *value;
+        item.shift += value;
     }
     if let Some(value) = &diff.rise {
-        item.rise = *value;
+        item.rise += value;
     }
     if let Some(value) = &diff.rotation {
-        item.rotation = *value;
+        item.rotation += value;
     }
     if let Some(value) = &diff.turn {
-        item.turn = *value;
+        item.turn += value;
     }
     if let Some(value) = &diff.tilt {
-        item.tilt = *value;
+        item.tilt += value;
     }
     if let Some(value) = &diff.u {
-        item.u = *value;
+        match value {
+            Some(delta) => {
+                item.u = Some(item.u.unwrap_or(0.0) + delta);
+            }
+            None => {
+                item.u = None;
+            }
+        }
     }
     if let Some(value) = &diff.v {
-        item.v = *value;
+        match value {
+            Some(delta) => {
+                item.v = Some(item.v.unwrap_or(0.0) + delta);
+            }
+            None => {
+                item.v = None;
+            }
+        }
     }
     if let Some(value) = &diff.description {
         item.description = value.clone();
@@ -3373,6 +3434,405 @@ pub fn apply_kit_diff(item: &mut Kit, diff: &KitDiff) {
 
 // #endregion 🔖ApplyDiff
 
+// #region 🔖Kit Change Helpers
+// [👤semio📚rs💻semio🔖kitchangehelpers](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers)
+// Kit Change Helpers MUST provide convenience functions for computing kit and design diffs, inverses, and changes.
+
+/// Computes a CollectionDiff between two optional collections of guid-identified items.
+/// Uses a caller-provided `compute_diff` function for entity-level diffs.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getguidcollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_guid_collection_diff)
+fn get_guid_collection_diff<T, D>(
+    before: &Option<Vec<T>>,
+    after: &Option<Vec<T>>,
+    entity_key: &str,
+    compute_diff: impl Fn(&T, &T) -> D,
+) -> Option<CollectionDiff<T, D>>
+where
+    T: HasGuid + Clone + PartialEq,
+    D: DiffHasGuid,
+{
+    let before_items = before.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
+    let after_items = after.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
+    let before_map: HashMap<String, &T> = before_items.iter().map(|i| (i.guid().to_string(), i)).collect();
+    let after_map: HashMap<String, &T> = after_items.iter().map(|i| (i.guid().to_string(), i)).collect();
+    let mut added = Vec::new();
+    let mut removed = Vec::new();
+    let mut updated = Vec::new();
+    for item in after_items {
+        if !before_map.contains_key(item.guid()) {
+            added.push(item.clone());
+        }
+    }
+    for item in before_items {
+        if !after_map.contains_key(item.guid()) {
+            removed.push(RemovedItem { guid: item.guid().to_string() });
+        }
+    }
+    for item in after_items {
+        if let Some(before_item) = before_map.get(item.guid()) {
+            if *before_item != item {
+                let diff = compute_diff(before_item, item);
+                updated.push(DiffUpdate {
+                    key: entity_key.to_string(),
+                    guid: item.guid().to_string(),
+                    diff,
+                });
+            }
+        }
+    }
+    if added.is_empty() && removed.is_empty() && updated.is_empty() {
+        None
+    } else {
+        Some(CollectionDiff {
+            added: if added.is_empty() { None } else { Some(added) },
+            removed: if removed.is_empty() { None } else { Some(removed) },
+            updated: if updated.is_empty() { None } else { Some(updated) },
+        })
+    }
+}
+
+// #region 🔖Entity Diff Functions
+
+fn get_attribute_diff(before: &Attribute, after: &Attribute) -> AttributeDiff {
+    let mut diff = AttributeDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.key != after.key { diff.key = Some(after.key.clone()); }
+    if before.value != after.value { diff.value = Some(after.value.clone()); }
+    if before.definition != after.definition { diff.definition = Some(after.definition.clone()); }
+    diff
+}
+
+fn get_prop_diff(before: &Prop, after: &Prop) -> PropDiff {
+    let mut diff = PropDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.quality != after.quality { diff.quality = Some(after.quality.clone()); }
+    if before.value != after.value { diff.value = Some(after.value.clone()); }
+    if before.unit != after.unit { diff.unit = Some(after.unit.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_connector_diff(before: &Connector, after: &Connector) -> ConnectorDiff {
+    let mut diff = ConnectorDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.point != after.point {
+        diff.point = Some(Vector {
+            x: after.point.x - before.point.x,
+            y: after.point.y - before.point.y,
+            z: after.point.z - before.point.z,
+        });
+    }
+    if before.direction != after.direction {
+        diff.direction = Some(Vector {
+            x: after.direction.x - before.direction.x,
+            y: after.direction.y - before.direction.y,
+            z: after.direction.z - before.direction.z,
+        });
+    }
+    if before.t != after.t { diff.t = Some(after.t); }
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.mandatory != after.mandatory { diff.mandatory = Some(after.mandatory); }
+    if before.port != after.port { diff.port = Some(after.port.clone()); }
+    diff.props = get_guid_collection_diff(&before.props, &after.props, "prop", get_prop_diff);
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_model_diff(before: &Model, after: &Model) -> ModelDiff {
+    let mut diff = ModelDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.file != after.file { diff.file = Some(after.file.clone()); }
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.tags != after.tags { diff.tags = Some(after.tags.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_type_diff(before: &Type, after: &Type) -> TypeDiff {
+    let mut diff = TypeDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.parent != after.parent { diff.parent = Some(after.parent.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.icon != after.icon { diff.icon = Some(after.icon.clone()); }
+    if before.image != after.image { diff.image = Some(after.image.clone()); }
+    if before.folder != after.folder { diff.folder = Some(after.folder.clone()); }
+    if before.unit != after.unit { diff.unit = Some(after.unit.clone()); }
+    if before.stock != after.stock { diff.stock = Some(after.stock); }
+    if before.is_abstract != after.is_abstract { diff.is_abstract = Some(after.is_abstract); }
+    if before.virtual_type != after.virtual_type { diff.virtual_type = Some(after.virtual_type); }
+    if before.location != after.location { diff.location = Some(after.location.clone()); }
+    if before.concepts != after.concepts { diff.concepts = Some(after.concepts.clone()); }
+    if before.authors != after.authors { diff.authors = Some(after.authors.clone()); }
+    diff.props = get_guid_collection_diff(&before.props, &after.props, "prop", get_prop_diff);
+    diff.models = get_guid_collection_diff(&before.models, &after.models, "model", get_model_diff);
+    diff.connectors = get_guid_collection_diff(&before.connectors, &after.connectors, "connector", get_connector_diff);
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_piece_diff(before: &Piece, after: &Piece) -> PieceDiff {
+    let mut diff = PieceDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.type_ref != after.type_ref { diff.type_ref = Some(after.type_ref.clone()); }
+    if before.design != after.design { diff.design = Some(after.design.clone()); }
+    if before.plane != after.plane { diff.plane = Some(after.plane.clone()); }
+    if before.center != after.center { diff.center = Some(after.center.clone()); }
+    if before.scale != after.scale { diff.scale = Some(after.scale); }
+    if before.mirror_plane != after.mirror_plane { diff.mirror_plane = Some(after.mirror_plane.clone()); }
+    if before.is_hidden != after.is_hidden { diff.is_hidden = Some(after.is_hidden); }
+    if before.is_locked != after.is_locked { diff.is_locked = Some(after.is_locked); }
+    if before.color != after.color { diff.color = Some(after.color.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    diff.props = get_guid_collection_diff(&before.props, &after.props, "prop", get_prop_diff);
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_connection_diff(before: &Connection, after: &Connection) -> ConnectionDiff {
+    let mut diff = ConnectionDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.connected != after.connected {
+        let mut sd = SideDiff::default();
+        if before.connected.piece != after.connected.piece { sd.piece = Some(after.connected.piece.clone()); }
+        if before.connected.design_piece != after.connected.design_piece { sd.design_piece = Some(after.connected.design_piece.clone()); }
+        if before.connected.connector != after.connected.connector { sd.connector = Some(after.connected.connector.clone()); }
+        diff.connected = Some(sd);
+    }
+    if before.connecting != after.connecting {
+        let mut sd = SideDiff::default();
+        if before.connecting.piece != after.connecting.piece { sd.piece = Some(after.connecting.piece.clone()); }
+        if before.connecting.design_piece != after.connecting.design_piece { sd.design_piece = Some(after.connecting.design_piece.clone()); }
+        if before.connecting.connector != after.connecting.connector { sd.connector = Some(after.connecting.connector.clone()); }
+        diff.connecting = Some(sd);
+    }
+    if before.gap != after.gap { diff.gap = Some(after.gap - before.gap); }
+    if before.shift != after.shift { diff.shift = Some(after.shift - before.shift); }
+    if before.rise != after.rise { diff.rise = Some(after.rise - before.rise); }
+    if before.rotation != after.rotation { diff.rotation = Some(after.rotation - before.rotation); }
+    if before.turn != after.turn { diff.turn = Some(after.turn - before.turn); }
+    if before.tilt != after.tilt { diff.tilt = Some(after.tilt - before.tilt); }
+    if before.u != after.u {
+        diff.u = Some(match (before.u, after.u) {
+            (Some(b), Some(a)) => Some(a - b),
+            (None, Some(a)) => Some(a),
+            (_, None) => None,
+        });
+    }
+    if before.v != after.v {
+        diff.v = Some(match (before.v, after.v) {
+            (Some(b), Some(a)) => Some(a - b),
+            (None, Some(a)) => Some(a),
+            (_, None) => None,
+        });
+    }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_layer_diff(before: &Layer, after: &Layer) -> LayerDiff {
+    let mut diff = LayerDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.path != after.path { diff.path = Some(after.path.clone()); }
+    if before.is_hidden != after.is_hidden { diff.is_hidden = Some(after.is_hidden); }
+    if before.is_locked != after.is_locked { diff.is_locked = Some(after.is_locked); }
+    if before.color != after.color { diff.color = Some(after.color.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_group_diff(before: &Group, after: &Group) -> GroupDiff {
+    let mut diff = GroupDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.color != after.color { diff.color = Some(after.color.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.pieces != after.pieces { diff.pieces = Some(after.pieces.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_stat_diff(before: &Stat, after: &Stat) -> StatDiff {
+    let mut diff = StatDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.quality != after.quality { diff.quality = Some(after.quality.clone()); }
+    if before.min != after.min { diff.min = Some(after.min); }
+    if before.min_excluded != after.min_excluded { diff.min_excluded = Some(after.min_excluded); }
+    if before.max != after.max { diff.max = Some(after.max); }
+    if before.max_excluded != after.max_excluded { diff.max_excluded = Some(after.max_excluded); }
+    if before.unit != after.unit { diff.unit = Some(after.unit.clone()); }
+    diff
+}
+
+fn get_tag_diff(before: &Tag, after: &Tag) -> TagDiff {
+    let mut diff = TagDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.icon != after.icon { diff.icon = Some(after.icon.clone()); }
+    diff
+}
+
+fn get_concept_diff(before: &Concept, after: &Concept) -> ConceptDiff {
+    let mut diff = ConceptDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.icon != after.icon { diff.icon = Some(after.icon.clone()); }
+    diff
+}
+
+fn get_port_diff(before: &Port, after: &Port) -> PortDiff {
+    let mut diff = PortDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.icon != after.icon { diff.icon = Some(after.icon.clone()); }
+    if before.compatible_interfaces != after.compatible_interfaces { diff.compatible_interfaces = Some(after.compatible_interfaces.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_quality_diff(before: &Quality, after: &Quality) -> QualityDiff {
+    let mut diff = QualityDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.key != after.key { diff.key = Some(after.key.clone()); }
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.kind != after.kind { diff.kind = Some(after.kind.clone()); }
+    if before.default_value != after.default_value { diff.default_value = Some(after.default_value); }
+    if before.formula != after.formula { diff.formula = Some(after.formula.clone()); }
+    if before.default_si_unit != after.default_si_unit { diff.default_si_unit = Some(after.default_si_unit.clone()); }
+    if before.default_imperial_unit != after.default_imperial_unit { diff.default_imperial_unit = Some(after.default_imperial_unit.clone()); }
+    if before.min != after.min { diff.min = Some(after.min); }
+    if before.is_min_excluded != after.is_min_excluded { diff.is_min_excluded = Some(after.is_min_excluded); }
+    if before.max != after.max { diff.max = Some(after.max); }
+    if before.is_max_excluded != after.is_max_excluded { diff.is_max_excluded = Some(after.is_max_excluded); }
+    if before.can_scale != after.can_scale { diff.can_scale = Some(after.can_scale); }
+    if before.uri != after.uri { diff.uri = Some(after.uri.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_file_diff(before: &File, after: &File) -> FileDiff {
+    let mut diff = FileDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.remote != after.remote { diff.remote = Some(after.remote.clone()); }
+    if before.folder != after.folder { diff.folder = Some(after.folder.clone()); }
+    if before.size != after.size { diff.size = Some(after.size); }
+    if before.hash != after.hash { diff.hash = Some(after.hash.clone()); }
+    diff
+}
+
+fn get_folder_diff(before: &Folder, after: &Folder) -> FolderDiff {
+    let mut diff = FolderDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.parent != after.parent { diff.parent = Some(after.parent.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+fn get_author_diff(before: &Author, after: &Author) -> AuthorDiff {
+    let mut diff = AuthorDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.email != after.email { diff.email = Some(after.email.clone()); }
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+// #endregion 🔖Entity Diff Functions
+
+/// Computes the KitDiff that transforms `before` into `after`.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getkitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_kit_diff)
+pub fn get_kit_diff(before: &Kit, after: &Kit) -> KitDiff {
+    let mut diff = KitDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.version != after.version { diff.version = Some(after.version.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.icon != after.icon { diff.icon = Some(after.icon.clone()); }
+    if before.image != after.image { diff.image = Some(after.image.clone()); }
+    if before.preview != after.preview { diff.preview = Some(after.preview.clone()); }
+    if before.remote != after.remote { diff.remote = Some(after.remote.clone()); }
+    if before.homepage != after.homepage { diff.homepage = Some(after.homepage.clone()); }
+    if before.license != after.license { diff.license = Some(after.license.clone()); }
+    diff.types = get_guid_collection_diff(&before.types, &after.types, "type", get_type_diff);
+    diff.designs = get_guid_collection_diff(&before.designs, &after.designs, "design", |b, a| get_design_diff(b, a));
+    diff.tags = get_guid_collection_diff(&before.tags, &after.tags, "tag", get_tag_diff);
+    diff.concepts = get_guid_collection_diff(&before.concepts, &after.concepts, "concept", get_concept_diff);
+    diff.ports = get_guid_collection_diff(&before.ports, &after.ports, "port", get_port_diff);
+    diff.qualities = get_guid_collection_diff(&before.qualities, &after.qualities, "quality", get_quality_diff);
+    diff.files = get_guid_collection_diff(&before.files, &after.files, "file", get_file_diff);
+    diff.folders = get_guid_collection_diff(&before.folders, &after.folders, "folder", get_folder_diff);
+    diff.authors = get_guid_collection_diff(&before.authors, &after.authors, "author", get_author_diff);
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+/// Computes the DesignDiff that transforms `before` into `after`.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getdesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_design_diff)
+pub fn get_design_diff(before: &Design, after: &Design) -> DesignDiff {
+    let mut diff = DesignDiff { guid: before.guid.clone(), ..Default::default() };
+    if before.name != after.name { diff.name = Some(after.name.clone()); }
+    if before.parent != after.parent { diff.parent = Some(after.parent.clone()); }
+    if before.description != after.description { diff.description = Some(after.description.clone()); }
+    if before.icon != after.icon { diff.icon = Some(after.icon.clone()); }
+    if before.image != after.image { diff.image = Some(after.image.clone()); }
+    if before.folder != after.folder { diff.folder = Some(after.folder.clone()); }
+    if before.unit != after.unit { diff.unit = Some(after.unit.clone()); }
+    if before.is_abstract != after.is_abstract { diff.is_abstract = Some(after.is_abstract); }
+    if before.can_scale != after.can_scale { diff.can_scale = Some(after.can_scale); }
+    if before.can_mirror != after.can_mirror { diff.can_mirror = Some(after.can_mirror); }
+    if before.concepts != after.concepts { diff.concepts = Some(after.concepts.clone()); }
+    if before.authors != after.authors { diff.authors = Some(after.authors.clone()); }
+    if before.active_layer != after.active_layer { diff.active_layer = Some(after.active_layer.clone()); }
+    diff.props = get_guid_collection_diff(&before.props, &after.props, "prop", get_prop_diff);
+    diff.pieces = get_guid_collection_diff(&before.pieces, &after.pieces, "piece", get_piece_diff);
+    diff.connections = get_guid_collection_diff(&before.connections, &after.connections, "connection", get_connection_diff);
+    diff.layers = get_guid_collection_diff(&before.layers, &after.layers, "layer", get_layer_diff);
+    diff.groups = get_guid_collection_diff(&before.groups, &after.groups, "group", get_group_diff);
+    diff.stats = get_guid_collection_diff(&before.stats, &after.stats, "stat", get_stat_diff);
+    diff.attributes = get_guid_collection_diff(&before.attributes, &after.attributes, "attribute", get_attribute_diff);
+    diff
+}
+
+/// Computes the inverse of a KitDiff given the original Kit state.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️inversekitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/inverse_kit_diff)
+pub fn inverse_kit_diff(original: &Kit, forward: &KitDiff) -> KitDiff {
+    let mut after = original.clone();
+    apply_kit_diff(&mut after, forward);
+    get_kit_diff(&after, original)
+}
+
+/// Computes the inverse of a DesignDiff given the original Design state.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️inversedesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/inverse_design_diff)
+pub fn inverse_design_diff(original: &Design, forward: &DesignDiff) -> DesignDiff {
+    let mut after = original.clone();
+    apply_design_diff(&mut after, forward);
+    get_design_diff(&after, original)
+}
+
+/// Computes a reversible KitChange from two kit states.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getkitchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_kit_change)
+pub fn get_kit_change(before: &Kit, after: &Kit) -> KitChange {
+    let forward = get_kit_diff(before, after);
+    let backward = inverse_kit_diff(before, &forward);
+    KitChange {
+        forward,
+        backward,
+        author: None,
+        time: None,
+        before: Some(before.clone()),
+        after: Some(after.clone()),
+    }
+}
+
+/// Computes a reversible DesignChange from two design states.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getdesignchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_design_change)
+pub fn get_design_change(before: &Design, after: &Design) -> DesignChange {
+    let forward = get_design_diff(before, after);
+    let backward = inverse_design_diff(before, &forward);
+    DesignChange {
+        forward,
+        backward,
+        author: None,
+        time: None,
+        before: Some(before.clone()),
+        after: Some(after.clone()),
+    }
+}
+
+// #endregion 🔖Kit Change Helpers
+
 // #region 🔖FlattenDesign
 // [👤semio📚rs💻semio🔖flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign)
 // FlattenDesign MUST provide the flattendesign functionality.
@@ -3392,22 +3852,40 @@ pub struct FlattenedPiece {
 /// <remarks>
 /// flatten_design MUST perform the flatten_design operation.
 /// </remarks>
-pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignDiff {
+pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
     let design = match find_design_in_kit(kit, design_guid) {
         Some(d) => d,
         None => {
-            return DesignDiff {
+            let empty_diff = DesignDiff {
                 guid: design_guid.to_string(),
                 ..Default::default()
-            }
+            };
+            return DesignChange {
+                forward: empty_diff.clone(),
+                backward: empty_diff,
+                author: None,
+                time: None,
+                before: None,
+                after: None,
+            };
         }
     };
 
+    let before_design = design.clone();
+
     let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
     if pieces.is_empty() {
-        return DesignDiff {
+        let empty_diff = DesignDiff {
             guid: design_guid.to_string(),
             ..Default::default()
+        };
+        return DesignChange {
+            forward: empty_diff.clone(),
+            backward: empty_diff,
+            author: None,
+            time: None,
+            before: Some(before_design.clone()),
+            after: Some(before_design),
         };
     }
 
@@ -3577,20 +4055,31 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignDiff {
         }
     }
 
-    let mut result = DesignDiff {
+    let mut forward = DesignDiff {
         guid: design_guid.to_string(),
         ..Default::default()
     };
 
     if !updated_pieces.is_empty() {
-        result.pieces = Some(CollectionDiff {
+        forward.pieces = Some(CollectionDiff {
             added: None,
             removed: None,
             updated: Some(updated_pieces),
         });
     }
 
-    result
+    let mut after_design = before_design.clone();
+    apply_design_diff(&mut after_design, &forward);
+    let backward = inverse_design_diff(&before_design, &forward);
+
+    DesignChange {
+        forward,
+        backward,
+        author: None,
+        time: None,
+        before: Some(before_design),
+        after: Some(after_design),
+    }
 }
 
 // [👤semio📚rs💻semio🔖flattendesign🛠️planesequalapprox](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/planes_equal_approx)
@@ -5638,10 +6127,10 @@ pub mod wasm {
     pub fn wasm_flatten_design(kit_json: &str, design_guid: &str) -> JsValue {
         match deserialize_kit(kit_json) {
             Ok(kit) => {
-                let diff = flatten_design(&kit, design_guid);
-                to_js_value(WasmResult::success(diff))
+                let change = flatten_design(&kit, design_guid);
+                to_js_value(WasmResult::success(change))
             }
-            Err(e) => to_js_value(WasmResult::<DesignDiff>::failure(e.to_string())),
+            Err(e) => to_js_value(WasmResult::<DesignChange>::failure(e.to_string())),
         }
     }
 
@@ -5798,9 +6287,9 @@ mod tests {
         let expected_design = find_design_by_name(designs, "Flat", Some(&design.guid))
             .expect("Expected Flat design not found");
 
-        let flat_design_diff = flatten_design(kit, &design.guid);
+        let flat_design_change = flatten_design(kit, &design.guid);
         let mut flat_design = design.clone();
-        apply_design_diff(&mut flat_design, &flat_design_diff);
+        apply_design_diff(&mut flat_design, &flat_design_change.forward);
 
         let expected_pieces = expected_design
             .pieces
@@ -6161,21 +6650,9 @@ mod tests {
                     kit_original.designs =
                         Some(designs.into_iter().filter(|d| d.parent.is_none()).collect());
                 }
-                let kit_diff = load_kit_diff("diff_kit_metabolism.json");
-                let kit_diff_inverted = load_kit_diff("diff_kit_metabolism_inverted.json");
                 let kit_diffed = load_kit("kit_metabolism_diffed.json");
 
-                let change = KitChange {
-                    forward: kit_diff.clone(),
-                    backward: kit_diff_inverted.clone(),
-                    author: None,
-                    time: None,
-                    before: Some(kit_original.clone()),
-                    after: Some(kit_diffed.clone()),
-                };
-
-                assert_eq!(change.forward, kit_diff);
-                assert_eq!(change.backward, kit_diff_inverted);
+                let change = get_kit_change(&kit_original, &kit_diffed);
 
                 let mut applied_forward = kit_original.clone();
                 apply_kit_diff(&mut applied_forward, &change.forward);
@@ -6186,6 +6663,11 @@ mod tests {
 
                 let mut applied_inverse = kit_diffed.clone();
                 apply_kit_diff(&mut applied_inverse, &change.backward);
+                // [DEBUG] Write both to files for comparison
+                let inv_json = serde_json::to_string_pretty(&applied_inverse).unwrap();
+                let orig_json = serde_json::to_string_pretty(&kit_original).unwrap();
+                std::fs::write("/tmp/inverse_applied.json", &inv_json).unwrap();
+                std::fs::write("/tmp/original.json", &orig_json).unwrap();
                 assert!(
                     are_kits_equal(&applied_inverse, &kit_original),
                     "ApplyKitDiff inverse: applied inverse kit doesn't match original kit"

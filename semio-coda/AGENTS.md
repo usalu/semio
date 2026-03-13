@@ -2,7 +2,7 @@
 
 coda is an ai that helps in designing buildings with Automated-Compliance-Checking (ACC).
 
-# 💯Requirements
+# Specification
 
 ## project
 
@@ -126,15 +126,15 @@ In general there are `rules` which are validated by the `validators`. Every `rul
 
 It should all be within one file `go/assistant/main.go`.
 
-As example, the design format/authoring platform/mcp server is `semio` and the targets are `BerlinBuildingCode` and `RoomProgram`.
+As example, the design format/authoring platform/mcp server is `semio` and the targets are `BerlinBuildingCode` and `programming`.
 There is one translator
 for `semio->BerlinBuildingCode`
 and a validator
 for `BerlinBuildingCode`.
 There is one translator
-for `semio->RoomProgram`
+for `semio->programming`
 and a validator
-for `RoomProgram`.
+for `programming`.
 
 # MCP Server
 
@@ -178,5 +178,5 @@ change <prompt>
 # Agents
 
 semio-to-blnbo-translation-agent # Responsible for translating semio format to blnbo
-semio-to-roomprogram-translation-agent # Responsible for translating semio format to roomprogram
+semio-to-programming-translation-agent # Responsible for translating semio format to programming
 semio-change-agent # Responsible for changing the semio with semio-mcp to fix breachs from the report

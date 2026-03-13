@@ -81,7 +81,7 @@ function setSidecarConnected(connected: boolean): void {
 function startSidecar(): void {
   if (shuttingDown) return;
 
-  const args = [...SIDECAR_ARGS];
+  const args = [...SIDECAR_BASE_ARGS];
   const projectPath = process.env.CODA_PROJECT;
   if (projectPath) {
     args.push("--project", projectPath);

@@ -1,13 +1,6 @@
 {
+	"inputs": [],
 	"servers": {
-		"playwright-test": {
-			"type": "stdio",
-			"command": "npx",
-			"args": [
-				"playwright",
-				"run-test-mcp-server"
-			]
-		},
 		"semio-repo": {
 			"type": "stdio",
 			"command": "./semio-repo/cli/cli",
@@ -37,6 +30,5 @@
 				"--mcp-stdio"
 			]
 		}
-	},
-	"inputs": []
+	}
 }

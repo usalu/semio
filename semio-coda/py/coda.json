@@ -1,126 +1,180 @@
 {
-    "measures": [
+    "properties": [
         {
-            "id": "add-building",
-            "description": "Add a building"
-        },
-        {
-            "id": "remove-building",
-            "description": "Remove a building"
-        },
-        {
-            "id": "change-building-usage",
-            "description": "Change the usage of a building"
-        },
-        {
-            "id": "add-storey",
-            "description": "Add a storey"
-        },
-        {
-            "id": "remove-storey",
-            "description": "Remove a storey"
-        },
-        {
-            "id": "increase-floor-height",
-            "description": "Increase the floor height"
-        },
-        {
-            "id": "decrease-floor-height",
-            "description": "Decrease the floor height"
-        },
-        {
-            "id": "increase-gross-floor-area",
-            "description": "Increase the gross floor area"
-        },
-        {
-            "id": "decrease-gross-floor-area",
-            "description": "Decrease the gross floor area"
-        },
-        {
-            "id": "add-space",
-            "description": "Add a space"
-        },
-        {
-            "id": "remove-space",
-            "description": "Remove a space"
-        },
-        {
-            "id": "change-space-usage",
-            "description": "Change the usage of a space"
+            "id": "building",
+            "name": "Building",
+            "description": "The building to be designed.",
+            "type": "object",
+            "properties": [
+                {
+                    "id": "gross-floor-area",
+                    "name": "Gross Floor Area",
+                    "type": "number",
+                    "description": "The total floor area of the building."
+                },
+                {
+                    "id": "energy_demand",
+                    "name": "Energy Demand",
+                    "type": "number",
+                    "description": "The energy demand of the building per square meter per year."
+                },
+                {
+                    "id": "storeys",
+                    "name": "Storeys",
+                    "type": "array",
+                    "description": "The storeys of the building.",
+                    "items": {
+                        "type": "object",
+                        "properties": [
+                            {
+                                "id": "floor_height",
+                                "name": "Floor Height",
+                                "type": "number",
+                                "description": "The height of the floor of the storey."
+                            },
+                            {
+                                "id": "gross-floor-area",
+                                "name": "Gross Floor Area",
+                                "type": "number",
+                                "description": "The total floor area of the storey."
+                            },
+                            {
+                                "id": "volume",
+                                "name": "Volume",
+                                "type": "number",
+                                "description": "The volume of the storey."
+                            },
+                            {
+                                "id": "occupancy",
+                                "name": "Occupancy",
+                                "type": "number"
+                            },
+                            {
+                                "id": "spaces",
+                                "name": "Spaces",
+                                "type": "array",
+                                "description": "The spaces of the storey.",
+                                "items": {
+                                    "type": "object",
+                                    "properties": [
+                                        {
+                                            "id": "gross-floor-area",
+                                            "name": "Gross Floor Area",
+                                            "type": "number",
+                                            "description": "The total floor area of the space."
+                                        },
+                                        {
+                                            "id": "occupancy",
+                                            "name": "Occupancy",
+                                            "type": "number"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
         }
     ],
+    "correlation": {
+        "properties": [
+            "gross-floor-area",
+            "energy_demand",
+            "occupancy"
+        ],
+        "matrix": [
+            [
+                1.0,
+                0.42,
+                -0.18
+            ],
+            [
+                0.42,
+                1.0,
+                0.67
+            ],
+            [
+                -0.18,
+                0.67,
+                1.0
+            ]
+        ]
+    },
     "platforms": [
         {
             "id": "semio",
-            "measures": [
+            "properties": [
                 {
-                    "id": "increase-gross-floor-area",
-                    "instructions": "Increase the floor area by eiter adding pieces or changing the type of existing pieces. Connect the new pieces to the existing pieces.",
-                    "mcp": {
-                        "resources": [
-                            {
-                                "id": "qualities",
-                                "instruction": "Try to find qualities that are related the gross floor area."
-                            },
-                            {
-                                "id": "quality",
-                                "instruction": "Access the value of the gross floor-related qualities."
-                            }
-                        ],
-                        "tools": [
-                            {
-                                "id": "add_piece",
-                                "instruction": "Add a piece to the building.",
-                                "parameters": [
-                                    {
-                                        "id": "piece_id",
-                                        "instruction": "The id of the piece to add. Make sure that the parameters of the piece are contributing to the gross floor area."
-                                    },
-                                    {
-                                        "id": "piece_type",
-                                        "instruction": "The type of the piece to add. Make sure the type is contributing to the gross floor area."
-                                    }
-                                ]
-                            },
-                            {
-                                "id": "add_connection",
-                                "instruction": "Connect every new piece to the existing pieces.",
-                                "parameters": [
-                                    {
-                                        "id": "connecting_piece_id",
-                                        "instruction": "The id of the piece to connect to."
-                                    },
-                                    {
-                                        "id": "connected_piece_id",
-                                        "instruction": "The id of the piece to connect to."
-                                    }
-                                ]
-                            },
-                            {
-                                "id": "change_piece_type",
-                                "instruction": "Change the type of the piece.",
-                                "parameters": [
-                                    {
-                                        "id": "piece_id",
-                                        "instruction": "The id of the piece to change the type of."
-                                    },
-                                    {
-                                        "id": "piece_type",
-                                        "instruction": "The new type of the piece with more gross floor area than the old type of the piece."
-                                    }
-                                ]
-                            },
-                            {
-                                "id": "update_type",
-                                "instruction": "Update the type of the piece.",
-                                "parameters": [
-                                    {
-                                        "id": "piece_type",
-                                        "instruction": "The type of the piece to update."
-                                    }
-                                ]
-                            }
-                        ]
+                    "id": "gross-floor-area",
+                    "increase": {
+                        "instructions": "Increase the floor area by eiter adding pieces or changing the type of existing pieces. Connect the new pieces to the existing pieces.",
+                        "mcp": {
+                            "resources": [
+                                {
+                                    "id": "qualities",
+                                    "instruction": "Try to find qualities that are related the gross floor area."
+                                },
+                                {
+                                    "id": "quality",
+                                    "instruction": "Access the value of the gross floor-related qualities."
+                                }
+                            ],
+                            "tools": [
+                                {
+                                    "id": "add_piece",
+                                    "instruction": "Add a piece to the building.",
+                                    "parameters": [
+                                        {
+                                            "id": "piece_id",
+                                            "instruction": "The id of the piece to add. Make sure that the parameters of the piece are contributing to the gross floor area."
+                                        },
+                                        {
+                                            "id": "piece_type",
+                                            "instruction": "The type of the piece to add. Make sure the type is contributing to the gross floor area."
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "add_connection",
+                                    "instruction": "Connect every new piece to the existing pieces.",
+                                    "parameters": [
+                                        {
+                                            "id": "connecting_piece_id",
+                                            "instruction": "The id of the piece to connect to."
+                                        },
+                                        {
+                                            "id": "connected_piece_id",
+                                            "instruction": "The id of the piece to connect to."
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "change_piece_type",
+                                    "instruction": "Change the type of the piece.",
+                                    "parameters": [
+                                        {
+                                            "id": "piece_id",
+                                            "instruction": "The id of the piece to change the type of."
+                                        },
+                                        {
+                                            "id": "piece_type",
+                                            "instruction": "The new type of the piece with more gross floor area than the old type of the piece."
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "update_type",
+                                    "instruction": "Update the type of the piece.",
+                                    "parameters": [
+                                        {
+                                            "id": "piece_type",
+                                            "instruction": "The type of the piece to update."
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
                     }
                 }
             ]
@@ -131,7 +185,15 @@
     ],
     "targets": [
         {
-            "id": "room-program",
+            "id": "programming",
+            "properties": [
+                {
+                    "id": "program",
+                    "name": "Program",
+                    "type": "Number",
+                    "description": "The sum of areas of the same program."
+                }
+            ],
             "rules": [
                 {
                     "id": "not-enough-program-area",
@@ -223,20 +285,20 @@
                 {
                     "id": "height",
                     "name": "Height",
-                    "type": "Number",
+                    "type": "number",
                     "description": "Height is the distance from the average ground surface to the top edge of the finished floor of the highest storey in which a habitable room is possible.",
                     "url": "https://gesetze.berlin.de/perma?d=jlr-BauOBE2005V11P2"
                 },
                 {
                     "id": "building-class",
                     "name": "Building Class",
-                    "type": "Level",
+                    "type": "level",
                     "levels": [
                         {
                             "value": "1",
                             "name": "Building Class 1",
                             "description": "Either free standing building with a height up to 7m and not more than two usage units with a total gross floor area of not more than 400m², or a land or forest usage building.",
-                            "instructions": {
+                            "measures": {
                                 "higher": [
                                     {
                                         "id": "change-building-usage",
@@ -301,8 +363,12 @@
                             "measures": {
                                 "lower": [
                                     {
-                                        "id": "remove-space",
-                                        "instruction": "Remove a space to have less than two usage units."
+                                        "id": "decrease-floor-height",
+                                        "instruction": "Decrease building height to maximum of 7m."
+                                    },
+                                    {
+                                        "id": "remove-storey",
+                                        "instruction": "Remove a storey to be below 7m building height."
                                     }
                                 ],
                                 "higher": [
@@ -337,39 +403,37 @@
                     ]
                 }
             ],
-            "rules": [
-                {
-                    "id": "staircase-located",
-                    "description": "Must be located in a separate stairwell",
-                    "clauses": [
-                        {
-                            "id": "not-external-staircase",
-                            "description": "Not an external staircase"
-                        },
-                        {
-                            "id": "not-in-building-classes-1-and-2",
-                            "description": "Not in buildings of building classes 1 and 2",
-                            "properties": [
-                                {
-                                    "id": "building-class",
-                                    "value": "1"
-                                },
-                                {
-                                    "id": "building-class",
-                                    "value": "2"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "id": "building-height-limit",
-                    "description": "The building height must be less than 21m.",
-                    "measures": [
-                        "remove-storey"
-                    ]
-                }
-            ]
+            "report": {
+                "id": "staircase-located",
+                "description": "Must be located in a separate stairwell",
+                "clauses": [
+                    {
+                        "id": "not-external-staircase",
+                        "description": "Not an external staircase"
+                    },
+                    {
+                        "id": "not-in-building-classes-1-and-2",
+                        "description": "Not in buildings of building classes 1 and 2",
+                        "properties": [
+                            {
+                                "id": "building-class",
+                                "value": "1"
+                            },
+                            {
+                                "id": "building-class",
+                                "value": "2"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "building-height-limit",
+                "description": "The building height must be less than 21m.",
+                "measures": [
+                    "remove-storey"
+                ]
+            }
         }
     ]
 }

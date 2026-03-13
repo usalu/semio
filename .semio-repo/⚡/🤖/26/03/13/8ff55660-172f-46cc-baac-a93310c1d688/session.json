@@ -1,0 +1,63 @@
+{
+  "id": "8ff55660-172f-46cc-baac-a93310c1d688",
+  "uri": "semiorepo://s/8ff55660-172f-46cc-baac-a93310c1d688",
+  "contributor": "🧑‍💻ueli",
+  "client": "windsurf-chat",
+  "second": "2026-03-13T23:56:45Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_user_prompt",
+          "trajectory_id": "8ff55660-172f-46cc-baac-a93310c1d688",
+          "timestamp": "2026-03-13T23:56:44.316110523Z",
+          "execution_id": "beda0d5b-44c2-4cba-bc8c-0ff05d3d6455",
+          "tool_info": {
+            "user_prompt": "coda:\nImplement the property system. There are number, object, array, level, category properties. Every property type has different kind of measures. number has increase, decrease measure. level has raise, lower measure. etc"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰23⌚56⏱️45",
+        "session": "⚪8ff55660172f46ccbaaca93310c1d688"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "8ff55660-172f-46cc-baac-a93310c1d688",
+          "timestamp": "2026-03-13T23:57:03.919510233Z",
+          "execution_id": "beda0d5b-44c2-4cba-bc8c-0ff05d3d6455",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "query": "coda property system number object array level category measures increase decrease raise lower"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰23⌚57⏱️05",
+        "session": "⚪8ff55660172f46ccbaaca93310c1d688"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

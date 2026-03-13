@@ -273,7 +273,7 @@ export interface ElementBaseProps {
   id: string;
 }
 
-export interface ElementProps extends ElementBaseProps {}
+export interface ElementProps extends ElementBaseProps { }
 
 /**
  * Returns the Tailwind background class for a given level.
@@ -1271,12 +1271,12 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, classN
   const normalizedName = (name ?? "").trim();
   const initials = normalizedName
     ? normalizedName
-        .split(" ")
-        .slice(0, 2)
-        .map((word: string) => word.charAt(0))
-        .join("")
-        .toUpperCase()
-        .substring(0, 2)
+      .split(" ")
+      .slice(0, 2)
+      .map((word: string) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
     : "";
   const isImageIcon = typeof icon === "string";
   const isReactIcon = icon && !isImageIcon;
@@ -2393,6 +2393,8 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
       </Label>
     );
   }
+
+  return inputElement;
 }
 
 export { Input };
@@ -3604,7 +3606,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
   const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
   return (
     <ToggleGroup
-      id={showLabel === true ? id : undefined}
+      id={id}
       showLabel={showLabel}
       kind="single"
       value={value}
@@ -4338,11 +4340,11 @@ function Navbar({ items, className }: NavbarProps) {
   const bgClass = getLevelBgClass(level);
   return (
     <nav id="semio.sketchpad.navbar" data-slot="navbar" className={cn("border-b h-large z-navbar flex items-center", bgClass, className)}>
-        {items.map((item, index) => (
-          <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
-            {item.content}
-          </div>
-        ))}
+      {items.map((item, index) => (
+        <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
+          {item.content}
+        </div>
+      ))}
     </nav>
   );
 }
@@ -4606,7 +4608,7 @@ interface TreeItemProps {
  * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.
  **/
 interface SortableTreeItemsProps {
-  items: { id: string; [key: string]: any }[];
+  items: { id: string;[key: string]: any }[];
   onReorder: (oldIndex: number, newIndex: number) => void;
   children: (item: any, index: number) => React.ReactNode;
 }
@@ -5779,7 +5781,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
           </span>
         );
       }
-      const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
+      const elementProps = itemContent.props as { className?: string;["data-slot"]?: string };
       return React.cloneElement(itemContent as React.ReactElement<any>, {
         className: cn("cursor-selectable", elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
@@ -6077,16 +6079,16 @@ const Panel: React.FC<PanelProps> = ({
         ? "border-l-accent"
         : "border-l"
       : resizeSide === "right"
+        ? isResizing || isResizeHovered
+          ? "border-r-accent"
+          : "border-r"
+        : resizeSide === "top"
           ? isResizing || isResizeHovered
-            ? "border-r-accent"
-            : "border-r"
-          : resizeSide === "top"
-            ? isResizing || isResizeHovered
-              ? "border-t-accent"
-              : "border-t"
-            : isResizing || isResizeHovered
-              ? "border-b-accent"
-              : "border-b";
+            ? "border-t-accent"
+            : "border-t"
+          : isResizing || isResizeHovered
+            ? "border-b-accent"
+            : "border-b";
   const containerClass = `absolute text-foreground border min-w-0 overflow-hidden ${borderClass} ${className}`;
   const hasContent = sortedSections.length > 0 || additionalContent;
   const isHorizontal = resizeSide === "left" || resizeSide === "right";

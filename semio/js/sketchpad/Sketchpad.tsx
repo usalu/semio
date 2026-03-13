@@ -3111,6 +3111,10 @@ class PropStore {
     return this.guid;
   }
 
+  hash = (prop: Prop): string => {
+    return JSON.stringify(prop);
+  };
+
   snapshot(): Prop {
     const currentHash = this.hash({
       guid: this.guid,
@@ -3132,6 +3136,8 @@ class PropStore {
 
     this.cache = prop;
     this.cacheHash = currentHash;
+
+    return prop;
   }
 
   change = (diff: PropDiff) => {
@@ -4860,8 +4866,9 @@ class SideStore {
     const pieceStore = this.parent.piece(pieceUuid);
     const typeGuid = pieceStore.type;
     if (typeGuid) {
-      if (typeStore) {
-        const connectorStore = typeStore.connector(connectorUuid);
+      const resolvedTypeStore = this.parent.parent.type(typeGuid);
+      if (resolvedTypeStore) {
+        const connectorStore = resolvedTypeStore.connector(connectorUuid);
         return connectorStore.guid;
       }
     }
@@ -4872,9 +4879,9 @@ class SideStore {
     const pieceStore = this.parent.piece(pieceUuid);
     const typeGuid = pieceStore.type;
     if (typeGuid) {
-      const typeStore = this.parent.parent.type(typeGuid);
-      if (typeStore) {
-        const connectorStore = typeStore.connectors.get(connector);
+      const resolvedTypeStore = this.parent.parent.type(typeGuid);
+      if (resolvedTypeStore) {
+        const connectorStore = resolvedTypeStore.connectors.get(connector);
         if (connectorStore) {
           this.ySide.set("connector", connectorStore.guid);
         }
@@ -15022,7 +15029,7 @@ export function useSketchpadCommands() {
 export function useKits(): KitShallow[] {
   const store = useSketchpadStore();
 
-  const kits = useSyncExternalStore(
+  return useSyncExternalStore(
     (onStoreChange) => {
       const unsubscribeCreated = store.onKitCreated(onStoreChange);
       const unsubscribeDeleted = store.onKitDeleted(onStoreChange);
@@ -15042,7 +15049,6 @@ export function useKits(): KitShallow[] {
     },
     () => store.kitShallows(),
   );
-
 }
 /**
  * Hook returning kit command dispatchers for a specific kit by guid.
@@ -15580,11 +15586,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const contextValue = useMemo(
-    () => ({
-      sections,
-      addSection,
-      removeSection,
-    }),
+    () => ({ sections, addSection, removeSection }),
     [sections, addSection, removeSection],
   );
 
@@ -15602,6 +15604,7 @@ export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
   const sections = context.sections[panelKey];
   return sections;
 };
+
 /**
  * Hook returning a callback to add a section to a panel.
  *
@@ -15918,6 +15921,7 @@ export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) =>
 export const useFooterItems = (): FooterItem[] => {
   const context = useContext(FooterItemContext);
   if (!context) throw new Error("useFooterItems must be used within FooterItemProvider");
+  return context.items;
 };
 
 /**
@@ -16284,7 +16288,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [searchParams] = useSearchParams();
-  const kits = useKits();
+  const kits = useKits() ?? [];
 
   const [mode] = useMode();
   const isMobile = useIsMobile();
@@ -17139,7 +17143,7 @@ const Search: FC = ({ }) => {
   const updateRecentSearches = useUpdateRecentSearches();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const kits = useKits();
+  const kits = useKits() ?? [];
   const tutorials = useAvailableTutorials();
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -18320,6 +18324,7 @@ const ScopeWrapper: FC<{ ScopeProvider: ComponentType<{ guid: string; children: 
  * AppRouter holds the data fields for a AppRouter record.
  **/
 const AppRouter: FC = () => {
+  const [appsInitialized, setAppsInitialized] = useState(false);
 
   useEffect(() => {
     if (!appsInitialized) {
@@ -18686,7 +18691,7 @@ const LayoutWrapper: FC = () => {
   const navigationHistory = useNavigationHistory();
   const currentPath = `${navigation}${location.search}`;
   const [searchParams] = useSearchParams();
-  const kits = useKits();
+  const kits = useKits() ?? [];
 
   const pathParts = navigation.split("/").filter((p) => p);
   const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);

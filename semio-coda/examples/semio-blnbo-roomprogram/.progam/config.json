@@ -3,12 +3,12 @@
         {
             "id": "0",
             "name": "Office Room",
-            "din276": "area.gfa.net.usbl.ofc-work.ofc-rm"
+            "din276": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche"
         }
     ],
     "byKind": [
         {
-            "kind": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "kind": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
             "constraints": {
                 "min": 300
             }
@@ -16,23 +16,23 @@
     ],
     "adjancency": [
         {
-            "from": "area.gfa.net.usbl.ofc-work.ofc-rm",
-            "to": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "from": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "to": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
             "type": "mandatory"
         },
         {
-            "from": "area.gfa.net.usbl.ofc-work.ofc-rm",
-            "to": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "from": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "to": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
             "type": "desirable"
         },
         {
-            "from": "area.gfa.net.usbl.ofc-work.ofc-rm",
-            "to": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "from": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "to": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
             "type": "neutral"
         },
         {
-            "from": "area.gfa.net.usbl.ofc-work.ofc-rm",
-            "to": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "from": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "to": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
             "type": "negative"
         }
     ]

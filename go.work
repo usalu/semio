@@ -1,6 +1,7 @@
 go 1.24.0
 
 use (
+	./semio-coda/programming/go
 	./semio-repo/cli
 	./semio-repo/server
 	./semio/go

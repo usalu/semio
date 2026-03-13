@@ -1012,7 +1012,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
     const existingNames = (context.kit.designs || []).map((d) => d.name);
     const clusterName = generateUniqueName(`${context.design.name} Cluster`, existingNames);
     const { clusteredDesign, externalConnections } = createClusteredDesign(context.design, validPieceGuids, clusterName);
-    const designDiff = replaceClusterWithDesign(context.design, validPieceGuids, clusteredDesign, externalConnections);
+    const designChange = replaceClusterWithDesign(context.design, validPieceGuids, clusteredDesign, externalConnections);
     const currentSelection = context.designApp.selection || {};
     const piecesRemoved = currentSelection.pieces || [];
     const connectionsRemoved = currentSelection.connections || [];
@@ -1034,7 +1034,7 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
           updated: [
             {
               design: { guid: context.design.guid },
-              diff: designDiff,
+              diff: designChange.forward,
             },
           ],
         },

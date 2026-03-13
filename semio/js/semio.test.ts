@@ -137,8 +137,8 @@ describe("Flatten", () => {
     const design = findDesign(kit, designName, parentName);
     const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design.guid);
     expect(expectedDesign).toBeDefined();
-    const flatDesignDiff = flattenDesign(kit, design.guid);
-    const flatDesign = applyDesignDiff(design, flatDesignDiff);
+    const flatDesignChange = flattenDesign(kit, design.guid);
+    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);
 
     flatDesign!.pieces?.forEach((p) => {
       const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
@@ -246,8 +246,8 @@ describe("Cluster", () => {
     } as Design;
 
     const { clusteredDesign, externalConnections } = createClusteredDesign(design, ["piece-a", "piece-b"], "Cluster");
-    const diff = replaceClusterWithDesign(design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
-    const updatedDesign = applyDesignDiff(design, diff);
+    const change = replaceClusterWithDesign(design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
+    const updatedDesign = applyDesignDiff(design, change.forward);
 
     const clusterConnection = updatedDesign.connections?.find((c) => c.guid === "conn-bc");
     expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);

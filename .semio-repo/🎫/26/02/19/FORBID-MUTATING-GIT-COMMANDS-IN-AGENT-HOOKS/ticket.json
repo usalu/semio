@@ -1,0 +1,13 @@
+{
+  "title": "Forbid Mutating Git Commands in Agent Hooks",
+  "status": "closed",
+  "description": "The IsToolBlocked function uses naive substring matching on the full command string, causing false positives. For example, `grep \"git checkout\" file.go` is blocked because the pattern \"git checkout\" appears in the grep arguments. The user reports all terminal commands are blocked in VSCode. Fix IsToolBlocked to only block when the command or a command segment actually STARTS WITH a blocked pattern (e.g., `git checkout`), not when it contains it anywhere. Also check VS Code Copilot Chat hook output format per the docs and ensure classifyTool handles VS Code tool names.",
+  "summary": "Refactored hook git-command blocking to parse shell-wrapped and option-wrapped git invocations instead of relying on literal string prefixes. Agent hooks now deny mutating git commands even when invoked through env/command/sudo/shell wrappers or git global options. Extended existing blocker tests to cover those forms. Verified focused blocker and hook tests pass. A full semio-repo/cli package run still fails for unrelated existing test issues in .devcontainer/post-attach.sh, fix/statute fixtures, SQLite schema export, and TestMonorepoTreeFullIDHierarchy timeout.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/632"
+  },
+  "goal": "🎯hooks",
+  "sessions": [
+    "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b⚪17734038440536598507379224977141743603"
+  ]
+}

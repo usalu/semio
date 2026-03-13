@@ -273,7 +273,7 @@
       "name": "🛠️dev🔬coda🖱️desktop",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "uv",
+      "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
         "dev",

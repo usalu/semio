@@ -1,5 +1,5 @@
 {
-    "name": "semio-blnbo-roomprogram",
+    "name": "semio-blnbo-programming",
     "mcp": {
         "command": "../semio-repo/cli/cli",
         "args": [
@@ -31,7 +31,7 @@
             ]
         },
         {
-            "id": "room.program."
+            "id": "programming"
         }
     ]
 }

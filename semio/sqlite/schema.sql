@@ -178,6 +178,14 @@ CREATE TABLE prop (
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
 );
 
+CREATE TABLE type_prop (
+	type_guid VARCHAR(36) NOT NULL,
+	prop_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (type_guid, prop_guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid),
+	FOREIGN KEY(prop_guid) REFERENCES prop (guid)
+);
+
 CREATE TABLE connector (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256),

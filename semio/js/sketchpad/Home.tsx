@@ -183,7 +183,7 @@ export interface HomeDiff {
   sortDirection?: HomeSortDirection;
 }
 
-export interface HomeEdit extends AppEdit<HomeSelectionDiff> {}
+export interface HomeEdit extends AppEdit<HomeSelectionDiff> { }
 
 /**
  * Command context carrying Home state and origin.
@@ -288,7 +288,7 @@ export { useHome };
 
 // #region Table
 
-  export { };
+export { };
 
 // #endregion Table
 
@@ -330,27 +330,27 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
   if (!kitShallow) {
     return (
       <TreeRow>
-          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
-        </TreeRow>
+        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
+      </TreeRow>
     );
   }
   return (
     <>
       <TreeRow>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kitShallow.name} readOnly showLabel />
-        </TreeRow>
+        <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kitShallow.name} readOnly showLabel />
+      </TreeRow>
       <TreeRow>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")} readOnly showLabel />
-        </TreeRow>
+        <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")} readOnly showLabel />
+      </TreeRow>
       <TreeRow>
-          <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")} readOnly showLabel />
-        </TreeRow>
+        <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")} readOnly showLabel />
+      </TreeRow>
       <TreeRow>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")} readOnly showLabel />
-        </TreeRow>
+        <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")} readOnly showLabel />
+      </TreeRow>
       <TreeRow>
-          <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")} readOnly showLabel />
-        </TreeRow>
+        <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")} readOnly showLabel />
+      </TreeRow>
     </>
   );
 };
@@ -380,44 +380,44 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
   return (
     <>
       <TreeRow>
-          <Input id="semio.sketchpad.app.home.panel.details.kits.name" value={commonName || ""} placeholder={commonName === undefined ? useLabel("semio.sketchpad.common.mixedValues") : undefined} readOnly showLabel />
-        </TreeRow>
+        <Input id="semio.sketchpad.app.home.panel.details.kits.name" value={commonName || ""} placeholder={commonName === undefined ? useLabel("semio.sketchpad.common.mixedValues") : undefined} readOnly showLabel />
+      </TreeRow>
       <TreeRow>
-          <Input
-            id="semio.sketchpad.app.home.panel.details.kits.version"
-            value={commonVersion || ""}
-            placeholder={commonVersion === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
-            readOnly
-            showLabel
-          />
-        </TreeRow>
+        <Input
+          id="semio.sketchpad.app.home.panel.details.kits.version"
+          value={commonVersion || ""}
+          placeholder={commonVersion === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
+          readOnly
+          showLabel
+        />
+      </TreeRow>
       <TreeRow>
-          <Textarea
-            id="semio.sketchpad.app.home.panel.details.kits.description"
-            value={commonDescription || ""}
-            placeholder={commonDescription === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
-            readOnly
-            showLabel
-          />
-        </TreeRow>
+        <Textarea
+          id="semio.sketchpad.app.home.panel.details.kits.description"
+          value={commonDescription || ""}
+          placeholder={commonDescription === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
+          readOnly
+          showLabel
+        />
+      </TreeRow>
       <TreeRow>
-          <Input
-            id="semio.sketchpad.app.home.panel.details.kits.icon"
-            value={commonIcon || ""}
-            placeholder={commonIcon === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
-            readOnly
-            showLabel
-          />
-        </TreeRow>
+        <Input
+          id="semio.sketchpad.app.home.panel.details.kits.icon"
+          value={commonIcon || ""}
+          placeholder={commonIcon === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
+          readOnly
+          showLabel
+        />
+      </TreeRow>
       <TreeRow>
-          <Input
-            id="semio.sketchpad.app.home.panel.details.kits.image"
-            value={commonImage || ""}
-            placeholder={commonImage === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
-            readOnly
-            showLabel
-          />
-        </TreeRow>
+        <Input
+          id="semio.sketchpad.app.home.panel.details.kits.image"
+          value={commonImage || ""}
+          placeholder={commonImage === undefined ? useLabel("semio.sketchpad.common.mixedValues") : useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
+          readOnly
+          showLabel
+        />
+      </TreeRow>
     </>
   );
 };
@@ -459,74 +459,74 @@ const SettingsContent: FC = () => {
   return (
     <>
       <TreeRow>
-          <ToggleGroup
-            id="semio.sketchpad.app.home.settings.theme"
-            value={theme}
-            onValueChange={(value: string) => setTheme?.(value as Theme)}
-            showLabel
-            kind="single"
-            disabled={!canSetTheme}
-            items={[
-              { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
-              { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
-              { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
-            ]}
-          />
-        </TreeRow>
+        <ToggleGroup
+          id="semio.sketchpad.app.home.settings.theme"
+          value={theme}
+          onValueChange={(value: string) => setTheme?.(value as Theme)}
+          showLabel
+          kind="single"
+          disabled={!canSetTheme}
+          items={[
+            { value: Theme.SYSTEM, id: "semio.sketchpad.settings.theme.system", icon: <MonitorIcon className="size-small" /> },
+            { value: Theme.LIGHT, id: "semio.sketchpad.settings.theme.light", icon: <SunIcon className="size-small" /> },
+            { value: Theme.DARK, id: "semio.sketchpad.settings.theme.dark", icon: <MoonIcon className="size-small" /> },
+          ]}
+        />
+      </TreeRow>
       <TreeRow>
-          <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
-            <SelectTrigger>
-              <SelectValue placeholder={languagePlaceholder} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">{languageEnLabel}</SelectItem>
-              <SelectItem value="de">{languageDeLabel}</SelectItem>
-            </SelectContent>
-          </Select>
-        </TreeRow>
+        <Select id="semio.sketchpad.app.home.settings.language" value={language || "en"} onValueChange={(value: string) => setLanguage?.(value)} showLabel disabled={!canSetLanguage}>
+          <SelectTrigger>
+            <SelectValue placeholder={languagePlaceholder} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="en">{languageEnLabel}</SelectItem>
+            <SelectItem value="de">{languageDeLabel}</SelectItem>
+          </SelectContent>
+        </Select>
+      </TreeRow>
       <TreeRow>
-          <ToggleGroup
-            id="semio.sketchpad.app.home.settings.device"
-            value={typeof device === "object" ? "desktop" : device}
-            onValueChange={(value: string) => setDevice?.(value as "desktop" | "tablet")}
-            showLabel
-            kind="single"
-            disabled={!canSetDevice}
-            items={[
-              { value: "desktop", id: "semio.sketchpad.settings.device.desktop", icon: <MousePointerIcon className="size-small" /> },
-              { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
-            ]}
-          />
-        </TreeRow>
+        <ToggleGroup
+          id="semio.sketchpad.app.home.settings.device"
+          value={typeof device === "object" ? "desktop" : device}
+          onValueChange={(value: string) => setDevice?.(value as "desktop" | "tablet")}
+          showLabel
+          kind="single"
+          disabled={!canSetDevice}
+          items={[
+            { value: "desktop", id: "semio.sketchpad.settings.device.desktop", icon: <MousePointerIcon className="size-small" /> },
+            { value: "tablet", id: "semio.sketchpad.settings.device.tablet", icon: <HandIcon className="size-small" /> },
+          ]}
+        />
+      </TreeRow>
       <TreeRow>
-          <ToggleGroup
-            id="semio.sketchpad.app.home.settings.expertise"
-            value={expertise}
-            onValueChange={(value: string) => setExpertise?.(value as Expertise)}
-            showLabel
-            kind="single"
-            disabled={!canSetExpertise}
-            items={[
-              { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
-              { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
-              { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
-            ]}
-          />
-        </TreeRow>
+        <ToggleGroup
+          id="semio.sketchpad.app.home.settings.expertise"
+          value={expertise}
+          onValueChange={(value: string) => setExpertise?.(value as Expertise)}
+          showLabel
+          kind="single"
+          disabled={!canSetExpertise}
+          items={[
+            { value: Expertise.BEGINNER, id: "semio.sketchpad.settings.expertise.beginner", icon: <TutorialIcon className="size-small" /> },
+            { value: Expertise.NORMAL, id: "semio.sketchpad.settings.expertise.normal", icon: <UserIcon className="size-small" /> },
+            { value: Expertise.EXPERT, id: "semio.sketchpad.settings.expertise.expert", icon: <AwardIcon className="size-small" /> },
+          ]}
+        />
+      </TreeRow>
       <TreeRow>
-          <ToggleGroup
-            id="semio.sketchpad.app.home.settings.mode"
-            value={mode}
-            onValueChange={(value: string) => setMode?.(value as Mode)}
-            showLabel
-            kind="single"
-            disabled={!canSetMode}
-            items={[
-              { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
-              { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
-            ]}
-          />
-        </TreeRow>
+        <ToggleGroup
+          id="semio.sketchpad.app.home.settings.mode"
+          value={mode}
+          onValueChange={(value: string) => setMode?.(value as Mode)}
+          showLabel
+          kind="single"
+          disabled={!canSetMode}
+          items={[
+            { value: Mode.USER, id: "semio.sketchpad.settings.mode.user", icon: <UserIcon className="size-small" /> },
+            { value: Mode.DEV, id: "semio.sketchpad.settings.mode.dev", icon: <CodeIcon className="size-small" /> },
+          ]}
+        />
+      </TreeRow>
     </>
   );
 };
@@ -552,7 +552,7 @@ const HomeFooter: FC = () => {
   useEffect(() => {
     if (appType !== "home") return;
 
-    return () => {};
+    return () => { };
   }, [appType, addFooterItem, removeFooterItem]);
 
   return null;
@@ -666,6 +666,13 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      <Input
+        id="semio.sketchpad.app.home.importKit"
+        type="file"
+        accept=".zip,.semio.zip,application/zip,application/x-zip-compressed"
+        className="hidden"
+        onChange={handleFileInputChange}
+      />
       {children}
       {isDragging && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm">
@@ -1434,39 +1441,39 @@ const HomeTableContent: FC = () => {
         columns={[
           ...(!selectedKind
             ? [
-                {
-                  id: "type",
-                  header: (
-                    <div className="inline-flex items-center gap-single">
-                      <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
-                      <Toggle
-                        kind="dropdown"
-                        pressed={sortColumn === "type"}
-                        value={sortColumn === "type" ? sortDirection : "asc"}
-                        onValueChange={(value) => {
-                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
-                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
-                        }}
-                        items={[
-                          { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
-                          { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
-                        ]}
-                        id={"semio.sketchpad.app.home.sortByType"}
-                      />
-                    </div>
-                  ),
-                  accessor: (row) => (
-                    <>
-                      {row.type === "temporary" && <TemporaryKitIcon />}
-                      {row.type === "local" && <LocalKitIcon />}
-                      {row.type === "remote" && <RemoteKitIcon />}
-                      {row.type === "docs" && <DocumentIcon className="size-small" />}
-                    </>
-                  ),
-                  width: "w-0 whitespace-nowrap",
-                  headerClassName: "relative group w-0 whitespace-nowrap",
-                } as TableColumn<TableRow>,
-              ]
+              {
+                id: "type",
+                header: (
+                  <div className="inline-flex items-center gap-single">
+                    <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
+                    <Toggle
+                      kind="dropdown"
+                      pressed={sortColumn === "type"}
+                      value={sortColumn === "type" ? sortDirection : "asc"}
+                      onValueChange={(value) => {
+                        homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
+                        homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
+                      }}
+                      items={[
+                        { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
+                        { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
+                      ]}
+                      id={"semio.sketchpad.app.home.sortByType"}
+                    />
+                  </div>
+                ),
+                accessor: (row) => (
+                  <>
+                    {row.type === "temporary" && <TemporaryKitIcon />}
+                    {row.type === "local" && <LocalKitIcon />}
+                    {row.type === "remote" && <RemoteKitIcon />}
+                    {row.type === "docs" && <DocumentIcon className="size-small" />}
+                  </>
+                ),
+                width: "w-0 whitespace-nowrap",
+                headerClassName: "relative group w-0 whitespace-nowrap",
+              } as TableColumn<TableRow>,
+            ]
             : []),
           {
             id: "name",
@@ -1788,7 +1795,7 @@ const Home: FC = () => {
 
   return (
     <>
-      <HomeAppFooter />
+      <HomeFooter />
       <HomeDropZone>
         <Canvas id="semio.sketchpad.app.home.canvas">
           <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />

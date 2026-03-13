@@ -218,6 +218,22 @@ class TestMcp:
     def test_mcp_instance_exists(self):
         assert engine.mcp is not None
 
+    def test_mcp_tool_surface_keeps_only_allowed_prefixes(self):
+        names = sorted(tool.name for tool in engine.mcp._tool_manager.list_tools())
+        assert names == [
+            "finish_working_in_design",
+            "finish_working_in_kit",
+            "finish_working_in_type",
+            "start_transaction",
+            "start_working_in_design",
+            "start_working_in_local_kit",
+            "start_working_in_remote_kit",
+            "start_working_in_type",
+            "sum_quality_in_design",
+            "transaction_abort",
+            "transaction_finalize",
+        ]
+
     def test_flatten_design_tool(self, minimalKitJson: dict):
         result = engine.flatten_design(minimalKitJson, "test-design-guid")
         assert isinstance(result, dict)
@@ -579,6 +595,48 @@ class TestMcp:
         assert sid not in engine._mcp_session_kits
         assert sid not in engine._mcp_session_designs
         assert sid not in engine._mcp_session_types
+
+    def test_start_transaction_rejects_nested_transaction(self):
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        try:
+            first = engine.start_transaction(mock_ctx)
+            second = engine.start_transaction(mock_ctx)
+            assert first.get("ok") is True
+            assert "error" in second
+        finally:
+            engine._mcp_session_transactions.pop(sid, None)
+
+    def test_finalize_transaction_removes_active_transaction(self):
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        started = engine.start_transaction(mock_ctx)
+        assert started.get("ok") is True
+        result = engine.finalize_transaction(mock_ctx)
+        assert result.get("ok") is True
+        assert sid not in engine._mcp_session_transactions
+
+    def test_abort_transaction_unwinds_recorded_kit_changes(self):
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        initial_kit = {"name": "Initial", "version": "1.0.0", "designs": [], "types": []}
+        changed_kit = {"name": "Changed", "version": "1.0.0", "designs": [], "types": []}
+        engine._mcp_session_kits[sid] = initial_kit
+        started = engine.start_transaction(mock_ctx)
+        assert started.get("ok") is True
+        engine._set_session_kit(mock_ctx, changed_kit)
+        engine._clear_session_kit(mock_ctx)
+        assert sid not in engine._mcp_session_kits
+        result = engine.abort_transaction(mock_ctx)
+        assert result.get("ok") is True
+        assert sid not in engine._mcp_session_transactions
+        assert sid in engine._mcp_session_kits
+        assert engine._mcp_session_kits[sid].get("name") == "Initial"
+
+    def test_abort_transaction_without_active_transaction_returns_error(self):
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        result = engine.abort_transaction(mock_ctx)
+        assert "error" in result
 
 
 # endregion MCP Tests

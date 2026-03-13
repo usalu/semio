@@ -38017,6 +38017,35 @@ var BlockedToolPatterns = []string{
 	"git tag",
 }
 
+var blockedGitGlobalOptionsWithValue = map[string]struct{}{
+	"-c":             {},
+	"-C":             {},
+	"--config-env":   {},
+	"--exec-path":    {},
+	"--git-dir":      {},
+	"--namespace":    {},
+	"--super-prefix": {},
+	"--work-tree":    {},
+}
+
+var blockedGitWrapperBins = map[string]struct{}{
+	"builtin": {},
+	"command": {},
+	"env":     {},
+	"nohup":   {},
+	"sudo":    {},
+	"time":    {},
+}
+
+var blockedGitShellBins = map[string]struct{}{
+	"bash": {},
+	"dash": {},
+	"fish": {},
+	"ksh":  {},
+	"sh":   {},
+	"zsh":  {},
+}
+
 // shellSegmentRE splits a command string by common shell operators.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🪨shellsegmentre](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/shellSegmentRE)
 var shellSegmentRE = regexp.MustCompile(`&&|\|\||;|\|`)
@@ -38043,13 +38072,171 @@ var grepLineOnlyRE = regexp.MustCompile(`^([0-9]+)([:\-].*)?$`)
 // splitCommandSegments MUST perform the splitCommandSegments operation.
 func splitCommandSegments(cmd string) []string {
 	var segments []string
-	for _, part := range shellSegmentRE.Split(cmd, -1) {
-		part = strings.TrimSpace(part)
+	var current strings.Builder
+	var quote rune
+	escaped := false
+	flush := func() {
+		part := strings.TrimSpace(current.String())
 		if part != "" {
 			segments = append(segments, part)
 		}
+		current.Reset()
 	}
+	for i := 0; i < len(cmd); {
+		r := rune(cmd[i])
+		if escaped {
+			current.WriteRune(r)
+			escaped = false
+			i++
+			continue
+		}
+		if r == '\\' {
+			current.WriteRune(r)
+			escaped = true
+			i++
+			continue
+		}
+		if quote != 0 {
+			current.WriteRune(r)
+			if r == quote {
+				quote = 0
+			}
+			i++
+			continue
+		}
+		if r == '\'' || r == '"' {
+			quote = r
+			current.WriteRune(r)
+			i++
+			continue
+		}
+		if r == ';' {
+			flush()
+			i++
+			continue
+		}
+		if r == '|' {
+			flush()
+			if i+1 < len(cmd) && cmd[i+1] == '|' {
+				i += 2
+			} else {
+				i++
+			}
+			continue
+		}
+		if r == '&' && i+1 < len(cmd) && cmd[i+1] == '&' {
+			flush()
+			i += 2
+			continue
+		}
+		current.WriteRune(r)
+		i++
+	}
+	flush()
 	return segments
+}
+
+func trimShellWordQuotes(value string) string {
+	value = strings.TrimSpace(value)
+	for len(value) >= 2 {
+		first := value[0]
+		last := value[len(value)-1]
+		if (first == '"' && last == '"') || (first == '\'' && last == '\'') {
+			value = strings.TrimSpace(value[1 : len(value)-1])
+			continue
+		}
+		break
+	}
+	return value
+}
+
+func skipEnvAssignments(parts []string, idx int) int {
+	for idx < len(parts) {
+		part := parts[idx]
+		if part == "" || strings.HasPrefix(part, "-") {
+			break
+		}
+		eq := strings.Index(part, "=")
+		if eq <= 0 {
+			break
+		}
+		idx++
+	}
+	return idx
+}
+
+func unwrapBlockedGitCommand(segment string) string {
+	segment = strings.TrimSpace(segment)
+	if segment == "" {
+		return ""
+	}
+	parts := strings.Fields(segment)
+	if len(parts) == 0 {
+		return ""
+	}
+	idx := skipEnvAssignments(parts, 0)
+	for idx < len(parts) {
+		bin := strings.ToLower(filepath.Base(trimShellWordQuotes(parts[idx])))
+		if _, ok := blockedGitWrapperBins[bin]; !ok {
+			break
+		}
+		idx++
+		if bin == "env" {
+			for idx < len(parts) && strings.HasPrefix(parts[idx], "-") {
+				idx++
+			}
+			idx = skipEnvAssignments(parts, idx)
+		}
+	}
+	if idx >= len(parts) {
+		return ""
+	}
+	bin := strings.ToLower(filepath.Base(trimShellWordQuotes(parts[idx])))
+	if _, ok := blockedGitShellBins[bin]; ok {
+		for i := idx + 1; i < len(parts); i++ {
+			part := trimShellWordQuotes(parts[i])
+			if part == "-c" || part == "-lc" || part == "-cl" {
+				return strings.TrimSpace(trimShellWordQuotes(strings.Join(parts[i+1:], " ")))
+			}
+		}
+		return ""
+	}
+	return strings.Join(parts[idx:], " ")
+}
+
+func blockedGitMutationPattern(segment string) string {
+	segment = unwrapBlockedGitCommand(segment)
+	if segment == "" {
+		return ""
+	}
+	parts := strings.Fields(segment)
+	if len(parts) == 0 {
+		return ""
+	}
+	if strings.ToLower(filepath.Base(trimShellWordQuotes(parts[0]))) != "git" {
+		return ""
+	}
+	for idx := 1; idx < len(parts); idx++ {
+		part := trimShellWordQuotes(parts[idx])
+		if part == "" {
+			continue
+		}
+		if strings.HasPrefix(part, "-") {
+			if _, ok := blockedGitGlobalOptionsWithValue[part]; ok && idx+1 < len(parts) {
+				idx++
+			}
+			continue
+		}
+		subcommand := strings.ToLower(part)
+		pattern := "git " + subcommand
+		for _, blockedPattern := range BlockedToolPatterns {
+			if pattern == strings.ToLower(blockedPattern) {
+				return blockedPattern
+			}
+		}
+		return ""
+	}
+	return ""
 }
 
 // isCommandSegmentBlocked checks whether a single command segment starts with a blocked pattern.
@@ -38060,15 +38247,8 @@ func isCommandSegmentBlocked(segment string) (bool, string) {
 	if segment == "" {
 		return false, ""
 	}
-	lower := strings.ToLower(segment)
-	for _, pattern := range BlockedToolPatterns {
-		patternLower := strings.ToLower(pattern)
-		if strings.HasPrefix(lower, patternLower) {
-			rest := lower[len(patternLower):]
-			if rest == "" || rest[0] == ' ' || rest[0] == '\t' {
-				return true, fmt.Sprintf("blocked: %q matches forbidden modifying git command %q because other developers and agents may be editing the same files concurrently", segment, pattern)
-			}
-		}
+	if pattern := blockedGitMutationPattern(segment); pattern != "" {
+		return true, fmt.Sprintf("blocked: %q matches forbidden modifying git command %q because other developers and agents may be editing the same files concurrently", segment, pattern)
 	}
 	return false, ""
 }

@@ -22,6 +22,7 @@
 from __future__ import annotations
 import abc
 import argparse
+import copy
 import contextlib
 import datetime
 import difflib
@@ -137,6 +138,9 @@ from semio import (
     areKitsDictEqual,
     areValidationResultsEqual,
     changeKeys,
+    changeToDict,
+    getDesignChange,
+    getKitChange,
     changeValues,
     createClusteredDesignDict,
     decode,
@@ -1868,6 +1872,8 @@ _mcp_session_designs: dict[int, dict] = {}
 _mcp_session_types: dict[int, dict] = {}
 _mcp_session_kit_mode: dict[int, str] = {}  # "local" or "remote"
 _mcp_session_kit_source: dict[int, str] = {}  # path or serverUrl+kitUri
+_mcp_session_transactions: dict[int, dict] = {}
+_mcp_session_transaction_rollback: set[int] = set()
 
 
 def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
@@ -1956,6 +1962,91 @@ def _get_session_type(ctx) -> dict:
     return _mcp_session_types[sid]
 
 
+def _clone_kit(kit: dict | None) -> dict | None:
+    """Create a deep copy of a kit dict for safe transaction snapshots."""
+    if kit is None:
+        return None
+    return copy.deepcopy(kit)
+
+
+def _get_active_transaction(sid: int | None) -> dict | None:
+    """Return the active transaction for a session, if any."""
+    if sid is None:
+        return None
+    transaction = _mcp_session_transactions.get(sid)
+    if transaction is None or not transaction.get("active"):
+        return None
+    return transaction
+
+
+def _record_transaction_kit_change(sid: int | None, before_kit: dict | None, after_kit: dict | None):
+    """Record a kit change in the active transaction using forward/backward diffs."""
+    if sid is None or sid in _mcp_session_transaction_rollback:
+        return
+    transaction = _get_active_transaction(sid)
+    if transaction is None:
+        return
+    if before_kit is None and after_kit is None:
+        return
+    before = _clone_kit(before_kit)
+    after = _clone_kit(after_kit)
+    if before is not None and after is not None:
+        change = getKitChange(before, after)
+        forward_diff = change.forward
+        backward_diff = change.backward
+    else:
+        forward_diff = after
+        backward_diff = before
+    transaction["changes"].append(
+        {
+            "kind": "kit_change",
+            "before_has_kit": before is not None,
+            "after_has_kit": after is not None,
+            "forward_diff": forward_diff,
+            "backward_diff": backward_diff,
+        }
+    )
+
+
+def _set_session_kit(ctx, kit: dict):
+    """Set session kit and record the change if a transaction is active."""
+    sid = _session_id(ctx)
+    before = _mcp_session_kits.get(sid)
+    _record_transaction_kit_change(sid, before, kit)
+    _mcp_session_kits[sid] = kit
+
+
+def _clear_session_kit(ctx):
+    """Clear session kit and record the change if a transaction is active."""
+    sid = _session_id(ctx)
+    before = _mcp_session_kits.get(sid)
+    _record_transaction_kit_change(sid, before, None)
+    _mcp_session_kits.pop(sid, None)
+
+
+def _rollback_session_transaction(sid: int):
+    """Rollback all transaction changes in reverse order."""
+    transaction = _get_active_transaction(sid)
+    if transaction is None:
+        return
+    for change in reversed(transaction.get("changes", [])):
+        if change.get("kind") != "kit_change":
+            continue
+        before_has_kit = bool(change.get("before_has_kit"))
+        after_has_kit = bool(change.get("after_has_kit"))
+        backward_diff = change.get("backward_diff")
+        if not before_has_kit and after_has_kit:
+            _mcp_session_kits.pop(sid, None)
+            continue
+        if before_has_kit and not after_has_kit:
+            if backward_diff is not None:
+                _mcp_session_kits[sid] = _clone_kit(backward_diff)
+            continue
+        if backward_diff is not None:
+            current = _clone_kit(_mcp_session_kits.get(sid, {}))
+            _mcp_session_kits[sid] = applyKitDiffDict(current, backward_diff)
+
+
 @mcp.tool()
 def start_working_in_local_kit(path: str, ctx: Context) -> dict:
     """Start working in a local kit for this MCP session. MUST be called first.
@@ -1965,7 +2056,7 @@ def start_working_in_local_kit(path: str, ctx: Context) -> dict:
     try:
         kit = _load_kit_from_path(path)
         sid = _session_id(ctx)
-        _mcp_session_kits[sid] = kit
+        _set_session_kit(ctx, kit)
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
@@ -1984,7 +2075,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> di
     try:
         kit = _load_kit_from_remote(serverUrl, kitUri)
         sid = _session_id(ctx)
-        _mcp_session_kits[sid] = kit
+        _set_session_kit(ctx, kit)
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "remote"
@@ -1998,7 +2089,6 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> di
 # [👤semio📚engine💻engine🔖mcp🔖mcpauthtools](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools)
 # MCP Auth Tools MUST expose login, logout and status for remote server authentication.
 
-@mcp.tool()
 def mcp_login(serverUrl: str, email: str, password: str) -> dict:
     """🔐 Login to a remote semio server. Stores the auth token for subsequent remote kit operations.
     [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogin](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_login)
@@ -2009,7 +2099,6 @@ def mcp_login(serverUrl: str, email: str, password: str) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def mcp_logout(serverUrl: str) -> dict:
     """🔓 Logout from a remote semio server. Removes the stored token.
     [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogout](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_logout)
@@ -2020,7 +2109,6 @@ def mcp_logout(serverUrl: str) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def mcp_auth_status(serverUrl: str) -> dict:
     """📋 Get the auth status for a remote semio server.
     [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcpauthstatus](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_auth_status)
@@ -2033,7 +2121,6 @@ def mcp_auth_status(serverUrl: str) -> dict:
 # endregion MCP Auth Tools
 
 
-@mcp.tool()
 def validate_kit(kit: dict) -> dict:
     """Validate a kit and return any validation problems.
     Callers MUST provide a dict matching the Kit schema.
@@ -2046,7 +2133,6 @@ def validate_kit(kit: dict) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def flatten_design(kit: dict, design_guid: str) -> dict:
     """Flatten a design by computing absolute planes for all pieces.
     Callers MUST provide a valid kit dict and an existing design GUID.
@@ -2058,7 +2144,6 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_kit_diff(before: dict, after: dict) -> dict:
     """Get the diff between two kit states.
     Callers MUST provide two valid kit dicts for comparison.
@@ -2070,7 +2155,6 @@ def get_kit_diff(before: dict, after: dict) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def apply_kit_diff(base: dict, diff: dict) -> dict:
     """Apply a diff to a kit.
     Callers MUST provide a valid base kit dict and a compatible diff dict.
@@ -2082,7 +2166,6 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
     """Get the inverse of a diff (for undo operations).
     Callers MUST provide the original kit dict and the applied diff dict.
@@ -2094,7 +2177,28 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
+def get_kit_change(before: dict, after: dict) -> dict:
+    """Get the change (forward and backward diffs) between two kit states for undo/redo.
+    Callers MUST provide two valid kit dicts for comparison.
+    [👤semio📚engine💻engine🔖mcp🛠️getkitchange](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_change)
+    """
+    try:
+        return changeToDict(getKitChange(before, after))
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def get_design_change(before: dict, after: dict) -> dict:
+    """Get the change (forward and backward diffs) between two design states for undo/redo.
+    Callers MUST provide two valid design dicts for comparison.
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignchange](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_change)
+    """
+    try:
+        return changeToDict(getDesignChange(before, after))
+    except Exception as e:
+        return {"error": str(e)}
+
+
 def pieces_metadata(kit: dict, design_guid: str) -> dict:
     """Get metadata for all pieces in a design (plane, center, fixedPieceId, parentPieceId, depth).
     Callers MUST provide a valid kit dict and an existing design GUID.
@@ -2106,7 +2210,6 @@ def pieces_metadata(kit: dict, design_guid: str) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_primitive_design(kit: dict, design_guid: str) -> dict:
     """Get the root/primitive design of a design family.
     Callers MUST provide a valid kit dict and an existing design GUID.
@@ -2118,7 +2221,6 @@ def get_primitive_design(kit: dict, design_guid: str) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_design_family(kit: dict, design_guid: str) -> list:
     """Get all designs in a design family tree.
     Callers MUST provide a valid kit dict and an existing design GUID.
@@ -2130,7 +2232,6 @@ def get_design_family(kit: dict, design_guid: str) -> list:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_design_siblings(kit: dict, design_guid: str) -> list:
     """Get all sibling designs (same parent, excluding self).
     Callers MUST provide a valid kit dict and an existing design GUID.
@@ -2142,7 +2243,6 @@ def get_design_siblings(kit: dict, design_guid: str) -> list:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_design_children(kit: dict, design_guid: str) -> list:
     """Get all direct children of a design.
     Callers MUST provide a valid kit dict and an existing design GUID.
@@ -2154,7 +2254,6 @@ def get_design_children(kit: dict, design_guid: str) -> list:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def are_designs_in_same_family(kit: dict, design_guid_a: str, design_guid_b: str) -> dict:
     """Check if two designs belong to the same family.
     Callers MUST provide a valid kit dict and two existing design GUIDs.
@@ -2166,7 +2265,6 @@ def are_designs_in_same_family(kit: dict, design_guid_a: str, design_guid_b: str
         return {"error": str(e)}
 
 
-@mcp.tool()
 def can_use_design_as_piece(kit: dict, container_design_guid: str, piece_design_guid: str) -> dict:
     """Check if a design can be used as a piece in another design.
     Callers MUST provide a valid kit dict and two existing design GUIDs.
@@ -2178,7 +2276,6 @@ def can_use_design_as_piece(kit: dict, container_design_guid: str, piece_design_
         return {"error": str(e)}
 
 
-@mcp.tool()
 def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
     """Find pieces in a design that reference designs from the same family.
     Callers MUST provide a valid kit dict and an existing design GUID.
@@ -2190,7 +2287,6 @@ def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_primitive_type(kit: dict, type_guid: str) -> dict:
     """Get the root/primitive type of a type family.
     Callers MUST provide a valid kit dict and an existing type GUID.
@@ -2202,7 +2298,6 @@ def get_primitive_type(kit: dict, type_guid: str) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_type_family(kit: dict, type_guid: str) -> list:
     """Get all types in a type family tree.
     Callers MUST provide a valid kit dict and an existing type GUID.
@@ -2214,7 +2309,6 @@ def get_type_family(kit: dict, type_guid: str) -> list:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_type_siblings(kit: dict, type_guid: str) -> list:
     """Get all sibling types (same parent, excluding self).
     Callers MUST provide a valid kit dict and an existing type GUID.
@@ -2226,7 +2320,6 @@ def get_type_siblings(kit: dict, type_guid: str) -> list:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_type_children(kit: dict, type_guid: str) -> list:
     """Get all direct children of a type.
     Callers MUST provide a valid kit dict and an existing type GUID.
@@ -2238,7 +2331,6 @@ def get_type_children(kit: dict, type_guid: str) -> list:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def are_types_in_same_family(kit: dict, type_guid_a: str, type_guid_b: str) -> dict:
     """Check if two types belong to the same family.
     Callers MUST provide a valid kit dict and two existing type GUIDs.
@@ -2250,7 +2342,6 @@ def are_types_in_same_family(kit: dict, type_guid_a: str, type_guid_b: str) -> d
         return {"error": str(e)}
 
 
-@mcp.tool()
 def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> dict:
     """Get the type of a piece in a design.
     Callers MUST provide a valid kit dict, design GUID, and piece GUID.
@@ -2262,7 +2353,6 @@ def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> d
         return {"error": str(e)}
 
 
-@mcp.tool()
 def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_guid: str) -> list:
     """Get all connectors of a piece that are used in connections.
     Callers MUST provide a valid kit dict, design GUID, and piece GUID.
@@ -2274,7 +2364,6 @@ def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_g
         return {"error": str(e)}
 
 
-@mcp.tool()
 def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piece_guid: str, variants: list[str] = None) -> list:
     """Find all types that can replace a piece while maintaining connection compatibility.
     Callers MUST provide a valid kit dict, design GUID, and piece GUID. Optionally filter by variant parent GUIDs.
@@ -2286,7 +2375,6 @@ def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piec
         return {"error": str(e)}
 
 
-@mcp.tool()
 def find_replaceable_types_for_pieces_in_design(kit: dict, design_guid: str, piece_guids: list[str], variants: list[str] = None) -> list:
     """Find types that can replace multiple pieces while maintaining all external connections.
     Callers MUST provide a valid kit dict, design GUID, and list of piece GUIDs.
@@ -2298,7 +2386,6 @@ def find_replaceable_types_for_pieces_in_design(kit: dict, design_guid: str, pie
         return {"error": str(e)}
 
 
-@mcp.tool()
 def create_clustered_design(original_design: dict, cluster_piece_ids: list[str], design_name: str) -> dict:
     """Create a new design from a subset of pieces (cluster).
     Returns clusteredDesign and externalConnections.
@@ -2311,7 +2398,6 @@ def create_clustered_design(original_design: dict, cluster_piece_ids: list[str],
         return {"error": str(e)}
 
 
-@mcp.tool()
 def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[str], clustered_design: dict, external_connections: list[dict]) -> dict:
     """Get a DesignDiff that replaces clustered pieces with a design reference.
     Callers MUST provide the original design, cluster piece IDs, the new clustered design, and external connections.
@@ -2323,7 +2409,6 @@ def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[s
         return {"error": str(e)}
 
 
-@mcp.tool()
 def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
     """Get clusterable groups of selected pieces.
     Callers MUST provide a valid design dict and list of selected piece GUIDs.
@@ -2335,7 +2420,6 @@ def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def expand_design_pieces(design: dict, kit: dict) -> dict:
     """Recursively expand design references by inlining their pieces and connections.
     Callers MUST provide a valid design dict and kit dict.
@@ -2347,7 +2431,6 @@ def expand_design_pieces(design: dict, kit: dict) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def find_attribute_value(entity: dict, name: str, default_value: str = None) -> dict:
     """Find an attribute value on an entity by key.
     Callers MUST provide an entity dict (kit, type, design, piece, etc.) and attribute key name.
@@ -2379,7 +2462,6 @@ def start_working_in_design(guid: str, ctx: Context) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def read_current_design(ctx: Context) -> dict:
     """Read the current design that was set via start_working_in_design.
     [👤semio📚engine💻engine🔖mcp🛠️readcurrentdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_design)
@@ -2421,7 +2503,6 @@ def start_working_in_type(guid: str, ctx: Context) -> dict:
         return {"error": str(e)}
 
 
-@mcp.tool()
 def read_current_type(ctx: Context) -> dict:
     """Read the current type that was set via start_working_in_type.
     [👤semio📚engine💻engine🔖mcp🛠️readcurrenttype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_type)
@@ -2452,7 +2533,7 @@ def finish_working_in_kit(ctx: Context) -> dict:
     """
     try:
         sid = _session_id(ctx)
-        _mcp_session_kits.pop(sid, None)
+        _clear_session_kit(ctx)
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode.pop(sid, None)
@@ -2460,6 +2541,68 @@ def finish_working_in_kit(ctx: Context) -> dict:
         return {"ok": True}
     except Exception as e:
         return {"error": str(e)}
+
+
+@mcp.tool()
+def start_transaction(ctx: Context) -> dict:
+    """Start a session-scoped transaction. Only one active transaction is allowed per session."""
+    try:
+        sid = _session_id(ctx)
+        if _get_active_transaction(sid) is not None:
+            return {"error": "A transaction is already active for this session."}
+        _mcp_session_transactions[sid] = {
+            "active": True,
+            "started_at": datetime.datetime.now(datetime.UTC).isoformat(),
+            "changes": [],
+        }
+        return {"ok": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def finalize_transaction(ctx: Context) -> dict:
+    """Finalize the active session transaction and keep all applied changes."""
+    try:
+        sid = _session_id(ctx)
+        transaction = _get_active_transaction(sid)
+        if transaction is None:
+            return {"error": "No active transaction for this session."}
+        change_count = len(transaction.get("changes", []))
+        _mcp_session_transactions.pop(sid, None)
+        return {"ok": True, "changeCount": change_count}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def abort_transaction(ctx: Context) -> dict:
+    """Abort the active session transaction and rollback all recorded changes in reverse order."""
+    try:
+        sid = _session_id(ctx)
+        transaction = _get_active_transaction(sid)
+        if transaction is None:
+            return {"error": "No active transaction for this session."}
+        rolled_back = len(transaction.get("changes", []))
+        _mcp_session_transaction_rollback.add(sid)
+        try:
+            _rollback_session_transaction(sid)
+        finally:
+            _mcp_session_transaction_rollback.discard(sid)
+            _mcp_session_transactions.pop(sid, None)
+        return {"ok": True, "rolledBackChangeCount": rolled_back}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def transaction_finalize(ctx: Context) -> dict:
+    """Finalize the active session transaction and keep all applied changes."""
+    return finalize_transaction(ctx)
+
+
+@mcp.tool()
+def transaction_abort(ctx: Context) -> dict:
+    """Abort the active session transaction and rollback all recorded changes in reverse order."""
+    return abort_transaction(ctx)
 
 
 @mcp.tool()

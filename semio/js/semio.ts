@@ -2229,7 +2229,7 @@ export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): Loc
  *  * [👤semio📚js💻semio🔖location🪨applylocationdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Location/d/i/applyLocationDiff)
  **/
 export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Location = {
     guid: base.guid,
@@ -2337,7 +2337,7 @@ export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDif
  *  * [👤semio📚js💻semio🔖author🪨applyauthordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/applyAuthorDiff)
  **/
 export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Author = {
     guid: base.guid,
@@ -2636,7 +2636,7 @@ export const mergeFolderDiff = (diff1: FolderDiff, diff2: FolderDiff): FolderDif
  *  * [👤semio📚js💻semio🔖folder🪨applyfolderdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/applyFolderDiff)
  **/
 export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Folder = {
     guid: base.guid,
@@ -2738,7 +2738,7 @@ export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
  *  * [👤semio📚js💻semio🔖benchmark🪨applybenchmarkdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Benchmark/d/i/applyBenchmarkDiff)
  **/
 export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchmark => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Benchmark = {
     guid: base.guid,
@@ -3041,8 +3041,8 @@ export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): Qualit
  *  * [👤semio📚js💻semio🔖quality🪨applyqualitydiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/applyQualityDiff)
  **/
 export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
-  const benchmarks = diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : undefined;
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const benchmarks = diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : base.benchmarks;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Quality = {
     guid: base.guid,
@@ -3199,7 +3199,7 @@ export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
  *  * [👤semio📚js💻semio🔖port🪨applyportdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/applyPortDiff)
  **/
 export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Port = {
     guid: base.guid,
@@ -3447,7 +3447,7 @@ export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
  *  * [👤semio📚js💻semio🔖prop🪨applypropdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/applyPropDiff)
  **/
 export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Prop = {
     guid: base.guid,
@@ -3651,7 +3651,7 @@ export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
  *  * [👤semio📚js💻semio🔖tag🪨applytagdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/applyTagDiff)
  **/
 export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Tag = {
     guid: base.guid,
@@ -3906,7 +3906,7 @@ export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): Concep
  *  * [👤semio📚js💻semio🔖concept🪨applyconceptdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/applyConceptDiff)
  **/
 export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Concept = {
     guid: base.guid,
@@ -4162,7 +4162,7 @@ export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff =>
  *  * [👤semio📚js💻semio🔖model🪨applymodeldiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/applyModelDiff)
  **/
 export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Model = {
     guid: base.guid,
@@ -4524,8 +4524,8 @@ export const inverseConnectorDiff = (original: Connector, appliedDiff: Connector
  *  * [👤semio📚js💻semio🔖connector🪨applyconnectordiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/applyConnectorDiff)
  **/
 export const applyConnectorDiff = (base: Connector, diff: ConnectorDiff): Connector => {
-  const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : undefined;
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Connector = {
     guid: base.guid,
@@ -4986,7 +4986,7 @@ export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff =>
  *  * [👤semio📚js💻semio🔖layer🪨applylayerdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/applyLayerDiff)
  **/
 export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Layer = {
     guid: base.guid,
@@ -5166,8 +5166,8 @@ export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
       newPlane = applyPlaneDiff(base.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }, diff.plane);
     }
   }
-  const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : undefined;
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Piece = {
     guid: base.guid,
@@ -5395,7 +5395,7 @@ export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): Group
  *  * [👤semio📚js💻semio🔖group🪨applygroupdiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/applyGroupDiff)
  **/
 export const applyGroupDiff = (base: Group, diff: GroupDiff): Group => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Group = {
     guid: base.guid,
@@ -5673,7 +5673,7 @@ export const getConnectionDiff = (before: Connection, after: Connection): Connec
  *  * [👤semio📚js💻semio🔖connection🪨applyconnectiondiff](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/applyConnectionDiff)
  **/
 export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Connection => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
+  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
 
   const result: Connection = {
     guid: base.guid,
@@ -6478,8 +6478,9 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
  *
  *  * [👤semio📚js💻semio🔖design🪨removepiecesandconnectionsfromdesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/removePiecesAndConnectionsFromDesign)
  **/
-export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignDiff => {
-  return {
+export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignChange => {
+  const design = findDesignInKit(kit, designId);
+  const forward: DesignDiff = {
     pieces: {
       removed: pieceIds.map((guid) => ({ guid })),
     },
@@ -6487,6 +6488,8 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
       removed: connectionIds.map((guid) => ({ guid })),
     },
   };
+  const backward = inverseDesignDiff(design, forward);
+  return { forward, backward };
 };
 
 // [👤semio📚js💻semio🔖design🪨computechildplane](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/computeChildPlane)
@@ -6565,14 +6568,14 @@ const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, child
  *
  *  * [👤semio📚js💻semio🔖design🪨flattendesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/flattenDesign)
  **/
-export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
+export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
   const design = findDesignInKit(kit, designId);
   if (!design) {
     throw new Error(`Design ${designId} not found in kit ${kit.name}`);
   }
   const types = kit.types ?? [];
 
-  if (!design.pieces || design.pieces.length === 0) return {};
+  if (!design.pieces || design.pieces.length === 0) return { forward: {}, backward: {} };
 
   const typesDict: { [key: string]: Type } = {};
   types.forEach((t) => {
@@ -6852,10 +6855,12 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
 
   const removedConnections = design.connections?.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) || [];
 
-  return {
+  const forward = {
     pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
     connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
   } as DesignDiff;
+  const backward = inverseDesignDiff(design, forward);
+  return { forward, backward };
 };
 
 /**
@@ -6908,7 +6913,7 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
  *
  *  * [👤semio📚js💻semio🔖design🪨replaceclusterwithdesign](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/replaceClusterWithDesign)
  **/
-export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignDiff => {
+export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignChange => {
   const piecesToRemove = clusterPieceIds.map((guid) => ({ guid }));
 
   const connectionsToRemove = (originalDesign.connections || [])
@@ -6944,7 +6949,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
     return connection;
   });
 
-  return {
+  const forward: DesignDiff = {
     pieces: {
       removed: piecesToRemove,
     },
@@ -6953,6 +6958,8 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
       added: updatedExternalConnections,
     },
   };
+  const backward = inverseDesignDiff(originalDesign, forward);
+  return { forward, backward };
 };
 
 /**
@@ -7704,6 +7711,30 @@ export const getKitChange = (before: Kit, after: Kit): KitChange => {
 };
 
 /**
+ * Represents a reversible design change with forward and backward diffs.
+ *
+ * MUST contain both forward and backward diffs.
+ *
+ *  * [👤semio📚js💻semio🔖design🛠️designchange](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignChange)
+ **/
+export interface DesignChange {
+  forward: DesignDiff;
+  backward: DesignDiff;
+}
+/**
+ * Computes the forward and backward diffs between two design states.
+ *
+ * MUST return both the forward diff and its inverse.
+ *
+ *  * [👤semio📚js💻semio🔖design🪨getdesignchange](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/getDesignChange)
+ **/
+export const getDesignChange = (before: Design, after: Design): DesignChange => {
+  const forward = getDesignDiff(before, after);
+  const backward = inverseDesignDiff(before, forward);
+  return { forward, backward };
+};
+
+/**
  * Zod schema for Kits diff validation.
  *
  *  * [👤semio📚js💻semio🔖kit🪨kitsdiffschema](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitsDiffSchema)
@@ -7721,11 +7752,11 @@ export const KitsDiffSchema = z.object({
  *
  *  * [👤semio📚js💻semio🔖kit🪨addtypetokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addTypeToKit)
  **/
-export const addTypeToKit = (type: Type): KitDiff => ({
-  types: {
-    added: [type],
-  },
-});
+export const addTypeToKit = (kit: Kit, type: Type): KitChange => {
+  const forward: KitDiff = { types: { added: [type] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Replaces an existing TypeInKit element.
  *
@@ -7733,11 +7764,11 @@ export const addTypeToKit = (type: Type): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨settypeinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setTypeInKit)
  **/
-export const setTypeInKit = (type: Type): KitDiff => ({
-  types: {
-    added: [type],
-  },
-});
+export const setTypeInKit = (kit: Kit, type: Type): KitChange => {
+  const forward: KitDiff = { types: { added: [type] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Removes a TypeFromKit element.
  *
@@ -7745,9 +7776,11 @@ export const setTypeInKit = (type: Type): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨removetypefromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeTypeFromKit)
  **/
-export const removeTypeFromKit = (typeGuid: string): KitDiff => ({
-  types: { removed: [{ guid: typeGuid }] },
-});
+export const removeTypeFromKit = (kit: Kit, typeGuid: string): KitChange => {
+  const forward: KitDiff = { types: { removed: [{ guid: typeGuid }] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 
 /**
  * Adds a DesignToKit element.
@@ -7756,11 +7789,11 @@ export const removeTypeFromKit = (typeGuid: string): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨adddesigntokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addDesignToKit)
  **/
-export const addDesignToKit = (design: Design): KitDiff => ({
-  designs: {
-    added: [design],
-  },
-});
+export const addDesignToKit = (kit: Kit, design: Design): KitChange => {
+  const forward: KitDiff = { designs: { added: [design] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Replaces an existing DesignInKit element.
  *
@@ -7768,11 +7801,11 @@ export const addDesignToKit = (design: Design): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨setdesigninkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setDesignInKit)
  **/
-export const setDesignInKit = (design: Design): KitDiff => ({
-  designs: {
-    added: [design],
-  },
-});
+export const setDesignInKit = (kit: Kit, design: Design): KitChange => {
+  const forward: KitDiff = { designs: { added: [design] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Removes a DesignFromKit element.
  *
@@ -7780,12 +7813,10 @@ export const setDesignInKit = (design: Design): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨removedesignfromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeDesignFromKit)
  **/
-export const removeDesignFromKit = (designGuid: string): KitDiff => {
-  return {
-    designs: {
-      removed: [{ guid: designGuid }],
-    },
-  };
+export const removeDesignFromKit = (kit: Kit, designGuid: string): KitChange => {
+  const forward: KitDiff = { designs: { removed: [{ guid: designGuid }] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
 };
 
 /**
@@ -7795,11 +7826,11 @@ export const removeDesignFromKit = (designGuid: string): KitDiff => {
  *
  *  * [👤semio📚js💻semio🔖kit🪨updatedesigninkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/updateDesignInKit)
  **/
-export const updateDesignInKit = (design: Design): KitDiff => ({
-  designs: {
-    added: [design],
-  },
-});
+export const updateDesignInKit = (kit: Kit, design: Design): KitChange => {
+  const forward: KitDiff = { designs: { added: [design] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 
 /**
  * Adds a PortToKit element.
@@ -7808,11 +7839,11 @@ export const updateDesignInKit = (design: Design): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨addporttokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addPortToKit)
  **/
-export const addPortToKit = (iface: Port): KitDiff => ({
-  ports: {
-    added: [iface],
-  },
-});
+export const addPortToKit = (kit: Kit, iface: Port): KitChange => {
+  const forward: KitDiff = { ports: { added: [iface] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Replaces an existing PortInKit element.
  *
@@ -7820,11 +7851,11 @@ export const addPortToKit = (iface: Port): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨setportinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setPortInKit)
  **/
-export const setPortInKit = (iface: Port): KitDiff => ({
-  ports: {
-    added: [iface],
-  },
-});
+export const setPortInKit = (kit: Kit, iface: Port): KitChange => {
+  const forward: KitDiff = { ports: { added: [iface] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Removes a PortFromKit element.
  *
@@ -7832,9 +7863,11 @@ export const setPortInKit = (iface: Port): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨removeportfromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removePortFromKit)
  **/
-export const removePortFromKit = (portGuid: string): KitDiff => ({
-  ports: { removed: [{ guid: portGuid }] },
-});
+export const removePortFromKit = (kit: Kit, portGuid: string): KitChange => {
+  const forward: KitDiff = { ports: { removed: [{ guid: portGuid }] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Performs the updatePortInKit operation.
  *
@@ -7842,11 +7875,11 @@ export const removePortFromKit = (portGuid: string): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨updateportinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/updatePortInKit)
  **/
-export const updatePortInKit = (iface: Port): KitDiff => ({
-  ports: {
-    added: [iface],
-  },
-});
+export const updatePortInKit = (kit: Kit, iface: Port): KitChange => {
+  const forward: KitDiff = { ports: { added: [iface] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 
 /**
  * Searches for matching FileInKit entry.
@@ -7868,7 +7901,11 @@ export const findFileInKit = (kit: Kit, fileGuid: string): File => {
  *
  *  * [👤semio📚js💻semio🔖kit🪨addfiletokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addFileToKit)
  **/
-export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
+export const addFileToKit = (kit: Kit, file: File): KitChange => {
+  const forward: KitDiff = { files: { added: [file] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Replaces an existing FileInKit element.
  *
@@ -7876,16 +7913,22 @@ export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] }
  *
  *  * [👤semio📚js💻semio🔖kit🪨setfileinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setFileInKit)
  **/
-export const setFileInKit = (file: File): KitDiff => ({ files: { added: [file] } });
+export const setFileInKit = (kit: Kit, file: File): KitChange => {
+  const forward: KitDiff = { files: { added: [file] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Removes a FileFromKit element.
  * MUST remove the element from the collection.
  *
  *  * [👤semio📚js💻semio🔖kit🪨removefilefromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeFileFromKit)
  **/
-export const removeFileFromKit = (fileGuid: string): KitDiff => ({
-  files: { removed: [{ guid: fileGuid }] },
-});
+export const removeFileFromKit = (kit: Kit, fileGuid: string): KitChange => {
+  const forward: KitDiff = { files: { removed: [{ guid: fileGuid }] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 
 /**
  * Replaces an existing AttributeInKit element.
@@ -7894,9 +7937,11 @@ export const removeFileFromKit = (fileGuid: string): KitDiff => ({
  *
  *  * [👤semio📚js💻semio🔖kit🪨setattributeinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setAttributeInKit)
  **/
-export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
-  attributes: { added: [attribute] },
-});
+export const setAttributeInKit = (kit: Kit, attribute: Attribute): KitChange => {
+  const forward: KitDiff = { attributes: { added: [attribute] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 
 /**
  * Searches for matching TagInKit entry.
@@ -7918,7 +7963,11 @@ export const findTagInKit = (kit: Kit, tagGuid: string): Tag => {
  *
  *  * [👤semio📚js💻semio🔖kit🪨addtagtokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addTagToKit)
  **/
-export const addTagToKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
+export const addTagToKit = (kit: Kit, tag: Tag): KitChange => {
+  const forward: KitDiff = { tags: { added: [tag] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Replaces an existing TagInKit element.
  *
@@ -7926,7 +7975,11 @@ export const addTagToKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
  *
  *  * [👤semio📚js💻semio🔖kit🪨settaginkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setTagInKit)
  **/
-export const setTagInKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
+export const setTagInKit = (kit: Kit, tag: Tag): KitChange => {
+  const forward: KitDiff = { tags: { added: [tag] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Removes a TagFromKit element.
  *
@@ -7934,9 +7987,11 @@ export const setTagInKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
  *
  *  * [👤semio📚js💻semio🔖kit🪨removetagfromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeTagFromKit)
  **/
-export const removeTagFromKit = (tagGuid: string): KitDiff => ({
-  tags: { removed: [{ guid: tagGuid }] },
-});
+export const removeTagFromKit = (kit: Kit, tagGuid: string): KitChange => {
+  const forward: KitDiff = { tags: { removed: [{ guid: tagGuid }] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 
 /**
  * Searches for matching ConceptInKit entry.
@@ -7958,7 +8013,11 @@ export const findConceptInKit = (kit: Kit, conceptGuid: string): Concept => {
  *
  *  * [👤semio📚js💻semio🔖kit🪨addconcepttokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/addConceptToKit)
  **/
-export const addConceptToKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
+export const addConceptToKit = (kit: Kit, concept: Concept): KitChange => {
+  const forward: KitDiff = { concepts: { added: [concept] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Replaces an existing ConceptInKit element.
  *
@@ -7966,7 +8025,11 @@ export const addConceptToKit = (concept: Concept): KitDiff => ({ concepts: { add
  *
  *  * [👤semio📚js💻semio🔖kit🪨setconceptinkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/setConceptInKit)
  **/
-export const setConceptInKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
+export const setConceptInKit = (kit: Kit, concept: Concept): KitChange => {
+  const forward: KitDiff = { concepts: { added: [concept] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 /**
  * Removes a ConceptFromKit element.
  *
@@ -7974,9 +8037,11 @@ export const setConceptInKit = (concept: Concept): KitDiff => ({ concepts: { add
  *
  *  * [👤semio📚js💻semio🔖kit🪨removeconceptfromkit](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/removeConceptFromKit)
  **/
-export const removeConceptFromKit = (conceptGuid: string): KitDiff => ({
-  concepts: { removed: [{ guid: conceptGuid }] },
-});
+export const removeConceptFromKit = (kit: Kit, conceptGuid: string): KitChange => {
+  const forward: KitDiff = { concepts: { removed: [{ guid: conceptGuid }] } };
+  const backward = inverseKitDiff(kit, forward);
+  return { forward, backward };
+};
 
 /**
  * Searches for matching ReplacableDesignsForDesignPiece entry.
@@ -8445,8 +8510,8 @@ export const piecesMetadata = (
   if (!design) {
     throw new Error(`Design ${designGuid} not found in kit ${kit.name}`);
   }
-  const flattenDiff = flattenDesign(kit, designGuid);
-  const flatDesign = applyDesignDiff(design, flattenDiff);
+  const flattenChange = flattenDesign(kit, designGuid);
+  const flatDesign = applyDesignDiff(design, flattenChange.forward);
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
@@ -10003,6 +10068,25 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
     });
     if (connectors_value) type.connectors = connectors_value;
 
+    const typeProps = safeExecResult("type_prop", "SELECT prop.* FROM prop JOIN type_prop ON prop.guid = type_prop.prop_guid WHERE type_prop.type_guid = ?", [typeGuid]);
+    const props_value = (() => {
+      const filtered = typeProps
+        .map((pr: any) => {
+          const propAttributes = execResult("SELECT * FROM attribute WHERE prop_guid = ?", [pr.guid]);
+          if (!pr.quality_guid) return null;
+          return {
+            guid: pr.guid,
+            value: String(pr.value),
+            unit: toUndefined(pr.unit),
+            quality: { guid: pr.quality_guid },
+            attributes: mapOrUndefined(propAttributes, buildAttribute),
+          };
+        })
+        .filter((p: any): p is NonNullable<typeof p> => p !== null);
+      return filtered.length > 0 ? filtered : undefined;
+    })();
+    if (props_value) type.props = props_value;
+
     const attributes_value = mapOrUndefined(typeAttributes, buildAttribute);
     if (attributes_value) type.attributes = attributes_value;
 
@@ -10146,9 +10230,9 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
       stats: stats.map((s: any) => ({
         guid: s.guid,
         quality: { guid: s.quality_guid },
-        min: s.min_value,
+        min: s.min_value ?? undefined,
         minExcluded: s.min_excluded ? true : undefined,
-        max: s.max_value,
+        max: s.max_value ?? undefined,
         maxExcluded: s.max_excluded ? true : undefined,
         unit: toUndefined(s.unit),
       })),
@@ -10189,14 +10273,14 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           guid: row.guid,
           key: row.key,
           name: row.name,
-          kind: row.kind,
-          defaultValue: row.default_value,
+          kind: row.kind || undefined,
+          defaultValue: row.default_value ?? undefined,
           formula: toUndefined(row.formula),
           defaultSiUnit: toUndefined(row.default_si_unit),
           defaultImperialUnit: toUndefined(row.default_imperial_unit),
-          min: row.min_value,
+          min: row.min_value ?? undefined,
           minExcluded: row.min_excluded ? true : undefined,
-          max: row.max_value,
+          max: row.max_value ?? undefined,
           maxExcluded: row.max_excluded ? true : undefined,
           canScale: row.can_scale ? true : undefined,
           uri: toUndefined(row.definition),
@@ -10206,9 +10290,9 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
               guid: b.guid,
               name: b.name,
               icon: toUndefined(b.icon),
-              min: b.min_value,
+              min: b.min_value ?? undefined,
               minExcluded: b.min_excluded ? true : undefined,
-              max: b.max_value,
+              max: b.max_value ?? undefined,
               maxExcluded: b.max_excluded ? true : undefined,
               attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
             };
@@ -10226,8 +10310,8 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
         name: row.name,
         remote: toUndefined(row.remote_url),
         folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-        size: row.size,
-        hash: row.hash,
+        size: row.size ?? undefined,
+        hash: toUndefined(row.hash),
         createdAt: row.created,
         updatedAt: row.updated,
       }))
@@ -10452,6 +10536,14 @@ CREATE TABLE prop (
 	connector_guid VARCHAR(36),
 	PRIMARY KEY (guid),
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
+);
+
+CREATE TABLE type_prop (
+	type_guid VARCHAR(36) NOT NULL,
+	prop_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (type_guid, prop_guid),
+	FOREIGN KEY(type_guid) REFERENCES type (guid),
+	FOREIGN KEY(prop_guid) REFERENCES prop (guid)
 );
 
 CREATE TABLE connector (
@@ -10770,7 +10862,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
         quality.guid,
         quality.key,
         quality.name,
-        quality.kind,
+        quality.kind ?? 0,
         quality.defaultValue || null,
         quality.formula || null,
         quality.defaultSiUnit || null,
@@ -10779,7 +10871,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
         quality.isMinExcluded ? 1 : null,
         quality.max || null,
         quality.isMaxExcluded ? 1 : null,
-        quality.canScale ? 1 : null,
+        quality.canScale ? 1 : 0,
         quality.uri || null,
         kit.guid,
       ],
@@ -10899,6 +10991,16 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
       toArray(connector.attributes).forEach((attr) => {
         db.run("INSERT INTO attribute (guid, key, value, definition, connector_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, connector.guid]);
+      });
+    });
+
+    toArray(type.props).forEach((prop) => {
+      const quality = toArray(kit.qualities).find((q) => q.guid === prop.quality.guid);
+      const propKey = quality?.key || "";
+      db.run("INSERT INTO prop (guid, key, value, unit, quality_guid) VALUES (?, ?, ?, ?, ?)", [prop.guid, propKey, prop.value, prop.unit || null, prop.quality.guid]);
+      db.run("INSERT INTO type_prop (type_guid, prop_guid) VALUES (?, ?)", [type.guid, prop.guid]);
+      toArray(prop.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, prop_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, prop.guid]);
       });
     });
 
