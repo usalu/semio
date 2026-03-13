@@ -211,7 +211,7 @@
       }
     },
     {
-      "name": "semio/coda-desktop dev",
+      "name": "🛠️dev👤coda🖱️desktop",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -534,7 +534,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "semio/coda-desktop build",
+      "name": "📦build👤coda🖱️desktop",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -623,7 +623,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "semio/coda-desktop publish",
+      "name": "⬆️publish👤coda🖱️desktop",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -641,9 +641,9 @@
       "name": "🛠️dev🧰mcp",
       "configurations": [
         "🛠️devinspector🧰mcp",
-        "🛠️dev👤semio:mcp",
-        "🛠️dev👤coda:mcp",
-        "🛠️dev🧰semiorepo:mcp"
+        "🛠️dev👤semio⚙️engine🤖mcp",
+        "🛠️dev👤coda🤖mcp",
+        "🛠️dev🧰semiorepo🤖mcp"
       ]
     }
   ]
