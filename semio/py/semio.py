@@ -321,6 +321,58 @@ class RemoteKitsNotYetSupported(FeatureNotYetSupported):
     def __str__(self):
         return "🔜 Remote kits are not yet supported."
 
+class AuthenticationError(ClientError):
+    """🔐 Base error for authentication failures.
+    AuthenticationError MUST provide a descriptive error message via __str__.
+    [👤semio📚py💻semio🔖exceptions🛠️authenticationerror](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/AuthenticationError)
+    """
+    def __str__(self):
+        return "🔐 Authentication failed."
+
+class InvalidAuthToken(AuthenticationError):
+    """🔑 The auth token is invalid or expired.
+    InvalidAuthToken MUST provide a descriptive error message via __str__.
+    [👤semio📚py💻semio🔖exceptions🛠️invalidauthtoken](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/InvalidAuthToken)
+    """
+    def __init__(self, serverUrl: str) -> None:
+        self.serverUrl = serverUrl
+
+    def __str__(self):
+        return f"🔑 The auth token for server ({self.serverUrl}) is invalid or expired."
+
+class AuthTokenNotFound(AuthenticationError):
+    """🔑 No auth token found for the server.
+    AuthTokenNotFound MUST provide a descriptive error message via __str__.
+    [👤semio📚py💻semio🔖exceptions🛠️authtokennotfound](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/AuthTokenNotFound)
+    """
+    def __init__(self, serverUrl: str) -> None:
+        self.serverUrl = serverUrl
+
+    def __str__(self):
+        return f"🔑 No auth token found for server ({self.serverUrl}). Call login first."
+
+class ServerUnreachable(ClientError):
+    """🌐 The remote server is not reachable.
+    ServerUnreachable MUST provide a descriptive error message via __str__.
+    [👤semio📚py💻semio🔖exceptions🛠️serverunreachable](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/ServerUnreachable)
+    """
+    def __init__(self, serverUrl: str) -> None:
+        self.serverUrl = serverUrl
+
+    def __str__(self):
+        return f"🌐 The remote server ({self.serverUrl}) is not reachable."
+
+class RemoteKitUriNotValid(ClientError):
+    """🌐 The remote kit URI is not valid.
+    RemoteKitUriNotValid MUST provide a descriptive error message via __str__.
+    [👤semio📚py💻semio🔖exceptions🛠️remotekiturinotvalid](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/RemoteKitUriNotValid)
+    """
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🌐 The remote kit URI ({self.uri}) is not valid. Expected format: http(s)://server/api/kits/encodedKitUri"
+
 class NotFound(ClientError, abc.ABC):
     """🔍 The base for not found errors.
     NotFound MUST provide a descriptive error message via __str__.

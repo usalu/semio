@@ -529,12 +529,12 @@ interface GraphqlSection {
 // #region 🔖Globals
 // [🧰semiorepo🖱️vscode💻extension🔖globals](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals)
 // Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
- **/
 let outputChannel: vscode.OutputChannel;
 /**
  * [🧰semiorepo🖱️vscode💻extension🔖globals🪨repodiagnosticcollection](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals/d/i/repoDiagnosticCollection)
  * repoDiagnosticCollection holds the data fields for a repoDiagnosticCollection record.
  **/
+let repoDiagnosticCollection: vscode.DiagnosticCollection;
 /**
  * [🧰semiorepo🖱️vscode💻extension🔖globals🪨kitdiagnosticcollection](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals/d/i/kitDiagnosticCollection)
  * kitDiagnosticCollection holds the data fields for a kitDiagnosticCollection record.

@@ -71,6 +71,21 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 TODO: Add roomie to discord for verification
 
+TODO: Start new project `semio-elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
+
+## 🔬coda
+
+coda:
+coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
+
+coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the semio engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
+Follow:
+Electron main starts helper on app launch or first use
+Communicate via structured JSON messages over stdio
+Add request IDs for request/response correlation
+Add timeouts, heartbeats, and auto-restart
+Keep the renderer isolated from native details
+
 ## [👤semio](semiorepo://project/semio)
 
 TODO: Rename tilt to slope, Add rotation to piece node

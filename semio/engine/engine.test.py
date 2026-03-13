@@ -24,6 +24,7 @@ import os
 import pathlib
 import shutil
 import tempfile
+from unittest.mock import MagicMock, patch
 
 import engine
 import pytest
@@ -704,3 +705,698 @@ class TestIntegration:
 
 
 # endregion Integration Tests
+
+
+# region Auth Error Classes Tests
+class TestAuthErrors:
+    def test_authentication_error(self):
+        error = engine.AuthenticationError()
+        assert "Authentication failed" in str(error)
+
+    def test_invalid_auth_token_error(self):
+        error = engine.InvalidAuthToken("https://example.com")
+        assert "https://example.com" in str(error)
+        assert "invalid or expired" in str(error)
+
+    def test_auth_token_not_found_error(self):
+        error = engine.AuthTokenNotFound("https://example.com")
+        assert "https://example.com" in str(error)
+        assert "No auth token found" in str(error)
+
+    def test_server_unreachable_error(self):
+        error = engine.ServerUnreachable("https://example.com")
+        assert "https://example.com" in str(error)
+        assert "not reachable" in str(error)
+
+    def test_remote_kit_uri_not_valid_error(self):
+        error = engine.RemoteKitUriNotValid("http://bad-uri")
+        assert "http://bad-uri" in str(error)
+        assert "not valid" in str(error)
+
+
+# endregion Auth Error Classes Tests
+
+
+# region Auth Credential Management Tests
+class TestAuthCredentials:
+    def test_load_auth_empty(self, tmp_path):
+        """_load_auth returns empty dict when no auth file exists."""
+        with patch.object(engine, "AUTH_FILE", str(tmp_path / "auth.json")):
+            result = engine._load_auth()
+            assert result == {}
+
+    def test_save_and_load_auth(self, tmp_path):
+        """_save_auth writes and _load_auth reads auth credentials."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            auth_data = {"https://server.com": {"token": "tok123", "email": "user@test.com"}}
+            engine._save_auth(auth_data)
+            loaded = engine._load_auth()
+            assert loaded == auth_data
+
+    def test_get_auth_token_found(self, tmp_path):
+        """getAuthToken returns the stored token for a server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            token = engine.getAuthToken("https://server.com")
+            assert token == "tok123"
+
+    def test_get_auth_token_not_found(self, tmp_path):
+        """getAuthToken raises AuthTokenNotFound when no token exists."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({})
+            with pytest.raises(engine.AuthTokenNotFound):
+                engine.getAuthToken("https://server.com")
+
+    def test_get_auth_token_strips_trailing_slash(self, tmp_path):
+        """getAuthToken strips trailing slash from server URL."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            token = engine.getAuthToken("https://server.com/")
+            assert token == "tok123"
+
+    def test_get_auth_status_authenticated(self, tmp_path):
+        """getAuthStatus returns authenticated=True when token exists."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            status = engine.getAuthStatus("https://server.com")
+            assert status["authenticated"] is True
+            assert status["email"] == "user@test.com"
+
+    def test_get_auth_status_not_authenticated(self, tmp_path):
+        """getAuthStatus returns authenticated=False when no token exists."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({})
+            status = engine.getAuthStatus("https://server.com")
+            assert status["authenticated"] is False
+            assert status["email"] == ""
+
+    def test_login_success(self, tmp_path):
+        """login stores token on successful server response."""
+        auth_file = str(tmp_path / "auth.json")
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"token": "new-token-123"}
+        mock_response.raise_for_status.return_value = None
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.post", return_value=mock_response):
+            result = engine.login("https://server.com", "user@test.com", "pass123")
+            assert result["ok"] is True
+            assert result["token"] == "new-token-123"
+            assert result["email"] == "user@test.com"
+            loaded = engine._load_auth()
+            assert "https://server.com" in loaded
+            assert loaded["https://server.com"]["token"] == "new-token-123"
+
+    def test_login_connection_error(self, tmp_path):
+        """login raises ServerUnreachable on connection error."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
+            with pytest.raises(engine.ServerUnreachable):
+                engine.login("https://unreachable.com", "user@test.com", "pass")
+
+    def test_login_401_error(self, tmp_path):
+        """login raises InvalidAuthToken on 401 response."""
+        auth_file = str(tmp_path / "auth.json")
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        http_error = engine.requests.exceptions.HTTPError(response=mock_response)
+        mock_response.raise_for_status.side_effect = http_error
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.post", return_value=mock_response):
+            with pytest.raises(engine.InvalidAuthToken):
+                engine.login("https://server.com", "user@test.com", "wrong-pass")
+
+    def test_logout_removes_token(self, tmp_path):
+        """logout removes the stored token for a server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            result = engine.logout("https://server.com")
+            assert result["ok"] is True
+            loaded = engine._load_auth()
+            assert "https://server.com" not in loaded
+
+    def test_logout_nonexistent_server(self, tmp_path):
+        """logout succeeds even if server was never logged in."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({})
+            result = engine.logout("https://nonexistent.com")
+            assert result["ok"] is True
+
+
+# endregion Auth Credential Management Tests
+
+
+# region RemoteStore Tests
+class TestRemoteStore:
+    def test_from_uri_valid(self):
+        """RemoteStore.fromUri parses server URL and kit URI from remote URI."""
+        uri = "https://server.com/api/kits/my-kit"
+        store = engine.RemoteStore.fromUri(uri)
+        assert store.serverUrl == "https://server.com"
+        assert store.kitUri == "my-kit"
+        assert store.uri == uri
+
+    def test_from_uri_with_encoded_kit(self):
+        """RemoteStore.fromUri handles encoded kit URI."""
+        encodedKit = engine.encode("/path/to/kit")
+        uri = f"https://server.com/api/kits/{encodedKit}"
+        store = engine.RemoteStore.fromUri(uri)
+        assert store.serverUrl == "https://server.com"
+        assert store.kitUri == "/path/to/kit"
+
+    def test_from_uri_invalid(self):
+        """RemoteStore.fromUri raises RemoteKitUriNotValid for bad URIs."""
+        with pytest.raises(engine.RemoteKitUriNotValid):
+            engine.RemoteStore.fromUri("https://server.com/bad/path")
+
+    def test_get_kit_success(self, tmp_path):
+        """RemoteStore.get retrieves kit from remote server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.json.return_value = {"uri": "my-kit", "name": "TestKit", "version": "1.0.0"}
+            mock_response.raise_for_status.return_value = None
+            with patch("engine.requests.get", return_value=mock_response):
+                result = store.get({"kind": "kit", "kitUri": "my-kit"})
+                assert result is not None
+                assert result.name == "TestKit"
+
+    def test_get_kit_unauthorized(self, tmp_path):
+        """RemoteStore.get raises InvalidAuthToken on 401."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "expired-token", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.status_code = 401
+            http_error = engine.requests.exceptions.HTTPError(response=mock_response)
+            mock_response.raise_for_status.side_effect = http_error
+            with patch("engine.requests.get", return_value=mock_response):
+                with pytest.raises(engine.InvalidAuthToken):
+                    store.get({"kind": "kit", "kitUri": "my-kit"})
+
+    def test_get_kit_not_found(self, tmp_path):
+        """RemoteStore.get raises KitNotFound on 404."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.status_code = 404
+            http_error = engine.requests.exceptions.HTTPError(response=mock_response)
+            mock_response.raise_for_status.side_effect = http_error
+            with patch("engine.requests.get", return_value=mock_response):
+                with pytest.raises(engine.KitNotFound):
+                    store.get({"kind": "kit", "kitUri": "my-kit"})
+
+    def test_get_kit_connection_error(self, tmp_path):
+        """RemoteStore.get raises ServerUnreachable on connection error."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            with patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
+                with pytest.raises(engine.ServerUnreachable):
+                    store.get({"kind": "kit", "kitUri": "my-kit"})
+
+    def test_get_kit_no_auth(self, tmp_path):
+        """RemoteStore.get raises AuthTokenNotFound when not logged in."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            with pytest.raises(engine.AuthTokenNotFound):
+                store.get({"kind": "kit", "kitUri": "my-kit"})
+
+    def test_put_kit_success(self, tmp_path):
+        """RemoteStore.put creates a kit on the remote server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.raise_for_status.return_value = None
+            with patch("engine.requests.put", return_value=mock_response):
+                result = store.put({"kind": "kit", "kitUri": "my-kit"}, engine.KitInput(name="TestKit", version="1.0.0"))
+                assert result is None
+
+    def test_put_type_success(self, tmp_path):
+        """RemoteStore.put creates a type on the remote server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.raise_for_status.return_value = None
+            with patch("engine.requests.put", return_value=mock_response) as mock_put:
+                result = store.put(
+                    {"kind": "type", "kitUri": "my-kit", "typeName": "Brick", "typeVariant": ""},
+                    engine.TypeInput(name="Brick", variant=""),
+                )
+                assert result is None
+                call_args = mock_put.call_args
+                assert "types/" in call_args[0][0]
+
+    def test_put_design_success(self, tmp_path):
+        """RemoteStore.put creates a design on the remote server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.raise_for_status.return_value = None
+            with patch("engine.requests.put", return_value=mock_response) as mock_put:
+                result = store.put(
+                    {"kind": "design", "kitUri": "my-kit", "designName": "MyDesign", "designVariant": "", "designView": ""},
+                    engine.DesignInput(name="MyDesign", variant="", view=""),
+                )
+                assert result is None
+                call_args = mock_put.call_args
+                assert "designs/" in call_args[0][0]
+
+    def test_delete_kit_success(self, tmp_path):
+        """RemoteStore.delete removes a kit from the remote server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.raise_for_status.return_value = None
+            with patch("engine.requests.delete", return_value=mock_response):
+                result = store.delete({"kind": "kit", "kitUri": "my-kit"})
+                assert result is None
+
+    def test_delete_type_success(self, tmp_path):
+        """RemoteStore.delete removes a type from the remote server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.raise_for_status.return_value = None
+            with patch("engine.requests.delete", return_value=mock_response) as mock_del:
+                result = store.delete({"kind": "type", "kitUri": "my-kit", "typeName": "Brick", "typeVariant": ""})
+                assert result is None
+                call_args = mock_del.call_args
+                assert "types/" in call_args[0][0]
+
+    def test_delete_design_success(self, tmp_path):
+        """RemoteStore.delete removes a design from the remote server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            mock_response = MagicMock()
+            mock_response.raise_for_status.return_value = None
+            with patch("engine.requests.delete", return_value=mock_response) as mock_del:
+                result = store.delete({"kind": "design", "kitUri": "my-kit", "designName": "MyDesign", "designVariant": "", "designView": ""})
+                assert result is None
+                call_args = mock_del.call_args
+                assert "designs/" in call_args[0][0]
+
+    def test_initialize_noop(self, tmp_path):
+        """RemoteStore.initialize is a no-op (server-side initialization)."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            store.initialize()  # Should not raise
+
+    def test_update_not_supported(self, tmp_path):
+        """RemoteStore.update raises FeatureNotYetSupported."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
+            with pytest.raises(engine.FeatureNotYetSupported):
+                store.update({}, "")
+
+
+# endregion RemoteStore Tests
+
+
+# region StoreFactory Remote Tests
+class TestStoreFactoryRemote:
+    def test_store_factory_remote_uri(self, tmp_path):
+        """StoreFactory returns RemoteStore for remote server URIs."""
+        engine.StoreFactory.cache_clear()
+        uri = "https://server.com/api/kits/my-kit"
+        store = engine.StoreFactory(uri)
+        assert isinstance(store, engine.RemoteStore)
+        assert store.serverUrl == "https://server.com"
+        assert store.kitUri == "my-kit"
+
+    def test_store_factory_invalid_remote_uri(self):
+        """StoreFactory raises RemoteKitUriNotValid for http URIs without /api/kits/."""
+        engine.StoreFactory.cache_clear()
+        with pytest.raises(engine.RemoteKitUriNotValid):
+            engine.StoreFactory("https://server.com/some/other/path")
+
+    def test_store_factory_local_still_works(self, tempKitPath: pathlib.Path):
+        """StoreFactory still returns SqliteStore for local absolute paths."""
+        engine.StoreFactory.cache_clear()
+        store = engine.StoreFactory(str(tempKitPath))
+        assert isinstance(store, engine.SqliteStore)
+
+    def test_store_factory_relative_path_raises(self):
+        """StoreFactory raises LocalKitUriIsNotAbsolute for relative paths."""
+        engine.StoreFactory.cache_clear()
+        with pytest.raises(engine.LocalKitUriIsNotAbsolute):
+            engine.StoreFactory("relative/path")
+
+
+# endregion StoreFactory Remote Tests
+
+
+# region MCP Auth Tools Tests
+class TestMcpAuth:
+    def test_mcp_login(self, tmp_path):
+        """mcp_login calls login and returns result."""
+        auth_file = str(tmp_path / "auth.json")
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"token": "mcp-token"}
+        mock_response.raise_for_status.return_value = None
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.post", return_value=mock_response):
+            result = engine.mcp_login("https://server.com", "user@test.com", "pass")
+            assert result["ok"] is True
+            assert result["token"] == "mcp-token"
+
+    def test_mcp_login_error(self, tmp_path):
+        """mcp_login returns error dict on connection failure."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
+            result = engine.mcp_login("https://unreachable.com", "user@test.com", "pass")
+            assert "error" in result
+
+    def test_mcp_logout(self, tmp_path):
+        """mcp_logout calls logout and returns result."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            result = engine.mcp_logout("https://server.com")
+            assert result["ok"] is True
+
+    def test_mcp_auth_status_authenticated(self, tmp_path):
+        """mcp_auth_status returns authenticated status."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            result = engine.mcp_auth_status("https://server.com")
+            assert result["authenticated"] is True
+
+    def test_mcp_auth_status_not_authenticated(self, tmp_path):
+        """mcp_auth_status returns not authenticated status."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({})
+            result = engine.mcp_auth_status("https://unknown.com")
+            assert result["authenticated"] is False
+
+
+# endregion MCP Auth Tools Tests
+
+
+# region MCP Remote Kit Tests
+class TestMcpRemoteKit:
+    def test_start_working_in_remote_kit_success(self, tmp_path):
+        """start_working_in_remote_kit fetches kit from remote server."""
+        auth_file = str(tmp_path / "auth.json")
+        kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
+        mock_response = MagicMock()
+        mock_response.json.return_value = kit_data
+        mock_response.raise_for_status.return_value = None
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", return_value=mock_response):
+            engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
+            result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
+            assert result["ok"] is True
+            assert result["mode"] == "remote"
+            assert result["serverUrl"] == "https://server.com"
+            assert result["kitUri"] == "my-kit"
+            sid = id(mock_ctx.session)
+            assert sid in engine._mcp_session_kits
+            assert engine._mcp_session_kit_mode[sid] == "remote"
+            assert "/api/kits/" in engine._mcp_session_kit_source[sid]
+
+    def test_start_working_in_remote_kit_no_auth(self, tmp_path):
+        """start_working_in_remote_kit returns error when not logged in."""
+        auth_file = str(tmp_path / "auth.json")
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({})
+            result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
+            assert "error" in result
+
+    def test_start_working_in_remote_kit_connection_error(self, tmp_path):
+        """start_working_in_remote_kit returns error on connection failure."""
+        auth_file = str(tmp_path / "auth.json")
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
+            assert "error" in result
+
+    def test_start_working_in_remote_kit_clears_previous_state(self, tmp_path):
+        """start_working_in_remote_kit clears design, type, and sets mode to remote."""
+        auth_file = str(tmp_path / "auth.json")
+        kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
+        mock_response = MagicMock()
+        mock_response.json.return_value = kit_data
+        mock_response.raise_for_status.return_value = None
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_designs[sid] = {"guid": "old-design"}
+        engine._mcp_session_types[sid] = {"guid": "old-type"}
+        engine._mcp_session_kit_mode[sid] = "local"
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", return_value=mock_response):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
+            assert sid not in engine._mcp_session_designs
+            assert sid not in engine._mcp_session_types
+            assert engine._mcp_session_kit_mode[sid] == "remote"
+
+    def test_start_working_in_local_kit_sets_mode_local(self):
+        """start_working_in_local_kit sets session mode to local."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
+        assert result.get("ok") is True
+        assert result.get("mode") == "local"
+        sid = id(mock_ctx.session)
+        assert engine._mcp_session_kit_mode[sid] == "local"
+
+    def test_get_session_kit_mode_default(self):
+        """_get_session_kit_mode returns 'local' when not set."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        mode = engine._get_session_kit_mode(mock_ctx)
+        assert mode == "local"
+
+    def test_get_session_kit_mode_remote(self, tmp_path):
+        """_get_session_kit_mode returns 'remote' for remote kit sessions."""
+        auth_file = str(tmp_path / "auth.json")
+        kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
+        mock_response = MagicMock()
+        mock_response.json.return_value = kit_data
+        mock_response.raise_for_status.return_value = None
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", return_value=mock_response):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
+            mode = engine._get_session_kit_mode(mock_ctx)
+            assert mode == "remote"
+
+    def test_finish_working_in_kit_clears_mode_and_source(self, kitMetabolismJson: dict):
+        """finish_working_in_kit clears mode and source in addition to kit, design, type."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        engine._mcp_session_kits[sid] = kitMetabolismJson
+        engine._mcp_session_kit_mode[sid] = "remote"
+        engine._mcp_session_kit_source[sid] = "https://server.com/api/kits/test"
+        result = engine.finish_working_in_kit(mock_ctx)
+        assert result["ok"] is True
+        assert sid not in engine._mcp_session_kit_mode
+        assert sid not in engine._mcp_session_kit_source
+
+    def test_all_mcp_tools_work_after_remote_kit_login(self, tmp_path):
+        """All existing MCP tools work after start_working_in_remote_kit (design/type operations)."""
+        auth_file = str(tmp_path / "auth.json")
+        kit_data = {
+            "name": "RemoteKit",
+            "version": "1.0.0",
+            "designs": [
+                {"guid": "d1", "name": "Design1", "pieces": [], "connections": []},
+            ],
+            "types": [
+                {"guid": "t1", "name": "Type1", "connectors": []},
+            ],
+        }
+        mock_response = MagicMock()
+        mock_response.json.return_value = kit_data
+        mock_response.raise_for_status.return_value = None
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", return_value=mock_response):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            engine.start_working_in_remote_kit("https://server.com", "remote-kit", mock_ctx)
+
+        # start_working_in_design works for remote kits
+        result = engine.start_working_in_design("d1", mock_ctx)
+        assert result["ok"] is True
+        assert result["guid"] == "d1"
+
+        # read_current_design works
+        design = engine.read_current_design(mock_ctx)
+        assert design["guid"] == "d1"
+
+        # finish_working_in_design works
+        result = engine.finish_working_in_design(mock_ctx)
+        assert result["ok"] is True
+
+        # start_working_in_type works for remote kits
+        result = engine.start_working_in_type("t1", mock_ctx)
+        assert result["ok"] is True
+
+        # read_current_type works
+        t = engine.read_current_type(mock_ctx)
+        assert t["guid"] == "t1"
+
+        # finish_working_in_type works
+        result = engine.finish_working_in_type(mock_ctx)
+        assert result["ok"] is True
+
+        # finish_working_in_kit clears everything
+        result = engine.finish_working_in_kit(mock_ctx)
+        assert result["ok"] is True
+
+
+# endregion MCP Remote Kit Tests
+
+
+# region REST Auth Endpoints Tests
+class TestRestAuthEndpoints:
+    def test_rest_login_endpoint(self, restClient: TestClient, tmp_path):
+        """POST /auth/login endpoint calls login and returns token."""
+        auth_file = str(tmp_path / "auth.json")
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"token": "rest-token"}
+        mock_response.raise_for_status.return_value = None
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.post", return_value=mock_response):
+            response = restClient.post("/auth/login", json={
+                "serverUrl": "https://server.com",
+                "email": "user@test.com",
+                "password": "pass123",
+            })
+            assert response.status_code == 200
+            data = response.json()
+            assert data["ok"] is True
+            assert data["token"] == "rest-token"
+
+    def test_rest_logout_endpoint(self, restClient: TestClient, tmp_path):
+        """POST /auth/logout endpoint removes token."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            response = restClient.post("/auth/logout", json={"serverUrl": "https://server.com"})
+            assert response.status_code == 200
+            data = response.json()
+            assert data["ok"] is True
+
+    def test_rest_auth_status_endpoint(self, restClient: TestClient, tmp_path):
+        """GET /auth/status endpoint returns auth status."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            response = restClient.get("/auth/status", params={"serverUrl": "https://server.com"})
+            assert response.status_code == 200
+            data = response.json()
+            assert data["authenticated"] is True
+            assert data["email"] == "user@test.com"
+
+    def test_rest_auth_status_not_authenticated(self, restClient: TestClient, tmp_path):
+        """GET /auth/status returns not authenticated for unknown server."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({})
+            response = restClient.get("/auth/status", params={"serverUrl": "https://unknown.com"})
+            assert response.status_code == 200
+            data = response.json()
+            assert data["authenticated"] is False
+
+
+# endregion REST Auth Endpoints Tests
+
+
+# region Load Kit From Remote Tests
+class TestLoadKitFromRemote:
+    def test_load_kit_from_remote_success(self, tmp_path):
+        """_load_kit_from_remote fetches kit from server."""
+        auth_file = str(tmp_path / "auth.json")
+        kit_data = {"name": "RemoteKit", "version": "1.0.0"}
+        mock_response = MagicMock()
+        mock_response.json.return_value = kit_data
+        mock_response.raise_for_status.return_value = None
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", return_value=mock_response):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            result = engine._load_kit_from_remote("https://server.com", "my-kit")
+            assert result["name"] == "RemoteKit"
+
+    def test_load_kit_from_remote_connection_error(self, tmp_path):
+        """_load_kit_from_remote raises ServerUnreachable on connection error."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            with pytest.raises(engine.ServerUnreachable):
+                engine._load_kit_from_remote("https://server.com", "my-kit")
+
+    def test_load_kit_from_remote_401(self, tmp_path):
+        """_load_kit_from_remote raises InvalidAuthToken on 401."""
+        auth_file = str(tmp_path / "auth.json")
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        http_error = engine.requests.exceptions.HTTPError(response=mock_response)
+        mock_response.raise_for_status.side_effect = http_error
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", return_value=mock_response):
+            engine._save_auth({"https://server.com": {"token": "expired", "email": "user@test.com"}})
+            with pytest.raises(engine.InvalidAuthToken):
+                engine._load_kit_from_remote("https://server.com", "my-kit")
+
+    def test_load_kit_from_remote_404(self, tmp_path):
+        """_load_kit_from_remote raises KitNotFound on 404."""
+        auth_file = str(tmp_path / "auth.json")
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        http_error = engine.requests.exceptions.HTTPError(response=mock_response)
+        mock_response.raise_for_status.side_effect = http_error
+        with patch.object(engine, "AUTH_FILE", auth_file), \
+             patch("engine.requests.get", return_value=mock_response):
+            engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
+            with pytest.raises(engine.KitNotFound):
+                engine._load_kit_from_remote("https://server.com", "my-kit")
+
+    def test_load_kit_from_remote_no_token(self, tmp_path):
+        """_load_kit_from_remote raises AuthTokenNotFound without login."""
+        auth_file = str(tmp_path / "auth.json")
+        with patch.object(engine, "AUTH_FILE", auth_file):
+            engine._save_auth({})
+            with pytest.raises(engine.AuthTokenNotFound):
+                engine._load_kit_from_remote("https://server.com", "my-kit")
+
+
+# endregion Load Kit From Remote Tests

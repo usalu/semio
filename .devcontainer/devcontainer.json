@@ -87,6 +87,8 @@
     "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume",
     "source=${localWorkspaceFolderBasename}-config-openai,target=/home/vscode/.config/openai,type=volume",
     "source=${localWorkspaceFolderBasename}-codeium,target=/home/vscode/.codeium,type=volume",
+    "source=${localWorkspaceFolderBasename}-gitkraken-cli,target=/home/vscode/.local/share/GitKrakenCLI,type=volume",
+    "source=${localWorkspaceFolderBasename}-gitkraken-workspaces,target=/home/vscode/.local/share/gk,type=volume",
     "source=${localWorkspaceFolderBasename}-cursor-server,target=/home/vscode/.cursor-server,type=volume",
     "source=${localWorkspaceFolderBasename}-antigravity-server,target=/home/vscode/.antigravity-server,type=volume",
     "source=${localWorkspaceFolderBasename}-vscode-server,target=/home/vscode/.vscode-server,type=volume",

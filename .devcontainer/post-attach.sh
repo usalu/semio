@@ -2,12 +2,15 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #region 🔖PostAttach
 set -e
+WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 VSIX_PATH="semio-repo/vscode/semio-repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
 EXTENSION_ID=""
 INSTALL_LOCK_FILE="/tmp/semio-post-attach-extension-install.lock"
 WSL_ERROR="Command is only available in WSL or inside a Visual Studio Code terminal."
+GITKRAKEN_WORKSPACE_NAME="${SEMIO_GITKRAKEN_WORKSPACE_NAME:-semio}"
+SKIP_EXTENSION_INSTALL="${SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL:-}"
 
 #region 🔖DetectIDE
 find_working_clis() {
@@ -123,8 +126,106 @@ find_working_clis() {
   return 0
 }
 
-mapfile -t IDE_CLIS < <(find_working_clis)
+if [ -n "$SKIP_EXTENSION_INSTALL" ]; then
+  IDE_CLIS=()
+else
+  mapfile -t IDE_CLIS < <(find_working_clis)
+fi
 #endregion 🔖DetectIDE
+
+#region 🔖GitKrakenWorkspace
+collect_gitkraken_workspace_repos() {
+  local repos=()
+  local path=""
+
+  append_repo() {
+    local repo_path="$1"
+    local existing=""
+    if [ -z "$repo_path" ] || [ ! -d "$repo_path" ]; then
+      return 0
+    fi
+    for existing in "${repos[@]}"; do
+      if [ "$existing" = "$repo_path" ]; then
+        return 0
+      fi
+    done
+    repos+=("$repo_path")
+  }
+
+  if git -C "$WORKSPACE" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    append_repo "$WORKSPACE"
+  fi
+  if [ -f "$WORKSPACE/.gitmodules" ]; then
+    while IFS= read -r path; do
+      [ -n "$path" ] || continue
+      if git -C "$WORKSPACE/$path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        append_repo "$WORKSPACE/$path"
+      fi
+    done < <(git config -f "$WORKSPACE/.gitmodules" --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+  fi
+  printf '%s\n' "${repos[@]}"
+}
+
+configure_gitkraken_workspace() {
+  if ! command -v gk >/dev/null 2>&1; then
+    echo "⚠️  GitKraken CLI not available, skipping GitKraken workspace bootstrap."
+    return 0
+  fi
+
+  mapfile -t gitkraken_repos < <(collect_gitkraken_workspace_repos)
+  if [ "${#gitkraken_repos[@]}" -eq 0 ]; then
+    echo "⚠️  No git repositories found for GitKraken workspace bootstrap."
+    return 0
+  fi
+
+  local info_output=""
+  local repo=""
+  local missing_repos=()
+  local repo_csv=""
+  local missing_csv=""
+  local created=""
+  local has_workspace=""
+
+  info_output="$(gk ws info "$GITKRAKEN_WORKSPACE_NAME" 2>/dev/null || true)"
+  if [ -z "$(printf '%s' "$info_output" | tr -d '[:space:]')" ]; then
+    has_workspace=""
+  elif printf '%s\n' "$info_output" | grep -Fq "you do not have any workspaces"; then
+    has_workspace=""
+  elif printf '%s\n' "$info_output" | grep -Fq "no workspace with name"; then
+    has_workspace=""
+  else
+    has_workspace="1"
+  fi
+
+  if [ -n "$has_workspace" ]; then
+    for repo in "${gitkraken_repos[@]}"; do
+      if ! printf '%s\n' "$info_output" | grep -Fq "$repo"; then
+        missing_repos+=("$repo")
+      fi
+    done
+    if [ "${#missing_repos[@]}" -gt 0 ]; then
+      missing_csv="$(IFS=,; printf '%s' "${missing_repos[*]}")"
+      gk ws update "$GITKRAKEN_WORKSPACE_NAME" --add-repos "$missing_csv" >/dev/null
+      echo "✅ GitKraken workspace updated: $GITKRAKEN_WORKSPACE_NAME"
+    else
+      echo "✅ GitKraken workspace already current: $GITKRAKEN_WORKSPACE_NAME"
+    fi
+  else
+    repo_csv="$(IFS=,; printf '%s' "${gitkraken_repos[*]}")"
+    gk ws create "$GITKRAKEN_WORKSPACE_NAME" --add-repos "$repo_csv" >/dev/null
+    created="1"
+    echo "✅ GitKraken workspace created: $GITKRAKEN_WORKSPACE_NAME"
+  fi
+
+  if [ -n "$created" ] || [ "${#missing_repos[@]}" -gt 0 ]; then
+    gk ws refresh "$GITKRAKEN_WORKSPACE_NAME" >/dev/null 2>&1 || true
+  fi
+  gk ws set "$GITKRAKEN_WORKSPACE_NAME" >/dev/null
+  echo "✅ GitKraken default workspace set: $GITKRAKEN_WORKSPACE_NAME"
+}
+#endregion 🔖GitKrakenWorkspace
+
+configure_gitkraken_workspace
 
 #region 🔖InstallExtension
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
@@ -187,7 +288,7 @@ fi
 #endregion 🔖InstallExtension
 
 #region 🔖WindsurfMcpConfig
-WINDSURF_MCP_DIR="/home/vscode/.codeium/windsurf"
+WINDSURF_MCP_DIR="${HOME:-/home/vscode}/.codeium/windsurf"
 WINDSURF_MCP_FILE="${WINDSURF_MCP_DIR}/mcp_config.json"
 mkdir -p "$WINDSURF_MCP_DIR"
 cat > "$WINDSURF_MCP_FILE" <<'EOF'

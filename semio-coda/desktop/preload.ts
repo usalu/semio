@@ -20,7 +20,7 @@
 
 // #region 🔖Preload
 // [🔬coda🖱️desktop💻preload🔖preload](semiorepo://p/r/coda/b/u/desktop/f/preload.ts/s/Preload)
-// Electron preload script exposing window controls, OS APIs, and coda MCP bridge.
+// Electron preload script exposing window controls, OS APIs, and coda sidecar bridge.
 // Preload MUST use contextBridge to safely expose IPC methods.
 
 import { contextBridge, ipcRenderer } from "electron";
@@ -36,7 +36,25 @@ contextBridge.exposeInMainWorld("os", {
 });
 
 contextBridge.exposeInMainWorld("coda", {
+  // Direct sidecar method call (preferred)
+  call: (method: string, params: Record<string, unknown> = {}) =>
+    ipcRenderer.invoke("coda-call", method, params),
+  // Backward-compatible resource fetch
   fetch: (uri: string) => ipcRenderer.invoke("coda-fetch", uri),
-  tool: (name: string, args: Record<string, unknown>) => ipcRenderer.invoke("coda-tool", name, args),
+  // Backward-compatible tool call
+  tool: (name: string, args: Record<string, unknown>) =>
+    ipcRenderer.invoke("coda-tool", name, args),
+});
+
+contextBridge.exposeInMainWorld("dialog", {
+  openFolder: (): Promise<string | null> => ipcRenderer.invoke("dialog-open-folder"),
+});
+
+contextBridge.exposeInMainWorld("project", {
+  getPath: (): Promise<string | null> => ipcRenderer.invoke("get-project-path"),
+  open: (folder: string): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke("project-open", folder),
+  create: (name: string, folder: string): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke("project-create", name, folder),
 });
 // #endregion 🔖Preload

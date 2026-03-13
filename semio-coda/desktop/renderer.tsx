@@ -48,6 +48,14 @@ declare global {
       fetch(uri: string): Promise<McpResponse>;
       tool(name: string, args: Record<string, unknown>): Promise<McpResponse>;
     };
+    dialog: {
+      openFolder(): Promise<string | null>;
+    };
+    project: {
+      getPath(): Promise<string | null>;
+      open(folder: string): Promise<{ success: boolean; error?: string }>;
+      create(name: string, folder: string): Promise<{ success: boolean; error?: string }>;
+    };
   }
 }
 
@@ -1393,6 +1401,248 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
 
 // #endregion 🔖Pages
 
+// #region 🔖Welcome
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖welcome](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Welcome)
+// Welcome screen shown on startup when no project is open.
+// MUST offer two options: create a new project or open an existing one.
+
+/**
+ * Welcome screen with options to create or open a project.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖welcome🛠️welcomepage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Welcome/d/i/WelcomePage)
+ *
+ * MUST show create-new-project form and open-existing-project button.
+ * MUST call onProjectReady with the resolved project path on success.
+ **/
+function WelcomePage({
+  onProjectReady,
+  onMinimize,
+  onMaximize,
+  onClose,
+}: {
+  onProjectReady: (projectPath: string) => void;
+  onMinimize: () => void;
+  onMaximize: () => void;
+  onClose: () => void;
+}) {
+  const [mode, setMode] = useState<"choose" | "create" | "open">("choose");
+  const [projectName, setProjectName] = useState("");
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handlePickFolder = useCallback(async () => {
+    const folder = await window.dialog.openFolder();
+    if (folder) {
+      setSelectedFolder(folder);
+      setError(null);
+    }
+  }, []);
+
+  const handleCreate = useCallback(async () => {
+    if (!projectName.trim()) {
+      setError("Project name is required.");
+      return;
+    }
+    if (!selectedFolder) {
+      setError("Please select a folder.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await window.project.create(projectName.trim(), selectedFolder);
+      if (result.success) {
+        onProjectReady(selectedFolder);
+      } else {
+        setError(result.error ?? "Failed to create project.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [projectName, selectedFolder, onProjectReady]);
+
+  const handleOpen = useCallback(async () => {
+    const folder = await window.dialog.openFolder();
+    if (!folder) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await window.project.open(folder);
+      if (result.success) {
+        onProjectReady(folder);
+      } else {
+        setError(result.error ?? "Failed to open project.");
+        setMode("open");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [onProjectReady]);
+
+  return (
+    <div className="flex h-screen w-screen flex-col bg-surface overflow-hidden">
+      {/* Title Bar */}
+      <div className="flex h-9 items-center border-b border-border bg-surface-alt px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+        <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+          <span className="text-sm font-bold text-coda-600">coda</span>
+          <span className="text-xs text-text-tertiary">ACC Design Assistant</span>
+        </div>
+        <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+          <button onClick={onMinimize} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer">
+            <IconMinimize />
+          </button>
+          <button onClick={onMaximize} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer">
+            <IconMaximize />
+          </button>
+          <button onClick={onClose} className="rounded p-1.5 text-text-secondary hover:bg-violated/20 hover:text-violated transition-colors cursor-pointer">
+            <IconClose />
+          </button>
+        </div>
+      </div>
+
+      {/* Welcome Content */}
+      <div className="flex flex-1 items-center justify-center p-8">
+        <div className="w-full max-w-2xl space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-coda-600">coda</h1>
+            <p className="mt-2 text-text-secondary">ACC Design Assistant</p>
+          </div>
+
+          {mode === "choose" && (
+            <div className="grid grid-cols-2 gap-6">
+              {/* #region Create New Project Card */}
+              <button
+                onClick={() => { setMode("create"); setError(null); }}
+                className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border bg-surface p-8 text-left transition-all hover:border-coda-400 hover:bg-coda-50 cursor-pointer"
+              >
+                <div className="rounded-full bg-coda-100 p-4 transition-colors group-hover:bg-coda-200">
+                  <svg className="w-8 h-8 text-coda-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="18" x2="12" y2="12" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <div className="text-base font-semibold text-text">Create New Project</div>
+                  <p className="mt-1 text-sm text-text-secondary">Start fresh with a new coda project in a folder of your choice.</p>
+                </div>
+              </button>
+              {/* #endregion */}
+
+              {/* #region Open Existing Project Card */}
+              <button
+                onClick={handleOpen}
+                disabled={loading}
+                className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border bg-surface p-8 text-left transition-all hover:border-coda-400 hover:bg-coda-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="rounded-full bg-coda-100 p-4 transition-colors group-hover:bg-coda-200">
+                  <svg className="w-8 h-8 text-coda-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <div className="text-base font-semibold text-text">Open Existing Project</div>
+                  <p className="mt-1 text-sm text-text-secondary">Open a folder that already contains a coda project configuration.</p>
+                </div>
+              </button>
+              {/* #endregion */}
+            </div>
+          )}
+
+          {(mode === "create" || mode === "open") && (
+            <div className="rounded-xl border border-border bg-surface p-6 space-y-5">
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setMode("choose"); setError(null); }} className="text-text-tertiary hover:text-text transition-colors cursor-pointer">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <h2 className="text-base font-semibold text-text">
+                  {mode === "create" ? "Create New Project" : "Open Existing Project"}
+                </h2>
+              </div>
+
+              {mode === "create" && (
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-text">Project Name</label>
+                    <input
+                      type="text"
+                      value={projectName}
+                      onChange={(e) => setProjectName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                      placeholder="My Project"
+                      className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-text">Project Folder</label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-secondary truncate">
+                        {selectedFolder ?? "No folder selected"}
+                      </div>
+                      <Button onClick={handlePickFolder} variant="secondary">
+                        Browse…
+                      </Button>
+                    </div>
+                    <p className="text-xs text-text-tertiary">A <code className="font-mono">.coda/project.json</code> will be created in this folder.</p>
+                  </div>
+                </div>
+              )}
+
+              {mode === "open" && (
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <div className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-secondary truncate">
+                      {selectedFolder ?? "No folder selected"}
+                    </div>
+                    <Button onClick={handlePickFolder} variant="secondary">
+                      Browse…
+                    </Button>
+                  </div>
+                  <p className="text-xs text-text-tertiary">Select a folder that contains a <code className="font-mono">.coda/project.json</code> file.</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-md border border-violated/30 bg-violated/10 px-3 py-2 text-sm text-violated">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button onClick={() => { setMode("choose"); setError(null); }} variant="secondary">
+                  Cancel
+                </Button>
+                {mode === "create" ? (
+                  <Button onClick={handleCreate} variant="primary" loading={loading} disabled={!projectName.trim() || !selectedFolder}>
+                    Create Project
+                  </Button>
+                ) : (
+                  <Button onClick={handleOpen} variant="primary" loading={loading} disabled={loading}>
+                    Open Project
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {error && mode === "choose" && (
+            <div className="rounded-md border border-violated/30 bg-violated/10 px-3 py-2 text-sm text-violated text-center">
+              {error}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// #endregion 🔖Welcome
+
 // #region 🔖App
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖app](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/App)
 // Root application component with sidebar navigation, title bar, and page routing.
@@ -1417,25 +1667,29 @@ const navItems: Array<{ id: Page; label: string; icon: React.ComponentType<{ cla
  * Root React component that renders the coda desktop app.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖app🛠️app](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/App/d/i/App)
  *
+ * MUST show WelcomePage until a project is selected.
  * MUST show loading state until user ID is resolved.
  * MUST provide sidebar navigation and page content area.
  **/
 function App() {
   const [userId, setUserId] = useState<string>("");
+  const [projectPath, setProjectPath] = useState<string | null | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    async function fetchUserId() {
+    async function init() {
       try {
-        const id = await window.os.getUserId();
+        const [id, path] = await Promise.all([window.os.getUserId(), window.project.getPath()]);
         setUserId(id);
+        setProjectPath(path);
       } catch {
         setUserId("anonymous-user");
+        setProjectPath(null);
       }
     }
-    fetchUserId();
+    init();
   }, []);
 
   const handleRefresh = useCallback(() => setRefreshKey((n) => n + 1), []);
@@ -1452,13 +1706,26 @@ function App() {
     if (window.windowControls) window.windowControls.close();
   }, []);
 
-  if (!userId) {
+  if (projectPath === undefined) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-surface">
-        <Spinner label="Loading user data..." />
+        <Spinner label="Loading..." />
       </div>
     );
   }
+
+  if (!projectPath) {
+    return (
+      <WelcomePage
+        onProjectReady={(p) => setProjectPath(p)}
+        onMinimize={handleMinimize}
+        onMaximize={handleMaximize}
+        onClose={handleClose}
+      />
+    );
+  }
+
+  const projectName = projectPath.split("/").pop() ?? projectPath;
 
   return (
     <div className="flex h-screen w-screen flex-col bg-surface overflow-hidden">
@@ -1468,7 +1735,8 @@ function App() {
           <span className="text-sm font-bold text-coda-600">coda</span>
           <span className="text-xs text-text-tertiary">ACC Design Assistant</span>
           <span className="text-xs text-text-tertiary ml-1">|</span>
-          <span className="text-xs text-text-tertiary ml-1">{userId}</span>
+          <span className="text-xs text-text-tertiary ml-1 font-mono" title={projectPath}>{projectName}</span>
+          {userId && <><span className="text-xs text-text-tertiary ml-1">·</span><span className="text-xs text-text-tertiary ml-1">{userId}</span></>}
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <button onClick={handleRefresh} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer" title="Refresh data">

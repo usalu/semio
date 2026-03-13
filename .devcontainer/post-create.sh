@@ -6,10 +6,63 @@ WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 #region 🔖Startup
 echo "Setting up semio development environment..."
 #endregion 🔖Startup
+#region 🔖GitKrakenCliHelpers
+install_gitkraken_cli() {
+  if command -v gk >/dev/null 2>&1 && gk --version >/dev/null 2>&1; then
+    echo "GitKraken CLI already installed."
+    return 0
+  fi
+
+  case "$(uname -m)" in
+    x86_64|amd64)
+      local gitkraken_arch="amd64"
+      ;;
+    aarch64|arm64)
+      local gitkraken_arch="arm64"
+      ;;
+    i386|i686)
+      local gitkraken_arch="386"
+      ;;
+    *)
+      echo "⚠️  Skipping GitKraken CLI install for unsupported architecture: $(uname -m)"
+      return 0
+      ;;
+  esac
+
+  echo "Installing GitKraken CLI..."
+  local release_json
+  release_json="$(curl -fsSL https://api.github.com/repos/gitkraken/gk-cli/releases/latest)"
+  local download_url
+  download_url="$(
+    printf '%s' "$release_json" | jq -r \
+      --arg suffix "linux_${gitkraken_arch}.zip" \
+      '.assets[] | select(.name | endswith($suffix)) | .browser_download_url' | head -n 1
+  )"
+  if [ -z "$download_url" ] || [ "$download_url" = "null" ]; then
+    echo "⚠️  Unable to resolve GitKraken CLI download URL for architecture: ${gitkraken_arch}"
+    return 0
+  fi
+
+  mkdir -p "$HOME/.local/bin" "$HOME/.local/share/GitKrakenCLI" "$HOME/.local/share/gk"
+  local temp_dir
+  temp_dir="$(mktemp -d)"
+  trap 'rm -rf "$temp_dir"' RETURN
+  curl -fsSL "$download_url" -o "$temp_dir/gk.zip"
+  unzip -q "$temp_dir/gk.zip" -d "$temp_dir"
+  install -m 0755 "$temp_dir/gk" "$HOME/.local/bin/gk"
+  rm -rf "$temp_dir"
+  trap - RETURN
+
+  gk --version >/dev/null 2>&1
+  echo "GitKraken CLI installed."
+}
+#endregion 🔖GitKrakenCliHelpers
 #region 🔖Ownership
 echo "Fixing ownership of mounted config directories..."
 sudo chown -R vscode:vscode /home/vscode/.cache || true
 sudo chown -R vscode:vscode /home/vscode/.config/gh || true
+sudo chown -R vscode:vscode /home/vscode/.local/share/GitKrakenCLI || true
+sudo chown -R vscode:vscode /home/vscode/.local/share/gk || true
 #endregion 🔖Ownership
 #region 🔖GitSafe
 echo "Marking workspace as safe for git (devcontainer bind-mount / submodules)..."
@@ -29,6 +82,9 @@ echo "Installing Gemini CLI..."
 npm install -g @google/gemini-cli
 #endregion 🔖GeminiCli
 #endregion 🔖Node
+#region 🔖GitKrakenCli
+install_gitkraken_cli
+#endregion 🔖GitKrakenCli
 #region 🔖Python
 echo "Setting up Python environment..."
 uv sync
@@ -64,7 +120,7 @@ echo "Configuring git hooks and agent hook configs..."
 #endregion 🔖GitHooks
 #region 🔖VSCode
 echo "Building semio VSCode extension..."
-cd js/vscode
+cd semio-repo/vscode
 npm run build
 npm run package
 cd ../..

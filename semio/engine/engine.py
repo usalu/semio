@@ -69,11 +69,14 @@ from semio import (
     MAX_REQUEST_BODY_SIZE,
     PORT,
     RELEASE,
+    USER_FOLDER,
     VERSION,
     Attribute,
     AttributeNode,
     Author,
     AuthorNode,
+    AuthenticationError,
+    AuthTokenNotFound,
     ClientError,
     CodeUnreachable,
     Connection,
@@ -90,6 +93,7 @@ from semio import (
     DesignPrediction,
     Error,
     FeatureNotYetSupported,
+    InvalidAuthToken,
     Kit,
     KitAlreadyExists,
     KitContext,
@@ -112,9 +116,11 @@ from semio import (
     Point,
     PointNode,
     RelayNode,
+    RemoteKitUriNotValid,
     RemoteKitsNotYetSupported,
     Semio,
     ServerError,
+    ServerUnreachable,
     Side,
     SideNode,
     Type,
@@ -677,10 +683,257 @@ class PostgresStore(DatabaseStore):
         sqlmodel.SQLModel.metadata.create_all(self.engine)
 
 
+# region Auth
+# [👤semio📚engine💻engine🔖store🔖auth](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth)
+# Auth MUST provide credential management for remote server authentication using Bearer tokens.
+
+AUTH_FILE = os.path.join(os.path.expanduser(USER_FOLDER), "auth.json")
+
+
+def _load_auth() -> dict:
+    """Load auth credentials from the auth file.
+    Returns dict mapping serverUrl -> {token, email}.
+    [👤semio📚engine💻engine🔖store🔖auth🛠️loadauth](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/_load_auth)
+    """
+    if os.path.exists(AUTH_FILE):
+        with open(AUTH_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def _save_auth(auth: dict) -> None:
+    """Save auth credentials to the auth file.
+    Callers MUST provide a dict mapping serverUrl -> {token, email}.
+    [👤semio📚engine💻engine🔖store🔖auth🛠️saveauth](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/_save_auth)
+    """
+    os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
+    with open(AUTH_FILE, "w", encoding="utf-8") as f:
+        json.dump(auth, f, indent=2)
+
+
+def login(serverUrl: str, email: str, password: str) -> dict:
+    """🔐 Login to a remote server and store the auth token.
+    Callers MUST provide a valid server URL, email and password.
+    Returns {ok, serverUrl, email, token} on success.
+    [👤semio📚engine💻engine🔖store🔖auth🛠️login](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/login)
+    """
+    serverUrl = serverUrl.rstrip("/")
+    try:
+        response = requests.post(
+            f"{serverUrl}/auth/login",
+            json={"email": email, "password": password},
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+        token = data.get("token", "")
+        if not token:
+            raise AuthenticationError()
+        auth = _load_auth()
+        auth[serverUrl] = {"token": token, "email": email}
+        _save_auth(auth)
+        return {"ok": True, "serverUrl": serverUrl, "email": email, "token": token}
+    except requests.exceptions.ConnectionError:
+        raise ServerUnreachable(serverUrl)
+    except requests.exceptions.HTTPError as e:
+        if e.response is not None and e.response.status_code in (401, 403):
+            raise InvalidAuthToken(serverUrl)
+        raise ServerUnreachable(serverUrl)
+
+
+def logout(serverUrl: str) -> dict:
+    """🔓 Logout from a remote server and remove the stored token.
+    Callers MUST provide a valid server URL.
+    Returns {ok, serverUrl} on success.
+    [👤semio📚engine💻engine🔖store🔖auth🛠️logout](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/logout)
+    """
+    serverUrl = serverUrl.rstrip("/")
+    auth = _load_auth()
+    auth.pop(serverUrl, None)
+    _save_auth(auth)
+    return {"ok": True, "serverUrl": serverUrl}
+
+
+def getAuthToken(serverUrl: str) -> str:
+    """🔑 Get the stored auth token for a server.
+    Raises AuthTokenNotFound if no token is stored.
+    [👤semio📚engine💻engine🔖store🔖auth🛠️getauthtoken](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/getAuthToken)
+    """
+    serverUrl = serverUrl.rstrip("/")
+    auth = _load_auth()
+    entry = auth.get(serverUrl)
+    if not entry or not entry.get("token"):
+        raise AuthTokenNotFound(serverUrl)
+    return entry["token"]
+
+
+def getAuthStatus(serverUrl: str) -> dict:
+    """📋 Get the auth status for a server.
+    Returns {authenticated, serverUrl, email} without raising.
+    [👤semio📚engine💻engine🔖store🔖auth🛠️getauthstatus](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/getAuthStatus)
+    """
+    serverUrl = serverUrl.rstrip("/")
+    auth = _load_auth()
+    entry = auth.get(serverUrl)
+    if entry and entry.get("token"):
+        return {"authenticated": True, "serverUrl": serverUrl, "email": entry.get("email", "")}
+    return {"authenticated": False, "serverUrl": serverUrl, "email": ""}
+
+
+# endregion Auth
+
+
+class RemoteStore(Store):
+    """REST-backed store that proxies kit operations to a remote semio server.
+    Callers MUST call login() first to authenticate with the remote server.
+    [👤semio📚engine💻engine🔖store🛠️remotestore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/RemoteStore)
+    """
+
+    serverUrl: str
+    kitUri: str
+
+    def __init__(self, uri: str, serverUrl: str, kitUri: str) -> None:
+        super().__init__(uri)
+        self.serverUrl = serverUrl
+        self.kitUri = kitUri
+
+    @classmethod
+    def fromUri(cls, uri: str) -> "RemoteStore":
+        """🔧 Construct a RemoteStore from a remote URI.
+        URI format: serverUrl + /api/kits/ + encodedKitUri
+        """
+        if "/api/kits/" not in uri:
+            raise RemoteKitUriNotValid(uri)
+        idx = uri.index("/api/kits/")
+        serverUrl = uri[:idx]
+        encodedKitUri = uri[idx + len("/api/kits/"):]
+        kitUri = decode(encodedKitUri)
+        return cls(uri, serverUrl, kitUri)
+
+    def _headers(self) -> dict:
+        """Get authorization headers for remote requests."""
+        token = getAuthToken(self.serverUrl)
+        return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+    def _api_url(self, path: str = "") -> str:
+        """Build API URL for a kit operation."""
+        base = f"{self.serverUrl}/api/kits/{encode(self.kitUri)}"
+        if path:
+            return f"{base}/{path}"
+        return base
+
+    def initialize(self) -> None:
+        """Remote kits are initialized on the server side."""
+        pass
+
+    def get(self, operation: dict) -> typing.Any:
+        """🔍 Get an entity from the remote store."""
+        kind = operation["kind"]
+        try:
+            if kind == "kit":
+                response = requests.get(self._api_url(), headers=self._headers(), timeout=30)
+                response.raise_for_status()
+                return KitOutput.model_validate(response.json())
+            else:
+                raise FeatureNotYetSupported()
+        except requests.exceptions.ConnectionError:
+            raise ServerUnreachable(self.serverUrl)
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 401:
+                raise InvalidAuthToken(self.serverUrl)
+            if e.response is not None and e.response.status_code == 404:
+                raise KitNotFound(self.kitUri)
+            raise ServerUnreachable(self.serverUrl)
+
+    def put(self, operation: dict, input: KitInput | DesignInput | TypeInput) -> typing.Any:
+        """📥 Put an entity in the remote store."""
+        kind = operation["kind"]
+        try:
+            if kind == "kit":
+                response = requests.put(
+                    self._api_url(),
+                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    headers=self._headers(),
+                    timeout=30,
+                )
+                response.raise_for_status()
+                return None
+            elif kind == "type":
+                typeName = encode(operation.get("typeName", ""))
+                typeVariant = encode(operation.get("typeVariant", ""))
+                path = f"types/{typeName},{typeVariant}"
+                response = requests.put(
+                    self._api_url(path),
+                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    headers=self._headers(),
+                    timeout=30,
+                )
+                response.raise_for_status()
+                return None
+            elif kind == "design":
+                designName = encode(operation.get("designName", ""))
+                designVariant = encode(operation.get("designVariant", ""))
+                designView = encode(operation.get("designView", ""))
+                path = f"designs/{designName},{designVariant},{designView}"
+                response = requests.put(
+                    self._api_url(path),
+                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    headers=self._headers(),
+                    timeout=30,
+                )
+                response.raise_for_status()
+                return None
+            else:
+                raise FeatureNotYetSupported()
+        except requests.exceptions.ConnectionError:
+            raise ServerUnreachable(self.serverUrl)
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 401:
+                raise InvalidAuthToken(self.serverUrl)
+            raise ServerUnreachable(self.serverUrl)
+
+    def update(self, operation: dict, input: str) -> typing.Any:
+        """🔄 Update an entity in the remote store."""
+        raise FeatureNotYetSupported()
+
+    def delete(self, operation: dict) -> typing.Any:
+        """🗑 Delete an entity from the remote store."""
+        kind = operation["kind"]
+        try:
+            if kind == "kit":
+                response = requests.delete(self._api_url(), headers=self._headers(), timeout=30)
+                response.raise_for_status()
+                return None
+            elif kind == "type":
+                typeName = encode(operation.get("typeName", ""))
+                typeVariant = encode(operation.get("typeVariant", ""))
+                path = f"types/{typeName},{typeVariant}"
+                response = requests.delete(self._api_url(path), headers=self._headers(), timeout=30)
+                response.raise_for_status()
+                return None
+            elif kind == "design":
+                designName = encode(operation.get("designName", ""))
+                designVariant = encode(operation.get("designVariant", ""))
+                designView = encode(operation.get("designView", ""))
+                path = f"designs/{designName},{designVariant},{designView}"
+                response = requests.delete(self._api_url(path), headers=self._headers(), timeout=30)
+                response.raise_for_status()
+                return None
+            else:
+                raise FeatureNotYetSupported()
+        except requests.exceptions.ConnectionError:
+            raise ServerUnreachable(self.serverUrl)
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 401:
+                raise InvalidAuthToken(self.serverUrl)
+            raise ServerUnreachable(self.serverUrl)
+
+
 @functools.lru_cache
 def StoreFactory(uri: str) -> Store:
     """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created.
-    Callers MUST provide either an absolute local path or an http URL.
+    Callers MUST provide either an absolute local path, an http URL ending in .zip (cached), or a remote server URI.
+    Remote server URIs have the format: http(s)://server/api/kits/encodedKitUri
     [👤semio📚engine💻engine🔖store🛠️storefactory](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/StoreFactory)
     """
     if os.path.isabs(uri):
@@ -691,7 +944,9 @@ def StoreFactory(uri: str) -> Store:
             if not os.path.exists(path):
                 cache(uri)
             return SqliteStore.fromUri(uri, path)
-        raise RemoteKitsNotYetSupported(uri)
+        if "/api/kits/" in uri:
+            return RemoteStore.fromUri(uri)
+        raise RemoteKitUriNotValid(uri)
     raise LocalKitUriIsNotAbsolute(uri)
 
 
@@ -1515,6 +1770,89 @@ def custom_openapi():
 
 rest.openapi = custom_openapi
 
+
+# region Auth Endpoints
+# [👤semio📚engine💻engine🔖rest🔖authendpoints](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints)
+# Auth endpoints MUST expose login, logout and status for remote server authentication.
+
+
+class LoginRequest(pydantic.BaseModel):
+    """Login request body.
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️loginrequest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LoginRequest)
+    """
+    serverUrl: str
+    email: str
+    password: str
+
+
+class LoginResponse(pydantic.BaseModel):
+    """Login response body.
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️loginresponse](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LoginResponse)
+    """
+    ok: bool
+    serverUrl: str
+    email: str
+    token: str
+
+
+class LogoutRequest(pydantic.BaseModel):
+    """Logout request body.
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️logoutrequest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LogoutRequest)
+    """
+    serverUrl: str
+
+
+class AuthStatusResponse(pydantic.BaseModel):
+    """Auth status response body.
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️authstatusresponse](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/AuthStatusResponse)
+    """
+    authenticated: bool
+    serverUrl: str
+    email: str
+
+
+@rest.post("/auth/login")
+async def rest_login(request: LoginRequest) -> LoginResponse:
+    """Login to a remote server and store the auth token.
+    Callers MUST provide serverUrl, email and password.
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restlogin](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_login)
+    """
+    try:
+        result = login(request.serverUrl, request.email, request.password)
+        return LoginResponse(**result)
+    except ClientError as e:
+        return fastapi.Response(content=str(e), status_code=400)
+    except Exception as e:
+        return fastapi.Response(content=str(e), status_code=500)
+
+
+@rest.post("/auth/logout")
+async def rest_logout(request: LogoutRequest) -> dict:
+    """Logout from a remote server and remove the stored token.
+    Callers MUST provide serverUrl.
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restlogout](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_logout)
+    """
+    try:
+        return logout(request.serverUrl)
+    except Exception as e:
+        return fastapi.Response(content=str(e), status_code=500)
+
+
+@rest.get("/auth/status")
+async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
+    """Get the auth status for a remote server.
+    Callers MUST provide serverUrl as a query parameter.
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restauthstatus](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_auth_status)
+    """
+    try:
+        result = getAuthStatus(serverUrl)
+        return AuthStatusResponse(**result)
+    except Exception as e:
+        return fastapi.Response(content=str(e), status_code=500)
+
+
+# endregion Auth Endpoints
+
 # endregion Rest
 
 # region Mcp
@@ -1528,6 +1866,33 @@ mcp = FastMCP("semio", stateless_http=False, json_response=True)
 _mcp_session_kits: dict[int, dict] = {}
 _mcp_session_designs: dict[int, dict] = {}
 _mcp_session_types: dict[int, dict] = {}
+_mcp_session_kit_mode: dict[int, str] = {}  # "local" or "remote"
+_mcp_session_kit_source: dict[int, str] = {}  # path or serverUrl+kitUri
+
+
+def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
+    """Load kit dict from a remote server via REST API.
+    Callers MUST have called login() first to authenticate with the server.
+    [👤semio📚engine💻engine🔖mcp🛠️loadkitfromremote](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_remote)
+    """
+    token = getAuthToken(serverUrl)
+    encodedKitUri = encode(kitUri)
+    try:
+        response = requests.get(
+            f"{serverUrl}/api/kits/{encodedKitUri}",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=30,
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.ConnectionError:
+        raise ServerUnreachable(serverUrl)
+    except requests.exceptions.HTTPError as e:
+        if e.response is not None and e.response.status_code == 401:
+            raise InvalidAuthToken(serverUrl)
+        if e.response is not None and e.response.status_code == 404:
+            raise KitNotFound(kitUri)
+        raise ServerUnreachable(serverUrl)
 
 
 def _load_kit_from_path(path: str) -> dict:
@@ -1562,11 +1927,17 @@ def _session_id(ctx) -> int:
 
 
 def _get_session_kit(ctx) -> dict:
-    """Get kit from session. Raises if start_working_in_local_kit was not called."""
+    """Get kit from session. Raises if start_working_in_local_kit or start_working_in_remote_kit was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_kits:
-        raise ValueError("Call start_working_in_local_kit(path) first to set the kit for this session.")
+        raise ValueError("Call start_working_in_local_kit(path) or start_working_in_remote_kit(serverUrl, kitUri) first to set the kit for this session.")
     return _mcp_session_kits[sid]
+
+
+def _get_session_kit_mode(ctx) -> str:
+    """Get kit mode from session. Returns 'local' or 'remote'."""
+    sid = _session_id(ctx)
+    return _mcp_session_kit_mode.get(sid, "local")
 
 
 def _get_session_design(ctx) -> dict:
@@ -1597,9 +1968,69 @@ def start_working_in_local_kit(path: str, ctx: Context) -> dict:
         _mcp_session_kits[sid] = kit
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
-        return {"ok": True, "path": path}
+        _mcp_session_kit_mode[sid] = "local"
+        _mcp_session_kit_source[sid] = path
+        return {"ok": True, "mode": "local", "path": path}
     except Exception as e:
         return {"error": str(e)}
+
+
+@mcp.tool()
+def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> dict:
+    """Start working in a remote kit for this MCP session. MUST be called first.
+    Requires prior login() to the server. Fetches the kit from the remote server.
+    [👤semio📚engine💻engine🔖mcp🛠️startworkinginremotekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_remote_kit)
+    """
+    try:
+        kit = _load_kit_from_remote(serverUrl, kitUri)
+        sid = _session_id(ctx)
+        _mcp_session_kits[sid] = kit
+        _mcp_session_designs.pop(sid, None)
+        _mcp_session_types.pop(sid, None)
+        _mcp_session_kit_mode[sid] = "remote"
+        _mcp_session_kit_source[sid] = f"{serverUrl}/api/kits/{encode(kitUri)}"
+        return {"ok": True, "mode": "remote", "serverUrl": serverUrl, "kitUri": kitUri}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# region MCP Auth Tools
+# [👤semio📚engine💻engine🔖mcp🔖mcpauthtools](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools)
+# MCP Auth Tools MUST expose login, logout and status for remote server authentication.
+
+@mcp.tool()
+def mcp_login(serverUrl: str, email: str, password: str) -> dict:
+    """🔐 Login to a remote semio server. Stores the auth token for subsequent remote kit operations.
+    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogin](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_login)
+    """
+    try:
+        return login(serverUrl, email, password)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def mcp_logout(serverUrl: str) -> dict:
+    """🔓 Logout from a remote semio server. Removes the stored token.
+    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogout](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_logout)
+    """
+    try:
+        return logout(serverUrl)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def mcp_auth_status(serverUrl: str) -> dict:
+    """📋 Get the auth status for a remote semio server.
+    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcpauthstatus](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_auth_status)
+    """
+    try:
+        return getAuthStatus(serverUrl)
+    except Exception as e:
+        return {"error": str(e)}
+
+# endregion MCP Auth Tools
 
 
 @mcp.tool()
@@ -2016,7 +2447,7 @@ def finish_working_in_type(ctx: Context) -> dict:
 
 @mcp.tool()
 def finish_working_in_kit(ctx: Context) -> dict:
-    """Finish working in the current kit. Clears kit, design, and type from session state.
+    """Finish working in the current kit. Clears kit, design, type, mode and source from session state.
     [👤semio📚engine💻engine🔖mcp🛠️finishworkinginkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_kit)
     """
     try:
@@ -2024,6 +2455,8 @@ def finish_working_in_kit(ctx: Context) -> dict:
         _mcp_session_kits.pop(sid, None)
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
+        _mcp_session_kit_mode.pop(sid, None)
+        _mcp_session_kit_source.pop(sid, None)
         return {"ok": True}
     except Exception as e:
         return {"error": str(e)}

@@ -11,6 +11,8 @@ sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codex 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.config 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codeium 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.local/share/GitKrakenCLI 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.local/share/gk 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.cursor-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.antigravity-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true

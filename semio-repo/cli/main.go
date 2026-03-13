@@ -180,6 +180,7 @@ func renderTemplate(tpl *template.Template, name string, data interface{}) strin
 func init() {
 	initTemplates()
 }
+
 // #endregion 🔖Templates
 
 // #region 🔖Engine Events
@@ -970,8 +971,7 @@ func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			id := args[0]
-			buildOpts := TreeBuildOptions{
-			}
+			buildOpts := TreeBuildOptions{}
 			tree := BuildMonorepoTreeCached(ctx, buildOpts)
 			var found *TreeNode
 			var findByID func(node *TreeNode)
@@ -1295,84 +1295,77 @@ func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 // [🧰semiorepo⌨️cli💻main🔖cliadapter🛠️bindtreeflags](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bindTreeFlags)
 // bindTreeFlags MUST perform the bindTreeFlags operation.
 // bindTreeFlags performs the bindTreeFlags operation.
+type boolFlagSpec struct {
+	Name  string
+	Usage string
+}
+
+type boolFlagPairSpec struct {
+	OnlyName  string
+	NoName    string
+	OnlyUsage string
+	NoUsage   string
+}
+
+// bindBoolFlags MUST register all boolean flags from the input specs.
+func bindBoolFlags(cmd *cobra.Command, specs []boolFlagSpec) {
+	for _, spec := range specs {
+		cmd.Flags().Bool(spec.Name, false, spec.Usage)
+	}
+}
+
+// bindOnlyNoFlagPairs MUST register only/no boolean flag pairs from the input specs.
+func bindOnlyNoFlagPairs(cmd *cobra.Command, specs []boolFlagPairSpec) {
+	for _, spec := range specs {
+		cmd.Flags().Bool(spec.OnlyName, false, spec.OnlyUsage)
+		cmd.Flags().Bool(spec.NoName, false, spec.NoUsage)
+	}
+}
+
 func bindTreeFlags(cmd *cobra.Command) {
-	cmd.Flags().Bool("only-technology", false, "Only show technologies")
-	cmd.Flags().Bool("no-technology", false, "Exclude technologies")
-	cmd.Flags().Bool("only-bundle", false, "Only show bundles")
-	cmd.Flags().Bool("no-bundle", false, "Exclude bundles")
-	cmd.Flags().Bool("only-folder", false, "Only show folders")
-	cmd.Flags().Bool("no-folder", false, "Exclude folders")
-	cmd.Flags().Bool("only-file", false, "Only show files")
-	cmd.Flags().Bool("no-file", false, "Exclude files")
-	cmd.Flags().Bool("only-section", false, "Only show sections")
-	cmd.Flags().Bool("no-section", false, "Exclude sections")
-	cmd.Flags().Bool("only-definition", false, "Only show definitions")
-	cmd.Flags().Bool("no-definition", false, "Exclude definitions")
-	cmd.Flags().Bool("only-goal", false, "Only show goals")
-	cmd.Flags().Bool("no-goal", false, "Exclude goals")
-	cmd.Flags().Bool("only-ticket", false, "Only show tickets")
-	cmd.Flags().Bool("no-ticket", false, "Exclude tickets")
-	cmd.Flags().Bool("only-draft", false, "Only show drafts")
-	cmd.Flags().Bool("no-draft", false, "Exclude drafts")
-	cmd.Flags().Bool("only-policy", false, "Only show policies")
-	cmd.Flags().Bool("no-policy", false, "Exclude policies")
-	cmd.Flags().Bool("only-contributor", false, "Only show contributors")
-	cmd.Flags().Bool("no-contributor", false, "Exclude contributors")
-	cmd.Flags().Bool("only-checkpoint", false, "Only show checkpoints")
-	cmd.Flags().Bool("no-checkpoint", false, "Exclude checkpoints")
-	cmd.Flags().Bool("only-statute", false, "Only show statutes")
-	cmd.Flags().Bool("no-statute", false, "Exclude statutes")
-	cmd.Flags().Bool("only-todo", false, "Only show todos")
-	cmd.Flags().Bool("no-todo", false, "Exclude todos")
-	cmd.Flags().Bool("only-breach", false, "Only show breaches")
-	cmd.Flags().Bool("no-breach", false, "Exclude breaches")
+	bindOnlyNoFlagPairs(cmd, []boolFlagPairSpec{
+		{OnlyName: "only-technology", NoName: "no-technology", OnlyUsage: "Only show technologies", NoUsage: "Exclude technologies"},
+		{OnlyName: "only-bundle", NoName: "no-bundle", OnlyUsage: "Only show bundles", NoUsage: "Exclude bundles"},
+		{OnlyName: "only-folder", NoName: "no-folder", OnlyUsage: "Only show folders", NoUsage: "Exclude folders"},
+		{OnlyName: "only-file", NoName: "no-file", OnlyUsage: "Only show files", NoUsage: "Exclude files"},
+		{OnlyName: "only-section", NoName: "no-section", OnlyUsage: "Only show sections", NoUsage: "Exclude sections"},
+		{OnlyName: "only-definition", NoName: "no-definition", OnlyUsage: "Only show definitions", NoUsage: "Exclude definitions"},
+		{OnlyName: "only-goal", NoName: "no-goal", OnlyUsage: "Only show goals", NoUsage: "Exclude goals"},
+		{OnlyName: "only-ticket", NoName: "no-ticket", OnlyUsage: "Only show tickets", NoUsage: "Exclude tickets"},
+		{OnlyName: "only-draft", NoName: "no-draft", OnlyUsage: "Only show drafts", NoUsage: "Exclude drafts"},
+		{OnlyName: "only-policy", NoName: "no-policy", OnlyUsage: "Only show policies", NoUsage: "Exclude policies"},
+		{OnlyName: "only-contributor", NoName: "no-contributor", OnlyUsage: "Only show contributors", NoUsage: "Exclude contributors"},
+		{OnlyName: "only-checkpoint", NoName: "no-checkpoint", OnlyUsage: "Only show checkpoints", NoUsage: "Exclude checkpoints"},
+		{OnlyName: "only-statute", NoName: "no-statute", OnlyUsage: "Only show statutes", NoUsage: "Exclude statutes"},
+		{OnlyName: "only-todo", NoName: "no-todo", OnlyUsage: "Only show todos", NoUsage: "Exclude todos"},
+		{OnlyName: "only-breach", NoName: "no-breach", OnlyUsage: "Only show breaches", NoUsage: "Exclude breaches"},
+		{OnlyName: "only-library", NoName: "no-library", OnlyUsage: "Only show library bundles", NoUsage: "Exclude library bundles"},
+		{OnlyName: "only-schema", NoName: "no-schema", OnlyUsage: "Only show schema bundles", NoUsage: "Exclude schema bundles"},
+		{OnlyName: "only-binary", NoName: "no-binary", OnlyUsage: "Only show binary bundles", NoUsage: "Exclude binary bundles"},
+		{OnlyName: "only-client", NoName: "no-client", OnlyUsage: "Only show client bundles", NoUsage: "Exclude client bundles"},
+		{OnlyName: "only-site", NoName: "no-site", OnlyUsage: "Only show site bundles", NoUsage: "Exclude site bundles"},
+		{OnlyName: "only-assets", NoName: "no-assets", OnlyUsage: "Only show asset bundles", NoUsage: "Exclude asset bundles"},
+		{OnlyName: "only-organization", NoName: "no-organization", OnlyUsage: "Only show organization folders", NoUsage: "Exclude organization folders"},
+		{OnlyName: "only-required", NoName: "no-required", OnlyUsage: "Only show required folders", NoUsage: "Exclude required folders"},
+		{OnlyName: "only-code", NoName: "no-code", OnlyUsage: "Only show code files", NoUsage: "Exclude code files"},
+		{OnlyName: "only-script", NoName: "no-script", OnlyUsage: "Only show script files", NoUsage: "Exclude script files"},
+		{OnlyName: "only-config", NoName: "no-config", OnlyUsage: "Only show config files", NoUsage: "Exclude config files"},
+		{OnlyName: "only-lab", NoName: "no-lab", OnlyUsage: "Only show lab files", NoUsage: "Exclude lab files"},
+		{OnlyName: "only-docs", NoName: "no-docs", OnlyUsage: "Only show docs files", NoUsage: "Exclude docs files"},
+		{OnlyName: "only-resource", NoName: "no-resource", OnlyUsage: "Only show resource files", NoUsage: "Exclude resource files"},
+		{OnlyName: "only-template", NoName: "no-template", OnlyUsage: "Only show template files", NoUsage: "Exclude template files"},
+		{OnlyName: "only-license", NoName: "no-license", OnlyUsage: "Only show license files", NoUsage: "Exclude license files"},
+		{OnlyName: "only-implementation", NoName: "no-implementation", OnlyUsage: "Only show implementation definitions", NoUsage: "Exclude implementation definitions"},
+		{OnlyName: "only-interface", NoName: "no-interface", OnlyUsage: "Only show interface definitions", NoUsage: "Exclude interface definitions"},
+		{OnlyName: "only-constant", NoName: "no-constant", OnlyUsage: "Only show constant definitions", NoUsage: "Exclude constant definitions"},
+	})
 
-	cmd.Flags().Bool("only-library", false, "Only show library bundles")
-	cmd.Flags().Bool("no-library", false, "Exclude library bundles")
-	cmd.Flags().Bool("only-schema", false, "Only show schema bundles")
-	cmd.Flags().Bool("no-schema", false, "Exclude schema bundles")
-	cmd.Flags().Bool("only-binary", false, "Only show binary bundles")
-	cmd.Flags().Bool("no-binary", false, "Exclude binary bundles")
-	cmd.Flags().Bool("only-client", false, "Only show client bundles")
-	cmd.Flags().Bool("no-client", false, "Exclude client bundles")
-	cmd.Flags().Bool("only-site", false, "Only show site bundles")
-	cmd.Flags().Bool("no-site", false, "Exclude site bundles")
-	cmd.Flags().Bool("only-assets", false, "Only show asset bundles")
-	cmd.Flags().Bool("no-assets", false, "Exclude asset bundles")
-
-	cmd.Flags().Bool("only-organization", false, "Only show organization folders")
-	cmd.Flags().Bool("no-organization", false, "Exclude organization folders")
-	cmd.Flags().Bool("only-required", false, "Only show required folders")
-	cmd.Flags().Bool("no-required", false, "Exclude required folders")
-
-	cmd.Flags().Bool("only-code", false, "Only show code files")
-	cmd.Flags().Bool("no-code", false, "Exclude code files")
-	cmd.Flags().Bool("only-script", false, "Only show script files")
-	cmd.Flags().Bool("no-script", false, "Exclude script files")
-	cmd.Flags().Bool("only-config", false, "Only show config files")
-	cmd.Flags().Bool("no-config", false, "Exclude config files")
-	cmd.Flags().Bool("only-lab", false, "Only show lab files")
-	cmd.Flags().Bool("no-lab", false, "Exclude lab files")
-	cmd.Flags().Bool("only-docs", false, "Only show docs files")
-	cmd.Flags().Bool("no-docs", false, "Exclude docs files")
-	cmd.Flags().Bool("only-resource", false, "Only show resource files")
-	cmd.Flags().Bool("no-resource", false, "Exclude resource files")
-	cmd.Flags().Bool("only-template", false, "Only show template files")
-	cmd.Flags().Bool("no-template", false, "Exclude template files")
-	cmd.Flags().Bool("only-license", false, "Only show license files")
-	cmd.Flags().Bool("no-license", false, "Exclude license files")
-
-	cmd.Flags().Bool("only-implementation", false, "Only show implementation definitions")
-	cmd.Flags().Bool("no-implementation", false, "Exclude implementation definitions")
-	cmd.Flags().Bool("only-interface", false, "Only show interface definitions")
-	cmd.Flags().Bool("no-interface", false, "Exclude interface definitions")
-	cmd.Flags().Bool("only-constant", false, "Only show constant definitions")
-	cmd.Flags().Bool("no-constant", false, "Exclude constant definitions")
-
-	cmd.Flags().Bool("only-open", false, "Only show open items")
-	cmd.Flags().Bool("only-closed", false, "Only show closed items")
-	cmd.Flags().Bool("open", false, "Only show open items")
-	cmd.Flags().Bool("closed", false, "Only show closed items")
+	bindBoolFlags(cmd, []boolFlagSpec{
+		{Name: "only-open", Usage: "Only show open items"},
+		{Name: "only-closed", Usage: "Only show closed items"},
+		{Name: "open", Usage: "Only show open items"},
+		{Name: "closed", Usage: "Only show closed items"},
+	})
 
 	cmd.Flags().IntSlice("only-year", nil, "Only show years")
 	cmd.Flags().IntSlice("no-year", nil, "Exclude years")
@@ -1625,7 +1618,7 @@ func resolveTestScopes(ids []string) []testScope {
 	}
 	var scopes []testScope
 	for _, raw := range ids {
-		scopes = append(scopes, scope)
+		scopes = append(scopes, resolveTestScope(raw))
 	}
 	return scopes
 }
@@ -4389,51 +4382,32 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 // bindStreamFlags holds the data fields for a bindStreamFlags record.
 // bindStreamFlags MUST perform the bindStreamFlags operation.
 func bindStreamFlags(cmd *cobra.Command) {
-	cmd.Flags().Bool("show-ignored", false, "Show ignored folders and files")
-	cmd.Flags().Bool("show-generated", false, "Show generated folders and files")
-	cmd.Flags().Bool("no-code", false, "Exclude code files")
-	cmd.Flags().Bool("no-script", false, "Exclude script files")
-	cmd.Flags().Bool("no-config", false, "Exclude config files")
-	cmd.Flags().Bool("no-lab", false, "Exclude lab files")
-	cmd.Flags().Bool("no-docs", false, "Exclude docs files")
-	cmd.Flags().Bool("no-resource", false, "Exclude resource files")
-	cmd.Flags().Bool("no-template", false, "Exclude template files")
-	cmd.Flags().Bool("no-license", false, "Exclude license files")
+	bindBoolFlags(cmd, []boolFlagSpec{
+		{Name: "show-ignored", Usage: "Show ignored folders and files"},
+		{Name: "show-generated", Usage: "Show generated folders and files"},
+	})
 
-	cmd.Flags().Bool("only-code", false, "Only show code files")
-	cmd.Flags().Bool("only-script", false, "Only show script files")
-	cmd.Flags().Bool("only-config", false, "Only show config files")
-	cmd.Flags().Bool("only-lab", false, "Only show lab files")
-	cmd.Flags().Bool("only-docs", false, "Only show docs files")
-	cmd.Flags().Bool("only-resource", false, "Only show resource files")
-	cmd.Flags().Bool("only-template", false, "Only show template files")
-	cmd.Flags().Bool("only-license", false, "Only show license files")
-
-	cmd.Flags().Bool("no-library", false, "Exclude library bundles")
-	cmd.Flags().Bool("no-schema", false, "Exclude schema bundles")
-	cmd.Flags().Bool("no-binary", false, "Exclude binary bundles")
-	cmd.Flags().Bool("no-client", false, "Exclude Client bundles")
-	cmd.Flags().Bool("no-site", false, "Exclude site bundles")
-	cmd.Flags().Bool("no-assets", false, "Exclude asset bundles")
-
-	cmd.Flags().Bool("only-library", false, "Only show library bundles")
-	cmd.Flags().Bool("only-schema", false, "Only show schema bundles")
-	cmd.Flags().Bool("only-binary", false, "Only show binary bundles")
-	cmd.Flags().Bool("only-client", false, "Only show Client bundles")
-	cmd.Flags().Bool("only-site", false, "Only show site bundles")
-	cmd.Flags().Bool("only-assets", false, "Only show asset bundles")
-
-	cmd.Flags().Bool("no-organization", false, "Exclude organization folders")
-	cmd.Flags().Bool("no-required", false, "Exclude required folders")
-	cmd.Flags().Bool("only-organization", false, "Only show organization folders")
-	cmd.Flags().Bool("only-required", false, "Only show required folders")
-
-	cmd.Flags().Bool("no-implementation", false, "Exclude implementation definitions")
-	cmd.Flags().Bool("no-interface", false, "Exclude interface definitions")
-	cmd.Flags().Bool("no-constant", false, "Exclude constant definitions")
-	cmd.Flags().Bool("only-implementation", false, "Only show implementation definitions")
-	cmd.Flags().Bool("only-interface", false, "Only show interface definitions")
-	cmd.Flags().Bool("only-constant", false, "Only show constant definitions")
+	bindOnlyNoFlagPairs(cmd, []boolFlagPairSpec{
+		{OnlyName: "only-code", NoName: "no-code", OnlyUsage: "Only show code files", NoUsage: "Exclude code files"},
+		{OnlyName: "only-script", NoName: "no-script", OnlyUsage: "Only show script files", NoUsage: "Exclude script files"},
+		{OnlyName: "only-config", NoName: "no-config", OnlyUsage: "Only show config files", NoUsage: "Exclude config files"},
+		{OnlyName: "only-lab", NoName: "no-lab", OnlyUsage: "Only show lab files", NoUsage: "Exclude lab files"},
+		{OnlyName: "only-docs", NoName: "no-docs", OnlyUsage: "Only show docs files", NoUsage: "Exclude docs files"},
+		{OnlyName: "only-resource", NoName: "no-resource", OnlyUsage: "Only show resource files", NoUsage: "Exclude resource files"},
+		{OnlyName: "only-template", NoName: "no-template", OnlyUsage: "Only show template files", NoUsage: "Exclude template files"},
+		{OnlyName: "only-license", NoName: "no-license", OnlyUsage: "Only show license files", NoUsage: "Exclude license files"},
+		{OnlyName: "only-library", NoName: "no-library", OnlyUsage: "Only show library bundles", NoUsage: "Exclude library bundles"},
+		{OnlyName: "only-schema", NoName: "no-schema", OnlyUsage: "Only show schema bundles", NoUsage: "Exclude schema bundles"},
+		{OnlyName: "only-binary", NoName: "no-binary", OnlyUsage: "Only show binary bundles", NoUsage: "Exclude binary bundles"},
+		{OnlyName: "only-client", NoName: "no-client", OnlyUsage: "Only show client bundles", NoUsage: "Exclude client bundles"},
+		{OnlyName: "only-site", NoName: "no-site", OnlyUsage: "Only show site bundles", NoUsage: "Exclude site bundles"},
+		{OnlyName: "only-assets", NoName: "no-assets", OnlyUsage: "Only show asset bundles", NoUsage: "Exclude asset bundles"},
+		{OnlyName: "only-organization", NoName: "no-organization", OnlyUsage: "Only show organization folders", NoUsage: "Exclude organization folders"},
+		{OnlyName: "only-required", NoName: "no-required", OnlyUsage: "Only show required folders", NoUsage: "Exclude required folders"},
+		{OnlyName: "only-implementation", NoName: "no-implementation", OnlyUsage: "Only show implementation definitions", NoUsage: "Exclude implementation definitions"},
+		{OnlyName: "only-interface", NoName: "no-interface", OnlyUsage: "Only show interface definitions", NoUsage: "Exclude interface definitions"},
+		{OnlyName: "only-constant", NoName: "no-constant", OnlyUsage: "Only show constant definitions", NoUsage: "Exclude constant definitions"},
+	})
 
 	cmd.Flags().IntSlice("no-year", nil, "Exclude years")
 	cmd.Flags().IntSlice("only-year", nil, "Only show years")
@@ -4952,16 +4926,16 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 // [🧰semiorepo⌨️cli💻main🔖cliadapter🛠️definitioncommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/definitionCommand)
 func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "definition", Short: "Definition management commands"}
-		listCmd := &cobra.Command{
-			Use:     "list",
-			Aliases: []string{"tree"},
-			Short:   "List definitions",
-			Args:    cobra.MaximumNArgs(1),
-			RunE: func(cmd *cobra.Command, args []string) error {
-				path, _ := cmd.Flags().GetString("file")
-				if path == "" && len(args) > 0 {
-					path = args[0]
-				}
+	listCmd := &cobra.Command{
+		Use:     "list",
+		Aliases: []string{"tree"},
+		Short:   "List definitions",
+		Args:    cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path, _ := cmd.Flags().GetString("file")
+			if path == "" && len(args) > 0 {
+				path = args[0]
+			}
 			if path == "" {
 				return fmt.Errorf("missing file")
 			}
@@ -4977,13 +4951,13 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 					StreamDefinitions(context.Background(), path, defChan, opts)
 				}()
 
-					for d := range defChan {
-						data, err := json.Marshal(map[string]interface{}{"definition": d})
-						if err != nil {
-							continue
-						}
-						stream <- Event{Kind: KindResult, Command: "definition list", Data: data}
+				for d := range defChan {
+					data, err := json.Marshal(map[string]interface{}{"definition": d})
+					if err != nil {
+						continue
 					}
+					stream <- Event{Kind: KindResult, Command: "definition list", Data: data}
+				}
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
 
@@ -5005,13 +4979,13 @@ func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Short: "Move an artifact from source to target",
 		Long:  "Move an artifact (file, folder, section) between locations. Supports cross-kind moves: file→section calls integrate, section→file calls extract.",
 		Args:  cobra.ExactArgs(2),
-			RunE: func(cmd *cobra.Command, args []string) error {
-				_, err := factory(*config)
-				if err != nil {
-					return err
-				}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := factory(*config)
+			if err != nil {
+				return err
+			}
 
-				source := ParseArtifactRef(args[0])
+			source := ParseArtifactRef(args[0])
 			target := ParseArtifactRef(args[1])
 
 			var result ToolResult
@@ -5247,6 +5221,7 @@ type GoalNode struct {
 	DueDate, CreatedAt string
 	Description        string
 	Children           []*GoalNode
+	Tickets            []*TicketNode
 }
 
 // #region 🔖Monorepo Tree Types
@@ -5604,6 +5579,7 @@ func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode
 			lookup[n.ID] = n
 		}
 		for _, n := range nodes {
+			if n.ParentID != "" && lookup[n.ParentID] != nil {
 				lookup[n.ParentID].Children = append(lookup[n.ParentID].Children, n)
 			} else {
 				roots = append(roots, n)
@@ -6679,6 +6655,7 @@ func fuzzyContains(text, term string) bool {
 	}
 	return false
 }
+
 // [🧰semiorepo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️searchtreeinmemory](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/searchTreeInMemory)
 // searchTreeInMemory holds the data fields for a searchTreeInMemory record.
 // searchTreeInMemory MUST perform the searchTreeInMemory operation.
@@ -6989,11 +6966,56 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	sort.Strings(paths)
 	var subWork []string
 	for _, path := range paths {
+		subWork = append(subWork, path+"="+meta.SubmoduleHeads[path]+":"+meta.SubmoduleDirty[path])
 	}
+	semioMetaHash := hashSemioMetaState(repoRoot)
 	meta.SubWorkingHash = hashString(strings.Join(subWork, "|"))
-	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + strconv.Itoa(cacheSchemaVersion))
+	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + semioMetaHash + strconv.Itoa(cacheSchemaVersion))
 	meta.Fingerprint = fp
 	return fp, meta
+}
+
+// hashSemioMetaState MUST produce a stable hash for semio metadata state changes.
+// hashSemioMetaState computes and returns a hash for semio metadata content relevant to tree cache invalidation.
+func hashSemioMetaState(repoRoot string) string {
+	metaRoot := filepath.Join(repoRoot, ".semio-repo")
+	if !FileExists(metaRoot) {
+		return ""
+	}
+
+	var entries []string
+	_ = filepath.WalkDir(metaRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		rel, relErr := filepath.Rel(metaRoot, path)
+		if relErr != nil {
+			return nil
+		}
+		rel = filepath.ToSlash(rel)
+		if rel == "." {
+			return nil
+		}
+		if rel == "cache" || strings.HasPrefix(rel, "cache/") {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.IsDir() {
+			entries = append(entries, "d:"+rel)
+			return nil
+		}
+		info, statErr := d.Info()
+		if statErr != nil {
+			return nil
+		}
+		entries = append(entries, fmt.Sprintf("f:%s:%d:%d", rel, info.Size(), info.ModTime().UnixNano()))
+		return nil
+	})
+
+	sort.Strings(entries)
+	return hashString(strings.Join(entries, "|"))
 }
 
 // [🧰semiorepo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️treenodescopepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/treeNodeScopePath)
@@ -7127,6 +7149,7 @@ func expandPathsWithAncestors(paths []string) []string {
 			if strings.HasPrefix(p, root+"/") || p == root {
 				if len(root) > len(bundle) {
 					bundle = root
+				}
 			}
 		}
 		if bundle != "" {
@@ -7818,6 +7841,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		var s Section
 		json.Unmarshal(b, &s)
 		return renderSectionTree(&s, isTTY, false)
+	}
 
 	for key, val := range payload {
 		if entityMap, ok := val.(map[string]interface{}); ok {
@@ -8159,6 +8183,7 @@ func toolResultFromTreeList(nodeKind TreeNodeKind) ToolResult {
 	ctx := context.Background()
 	tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{})
 	filter := TreeFilter{OnlyKinds: map[TreeNodeKind]bool{nodeKind: true}}
+	tree = FilterMonorepoTree(tree, &filter)
 	var nodes []*TreeNode
 	flattenTreeNodes(tree, &nodes)
 	var sb strings.Builder
@@ -9307,6 +9332,7 @@ const (
 	EmojiFolderRoot           = "🌱"
 	EmojiFileCode             = "💻"
 	EmojiFileLab              = "🥼"
+	EmojiFileScript           = "📜"
 	EmojiFileDocs             = "📃"
 	EmojiFileConfig           = "⚙️"
 	EmojiFileResource         = "💾"
@@ -10385,6 +10411,7 @@ func computeLineMetricsForDiff(diff *DiffLines, baseCheckpoint, filePath string)
 	}
 	if len(diff.Added) > 0 && len(diff.Removed) == 0 {
 		return LineMetrics{Added: CountLinesInFile(filepath.Join(GetRootDir(), filePath)), Removed: 0}
+	}
 	if len(diff.Removed) > 0 && len(diff.Added) == 0 {
 		return LineMetrics{Added: 0, Removed: CountLinesAtCheckpoint(baseCheckpoint, filePath)}
 	}
@@ -10590,10 +10617,12 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint s
 		for sectionPath, addedLines := range addedMap {
 			removedLines := removedMap[sectionPath]
 			if len(addedLines) == 0 && len(removedLines) == 0 {
+				continue
 			}
 			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeModified, Path: fileID + "#" + sectionPath, Lines: LineMetrics{Added: len(addedLines), Removed: len(removedLines)}})
 		}
 		for sectionPath, removedLines := range removedMap {
+			if _, ok := addedMap[sectionPath]; ok {
 				continue
 			}
 			if len(removedLines) == 0 {
@@ -10720,6 +10749,7 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint 
 		if status.To != "" {
 			currentFilesSet[status.To] = struct{}{}
 		}
+	}
 	var currentFiles []string
 	for f := range currentFilesSet {
 		currentFiles = append(currentFiles, f)
@@ -11392,6 +11422,7 @@ func (p *GitHubManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, 
 				Name string `json:"name"`
 			}{Name: l.Name})
 		}
+	}
 	return result, nil
 }
 
@@ -11412,6 +11443,7 @@ func (p *GitHubManagementProvider) ListRepoLabels() ([]ManagementLabel, error) {
 	}
 	result := make([]ManagementLabel, len(labels))
 	for i, l := range labels {
+		result[i] = ManagementLabel{Name: l.Name}
 	}
 	return result, nil
 }
@@ -11820,6 +11852,7 @@ func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, erro
 		return nil, fmt.Errorf("git diff --cached --name-only failed: %s", strings.TrimSpace(stderr))
 	}
 	var files []string
+	for _, line := range strings.Split(strings.ReplaceAll(stdout, "\r\n", "\n"), "\n") {
 		if line != "" {
 			files = append(files, line)
 		}
@@ -11883,6 +11916,7 @@ func (p *CopilotEditorProvider) Configure(repoRoot string) error {
 	if err != nil {
 		return err
 	}
+	mapping := p.HookMapping()
 	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
 	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
 		return err
@@ -12021,6 +12055,7 @@ func (p *WindsurfEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind
 // [🧰semiorepo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
 // FormatHookOutput holds the data fields for a FormatHookOutput record.
 // FormatHookOutput MUST perform the FormatHookOutput operation.
+func (p *WindsurfEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
@@ -12854,6 +12889,7 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 					} else if ch == '}' {
 						if braceDepth > 0 {
 							braceDepth--
+						}
 						if sawOpen && braceDepth == 0 {
 							end = lineIndex + 1
 							lineIndex = len(lines)
@@ -12888,9 +12924,11 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 // [🧰semiorepo⌨️cli💻main🔖types🔖languages🪨arrowfuncpattern](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/arrowFuncPattern)
 // arrowFuncPattern holds the data fields for a arrowFuncPattern record.
 var arrowFuncPattern = regexp.MustCompile(`=\s*(?:\([^)]*\)|[A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*[^=]+)?\s*=>\s*`)
+
 // funcExprPattern holds the data fields for a funcExprPattern record.
 // [🧰semiorepo⌨️cli💻main🔖types🔖languages🪨funcexprpattern](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/funcExprPattern)
 var funcExprPattern = regexp.MustCompile(`=\s*(?:async\s+)?function\b`)
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖languages🪨classexprpattern](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/classExprPattern)
 // classExprPattern holds the data fields for a classExprPattern record.
 var classExprPattern = regexp.MustCompile(`=\s*class\b`)
@@ -13163,6 +13201,7 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 				if line[j] == '"' {
 					scanState.InVerbatimString = false
 				}
+				j++
 				continue
 			}
 			if l.hasTripleQuotes {
@@ -13385,7 +13424,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 		}
 		lineStart := charIndex
 		foundInline := false
-		for j < len(line) {
+		for j := 0; j < len(line); {
 			if scanState.InBlockComment {
 				if !scanState.BlockCommentHasTodo && strings.Contains(line, "TODO") {
 					scanState.BlockCommentHasTodo = true
@@ -13513,10 +13552,6 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					j += 2
 					continue
 				}
-
-					j += 2
-					continue
-				}
 				trimmed := strings.TrimSpace(line)
 				if matched, _ := l.PolicySectionStartMatch(trimmed); matched {
 					break
@@ -13566,6 +13601,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 				}
 				break
 			}
+			j++
 		}
 		if !foundInline {
 			scanState.InTodoBlock = false
@@ -13618,6 +13654,7 @@ func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 		if !seen[imp] {
 			seen[imp] = true
 			uniqueImports = append(uniqueImports, imp)
+		}
 	}
 	return strings.Join(uniqueImports, "\n")
 }
@@ -13730,6 +13767,7 @@ func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 	}
 	return imports, strings.Join(bodyLines, "\n")
 }
+
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
 // [🧰semiorepo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️formatimports](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/FormatImports)
@@ -13818,6 +13856,7 @@ func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 			bodyLines = append(bodyLines, line)
 		}
 	}
+	return imports, strings.Join(bodyLines, "\n")
 }
 
 // FormatImports MUST produce a well-formed imports string.
@@ -13906,6 +13945,7 @@ func (l *CSharpLanguage) FormatImports(imports []string) string {
 	seen := make(map[string]bool)
 	var uniqueImports []string
 	for _, imp := range imports {
+		if !seen[imp] {
 			seen[imp] = true
 			uniqueImports = append(uniqueImports, imp)
 		}
@@ -15511,6 +15551,7 @@ func (g *Territory) AllKinds() []Statute {
 	}
 	return result
 }
+
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Territory.
 // [🧰semiorepo⌨️cli💻main🔖types🔖languages🛠️getid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetID)
@@ -16402,6 +16443,7 @@ func FileExists(path string) bool {
 // [🧰semiorepo⌨️cli💻main🔖types🔖utils🛠️isdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/IsDir)
 func IsDir(path string) bool {
 	info, err := os.Stat(path)
+	if err != nil {
 		return false
 	}
 	return info.IsDir()
@@ -18214,6 +18256,7 @@ func isSpecText(text string) bool {
 // [🧰semiorepo⌨️cli💻main🔖types🔖policies🪨specimplsyntaxbacktick](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/specImplSyntaxBacktick)
 // specImplSyntaxBacktick holds the data fields for a specImplSyntaxBacktick record.
 var specImplSyntaxBacktick = regexp.MustCompile("`[^`]+`")
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖policies🪨specimplsyntaxfunccall](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/specImplSyntaxFuncCall)
 // specImplSyntaxFuncCall holds the data fields for a specImplSyntaxFuncCall record.
 var specImplSyntaxFuncCall = regexp.MustCompile(`[A-Za-z_]\w*\.\w+\(|[A-Z]\w+\(`)
@@ -18884,6 +18927,7 @@ func parseSemioIdentificationLink(commentText string, uriKind string) (string, s
 	}
 	return idValue, uriValue, true
 }
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖policies🛠️sectionpolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/sectionPolicy)
 // sectionPolicy holds the data fields for a sectionPolicy record.
 // sectionPolicy MUST perform the sectionPolicy operation.
@@ -20673,6 +20717,7 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, 
 		addSections(ctx, result, file, fileID, content, section.Children, sectionPath)
 	}
 }
+
 // BuildCodebaseDefinitions MUST assemble the codebase definitions from the available context data.
 // BuildCodebaseDefinitions constructs and returns the codebase definitions structure.
 // [🧰semiorepo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasedefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseDefinitions)
@@ -21144,6 +21189,7 @@ func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, checkpoint string) []Cod
 		}
 		folderSet[folder] = struct{}{}
 		fileCounts[folder]++
+		content, err := ReadTextFileAtCheckpoint(checkpoint, file)
 		if err == nil {
 			lineCounts[folder] += CountLines(content)
 		}
@@ -24916,11 +24962,7 @@ func FileHeaderId(path string) string {
 	dir := filepath.Dir(normalized)
 	parentID := ""
 	if dir != "." && dir != "" {
-		bundle := GetBundleByPath(normalized)
-		if bundle != nil && NormalizePath(bundle.Root) == NormalizePath(dir) {
-			parentID = bundle.GetID()
-			parentID = resolveParentIDFromPath(dir)
-		}
+		parentID = resolveParentIDFromPath(dir)
 	}
 	data := map[string]interface{}{"path": normalized, "kind": kind, "parentId": parentID}
 	return GetArtifactID("file", data)
@@ -24998,6 +25040,7 @@ func DefinitionHeaderUri(filePath string, sectionPath string, name string) strin
 	data := map[string]interface{}{"id": val}
 	return GetArtifactURI("definition", data)
 }
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖tickets🛠️generatefileheader](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/generateFileHeader)
 // generateFileHeader holds the data fields for a generateFileHeader record.
 // generateFileHeader MUST perform the generateFileHeader operation.
@@ -26778,7 +26821,12 @@ type repoContext struct {
 // NewRepoContext creates and returns a new repo context instance.
 // [🧰semiorepo⌨️cli💻main🔖types🔖defaultcontext🛠️newrepocontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/NewRepoContext)
 func NewRepoContext(rootDir string) RepoContext {
-	ctx := &repoContext{rootDir: rootDir, managementProvider: DefaultManagementProvider()}
+	resolvedRoot := rootDir
+	if strings.TrimSpace(resolvedRoot) == "" {
+		resolvedRoot = findRepoRoot("")
+	}
+	SetRootDir(resolvedRoot)
+	ctx := &repoContext{rootDir: resolvedRoot, managementProvider: DefaultManagementProvider()}
 	ctx.bundles = LoadBundles()
 	return ctx
 }
@@ -29409,6 +29457,7 @@ func (c *repoContext) FolderDelete(path string) error {
 	result := ToolFolderDelete(path)
 	if result.Error != "" {
 		return errors.New(result.Error)
+	}
 	return nil
 }
 
@@ -32043,6 +32092,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return queryResolverInstance.Todos(p.Context, filter)
 				},
 			},
+			"tickets": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketType))),
 				Args: graphql.FieldConfigArgument{
 					"year":   &graphql.ArgumentConfig{Type: graphql.Int},
@@ -33011,6 +33061,7 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 			ne = strings.ReplaceAll(ne, "\uFE0E", "")
 			if ne == "" {
 				continue
+			}
 			idx := strings.Index(s, ne)
 			if idx >= 0 {
 				return s[:idx], s[idx+len(ne):], true
@@ -33193,9 +33244,7 @@ func (r *queryResolver) Technologies(ctx context.Context, filter *FilterInput) (
 		}
 
 		if _, ok := technologyMap[projName]; !ok {
-			if projName == "semio-repo" {
-				kind = TechnologyKindInfrastructure
-			}
+			kind := DeriveTechnologyKind(projName)
 			technologyMap[projName] = &Technology{
 				Name:    projName,
 				Kind:    kind,
@@ -33265,6 +33314,7 @@ func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 	}
 	return []*Folder{}, nil
 }
+
 // Files MUST return a non-nil error when the operation fails.
 // Files performs the files operation on the query resolver.
 // [🧰semiorepo⌨️cli💻main🔖types🔖queryresolvers🛠️files](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Files)
@@ -33587,6 +33637,7 @@ func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeRes
 	if r.Ctx != nil {
 		return r.Ctx.Analyze(scope)
 	}
+	return &AnalyzeResult{
 		Breachs: []*Breach{},
 		Metrics: &AnalyzeMetrics{
 			Total:       0,
@@ -33642,6 +33693,7 @@ func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, 
 // DraftCreate performs the draft create operation on the mutation resolver.
 // [🧰semiorepo⌨️cli💻main🔖types🔖mutationresolvers🛠️draftcreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/DraftCreate)
 func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInput) (*Draft, error) {
+	if r.Ctx != nil {
 		return r.Ctx.DraftCreate(input)
 	}
 	return nil, fmt.Errorf("not implemented")
@@ -34300,6 +34352,7 @@ func createMcpServer() *server.MCPServer {
 		mcp.NewResourceTemplate("semiorepo://pls/pl/{policy}/sts/{name}", "Breach Kind"),
 		handleStatuteResource,
 	)
+	s.AddResource(
 		mcp.NewResource("semiorepo://cs", "Contributors", mcp.WithMIMEType("text/plain")),
 		handleContributorsResource,
 	)
@@ -34803,6 +34856,7 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 // ticketRead MUST perform the ticketRead operation.
 // [🧰semiorepo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketread](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketRead)
 func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
 	year, err := requireIntArg(args, "year")
 	if err != nil {
 		return nil, err
@@ -34818,6 +34872,7 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	slug, err := requireStringArg(args, "slug")
 	if err != nil {
 		return nil, err
+	}
 
 	result := ToolTicketRead(year, month, day, slug)
 	return toolResultToMCP(result)
@@ -34909,6 +34964,7 @@ func draftDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 		return nil, err
 	}
 	result := ToolDraftDelete(slug)
+	return toolResultToMCP(result)
 }
 
 // [🧰semiorepo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️todocreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/todoCreate)
@@ -36314,6 +36370,7 @@ func GetBundleByPath(path string) *Bundle {
 				bestMatch = bundle
 				matchedLen = len(root)
 			}
+		}
 	}
 	return bestMatch
 }
@@ -37222,6 +37279,7 @@ func (r *Resolver) Statutes(ctx context.Context, repo *Repo) ([]*StatuteMeta, er
 // Breachs MUST return a non-nil error when the operation fails.
 // Breachs performs the breachs operation on the resolver.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️breachs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Breachs)
+func (r *Resolver) Breachs(ctx context.Context, repo *Repo, scope *string) ([]*Breach, error) {
 	analysis, err := r.Ctx.Analyze(scope)
 	if err != nil {
 		return nil, err
@@ -37967,12 +38025,15 @@ var shellSegmentRE = regexp.MustCompile(`&&|\|\||;|\|`)
 // This is used for command classification where pipe chains should be treated as a single command.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🪨shellsequencere](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/shellSequenceRE)
 var shellSequenceRE = regexp.MustCompile(`&&|\|\||;`)
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🪨greplinewithpathre](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/grepLineWithPathRE)
 // grepLineWithPathRE holds the data fields for a grepLineWithPathRE record.
 var grepLineWithPathRE = regexp.MustCompile(`^([^:]+):([0-9]+)([:\-].*)?$`)
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🪨grepcontextwithpathre](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/grepContextWithPathRE)
 // grepContextWithPathRE holds the data fields for a grepContextWithPathRE record.
 var grepContextWithPathRE = regexp.MustCompile(`^(.+?)-([0-9]+)-`)
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🪨greplineonlyre](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/grepLineOnlyRE)
 // grepLineOnlyRE holds the data fields for a grepLineOnlyRE record.
 var grepLineOnlyRE = regexp.MustCompile(`^([0-9]+)([:\-].*)?$`)
@@ -39044,6 +39105,7 @@ func appendSessionEvent(dir, sessionID string, entry HookLogEntry, fallbackMeta 
 	}
 	if meta.ID == "" {
 		meta.ID = sessionID
+		if meta.ID == "" {
 			meta.ID = fallbackMeta.ID
 		}
 	}
@@ -39064,6 +39126,7 @@ func appendSessionEvent(dir, sessionID string, entry HookLogEntry, fallbackMeta 
 		meta.Client = fallbackMeta.Client
 	}
 	if meta.Second == "" {
+		meta.Second = fallbackMeta.Second
 	}
 	if meta.Transcript == "" {
 		meta.Transcript = fallbackMeta.Transcript
@@ -40998,6 +41061,7 @@ func resolveGoTestFiles(parts []string, cwd string) []string {
 		arg := parts[i]
 		if arg == "--" {
 			break
+		}
 		if strings.HasPrefix(arg, "-") {
 
 			if !strings.Contains(arg, "=") {
@@ -41327,6 +41391,7 @@ func resolveRspecFiles(args []string, cwd string) []string {
 	}
 	return result
 }
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️isjstestfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/isJSTestFile)
 func isJSTestFile(name string) bool {
 	lower := strings.ToLower(name)
@@ -41366,8 +41431,35 @@ func findJSTestFiles(rootCwd string) []string {
 				result = append(result, relPath)
 			}
 		}
+		return nil
 	})
 	return result
+}
+
+// runPreflightFix executes the pre-checkpoint fix pass and returns an error when fix reports failure.
+// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️runpreflightfix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/runPreflightFix)
+func runPreflightFix() error {
+	result := ToolFix("semio")
+	if result.Error != "" {
+		return errors.New(result.Error)
+	}
+	if result.Output.ExitCode != 0 {
+		return fmt.Errorf("fix exited with code %d", result.Output.ExitCode)
+	}
+	return nil
+}
+
+// runPreflightAnalyze executes the pre-checkpoint analyze pass and returns an error when analysis reports failure.
+// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️runpreflightanalyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/runPreflightAnalyze)
+func runPreflightAnalyze() error {
+	result := ToolAnalyze("semio", nil)
+	if result.Error != "" {
+		return errors.New(result.Error)
+	}
+	if result.Output.ExitCode != 0 {
+		return fmt.Errorf("analyze exited with code %d", result.Output.ExitCode)
+	}
+	return nil
 }
 
 // findTestFilesByPatterns finds test files in a directory tree matching common conventions.
@@ -41732,6 +41824,7 @@ func extractBuildBundlesFromInput(input json.RawMessage, toolArgs string) []stri
 		var data map[string]interface{}
 		if err := json.Unmarshal(input, &data); err == nil {
 			toolInput = extractToolInputMapFromData(data)
+		}
 	}
 	if toolInput == nil && toolArgs != "" {
 		_ = json.Unmarshal([]byte(toolArgs), &toolInput)
@@ -41786,6 +41879,7 @@ func extractBuildEndedFromInput(input json.RawMessage) (succeeded []string, fail
 				}
 			}
 		}
+	}
 	return succeeded, failed
 }
 
@@ -42802,6 +42896,7 @@ func generateWindsurfConfig(repoRoot string) (string, error) {
 			"pre_user_prompt": []map[string]interface{}{
 				{"command": fmt.Sprintf("%s hook pre_user_prompt windsurf-chat", c), "show_output": false},
 			},
+			"post_cascade_response": []map[string]interface{}{
 				{"command": fmt.Sprintf("%s hook post_cascade_response windsurf-chat", c), "show_output": false},
 			},
 			"post_setup_worktree": []map[string]interface{}{
@@ -42942,6 +43037,7 @@ var updateCmd = &cobra.Command{
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖updatecommand🪨updatedryrun](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateDryRun)
 // updateDryRun holds the data fields for a updateDryRun record.
 var updateDryRun bool
+
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖updatecommand🪨updateapply](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateApply)
 // updateApply holds the data fields for a updateApply record.
 var updateApply bool
@@ -45209,6 +45305,7 @@ func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []
 		remaining = after[endIdx:]
 	}
 	fIdx := strings.Index(p, "/f/")
+	if fIdx >= 0 {
 		rest := p[fIdx+3:]
 		nextSlash := strings.Index(rest, "/")
 		if nextSlash < 0 {

@@ -24,7 +24,22 @@
 // Configuration MUST export a valid Vite config object.
 
 import { defineConfig } from "vite";
+import { builtinModules } from "module";
 
-export default defineConfig({});
+export default defineConfig({
+  build: {
+    outDir: ".vite/build",
+    lib: {
+      entry: "main.ts",
+      formats: ["cjs"],
+      fileName: () => "main.js",
+    },
+    rollupOptions: {
+      external: ["electron", ...builtinModules, ...builtinModules.map((m) => `node:${m}`)],
+    },
+    emptyOutDir: false,
+    sourcemap: "inline",
+  },
+});
 
 // #endregion 🔖Configuration

@@ -225,6 +225,19 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
+    {
+      "name": "semio/coda-desktop build",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "build",
+        "@semio/coda-desktop"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
     // ========================================
     // PUBLISH:TEST
     // ========================================
@@ -303,6 +316,19 @@
         "nx",
         "publish",
         "semio/sketchpad"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "semio/coda-desktop publish",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "publish",
+        "@semio/coda-desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -524,6 +550,19 @@
         "pattern": "(http://localhost:5173)",
         "uriFormat": "%s"
       }
+    },
+    {
+      "name": "semio/coda-desktop dev",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev",
+        "@semio/coda-desktop"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
     },
     // ========================================
     // MCP

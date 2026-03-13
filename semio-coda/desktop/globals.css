@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-coda-50: #f0f7ff;
   --color-coda-100: #e0efff;
@@ -28,7 +30,7 @@
   --color-text-tertiary: #94a3b8;
 }
 
-@variant dark (&:where(.dark, .dark *)) {
+.dark {
   --color-surface: #0f172a;
   --color-surface-alt: #1e293b;
   --color-surface-hover: #334155;

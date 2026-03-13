@@ -1,0 +1,12 @@
+{
+  "title": "Fix CLI Main Go Build Regressions",
+  "status": "open",
+  "description": "Repair compile regressions in semio-repo/cli/main.go introduced by malformed edits; restore build and tests to passing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/859"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary",
+  "sessions": [
+    "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9⚪17733445135484968195576697565474488745"
+  ]
+}

@@ -78,6 +78,13 @@ func firstJSONLine(output string) (json.RawMessage, bool) {
 	return nil, false
 }
 
+func writeExecutableFile(t *testing.T, path string, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0755); err != nil {
+		t.Fatalf("failed to write executable %s: %v", path, err)
+	}
+}
+
 func parseTicketOpenResult(t *testing.T, output string) (int, int, int, string) {
 	t.Helper()
 	data, ok := firstJSONLine(output)
@@ -246,6 +253,190 @@ func TestContributorDiscovery(t *testing.T) {
 		gotGithub := FindAndUpdateContributor(authorStr)
 		if gotGithub != authorStr {
 			t.Errorf("expected original string, got %q", gotGithub)
+		}
+	})
+}
+
+func TestDevcontainerPostAttachGitKrakenWorkspaceBootstrap(t *testing.T) {
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("failed to resolve current test file path")
+	}
+	repoRoot := filepath.Dir(filepath.Dir(filepath.Dir(currentFile)))
+	scriptPath := filepath.Join(repoRoot, ".devcontainer", "post-attach.sh")
+
+	t.Run("creates workspace from root and submodules", func(t *testing.T) {
+		workspaceDir := t.TempDir()
+		homeDir := t.TempDir()
+		binDir := t.TempDir()
+		logPath := filepath.Join(workspaceDir, "gk.log")
+		submoduleDir := filepath.Join(workspaceDir, "metabolism")
+
+		if err := os.MkdirAll(submoduleDir, 0755); err != nil {
+			t.Fatalf("failed to create submodule dir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(workspaceDir, ".gitmodules"), []byte("[submodule \"metabolism\"]\n\tpath = metabolism\n\turl = https://github.com/usalu/metabolism.git\n"), 0644); err != nil {
+			t.Fatalf("failed to write .gitmodules: %v", err)
+		}
+
+		writeExecutableFile(t, filepath.Join(binDir, "git"), fmt.Sprintf(`#!/bin/sh
+if [ "$1" = "-C" ]; then
+  target="$2"
+  shift 2
+fi
+if [ "$1" = "rev-parse" ] && [ "$2" = "--is-inside-work-tree" ]; then
+  case "$target" in
+    "%s"|"%s")
+      exit 0
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+fi
+if [ "$1" = "config" ] && [ "$2" = "-f" ] && [ "$3" = "%s/.gitmodules" ]; then
+  printf 'submodule.metabolism.path metabolism\n'
+  exit 0
+fi
+exit 1
+`, workspaceDir, submoduleDir, workspaceDir))
+
+		writeExecutableFile(t, filepath.Join(binDir, "awk"), `#!/bin/sh
+printf 'metabolism\n'
+`)
+
+		writeExecutableFile(t, filepath.Join(binDir, "gk"), fmt.Sprintf(`#!/bin/sh
+printf '%%s\n' "$*" >> "%s"
+if [ "$1" = "ws" ] && [ "$2" = "info" ]; then
+  exit 1
+fi
+exit 0
+`, logPath))
+
+		cmd := exec.Command("bash", scriptPath)
+		cmd.Dir = repoRoot
+		cmd.Env = append(os.Environ(),
+			"PATH="+binDir+":"+os.Getenv("PATH"),
+			"HOME="+homeDir,
+			"XDG_CONFIG_HOME="+filepath.Join(homeDir, ".config"),
+			"XDG_DATA_HOME="+filepath.Join(homeDir, ".local", "share"),
+			"containerWorkspaceFolder="+workspaceDir,
+			"SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL=1",
+			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Semio Test Workspace",
+		)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("post-attach failed: %v\n%s", err, output)
+		}
+
+		logData, err := os.ReadFile(logPath)
+		if err != nil {
+			t.Fatalf("failed to read gk log: %v", err)
+		}
+		logText := string(logData)
+		expectedRepoArg := workspaceDir + "," + submoduleDir
+		if !strings.Contains(logText, "ws create Semio Test Workspace --add-repos "+expectedRepoArg) {
+			t.Fatalf("expected workspace creation call with repos %q, got log:\n%s", expectedRepoArg, logText)
+		}
+		if !strings.Contains(logText, "ws refresh Semio Test Workspace") {
+			t.Fatalf("expected workspace refresh call, got log:\n%s", logText)
+		}
+		if !strings.Contains(logText, "ws set Semio Test Workspace") {
+			t.Fatalf("expected workspace set call, got log:\n%s", logText)
+		}
+
+		windsurfPath := filepath.Join(homeDir, ".codeium", "windsurf", "mcp_config.json")
+		configData, err := os.ReadFile(windsurfPath)
+		if err != nil {
+			t.Fatalf("failed to read Windsurf MCP config: %v", err)
+		}
+		if !strings.Contains(string(configData), "\"semio-repo\"") {
+			t.Fatalf("expected Windsurf MCP config to include semio-repo server, got:\n%s", configData)
+		}
+	})
+
+	t.Run("updates workspace only for missing repos", func(t *testing.T) {
+		workspaceDir := t.TempDir()
+		homeDir := t.TempDir()
+		binDir := t.TempDir()
+		logPath := filepath.Join(workspaceDir, "gk.log")
+		submoduleDir := filepath.Join(workspaceDir, "metabolism")
+
+		if err := os.MkdirAll(submoduleDir, 0755); err != nil {
+			t.Fatalf("failed to create submodule dir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(workspaceDir, ".gitmodules"), []byte("[submodule \"metabolism\"]\n\tpath = metabolism\n\turl = https://github.com/usalu/metabolism.git\n"), 0644); err != nil {
+			t.Fatalf("failed to write .gitmodules: %v", err)
+		}
+
+		writeExecutableFile(t, filepath.Join(binDir, "git"), fmt.Sprintf(`#!/bin/sh
+if [ "$1" = "-C" ]; then
+  target="$2"
+  shift 2
+fi
+if [ "$1" = "rev-parse" ] && [ "$2" = "--is-inside-work-tree" ]; then
+  case "$target" in
+    "%s"|"%s")
+      exit 0
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+fi
+if [ "$1" = "config" ] && [ "$2" = "-f" ] && [ "$3" = "%s/.gitmodules" ]; then
+  printf 'submodule.metabolism.path metabolism\n'
+  exit 0
+fi
+exit 1
+`, workspaceDir, submoduleDir, workspaceDir))
+
+		writeExecutableFile(t, filepath.Join(binDir, "awk"), `#!/bin/sh
+printf 'metabolism\n'
+`)
+
+		writeExecutableFile(t, filepath.Join(binDir, "gk"), fmt.Sprintf(`#!/bin/sh
+printf '%%s\n' "$*" >> "%s"
+if [ "$1" = "ws" ] && [ "$2" = "info" ]; then
+  printf '%%s\n' "NAME | DESCRIPTION | TYPE | # OF REPOS | SHARED WITH | ACTIVE"
+  printf '%%s\n' "%s"
+  exit 0
+fi
+exit 0
+`, logPath, workspaceDir))
+
+		cmd := exec.Command("bash", scriptPath)
+		cmd.Dir = repoRoot
+		cmd.Env = append(os.Environ(),
+			"PATH="+binDir+":"+os.Getenv("PATH"),
+			"HOME="+homeDir,
+			"XDG_CONFIG_HOME="+filepath.Join(homeDir, ".config"),
+			"XDG_DATA_HOME="+filepath.Join(homeDir, ".local", "share"),
+			"containerWorkspaceFolder="+workspaceDir,
+			"SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL=1",
+			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Semio Existing Workspace",
+		)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("post-attach failed: %v\n%s", err, output)
+		}
+
+		logData, err := os.ReadFile(logPath)
+		if err != nil {
+			t.Fatalf("failed to read gk log: %v", err)
+		}
+		logText := string(logData)
+		if strings.Contains(logText, "ws create Semio Existing Workspace") {
+			t.Fatalf("did not expect workspace create call, got log:\n%s", logText)
+		}
+		if !strings.Contains(logText, "ws update Semio Existing Workspace --add-repos "+submoduleDir) {
+			t.Fatalf("expected workspace update call for missing submodule, got log:\n%s", logText)
+		}
+		if strings.Contains(logText, "ws update Semio Existing Workspace --add-repos "+workspaceDir+","+submoduleDir) {
+			t.Fatalf("expected update to include only missing repos, got log:\n%s", logText)
+		}
+		if !strings.Contains(logText, "ws set Semio Existing Workspace") {
+			t.Fatalf("expected workspace set call, got log:\n%s", logText)
 		}
 	})
 }

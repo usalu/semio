@@ -61,6 +61,8 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin s
 USER vscode
 
 RUN mkdir -p /home/vscode/.local/bin \
+    /home/vscode/.local/share/GitKrakenCLI \
+    /home/vscode/.local/share/gk \
     /home/vscode/.claude \
     /home/vscode/.codex \
     /home/vscode/.config/gh \
