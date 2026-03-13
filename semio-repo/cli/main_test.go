@@ -313,6 +313,14 @@ fi
 exit 0
 `, logPath))
 
+		codexDir := filepath.Join(homeDir, ".codex")
+		if err := os.MkdirAll(codexDir, 0755); err != nil {
+			t.Fatalf("failed to create Codex dir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(codexDir, "config.toml"), []byte("personality = \"pragmatic\"\nmodel = \"gpt-5.4\"\nmodel_reasoning_effort = \"medium\"\n"), 0644); err != nil {
+			t.Fatalf("failed to seed Codex config: %v", err)
+		}
+
 		cmd := exec.Command("bash", scriptPath)
 		cmd.Dir = repoRoot
 		cmd.Env = append(os.Environ(),
@@ -367,8 +375,14 @@ exit 0
 		if !strings.Contains(codexText, "[mcp_servers.semio-repo]") {
 			t.Fatalf("expected Codex MCP config to include semio-repo server, got:\n%s", codexData)
 		}
+		if !strings.Contains(codexText, "personality = \"pragmatic\"") || !strings.Contains(codexText, "model = \"gpt-5.4\"") {
+			t.Fatalf("expected Codex MCP sync to preserve existing user settings, got:\n%s", codexData)
+		}
 		if !strings.Contains(codexText, fmt.Sprintf("command = %q", filepath.Join(repoRoot, "semio-repo", "cli", "cli"))) {
 			t.Fatalf("expected Codex MCP config to normalize semio-repo command to an absolute path, got:\n%s", codexData)
+		}
+		if !strings.Contains(codexText, fmt.Sprintf("cwd = %q", repoRoot)) {
+			t.Fatalf("expected Codex MCP config to set cwd to repo root, got:\n%s", codexData)
 		}
 		if !strings.Contains(codexText, fmt.Sprintf("%q", filepath.Join(repoRoot, "semio", "engine"))) {
 			t.Fatalf("expected Codex MCP config to normalize --directory arguments to absolute paths, got:\n%s", codexData)

@@ -246,7 +246,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio:mcp",
+      "name": "🛠️dev👤semio⚙️engine🤖mcp",
       "preLaunchTask": "inspector mcp",
       "type": "node",
       "request": "launch",
@@ -262,7 +262,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "🛠️dev👤coda:mcp",
+      "name": "🛠️dev👤coda🤖mcp",
       "preLaunchTask": "inspector mcp",
       "type": "node",
       "request": "launch",
@@ -278,7 +278,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "🛠️dev🧰semiorepo:mcp",
+      "name": "🛠️dev🧰semiorepo🤖mcp",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
@@ -299,7 +299,7 @@
       }
     },
     {
-      "name": "🛠️dev📚go",
+      "name": "🛠️dev�go",
       "type": "go",
       "request": "launch",
       "mode": "debug",
@@ -307,7 +307,7 @@
       "cwd": "${fileDirname}"
     },
     {
-      "name": "🛠️dev📚py",
+      "name": "🛠️dev�py",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",

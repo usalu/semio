@@ -26,7 +26,7 @@ Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI au
 Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
 Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
 Post-attach uninstalls any existing semio-repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the fresh VSIX, validates installs by checking list-extensions output, and falls back to direct extensions directory installs plus extensions.json registration (with `$mid` location keys) when CLIs report WSL-only usage.
-Post-attach also materializes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` and Codex's MCP config at `~/.codex/config.toml` from the monorepo `.mcp.json`, so both clients pick up the semio-repo, semio, coda, and Playwright servers after rebuilds without manual setup.
+Post-attach also materializes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` and merges Codex MCP server entries into `~/.codex/config.toml` from the monorepo `.mcp.json`, so both clients pick up the semio-repo, semio, coda, and Playwright servers after rebuilds without manual setup while preserving existing Codex user settings such as model and personality.
 Post-create installs Linux GitKraken Desktop plus the official GitKraken `gk` CLI into the devcontainer, and post-attach creates or updates the default local GitKraken workspace from the repo root plus submodules so the Linux GitKraken app picks up the monorepo layout without manual workspace setup.
 Engine compatibility for the local extension is aligned to the lowest supported editor build so Cursor and VS Code accept the same VSIX.
 
@@ -62,7 +62,7 @@ Devcontainer provisioning MUST install the workspace VS Code extension automatic
 
 Devcontainer post-attach MUST uninstall any existing semio-repo extension via IDE IPC hook CLIs and extensions directory cleanup, clear stale VS Code and Cursor extension caches, install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates that include mid location keys when CLIs report WSL-only usage.
 
-Devcontainer post-attach MUST generate Windsurf and Codex MCP configs from the monorepo `.mcp.json` and persist them in the clients' home config folders.
+Devcontainer post-attach MUST generate Windsurf MCP config and merge Codex MCP server entries from the monorepo `.mcp.json` into the clients' home config folders without removing unrelated Codex user settings.
 
 Semio VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
 

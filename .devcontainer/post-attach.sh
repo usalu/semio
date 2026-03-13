@@ -381,14 +381,58 @@ fs.writeFileSync(
 
 const codexDir = path.join(homeDir, ".codex");
 fs.mkdirSync(codexDir, { recursive: true });
-const codexLines = [
+const codexConfigPath = path.join(codexDir, "config.toml");
+const existingCodexText = fs.existsSync(codexConfigPath)
+  ? fs.readFileSync(codexConfigPath, "utf8")
+  : "";
+
+function stripManagedCodexMcpBlocks(configText) {
+  const lines = configText.split(/\r?\n/);
+  const keptLines = [];
+  let skippingManagedBlock = false;
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    const isTableHeader = /^\[[^\]]+\]\s*$/.test(trimmedLine);
+
+    if (
+      trimmedLine === "# Codex MCP Server Configuration" ||
+      trimmedLine === `# Generated from ${sourcePath} by .devcontainer/post-attach.sh`
+    ) {
+      continue;
+    }
+
+    if (/^\[mcp_servers\.[^\]]+\]\s*$/.test(trimmedLine)) {
+      skippingManagedBlock = true;
+      continue;
+    }
+
+    if (skippingManagedBlock && isTableHeader) {
+      skippingManagedBlock = false;
+    }
+
+    if (!skippingManagedBlock) {
+      keptLines.push(line);
+    }
+  }
+
+  return keptLines.join("\n").replace(/\s+$/, "");
+}
+
+const preservedCodexText = stripManagedCodexMcpBlocks(existingCodexText);
+const codexLines = [];
+if (preservedCodexText.length > 0) {
+  codexLines.push(preservedCodexText, "");
+}
+codexLines.push(
   "# Codex MCP Server Configuration",
-  "# Generated from /workspaces/semio/.mcp.json by .devcontainer/post-attach.sh",
+  `# Generated from ${sourcePath} by .devcontainer/post-attach.sh`,
   "",
-];
+);
 for (const [name, server] of Object.entries(normalizedServers)) {
   codexLines.push(`[mcp_servers.${name}]`);
   codexLines.push(`command = "${escapeTomlString(server.command)}"`);
+  codexLines.push(`cwd = "${escapeTomlString(repoRoot)}"`);
   if (Array.isArray(server.args) && server.args.length > 0) {
     codexLines.push(
       `args = [${server.args
@@ -401,7 +445,7 @@ for (const [name, server] of Object.entries(normalizedServers)) {
   codexLines.push(`enabled = ${server.disabled === true ? "false" : "true"}`);
   codexLines.push("");
 }
-fs.writeFileSync(path.join(codexDir, "config.toml"), `${codexLines.join("\n")}\n`);
+fs.writeFileSync(codexConfigPath, `${codexLines.join("\n")}\n`);
 EOF
 
   echo "✅ Synced MCP configs for Windsurf and Codex."
