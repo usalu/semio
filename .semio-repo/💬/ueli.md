@@ -102,10 +102,16 @@ semio:
 Add a new
 
 Introduce a new concept: Operation
-An Operation always returns a Result.
+An Operation always takes an artifact (kit|design|type) and returns an Edit.
 A result has a diff, meta
 e.g.
 FlattenDesign is an operation.
+
+semio:
+Introduce change
+
+Currently all functions in semio return diffs. Extend all of them to return a change. This way everything gets undo/redo compatible.
+You MUST implement it for every programming language.
 
 File blobs should not be pure base encoded strings, but common data encoded with uri etc. You MUST update all programming languages.
 
@@ -133,6 +139,12 @@ There MUST be only one schema, no migrations or legacy api support.
 semio engine:
 The engine is used to interact with local kits (path) and remote kits (server with accounts and auth). It only runs on clients. All functionality
 MUST work for both kind of kits. Extend the engine with a way to authenticate with servers and refactor everything to work with this two modes. Test everything.
+
+## 👤semio⌨️engine🤖mcp
+
+semio engine mcp:
+Remove all mcp tools but the start*, finish*, sum_qu\* one.
+Introduce a transaction mechanism that is stateful session-scoped. There can be only one active transaction. A transaction is global (e.g. it is no problem to do kit changes, then design, then type, then kit, etc). start_transaction, finalize_transaction, abort_transaction that keeps a stack of kit changes (they have forward and backward diff) and on abort_transaction undo all operations by unwinding all backwards diffs.
 
 ## 👤semio📚js
 

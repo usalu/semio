@@ -50,11 +50,11 @@ _PROJECT_ENV = "CODA_PROJECT"
 
 def _load_json_with_comments(path: Path) -> dict:
     """Load JSON file, stripping // line comments.
-    _load_json_with_comments MUST perform the _load_json_with_comments operation.
+    _load_json_with_comments MUST strip full-line // comments without corrupting URLs inside strings.
     [🔬coda📚py💻coda🔖helpers🛠️loadjsonwithcomments](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_load_json_with_comments)
     """
     text = path.read_text(encoding="utf-8")
-    text = re.sub(r"\s*//.*$", "", text, flags=re.MULTILINE)
+    text = re.sub(r"^\s*//.*$", "", text, flags=re.MULTILINE)
     return json.loads(text)
 
 
@@ -334,6 +334,29 @@ def get_targets() -> str:
     """
     config = _get_coda_config()
     return json.dumps(config.get("targets", []), indent=2)
+
+
+@mcp.resource("coda://frameworks")
+def get_frameworks() -> str:
+    """List all frameworks. Frameworks are the same as targets in coda.json but general (not project-scoped).
+    Implementations MUST load the coda config and return the targets array.
+    [🔬coda📚py💻coda🔖resources🛠️getframeworks](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_frameworks)
+    """
+    config = _get_coda_config()
+    return json.dumps(config.get("targets", []), indent=2)
+
+
+@mcp.resource("coda://framework/{id}")
+def get_framework(id: str) -> str:
+    """Get a framework by id. Frameworks are the same as targets in coda.json but general (not project-scoped).
+    Implementations MUST return an error JSON object when the framework is not found.
+    [🔬coda📚py💻coda🔖resources🛠️getframework](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_framework)
+    """
+    config = _get_coda_config()
+    for t in config.get("targets", []):
+        if t.get("id") == id:
+            return json.dumps(t, indent=2)
+    return json.dumps({"error": f"framework not found: {id}"})
 
 
 @mcp.resource("coda://target/{id}")

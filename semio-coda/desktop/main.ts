@@ -37,8 +37,13 @@ if (started) {
 }
 
 // Sidecar configuration
-const SIDECAR_CMD = process.env.CODA_SIDECAR_CMD ?? "coda";
-const SIDECAR_ARGS = ["--sidecar"];
+// In dev, __dirname is desktop/.vite/build. The py dir is a sibling of desktop/.
+// app.getAppPath() returns the desktop/ dir in dev.
+const SIDECAR_PY_DIR = path.resolve(app.isPackaged
+  ? path.join(process.resourcesPath, "py")
+  : path.join(app.getAppPath(), "..", "py"));
+const SIDECAR_CMD = process.env.CODA_SIDECAR_CMD ?? "uv";
+const SIDECAR_BASE_ARGS = process.env.CODA_SIDECAR_CMD ? ["--sidecar"] : ["run", "--active", "coda.py", "--sidecar"];
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const HEARTBEAT_TIMEOUT_MS = 5_000;
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -82,8 +87,10 @@ function startSidecar(): void {
     args.push("--project", projectPath);
   }
 
+  console.error(`[coda sidecar] spawning: ${SIDECAR_CMD} ${args.join(" ")} (cwd: ${SIDECAR_PY_DIR})`);
   sidecar = spawn(SIDECAR_CMD, args, {
     stdio: ["pipe", "pipe", "pipe"],
+    cwd: SIDECAR_PY_DIR,
     env: { ...process.env },
   });
 

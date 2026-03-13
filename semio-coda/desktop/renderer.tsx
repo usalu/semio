@@ -149,7 +149,32 @@ interface Rule {
 }
 
 /**
- * A property definition on a target.
+ * A measure reference with an instruction for a specific level direction.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️levelmeasureref](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/LevelMeasureRef)
+ *
+ * MUST have id and optional instruction.
+ **/
+interface LevelMeasureRef {
+  id: string;
+  instruction?: string;
+}
+
+/**
+ * A level within a property, optionally with measures and instructions for raising/lowering.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️level](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Level)
+ *
+ * MUST have a value. May have measures (lower/higher) and instructions (higher).
+ **/
+interface Level {
+  value: string;
+  name?: string;
+  description?: string;
+  measures?: { lower?: LevelMeasureRef[]; higher?: LevelMeasureRef[] };
+  instructions?: { higher?: LevelMeasureRef[] };
+}
+
+/**
+ * A property definition on a framework.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️property](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Property)
  *
  * MUST have id and name.
@@ -160,16 +185,16 @@ interface Property {
   type?: string;
   description?: string;
   url?: string;
-  levels?: Array<{ value: string; name?: string; description?: string }>;
+  levels?: Level[];
 }
 
 /**
- * A compliance target with properties and rules.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️target](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Target)
+ * A compliance framework with properties and rules. General (not project-scoped).
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️framework](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Framework)
  *
  * MUST have an id.
  **/
-interface Target {
+interface Framework {
   id: string;
   properties?: Property[];
   rules?: Rule[];
@@ -746,7 +771,7 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
   const { data: iteration, loading: iterLoading } = useCodaResource<Iteration>("coda://current-iteration", refreshKey);
   const { data: report, loading: reportLoading } = useCodaResource<Report>("coda://report", refreshKey);
   const { data: measures } = useCodaResource<Measure[]>("coda://measures", refreshKey);
-  const { data: targets } = useCodaResource<Target[]>("coda://targets", refreshKey);
+  const { data: frameworks } = useCodaResource<Framework[]>("coda://frameworks", refreshKey);
 
   const loading = projectLoading || runLoading || iterLoading || reportLoading;
 
@@ -794,40 +819,46 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {measures && measures.length > 0 && (
-          <Card title={`Measures (${measures.length})`}>
-            <div className="space-y-1">
-              {measures.map((m) => (
-                <div key={m.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-hover">
-                  <IconWrench className="w-3.5 h-3.5 text-text-tertiary mt-0.5 shrink-0" />
-                  <div>
-                    <span className="font-medium text-text">{formatId(m.id)}</span>
-                    {m.description && <p className="text-xs text-text-secondary">{m.description}</p>}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-text">General Configuration</h3>
+          <span className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded">not project-scoped</span>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {measures && measures.length > 0 && (
+            <Card title={`Measures (${measures.length})`}>
+              <div className="space-y-1">
+                {measures.map((m) => (
+                  <div key={m.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-hover">
+                    <IconWrench className="w-3.5 h-3.5 text-text-tertiary mt-0.5 shrink-0" />
+                    <div>
+                      <span className="font-medium text-text">{formatId(m.id)}</span>
+                      {m.description && <p className="text-xs text-text-secondary">{m.description}</p>}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
+                ))}
+              </div>
+            </Card>
+          )}
 
-        {targets && targets.length > 0 && (
-          <Card title={`Targets (${targets.length})`}>
-            <div className="space-y-1">
-              {targets.map((t) => (
-                <div key={t.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-hover">
-                  <IconReport className="w-3.5 h-3.5 text-text-tertiary mt-0.5 shrink-0" />
-                  <div>
-                    <span className="font-medium text-text">{formatId(t.id)}</span>
-                    <p className="text-xs text-text-secondary">
-                      {t.properties?.length ?? 0} properties, {t.rules?.length ?? 0} rules
-                    </p>
-                  </div>
+          {frameworks && frameworks.length > 0 && (
+            <Card title={`Frameworks (${frameworks.length})`}>
+              <div className="space-y-1">
+                {frameworks.map((fw) => (
+                  <div key={fw.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-hover">
+                    <IconReport className="w-3.5 h-3.5 text-text-tertiary mt-0.5 shrink-0" />
+                    <div>
+                      <span className="font-medium text-text">{formatId(fw.id)}</span>
+                      <p className="text-xs text-text-secondary">
+                        {fw.properties?.length ?? 0} properties, {fw.rules?.length ?? 0} rules
+                      </p>
+                    </div>
                 </div>
               ))}
             </div>
           </Card>
         )}
+        </div>
       </div>
     </div>
   );
@@ -839,27 +870,28 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage)
 
 /**
- * Configuration page showing measures, targets (with properties and rules), and platforms.
+ * Configuration page showing measures, frameworks (with properties and rules), and platforms.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage🛠️configpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage/d/i/ConfigPage)
  *
  * MUST display all coda configuration in expandable sections.
+ * Measures and frameworks are general (not project-scoped).
  **/
 function ConfigPage({ refreshKey }: { refreshKey: number }) {
   const { data: measures, loading: measuresLoading } = useCodaResource<Measure[]>("coda://measures", refreshKey);
-  const { data: targets, loading: targetsLoading } = useCodaResource<Target[]>("coda://targets", refreshKey);
+  const { data: frameworks, loading: frameworksLoading } = useCodaResource<Framework[]>("coda://frameworks", refreshKey);
   const { data: platforms, loading: platformsLoading } = useCodaResource<Platform[]>("coda://platforms", refreshKey);
 
-  const loading = measuresLoading || targetsLoading || platformsLoading;
+  const loading = measuresLoading || frameworksLoading || platformsLoading;
   if (loading) return <Spinner label="Loading configuration..." />;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-text">Configuration</h2>
-        <p className="text-sm text-text-secondary mt-1">Measures, targets, and platforms from the coda configuration.</p>
+        <p className="text-sm text-text-secondary mt-1">Measures, frameworks, and platforms from the coda configuration. These are general and not project-scoped.</p>
       </div>
 
-      <Card title={`Measures (${measures?.length ?? 0})`}>
+      <Card title={`Measures (${measures?.length ?? 0})`} action={<span className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded">general</span>}>
         {measures && measures.length > 0 ? (
           <div className="divide-y divide-border">
             {measures.map((m) => (
@@ -874,17 +906,17 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
         )}
       </Card>
 
-      <Card title={`Targets (${targets?.length ?? 0})`}>
-        {targets && targets.length > 0 ? (
+      <Card title={`Frameworks (${frameworks?.length ?? 0})`} action={<span className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded">general</span>}>
+        {frameworks && frameworks.length > 0 ? (
           <div className="space-y-3">
-            {targets.map((target) => (
-              <Collapsible key={target.id} title={formatId(target.id)} badge={<span className="text-xs text-text-tertiary">{target.rules?.length ?? 0} rules</span>}>
+            {frameworks.map((fw) => (
+              <Collapsible key={fw.id} title={formatId(fw.id)} badge={<span className="text-xs text-text-tertiary">{fw.properties?.length ?? 0} properties, {fw.rules?.length ?? 0} rules</span>}>
                 <div className="space-y-3">
-                  {target.properties && target.properties.length > 0 && (
+                  {fw.properties && fw.properties.length > 0 && (
                     <div>
                       <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Properties</h4>
                       <div className="space-y-1.5">
-                        {target.properties.map((prop) => (
+                        {fw.properties.map((prop) => (
                           <div key={prop.id} className="rounded bg-surface-alt border border-border p-2">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-text">{prop.name ?? formatId(prop.id)}</span>
@@ -897,14 +929,60 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                               </a>
                             )}
                             {prop.levels && prop.levels.length > 0 && (
-                              <div className="mt-2 space-y-1">
+                              <div className="mt-2 space-y-2">
+                                <span className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Levels ({prop.levels.length})</span>
                                 {prop.levels.map((level) => (
-                                  <div key={level.value} className="flex items-start gap-2 text-xs">
-                                    <span className="bg-coda-600 text-white px-1.5 py-0.5 rounded font-mono shrink-0">{level.value}</span>
-                                    <div>
-                                      {level.name && <span className="font-medium text-text">{level.name}</span>}
-                                      {level.description && <p className="text-text-secondary">{level.description}</p>}
+                                  <div key={level.value} className="rounded border border-border p-2 space-y-1.5">
+                                    <div className="flex items-start gap-2 text-xs">
+                                      <span className="bg-coda-600 text-white px-1.5 py-0.5 rounded font-mono shrink-0">{level.value}</span>
+                                      <div>
+                                        {level.name && <span className="font-medium text-text">{level.name}</span>}
+                                        {level.description && <p className="text-text-secondary">{level.description}</p>}
+                                      </div>
                                     </div>
+                                    {level.measures && (
+                                      <div className="space-y-1 pl-2 border-l-2 border-coda-200">
+                                        {level.measures.lower && level.measures.lower.length > 0 && (
+                                          <div>
+                                            <span className="text-xs font-semibold text-text-tertiary">↓ Lower measures:</span>
+                                            <div className="mt-0.5 space-y-0.5">
+                                              {level.measures.lower.map((lm) => (
+                                                <div key={lm.id} className="text-xs flex items-start gap-1">
+                                                  <span className="bg-coda-100 text-coda-700 px-1 py-0.5 rounded font-mono shrink-0">{lm.id}</span>
+                                                  {lm.instruction && <span className="text-text-secondary">{lm.instruction}</span>}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                        {level.measures.higher && level.measures.higher.length > 0 && (
+                                          <div>
+                                            <span className="text-xs font-semibold text-text-tertiary">↑ Higher measures:</span>
+                                            <div className="mt-0.5 space-y-0.5">
+                                              {level.measures.higher.map((hm) => (
+                                                <div key={hm.id} className="text-xs flex items-start gap-1">
+                                                  <span className="bg-coda-100 text-coda-700 px-1 py-0.5 rounded font-mono shrink-0">{hm.id}</span>
+                                                  {hm.instruction && <span className="text-text-secondary">{hm.instruction}</span>}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                    {level.instructions && level.instructions.higher && level.instructions.higher.length > 0 && (
+                                      <div className="space-y-1 pl-2 border-l-2 border-coda-200">
+                                        <span className="text-xs font-semibold text-text-tertiary">↑ Higher instructions:</span>
+                                        <div className="mt-0.5 space-y-0.5">
+                                          {level.instructions.higher.map((hi) => (
+                                            <div key={hi.id} className="text-xs flex items-start gap-1">
+                                              <span className="bg-coda-100 text-coda-700 px-1 py-0.5 rounded font-mono shrink-0">{hi.id}</span>
+                                              {hi.instruction && <span className="text-text-secondary">{hi.instruction}</span>}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -915,11 +993,11 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                     </div>
                   )}
 
-                  {target.rules && target.rules.length > 0 && (
+                  {fw.rules && fw.rules.length > 0 && (
                     <div>
                       <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Rules</h4>
                       <div className="space-y-1.5">
-                        {target.rules.map((rule) => (
+                        {fw.rules.map((rule) => (
                           <div key={rule.id} className="rounded bg-surface-alt border border-border p-2">
                             <div className="text-sm font-medium text-text">{formatId(rule.id)}</div>
                             {rule.description && <p className="text-xs text-text-secondary mt-0.5">{rule.description}</p>}
@@ -929,6 +1007,15 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                                   <div key={clause.id} className="text-xs">
                                     <span className="font-medium text-text">{formatId(clause.id)}</span>
                                     {clause.description && <span className="text-text-secondary"> — {clause.description}</span>}
+                                    {clause.properties && clause.properties.length > 0 && (
+                                      <div className="mt-0.5 flex flex-wrap gap-1">
+                                        {clause.properties.map((cp, idx) => (
+                                          <span key={`${cp.id}-${cp.value}-${idx}`} className="bg-surface border border-border px-1 py-0.5 rounded font-mono text-text-secondary">
+                                            {cp.id}={cp.value}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -942,6 +1029,18 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                                 ))}
                               </div>
                             )}
+                            {rule.data && Object.keys(rule.data).length > 0 && (
+                              <div className="mt-1.5">
+                                <span className="text-xs text-text-tertiary">Data schema:</span>
+                                <div className="mt-0.5 flex flex-wrap gap-1">
+                                  {Object.entries(rule.data).map(([k, v]) => (
+                                    <span key={k} className="text-xs bg-surface border border-border px-1 py-0.5 rounded font-mono text-text-secondary">
+                                      {k}: {String(v)}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -952,7 +1051,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
             ))}
           </div>
         ) : (
-          <EmptyState message="No targets configured." />
+          <EmptyState message="No frameworks configured." />
         )}
       </Card>
 

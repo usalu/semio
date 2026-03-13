@@ -3,45 +3,36 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "🚀gitk",
+      "name": "🚀gitkraken",
       "type": "node-terminal",
       "request": "launch",
-      "command": "gitk --all",
+      "command": "/usr/bin/gitkraken --path \"${workspaceFolder}\"",
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️dev🧰semiorepo⌨️cli",
-      "type": "go",
+      "name": "🚀mcpinspector",
+      "type": "node",
       "request": "launch",
-      "mode": "debug",
-      "program": "${workspaceFolder}/semio-repo/cli",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "mcp:inspector"
+      ],
+      "env": {
+        "HOST": "0.0.0.0",
+        "CLIENT_PORT": "6274",
+        "SERVER_PORT": "6277"
+      },
       "cwd": "${workspaceFolder}",
-      "args": [
-        "help"
-      ]
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://[^\\s]+:6274)",
+        "uriFormat": "%s"
+      }
     },
     {
-      "name": "🛠️dev🧰semiorepo⌨️server",
-      "type": "go",
-      "request": "launch",
-      "mode": "debug",
-      "program": "${workspaceFolder}/semio-repo/server",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "🛠️dev🧰semiorepo⌨️vscode",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/semio-repo/vscode"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/semio-repo/vscode/out/**/*.js"
-      ],
-      "preLaunchTask": "semio-repo/vscode dev"
-    },
-    {
-      "name": "🛠️dev👤semio📚engine",
+      "name": "🛠️dev👤semio⌨️engine",
       "preLaunchTask": "semio/engine dev",
       "type": "debugpy",
       "request": "attach",
@@ -75,7 +66,7 @@
       }
     },
     {
-      "name": "🛠️devstorybook👤semio📚js",
+      "name": "🛠️dev👤semio📚js📖storybook",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -93,7 +84,7 @@
       }
     },
     {
-      "name": "🛠️devsketchpad👤semio📚js",
+      "name": "🛠️dev👤semio📚js✏️sketchpad",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -111,7 +102,7 @@
       }
     },
     {
-      "name": "🛠️devui👤semio📚3dm",
+      "name": "🛠️dev👤semio📚3dm",
       "preLaunchTask": "semio/3dm ui dev",
       "type": "chrome",
       "request": "launch",
@@ -211,41 +202,6 @@
       }
     },
     {
-      "name": "🛠️dev👤coda🖱️desktop",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "dev",
-        "@semio/coda-desktop"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "🛠️devinspector🧰mcp",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "mcp:inspector"
-      ],
-      "env": {
-        "HOST": "0.0.0.0",
-        "CLIENT_PORT": "6274",
-        "SERVER_PORT": "6277"
-      },
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://[^\\s]+:6274)",
-        "uriFormat": "%s"
-      }
-    },
-    {
       "name": "🛠️dev👤semio⚙️engine🤖mcp",
       "preLaunchTask": "inspector mcp",
       "type": "node",
@@ -262,7 +218,72 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "🛠️dev👤coda🤖mcp",
+      "name": "🛠️dev🧰semiorepo⌨️cli",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/semio-repo/cli",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "help"
+      ]
+    },
+    {
+      "name": "🛠️dev🧰semiorepo⌨️server",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/semio-repo/server",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🛠️dev🧰semiorepo⌨️vscode",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/semio-repo/vscode"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/semio-repo/vscode/out/**/*.js"
+      ],
+      "preLaunchTask": "semio-repo/vscode dev"
+    },
+    {
+      "name": "🛠️dev🧰semiorepo🤖mcp",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "mcp:inspector"
+      ],
+      "env": {
+        "MCP_AUTO_OPEN_ENABLED": "false",
+        "MCP_PROXY_AUTH_TOKEN": "semio-repo-mcp-debug-token"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
+        "uriFormat": "%s&transport=stdio&serverCommand=./semio-repo/cli/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+      }
+    },
+    {
+      "name": "🛠️dev🔬coda🖱️desktop",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "nx",
+        "dev",
+        "@semio/coda-desktop"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🛠️dev🔬coda🤖mcp",
       "preLaunchTask": "inspector mcp",
       "type": "node",
       "request": "launch",
@@ -273,18 +294,6 @@
         "run",
         "coda.py",
         "--mcp-stdio"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "🛠️dev🧰semiorepo🤖mcp",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "mcp:inspector"
       ],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
@@ -314,61 +323,25 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build",
-      "type": "node",
+      "name": "🛠️dev📄go",
+      "type": "go",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "build"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
+      "mode": "debug",
+      "program": "${file}",
+      "cwd": "${fileDirname}"
     },
     {
-      "name": "📦build🧰semiorepo⌨️cli",
-      "type": "node",
+      "name": "🛠️dev📄py",
+      "type": "debugpy",
       "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio-repo/cli"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build🧰semiorepo⌨️server",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio-repo/server"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build🧰semiorepo⌨️vscode",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio-repo/vscode"
-      ],
-      "cwd": "${workspaceFolder}",
+      "program": "${file}",
       "console": "integratedTerminal"
     },
     {
       "name": "📦build👤semio📚go",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
         "nx",
         "build",
@@ -482,7 +455,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build👤semio📚3dm",
+      "name": "📦build👤semio�3dm",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -508,7 +481,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build👤semio🏪icons",
+      "name": "📦build👤semio�icons",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -534,7 +507,46 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build👤coda🖱️desktop",
+      "name": "📦build🧰semiorepo⌨️cli",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "build",
+        "semio-repo/cli"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "📦build🧰semiorepo⌨️server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "build",
+        "semio-repo/server"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "📦build🧰semiorepo🖱️vscode",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "build",
+        "semio-repo/vscode"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "📦build🔬coda🖱️desktop",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -542,30 +554,6 @@
         "nx",
         "build",
         "@semio/coda-desktop"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "⬆️publish:test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "publish:test"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "⬆️publish",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "publish"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -587,11 +575,24 @@
       "name": "⬆️publish👤semio🌐play",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
         "nx",
         "publish",
         "semio/play"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "⬆️publish👤semio🌐sketchpad",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "nx",
+        "publish",
+        "semio/sketchpad"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -610,20 +611,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "⬆️publish👤semio🖱️sketchpad",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "publish",
-        "semio/sketchpad"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "⬆️publish👤coda🖱️desktop",
+      "name": "⬆️publish🔬coda🖱️desktop",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -634,17 +622,6 @@
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
-    }
-  ],
-  "compounds": [
-    {
-      "name": "🛠️dev🧰mcp",
-      "configurations": [
-        "🛠️devinspector🧰mcp",
-        "🛠️dev👤semio⚙️engine🤖mcp",
-        "🛠️dev👤coda🤖mcp",
-        "🛠️dev🧰semiorepo🤖mcp"
-      ]
     }
   ]
 }

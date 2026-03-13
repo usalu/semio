@@ -120,11 +120,6 @@ export default defineConfig({
     testTimeout: 30000,
     include: ["semio.test.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
-      exclude: ["**/*.config.*", "**/*.setup.*", "**/node_modules/**", "**/.storybook/**"],
-    },
   },
 });
 // #endregion 🔖Configuration
