@@ -901,13 +901,13 @@ def _sidecar_get_status(params: dict) -> dict:
 @_register_sidecar("get_measures")
 def _sidecar_get_measures(params: dict) -> dict:
     config = _get_coda_config()
-    return {"measures": config.get("measures", [])}
+    return config.get("measures", [])
 
 
 @_register_sidecar("get_targets")
 def _sidecar_get_targets(params: dict) -> dict:
     config = _get_coda_config()
-    return {"targets": config.get("targets", [])}
+    return config.get("targets", [])
 
 
 @_register_sidecar("get_project")
@@ -948,9 +948,9 @@ def _sidecar_get_breachs(params: dict) -> dict:
         return {"error": "No iterations found"}
     report_json = iter_dir / "targets" / "report.json"
     if not report_json.exists():
-        return {"breachs": []}
+        return []
     report = json.loads(report_json.read_text(encoding="utf-8"))
-    return {"breachs": report.get("breachs", [])}
+    return report.get("breachs", [])
 
 
 @_register_sidecar("get_iterations")
@@ -960,13 +960,144 @@ def _sidecar_get_iterations(params: dict) -> dict:
         return {"error": "No project root"}
     run_dir = _sidecar_session.run_dir or _get_latest_run(root)
     if not run_dir:
-        return {"iterations": []}
+        return []
     iters = run_dir / "iterations"
     if not iters.exists():
-        return {"iterations": []}
+        return []
     dirs = [d for d in iters.iterdir() if d.is_dir() and d.name.isdigit()]
     entries = [{"index": d.name} for d in sorted(dirs, key=lambda x: int(x.name))]
-    return {"iterations": entries}
+    return entries
+
+
+@_register_sidecar("get_platforms")
+def _sidecar_get_platforms(params: dict) -> dict:
+    root = _get_project_root()
+    if not root:
+        return {"error": "No project root"}
+    platforms_dir = root / ".coda" / "platforms"
+    if not platforms_dir.exists():
+        return []
+    platforms = []
+    for p in platforms_dir.iterdir():
+        if p.is_file() and p.suffix == ".json":
+            try:
+                platforms.append(json.loads(p.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+    return platforms
+
+
+@_register_sidecar("get_current_run")
+def _sidecar_get_current_run(params: dict) -> dict:
+    root = _get_project_root()
+    if not root:
+        return {"error": "No project root"}
+    run_dir = _get_latest_run(root)
+    if not run_dir:
+        return {"error": "No runs found"}
+    run_json = run_dir / "run.json"
+    if run_json.exists():
+        return json.loads(run_json.read_text(encoding="utf-8"))
+    return {"id": run_dir.name, "run_id": run_dir.name}
+
+
+@_register_sidecar("get_current_iteration")
+def _sidecar_get_current_iteration(params: dict) -> dict:
+    root = _get_project_root()
+    if not root:
+        return {"error": "No project root"}
+    run_dir = _get_latest_run(root)
+    if not run_dir:
+        return {"error": "No runs found"}
+    iter_dir = _get_latest_iteration(run_dir)
+    if not iter_dir:
+        return {"error": "No iterations found"}
+    iter_json = iter_dir / "iteration.json"
+    if iter_json.exists():
+        return json.loads(iter_json.read_text(encoding="utf-8"))
+    return {"index": iter_dir.name}
+
+
+@_register_sidecar("get_translation")
+def _sidecar_get_translation(params: dict) -> dict:
+    target_id = params.get("target_id", "")
+    if not target_id:
+        return {"error": "Missing 'target_id' parameter"}
+    root = _get_project_root()
+    if not root:
+        return {"error": "No project root"}
+    run_dir = _get_latest_run(root)
+    if not run_dir:
+        return {"error": "No runs found"}
+    iter_dir = _get_latest_iteration(run_dir)
+    if not iter_dir:
+        return {"error": "No iterations found"}
+    translation_json = iter_dir / "targets" / target_id / "translation.json"
+    if not translation_json.exists():
+        return {"error": f"No translation found for target: {target_id}"}
+    return json.loads(translation_json.read_text(encoding="utf-8"))
+
+
+@_register_sidecar("translate")
+def _sidecar_translate(params: dict) -> dict:
+    target_id = params.get("target_id", "")
+    if not target_id:
+        return {"error": "Missing 'target_id' parameter"}
+    _emit_event("translate_requested", {"target_id": target_id})
+    proj = _get_project_config()
+    if not proj:
+        return {"error": "No project"}
+    targets = proj.get("targets", [])
+    if not any(t.get("id") == target_id for t in targets):
+        return {"error": f"Target not in project: {target_id}"}
+    root = _get_project_root()
+    if not root:
+        return {"error": "No project root"}
+    run_dir = _get_latest_run(root)
+    if not run_dir:
+        return {"error": "No runs found. Call start_run first."}
+    iter_dir = _get_latest_iteration(run_dir)
+    if not iter_dir:
+        return {"error": "No iterations found. Call start_iteration first."}
+    target_dir = iter_dir / "targets" / target_id
+    target_dir.mkdir(parents=True, exist_ok=True)
+    design_id = proj.get("design", {}).get("id", "unknown")
+    design_slug = design_id.split(".")[-1] if "." in design_id else design_id
+    target_slug = target_id.split(".")[-1] if "." in target_id else target_id
+    agent_name = f"{design_slug}-to-{target_slug}-translation-subagent"
+    result = {
+        "action": "invoke_subagent",
+        "agent_name": agent_name,
+        "target_id": target_id,
+        "design_id": design_id,
+        "output_path": str(target_dir / "translation.json"),
+        "instruction": f"Invoke the @{agent_name} subagent to translate the {design_id} design into the {target_id} target format.",
+    }
+    _emit_event("translate_started", {"target_id": target_id, "agent_name": agent_name, "design_id": design_id})
+    return result
+
+
+@_register_sidecar("save_validation")
+def _sidecar_save_validation(params: dict) -> dict:
+    target_id = params.get("target_id", "")
+    data = params.get("data", "")
+    if not target_id:
+        return {"error": "Missing 'target_id' parameter"}
+    root = _get_project_root()
+    if not root:
+        return {"error": "No project root"}
+    run_dir = _get_latest_run(root)
+    if not run_dir:
+        return {"error": "No runs found"}
+    iter_dir = _get_latest_iteration(run_dir)
+    if not iter_dir:
+        return {"error": "No iterations found"}
+    report_path = iter_dir / "targets" / target_id / "report.json"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(data if isinstance(data, str) else json.dumps(data), encoding="utf-8")
+    result = {"saved": True, "path": str(report_path)}
+    _emit_event("validation_saved", {"target_id": target_id, "path": str(report_path)})
+    return result
 
 
 @_register_sidecar("save_translation")

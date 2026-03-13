@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     wget \
+    fontconfig \
+    fonts-noto-color-emoji \
     ripgrep \
     socat \
     netcat-openbsd \
@@ -61,6 +63,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin s
 USER vscode
 
 RUN mkdir -p /home/vscode/.local/bin \
+    /home/vscode/.gitkraken \
     /home/vscode/.local/share/GitKrakenCLI \
     /home/vscode/.local/share/gk \
     /home/vscode/.claude \

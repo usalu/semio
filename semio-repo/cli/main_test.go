@@ -350,8 +350,28 @@ exit 0
 		if err != nil {
 			t.Fatalf("failed to read Windsurf MCP config: %v", err)
 		}
-		if !strings.Contains(string(configData), "\"semio-repo\"") {
+		configText := string(configData)
+		if !strings.Contains(configText, "\"semio-repo\"") {
 			t.Fatalf("expected Windsurf MCP config to include semio-repo server, got:\n%s", configData)
+		}
+		if !strings.Contains(configText, filepath.Join(repoRoot, "semio-repo", "cli", "cli")) {
+			t.Fatalf("expected Windsurf MCP config to normalize semio-repo command to an absolute path, got:\n%s", configData)
+		}
+
+		codexPath := filepath.Join(homeDir, ".codex", "config.toml")
+		codexData, err := os.ReadFile(codexPath)
+		if err != nil {
+			t.Fatalf("failed to read Codex MCP config: %v", err)
+		}
+		codexText := string(codexData)
+		if !strings.Contains(codexText, "[mcp_servers.semio-repo]") {
+			t.Fatalf("expected Codex MCP config to include semio-repo server, got:\n%s", codexData)
+		}
+		if !strings.Contains(codexText, fmt.Sprintf("command = %q", filepath.Join(repoRoot, "semio-repo", "cli", "cli"))) {
+			t.Fatalf("expected Codex MCP config to normalize semio-repo command to an absolute path, got:\n%s", codexData)
+		}
+		if !strings.Contains(codexText, fmt.Sprintf("%q", filepath.Join(repoRoot, "semio", "engine"))) {
+			t.Fatalf("expected Codex MCP config to normalize --directory arguments to absolute paths, got:\n%s", codexData)
 		}
 	})
 

@@ -45,8 +45,12 @@ declare global {
       getUserId(): Promise<string>;
     };
     coda: {
+      call(method: string, params?: Record<string, unknown>): Promise<McpResponse>;
       fetch(uri: string): Promise<McpResponse>;
       tool(name: string, args: Record<string, unknown>): Promise<McpResponse>;
+      getConnectionStatus(): Promise<boolean>;
+      onEvent(callback: (event: CodaEvent) => void): () => void;
+      onConnectionStatus(callback: (connected: boolean) => void): () => void;
     };
     dialog: {
       openFolder(): Promise<string | null>;
@@ -57,6 +61,18 @@ declare global {
       create(name: string, folder: string): Promise<{ success: boolean; error?: string }>;
     };
   }
+}
+
+/**
+ * An event pushed from the coda sidecar process.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️codaevent](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/CodaEvent)
+ *
+ * MUST have event kind, data, and timestamp.
+ **/
+interface CodaEvent {
+  event: string;
+  data: Record<string, unknown>;
+  timestamp: number;
 }
 
 /**
@@ -214,7 +230,7 @@ interface Report {
  *
  * MUST enumerate all navigable pages.
  **/
-type Page = "dashboard" | "config" | "runs" | "report" | "translations" | "actions";
+type Page = "dashboard" | "config" | "runs" | "report" | "translations" | "actions" | "events";
 
 // #endregion 🔖Types
 
@@ -417,6 +433,14 @@ function IconChevronDown({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+function IconEvents({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   );
 }
@@ -1274,6 +1298,24 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
     }
   }, [onRefresh]);
 
+  const runCall = useCallback(async (method: string, params: Record<string, unknown>, label: string) => {
+    setLoading(label);
+    try {
+      const response = await window.coda.call(method, params);
+      const result = response.result ?? response.error ?? "No response";
+      setActionLog((prev) => [
+        { id: Date.now(), action: label, result, timestamp: new Date().toLocaleTimeString(), success: !response.error },
+        ...prev,
+      ]);
+      onRefresh();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setActionLog((prev) => [{ id: Date.now(), action: label, result: { error: message }, timestamp: new Date().toLocaleTimeString(), success: false }, ...prev]);
+    } finally {
+      setLoading(null);
+    }
+  }, [onRefresh]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -1307,27 +1349,7 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
               <EmptyState message="No project targets found." />
             ) : (
               targetIds.map((tid) => (
-                <div key={tid} className="rounded border border-border p-3 space-y-2">
-                  <div className="text-sm font-medium text-text font-mono">{tid}</div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => runTool("translate", { target_id: tid }, `Translate ${tid}`)}
-                      loading={loading === `Translate ${tid}`}
-                      disabled={loading !== null}
-                    >
-                      <IconTranslations className="w-3.5 h-3.5" />
-                      Translate
-                    </Button>
-                    <Button
-                      onClick={() => runTool("validate", { target_id: tid }, `Validate ${tid}`)}
-                      loading={loading === `Validate ${tid}`}
-                      disabled={loading !== null}
-                    >
-                      <IconCheck className="w-3.5 h-3.5" />
-                      Validate
-                    </Button>
-                  </div>
-                </div>
+                <TargetActionCard key={tid} targetId={tid} loading={loading} runTool={runTool} runCall={runCall} />
               ))
             )}
           </div>
@@ -1336,6 +1358,10 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
 
       <Card title="Fix Design">
         <FixAction loading={loading} onFix={(prompt) => runTool("fix", { prompt }, `Fix: ${prompt.slice(0, 30)}...`)} disabled={loading !== null} />
+      </Card>
+
+      <Card title="Manual Fix Result">
+        <ManualFixInput loading={loading} onSubmit={(result) => runCall("save_report", { report_data: typeof result === "string" ? result : JSON.stringify(result) }, "Manual Save Report")} disabled={loading !== null} />
       </Card>
 
       {actionLog.length > 0 && (
@@ -1358,6 +1384,155 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
           </div>
         </Card>
       )}
+    </div>
+  );
+}
+
+/**
+ * Per-target action card with translate/validate buttons and manual input.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖actionspage🛠️targetactioncard](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ActionsPage/d/i/TargetActionCard)
+ *
+ * MUST offer tool invocation and manual result input for translate and validate.
+ **/
+function TargetActionCard({
+  targetId,
+  loading,
+  runTool,
+  runCall,
+}: {
+  targetId: string;
+  loading: string | null;
+  runTool: (name: string, args: Record<string, unknown>, label: string) => void;
+  runCall: (method: string, params: Record<string, unknown>, label: string) => void;
+}) {
+  const [manualMode, setManualMode] = useState<null | "translate" | "validate">(null);
+  const [manualInput, setManualInput] = useState("");
+
+  const handleManualSubmit = useCallback(() => {
+    if (!manualInput.trim() || !manualMode) return;
+    try {
+      const parsed = JSON.parse(manualInput);
+      if (manualMode === "translate") {
+        runCall("save_translation", { target_id: targetId, data: typeof parsed === "string" ? parsed : JSON.stringify(parsed) }, `Manual Translate ${targetId}`);
+      } else {
+        runCall("save_validation", { target_id: targetId, data: typeof parsed === "string" ? parsed : JSON.stringify(parsed) }, `Manual Validate ${targetId}`);
+      }
+      setManualInput("");
+      setManualMode(null);
+    } catch {
+      // Input is not valid JSON — send as plain text
+      if (manualMode === "translate") {
+        runCall("save_translation", { target_id: targetId, data: manualInput.trim() }, `Manual Translate ${targetId}`);
+      } else {
+        runCall("save_validation", { target_id: targetId, data: manualInput.trim() }, `Manual Validate ${targetId}`);
+      }
+      setManualInput("");
+      setManualMode(null);
+    }
+  }, [manualInput, manualMode, targetId, runTool, runCall]);
+
+  return (
+    <div className="rounded border border-border p-3 space-y-2">
+      <div className="text-sm font-medium text-text font-mono">{targetId}</div>
+      <div className="flex gap-2">
+        <Button
+          onClick={() => runTool("translate", { target_id: targetId }, `Translate ${targetId}`)}
+          loading={loading === `Translate ${targetId}`}
+          disabled={loading !== null}
+        >
+          <IconTranslations className="w-3.5 h-3.5" />
+          Translate
+        </Button>
+        <Button
+          onClick={() => runTool("validate", { target_id: targetId }, `Validate ${targetId}`)}
+          loading={loading === `Validate ${targetId}`}
+          disabled={loading !== null}
+        >
+          <IconCheck className="w-3.5 h-3.5" />
+          Validate
+        </Button>
+        <Button
+          onClick={() => setManualMode(manualMode ? null : "translate")}
+          variant={manualMode ? "primary" : "secondary"}
+          className="ml-auto text-xs"
+        >
+          Manual
+        </Button>
+      </div>
+      {manualMode && (
+        <div className="space-y-2 pt-1">
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setManualMode("translate"); setManualInput(""); }}
+              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
+                manualMode === "translate" ? "bg-coda-600 text-white border-coda-600" : "border-border text-text-secondary hover:bg-surface-hover"
+              }`}
+            >
+              Translation
+            </button>
+            <button
+              onClick={() => { setManualMode("validate"); setManualInput(""); }}
+              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
+                manualMode === "validate" ? "bg-coda-600 text-white border-coda-600" : "border-border text-text-secondary hover:bg-surface-hover"
+              }`}
+            >
+              Validation
+            </button>
+          </div>
+          <textarea
+            value={manualInput}
+            onChange={(e) => setManualInput(e.target.value)}
+            placeholder={`Paste ${manualMode} result JSON here...`}
+            rows={5}
+            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400 resize-y"
+          />
+          <div className="flex gap-2 justify-end">
+            <Button onClick={() => { setManualMode(null); setManualInput(""); }} variant="secondary" className="text-xs">
+              Cancel
+            </Button>
+            <Button onClick={handleManualSubmit} variant="primary" disabled={!manualInput.trim() || loading !== null} className="text-xs">
+              Save {manualMode === "translate" ? "Translation" : "Validation"}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Manual fix result input form.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖actionspage🛠️manualfixinput](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ActionsPage/d/i/ManualFixInput)
+ *
+ * MUST provide a textarea to paste fix results and submit them.
+ **/
+function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | null; onSubmit: (result: unknown) => void; disabled: boolean }) {
+  const [input, setInput] = useState("");
+  const handleSubmit = () => {
+    if (!input.trim()) return;
+    try {
+      const parsed = JSON.parse(input);
+      onSubmit(parsed);
+    } catch {
+      onSubmit(input.trim());
+    }
+    setInput("");
+  };
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-text-secondary">Paste the fix result (report JSON) from an agent to manually save it.</p>
+      <textarea
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Paste fix result JSON here..."
+        rows={4}
+        className="w-full rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400 resize-y"
+      />
+      <div className="flex justify-end">
+        <Button onClick={handleSubmit} variant="primary" loading={loading === "Manual Save Report"} disabled={disabled || !input.trim()} className="text-xs">
+          Save Report
+        </Button>
+      </div>
     </div>
   );
 }
@@ -1398,6 +1573,101 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
 }
 
 // #endregion 🔖ActionsPage
+
+// #region 🔖EventsPage
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖eventspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/EventsPage)
+// Events page showing real-time event stream from the coda sidecar process.
+// EventsPage MUST display all events with timestamps, kind, and full data.
+// EventsPage MUST allow clearing and filtering events.
+
+/**
+ * Events page showing the real-time event log from the sidecar.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖eventspage🛠️eventspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/EventsPage/d/i/EventsPage)
+ *
+ * MUST display all events in reverse chronological order.
+ * MUST show event kind, timestamp, and full data payload.
+ **/
+function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => void }) {
+  const [filter, setFilter] = useState("");
+
+  const filteredEvents = useMemo(() => {
+    if (!filter.trim()) return events;
+    const lower = filter.toLowerCase();
+    return events.filter((e) => e.event.toLowerCase().includes(lower) || JSON.stringify(e.data).toLowerCase().includes(lower));
+  }, [events, filter]);
+
+  const uniqueKinds = useMemo(() => {
+    const kinds = new Set(events.map((e) => e.event));
+    return Array.from(kinds).sort();
+  }, [events]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-text">Events</h2>
+          <p className="text-sm text-text-secondary mt-1">
+            Real-time event stream from the coda sidecar ({events.length} total).
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={onClear} variant="secondary" disabled={events.length === 0}>
+            Clear
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input
+          type="text"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Filter events by kind or content..."
+          className="flex-1 rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400"
+        />
+        {uniqueKinds.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {uniqueKinds.map((kind) => (
+              <button
+                key={kind}
+                onClick={() => setFilter(filter === kind ? "" : kind)}
+                className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
+                  filter === kind ? "bg-coda-600 text-white border-coda-600" : "border-border text-text-secondary hover:bg-surface-hover"
+                }`}
+              >
+                {kind}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {filteredEvents.length === 0 ? (
+        <Card>
+          <EmptyState message={events.length === 0 ? "No events received yet. Events will appear here as the sidecar processes requests." : "No events match the current filter."} />
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {filteredEvents.map((evt, idx) => {
+            const ts = new Date(evt.timestamp * 1000);
+            const timeStr = ts.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 3 });
+            return (
+              <Collapsible
+                key={`${evt.timestamp}-${idx}`}
+                title={evt.event}
+                badge={<span className="text-xs text-text-tertiary font-mono">{timeStr}</span>}
+              >
+                <JsonViewer data={evt.data} />
+              </Collapsible>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// #endregion 🔖EventsPage
 
 // #endregion 🔖Pages
 
@@ -1661,6 +1931,7 @@ const navItems: Array<{ id: Page; label: string; icon: React.ComponentType<{ cla
   { id: "report", label: "Report", icon: IconReport },
   { id: "translations", label: "Translations", icon: IconTranslations },
   { id: "actions", label: "Actions", icon: IconActions },
+  { id: "events", label: "Events", icon: IconEvents },
 ];
 
 /**
@@ -1677,20 +1948,43 @@ function App() {
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
   const [refreshKey, setRefreshKey] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidecarConnected, setSidecarConnected] = useState(false);
+  const [events, setEvents] = useState<CodaEvent[]>([]);
 
   useEffect(() => {
     async function init() {
       try {
-        const [id, path] = await Promise.all([window.os.getUserId(), window.project.getPath()]);
+        const [id, path, connected] = await Promise.all([
+          window.os.getUserId(),
+          window.project.getPath(),
+          window.coda.getConnectionStatus(),
+        ]);
         setUserId(id);
         setProjectPath(path);
+        setSidecarConnected(connected);
       } catch {
         setUserId("anonymous-user");
         setProjectPath(null);
+        setSidecarConnected(false);
       }
     }
     init();
   }, []);
+
+  useEffect(() => {
+    const unsubEvent = window.coda.onEvent((evt: CodaEvent) => {
+      setEvents((prev) => [evt, ...prev]);
+    });
+    const unsubConnection = window.coda.onConnectionStatus((connected: boolean) => {
+      setSidecarConnected(connected);
+    });
+    return () => {
+      unsubEvent();
+      unsubConnection();
+    };
+  }, []);
+
+  const handleClearEvents = useCallback(() => setEvents([]), []);
 
   const handleRefresh = useCallback(() => setRefreshKey((n) => n + 1), []);
 
@@ -1737,6 +2031,11 @@ function App() {
           <span className="text-xs text-text-tertiary ml-1">|</span>
           <span className="text-xs text-text-tertiary ml-1 font-mono" title={projectPath}>{projectName}</span>
           {userId && <><span className="text-xs text-text-tertiary ml-1">·</span><span className="text-xs text-text-tertiary ml-1">{userId}</span></>}
+          <span className="text-xs text-text-tertiary ml-1">·</span>
+          <span className={`ml-1 inline-flex items-center gap-1 text-xs ${sidecarConnected ? "text-compliant" : "text-violated"}`} title={sidecarConnected ? "Sidecar connected" : "Sidecar disconnected (offline mode)"}>
+            <span className={`w-1.5 h-1.5 rounded-full ${sidecarConnected ? "bg-compliant" : "bg-violated"}`} />
+            {sidecarConnected ? "Connected" : "Offline"}
+          </span>
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <button onClick={handleRefresh} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer" title="Refresh data">
@@ -1795,6 +2094,7 @@ function App() {
           {currentPage === "report" && <ReportPage refreshKey={refreshKey} />}
           {currentPage === "translations" && <TranslationsPage refreshKey={refreshKey} />}
           {currentPage === "actions" && <ActionsPage refreshKey={refreshKey} onRefresh={handleRefresh} />}
+          {currentPage === "events" && <EventsPage events={events} onClear={handleClearEvents} />}
         </main>
         {/* #endregion Content */}
       </div>

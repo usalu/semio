@@ -1,7 +1,8 @@
 {
   "title": "Setup Semio Repo MCP Server",
-  "status": "open",
+  "status": "closed",
   "description": "Setup semio repo mcp server for the monorepo according to https://developers.openai.com/codex/mcp/. The server should provide MCP tools for repo management operations like search, ticket management, file operations, etc. Use the existing Go server as a base and add MCP endpoints.",
+  "summary": "Added zero-touch Codex MCP provisioning by generating persisted Codex and Windsurf client configs from the monorepo .mcp.json during devcontainer attach, and extended the existing devcontainer bootstrap test to cover the Codex config path.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/824"
   },

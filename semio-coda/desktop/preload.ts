@@ -20,8 +20,9 @@
 
 // #region 🔖Preload
 // [🔬coda🖱️desktop💻preload🔖preload](semiorepo://p/r/coda/b/u/desktop/f/preload.ts/s/Preload)
-// Electron preload script exposing window controls, OS APIs, and coda sidecar bridge.
+// Electron preload script exposing window controls, OS APIs, coda sidecar bridge, and event system.
 // Preload MUST use contextBridge to safely expose IPC methods.
+// Preload MUST expose event listener registration for sidecar events and connection status.
 
 import { contextBridge, ipcRenderer } from "electron";
 
@@ -36,25 +37,31 @@ contextBridge.exposeInMainWorld("os", {
 });
 
 contextBridge.exposeInMainWorld("coda", {
-  // Direct sidecar method call (preferred)
   call: (method: string, params: Record<string, unknown> = {}) =>
     ipcRenderer.invoke("coda-call", method, params),
-  // Backward-compatible resource fetch
   fetch: (uri: string) => ipcRenderer.invoke("coda-fetch", uri),
-  // Backward-compatible tool call
   tool: (name: string, args: Record<string, unknown>) =>
     ipcRenderer.invoke("coda-tool", name, args),
+  getConnectionStatus: () => ipcRenderer.invoke("coda-connection-status"),
+  onEvent: (callback: (event: { event: string; data: Record<string, unknown>; timestamp: number }) => void) => {
+    const handler = (_ipcEvent: Electron.IpcRendererEvent, evt: { event: string; data: Record<string, unknown>; timestamp: number }) => callback(evt);
+    ipcRenderer.on("coda-event", handler);
+    return () => { ipcRenderer.removeListener("coda-event", handler); };
+  },
+  onConnectionStatus: (callback: (connected: boolean) => void) => {
+    const handler = (_ipcEvent: Electron.IpcRendererEvent, connected: boolean) => callback(connected);
+    ipcRenderer.on("coda-connection-status", handler);
+    return () => { ipcRenderer.removeListener("coda-connection-status", handler); };
+  },
 });
 
 contextBridge.exposeInMainWorld("dialog", {
-  openFolder: (): Promise<string | null> => ipcRenderer.invoke("dialog-open-folder"),
+  openFolder: () => ipcRenderer.invoke("dialog-open-folder"),
 });
 
 contextBridge.exposeInMainWorld("project", {
-  getPath: (): Promise<string | null> => ipcRenderer.invoke("get-project-path"),
-  open: (folder: string): Promise<{ success: boolean; error?: string }> =>
-    ipcRenderer.invoke("project-open", folder),
-  create: (name: string, folder: string): Promise<{ success: boolean; error?: string }> =>
-    ipcRenderer.invoke("project-create", name, folder),
+  getPath: () => ipcRenderer.invoke("project-get-path"),
+  open: (folder: string) => ipcRenderer.invoke("project-open", folder),
+  create: (name: string, folder: string) => ipcRenderer.invoke("project-create", name, folder),
 });
 // #endregion 🔖Preload

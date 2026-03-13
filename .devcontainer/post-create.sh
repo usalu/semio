@@ -3,10 +3,74 @@
 #region 🔖PostCreate
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
+#region 🔖EmojiFonts
+configure_emoji_fonts() {
+  echo "Configuring emoji font fallback..."
+  sudo mkdir -p /etc/fonts
+  sudo tee /etc/fonts/local.conf >/dev/null <<'FONTCONFIG'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <alias>
+    <family>sans-serif</family>
+    <prefer>
+      <family>Noto Color Emoji</family>
+    </prefer>
+  </alias>
+  <alias>
+    <family>serif</family>
+    <prefer>
+      <family>Noto Color Emoji</family>
+    </prefer>
+  </alias>
+  <alias>
+    <family>monospace</family>
+    <prefer>
+      <family>Noto Color Emoji</family>
+    </prefer>
+  </alias>
+</fontconfig>
+FONTCONFIG
+  sudo fc-cache -f
+}
+#endregion 🔖EmojiFonts
 #region 🔖Startup
 echo "Setting up semio development environment..."
 #endregion 🔖Startup
 #region 🔖GitKrakenCliHelpers
+install_gitkraken_desktop() {
+  if command -v gitkraken >/dev/null 2>&1; then
+    echo "GitKraken Desktop already installed."
+    return 0
+  fi
+
+  case "$(uname -m)" in
+    x86_64|amd64)
+      local gitkraken_arch="amd64"
+      ;;
+    aarch64|arm64)
+      local gitkraken_arch="arm64"
+      ;;
+    *)
+      echo "⚠️  Skipping GitKraken Desktop install for unsupported architecture: $(uname -m)"
+      return 0
+      ;;
+  esac
+
+  echo "Installing GitKraken Desktop for Linux..."
+  mkdir -p "$HOME/.gitkraken"
+  local temp_dir
+  temp_dir="$(mktemp -d)"
+  trap 'rm -rf "$temp_dir"' RETURN
+  curl -fsSL "https://release.gitkraken.com/linux/gitkraken-${gitkraken_arch}.deb" -o "$temp_dir/gitkraken.deb"
+  sudo apt-get update
+  sudo apt-get install -y "$temp_dir/gitkraken.deb"
+  rm -rf "$temp_dir"
+  trap - RETURN
+
+  echo "GitKraken Desktop installed."
+}
+
 install_gitkraken_cli() {
   if command -v gk >/dev/null 2>&1 && gk --version >/dev/null 2>&1; then
     echo "GitKraken CLI already installed."
@@ -61,9 +125,13 @@ install_gitkraken_cli() {
 echo "Fixing ownership of mounted config directories..."
 sudo chown -R vscode:vscode /home/vscode/.cache || true
 sudo chown -R vscode:vscode /home/vscode/.config/gh || true
+sudo chown -R vscode:vscode /home/vscode/.gitkraken || true
 sudo chown -R vscode:vscode /home/vscode/.local/share/GitKrakenCLI || true
 sudo chown -R vscode:vscode /home/vscode/.local/share/gk || true
 #endregion 🔖Ownership
+#region 🔖EmojiFonts
+configure_emoji_fonts
+#endregion 🔖EmojiFonts
 #region 🔖GitSafe
 echo "Marking workspace as safe for git (devcontainer bind-mount / submodules)..."
 git config --global --add safe.directory "$WORKSPACE"
@@ -82,6 +150,9 @@ echo "Installing Gemini CLI..."
 npm install -g @google/gemini-cli
 #endregion 🔖GeminiCli
 #endregion 🔖Node
+#region 🔖GitKrakenDesktop
+install_gitkraken_desktop
+#endregion 🔖GitKrakenDesktop
 #region 🔖GitKrakenCli
 install_gitkraken_cli
 #endregion 🔖GitKrakenCli

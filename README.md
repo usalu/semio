@@ -385,7 +385,7 @@ We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git clie
 
 It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
 
-The devcontainer bootstraps GitKraken with zero-touch local workspace config for the semio monorepo and its git submodules, so the default Semio workspace is ready after attach without manual repository grouping 🔀
+The devcontainer installs Linux GitKraken Desktop and bootstraps zero-touch local workspace config for the semio monorepo and its git submodules, so the default Semio workspace is ready after attach without manual repository grouping 🔀
 
 ### 💬 Discord [↑](#-git-)
 

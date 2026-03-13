@@ -14,23 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Entry point for the Electron main process managing windows, sidecar lifecycle, and IPC.
+// Entry point for the Electron main process managing windows, sidecar lifecycle, IPC, and event forwarding.
 
 // #endregion 🔖Header
 
 // #region 🔖Sidecar Bridge
 // [🔬coda🖱️desktop💻main🔖sidecarbridge](semiorepo://p/r/coda/b/u/desktop/f/main.ts/s/Sidecar%20Bridge)
 // Manages the Python sidecar child process over JSON-over-stdio.
-// MUST handle spawning, request/response correlation, heartbeats, timeouts, and auto-restart.
+// MUST handle spawning, request/response correlation, heartbeats, timeouts, auto-restart, and event forwarding.
 
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import started from "electron-squirrel-startup";
 import { ChildProcess, spawn } from "node:child_process";
-import fs from "node:fs";
 import path from "node:path";
 import { createInterface, Interface as ReadlineInterface } from "node:readline";
 import os from "os";
 import { randomUUID } from "node:crypto";
+import fs from "node:fs";
 
 if (started) {
   app.quit();
@@ -57,14 +57,29 @@ let pendingRequests = new Map<string, PendingRequest>();
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 let restartCount = 0;
 let shuttingDown = false;
+let sidecarConnected = false;
 let currentProjectPath: string | null = process.env.CODA_PROJECT ?? null;
+
+function broadcastToRenderers(channel: string, ...args: unknown[]): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send(channel, ...args);
+  }
+}
+
+function setSidecarConnected(connected: boolean): void {
+  if (sidecarConnected !== connected) {
+    sidecarConnected = connected;
+    broadcastToRenderers("coda-connection-status", connected);
+  }
+}
 
 function startSidecar(): void {
   if (shuttingDown) return;
 
   const args = [...SIDECAR_ARGS];
-  if (currentProjectPath) {
-    args.push("--project", currentProjectPath);
+  const projectPath = process.env.CODA_PROJECT;
+  if (projectPath) {
+    args.push("--project", projectPath);
   }
 
   sidecar = spawn(SIDECAR_CMD, args, {
@@ -79,6 +94,29 @@ function startSidecar(): void {
     try {
       const msg = JSON.parse(line);
       const id = msg.id as string | null;
+
+      // Event messages: id===null and have "event" field
+      if (id === null && msg.event) {
+        broadcastToRenderers("coda-event", {
+          event: msg.event,
+          data: msg.data ?? {},
+          timestamp: msg.timestamp ?? Date.now() / 1000,
+        });
+        return;
+      }
+
+      // Ready signal
+      if (id === null && msg.result?.status === "ready") {
+        setSidecarConnected(true);
+        broadcastToRenderers("coda-event", {
+          event: "sidecar_ready",
+          data: { pid: msg.result.pid },
+          timestamp: Date.now() / 1000,
+        });
+        return;
+      }
+
+      // Response to a pending request
       if (id && pendingRequests.has(id)) {
         const pending = pendingRequests.get(id)!;
         clearTimeout(pending.timer);
@@ -89,7 +127,6 @@ function startSidecar(): void {
           pending.resolve(msg.result);
         }
       }
-      // id===null messages (e.g. ready signal) are informational
     } catch {
       // Ignore unparseable lines (e.g. Python warnings)
     }
@@ -106,6 +143,12 @@ function startSidecar(): void {
 
   sidecar.on("exit", (code, signal) => {
     console.error(`[coda sidecar] exited code=${code} signal=${signal}`);
+    setSidecarConnected(false);
+    broadcastToRenderers("coda-event", {
+      event: "sidecar_disconnected",
+      data: { code, signal },
+      timestamp: Date.now() / 1000,
+    });
     cleanup();
     if (!shuttingDown && restartCount < MAX_RESTART_ATTEMPTS) {
       restartCount++;
@@ -129,8 +172,7 @@ function cleanup(): void {
     sidecarRL.close();
     sidecarRL = null;
   }
-  // Reject all pending requests
-  for (const [id, pending] of pendingRequests) {
+  for (const [, pending] of pendingRequests) {
     clearTimeout(pending.timer);
     pending.reject({ code: -32000, message: "Sidecar disconnected" });
   }
@@ -140,10 +182,10 @@ function cleanup(): void {
 
 function stopSidecar(): void {
   shuttingDown = true;
+  setSidecarConnected(false);
   cleanup();
   if (sidecar && !sidecar.killed) {
     sidecar.kill("SIGTERM");
-    // Force kill after 2s if still alive
     setTimeout(() => {
       if (sidecar && !sidecar.killed) {
         sidecar.kill("SIGKILL");
@@ -181,10 +223,11 @@ function startHeartbeat(): void {
         setTimeout(() => reject(new Error("heartbeat timeout")), HEARTBEAT_TIMEOUT_MS)
       );
       await Promise.race([hbPromise, timeout]);
-      // Heartbeat succeeded, reset restart counter
       restartCount = 0;
+      setSidecarConnected(true);
     } catch {
       console.error("[coda sidecar] heartbeat failed, killing process");
+      setSidecarConnected(false);
       if (sidecar && !sidecar.killed) {
         sidecar.kill("SIGTERM");
       }
@@ -304,8 +347,56 @@ app.whenReady().then(() => {
     return os.userInfo().username;
   });
 
+  // Connection status query
+  ipcMain.handle("coda-connection-status", () => {
+    return sidecarConnected;
+  });
+
+  // Open folder dialog
+  ipcMain.handle("dialog-open-folder", async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ["openDirectory", "createDirectory"],
+    });
+    return result.canceled ? null : result.filePaths[0] ?? null;
+  });
+
+  // Project management
+  ipcMain.handle("project-get-path", () => {
+    return currentProjectPath;
+  });
+
+  ipcMain.handle("project-open", async (_event, folder: string) => {
+    const projectJson = path.join(folder, ".coda", "project.json");
+    if (!fs.existsSync(projectJson)) {
+      return { success: false, error: "No .coda/project.json found in this folder." };
+    }
+    switchProject(folder);
+    return { success: true };
+  });
+
+  ipcMain.handle("project-create", async (_event, name: string, folder: string) => {
+    const codaDir = path.join(folder, ".coda");
+    const projectJsonPath = path.join(codaDir, "project.json");
+    try {
+      fs.mkdirSync(codaDir, { recursive: true });
+      fs.writeFileSync(
+        projectJsonPath,
+        JSON.stringify({ design: { id: name }, targets: [] }, null, 2),
+        "utf-8"
+      );
+      switchProject(folder);
+      return { success: true };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      return { success: false, error: message };
+    }
+  });
+
   // Sidecar bridge: all coda operations go through the sidecar
   ipcMain.handle("coda-call", async (_event, method: string, params: Record<string, unknown>) => {
+    if (!sidecarConnected) {
+      return { error: { code: -32000, message: "Sidecar not connected. Desktop is in offline mode." } };
+    }
     try {
       return await sendRequest(method, params ?? {});
     } catch (err) {
@@ -313,80 +404,76 @@ app.whenReady().then(() => {
     }
   });
 
-  // Keep backward-compatible resource/tool endpoints that route through sidecar
+  // Resource fetch — wraps sidecar responses into MCP resource format
   ipcMain.handle("coda-fetch", async (_event, uri: string) => {
-    // Map resource URIs to sidecar method calls
+    if (!sidecarConnected) {
+      return { error: { code: -32000, message: "Sidecar not connected. Desktop is in offline mode." } };
+    }
+
+    function wrapAsResource(data: unknown, resourceUri: string) {
+      return {
+        jsonrpc: "2.0",
+        id: 1,
+        result: {
+          contents: [{ uri: resourceUri, mimeType: "application/json", text: JSON.stringify(data) }],
+        },
+      };
+    }
+
     const resourceMapping: Record<string, { method: string; params?: Record<string, unknown> }> = {
       "coda://measures": { method: "get_measures" },
       "coda://targets": { method: "get_targets" },
+      "coda://platforms": { method: "get_platforms" },
       "coda://project": { method: "get_project" },
       "coda://report": { method: "get_report" },
       "coda://breachs": { method: "get_breachs" },
       "coda://iterations": { method: "get_iterations" },
+      "coda://current-run": { method: "get_current_run" },
+      "coda://current-iteration": { method: "get_current_iteration" },
     };
     const fullUri = uri.startsWith("coda://") ? uri : `coda://${uri}`;
-    const mapped = resourceMapping[fullUri];
-    if (mapped) {
+
+    // Handle parameterized URIs like coda://translation/{target_id}
+    const translationMatch = fullUri.match(/^coda:\/\/translation\/(.+)$/);
+    if (translationMatch) {
       try {
-        return await sendRequest(mapped.method, mapped.params ?? {});
+        const result = await sendRequest("get_translation", { target_id: translationMatch[1] });
+        return wrapAsResource(result, fullUri);
       } catch (err) {
         return { error: err };
       }
     }
-    // If not mapped, return error
+
+    const mapped = resourceMapping[fullUri];
+    if (mapped) {
+      try {
+        const result = await sendRequest(mapped.method, mapped.params ?? {});
+        return wrapAsResource(result, fullUri);
+      } catch (err) {
+        return { error: err };
+      }
+    }
     return { error: { message: `Unknown resource: ${fullUri}` } };
   });
 
+  // Tool call — wraps sidecar responses into MCP tool format
   ipcMain.handle("coda-tool", async (_event, name: string, args: Record<string, unknown>) => {
+    if (!sidecarConnected) {
+      return { error: { code: -32000, message: "Sidecar not connected. Desktop is in offline mode." } };
+    }
     try {
-      return await sendRequest(name, args ?? {});
+      const result = await sendRequest(name, args ?? {});
+      return {
+        jsonrpc: "2.0",
+        id: 1,
+        result: {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        },
+      };
     } catch (err) {
       return { error: err };
     }
   });
-
-  // #region 🔖Project Management
-  // IPC handlers for project selection, creation, and path queries.
-  // MUST validate folders and scaffold .coda/project.json on creation.
-
-  ipcMain.handle("get-project-path", () => {
-    return currentProjectPath;
-  });
-
-  ipcMain.handle("dialog-open-folder", async () => {
-    const win = BrowserWindow.getFocusedWindow();
-    const result = await dialog.showOpenDialog(win!, {
-      properties: ["openDirectory", "createDirectory"],
-    });
-    if (result.canceled || result.filePaths.length === 0) return null;
-    return result.filePaths[0];
-  });
-
-  ipcMain.handle("project-open", async (_event, folder: string) => {
-    const codaDir = path.join(folder, ".coda");
-    const projectFile = path.join(codaDir, "project.json");
-    if (!fs.existsSync(projectFile)) {
-      return { success: false, error: "No .coda/project.json found in selected folder." };
-    }
-    switchProject(folder);
-    return { success: true };
-  });
-
-  ipcMain.handle("project-create", async (_event, name: string, folder: string) => {
-    try {
-      const codaDir = path.join(folder, ".coda");
-      fs.mkdirSync(codaDir, { recursive: true });
-      const projectJson = JSON.stringify({ design: { id: name }, targets: [] }, null, 2);
-      fs.writeFileSync(path.join(codaDir, "project.json"), projectJson, "utf8");
-      switchProject(folder);
-      return { success: true };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { success: false, error: message };
-    }
-  });
-
-  // #endregion 🔖Project Management
 });
 
 // #endregion 🔖Main Process

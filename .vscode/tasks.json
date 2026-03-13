@@ -432,7 +432,7 @@
       "problemMatcher": []
     },
     {
-      "label": "🚀publish👤semio🖱️sketchpad",
+      "label": "⬆️publish👤semio🖱️sketchpad",
       "type": "shell",
       "command": "npx nx publish semio/sketchpad",
       "group": "build",

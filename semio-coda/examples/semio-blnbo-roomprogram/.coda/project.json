@@ -1,4 +1,5 @@
 {
+    "name": "semio-blnbo-roomprogram",
     "mcp": {
         "command": "../semio-repo/cli/cli",
         "args": [

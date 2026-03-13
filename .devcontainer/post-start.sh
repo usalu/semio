@@ -3,6 +3,37 @@
 #region 🔖PostStart
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
+#region 🔖EmojiFonts
+configure_emoji_fonts() {
+  sudo mkdir -p /etc/fonts
+  sudo tee /etc/fonts/local.conf >/dev/null <<'FONTCONFIG'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <alias>
+    <family>sans-serif</family>
+    <prefer>
+      <family>Noto Color Emoji</family>
+    </prefer>
+  </alias>
+  <alias>
+    <family>serif</family>
+    <prefer>
+      <family>Noto Color Emoji</family>
+    </prefer>
+  </alias>
+  <alias>
+    <family>monospace</family>
+    <prefer>
+      <family>Noto Color Emoji</family>
+    </prefer>
+  </alias>
+</fontconfig>
+FONTCONFIG
+  sudo fc-cache -f
+  echo "Fixed emoji font fallback."
+}
+#endregion 🔖EmojiFonts
 #region 🔖Startup
 #endregion 🔖Startup
 #region 🔖Ownership
@@ -11,6 +42,7 @@ sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codex 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.config 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codeium 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.gitkraken 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.local/share/GitKrakenCLI 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.local/share/gk 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.cursor-server 2>/dev/null || true
@@ -19,6 +51,9 @@ sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.windsurf-server 2>/dev/null || true
 echo "✅ Fixed ownership for persisted volume mounts."
 #endregion 🔖Ownership
+#region 🔖EmojiFonts
+configure_emoji_fonts
+#endregion 🔖EmojiFonts
 #region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"

@@ -3,6 +3,7 @@
 #region 🔖PostAttach
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VSIX_PATH="semio-repo/vscode/semio-repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
@@ -11,6 +12,92 @@ INSTALL_LOCK_FILE="/tmp/semio-post-attach-extension-install.lock"
 WSL_ERROR="Command is only available in WSL or inside a Visual Studio Code terminal."
 GITKRAKEN_WORKSPACE_NAME="${SEMIO_GITKRAKEN_WORKSPACE_NAME:-semio}"
 SKIP_EXTENSION_INSTALL="${SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL:-}"
+
+#region 🔖GitKrakenCliHelpers
+install_gitkraken_desktop() {
+  if command -v gitkraken >/dev/null 2>&1; then
+    return 0
+  fi
+
+  case "$(uname -m)" in
+    x86_64|amd64)
+      local gitkraken_arch="amd64"
+      ;;
+    aarch64|arm64)
+      local gitkraken_arch="arm64"
+      ;;
+    *)
+      echo "⚠️  Skipping GitKraken Desktop install for unsupported architecture: $(uname -m)"
+      return 0
+      ;;
+  esac
+
+  echo "Installing GitKraken Desktop for Linux..."
+  mkdir -p "${HOME:-/home/vscode}/.gitkraken"
+  local temp_dir
+  temp_dir="$(mktemp -d)"
+  trap 'rm -rf "$temp_dir"' RETURN
+  curl -fsSL "https://release.gitkraken.com/linux/gitkraken-${gitkraken_arch}.deb" -o "$temp_dir/gitkraken.deb"
+  sudo apt-get update
+  sudo apt-get install -y "$temp_dir/gitkraken.deb"
+  rm -rf "$temp_dir"
+  trap - RETURN
+
+  echo "GitKraken Desktop installed."
+}
+
+install_gitkraken_cli() {
+  if [ -x "${HOME:-/home/vscode}/.local/bin/gk" ] && "${HOME:-/home/vscode}/.local/bin/gk" --version >/dev/null 2>&1; then
+    return 0
+  fi
+  if command -v gk >/dev/null 2>&1 && gk --version >/dev/null 2>&1; then
+    return 0
+  fi
+
+  case "$(uname -m)" in
+    x86_64|amd64)
+      local gitkraken_arch="amd64"
+      ;;
+    aarch64|arm64)
+      local gitkraken_arch="arm64"
+      ;;
+    i386|i686)
+      local gitkraken_arch="386"
+      ;;
+    *)
+      echo "⚠️  Skipping GitKraken CLI install for unsupported architecture: $(uname -m)"
+      return 0
+      ;;
+  esac
+
+  echo "Installing GitKraken CLI..."
+  local release_json
+  release_json="$(curl -fsSL https://api.github.com/repos/gitkraken/gk-cli/releases/latest)"
+  local download_url
+  download_url="$(
+    printf '%s' "$release_json" | jq -r \
+      --arg suffix "linux_${gitkraken_arch}.zip" \
+      '.assets[] | select(.name | endswith($suffix)) | .browser_download_url' | head -n 1
+  )"
+  if [ -z "$download_url" ] || [ "$download_url" = "null" ]; then
+    echo "⚠️  Unable to resolve GitKraken CLI download URL for architecture: ${gitkraken_arch}"
+    return 0
+  fi
+
+  mkdir -p "${HOME:-/home/vscode}/.local/bin" "${HOME:-/home/vscode}/.local/share/GitKrakenCLI" "${HOME:-/home/vscode}/.local/share/gk"
+  local temp_dir
+  temp_dir="$(mktemp -d)"
+  trap 'rm -rf "$temp_dir"' RETURN
+  curl -fsSL "$download_url" -o "$temp_dir/gk.zip"
+  unzip -q "$temp_dir/gk.zip" -d "$temp_dir"
+  install -m 0755 "$temp_dir/gk" "${HOME:-/home/vscode}/.local/bin/gk"
+  rm -rf "$temp_dir"
+  trap - RETURN
+
+  "${HOME:-/home/vscode}/.local/bin/gk" --version >/dev/null 2>&1
+  echo "GitKraken CLI installed."
+}
+#endregion 🔖GitKrakenCliHelpers
 
 #region 🔖DetectIDE
 find_working_clis() {
@@ -225,7 +312,101 @@ configure_gitkraken_workspace() {
 }
 #endregion 🔖GitKrakenWorkspace
 
+install_gitkraken_desktop
+install_gitkraken_cli
 configure_gitkraken_workspace
+
+#region 🔖McpConfig
+sync_mcp_client_configs() {
+  local home_dir="${HOME:-/home/vscode}"
+  local repo_root="${REPO_ROOT:-/workspaces/semio}"
+  local source_path="${repo_root}/.mcp.json"
+
+  if [ ! -f "$source_path" ]; then
+    echo "⚠️  MCP config source not found at $source_path, skipping client MCP bootstrap."
+    return 0
+  fi
+
+  node - "$repo_root" "$home_dir" <<'EOF'
+const fs = require("fs");
+const path = require("path");
+
+const [repoRoot, homeDir] = process.argv.slice(2);
+const sourcePath = path.join(repoRoot, ".mcp.json");
+const sourceData = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
+const sourceServers = sourceData.mcpServers ?? {};
+
+function absolutizeValue(value) {
+  if (typeof value !== "string" || value.length === 0) {
+    return value;
+  }
+  if (value.startsWith("./")) {
+    return path.join(repoRoot, value.slice(2));
+  }
+  return value;
+}
+
+function normalizeServer(server) {
+  const sourceArgs = Array.isArray(server.args) ? server.args : [];
+  return {
+    ...server,
+    command: absolutizeValue(server.command),
+    args: sourceArgs.map((arg, index) => {
+      if (typeof arg !== "string") {
+        return arg;
+      }
+      const previousArg = index > 0 ? sourceArgs[index - 1] : "";
+      if ((previousArg === "--directory" || previousArg === "-C") && !path.isAbsolute(arg)) {
+        return path.join(repoRoot, arg);
+      }
+      return absolutizeValue(arg);
+    }),
+  };
+}
+
+function escapeTomlString(value) {
+  return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+const normalizedServers = Object.fromEntries(
+  Object.entries(sourceServers).map(([name, server]) => [name, normalizeServer(server)]),
+);
+
+const windsurfDir = path.join(homeDir, ".codeium", "windsurf");
+fs.mkdirSync(windsurfDir, { recursive: true });
+fs.writeFileSync(
+  path.join(windsurfDir, "mcp_config.json"),
+  `${JSON.stringify({ mcpServers: normalizedServers }, null, 2)}\n`,
+);
+
+const codexDir = path.join(homeDir, ".codex");
+fs.mkdirSync(codexDir, { recursive: true });
+const codexLines = [
+  "# Codex MCP Server Configuration",
+  "# Generated from /workspaces/semio/.mcp.json by .devcontainer/post-attach.sh",
+  "",
+];
+for (const [name, server] of Object.entries(normalizedServers)) {
+  codexLines.push(`[mcp_servers.${name}]`);
+  codexLines.push(`command = "${escapeTomlString(server.command)}"`);
+  if (Array.isArray(server.args) && server.args.length > 0) {
+    codexLines.push(
+      `args = [${server.args
+        .map((arg) => `"${escapeTomlString(arg)}"`)
+        .join(", ")}]`,
+    );
+  } else {
+    codexLines.push("args = []");
+  }
+  codexLines.push(`enabled = ${server.disabled === true ? "false" : "true"}`);
+  codexLines.push("");
+}
+fs.writeFileSync(path.join(codexDir, "config.toml"), `${codexLines.join("\n")}\n`);
+EOF
+
+  echo "✅ Synced MCP configs for Windsurf and Codex."
+}
+#endregion 🔖McpConfig
 
 #region 🔖InstallExtension
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
@@ -287,43 +468,9 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
 fi
 #endregion 🔖InstallExtension
 
-#region 🔖WindsurfMcpConfig
-WINDSURF_MCP_DIR="${HOME:-/home/vscode}/.codeium/windsurf"
-WINDSURF_MCP_FILE="${WINDSURF_MCP_DIR}/mcp_config.json"
-mkdir -p "$WINDSURF_MCP_DIR"
-cat > "$WINDSURF_MCP_FILE" <<'EOF'
-{
-    "mcpServers": {
-        "semio-repo": {
-            "command": "./semio-repo/cli/cli",
-            "args": [
-                "mcp"
-            ]
-        },
-        "semio": {
-            "command": "uv",
-            "args": [
-                "--directory",
-                "semio/engine",
-                "run",
-                "engine.py",
-                "--mcp-stdio"
-            ]
-        },
-        "coda": {
-            "command": "uv",
-            "args": [
-                "--directory",
-                "semio-coda/py",
-                "run",
-                "coda.py",
-                "--mcp-stdio"
-            ]
-        }
-    }
-}
-EOF
-#endregion 🔖WindsurfMcpConfig
+#region 🔖McpConfig
+sync_mcp_client_configs
+#endregion 🔖McpConfig
 
 echo "✅ Post-attach setup complete."
 #endregion 🔖PostAttach
