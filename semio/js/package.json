@@ -13,9 +13,9 @@
   "scripts": {
     "dev": "node --import tsx dev.ts",
     "dev:storybook": "node --import tsx dev.ts storybook",
-    "dev:storybook:inner": "storybook dev -p 6006 --exact-port --host 0.0.0.0 --no-open --debug",
+    "dev:storybook:inner": "npm --prefix ../../semio-elements/ui run dev",
     "dev:sketchpad": "vite --port 5173 --host 0.0.0.0",
-    "build": "storybook build",
+    "build": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
@@ -24,6 +24,7 @@
     "postinstall": "node -e \"try { require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm') } catch (e) { console.error('Failed to copy sql-wasm.wasm:', e.message) }\""
   },
   "dependencies": {
+    "@semio-elements/ui": "*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

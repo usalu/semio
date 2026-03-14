@@ -25,7 +25,7 @@
 
 import "./i18n";
 
-export type { TooltipConfig } from "./sketchpad/elements";
+export type { TooltipConfig } from "@semio-elements/ui";
 export type { AppConfig, CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/shared";
 export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";
 
@@ -40,8 +40,8 @@ export { config as typeConfig } from "./sketchpad/Type";
 export { areKitsEqual, exportKit, importKit } from "./semio";
 export type { KitImportResult } from "./semio";
 
-export { Action, ActionDropdown, ActionGroup, ActionGroupItem, Aside, Avatar, AvatarFallback, AvatarImage, Card, CardGrid, DraggableAvatar, FileTree, Section, Steps, TableAvatar, Tabs, TabsContent, TabsList, TabsTrigger } from "./sketchpad/elements";
-export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps, CardGridProps, CardProps, DraggableAvatarProps, FileTreeNode, SectionProps, StepsProps, TableAvatarProps } from "./sketchpad/elements";
+export { Action, ActionDropdown, ActionGroup, ActionGroupItem, Aside, Avatar, AvatarFallback, AvatarImage, Card, CardGrid, DraggableAvatar, FileTree, Section, Steps, TableAvatar, Tabs, TabsContent, TabsList, TabsTrigger } from "@semio-elements/ui";
+export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps, CardGridProps, CardProps, DraggableAvatarProps, FileTreeNode, SectionProps, StepsProps, TableAvatarProps } from "@semio-elements/ui";
 
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";

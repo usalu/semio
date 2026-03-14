@@ -40,6 +40,13 @@ mcp = FastMCP("coda", json_response=True)
 _CODA_ROOT = Path(__file__).resolve().parent
 _CODA_JSON_PATH = _CODA_ROOT / "coda.json"
 _PROJECT_ENV = "CODA_PROJECT"
+_PROPERTY_KIND_MEASURE_KINDS = {
+    "number": ["increase", "decrease"],
+    "object": ["add", "remove"],
+    "array": ["append", "remove_item"],
+    "level": ["raise", "lower"],
+    "category": ["include", "exclude"],
+}
 
 # endregion Imports
 
@@ -82,6 +89,84 @@ def _get_coda_config() -> dict:
     if not config_path.is_absolute():
         config_path = _CODA_ROOT / config_path
     return _load_json_with_comments(config_path)
+
+
+def _canonicalize_property_kind(raw_kind: str | None) -> str:
+    """Map legacy property kind values to canonical coda kinds.
+    _canonicalize_property_kind MUST map to one of: number, object, array, level, category.
+    [🔬coda📚py💻coda🔖helpers🛠️canonicalizepropertykind](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_canonicalize_property_kind)
+    """
+    if not raw_kind:
+        return "object"
+    kind = str(raw_kind).strip().lower()
+    if kind in _PROPERTY_KIND_MEASURE_KINDS:
+        return kind
+    return "object"
+
+
+def _normalize_property_definition(property_definition: dict) -> dict:
+    """Normalize a property definition to the canonical coda property kind system.
+    _normalize_property_definition MUST expose canonical kind and kind-specific measure_kinds.
+    [🔬coda📚py💻coda🔖helpers🛠️normalizepropertydefinition](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_normalize_property_definition)
+    """
+    normalized = dict(property_definition)
+    kind = _canonicalize_property_kind(
+        normalized.get("kind") or normalized.get("type")
+    )
+    normalized["kind"] = kind
+    normalized["measure_kinds"] = normalized.get("measure_kinds") or list(
+        _PROPERTY_KIND_MEASURE_KINDS[kind]
+    )
+
+    # Property schema now uses kind as the canonical key.
+    normalized.pop("type", None)
+
+    if kind == "object":
+        properties = normalized.get("properties", [])
+        if isinstance(properties, list):
+            normalized["properties"] = [
+                _normalize_property_definition(p) if isinstance(p, dict) else p
+                for p in properties
+            ]
+
+    if kind == "array":
+        items = normalized.get("items")
+        if isinstance(items, dict):
+            normalized["items"] = _normalize_property_definition(items)
+
+    if kind == "level":
+        levels = normalized.get("levels", [])
+        if isinstance(levels, list):
+            normalized_levels = []
+            for level in levels:
+                if not isinstance(level, dict):
+                    normalized_levels.append(level)
+                    continue
+                normalized_level = dict(level)
+                measures = normalized_level.get("measures")
+                if isinstance(measures, dict):
+                    if "higher" in measures and "raise" not in measures:
+                        measures["raise"] = measures.pop("higher")
+                normalized_level["measure_kinds"] = ["raise", "lower"]
+                normalized_levels.append(normalized_level)
+            normalized["levels"] = normalized_levels
+
+    return normalized
+
+
+def _normalize_target_definition(target_definition: dict) -> dict:
+    """Normalize target property definitions to canonical coda property kinds.
+    _normalize_target_definition MUST normalize all target properties recursively.
+    [🔬coda📚py💻coda🔖helpers🛠️normalizetargetdefinition](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_normalize_target_definition)
+    """
+    normalized = dict(target_definition)
+    properties = normalized.get("properties", [])
+    if isinstance(properties, list):
+        normalized["properties"] = [
+            _normalize_property_definition(p) if isinstance(p, dict) else p
+            for p in properties
+        ]
+    return normalized
 
 
 def _get_project_config() -> dict | None:
@@ -333,7 +418,8 @@ def get_targets() -> str:
     [🔬coda📚py💻coda🔖resources🛠️gettargets](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_targets)
     """
     config = _get_coda_config()
-    return json.dumps(config.get("targets", []), indent=2)
+    targets = [_normalize_target_definition(t) for t in config.get("targets", [])]
+    return json.dumps(targets, indent=2)
 
 
 @mcp.resource("coda://frameworks")
@@ -368,7 +454,7 @@ def get_target(id: str) -> str:
     config = _get_coda_config()
     for t in config.get("targets", []):
         if t.get("id") == id:
-            return json.dumps(t, indent=2)
+            return json.dumps(_normalize_target_definition(t), indent=2)
     return json.dumps({"error": f"target not found: {id}"})
 
 
@@ -381,7 +467,8 @@ def get_target_properties(target_id: str) -> str:
     config = _get_coda_config()
     for t in config.get("targets", []):
         if t.get("id") == target_id:
-            return json.dumps(t.get("properties", []), indent=2)
+            target = _normalize_target_definition(t)
+            return json.dumps(target.get("properties", []), indent=2)
     return json.dumps({"error": f"target not found: {target_id}"})
 
 
@@ -394,7 +481,8 @@ def get_target_property(target_id: str, id: str) -> str:
     config = _get_coda_config()
     for t in config.get("targets", []):
         if t.get("id") == target_id:
-            for p in t.get("properties", []):
+            target = _normalize_target_definition(t)
+            for p in target.get("properties", []):
                 if p.get("id") == id:
                     return json.dumps(p, indent=2)
             return json.dumps({"error": f"property not found: {id}"})
@@ -930,7 +1018,7 @@ def _sidecar_get_measures(params: dict) -> dict:
 @_register_sidecar("get_targets")
 def _sidecar_get_targets(params: dict) -> dict:
     config = _get_coda_config()
-    return config.get("targets", [])
+    return [_normalize_target_definition(t) for t in config.get("targets", [])]
 
 
 @_register_sidecar("get_project")

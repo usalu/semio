@@ -127,7 +127,7 @@ import {
   useTypeScope,
   Window
 } from "./Sketchpad";
-import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "./elements";
+import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "@semio-elements/ui";
 import {
   Action,
   applyNodeChanges,
@@ -171,7 +171,7 @@ import {
   TreeStateProvider,
   useInternalNode,
   useReactFlow
-} from "./elements";
+} from "@semio-elements/ui";
 import {
   addToSelection,
   clearSelectionDimension,
@@ -4830,15 +4830,15 @@ const AppContent: FC = () => {
     });
     return paths;
   }, [importedFilePaths]);
-  const kitDesignsKey = useMemo(() => kitDesigns?.map((d) => `${d.guid}:${d.name}:${d.parent?.guid || ""}:${d.folder || ""}:${d.updatedAt || ""}`).join("|") || "", [kitDesigns]);
-  const kitTypesKey = useMemo(() => kitTypes?.map((t) => `${t.guid}:${t.name}:${t.parent?.guid || ""}:${t.folder || ""}:${t.updatedAt || ""}`).join("|") || "", [kitTypes]);
-  const kitQualitiesKey = useMemo(() => kitQualities?.map((q) => `${q.guid}:${q.name}:${q.folder || ""}`).join("|") || "", [kitQualities]);
-  const kitPortsKey = useMemo(() => kitPorts?.map((i) => `${i.guid}:${i.name}`).join("|") || "", [kitPorts]);
-  const kitTagsKey = useMemo(() => kitTags?.map((tag) => `${tag.guid}:${tag.name}`).join("|") || "", [kitTags]);
-  const kitConceptsKey = useMemo(() => kitConcepts?.map((c) => `${c.guid}:${c.name}`).join("|") || "", [kitConcepts]);
-  const kitFilesKey = useMemo(() => kitFiles?.map((f) => `${f.guid}:${f.name}:${f.folder?.guid || ""}:${f.updatedAt || ""}`).join("|") || "", [kitFiles]);
-  const kitFoldersKey = useMemo(() => kitFolders?.map((f) => `${f.guid}:${f.name}:${f.parent?.guid || ""}:${f.updatedAt || ""}`).join("|") || "", [kitFolders]);
-  const kitAuthorsKey = useMemo(() => kitAuthors?.map((a) => `${a.guid}:${a.name}`).join("|") || "", [kitAuthors]);
+  const kitDesignsKey = useMemo(() => (kitDesigns ?? []).filter(Boolean).map((d) => `${d.guid}:${d.name}:${d.parent?.guid || ""}:${d.folder || ""}:${d.updatedAt || ""}`).join("|"), [kitDesigns]);
+  const kitTypesKey = useMemo(() => (kitTypes ?? []).filter(Boolean).map((t) => `${t.guid}:${t.name}:${t.parent?.guid || ""}:${t.folder || ""}:${t.updatedAt || ""}`).join("|"), [kitTypes]);
+  const kitQualitiesKey = useMemo(() => (kitQualities ?? []).filter(Boolean).map((q) => `${q.guid}:${q.name}:${q.folder || ""}`).join("|"), [kitQualities]);
+  const kitPortsKey = useMemo(() => (kitPorts ?? []).filter(Boolean).map((i) => `${i.guid}:${i.name}`).join("|"), [kitPorts]);
+  const kitTagsKey = useMemo(() => (kitTags ?? []).filter(Boolean).map((tag) => `${tag.guid}:${tag.name}`).join("|"), [kitTags]);
+  const kitConceptsKey = useMemo(() => (kitConcepts ?? []).filter(Boolean).map((c) => `${c.guid}:${c.name}`).join("|"), [kitConcepts]);
+  const kitFilesKey = useMemo(() => (kitFiles ?? []).filter(Boolean).map((f) => `${f.guid}:${f.name}:${f.folder?.guid || ""}:${f.updatedAt || ""}`).join("|"), [kitFiles]);
+  const kitFoldersKey = useMemo(() => (kitFolders ?? []).filter(Boolean).map((f) => `${f.guid}:${f.name}:${f.parent?.guid || ""}:${f.updatedAt || ""}`).join("|"), [kitFolders]);
+  const kitAuthorsKey = useMemo(() => (kitAuthors ?? []).filter(Boolean).map((a) => `${a.guid}:${a.name}`).join("|"), [kitAuthors]);
 
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
@@ -7342,43 +7342,47 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
 
     switch (kind) {
       case "type":
-        items = (kit.types ?? []).map((t) => ({
+        items = (kit.types ?? []).filter(Boolean).map((t) => ({
           guid: t.guid,
           name: t.name,
           icon: t.icon,
           parentGuid: t.parent?.guid,
-          concepts: t.concepts?.map((c) => c.guid),
+          concepts: (t.concepts ?? [])
+            .map((c: any) => (typeof c === "string" ? c : c?.guid))
+            .filter((guid): guid is string => Boolean(guid)),
         }));
         break;
       case "design":
-        items = (kit.designs ?? []).map((d) => ({
+        items = (kit.designs ?? []).filter(Boolean).map((d) => ({
           guid: d.guid,
           name: d.name,
           icon: d.icon,
           parentGuid: d.parent?.guid,
-          concepts: d.concepts?.map((c) => c.guid),
+          concepts: (d.concepts ?? [])
+            .map((c: any) => (typeof c === "string" ? c : c?.guid))
+            .filter((guid): guid is string => Boolean(guid)),
         }));
         break;
       case "quality":
-        items = (kit.qualities ?? []).map((q) => ({ guid: q.guid, name: q.name, icon: q.icon }));
+        items = (kit.qualities ?? []).filter(Boolean).map((q) => ({ guid: q.guid, name: q.name, icon: q.icon }));
         break;
       case "port":
-        items = (kit.ports ?? []).map((i) => ({ guid: i.guid, name: i.name, icon: i.icon }));
+        items = (kit.ports ?? []).filter(Boolean).map((i) => ({ guid: i.guid, name: i.name, icon: i.icon }));
         break;
       case "tag":
-        items = (kit.tags ?? []).map((t) => ({ guid: t.guid, name: t.name, icon: t.icon }));
+        items = (kit.tags ?? []).filter(Boolean).map((t) => ({ guid: t.guid, name: t.name, icon: t.icon }));
         break;
       case "concept":
-        items = (kit.concepts ?? []).map((c) => ({ guid: c.guid, name: c.name, icon: c.icon }));
+        items = (kit.concepts ?? []).filter(Boolean).map((c) => ({ guid: c.guid, name: c.name, icon: c.icon }));
         break;
       case "file":
-        items = (kit.files ?? []).map((f) => ({ guid: f.guid, name: f.name, icon: getFileIcon(f.name), parentGuid: f.folder?.guid }));
+        items = (kit.files ?? []).filter(Boolean).map((f) => ({ guid: f.guid, name: f.name, icon: getFileIcon(f.name), parentGuid: f.folder?.guid }));
         break;
       case "folder":
-        items = (kit.folders ?? []).map((f) => ({ guid: f.guid, name: f.name, icon: <FolderIcon className="size-tiny" />, parentGuid: f.parent?.guid }));
+        items = (kit.folders ?? []).filter(Boolean).map((f) => ({ guid: f.guid, name: f.name, icon: <FolderIcon className="size-tiny" />, parentGuid: f.parent?.guid }));
         break;
       case "author":
-        items = (kit.authors ?? []).map((a) => ({ guid: a.guid, name: a.name, icon: <UserIcon className="size-tiny" /> }));
+        items = (kit.authors ?? []).filter(Boolean).map((a) => ({ guid: a.guid, name: a.name, icon: <UserIcon className="size-tiny" /> }));
         break;
     }
 

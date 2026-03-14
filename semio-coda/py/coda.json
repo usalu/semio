@@ -1,72 +1,212 @@
 {
+    "property_kinds": {
+        "number": {
+            "measure_kinds": [
+                "increase",
+                "decrease"
+            ]
+        },
+        "object": {
+            "measure_kinds": [
+                "add",
+                "remove"
+            ]
+        },
+        "array": {
+            "measure_kinds": [
+                "append",
+                "remove_item"
+            ]
+        },
+        "level": {
+            "measure_kinds": [
+                "raise",
+                "lower"
+            ]
+        },
+        "category": {
+            "measure_kinds": [
+                "include",
+                "exclude"
+            ]
+        }
+    },
+    "measures": [
+        {
+            "id": "increase-gross-floor-area",
+            "kind": "increase",
+            "description": "Increase gross floor area."
+        },
+        {
+            "id": "decrease-gross-floor-area",
+            "kind": "decrease",
+            "description": "Decrease gross floor area."
+        },
+        {
+            "id": "add-space",
+            "kind": "append",
+            "description": "Add one space to a collection of spaces."
+        },
+        {
+            "id": "remove-space",
+            "kind": "remove_item",
+            "description": "Remove one space from a collection of spaces."
+        },
+        {
+            "id": "raise-building-class",
+            "kind": "raise",
+            "description": "Raise building class to a higher level."
+        },
+        {
+            "id": "lower-building-class",
+            "kind": "lower",
+            "description": "Lower building class to a lower level."
+        },
+        {
+            "id": "include-space-category",
+            "kind": "include",
+            "description": "Include a category in the allowed space categories."
+        },
+        {
+            "id": "exclude-space-category",
+            "kind": "exclude",
+            "description": "Exclude a category from the allowed space categories."
+        }
+    ],
     "properties": [
         {
             "id": "building",
             "name": "Building",
             "description": "The building to be designed.",
-            "type": "object",
+            "kind": "object",
+            "measure_kinds": [
+                "add",
+                "remove"
+            ],
             "properties": [
                 {
                     "id": "gross-floor-area",
                     "name": "Gross Floor Area",
-                    "type": "number",
+                    "kind": "number",
+                    "measure_kinds": [
+                        "increase",
+                        "decrease"
+                    ],
                     "description": "The total floor area of the building."
                 },
                 {
                     "id": "energy_demand",
                     "name": "Energy Demand",
-                    "type": "number",
+                    "kind": "number",
+                    "measure_kinds": [
+                        "increase",
+                        "decrease"
+                    ],
                     "description": "The energy demand of the building per square meter per year."
                 },
                 {
                     "id": "storeys",
                     "name": "Storeys",
-                    "type": "array",
+                    "kind": "array",
+                    "measure_kinds": [
+                        "append",
+                        "remove_item"
+                    ],
                     "description": "The storeys of the building.",
                     "items": {
-                        "type": "object",
+                        "kind": "object",
+                        "measure_kinds": [
+                            "add",
+                            "remove"
+                        ],
                         "properties": [
                             {
                                 "id": "floor_height",
                                 "name": "Floor Height",
-                                "type": "number",
+                                "kind": "number",
+                                "measure_kinds": [
+                                    "increase",
+                                    "decrease"
+                                ],
                                 "description": "The height of the floor of the storey."
                             },
                             {
                                 "id": "gross-floor-area",
                                 "name": "Gross Floor Area",
-                                "type": "number",
+                                "kind": "number",
+                                "measure_kinds": [
+                                    "increase",
+                                    "decrease"
+                                ],
                                 "description": "The total floor area of the storey."
                             },
                             {
                                 "id": "volume",
                                 "name": "Volume",
-                                "type": "number",
+                                "kind": "number",
+                                "measure_kinds": [
+                                    "increase",
+                                    "decrease"
+                                ],
                                 "description": "The volume of the storey."
                             },
                             {
                                 "id": "occupancy",
                                 "name": "Occupancy",
-                                "type": "number"
+                                "kind": "number",
+                                "measure_kinds": [
+                                    "increase",
+                                    "decrease"
+                                ]
+                            },
+                            {
+                                "id": "space-category",
+                                "name": "Space Category",
+                                "kind": "category",
+                                "measure_kinds": [
+                                    "include",
+                                    "exclude"
+                                ],
+                                "values": [
+                                    "residential",
+                                    "office",
+                                    "service"
+                                ]
                             },
                             {
                                 "id": "spaces",
                                 "name": "Spaces",
-                                "type": "array",
+                                "kind": "array",
+                                "measure_kinds": [
+                                    "append",
+                                    "remove_item"
+                                ],
                                 "description": "The spaces of the storey.",
                                 "items": {
-                                    "type": "object",
+                                    "kind": "object",
+                                    "measure_kinds": [
+                                        "add",
+                                        "remove"
+                                    ],
                                     "properties": [
                                         {
                                             "id": "gross-floor-area",
                                             "name": "Gross Floor Area",
-                                            "type": "number",
+                                            "kind": "number",
+                                            "measure_kinds": [
+                                                "increase",
+                                                "decrease"
+                                            ],
                                             "description": "The total floor area of the space."
                                         },
                                         {
                                             "id": "occupancy",
                                             "name": "Occupancy",
-                                            "type": "number"
+                                            "kind": "number",
+                                            "measure_kinds": [
+                                                "increase",
+                                                "decrease"
+                                            ]
                                         }
                                     ]
                                 }
@@ -190,7 +330,11 @@
                 {
                     "id": "program",
                     "name": "Program",
-                    "type": "Number",
+                    "kind": "number",
+                    "measure_kinds": [
+                        "increase",
+                        "decrease"
+                    ],
                     "description": "The sum of areas of the same program."
                 }
             ],
@@ -285,14 +429,22 @@
                 {
                     "id": "height",
                     "name": "Height",
-                    "type": "number",
+                    "kind": "number",
+                    "measure_kinds": [
+                        "increase",
+                        "decrease"
+                    ],
                     "description": "Height is the distance from the average ground surface to the top edge of the finished floor of the highest storey in which a habitable room is possible.",
                     "url": "https://gesetze.berlin.de/perma?d=jlr-BauOBE2005V11P2"
                 },
                 {
                     "id": "building-class",
                     "name": "Building Class",
-                    "type": "level",
+                    "kind": "level",
+                    "measure_kinds": [
+                        "raise",
+                        "lower"
+                    ],
                     "levels": [
                         {
                             "value": "1",
@@ -403,37 +555,39 @@
                     ]
                 }
             ],
-            "report": {
-                "id": "staircase-located",
-                "description": "Must be located in a separate stairwell",
-                "clauses": [
-                    {
-                        "id": "not-external-staircase",
-                        "description": "Not an external staircase"
-                    },
-                    {
-                        "id": "not-in-building-classes-1-and-2",
-                        "description": "Not in buildings of building classes 1 and 2",
-                        "properties": [
-                            {
-                                "id": "building-class",
-                                "value": "1"
-                            },
-                            {
-                                "id": "building-class",
-                                "value": "2"
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": "building-height-limit",
-                "description": "The building height must be less than 21m.",
-                "measures": [
-                    "remove-storey"
-                ]
-            }
+            "rules": [
+                {
+                    "id": "staircase-located",
+                    "description": "Must be located in a separate stairwell",
+                    "clauses": [
+                        {
+                            "id": "not-external-staircase",
+                            "description": "Not an external staircase"
+                        },
+                        {
+                            "id": "not-in-building-classes-1-and-2",
+                            "description": "Not in buildings of building classes 1 and 2",
+                            "properties": [
+                                {
+                                    "id": "building-class",
+                                    "value": "1"
+                                },
+                                {
+                                    "id": "building-class",
+                                    "value": "2"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "building-height-limit",
+                    "description": "The building height must be less than 21m.",
+                    "measures": [
+                        "remove-storey"
+                    ]
+                }
+            ]
         }
     ]
 }

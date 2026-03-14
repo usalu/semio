@@ -168,7 +168,7 @@ import {
   TreeSection,
   TreeStateProvider,
   Window
-} from "./elements";
+} from "@semio-elements/ui";
 import {
   ActionField,
   AppCommandResult,
@@ -19422,7 +19422,7 @@ const Sketchpad = ({
 
 // #endregion Sketchpad Components
 
-export { SectionSpecificity, Window } from "./elements";
+export { SectionSpecificity, Window } from "@semio-elements/ui";
 
 export { Sketchpad };
 export default Sketchpad;

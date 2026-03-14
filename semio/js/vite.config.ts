@@ -108,6 +108,7 @@ export default defineConfig({
   resolve: {
     dedupe: ["three"],
     alias: {
+      "@semio-elements/ui": path.resolve(__dirname, "../../semio-elements/ui"),
       "@semio/assets": path.resolve(__dirname, "../assets"),
     },
   },

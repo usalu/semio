@@ -26,7 +26,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff, sumQualityInDesign } from "../semio";
-import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "./elements";
+import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "@semio-elements/ui";
 import {
     Diagram as BaseDiagram,
     calculateDiagramLayout,
@@ -51,7 +51,7 @@ import {
     TreeItem,
     TreeRow,
     TreeStateProvider,
-} from "./elements";
+} from "@semio-elements/ui";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId } from "./shared";
 import { AppConfig, applySelectionComposition, AppPlugin, createPanelDefinition, Expertise, isSelectionToolKind, Mode, PanelKind, registerAppPlugin, registerEventHandler, resolveSelectionCompositionKind, Theme, ToolKind, toSelectionToolKind } from "./shared";
 import type { KitStore, QualityStore, SketchpadStore } from "./Sketchpad";

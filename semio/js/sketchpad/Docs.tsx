@@ -41,7 +41,7 @@ import {
     useSettings,
     useSketchpadCommands,
 } from "./Sketchpad";
-import { Aside, BasicChatPanel, Tabs as BaseTabs, FileTree, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider } from "./elements";
+import { Aside, BasicChatPanel, Tabs as BaseTabs, FileTree, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider } from "@semio-elements/ui";
 import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, registerDocsRegistry, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
 // #endregion Imports

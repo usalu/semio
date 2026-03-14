@@ -25,7 +25,7 @@ import { FC, useCallback, useLayoutEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useLabel } from "../i18n";
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, ToolbarGroup } from "./elements";
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, ToolbarGroup } from "@semio-elements/ui";
 import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared";
 import { conditionalHookResult, createPanelDefinition, EMPTY_PANEL_VISIBILITY, PanelKind, registerAppPlugin, registerEventHandler } from "./shared";
 import { Canvas, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, useAddPanelSection, useAppType, useRemovePanelSection, useSketchpadActor } from "./Sketchpad";

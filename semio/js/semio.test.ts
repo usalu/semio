@@ -17,9 +17,11 @@
 // #endregion 🔖Header
 
 import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from "@semio/assets";
+import * as ElementsBundle from "@semio-elements/ui";
 import { describe, expect, it } from "vitest";
 import { detectStorybookLaunchKind, isStorybookIndexPayload, readLaunchKind } from "./dev";
-import { buildControlTree, ControlDef } from "./sketchpad/elements";
+import { buildControlTree, ControlDef } from "@semio-elements/ui";
+import { Action as JsAction } from "./index";
 import {
   applyDesignDiff,
   applyKitDiff,
@@ -48,6 +50,7 @@ import {
   validateKit,
   ValidationResult,
 } from "./semio";
+import * as SketchpadElements from "./sketchpad/elements";
 import { applySelectionComposition, getNextPanelVisibilityFromToggle, resolveSelectionCompositionKind, ToolKind } from "./sketchpad/shared";
 
 const TOLERANCE = 0.001;
@@ -127,6 +130,16 @@ describe("Change", () => {
         });
       });
     });
+  });
+});
+
+describe("Elements Bundle", () => {
+  it("semio/js consumes semio-elements ui exports without changing runtime identities", () => {
+    expect(SketchpadElements.Action).toBe(ElementsBundle.Action);
+    expect(SketchpadElements.LevelProvider).toBe(ElementsBundle.LevelProvider);
+    expect(SketchpadElements.SectionSpecificity).toBe(ElementsBundle.SectionSpecificity);
+    expect(SketchpadElements.buildControlTree).toBe(ElementsBundle.buildControlTree);
+    expect(JsAction).toBe(ElementsBundle.Action);
   });
 });
 

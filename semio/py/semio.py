@@ -48,41 +48,13 @@ if sys.version_info >= (3, 13):
     import graphene_pydantic.converters
 
     graphene_pydantic.converters.evaluate_forward_ref = _patched_evaluate_forward_ref
-    import sqlmodel._compat
 
-    _original_get_relationship_to = sqlmodel._compat.get_relationship_to
-
-    def _patched_get_relationship_to(name: str, rel_info: typing.Any, annotation: typing.Any) -> typing.Any:
-        if isinstance(annotation, str):
-            import re
-
-            def strip_quotes(s: str) -> str:
-                if (s.startswith("'") and s.endswith("'")) or (s.startswith('"') and s.endswith('"')):
-                    return s[1:-1]
-                return s
-
-            annotation = strip_quotes(annotation)
-            list_match = re.match(r"list\[(.+)\]", annotation)
-            if list_match:
-                annotation = strip_quotes(list_match.group(1))
-            return annotation
-        return _original_get_relationship_to(name, rel_info, annotation)
-        return _original_get_relationship_to(name=name, rel_info=rel_info, annotation=annotation)
-
-    sqlmodel._compat.get_relationship_to = _patched_get_relationship_to
-    import sqlmodel.main
-
-    sqlmodel.main.get_relationship_to = _patched_get_relationship_to
 import graphene_pydantic
-import graphene_sqlalchemy
 import loguru
 import networkx
 import numpy
 import pydantic
 import pytransform3d.rotations
-import sqlalchemy
-import sqlalchemy.orm
-import sqlmodel
 
 # endregion Imports
 
@@ -413,19 +385,18 @@ class AlreadyExists(SpecificationError, abc.ABC):
     [👤semio📚py💻semio🔖exceptions🛠️alreadyexists](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/AlreadyExists)
     """
 
-class Semio(sqlmodel.SQLModel, table=True):
+class Semio(pydantic.BaseModel):
     """ℹ Metadata about the database.
     Semio MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖exceptions🛠️semio](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/Semio)
     """
 
-    __tablename__ = "semio"
 
-    release: str = sqlmodel.Field(default=RELEASE, primary_key=True)
+    release: str = pydantic.Field(default=RELEASE)
     """🍾 The current release of semio."""
-    engine: str = sqlmodel.Field(default=VERSION)
+    engine: str = pydantic.Field(default=VERSION)
     """⚙️The version of the engine that created this database."""
-    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
     """⌚ The time when the database was created."""
 
 # endregion Exceptions
@@ -437,7 +408,7 @@ class Semio(sqlmodel.SQLModel, table=True):
 # [👤semio📚py💻semio🔖modeling](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling)
 # Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
-class SModel(sqlmodel.SQLModel, abc.ABC):
+class SModel(pydantic.BaseModel, abc.ABC):
     """⚪ The base for models.
     SModel MUST be subclassed and MUST NOT be instantiated directly.
     [👤semio📚py💻semio🔖modeling🔖primitives🛠️smodel](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/SModel)
@@ -529,7 +500,7 @@ class Entity(SModel, abc.ABC):
     PLURAL: typing.ClassVar[str]
     """🔢 The plural of the singular of the entity name."""
 
-    def parent(self) -> typing.Optional["Entity"]:
+    def parent_entity(self) -> typing.Optional["Entity"]:
         """👪 The parent entity of the entity."""
         return None
 
@@ -545,7 +516,7 @@ class Entity(SModel, abc.ABC):
     def guid(self) -> str:
         """🆔 A Globally Unique Identifier (GUID) of the entity."""
         localId = f"{self.__class__.PLURAL.lower()}/{self.id()}"
-        parent = self.parent()
+        parent = self.parent_entity()
         parentId = f"{parent.guid()}/" if parent is not None else ""
         return parentId + localId
 
@@ -577,7 +548,6 @@ class TableEntity(Entity, Table, abc.ABC):
     [👤semio📚py💻semio🔖modeling🔖primitives🛠️tableentity](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/TableEntity)
     """
 
-    __tablename__: typing.ClassVar[str]
     """📛 The lowercase name of the table in the database."""
 
 # endregion Primitives
@@ -628,7 +598,7 @@ class RelayNode(graphene.relay.Node):
         entity = get(global_id)
         return entity
 
-class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
+class TableNode(graphene_pydantic.PydanticObjectType):
     """A base class for all nodes that are a table in the database.
     It automatically excludes the fields that are defined in the table.
     Resolvers to all @properties are added.
@@ -642,11 +612,16 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
 
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, **options):
-        excludedFields = tuple(k for k, v in model.model_fields.items() if v.exclude)
+        excludedFields = tuple(
+            k for k, v in model.model_fields.items()
+            if v.exclude or v.default_factory is not None
+        )
         if "exclude_fields" in options:
             options["exclude_fields"] += excludedFields
         else:
             options["exclude_fields"] = excludedFields
+        if "name" not in options:
+            options["name"] = model.__name__
 
         super().__init_subclass_with_meta__(model=model, **options)
 
@@ -688,21 +663,21 @@ class AttributeKeyField(RealField, abc.ABC):
     AttributeKeyField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖attribute🛠️attributekeyfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeKeyField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class AttributeValueField(RealField, abc.ABC):
     """Field mixin for the value of a attribute.
     AttributeValueField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖attribute🛠️attributevaluefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeValueField)
     """
-    value: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    value: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class AttributeDefinitionField(RealField, abc.ABC):
     """Field mixin for the definition of a attribute.
     AttributeDefinitionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖attribute🛠️attributedefinitionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeDefinitionField)
     """
-    definition: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    definition: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class AttributeId(AttributeKeyField, Id):
     """Identity fields for uniquely identifying a attribute.
@@ -744,145 +719,15 @@ class Attribute(
     AttributeValueField,
     AttributeKeyField,
     TableEntity,
-    table=True,
 ):
     """Attribute entity storing a key-value pair with an optional definition.
     Attribute MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖attribute🛠️attribute](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/Attribute)
     """
     PLURAL = "attributes"
-    __tablename__ = "attribute"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    modelPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("model.id")),
-        default=None,
-        exclude=True,
-    )
-    model: "Model" = sqlmodel.Relationship(back_populates="attributes")
-    connectorPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connector.id")),
-        default=None,
-        exclude=True,
-    )
-    connector: "Connector" = sqlmodel.Relationship(back_populates="attributes")
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
-        default=None,
-        exclude=True,
-    )
-    type: "Type" = sqlmodel.Relationship(back_populates="attributes")
-    piecePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("piece.id")),
-        default=None,
-        exclude=True,
-    )
-    piece: "Piece" = sqlmodel.Relationship(back_populates="attributes")
-    connectionPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "connection_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("connection.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    connection: "Connection" = sqlmodel.Relationship(back_populates="attributes")
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    design: "Design" = sqlmodel.Relationship(back_populates="attributes")
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
-    kit: "Kit" = sqlmodel.Relationship(back_populates="attributes")
-    qualityPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("quality.id")),
-        default=None,
-        exclude=True,
-    )
-    quality: "Quality" = sqlmodel.Relationship(back_populates="attributes")
-    propPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("prop_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("prop.id")),
-        default=None,
-        exclude=True,
-    )
-    prop: "Prop" = sqlmodel.Relationship(back_populates="attributes")
-    authorPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("author_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("author.id")),
-        default=None,
-        exclude=True,
-    )
-    author: "Author" = sqlmodel.Relationship(back_populates="attributes")
-    locationPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("location_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("location.id")),
-        default=None,
-        exclude=True,
-    )
-    location: "Location" = sqlmodel.Relationship(back_populates="attributes")
-    benchmarkPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("benchmark_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("benchmark.id")),
-        default=None,
-        exclude=True,
-    )
-    benchmark: "Benchmark" = sqlmodel.Relationship(back_populates="attributes")
-    folderPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("folder_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("folder.id")),
-        default=None,
-        exclude=True,
-    )
-    folder: "Folder" = sqlmodel.Relationship(back_populates="attributes")
-    portPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("port.id")),
-        default=None,
-        exclude=True,
-    )
-    port_: "Port" = sqlmodel.Relationship(back_populates="attributes")
 
-    __table_args__ = (
-        sqlalchemy.CheckConstraint(
-            """
-        (
-            (model_id IS NOT NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL AND folder_id IS NULL)
-        OR
-            (model_id IS NULL AND connector_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL AND folder_id IS NOT NULL)
-        )
-        """,
-            name="ck_attributes_parent_set",
-        ),
-        sqlalchemy.UniqueConstraint("name", "type_id", "design_id", name="uq_attributes_name_type_id_design_id"),
-    )
 
-    def parent(
+    def parent_entity(
         self,
     ) -> typing.Union[
         "Model",
@@ -961,35 +806,35 @@ class TagGuidField(RealField, abc.ABC):
     TagGuidField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖tag🛠️tagguidfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagGuidField)
     """
-    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 class TagNameField(RealField, abc.ABC):
     """Field mixin for the name of a tag.
     TagNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖tag🛠️tagnamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class TagDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a tag.
     TagDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖tag🛠️tagdescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagDescriptionField)
     """
-    description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class TagIconField(RealField, abc.ABC):
     """Field mixin for the icon of a tag.
     TagIconField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖tag🛠️tagiconfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagIconField)
     """
-    icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 class TagOrderField(RealField, abc.ABC):
     """Field mixin for the order of a tag.
     TagOrderField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖tag🛠️tagorderfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagOrderField)
     """
-    order: int = sqlmodel.Field(default=0)
+    order: int = pydantic.Field(default=0)
 
 class TagId(TagGuidField, Id):
     """Identity fields for uniquely identifying a tag.
@@ -1005,24 +850,11 @@ class Tag(
     TagNameField,
     TagGuidField,
     Table,
-    table=True,
 ):
     """Tag entity for labeling kit elements with name, icon and order.
     Tag MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖tag🛠️tag](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/Tag)
     """
-    __tablename__ = "tag"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    modelPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("model_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("model.id")),
-        default=None,
-        exclude=True,
-    )
-    model: Model = sqlmodel.Relationship(back_populates="tags_")
 
 # endregion Tag
 
@@ -1035,35 +867,35 @@ class ConceptGuidField(RealField, abc.ABC):
     ConceptGuidField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖concept🛠️conceptguidfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptGuidField)
     """
-    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 class ConceptNameField(RealField, abc.ABC):
     """Field mixin for the name of a concept.
     ConceptNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖concept🛠️conceptnamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class ConceptDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a concept.
     ConceptDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖concept🛠️conceptdescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptDescriptionField)
     """
-    description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class ConceptIconField(RealField, abc.ABC):
     """Field mixin for the icon of a concept.
     ConceptIconField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖concept🛠️concepticonfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptIconField)
     """
-    icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 class ConceptOrderField(RealField, abc.ABC):
     """Field mixin for the order of a concept.
     ConceptOrderField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖concept🛠️conceptorderfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptOrderField)
     """
-    order: int = sqlmodel.Field(default=0)
+    order: int = pydantic.Field(default=0)
 
 class ConceptId(ConceptGuidField, Id):
     """Identity fields for uniquely identifying a concept.
@@ -1079,36 +911,11 @@ class Concept(
     ConceptNameField,
     ConceptGuidField,
     Table,
-    table=True,
 ):
     """Concept entity for semantic grouping with name, icon and order.
     Concept MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖concept🛠️concept](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/Concept)
     """
-    __tablename__ = "concept"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
-        default=None,
-        exclude=True,
-    )
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    kit: Kit = sqlmodel.Relationship(back_populates="concepts_")
-    type: Type = sqlmodel.Relationship(back_populates="concepts_")
-    design: Design = sqlmodel.Relationship(back_populates="concepts_")
 
 # endregion Concept
 
@@ -1121,8 +928,8 @@ class Coord(SModel):
     Coord MUST contain all coordinate or geometry fields.
     [👤semio📚py💻semio🔖domain🔖coord🛠️coord](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord/d/i/Coord)
     """
-    u: float = sqlmodel.Field()
-    v: float = sqlmodel.Field()
+    u: float = pydantic.Field()
+    v: float = pydantic.Field()
 
     def __str__(self) -> str:
         return f"[{pretty(self.u)}, {pretty(self.v)}]"
@@ -1185,9 +992,9 @@ class Point(SModel):
     Point MUST contain all coordinate or geometry fields.
     [👤semio📚py💻semio🔖domain🔖point🛠️point](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point/d/i/Point)
     """
-    x: float = sqlmodel.Field()
-    y: float = sqlmodel.Field()
-    z: float = sqlmodel.Field()
+    x: float = pydantic.Field()
+    y: float = pydantic.Field()
+    z: float = pydantic.Field()
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
@@ -1250,9 +1057,9 @@ class Vector(SModel):
     Vector MUST contain all coordinate or geometry fields.
     [👤semio📚py💻semio🔖domain🔖vector🛠️vector](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector/d/i/Vector)
     """
-    x: float = sqlmodel.Field()
-    y: float = sqlmodel.Field()
-    z: float = sqlmodel.Field()
+    x: float = pydantic.Field()
+    y: float = pydantic.Field()
+    z: float = pydantic.Field()
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
@@ -1315,39 +1122,39 @@ class PlaneOriginField(MaskedField, abc.ABC):
     PlaneOriginField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖plane🛠️planeoriginfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneOriginField)
     """
-    origin: Point = sqlmodel.Field()
+    origin: Point = pydantic.Field()
 
 class PlaneXAxisField(MaskedField, abc.ABC):
     """Field mixin for the x axis of a plane.
     PlaneXAxisField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖plane🛠️planexaxisfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneXAxisField)
     """
-    xAxis: Vector = sqlmodel.Field()
+    xAxis: Vector = pydantic.Field()
 
 class PlaneYAxisField(MaskedField, abc.ABC):
     """Field mixin for the y axis of a plane.
     PlaneYAxisField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖plane🛠️planeyaxisfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneYAxisField)
     """
-    yAxis: Vector = sqlmodel.Field()
+    yAxis: Vector = pydantic.Field()
 
 class PlaneInput(Input):
     """Input fields for creating or updating a plane.
     PlaneInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖plane🛠️planeinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneInput)
     """
-    origin: PointInput = sqlmodel.Field()
-    xAxis: VectorInput = sqlmodel.Field()
-    yAxis: VectorInput = sqlmodel.Field()
+    origin: PointInput = pydantic.Field()
+    xAxis: VectorInput = pydantic.Field()
+    yAxis: VectorInput = pydantic.Field()
 
 class PlaneContext(Context):
     """Context fields for understanding a plane by an LLM.
     PlaneContext MUST contain all fields needed for LLM understanding.
     [👤semio📚py💻semio🔖domain🔖plane🛠️planecontext](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneContext)
     """
-    origin: PointContext = sqlmodel.Field()
-    xAxis: VectorContext = sqlmodel.Field()
-    yAxis: VectorContext = sqlmodel.Field()
+    origin: PointContext = pydantic.Field()
+    xAxis: VectorContext = pydantic.Field()
+    yAxis: VectorContext = pydantic.Field()
 
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
     """Output fields returned when fetching a plane.
@@ -1356,27 +1163,11 @@ class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
     """
     pass
 
-class Plane(Table, table=True):
+class Plane(Table):
     """Oriented coordinate frame in 3D space with origin and axes.
     Plane MUST contain all coordinate or geometry fields.
     [👤semio📚py💻semio🔖domain🔖plane🛠️plane](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/Plane)
     """
-    __tablename__ = "plane"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    originX: float = sqlmodel.Field(sa_column=sqlmodel.Column("origin_x", sqlalchemy.Float()), exclude=True)
-    originY: float = sqlmodel.Field(sa_column=sqlmodel.Column("origin_y", sqlalchemy.Float()), exclude=True)
-    originZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("origin_z", sqlalchemy.Float()), exclude=True)
-    xAxisX: float = sqlmodel.Field(sa_column=sqlmodel.Column("x_axis_x", sqlalchemy.Float()), exclude=True)
-    xAxisY: float = sqlmodel.Field(sa_column=sqlmodel.Column("x_axis_y", sqlalchemy.Float()), exclude=True)
-    xAxisZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("x_axis_z", sqlalchemy.Float()), exclude=True)
-    yAxisX: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_x", sqlalchemy.Float()), exclude=True)
-    yAxisY: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_y", sqlalchemy.Float()), exclude=True)
-    yAxisZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_z", sqlalchemy.Float()), exclude=True)
-    piece: Piece = sqlmodel.Relationship(back_populates="plane")
 
     @property
     def origin(self) -> Point:
@@ -1461,28 +1252,28 @@ class LocationGuidField(RealField, abc.ABC):
     LocationGuidField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖location🛠️locationguidfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationGuidField)
     """
-    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 class LocationLongitudeField(RealField, abc.ABC):
     """Field mixin for the longitude of a location.
     LocationLongitudeField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖location🛠️locationlongitudefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationLongitudeField)
     """
-    longitude: float = sqlmodel.Field()
+    longitude: float = pydantic.Field()
 
 class LocationLatitudeField(RealField, abc.ABC):
     """Field mixin for the latitude of a location.
     LocationLatitudeField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖location🛠️locationlatitudefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationLatitudeField)
     """
-    latitude: float = sqlmodel.Field()
+    latitude: float = pydantic.Field()
 
 class LocationAltitudeField(RealField, abc.ABC):
     """Field mixin for the altitude of a location.
     LocationAltitudeField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖location🛠️locationaltitudefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationAltitudeField)
     """
-    altitude: typing.Optional[float] = sqlmodel.Field(default=None)
+    altitude: typing.Optional[float] = pydantic.Field(default=None)
 
 class LocationId(LocationGuidField, Id):
     """Identity fields for uniquely identifying a location.
@@ -1497,20 +1288,13 @@ class Location(
     LocationLongitudeField,
     LocationGuidField,
     TableEntity,
-    table=True,
 ):
     """Geographic location with longitude, latitude and altitude.
     Location MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖location🛠️location](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/Location)
     """
     PLURAL = "locations"
-    __tablename__ = "location"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 class LocationInput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Input):
     """Input fields for creating or updating a location.
@@ -1567,21 +1351,21 @@ class AuthorNameField(RealField, abc.ABC):
     AuthorNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖author🛠️authornamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class AuthorEmailField(RealField, abc.ABC):
     """Field mixin for the email of a author.
     AuthorEmailField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖author🛠️authoremailfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorEmailField)
     """
-    email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+    email: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 class AuthorRankField(RealField, abc.ABC):
     """Field mixin for the rank of a author.
     AuthorRankField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖author🛠️authorrankfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorRankField)
     """
-    rank: int = sqlmodel.Field(default=0)
+    rank: int = pydantic.Field(default=0)
 
 class AuthorId(AuthorEmailField, Id):
     """Identity fields for uniquely identifying a author.
@@ -1616,30 +1400,16 @@ class Author(
     AuthorEmailField,
     AuthorNameField,
     TableEntity,
-    table=True,
 ):
     """Author entity with name, email and contribution rank.
     Author MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖author🛠️author](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/Author)
     """
     PLURAL = "authors"
-    __tablename__ = "author"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
-    kit: Kit = sqlmodel.Relationship(back_populates="authors_")
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="author", cascade_delete=True)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("email", "kit_id", name="uq_authors_email_kit_id"),)
 
-    def parent(self) -> "Kit":
+    def parent_entity(self) -> "Kit":
         if self.kit is not None:
             return self.kit
         raise NoKitAssigned()
@@ -1666,47 +1436,17 @@ class ArtifactAuthorEmailField(RealField, abc.ABC):
     ArtifactAuthorEmailField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖artifactauthor🛠️artifactauthoremailfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/ArtifactAuthor/d/i/ArtifactAuthorEmailField)
     """
-    author_email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+    author_email: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
-class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
+class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity):
     """Association entity linking an artifact to an author by email.
     ArtifactAuthor MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖artifactauthor🛠️artifactauthor](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/ArtifactAuthor/d/i/ArtifactAuthor)
     """
     PLURAL = "artifact_authors"
-    __tablename__ = "artifact_author"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
-        default=None,
-        exclude=True,
-    )
-    type: Type = sqlmodel.Relationship(back_populates="artifact_authors")
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    design: Design = sqlmodel.Relationship(back_populates="artifact_authors")
 
-    __table_args__ = (
-        sqlalchemy.CheckConstraint(
-            "(type_id IS NOT NULL AND design_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL)",
-            name="ck_artifact_authors_parent_set",
-        ),
-        sqlalchemy.UniqueConstraint(
-            "author_email",
-            "type_id",
-            "design_id",
-            name="uq_artifact_authors_email_type_id_design_id",
-        ),
-    )
 
-    def parent(self) -> typing.Union["Type", "Design", None]:
+    def parent_entity(self) -> typing.Union["Type", "Design", None]:
         if self.type is not None:
             return self.type
         if self.design is not None:
@@ -1730,14 +1470,14 @@ class FileGuidField(RealField, abc.ABC):
     FileGuidField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️fileguidfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileGuidField)
     """
-    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 class FileNameField(RealField, abc.ABC):
     """Field mixin for the name of a file.
     FileNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️filenamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class FileRemoteField(RealField, abc.ABC):
@@ -1745,63 +1485,63 @@ class FileRemoteField(RealField, abc.ABC):
     FileRemoteField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️fileremotefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileRemoteField)
     """
-    remote: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+    remote: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 class FileFolderField(RealField, abc.ABC):
     """Field mixin for the folder of a file.
     FileFolderField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️filefolderfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileFolderField)
     """
-    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+    folder: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 class FileSizeField(RealField, abc.ABC):
     """Field mixin for the size of a file.
     FileSizeField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️filesizefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileSizeField)
     """
-    size: typing.Optional[int] = sqlmodel.Field(default=None)
+    size: typing.Optional[int] = pydantic.Field(default=None)
 
 class FileHashField(RealField, abc.ABC):
     """Field mixin for the hash of a file.
     FileHashField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️filehashfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileHashField)
     """
-    hash: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+    hash: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 class FileBlobField(RealField, abc.ABC):
     """Field mixin for the blob of a file.
     FileBlobField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️fileblobfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileBlobField)
     """
-    blob: typing.Optional[str] = sqlmodel.Field(default=None)
+    blob: typing.Optional[str] = pydantic.Field(default=None)
 
 class FileCreatedAtField(RealField, abc.ABC):
     """Field mixin for the created at of a file.
     FileCreatedAtField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️filecreatedatfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileCreatedAtField)
     """
-    createdAt: datetime.datetime = sqlmodel.Field()
+    createdAt: datetime.datetime = pydantic.Field()
 
 class FileCreatedByField(RealField, abc.ABC):
     """Field mixin for the created by of a file.
     FileCreatedByField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️filecreatedbyfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileCreatedByField)
     """
-    createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    createdBy: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class FileUpdatedAtField(RealField, abc.ABC):
     """Field mixin for the updated at of a file.
     FileUpdatedAtField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️fileupdatedatfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileUpdatedAtField)
     """
-    updatedAt: datetime.datetime = sqlmodel.Field()
+    updatedAt: datetime.datetime = pydantic.Field()
 
 class FileUpdatedByField(RealField, abc.ABC):
     """Field mixin for the updated by of a file.
     FileUpdatedByField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖file🛠️fileupdatedbyfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileUpdatedByField)
     """
-    updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    updatedBy: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class FileId(FileGuidField, Id):
     """Identity fields for uniquely identifying a file.
@@ -1890,29 +1630,15 @@ class File(
     FileNameField,
     FileGuidField,
     TableEntity,
-    table=True,
 ):
     """File entity for binary assets with metadata, hashing and timestamps.
     File MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖file🛠️file](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/File)
     """
     PLURAL = "files"
-    __tablename__ = "file"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
-    kit: Kit = sqlmodel.Relationship(back_populates="files_")
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("guid", "kit_id", name="uq_files_guid_kit_id"),)
 
-    def parent(self) -> "Kit":
+    def parent_entity(self) -> "Kit":
         if self.kit is not None:
             return self.kit
         raise NoKitAssigned()
@@ -1939,56 +1665,56 @@ class FolderGuidField(RealField, abc.ABC):
     FolderGuidField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖folder🛠️folderguidfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderGuidField)
     """
-    guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 class FolderNameField(RealField, abc.ABC):
     """Field mixin for the name of a folder.
     FolderNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖folder🛠️foldernamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class FolderParentField(RealField, abc.ABC):
     """Field mixin for the parent of a folder.
     FolderParentField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖folder🛠️folderparentfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderParentField)
     """
-    parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    parent: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class FolderDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a folder.
     FolderDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖folder🛠️folderdescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class FolderCreatedAtField(RealField, abc.ABC):
     """Field mixin for the created at of a folder.
     FolderCreatedAtField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖folder🛠️foldercreatedatfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderCreatedAtField)
     """
-    createdAt: datetime.datetime = sqlmodel.Field()
+    createdAt: datetime.datetime = pydantic.Field()
 
 class FolderCreatedByField(RealField, abc.ABC):
     """Field mixin for the created by of a folder.
     FolderCreatedByField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖folder🛠️foldercreatedbyfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderCreatedByField)
     """
-    createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    createdBy: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class FolderUpdatedAtField(RealField, abc.ABC):
     """Field mixin for the updated at of a folder.
     FolderUpdatedAtField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖folder🛠️folderupdatedatfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderUpdatedAtField)
     """
-    updatedAt: datetime.datetime = sqlmodel.Field()
+    updatedAt: datetime.datetime = pydantic.Field()
 
 class FolderUpdatedByField(RealField, abc.ABC):
     """Field mixin for the updated by of a folder.
     FolderUpdatedByField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖folder🛠️folderupdatedbyfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderUpdatedByField)
     """
-    updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    updatedBy: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class FolderId(FolderGuidField, Id):
     """Identity fields for uniquely identifying a folder.
@@ -2029,7 +1755,7 @@ class FolderInput(
     FolderInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖folder🛠️folderinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderInput)
     """
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 class FolderContext(FolderNameField, FolderGuidField, Context):
     """Context fields for understanding a folder by an LLM.
@@ -2053,7 +1779,7 @@ class FolderOutput(
     FolderOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖folder🛠️folderoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderOutput)
     """
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 class Folder(
     FolderUpdatedByField,
@@ -2065,30 +1791,16 @@ class Folder(
     FolderNameField,
     FolderGuidField,
     TableEntity,
-    table=True,
 ):
     """Folder entity for hierarchical content organization.
     Folder MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖folder🛠️folder](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/Folder)
     """
     PLURAL = "folders"
-    __tablename__ = "folder"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
-    kit: Kit = sqlmodel.Relationship(back_populates="folders_")
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="folder", cascade_delete=True)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("guid", "kit_id", name="uq_folders_guid_kit_id"),)
 
-    def parent(self) -> "Kit":
+    def parent_entity(self) -> "Kit":
         if self.kit is not None:
             return self.kit
         raise NoKitAssigned()
@@ -2148,42 +1860,42 @@ class BenchmarkNameField(RealField, abc.ABC):
     BenchmarkNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarknamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class BenchmarkIconField(RealField, abc.ABC):
     """Field mixin for the icon of a benchmark.
     BenchmarkIconField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkiconfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkIconField)
     """
-    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class BenchmarkMinField(RealField, abc.ABC):
     """Field mixin for the min of a benchmark.
     BenchmarkMinField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkminfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkMinField)
     """
-    min: typing.Optional[float] = sqlmodel.Field(default=None)
+    min: typing.Optional[float] = pydantic.Field(default=None)
 
 class BenchmarkMinExcludedField(RealField, abc.ABC):
     """Field mixin for the min excluded of a benchmark.
     BenchmarkMinExcludedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkminexcludedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkMinExcludedField)
     """
-    min_excluded: bool = sqlmodel.Field(default=False)
+    min_excluded: bool = pydantic.Field(default=False)
 
 class BenchmarkMaxField(RealField, abc.ABC):
     """Field mixin for the max of a benchmark.
     BenchmarkMaxField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkmaxfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkMaxField)
     """
-    max: typing.Optional[float] = sqlmodel.Field(default=None)
+    max: typing.Optional[float] = pydantic.Field(default=None)
 
 class BenchmarkMaxExcludedField(RealField, abc.ABC):
     """Field mixin for the max excluded of a benchmark.
     BenchmarkMaxExcludedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkmaxexcludedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkMaxExcludedField)
     """
-    max_excluded: bool = sqlmodel.Field(default=False)
+    max_excluded: bool = pydantic.Field(default=False)
 
 class BenchmarkId(BenchmarkNameField, Id):
     """Identity fields for uniquely identifying a benchmark.
@@ -2245,26 +1957,13 @@ class Benchmark(
     BenchmarkIconField,
     BenchmarkNameField,
     TableEntity,
-    table=True,
 ):
     """Benchmark entity for performance metrics with min-max bounds.
     Benchmark MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmark](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/Benchmark)
     """
     PLURAL = "benchmarks"
-    __tablename__ = "benchmark"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    qualityPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("quality.id")),
-        default=None,
-        exclude=True,
-    )
-    quality: Quality = sqlmodel.Relationship(back_populates="benchmarks")
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="benchmark", cascade_delete=True)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 # endregion Benchmark
 
@@ -2277,140 +1976,140 @@ class QualityKeyField(RealField, abc.ABC):
     QualityKeyField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitykeyfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityKeyField)
     """
-    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, primary_key=True)
+    key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class QualityNameField(RealField, abc.ABC):
     """Field mixin for the name of a quality.
     QualityNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitynamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class QualityDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a quality.
     QualityDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitydescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class QualityUriField(RealField, abc.ABC):
     """Field mixin for the uri of a quality.
     QualityUriField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityurifield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityUriField)
     """
-    uri: str = sqlmodel.Field(default="", max_length=URI_LENGTH_LIMIT)
+    uri: str = pydantic.Field(default="", max_length=URI_LENGTH_LIMIT)
 
 class QualityScalableField(RealField, abc.ABC):
     """Field mixin for the scalable of a quality.
     QualityScalableField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityscalablefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityScalableField)
     """
-    scalable: bool = sqlmodel.Field(default=False)
+    scalable: bool = pydantic.Field(default=False)
 
 class QualityKindField(RealField, abc.ABC):
     """Field mixin for the kind of a quality.
     QualityKindField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitykindfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityKindField)
     """
-    kind: int = sqlmodel.Field(default=0)
+    kind: int = pydantic.Field(default=0)
 
 class QualitySiField(RealField, abc.ABC):
     """Field mixin for the si of a quality.
     QualitySiField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitysifield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualitySiField)
     """
-    si: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    si: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class QualityImperialField(RealField, abc.ABC):
     """Field mixin for the imperial of a quality.
     QualityImperialField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityimperialfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityImperialField)
     """
-    imperial: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    imperial: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class QualityMinField(RealField, abc.ABC):
     """Field mixin for the min of a quality.
     QualityMinField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityminfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityMinField)
     """
-    min: typing.Optional[float] = sqlmodel.Field(default=None)
+    min: typing.Optional[float] = pydantic.Field(default=None)
 
 class QualityMinExcludedField(RealField, abc.ABC):
     """Field mixin for the min excluded of a quality.
     QualityMinExcludedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityminexcludedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityMinExcludedField)
     """
-    min_excluded: bool = sqlmodel.Field(default=True)
+    min_excluded: bool = pydantic.Field(default=True)
 
 class QualityMaxField(RealField, abc.ABC):
     """Field mixin for the max of a quality.
     QualityMaxField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitymaxfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityMaxField)
     """
-    max: typing.Optional[float] = sqlmodel.Field(default=None)
+    max: typing.Optional[float] = pydantic.Field(default=None)
 
 class QualityMaxExcludedField(RealField, abc.ABC):
     """Field mixin for the max excluded of a quality.
     QualityMaxExcludedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitymaxexcludedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityMaxExcludedField)
     """
-    max_excluded: bool = sqlmodel.Field(default=True)
+    max_excluded: bool = pydantic.Field(default=True)
 
 class QualityDefaultField(RealField, abc.ABC):
     """Field mixin for the default of a quality.
     QualityDefaultField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitydefaultfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityDefaultField)
     """
-    default: typing.Optional[float] = sqlmodel.Field(default=None)
+    default: typing.Optional[float] = pydantic.Field(default=None)
 
 class QualityFormulaField(RealField, abc.ABC):
     """Field mixin for the formula of a quality.
     QualityFormulaField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityformulafield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityFormulaField)
     """
-    formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
+    formula: str = pydantic.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
 
 class QualityFolderField(RealField, abc.ABC):
     """Field mixin for the folder of a quality.
     QualityFolderField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityfolderfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityFolderField)
     """
-    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+    folder: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 class QualityIconField(RealField, abc.ABC):
     """Field mixin for the icon of a quality.
     QualityIconField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityiconfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityIconField)
     """
-    icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 class QualityImageField(RealField, abc.ABC):
     """Field mixin for the image of a quality.
     QualityImageField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityimagefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityImageField)
     """
-    image: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+    image: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 class QualityUnitField(RealField, abc.ABC):
     """Field mixin for the unit of a quality.
     QualityUnitField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityunitfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityUnitField)
     """
-    unit: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+    unit: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 class QualityCreatedField(RealField, abc.ABC):
     """Field mixin for the created of a quality.
     QualityCreatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualitycreatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityCreatedField)
     """
-    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class QualityUpdatedField(RealField, abc.ABC):
     """Field mixin for the updated of a quality.
     QualityUpdatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityupdatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityUpdatedField)
     """
-    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class QualityId(QualityKeyField, Id):
     """Identity fields for uniquely identifying a quality.
@@ -2507,8 +2206,8 @@ class QualityOutput(
     QualityOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖quality🛠️qualityoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityOutput)
     """
-    benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    benchmarks: list["BenchmarkOutput"] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 class Quality(
     QualityUpdatedField,
@@ -2532,33 +2231,16 @@ class Quality(
     QualityNameField,
     QualityKeyField,
     TableEntity,
-    table=True,
 ):
     """Quality entity with units, constraints, formula and folder classification.
     Quality MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖quality🛠️quality](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/Quality)
     """
     PLURAL = "qualities"
-    __tablename__ = "quality"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
-    kit: Kit = sqlmodel.Relationship(back_populates="qualities")
 
-    benchmarks: list["Benchmark"] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
+    benchmarks: list["Benchmark"] = pydantic.Field(default_factory=list)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
-    __table_args__ = (
-        sqlalchemy.CheckConstraint("kind >= 0 AND kind <= 63", name="ck_qualities_kind_range"),
-        sqlalchemy.UniqueConstraint("key", "kit_id", name="uq_qualities_key_kit_id"),
-    )
 
 # endregion Quality
 
@@ -2571,35 +2253,35 @@ class PropKeyField(RealField, abc.ABC):
     PropKeyField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖prop🛠️propkeyfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropKeyField)
     """
-    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class PropValueField(RealField, abc.ABC):
     """Field mixin for the value of a prop.
     PropValueField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖prop🛠️propvaluefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropValueField)
     """
-    value: str = sqlmodel.Field(max_length=VALUE_LENGTH_LIMIT)
+    value: str = pydantic.Field(max_length=VALUE_LENGTH_LIMIT)
 
 class PropUnitField(RealField, abc.ABC):
     """Field mixin for the unit of a prop.
     PropUnitField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖prop🛠️propunitfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropUnitField)
     """
-    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class PropCreatedField(RealField, abc.ABC):
     """Field mixin for the created of a prop.
     PropCreatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖prop🛠️propcreatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropCreatedField)
     """
-    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class PropUpdatedField(RealField, abc.ABC):
     """Field mixin for the updated of a prop.
     PropUpdatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖prop🛠️propupdatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropUpdatedField)
     """
-    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class PropId(PropKeyField, Id):
     """Identity fields for uniquely identifying a prop.
@@ -2641,7 +2323,7 @@ class PropOutput(
     PropOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖prop🛠️propoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropOutput)
     """
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 class Prop(
     PropUpdatedField,
@@ -2650,56 +2332,17 @@ class Prop(
     PropValueField,
     PropKeyField,
     TableEntity,
-    table=True,
 ):
     """Prop entity for key-value properties with optional units.
     Prop MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖prop🛠️prop](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/Prop)
     """
     PLURAL = "props"
-    __tablename__ = "prop"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    connectorPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connector.id")),
-        default=None,
-        exclude=True,
-    )
-    connector: Connector = sqlmodel.Relationship(back_populates="props")
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
-        default=None,
-        exclude=True,
-    )
-    type: Type = sqlmodel.Relationship(back_populates="props")
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    design: Design = sqlmodel.Relationship(back_populates="props")
 
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="prop", cascade_delete=True)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
-    __table_args__ = (
-        sqlalchemy.CheckConstraint(
-            """
-        (
-            (connector_id IS NOT NULL AND type_id IS NULL AND design_id IS NULL)
-        OR
-            (connector_id IS NULL AND type_id IS NOT NULL AND design_id IS NULL)
-        OR
-            (connector_id IS NULL AND type_id IS NULL AND design_id IS NOT NULL)
-        )
-        """,
-            name="ck_props_parent_set",
-        ),
-    )
 
-    def parent(self) -> typing.Union["Connector", "Type", "Design"]:
+    def parent_entity(self) -> typing.Union["Connector", "Type", "Design"]:
         if self.connector is not None:
             return self.connector
         if self.type is not None:
@@ -2748,35 +2391,35 @@ class ModelNameField(RealField, abc.ABC):
     ModelNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖model🛠️modelnamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelNameField)
     """
-    name: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
+    name: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 class ModelUrlField(RealField, abc.ABC):
     """Field mixin for the url of a model.
     ModelUrlField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖model🛠️modelurlfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelUrlField)
     """
-    url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
+    url: str = pydantic.Field(max_length=URL_LENGTH_LIMIT)
 
 class ModelFileField(RealField, abc.ABC):
     """Field mixin for the file of a model.
     ModelFileField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖model🛠️modelfilefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelFileField)
     """
-    file: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+    file: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 class ModelDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a model.
     ModelDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖model🛠️modeldescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class ModelTagsField(MaskedField, abc.ABC):
     """Field mixin for the tags of a model.
     ModelTagsField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖model🛠️modeltagsfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelTagsField)
     """
-    tags: list[str] = sqlmodel.Field(default_factory=list)
+    tags: list[str] = pydantic.Field(default_factory=list)
 
 class ModelId(ModelTagsField, Id):
     """Identity fields for uniquely identifying a model.
@@ -2811,14 +2454,14 @@ class ModelInput(
     ModelInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖model🛠️modelinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelInput)
     """
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 class ModelContext(ModelTagsField, ModelDescriptionField, ModelNameField, Context):
     """Context fields for understanding a model by an LLM.
     ModelContext MUST contain all fields needed for LLM understanding.
     [👤semio📚py💻semio🔖domain🔖model🛠️modelcontext](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelContext)
     """
-    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
 class ModelOutput(
     ModelTagsField,
@@ -2832,7 +2475,7 @@ class ModelOutput(
     ModelOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖model🛠️modeloutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelOutput)
     """
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 class Model(
     ModelDescriptionField,
@@ -2840,27 +2483,14 @@ class Model(
     ModelFileField,
     ModelUrlField,
     TableEntity,
-    table=True,
 ):
     """Model entity for 3D geometry with name, URL and file reference.
     Model MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖model🛠️model](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/Model)
     """
     PLURAL = "models"
-    __tablename__ = "model"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    tags_: list[Tag] = sqlmodel.Relationship(back_populates="model", cascade_delete=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="model", cascade_delete=True)
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
-        default=None,
-        exclude=True,
-    )
-    type: Type = sqlmodel.Relationship(back_populates="models")
+    tags_: list[Tag] = pydantic.Field(default_factory=list)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
     @property
     def tags(self: "Model") -> list[str]:
@@ -2870,7 +2500,7 @@ class Model(
     def tags(self: "Model", tags: list[str]):
         self.tags_ = [Tag(name=tag, order=i) for i, tag in enumerate(tags)]
 
-    def parent(self: "Model") -> "Type":
+    def parent_entity(self: "Model") -> "Type":
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
@@ -2930,28 +2560,28 @@ class PortNameField(RealField, abc.ABC):
     PortNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖port🛠️portnamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class PortDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a port.
     PortDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖port🛠️portdescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortDescriptionField)
     """
-    description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class PortIconField(RealField, abc.ABC):
     """Field mixin for the icon of a port.
     PortIconField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖port🛠️porticonfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortIconField)
     """
-    icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
+    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 class PortCompatiblePortsField(MaskedField, abc.ABC):
     """Field mixin for the compatible ports of a port.
     PortCompatiblePortsField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖port🛠️portcompatibleportsfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortCompatiblePortsField)
     """
-    compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
+    compatiblePorts: list[str] = pydantic.Field(default_factory=list)
 
 class PortId(PortNameField, Id):
     """Identity fields for uniquely identifying a port.
@@ -2972,34 +2602,22 @@ class PortInput(PortCompatiblePortsField, PortIconField, PortDescriptionField, P
     PortInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖port🛠️portinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortInput)
     """
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 class PortOutput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
     """Output fields returned when fetching a port.
     PortOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖port🛠️portoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortOutput)
     """
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
-class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, table=True):
+class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity):
     """Port entity defining a named connection interface on a type.
     Port MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖port🛠️port](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/Port)
     """
     PLURAL = "ports"
-    __tablename__ = "port"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="port_", cascade_delete=True)
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
-    kit: Kit = sqlmodel.Relationship(back_populates="ports")
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 # TODO: Fix PortNode - was incorrectly changed to TableEntityNode in latest commit
 
@@ -3025,32 +2643,20 @@ class CompatiblePortNameField(RealField, abc.ABC):
     CompatiblePortNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport🛠️compatibleportnamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort/d/i/CompatiblePortNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class CompatiblePortOrderField(RealField, abc.ABC):
     """Field mixin for the order of a compatible port.
     CompatiblePortOrderField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport🛠️compatibleportorderfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort/d/i/CompatiblePortOrderField)
     """
-    order: int = sqlmodel.Field()
+    order: int = pydantic.Field()
 
-class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, table=True):
+class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table):
     """Compatible port entity specifying an allowed port pairing.
     CompatiblePort MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport🛠️compatibleport](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort/d/i/CompatiblePort)
     """
-    __tablename__ = "compatible_port"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    connectorPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("connector_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connector.id")),
-        default=None,
-        exclude=True,
-    )
-    connector: Connector = sqlmodel.Relationship(back_populates="compatiblePorts_")
 
 # endregion CompatiblePort
 
@@ -3059,56 +2665,56 @@ class ConnectorIdField(MaskedField, abc.ABC):
     ConnectorIdField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectoridfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorIdField)
     """
-    id_: str = sqlmodel.Field(default="", max_length=ID_LENGTH_LIMIT)
+    id_: str = pydantic.Field(default="", max_length=ID_LENGTH_LIMIT)
 
 class ConnectorDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a connector.
     ConnectorDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectordescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class ConnectorMandatoryField(RealField, abc.ABC):
     """Field mixin for the mandatory of a connector.
     ConnectorMandatoryField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectormandatoryfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorMandatoryField)
     """
-    is_mandatory: bool = sqlmodel.Field(default=False)
+    is_mandatory: bool = pydantic.Field(default=False)
 
 class ConnectorPortField(RealField, abc.ABC):
     """Field mixin for the port of a connector.
     ConnectorPortField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectorportfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorPortField)
     """
-    port: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    port: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class ConnectorCompatiblePortsField(MaskedField, abc.ABC):
     """Field mixin for the compatible ports of a connector.
     ConnectorCompatiblePortsField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectorcompatibleportsfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorCompatiblePortsField)
     """
-    compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
+    compatiblePorts: list[str] = pydantic.Field(default_factory=list)
 
 class ConnectorPointField(MaskedField, abc.ABC):
     """Field mixin for the point of a connector.
     ConnectorPointField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectorpointfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorPointField)
     """
-    point: Point = sqlmodel.Field()
+    point: Point = pydantic.Field()
 
 class ConnectorDirectionField(MaskedField, abc.ABC):
     """Field mixin for the direction of a connector.
     ConnectorDirectionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectordirectionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorDirectionField)
     """
-    direction: Vector = sqlmodel.Field()
+    direction: Vector = pydantic.Field()
 
 class ConnectorTField(RealField, abc.ABC):
     """Field mixin for the t of a connector.
     ConnectorTField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectortfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorTField)
     """
-    t: float = sqlmodel.Field(default=0.0)
+    t: float = pydantic.Field(default=0.0)
 
 class ConnectorId(ConnectorIdField, Id):
     """Identity fields for uniquely identifying a connector.
@@ -3145,9 +2751,9 @@ class ConnectorInput(
     ConnectorInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectorinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorInput)
     """
-    point: PointInput = sqlmodel.Field()
-    direction: VectorInput = sqlmodel.Field()
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    point: PointInput = pydantic.Field()
+    direction: VectorInput = pydantic.Field()
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 class ConnectorContext(
     ConnectorTField,
@@ -3164,7 +2770,7 @@ class ConnectorContext(
     ConnectorContext MUST contain all fields needed for LLM understanding.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectorcontext](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorContext)
     """
-    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
 class ConnectorOutput(
     ConnectorTField,
@@ -3181,7 +2787,7 @@ class ConnectorOutput(
     ConnectorOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connectoroutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorOutput)
     """
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 class Connector(
     ConnectorTField,
@@ -3189,52 +2795,19 @@ class Connector(
     ConnectorMandatoryField,
     ConnectorDescriptionField,
     TableEntity,
-    table=True,
 ):
     """Connector entity defining a localized connection point on a type.
     Connector MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖connector🛠️connector](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/Connector)
     """
     PLURAL = "connectors"
-    __tablename__ = "connector"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
 
-    id_: str = sqlmodel.Field(
-        sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)),
-        default="",
-    )
-    compatiblePorts_: list[CompatiblePort] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
-    pointX: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column("point_x", sqlalchemy.String(ID_LENGTH_LIMIT)),
-        exclude=True,
-    )
-    pointY: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_y", sqlalchemy.Float()), exclude=True)
-    pointZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_z", sqlalchemy.Float()), exclude=True)
-    directionX: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_x", sqlalchemy.Float()), exclude=True)
-    directionY: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_y", sqlalchemy.Float()), exclude=True)
-    directionZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_z", sqlalchemy.Float()), exclude=True)
-    attributes: list["Attribute"] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
-    props: list["Prop"] = sqlmodel.Relationship(back_populates="connector", cascade_delete=True)
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")),
-        default=None,
-        exclude=True,
-    )
-    type: Type = sqlmodel.Relationship(back_populates="connectors")
-    connecteds: list["Connection"] = sqlmodel.Relationship(
-        back_populates="connectedConnector",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectedConnectorPk"},
-    )
-    connectings: list["Connection"] = sqlmodel.Relationship(
-        back_populates="connectingConnector",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectingConnectorPk"},
-    )
+    compatiblePorts_: list[CompatiblePort] = pydantic.Field(default_factory=list)
+    attributes: list["Attribute"] = pydantic.Field(default_factory=list)
+    props: list["Prop"] = pydantic.Field(default_factory=list)
+    connecteds: list["Connection"] = pydantic.Field(default_factory=list)
+    connectings: list["Connection"] = pydantic.Field(default_factory=list)
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "type_id", name="uq_connectors_local_id_type_id"),)
 
     @property
     def compatiblePorts(self) -> list[str]:
@@ -3268,7 +2841,7 @@ class Connector(
     def connections(self) -> list["Connection"]:
         return self.connecteds + self.connectings
 
-    def parent(self) -> "Type":
+    def parent_entity(self) -> "Type":
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
@@ -3356,112 +2929,112 @@ class TypeNameField(RealField, abc.ABC):
     TypeNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typenamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class TypeDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a type.
     TypeDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typedescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class TypeIconField(RealField, abc.ABC):
     """Field mixin for the icon of a type.
     TypeIconField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeiconfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeIconField)
     """
-    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class TypeImageField(RealField, abc.ABC):
     """Field mixin for the image of a type.
     TypeImageField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeimagefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeImageField)
     """
-    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class TypeVariantField(RealField, abc.ABC):
     """Field mixin for the variant of a type.
     TypeVariantField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typevariantfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)
     """
-    variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    variant: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class TypeParentField(RealField, abc.ABC):
     """Field mixin for the parent of a type.
     TypeParentField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeparentfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeParentField)
     """
-    parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    parent: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class TypeIsAbstractField(RealField, abc.ABC):
     """Field mixin for the is abstract of a type.
     TypeIsAbstractField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeisabstractfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeIsAbstractField)
     """
-    is_abstract: bool = sqlmodel.Field(default=False)
+    is_abstract: bool = pydantic.Field(default=False)
 
 class TypeFolderField(RealField, abc.ABC):
     """Field mixin for the folder of a type.
     TypeFolderField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typefolderfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeFolderField)
     """
-    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    folder: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class TypeStockField(RealField, abc.ABC):
     """Field mixin for the stock of a type.
     TypeStockField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typestockfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)
     """
-    stock: int = sqlmodel.Field(default=2147483647)
+    stock: int = pydantic.Field(default=2147483647)
 
 class TypeVirtualField(RealField, abc.ABC):
     """Field mixin for the virtual of a type.
     TypeVirtualField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typevirtualfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVirtualField)
     """
-    is_virtual: bool = sqlmodel.Field(default=False)
+    is_virtual: bool = pydantic.Field(default=False)
 
 class TypeScalableField(RealField, abc.ABC):
     """Field mixin for the scalable of a type.
     TypeScalableField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typescalablefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeScalableField)
     """
-    can_scale: bool = sqlmodel.Field(default=True)
+    can_scale: bool = pydantic.Field(default=True)
 
 class TypeMirrborableField(RealField, abc.ABC):
     """Field mixin for the mirrborable of a type.
     TypeMirrborableField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typemirrborablefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeMirrborableField)
     """
-    can_mirror: bool = sqlmodel.Field(default=True)
+    can_mirror: bool = pydantic.Field(default=True)
 
 class TypeUnitField(RealField, abc.ABC):
     """Field mixin for the unit of a type.
     TypeUnitField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeunitfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeUnitField)
     """
-    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class TypeLocationField(MaskedField, abc.ABC):
     """Field mixin for the location of a type.
     TypeLocationField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typelocationfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeLocationField)
     """
-    location: typing.Optional[Location] = sqlmodel.Field(default=None)
+    location: typing.Optional[Location] = pydantic.Field(default=None)
 
 class TypeCreatedField(RealField, abc.ABC):
     """Field mixin for the created of a type.
     TypeCreatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typecreatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeCreatedField)
     """
-    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class TypeUpdatedField(RealField, abc.ABC):
     """Field mixin for the updated of a type.
     TypeUpdatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeupdatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeUpdatedField)
     """
-    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class TypeId(TypeVariantField, TypeNameField, Id):
     """Identity fields for uniquely identifying a type.
@@ -3506,16 +3079,16 @@ class TypeInput(
     TypeInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeInput)
     """
-    parent: typing.Optional[str] = sqlmodel.Field(default=None)
-    is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
-    folder: typing.Optional[str] = sqlmodel.Field(default=None)
-    location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
-    models: list[ModelInput] = sqlmodel.Field(default_factory=list)
-    connectors: list[ConnectorInput] = sqlmodel.Field(default_factory=list)
-    props: list[PropInput] = sqlmodel.Field(default_factory=list)
-    authors: list[str] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
-    concepts: list[str] = sqlmodel.Field(default_factory=list)
+    parent: typing.Optional[str] = pydantic.Field(default=None)
+    is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
+    folder: typing.Optional[str] = pydantic.Field(default=None)
+    location: typing.Optional[LocationInput] = pydantic.Field(default=None)
+    models: list[ModelInput] = pydantic.Field(default_factory=list)
+    connectors: list[ConnectorInput] = pydantic.Field(default_factory=list)
+    props: list[PropInput] = pydantic.Field(default_factory=list)
+    authors: list[str] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
+    concepts: list[str] = pydantic.Field(default_factory=list)
 
 class TypeOutput(
     TypeUpdatedField,
@@ -3534,16 +3107,16 @@ class TypeOutput(
     TypeOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeOutput)
     """
-    parent: typing.Optional[str] = sqlmodel.Field(default=None)
-    is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
-    folder: typing.Optional[str] = sqlmodel.Field(default=None)
-    location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
-    models: list[ModelOutput] = sqlmodel.Field(default_factory=list)
-    connectors: list[ConnectorOutput] = sqlmodel.Field(default_factory=list)
-    props: list[PropOutput] = sqlmodel.Field(default_factory=list)
-    authors: list[str] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-    concepts: list[str] = sqlmodel.Field(default_factory=list)
+    parent: typing.Optional[str] = pydantic.Field(default=None)
+    is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
+    folder: typing.Optional[str] = pydantic.Field(default=None)
+    location: typing.Optional[LocationOutput] = pydantic.Field(default=None)
+    models: list[ModelOutput] = pydantic.Field(default_factory=list)
+    connectors: list[ConnectorOutput] = pydantic.Field(default_factory=list)
+    props: list[PropOutput] = pydantic.Field(default_factory=list)
+    authors: list[str] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
+    concepts: list[str] = pydantic.Field(default_factory=list)
 
 class TypeContext(
     TypeUnitField,
@@ -3558,10 +3131,10 @@ class TypeContext(
     TypeContext MUST contain all fields needed for LLM understanding.
     [👤semio📚py💻semio🔖domain🔖type🛠️typecontext](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeContext)
     """
-    location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
-    connectors: list[ConnectorContext] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
-    concepts: list[str] = sqlmodel.Field(default_factory=list)
+    location: typing.Optional[LocationContext] = pydantic.Field(default=None)
+    connectors: list[ConnectorContext] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
+    concepts: list[str] = pydantic.Field(default_factory=list)
 
 class Type(
     TypeUpdatedField,
@@ -3580,55 +3153,31 @@ class Type(
     TypeIsAbstractField,
     TypeParentField,
     TableEntity,
-    table=True,
 ):
     """Type entity defining a reusable parametric building block.
     Type MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖type🛠️type](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/Type)
     """
     PLURAL = "types"
-    __tablename__ = "type"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
 
-    locationLongitude: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("location_longitude", sqlalchemy.Float()),
-        exclude=True,
-        default=None,
-    )
 
-    locationLatitude: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()),
-        exclude=True,
-        default=None,
-    )
 
-    models: list[Model] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    models: list[Model] = pydantic.Field(default_factory=list)
 
-    connectors: list[Connector] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    connectors: list[Connector] = pydantic.Field(default_factory=list)
 
-    props: list["Prop"] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    props: list["Prop"] = pydantic.Field(default_factory=list)
 
-    artifact_authors: list[ArtifactAuthor] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    artifact_authors: list[ArtifactAuthor] = pydantic.Field(default_factory=list)
 
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
 
-    kit: Kit = sqlmodel.Relationship(back_populates="types")
 
-    pieces: list["Piece"] = sqlmodel.Relationship(back_populates="type")
+    pieces: list["Piece"] = pydantic.Field(default_factory=list)
 
-    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    concepts_: list[Concept] = pydantic.Field(default_factory=list)
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kit_id", name="uq_types_name_variant_kit_id"),)
 
     @property
     def location(self) -> typing.Optional[Location]:
@@ -3668,7 +3217,7 @@ class Type(
     def concepts(self: "Type", concepts: list[str]):
         self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
 
-    def parent(self) -> "Kit":
+    def parent_entity(self) -> "Kit":
         if self.kit is None:
             raise NoKitAssigned()
         return self.kit
@@ -3823,35 +3372,35 @@ class LayerNameField(RealField, abc.ABC):
     LayerNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖layer🛠️layernamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class LayerDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a layer.
     LayerDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖layer🛠️layerdescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class LayerColorField(RealField, abc.ABC):
     """Field mixin for the color of a layer.
     LayerColorField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖layer🛠️layercolorfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerColorField)
     """
-    color: str = sqlmodel.Field(default="", max_length=7)
+    color: str = pydantic.Field(default="", max_length=7)
 
 class LayerIsHiddenField(RealField, abc.ABC):
     """Field mixin for the is hidden of a layer.
     LayerIsHiddenField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖layer🛠️layerishiddenfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerIsHiddenField)
     """
-    is_hidden: bool = sqlmodel.Field(default=False)
+    is_hidden: bool = pydantic.Field(default=False)
 
 class LayerIsLockedField(RealField, abc.ABC):
     """Field mixin for the is locked of a layer.
     LayerIsLockedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖layer🛠️layerislockedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerIsLockedField)
     """
-    is_locked: bool = sqlmodel.Field(default=False)
+    is_locked: bool = pydantic.Field(default=False)
 
 class LayerId(LayerNameField, Id):
     """Identity fields for uniquely identifying a layer.
@@ -3909,25 +3458,12 @@ class Layer(
     LayerDescriptionField,
     LayerNameField,
     TableEntity,
-    table=True,
 ):
     """Layer entity for grouping design elements with visibility and locking.
     Layer MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖layer🛠️layer](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/Layer)
     """
     PLURAL = "layers"
-    __tablename__ = "layer"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    design: Design = sqlmodel.Relationship(back_populates="layers")
 
 # endregion Layer
 
@@ -3940,7 +3476,7 @@ class PieceIdField(MaskedField, abc.ABC):
     PieceIdField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️pieceidfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceIdField)
     """
-    id_: str = sqlmodel.Field(
+    id_: str = pydantic.Field(
         default="",
         max_length=ID_LENGTH_LIMIT,
     )
@@ -3950,70 +3486,70 @@ class PieceDescriptionField(RealField, abc.ABC):
     PieceDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piecedescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class PieceTypeField(MaskedField, abc.ABC):
     """Field mixin for the type of a piece.
     PieceTypeField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piecetypefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceTypeField)
     """
-    type: typing.Optional[TypeId] = sqlmodel.Field(default=None)
+    type: typing.Optional[TypeId] = pydantic.Field(default=None)
 
 class PieceDesignField(MaskedField, abc.ABC):
     """Field mixin for the design of a piece.
     PieceDesignField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piecedesignfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceDesignField)
     """
-    designPiece: typing.Optional["DesignId"] = sqlmodel.Field(default=None)
+    designPiece: typing.Optional["DesignId"] = pydantic.Field(default=None)
 
 class PiecePlaneField(MaskedField, abc.ABC):
     """Field mixin for the plane of a piece.
     PiecePlaneField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️pieceplanefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PiecePlaneField)
     """
-    plane: typing.Optional[Plane] = sqlmodel.Field(default=None)
+    plane: typing.Optional[Plane] = pydantic.Field(default=None)
 
 class PieceCenterField(MaskedField, abc.ABC):
     """Field mixin for the center of a piece.
     PieceCenterField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piececenterfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceCenterField)
     """
-    center: typing.Optional[Coord] = sqlmodel.Field(default=None)
+    center: typing.Optional[Coord] = pydantic.Field(default=None)
 
 class PieceScaleField(RealField, abc.ABC):
     """Field mixin for the scale of a piece.
     PieceScaleField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piecescalefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceScaleField)
     """
-    scale: float = sqlmodel.Field(default=1.0)
+    scale: float = pydantic.Field(default=1.0)
 
 class PieceMirrorPlaneField(MaskedField, abc.ABC):
     """Field mixin for the mirror plane of a piece.
     PieceMirrorPlaneField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piecemirrorplanefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceMirrorPlaneField)
     """
-    mirrorPlane: typing.Optional[Plane] = sqlmodel.Field(default=None)
+    mirrorPlane: typing.Optional[Plane] = pydantic.Field(default=None)
 
 class PieceHiddenField(RealField, abc.ABC):
     """Field mixin for the hidden of a piece.
     PieceHiddenField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piecehiddenfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceHiddenField)
     """
-    is_hidden: bool = sqlmodel.Field(default=False)
+    is_hidden: bool = pydantic.Field(default=False)
 
 class PieceLockedField(RealField, abc.ABC):
     """Field mixin for the locked of a piece.
     PieceLockedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piecelockedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceLockedField)
     """
-    is_locked: bool = sqlmodel.Field(default=False)
+    is_locked: bool = pydantic.Field(default=False)
 
 class PieceColorField(RealField, abc.ABC):
     """Field mixin for the color of a piece.
     PieceColorField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piececolorfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceColorField)
     """
-    color: str = sqlmodel.Field(default="", max_length=7)
+    color: str = pydantic.Field(default="", max_length=7)
 
 class PieceId(PieceIdField, Id):
     """Identity fields for uniquely identifying a piece.
@@ -4042,27 +3578,27 @@ class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceI
     PieceInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖piece🛠️pieceinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceInput)
     """
-    plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
-    center: typing.Optional[CoordInput] = sqlmodel.Field(default=None)
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    plane: typing.Optional[PlaneInput] = pydantic.Field(default=None)
+    center: typing.Optional[CoordInput] = pydantic.Field(default=None)
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     """Context fields for understanding a piece by an LLM.
     PieceContext MUST contain all fields needed for LLM understanding.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piececontext](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceContext)
     """
-    plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
-    center: typing.Optional[CoordContext] = sqlmodel.Field(default=None)
-    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+    plane: typing.Optional[PlaneContext] = pydantic.Field(default=None)
+    center: typing.Optional[CoordContext] = pydantic.Field(default=None)
+    attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
 class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     """Output fields returned when fetching a piece.
     PieceOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖piece🛠️pieceoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceOutput)
     """
-    plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
-    center: typing.Optional[CoordOutput] = sqlmodel.Field(default=None)
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    plane: typing.Optional[PlaneOutput] = pydantic.Field(default=None)
+    center: typing.Optional[CoordOutput] = pydantic.Field(default=None)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     """Prediction fields for LLM-based piece inference.
@@ -4078,78 +3614,16 @@ class Piece(
     PieceColorField,
     PieceScaleField,
     TableEntity,
-    table=True,
 ):
     """Piece entity for a placed instance of a type within a design.
     Piece MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖piece🛠️piece](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/Piece)
     """
     PLURAL = "pieces"
-    __tablename__ = "piece"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    id_: str = sqlmodel.Field(
-        sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)),
-        default="",
-    )
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "type_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("type.id"),
-            nullable=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    type: Type = sqlmodel.Relationship(back_populates="pieces")
-    designPiecePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "design_piece_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("design.id"),
-            nullable=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    designPiece: Design = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Design", foreign_keys="[Piece.designPiecePk]"))
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    design: Design = sqlmodel.Relationship(
-        back_populates="pieces",
-        sa_relationship_kwargs={"foreign_keys": "[Piece.designPk]"},
-    )
-    planePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "plane_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("plane.id"),
-            nullable=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    plane: Plane = sqlmodel.Relationship(back_populates="piece")
-    centerU: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_x", sqlalchemy.Float()), exclude=True)
-    centerV: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_y", sqlalchemy.Float()), exclude=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="piece", cascade_delete=True)
-    connecteds: list["Connection"] = sqlmodel.Relationship(
-        back_populates="connectedPiece",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"},
-    )
-    connectings: list["Connection"] = sqlmodel.Relationship(
-        back_populates="connectingPiece",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"},
-    )
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
+    connecteds: list["Connection"] = pydantic.Field(default_factory=list)
+    connectings: list["Connection"] = pydantic.Field(default_factory=list)
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "design_id", name="uq_pieces_local_id_design_id"),)
 
     @property
     def center(self) -> typing.Optional[Coord]:
@@ -4170,7 +3644,7 @@ class Piece(
     def connections(self) -> list["Connection"]:
         return self.connecteds + self.connectings
 
-    def parent(self) -> "Design":
+    def parent_entity(self) -> "Design":
         if self.design is None:
             raise NoParentAssigned()
         return self.design
@@ -4279,21 +3753,21 @@ class GroupNameField(RealField, abc.ABC):
     GroupNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖group🛠️groupnamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class GroupDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a group.
     GroupDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖group🛠️groupdescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class GroupColorField(RealField, abc.ABC):
     """Field mixin for the color of a group.
     GroupColorField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖group🛠️groupcolorfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupColorField)
     """
-    color: str = sqlmodel.Field(default="", max_length=7)
+    color: str = pydantic.Field(default="", max_length=7)
 
 class GroupId(GroupNameField, Id):
     """Identity fields for uniquely identifying a group.
@@ -4321,27 +3795,15 @@ class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output
     GroupOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖group🛠️groupoutput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupOutput)
     """
-    pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    pieces: list["PieceOutput"] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
-class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
+class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity):
     """Group entity for named collections of pieces.
     Group MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖group🛠️group](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/Group)
     """
     PLURAL = "groups"
-    __tablename__ = "group"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    design: Design = sqlmodel.Relationship(back_populates="groups")
 
 # endregion Group
 
@@ -4354,9 +3816,9 @@ class Side(BaseModel):
     Side MUST contain all coordinate or geometry fields.
     [👤semio📚py💻semio🔖domain🔖side🛠️side](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side/d/i/Side)
     """
-    piece: PieceId = sqlmodel.Field()
-    designPiece: typing.Optional[PieceId] = sqlmodel.Field(default=None)
-    connector: typing.Optional[ConnectorId] = sqlmodel.Field(default=None)
+    piece: PieceId = pydantic.Field()
+    designPiece: typing.Optional[PieceId] = pydantic.Field(default=None)
+    connector: typing.Optional[ConnectorId] = pydantic.Field(default=None)
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
@@ -4453,77 +3915,77 @@ class ConnectionConnectedField(MaskedField, abc.ABC):
     ConnectionConnectedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectionconnectedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionConnectedField)
     """
-    connected: Side = sqlmodel.Field()
+    connected: Side = pydantic.Field()
 
 class ConnectionConnectingField(MaskedField, abc.ABC):
     """Field mixin for the connecting of a connection.
     ConnectionConnectingField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectionconnectingfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionConnectingField)
     """
-    connecting: Side = sqlmodel.Field()
+    connecting: Side = pydantic.Field()
 
 class ConnectionDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a connection.
     ConnectionDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectiondescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class ConnectionGapField(RealField, abc.ABC):
     """Field mixin for the gap of a connection.
     ConnectionGapField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectiongapfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionGapField)
     """
-    gap: float = sqlmodel.Field(default=0)
+    gap: float = pydantic.Field(default=0)
 
 class ConnectionShiftField(RealField, abc.ABC):
     """Field mixin for the shift of a connection.
     ConnectionShiftField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectionshiftfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionShiftField)
     """
-    shift: float = sqlmodel.Field(default=0)
+    shift: float = pydantic.Field(default=0)
 
 class ConnectionRiseField(MaskedField, abc.ABC):
     """Field mixin for the rise of a connection.
     ConnectionRiseField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectionrisefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionRiseField)
     """
-    rise: float = sqlmodel.Field(default=0)
+    rise: float = pydantic.Field(default=0)
 
 class ConnectionRotationField(RealField, abc.ABC):
     """Field mixin for the rotation of a connection.
     ConnectionRotationField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectionrotationfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionRotationField)
     """
-    rotation: float = sqlmodel.Field(ge=0, lt=360, default=0)
+    rotation: float = pydantic.Field(ge=0, lt=360, default=0)
 
 class ConnectionTurnField(RealField, abc.ABC):
     """Field mixin for the turn of a connection.
     ConnectionTurnField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectionturnfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionTurnField)
     """
-    turn: float = sqlmodel.Field(ge=0, lt=360, default=0)
+    turn: float = pydantic.Field(ge=0, lt=360, default=0)
 
 class ConnectionTiltField(RealField, abc.ABC):
     """Field mixin for the tilt of a connection.
     ConnectionTiltField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectiontiltfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionTiltField)
     """
-    tilt: float = sqlmodel.Field(ge=0, lt=360, default=0)
+    tilt: float = pydantic.Field(ge=0, lt=360, default=0)
 
 class ConnectionUField(RealField, abc.ABC):
     """Field mixin for the u of a connection.
     ConnectionUField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectionufield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionUField)
     """
-    u: float = sqlmodel.Field(default=0)
+    u: float = pydantic.Field(default=0)
 
 class ConnectionVField(RealField, abc.ABC):
     """Field mixin for the v of a connection.
     ConnectionVField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connectionvfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionVField)
     """
-    v: float = sqlmodel.Field(default=0)
+    v: float = pydantic.Field(default=0)
 
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
     """Identity fields for uniquely identifying a connection.
@@ -4568,8 +4030,8 @@ class ConnectionInput(
     """
     pass
 
-    connected: SideInput = sqlmodel.Field()
-    connecting: SideInput = sqlmodel.Field()
+    connected: SideInput = pydantic.Field()
+    connecting: SideInput = pydantic.Field()
 
 class ConnectionContext(
     ConnectionVField,
@@ -4589,8 +4051,8 @@ class ConnectionContext(
     """
     pass
 
-    connected: SideContext = sqlmodel.Field()
-    connecting: SideContext = sqlmodel.Field()
+    connected: SideContext = pydantic.Field()
+    connecting: SideContext = pydantic.Field()
 
 class ConnectionOutput(
     ConnectionVField,
@@ -4610,8 +4072,8 @@ class ConnectionOutput(
     """
     pass
 
-    connected: SideOutput = sqlmodel.Field()
-    connecting: SideOutput = sqlmodel.Field()
+    connected: SideOutput = pydantic.Field()
+    connecting: SideOutput = pydantic.Field()
 
 class ConnectionPrediction(
     ConnectionVField,
@@ -4631,8 +4093,8 @@ class ConnectionPrediction(
     """
     pass
 
-    connected: SidePrediction = sqlmodel.Field()
-    connecting: SidePrediction = sqlmodel.Field()
+    connected: SidePrediction = pydantic.Field()
+    connecting: SidePrediction = pydantic.Field()
 
 class Connection(
     ConnectionVField,
@@ -4645,133 +4107,14 @@ class Connection(
     ConnectionGapField,
     ConnectionDescriptionField,
     TableEntity,
-    table=True,
 ):
     """Connection entity linking two pieces through their connectors.
     Connection MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖connection🛠️connection](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/Connection)
     """
     PLURAL = "connections"
-    __tablename__ = "connection"
 
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    connectedPiecePk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectedPieceId",
-        sa_column=sqlmodel.Column(
-            "connected_piece_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("piece.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    connectedPiece: Piece = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Piece",
-            back_populates="connecteds",
-            foreign_keys="[Connection.connectedPiecePk]",
-        )
-    )
-    connectedConnectorPk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectedConnectorId",
-        sa_column=sqlmodel.Column(
-            "connected_connector_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("connector.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    connectedConnector: Connector = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Connector",
-            back_populates="connecteds",
-            foreign_keys="[Connection.connectedConnectorPk]",
-        )
-    )
-    connectedDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectedDesignPieceId",
-        sa_column=sqlmodel.Column(
-            "connected_design_piece_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("piece.id"),
-            nullable=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    connectedDesignPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectedDesignPiecePk]"))
-    connectingPiecePk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectingPieceId",
-        sa_column=sqlmodel.Column(
-            "connecting_piece_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("piece.id"),
-        ),
-        exclude=True,
-        default=None,
-    )
-    connectingPiece: Piece = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Piece",
-            back_populates="connectings",
-            foreign_keys="[Connection.connectingPiecePk]",
-        )
-    )
-    connectingConnectorPk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectingConnectorId",
-        sa_column=sqlmodel.Column(
-            "connecting_connector_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("connector.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    connectingConnector: Connector = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Connector",
-            back_populates="connectings",
-            foreign_keys="[Connection.connectingConnectorPk]",
-        )
-    )
-    connectingDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectingDesignPieceId",
-        sa_column=sqlmodel.Column(
-            "connecting_design_piece_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("piece.id"),
-            nullable=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    connectingDesignPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectingDesignPiecePk]"))
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="connection", cascade_delete=True)
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        alias="designId",
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    design: Design = sqlmodel.Relationship(back_populates="connections")
-    __table_args__ = (
-        sqlalchemy.UniqueConstraint(
-            "connected_piece_id",
-            "connected_design_piece_id",
-            "connecting_piece_id",
-            "connecting_design_piece_id",
-            name="uq_connections_connected_piece_id_connected_design_piece_id_connecting_piece_id_connecting_design_piece_id",
-        ),
-        sqlalchemy.CheckConstraint(
-            "connected_piece_id != connecting_piece_id",
-            name="ck_connections_not_reflexive",
-        ),
-    )
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
     @property
     def connected(self) -> Side:
@@ -4789,7 +4132,7 @@ class Connection(
             connector=self.connectingConnector,
         )
 
-    def parent(self) -> "Design":
+    def parent_entity(self) -> "Design":
         if self.design is None:
             raise NoDesignAssigned()
         return self.design
@@ -4948,56 +4291,56 @@ class StatKeyField(RealField, abc.ABC):
     StatKeyField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖stat🛠️statkeyfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatKeyField)
     """
-    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class StatUnitField(RealField, abc.ABC):
     """Field mixin for the unit of a stat.
     StatUnitField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖stat🛠️statunitfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatUnitField)
     """
-    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class StatMinField(RealField, abc.ABC):
     """Field mixin for the min of a stat.
     StatMinField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖stat🛠️statminfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatMinField)
     """
-    min: typing.Optional[float] = sqlmodel.Field(default=None)
+    min: typing.Optional[float] = pydantic.Field(default=None)
 
 class StatMinExcludedField(RealField, abc.ABC):
     """Field mixin for the min excluded of a stat.
     StatMinExcludedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖stat🛠️statminexcludedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatMinExcludedField)
     """
-    min_excluded: bool = sqlmodel.Field(default=False)
+    min_excluded: bool = pydantic.Field(default=False)
 
 class StatMaxField(RealField, abc.ABC):
     """Field mixin for the max of a stat.
     StatMaxField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖stat🛠️statmaxfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatMaxField)
     """
-    max: typing.Optional[float] = sqlmodel.Field(default=None)
+    max: typing.Optional[float] = pydantic.Field(default=None)
 
 class StatMaxExcludedField(RealField, abc.ABC):
     """Field mixin for the max excluded of a stat.
     StatMaxExcludedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖stat🛠️statmaxexcludedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatMaxExcludedField)
     """
-    max_excluded: bool = sqlmodel.Field(default=False)
+    max_excluded: bool = pydantic.Field(default=False)
 
 class StatCreatedField(RealField, abc.ABC):
     """Field mixin for the created of a stat.
     StatCreatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖stat🛠️statcreatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatCreatedField)
     """
-    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class StatUpdatedField(RealField, abc.ABC):
     """Field mixin for the updated of a stat.
     StatUpdatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖stat🛠️statupdatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatUpdatedField)
     """
-    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class StatId(StatKeyField, Id):
     """Identity fields for uniquely identifying a stat.
@@ -5065,25 +4408,12 @@ class Stat(
     StatUnitField,
     StatKeyField,
     TableEntity,
-    table=True,
 ):
     """Stat entity for recording computed statistics with bounds.
     Stat MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖stat🛠️stat](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/Stat)
     """
     PLURAL = "stats"
-    __tablename__ = "stat"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")),
-        default=None,
-        exclude=True,
-    )
-    design: Design = sqlmodel.Relationship(back_populates="stats")
 
 # endregion Stat
 
@@ -5096,112 +4426,112 @@ class DesignNameField(RealField, abc.ABC):
     DesignNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designnamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class DesignDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a design.
     DesignDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designdescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class DesignIconField(RealField, abc.ABC):
     """Field mixin for the icon of a design.
     DesignIconField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designiconfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignIconField)
     """
-    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class DesignImageField(RealField, abc.ABC):
     """Field mixin for the image of a design.
     DesignImageField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designimagefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignImageField)
     """
-    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class DesignVariantField(RealField, abc.ABC):
     """Field mixin for the variant of a design.
     DesignVariantField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designvariantfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignVariantField)
     """
-    variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    variant: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class DesignViewField(RealField, abc.ABC):
     """Field mixin for the view of a design.
     DesignViewField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designviewfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignViewField)
     """
-    view: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    view: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class DesignParentField(RealField, abc.ABC):
     """Field mixin for the parent of a design.
     DesignParentField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designparentfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignParentField)
     """
-    parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    parent: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class DesignIsAbstractField(RealField, abc.ABC):
     """Field mixin for the is abstract of a design.
     DesignIsAbstractField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designisabstractfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignIsAbstractField)
     """
-    is_abstract: bool = sqlmodel.Field(default=False)
+    is_abstract: bool = pydantic.Field(default=False)
 
 class DesignFolderField(RealField, abc.ABC):
     """Field mixin for the folder of a design.
     DesignFolderField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designfolderfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignFolderField)
     """
-    folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    folder: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class DesignActiveLayerField(RealField, abc.ABC):
     """Field mixin for the active layer of a design.
     DesignActiveLayerField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designactivelayerfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignActiveLayerField)
     """
-    activeLayer: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
+    activeLayer: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 class DesignLocationField(MaskedField, abc.ABC):
     """Field mixin for the location of a design.
     DesignLocationField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designlocationfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignLocationField)
     """
-    location: typing.Optional[Location] = sqlmodel.Field(default=None)
+    location: typing.Optional[Location] = pydantic.Field(default=None)
 
 class DesignUnitField(RealField, abc.ABC):
     """Field mixin for the unit of a design.
     DesignUnitField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designunitfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignUnitField)
     """
-    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class DesignScalableField(RealField, abc.ABC):
     """Field mixin for the scalable of a design.
     DesignScalableField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designscalablefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignScalableField)
     """
-    can_scale: bool = sqlmodel.Field(default=True)
+    can_scale: bool = pydantic.Field(default=True)
 
 class DesignMirrorableField(RealField, abc.ABC):
     """Field mixin for the mirrorable of a design.
     DesignMirrorableField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designmirrorablefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignMirrorableField)
     """
-    can_mirror: bool = sqlmodel.Field(default=True)
+    can_mirror: bool = pydantic.Field(default=True)
 
 class DesignCreatedField(RealField, abc.ABC):
     """Field mixin for the created of a design.
     DesignCreatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designcreatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignCreatedField)
     """
-    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class DesignUpdatedField(RealField, abc.ABC):
     """Field mixin for the updated of a design.
     DesignUpdatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖design🛠️designupdatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignUpdatedField)
     """
-    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class DesignId(DesignNameField, DesignVariantField, Id):
     """Identity fields for uniquely identifying a design.
@@ -5245,17 +4575,17 @@ class DesignInput(
     DesignInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖design🛠️designinput](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignInput)
     """
-    parent: typing.Optional[str] = sqlmodel.Field(default=None)
-    is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
-    folder: typing.Optional[str] = sqlmodel.Field(default=None)
-    activeLayer: typing.Optional[str] = sqlmodel.Field(default=None)
-    location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
-    pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
-    connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
-    props: list[PropInput] = sqlmodel.Field(default_factory=list)
-    authors: list[str] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
-    concepts: list[str] = sqlmodel.Field(default_factory=list)
+    parent: typing.Optional[str] = pydantic.Field(default=None)
+    is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
+    folder: typing.Optional[str] = pydantic.Field(default=None)
+    activeLayer: typing.Optional[str] = pydantic.Field(default=None)
+    location: typing.Optional[LocationInput] = pydantic.Field(default=None)
+    pieces: list[PieceInput] = pydantic.Field(default_factory=list)
+    connections: list[ConnectionInput] = pydantic.Field(default_factory=list)
+    props: list[PropInput] = pydantic.Field(default_factory=list)
+    authors: list[str] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
+    concepts: list[str] = pydantic.Field(default_factory=list)
 
 class DesignContext(
     DesignUnitField,
@@ -5271,11 +4601,11 @@ class DesignContext(
     """
     pass
 
-    location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
-    pieces: list[PieceContext] = sqlmodel.Field(default_factory=list)
-    connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
-    concepts: list[str] = sqlmodel.Field(default_factory=list)
+    location: typing.Optional[LocationContext] = pydantic.Field(default=None)
+    pieces: list[PieceContext] = pydantic.Field(default_factory=list)
+    connections: list[ConnectionContext] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
+    concepts: list[str] = pydantic.Field(default_factory=list)
 
 class DesignOutput(
     DesignUpdatedField,
@@ -5295,17 +4625,17 @@ class DesignOutput(
     """
     pass
 
-    parent: typing.Optional[str] = sqlmodel.Field(default=None)
-    is_abstract: typing.Optional[bool] = sqlmodel.Field(default=None)
-    folder: typing.Optional[str] = sqlmodel.Field(default=None)
-    activeLayer: typing.Optional[str] = sqlmodel.Field(default=None)
-    location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
-    pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
-    connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
-    props: list[PropOutput] = sqlmodel.Field(default_factory=list)
-    authors: list[str] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-    concepts: list[str] = sqlmodel.Field(default_factory=list)
+    parent: typing.Optional[str] = pydantic.Field(default=None)
+    is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
+    folder: typing.Optional[str] = pydantic.Field(default=None)
+    activeLayer: typing.Optional[str] = pydantic.Field(default=None)
+    location: typing.Optional[LocationOutput] = pydantic.Field(default=None)
+    pieces: list[PieceOutput] = pydantic.Field(default_factory=list)
+    connections: list[ConnectionOutput] = pydantic.Field(default_factory=list)
+    props: list[PropOutput] = pydantic.Field(default_factory=list)
+    authors: list[str] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
+    concepts: list[str] = pydantic.Field(default_factory=list)
 
 class DesignPrediction(DesignDescriptionField, Prediction):
     """Prediction fields for LLM-based design inference.
@@ -5314,8 +4644,8 @@ class DesignPrediction(DesignDescriptionField, Prediction):
     """
     pass
 
-    pieces: list[PiecePrediction] = sqlmodel.Field(default_factory=list)
-    connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
+    pieces: list[PiecePrediction] = pydantic.Field(default_factory=list)
+    connections: list[ConnectionPrediction] = pydantic.Field(default_factory=list)
 
 class Design(
     DesignNameField,
@@ -5334,59 +4664,22 @@ class Design(
     DesignIsAbstractField,
     DesignParentField,
     TableEntity,
-    table=True,
 ):
     """Design entity composing pieces and connections into an assembly.
     Design MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖design🛠️design](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/Design)
     """
     PLURAL = "designs"
-    __tablename__ = "design"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    artifact_authors: list[ArtifactAuthor] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    locationLongitude: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("location_longitude", sqlalchemy.Float()),
-        exclude=True,
-        default=None,
-    )
-    locationLatitude: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()),
-        exclude=True,
-        default=None,
-    )
-    layers: list[Layer] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    pieces: list[Piece] = sqlmodel.Relationship(
-        back_populates="design",
-        cascade_delete=True,
-        sa_relationship_kwargs={"foreign_keys": "[Piece.designPk]"},
-    )
-    groups: list[Group] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    connections: list[Connection] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    stats: list[Stat] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    props: list["Prop"] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        alias="kitId",
-        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
-        default=None,
-        exclude=True,
-    )
-    kit: Kit = sqlmodel.Relationship(back_populates="designs")
+    concepts_: list[Concept] = pydantic.Field(default_factory=list)
+    artifact_authors: list[ArtifactAuthor] = pydantic.Field(default_factory=list)
+    layers: list[Layer] = pydantic.Field(default_factory=list)
+    pieces: list[Piece] = pydantic.Field(default_factory=list)
+    groups: list[Group] = pydantic.Field(default_factory=list)
+    connections: list[Connection] = pydantic.Field(default_factory=list)
+    stats: list[Stat] = pydantic.Field(default_factory=list)
+    props: list["Prop"] = pydantic.Field(default_factory=list)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
-    __table_args__ = (
-        sqlalchemy.UniqueConstraint(
-            "name",
-            "variant",
-            "view",
-            "kit_id",
-            name="uq_designs_name_variant_view_kit_id",
-        ),
-    )
 
     @property
     def location(self) -> typing.Optional[Location]:
@@ -5422,7 +4715,7 @@ class Design(
     def concepts(self: "Design", concepts: list[str]):
         self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
 
-    def parent(self) -> "Kit":
+    def parent_entity(self) -> "Kit":
         if self.kit is None:
             raise NoKitAssigned()
         return self.kit
@@ -5549,84 +4842,84 @@ class KitUriField(RealField, abc.ABC):
     KitUriField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kiturifield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitUriField)
     """
-    uri: str = sqlmodel.Field(max_length=URI_LENGTH_LIMIT)
+    uri: str = pydantic.Field(max_length=URI_LENGTH_LIMIT)
 
 class KitNameField(RealField, abc.ABC):
     """Field mixin for the name of a kit.
     KitNameField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitnamefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitNameField)
     """
-    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 class KitDescriptionField(RealField, abc.ABC):
     """Field mixin for the description of a kit.
     KitDescriptionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitdescriptionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitDescriptionField)
     """
-    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+    description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 class KitIconField(RealField, abc.ABC):
     """Field mixin for the icon of a kit.
     KitIconField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kiticonfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitIconField)
     """
-    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class KitImageField(RealField, abc.ABC):
     """Field mixin for the image of a kit.
     KitImageField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitimagefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitImageField)
     """
-    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class KitPreviewField(RealField, abc.ABC):
     """Field mixin for the preview of a kit.
     KitPreviewField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitpreviewfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitPreviewField)
     """
-    preview: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    preview: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class KitVersionField(RealField, abc.ABC):
     """Field mixin for the version of a kit.
     KitVersionField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitversionfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitVersionField)
     """
-    version: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+    version: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 class KitRemoteField(RealField, abc.ABC):
     """Field mixin for the remote of a kit.
     KitRemoteField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitremotefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitRemoteField)
     """
-    remote: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    remote: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class KitHomepageField(RealField, abc.ABC):
     """Field mixin for the homepage of a kit.
     KitHomepageField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kithomepagefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitHomepageField)
     """
-    homepage: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    homepage: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class KitLicenseField(RealField, abc.ABC):
     """Field mixin for the license of a kit.
     KitLicenseField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitlicensefield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitLicenseField)
     """
-    license: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+    license: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 class KitCreatedField(RealField, abc.ABC):
     """Field mixin for the created of a kit.
     KitCreatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitcreatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitCreatedField)
     """
-    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class KitUpdatedField(RealField, abc.ABC):
     """Field mixin for the updated of a kit.
     KitUpdatedField MUST declare exactly one field with appropriate constraints.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kitupdatedfield](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitUpdatedField)
     """
-    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 class KitId(KitUriField, Id):
     """Identity fields for uniquely identifying a kit.
@@ -5672,11 +4965,11 @@ class KitInput(
     """
     pass
 
-    types: list[TypeInput] = sqlmodel.Field(default_factory=list)
-    designs: list[DesignInput] = sqlmodel.Field(default_factory=list)
-    folders: list[FolderInput] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
-    concepts: list[str] = sqlmodel.Field(default_factory=list)
+    types: list[TypeInput] = pydantic.Field(default_factory=list)
+    designs: list[DesignInput] = pydantic.Field(default_factory=list)
+    folders: list[FolderInput] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
+    concepts: list[str] = pydantic.Field(default_factory=list)
 
 class KitContext(KitDescriptionField, KitNameField, Context):
     """Context fields for understanding a kit by an LLM.
@@ -5685,9 +4978,9 @@ class KitContext(KitDescriptionField, KitNameField, Context):
     """
     pass
 
-    types: list[TypeContext] = sqlmodel.Field(default_factory=list)
-    designs: list[DesignContext] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+    types: list[TypeContext] = pydantic.Field(default_factory=list)
+    designs: list[DesignContext] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
 class KitOutput(
     KitUpdatedField,
@@ -5710,11 +5003,11 @@ class KitOutput(
     """
     pass
 
-    types: list[TypeOutput] = sqlmodel.Field(default_factory=list)
-    designs: list[DesignOutput] = sqlmodel.Field(default_factory=list)
-    folders: list[FolderOutput] = sqlmodel.Field(default_factory=list)
-    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-    concepts: list[str] = sqlmodel.Field(default_factory=list)
+    types: list[TypeOutput] = pydantic.Field(default_factory=list)
+    designs: list[DesignOutput] = pydantic.Field(default_factory=list)
+    folders: list[FolderOutput] = pydantic.Field(default_factory=list)
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
+    concepts: list[str] = pydantic.Field(default_factory=list)
 
 class Kit(
     KitNameField,
@@ -5730,28 +5023,21 @@ class Kit(
     KitUpdatedField,
     KitCreatedField,
     TableEntity,
-    table=True,
 ):
     """Kit entity packaging types, designs, qualities and metadata.
     Kit MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖kit🛠️kit](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/Kit)
     """
     PLURAL = "kits"
-    __tablename__ = "kit"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    files_: list[File] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    folders_: list[Folder] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    ports: list[Port] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    concepts_: list[Concept] = pydantic.Field(default_factory=list)
+    authors_: list[Author] = pydantic.Field(default_factory=list)
+    files_: list[File] = pydantic.Field(default_factory=list)
+    folders_: list[Folder] = pydantic.Field(default_factory=list)
+    ports: list[Port] = pydantic.Field(default_factory=list)
+    types: list[Type] = pydantic.Field(default_factory=list)
+    designs: list[Design] = pydantic.Field(default_factory=list)
+    qualities: list[Quality] = pydantic.Field(default_factory=list)
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
     @property
     def concepts(self: "Kit") -> list[str]:
@@ -5771,7 +5057,6 @@ class Kit(
     def folders(self: "Kit", folders: list[Folder]):
         self.folders_ = folders
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("uri", name="uq_kits_uri"),)
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod

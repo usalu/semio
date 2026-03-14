@@ -107,27 +107,27 @@ class TestOperationBuilder:
         code = "C%3A%5Ctest%5Ckit"
         tree = engine.codeParser.parse(code)
         operation = engine.OperationBuilder().transform(tree)
-        assert operation["kind"] == "kit"
+        assert operation["kind"] == engine.OperationKind.KIT
         assert "kitUri" in operation
 
     def test_parse_kits_operation(self):
         code = ""
         tree = engine.codeParser.parse(code)
         operation = engine.OperationBuilder().transform(tree)
-        assert operation["kind"] == "kits"
+        assert operation["kind"] == engine.OperationKind.KITS
 
     def test_parse_types_operation(self):
         code = "C%3A%5Ctest%5Ckit/types"
         tree = engine.codeParser.parse(code)
         operation = engine.OperationBuilder().transform(tree)
-        assert operation["kind"] == "types"
+        assert operation["kind"] == engine.OperationKind.TYPES
         assert "kitUri" in operation
 
     def test_parse_designs_operation(self):
         code = "C%3A%5Ctest%5Ckit/designs"
         tree = engine.codeParser.parse(code)
         operation = engine.OperationBuilder().transform(tree)
-        assert operation["kind"] == "designs"
+        assert operation["kind"] == engine.OperationKind.DESIGNS
         assert "kitUri" in operation
 
 
@@ -758,7 +758,7 @@ class TestIntegration:
         engine.StoreFactory.cache_clear()
         code = engine.encode(str(tempKitPath))
         resultStore, resultOperation = engine.storeAndOperationFromCode(code)
-        assert resultOperation["kind"] == "kit"
+        assert resultOperation["kind"] == engine.OperationKind.KIT
         assert resultOperation["kitUri"] == str(tempKitPath)
 
 
@@ -945,7 +945,7 @@ class TestRemoteStore:
             mock_response.json.return_value = {"uri": "my-kit", "name": "TestKit", "version": "1.0.0"}
             mock_response.raise_for_status.return_value = None
             with patch("engine.requests.get", return_value=mock_response):
-                result = store.get({"kind": "kit", "kitUri": "my-kit"})
+                result = store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
                 assert result is not None
                 assert result.name == "TestKit"
 
@@ -961,7 +961,7 @@ class TestRemoteStore:
             mock_response.raise_for_status.side_effect = http_error
             with patch("engine.requests.get", return_value=mock_response):
                 with pytest.raises(engine.InvalidAuthToken):
-                    store.get({"kind": "kit", "kitUri": "my-kit"})
+                    store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
 
     def test_get_kit_not_found(self, tmp_path):
         """RemoteStore.get raises KitNotFound on 404."""
@@ -975,7 +975,7 @@ class TestRemoteStore:
             mock_response.raise_for_status.side_effect = http_error
             with patch("engine.requests.get", return_value=mock_response):
                 with pytest.raises(engine.KitNotFound):
-                    store.get({"kind": "kit", "kitUri": "my-kit"})
+                    store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
 
     def test_get_kit_connection_error(self, tmp_path):
         """RemoteStore.get raises ServerUnreachable on connection error."""
@@ -985,7 +985,7 @@ class TestRemoteStore:
             store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
             with patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
                 with pytest.raises(engine.ServerUnreachable):
-                    store.get({"kind": "kit", "kitUri": "my-kit"})
+                    store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
 
     def test_get_kit_no_auth(self, tmp_path):
         """RemoteStore.get raises AuthTokenNotFound when not logged in."""
@@ -994,7 +994,7 @@ class TestRemoteStore:
             engine._save_auth({})
             store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
             with pytest.raises(engine.AuthTokenNotFound):
-                store.get({"kind": "kit", "kitUri": "my-kit"})
+                store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
 
     def test_put_kit_success(self, tmp_path):
         """RemoteStore.put creates a kit on the remote server."""
@@ -1005,7 +1005,7 @@ class TestRemoteStore:
             mock_response = MagicMock()
             mock_response.raise_for_status.return_value = None
             with patch("engine.requests.put", return_value=mock_response):
-                result = store.put({"kind": "kit", "kitUri": "my-kit"}, engine.KitInput(name="TestKit", version="1.0.0"))
+                result = store.put({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"}, engine.KitInput(name="TestKit", version="1.0.0"))
                 assert result is None
 
     def test_put_type_success(self, tmp_path):
@@ -1018,7 +1018,7 @@ class TestRemoteStore:
             mock_response.raise_for_status.return_value = None
             with patch("engine.requests.put", return_value=mock_response) as mock_put:
                 result = store.put(
-                    {"kind": "type", "kitUri": "my-kit", "typeName": "Brick", "typeVariant": ""},
+                    {"kind": engine.OperationKind.TYPE, "kitUri": "my-kit", "typeName": "Brick", "typeVariant": ""},
                     engine.TypeInput(name="Brick", variant=""),
                 )
                 assert result is None
@@ -1035,7 +1035,7 @@ class TestRemoteStore:
             mock_response.raise_for_status.return_value = None
             with patch("engine.requests.put", return_value=mock_response) as mock_put:
                 result = store.put(
-                    {"kind": "design", "kitUri": "my-kit", "designName": "MyDesign", "designVariant": "", "designView": ""},
+                    {"kind": engine.OperationKind.DESIGN, "kitUri": "my-kit", "designName": "MyDesign", "designVariant": "", "designView": ""},
                     engine.DesignInput(name="MyDesign", variant="", view=""),
                 )
                 assert result is None
@@ -1051,7 +1051,7 @@ class TestRemoteStore:
             mock_response = MagicMock()
             mock_response.raise_for_status.return_value = None
             with patch("engine.requests.delete", return_value=mock_response):
-                result = store.delete({"kind": "kit", "kitUri": "my-kit"})
+                result = store.delete({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
                 assert result is None
 
     def test_delete_type_success(self, tmp_path):
@@ -1063,7 +1063,7 @@ class TestRemoteStore:
             mock_response = MagicMock()
             mock_response.raise_for_status.return_value = None
             with patch("engine.requests.delete", return_value=mock_response) as mock_del:
-                result = store.delete({"kind": "type", "kitUri": "my-kit", "typeName": "Brick", "typeVariant": ""})
+                result = store.delete({"kind": engine.OperationKind.TYPE, "kitUri": "my-kit", "typeName": "Brick", "typeVariant": ""})
                 assert result is None
                 call_args = mock_del.call_args
                 assert "types/" in call_args[0][0]
@@ -1077,7 +1077,7 @@ class TestRemoteStore:
             mock_response = MagicMock()
             mock_response.raise_for_status.return_value = None
             with patch("engine.requests.delete", return_value=mock_response) as mock_del:
-                result = store.delete({"kind": "design", "kitUri": "my-kit", "designName": "MyDesign", "designVariant": "", "designView": ""})
+                result = store.delete({"kind": engine.OperationKind.DESIGN, "kitUri": "my-kit", "designName": "MyDesign", "designVariant": "", "designView": ""})
                 assert result is None
                 call_args = mock_del.call_args
                 assert "designs/" in call_args[0][0]
@@ -1258,6 +1258,8 @@ class TestMcpRemoteKit:
     def test_get_session_kit_mode_default(self):
         """_get_session_kit_mode returns 'local' when not set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = engine._session_id(mock_ctx)
+        engine._mcp_session_kit_mode.pop(sid, None)
         mode = engine._get_session_kit_mode(mock_ctx)
         assert mode == "local"
 

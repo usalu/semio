@@ -49,7 +49,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
-import { Action, BasicChatPanel, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider } from "./elements";
+import { Action, BasicChatPanel, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider } from "@semio-elements/ui";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
 import { applySelectionComposition, createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, resolveSelectionCompositionKind, Theme, ToolKind } from "./shared";
 import {

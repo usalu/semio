@@ -692,6 +692,363 @@ function JsonViewer({ data }: { data: unknown }) {
 
 // #endregion 🔖JsonViewer
 
+// #region 🔖OntologyTree
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree)
+// Tree viewer for visualizing OWL class expression structure (schema-level, no instances).
+// OntologyTree MUST render a collapsible tree of the class expression without truth values.
+
+/**
+ * Node kind in an ontology class expression tree.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree✂️ontologynodekind](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/f/OntologyNodeKind)
+ *
+ * Enumerates all OWL class expression constructs.
+ **/
+type OntologyNodeKind =
+  | "Class"
+  | "And"
+  | "Or"
+  | "Not"
+  | "SomeValuesFrom"
+  | "AllValuesFrom"
+  | "ExactCardinality"
+  | "MinCardinality"
+  | "MaxCardinality"
+  | "DataSomeValuesFrom"
+  | "DataAllValuesFrom"
+  | "DataHasValue"
+  | "DatatypeRestriction";
+
+/**
+ * A node in the ontology class expression tree (schema only, no instances).
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree✂️ontologytreenode](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/f/OntologyTreeNode)
+ *
+ * MUST have id, kind, label, and children.
+ **/
+interface OntologyTreeNode {
+  id: string;
+  kind: OntologyNodeKind;
+  label: string;
+  fragment?: string;
+  property?: string;
+  className?: string;
+  cardinality?: number;
+  datatype?: string;
+  restriction?: string;
+  children: OntologyTreeNode[];
+}
+
+/**
+ * Returns the icon label for an ontology node kind.
+ **/
+function ontologyNodeIcon(kind: OntologyNodeKind): string {
+  switch (kind) {
+    case "Class": return "C";
+    case "And": return "∧";
+    case "Or": return "∨";
+    case "Not": return "¬";
+    case "SomeValuesFrom": return "∃";
+    case "AllValuesFrom": return "∀";
+    case "ExactCardinality": return "=n";
+    case "MinCardinality": return "≥n";
+    case "MaxCardinality": return "≤n";
+    case "DataSomeValuesFrom": return "∃d";
+    case "DataAllValuesFrom": return "∀d";
+    case "DataHasValue": return "v";
+    case "DatatypeRestriction": return "D";
+    default: return "?";
+  }
+}
+
+/**
+ * Renders a single ontology tree node with expand/collapse.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree🛠️ontologytreenodeview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/i/OntologyTreeNodeView)
+ *
+ * MUST display the node kind icon, label, and expandable children.
+ **/
+function OntologyTreeNodeView({
+  node,
+  depth = 0,
+  defaultExpanded = true,
+}: {
+  node: OntologyTreeNode;
+  depth?: number;
+  defaultExpanded?: boolean;
+}) {
+  const hasChildren = node.children.length > 0;
+  const [expanded, setExpanded] = useState(defaultExpanded);
+
+  return (
+    <div className="select-none">
+      <div
+        className={`flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-surface-hover transition-colors ${hasChildren ? "cursor-pointer" : ""}`}
+        style={{ paddingLeft: `${depth * 16 + 4}px` }}
+        onClick={() => hasChildren && setExpanded(!expanded)}
+      >
+        {hasChildren ? (
+          expanded ? <IconChevronDown className="w-3 h-3 text-text-tertiary shrink-0" /> : <IconChevronRight className="w-3 h-3 text-text-tertiary shrink-0" />
+        ) : (
+          <span className="w-3 shrink-0" />
+        )}
+        <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-coda-100 text-coda-700 text-[10px] font-bold shrink-0" title={node.kind}>
+          {ontologyNodeIcon(node.kind)}
+        </span>
+        <span className="text-sm font-medium text-text">{node.label}</span>
+        {node.fragment && node.fragment !== node.label && (
+          <span className="text-xs text-text-tertiary ml-1 truncate">{node.fragment}</span>
+        )}
+      </div>
+      {expanded && hasChildren && (
+        <div>
+          {node.children.map((child) => (
+            <OntologyTreeNodeView key={child.id} node={child} depth={depth + 1} defaultExpanded={defaultExpanded} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Tree viewer that displays an OWL class expression as a collapsible tree.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree🛠️ontologytree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/i/OntologyTree)
+ *
+ * MUST render the full ontology tree structure from root.
+ **/
+function OntologyTree({
+  root,
+  title,
+  defaultExpanded = true,
+}: {
+  root: OntologyTreeNode;
+  title?: string;
+  defaultExpanded?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-surface overflow-hidden">
+      {title && (
+        <div className="border-b border-border px-3 py-2">
+          <h3 className="text-sm font-semibold text-text">{title}</h3>
+        </div>
+      )}
+      <div className="p-2 overflow-x-auto">
+        <OntologyTreeNodeView node={root} defaultExpanded={defaultExpanded} />
+      </div>
+    </div>
+  );
+}
+
+// #endregion 🔖OntologyTree
+
+// #region 🔖ValidationTree
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree)
+// Tree viewer for visualizing validation results (data graph instances of the ontology).
+// ValidationTree MUST render truth values, witnesses, data values, and cardinality info.
+
+/**
+ * Three-valued truth for validation nodes.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree✂️truthvalue](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/f/TruthValue)
+ *
+ * true = green, false = red, unknown = gray.
+ **/
+type TruthValue = "true" | "false" | "unknown";
+
+/**
+ * Node kind in a validation tree, extending ontology kinds with instance-level nodes.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree✂️validationnodekind](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/f/ValidationNodeKind)
+ *
+ * Extends OntologyNodeKind with Witness and DataValue for instance data.
+ **/
+type ValidationNodeKind = OntologyNodeKind | "ClassAssertion" | "Witness" | "DataValue";
+
+/**
+ * A node in the validation result tree (instance-level with truth values).
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree✂️validationtreenode](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/f/ValidationTreeNode)
+ *
+ * MUST have id, kind, label, truth, and children.
+ **/
+interface ValidationTreeNode {
+  id: string;
+  kind: ValidationNodeKind;
+  label: string;
+  fragment?: string;
+  truth: TruthValue;
+  summary?: string;
+  property?: string;
+  className?: string;
+  subject?: string;
+  individual?: string;
+  counted?: boolean;
+  expectedCardinality?: number;
+  matchingCount?: number;
+  value?: number | string;
+  datatype?: string;
+  children: ValidationTreeNode[];
+}
+
+/**
+ * A validation report for a specific instance.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree✂️validationreport](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/f/ValidationReport)
+ *
+ * MUST have instance, expression, truth, and tree.
+ **/
+interface ValidationReport {
+  instance: string;
+  expression: string;
+  truth: TruthValue;
+  tree: ValidationTreeNode;
+}
+
+/**
+ * Maps truth value to color classes.
+ **/
+const truthColors: Record<TruthValue, { dot: string; text: string; bg: string }> = {
+  true: { dot: "bg-compliant", text: "text-compliant", bg: "bg-compliant/10" },
+  false: { dot: "bg-violated", text: "text-violated", bg: "bg-violated/10" },
+  unknown: { dot: "bg-unknown", text: "text-unknown", bg: "bg-unknown/10" },
+};
+
+/**
+ * Maps truth value to emoji indicator.
+ **/
+function truthEmoji(truth: TruthValue): string {
+  switch (truth) {
+    case "true": return "🟢";
+    case "false": return "🔴";
+    case "unknown": return "⚪";
+  }
+}
+
+/**
+ * Renders a single validation tree node with expand/collapse, truth badges, and witnesses.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree🛠️validationtreenodeview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/i/ValidationTreeNodeView)
+ *
+ * MUST display truth indicator, node label, witness/value info, and expandable children.
+ **/
+function ValidationTreeNodeView({
+  node,
+  depth = 0,
+  defaultExpanded = true,
+}: {
+  node: ValidationTreeNode;
+  depth?: number;
+  defaultExpanded?: boolean;
+}) {
+  const hasChildren = node.children.length > 0;
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const colors = truthColors[node.truth];
+  const isWitness = node.kind === "Witness";
+  const isDataValue = node.kind === "DataValue";
+
+  return (
+    <div className="select-none">
+      <div
+        className={`flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-surface-hover transition-colors ${hasChildren ? "cursor-pointer" : ""}`}
+        style={{ paddingLeft: `${depth * 16 + 4}px` }}
+        onClick={() => hasChildren && setExpanded(!expanded)}
+        title={node.summary}
+      >
+        {hasChildren ? (
+          expanded ? <IconChevronDown className="w-3 h-3 text-text-tertiary shrink-0" /> : <IconChevronRight className="w-3 h-3 text-text-tertiary shrink-0" />
+        ) : (
+          <span className="w-3 shrink-0" />
+        )}
+        {/* Truth indicator */}
+        <span className="text-xs shrink-0" title={`${node.truth}`}>{truthEmoji(node.truth)}</span>
+        {/* Node content */}
+        {isWitness ? (
+          <>
+            <span className={`text-sm font-medium ${node.counted === false ? "text-text-tertiary" : "text-text"}`}>
+              {node.individual ?? node.label}
+            </span>
+            {node.counted === true && (
+              <span className="text-[10px] font-medium text-compliant bg-compliant/10 px-1 py-0.5 rounded">counted</span>
+            )}
+            {node.counted === false && (
+              <span className="text-[10px] font-medium text-unknown bg-unknown/10 px-1 py-0.5 rounded">not matching</span>
+            )}
+          </>
+        ) : isDataValue ? (
+          <>
+            <span className="text-sm font-mono text-text">{String(node.value ?? node.label)}</span>
+            {node.datatype && (
+              <span className="text-xs text-text-tertiary">{node.datatype}</span>
+            )}
+          </>
+        ) : (
+          <>
+            <span className={`inline-flex items-center justify-center w-5 h-5 rounded ${colors.bg} ${colors.text} text-[10px] font-bold shrink-0`} title={node.kind}>
+              {node.kind === "ClassAssertion" ? "∈" : ontologyNodeIcon(node.kind as OntologyNodeKind)}
+            </span>
+            <span className="text-sm font-medium text-text">{node.label}</span>
+            {node.kind === "ExactCardinality" || node.kind === "MinCardinality" || node.kind === "MaxCardinality" ? (
+              node.matchingCount !== undefined && node.expectedCardinality !== undefined && (
+                <span className="text-xs text-text-secondary ml-1">
+                  [{node.matchingCount}/{node.expectedCardinality}]
+                </span>
+              )
+            ) : null}
+            {node.fragment && node.fragment !== node.label && (
+              <span className="text-xs text-text-tertiary ml-1 truncate">{node.fragment}</span>
+            )}
+          </>
+        )}
+        {/* Summary tooltip as text */}
+        {node.summary && !isWitness && !isDataValue && (
+          <span className={`text-xs ${colors.text} ml-auto shrink-0`}>{node.truth}</span>
+        )}
+      </div>
+      {expanded && hasChildren && (
+        <div>
+          {node.children.map((child) => (
+            <ValidationTreeNodeView key={child.id} node={child} depth={depth + 1} defaultExpanded={defaultExpanded} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Tree viewer that displays a validation report as a collapsible tree with truth values.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree🛠️validationtree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/i/ValidationTree)
+ *
+ * MUST render instance header, expression, overall truth, and the expanded result tree.
+ **/
+function ValidationTree({
+  report,
+  defaultExpanded = true,
+}: {
+  report: ValidationReport;
+  defaultExpanded?: boolean;
+}) {
+  const rootColors = truthColors[report.truth];
+
+  return (
+    <div className="rounded-lg border border-border bg-surface overflow-hidden">
+      <div className="border-b border-border px-3 py-2 space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-text">Instance: {report.instance}</span>
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
+            report.truth === "true"
+              ? "bg-compliant/15 text-compliant border-compliant/30"
+              : report.truth === "false"
+                ? "bg-violated/15 text-violated border-violated/30"
+                : "bg-unknown/15 text-unknown border-unknown/30"
+          }`}>
+            {truthEmoji(report.truth)} {report.truth}
+          </span>
+        </div>
+        <div className="text-xs text-text-secondary font-mono break-all">{report.expression}</div>
+      </div>
+      <div className="p-2 overflow-x-auto">
+        <ValidationTreeNodeView node={report.tree} defaultExpanded={defaultExpanded} />
+      </div>
+    </div>
+  );
+}
+
+// #endregion 🔖ValidationTree
+
 // #endregion 🔖Components
 
 // #region 🔖Hooks
@@ -2203,11 +2560,17 @@ function App() {
 
 export default App;
 
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+export { OntologyTree, ValidationTree };
+export type { OntologyTreeNode, OntologyNodeKind, ValidationTreeNode, ValidationNodeKind, TruthValue, ValidationReport };
+
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+}
 
 // #endregion 🔖App
 

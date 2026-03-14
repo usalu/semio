@@ -113,7 +113,7 @@ import {
     toThreeRotation,
     Type
 } from "../semio";
-import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection } from "./elements";
+import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection } from "@semio-elements/ui";
 import {
     applyNodeChanges,
     Avatar,
@@ -147,7 +147,7 @@ import {
     useReactFlow,
     useStoreApi,
     ViewportPortal
-} from "./elements";
+} from "@semio-elements/ui";
 import { getConnectorPortGuid, getPortCompatibilityState, getPortTone } from "./portColor";
 import { getKitAppHooks, registerDesignAppHooks, registerDesignAppStoreFactory } from "./shared";
 import {

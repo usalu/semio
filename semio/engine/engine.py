@@ -49,9 +49,6 @@ import lark
 import openai
 import pydantic
 import requests
-import sqlalchemy
-import sqlalchemy.orm
-import sqlmodel
 import starlette.applications
 import starlette_graphene3
 import uvicorn
@@ -119,7 +116,6 @@ from semio import (
     RelayNode,
     RemoteKitUriNotValid,
     RemoteKitsNotYetSupported,
-    Semio,
     ServerError,
     ServerUnreachable,
     Side,
@@ -196,40 +192,90 @@ codeGrammar = (
 codeParser = lark.Lark(codeGrammar, start="code")
 
 
+class OperationKind(enum.Enum):
+    """The kind of a store operation.
+    [👤semio📚engine💻engine🔖store🛠️operationkind](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/OperationKind)
+    """
+
+    KITS = "kits"
+    KIT = "kit"
+    DESIGNS = "designs"
+    DESIGN = "design"
+    TYPES = "types"
+    TYPE = "type"
+
+
+class Operation(typing.TypedDict, total=False):
+    """Typed operation dict produced by OperationBuilder from parsed code grammar.
+    `kind` is always present. Other fields depend on the kind.
+    [👤semio📚engine💻engine🔖store🛠️operation](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Operation)
+    """
+
+    kind: typing.Required[OperationKind]
+    kitUri: str
+    designName: str
+    designVariant: str
+    designView: str
+    typeName: str
+    typeVariant: str
+
+
+class TransactionChange(typing.TypedDict):
+    """A single recorded change within a transaction.
+    [👤semio📚engine💻engine🔖store🛠️transactionchange](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/TransactionChange)
+    """
+
+    kind: str
+    before_has_kit: bool
+    after_has_kit: bool
+    forward_diff: dict | None
+    backward_diff: dict | None
+
+
+class Transaction(typing.TypedDict):
+    """An active MCP session transaction tracking kit changes for rollback.
+    [👤semio📚engine💻engine🔖store🛠️transaction](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Transaction)
+    """
+
+    active: bool
+    started_at: str
+    changes: list[TransactionChange]
+
+
 class OperationBuilder(lark.Transformer):
     """Lark transformer that builds operation dicts from parsed code grammar trees.
     Callers MUST pass a valid parse tree from codeParser.
     [👤semio📚engine💻engine🔖store🛠️operationbuilder](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/OperationBuilder)
     """
 
-    def code(self, children):
+    def code(self, children) -> Operation:
         if len(children) == 0:
-            return {"kind": "kits"}
+            return Operation(kind=OperationKind.KITS)
         kitUri = decode(children[0].value)
         if len(children) == 1:
-            return {"kind": "kit", "kitUri": kitUri}
+            return Operation(kind=OperationKind.KIT, kitUri=kitUri)
         code = children[1]
         code["kitUri"] = kitUri
         return code
 
-    def design(self, children):
+    def design(self, children) -> Operation:
         if len(children) == 0:
-            return {"kind": "designs"}
-        return {
-            "kind": "design",
-            "designName": decode(children[0].value),
-            "designVariant": (decode(children[1].value) if len(children) == 2 else ""),
-            "designView": (decode(children[2].value) if len(children) == 3 else ""),
-        }
+            return Operation(kind=OperationKind.DESIGNS)
+        return Operation(
+            kind=OperationKind.DESIGN,
+            designName=decode(children[0].value),
+            designVariant=(decode(children[1].value) if len(children) == 2 else ""),
+            designView=(decode(children[2].value) if len(children) == 3 else ""),
+        )
 
-    def type(self, children):
+    def type(self, children) -> Operation:
         if len(children) == 0:
-            return {"kind": "types"}
-        return {
-            "kind": "type",
-            "typeName": decode(children[0].value),
-            "typeVariant": (decode(children[1].value) if len(children) == 2 else ""),
-        }
+            return Operation(kind=OperationKind.TYPES)
+        return Operation(
+            kind=OperationKind.TYPE,
+            typeName=decode(children[0].value),
+            typeVariant=(decode(children[1].value) if len(children) == 2 else ""),
+        )
 
 
 class StoreKind(enum.Enum):
@@ -287,278 +333,214 @@ class Store(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get(cls: "Store", operation: dict) -> typing.Any:
+    def get(cls: "Store", operation: Operation) -> typing.Any:
         """🔍 Get an entity from the store."""
         pass
 
     @abc.abstractmethod
-    def put(cls: "Store", operation: dict, input: str) -> typing.Any:
+    def put(cls: "Store", operation: Operation, input: str) -> typing.Any:
         """📥 Put an entity in the store."""
         pass
 
     @abc.abstractmethod
-    def update(cls: "Store", operation: dict, input: str) -> typing.Any:
+    def update(cls: "Store", operation: Operation, input: str) -> typing.Any:
         """🔄 Update an entity in the store."""
         pass
 
     @abc.abstractmethod
-    def delete(cls: "Store", operation: dict) -> typing.Any:
+    def delete(cls: "Store", operation: Operation) -> typing.Any:
         """🗑 Delete an entity from the store."""
         pass
 
 
 class DatabaseStore(Store, abc.ABC):
-    """Abstract database-backed store using SQLAlchemy engine and session.
+    """Abstract database-backed store using raw SQL via sqlite3.
+    Stores kit data as JSON blobs. No ORM.
     Subclasses MUST implement the fromUri classmethod to construct from a URI.
     [👤semio📚engine💻engine🔖store🛠️databasestore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/DatabaseStore)
     """
 
-    engine: sqlalchemy.engine.Engine
+    db_path: str
 
-    def __init__(self, uri: str, engine: sqlalchemy.engine.Engine) -> None:
+    def __init__(self, uri: str, db_path: str) -> None:
         super().__init__(uri)
-        self.engine = engine
+        self.db_path = db_path
 
-    @functools.cached_property
-    def session(self: "DatabaseStore") -> sqlalchemy.orm.Session:
-        return sqlalchemy.orm.sessionmaker(bind=self.engine)()
+    def _connect(self) -> sqlite3.Connection:
+        return sqlite3.connect(self.db_path)
 
-    def initialized(self: "DatabaseStore") -> bool:
+    def initialized(self) -> bool:
+        if not os.path.exists(self.db_path):
+            return False
         try:
-            inspector = sqlalchemy.inspect(self.engine)
-            if "semio" in inspector.get_table_names():
-                return True
-        except sqlalchemy.exc.OperationalError:
+            with self._connect() as conn:
+                cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='kit'")
+                return cursor.fetchone() is not None
+        except sqlite3.OperationalError:
             return False
 
     @classmethod
     @abc.abstractmethod
-    def fromUri(cls: "DatabaseStore", uri: str) -> "DatabaseStore":
+    def fromUri(cls, uri: str) -> "DatabaseStore":
         """🔧 Get a store from the uri."""
         pass
 
-    def postDeleteKit(self: "SqliteStore") -> None:
+    def postDeleteKit(self) -> None:
         return None
 
-    def get(self: "DatabaseStore", operation: dict) -> typing.Any:
+    def get(self, operation: Operation) -> typing.Any:
         kitUri = operation["kitUri"]
         kind = operation["kind"]
+        if not self.initialized():
+            raise KitNotFound(kitUri)
         try:
-            kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
-        except sqlalchemy.exc.OperationalError:
+            with self._connect() as conn:
+                cursor = conn.execute("SELECT data FROM kit WHERE uri = ?", (kitUri,))
+                row = cursor.fetchone()
+        except sqlite3.OperationalError:
             raise KitNotFound(kitUri)
-        if kit is None:
+        if row is None:
             raise KitNotFound(kitUri)
+        kit_data = json.loads(row[0])
         match kind:
-            case "kit":
-                return kit
-            case "design":
+            case OperationKind.KIT:
+                return KitOutput.model_validate(kit_data)
+            case OperationKind.DESIGN:
                 raise FeatureNotYetSupported()
-            case "type":
+            case OperationKind.TYPE:
                 raise FeatureNotYetSupported()
             case _:
                 raise FeatureNotYetSupported()
 
     def put(
-        self: "DatabaseStore",
-        operation: dict,
+        self,
+        operation: Operation,
         input: KitInput | DesignInput | TypeInput,
     ) -> typing.Any:
         kitUri = operation["kitUri"]
         kind = operation["kind"]
 
-        if kind == "kit":
+        if kind == OperationKind.KIT:
             self.initialize()
             dump = input.model_dump()
             dump["uri"] = kitUri
-            kit = Kit.parse(dump)
-            existingKit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
-            if existingKit is not None:
-                raise KitAlreadyExists(kitUri)
-            try:
-                self.session.add(kit)
-                self.session.commit()
-            except Exception as e:
-                self.session.rollback()
-                raise e
-            return kit
+            with self._connect() as conn:
+                cursor = conn.execute("SELECT 1 FROM kit WHERE uri = ?", (kitUri,))
+                if cursor.fetchone() is not None:
+                    raise KitAlreadyExists(kitUri)
+                conn.execute(
+                    "INSERT INTO kit (uri, data) VALUES (?, ?)",
+                    (kitUri, json.dumps(dump)),
+                )
+            return KitOutput.model_validate(dump)
 
         if not self.initialized():
             raise KitNotFound(kitUri)
-        kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
-        match kind:
-            case "design":
-                types = [u.Type for u in self.session.query(Type, Kit).filter(Kit.uri == kitUri).all()]
-                existingDesigns = [d for d, _ in self.session.query(Design, Kit).filter(Kit.uri == kitUri).all()]
-                designsById: dict[str, dict[str, dict[str, Design]]] = {}
-                for d in existingDesigns:
-                    if d.name not in designsById:
-                        designsById[d.name] = {}
-                    if d.variant not in designsById[d.name]:
-                        designsById[d.name][d.variant] = {}
-                    designsById[d.name][d.variant][d.view] = d
-                existingDesignUnion = (
-                    self.session.query(Design, Kit)
-                    .filter(
-                        Kit.uri == kitUri,
-                        Design.name == input.name,
-                        Design.variant == input.variant,
-                        Design.view == input.view,
+
+        with self._connect() as conn:
+            cursor = conn.execute("SELECT data FROM kit WHERE uri = ?", (kitUri,))
+            row = cursor.fetchone()
+            if row is None:
+                raise KitNotFound(kitUri)
+            kit_data = json.loads(row[0])
+
+            match kind:
+                case OperationKind.DESIGN:
+                    design_dump = input.model_dump()
+                    designs = kit_data.get("designs", [])
+                    designs = [
+                        d for d in designs
+                        if not (d.get("name") == input.name and d.get("variant") == input.variant and d.get("view") == input.view)
+                    ]
+                    designs.append(design_dump)
+                    kit_data["designs"] = designs
+                    conn.execute(
+                        "UPDATE kit SET data = ? WHERE uri = ?",
+                        (json.dumps(kit_data), kitUri),
                     )
-                    .one_or_none()
-                )
-                try:
-                    if existingDesignUnion is not None:
-                        existingDesign = existingDesignUnion.Design
-                        self.session.delete(existingDesign)
-                        design = Design.parse(input, types, designsById)
-                        design.kit = kit
-                        self.session.add(design)
-                        self.session.commit()
-                    else:
-                        design = Design.parse(input, types, designsById)
-                        design.kit = kit
-                        self.session.add(design)
-                        self.session.commit()
-                except Exception as e:
-                    self.session.rollback()
-                    raise e
-            case "type":
-                type = Type.parse(input)
-                type.kit = kit
-                existingTypeUnion = (
-                    self.session.query(Type, Kit)
-                    .filter(
-                        Kit.uri == kitUri,
-                        Type.name == type.name,
-                        Type.variant == type.variant,
+                case OperationKind.TYPE:
+                    type_dump = input.model_dump()
+                    types = kit_data.get("types", [])
+                    types = [
+                        t for t in types
+                        if not (t.get("name") == input.name and t.get("variant") == input.variant)
+                    ]
+                    types.append(type_dump)
+                    kit_data["types"] = types
+                    conn.execute(
+                        "UPDATE kit SET data = ? WHERE uri = ?",
+                        (json.dumps(kit_data), kitUri),
                     )
-                    .one_or_none()
-                )
-                try:
-                    if existingTypeUnion is not None:
-                        existingType = existingTypeUnion.Type
-                        existingConnectors = {p.id_: p for p in existingType.connectors}
-                        usedConnectors = {}
-                        for connector in list(existingType.connectors):
-                            for connection in connector.connections:
-                                if connection.connectedPiece.type == existingType:
-                                    usedConnectors[connection.connectedConnector.id_] = connection.connectedConnector
-                                if connection.connectingPiece.type == existingType:
-                                    usedConnectors[connection.connectingConnector.id_] = connection.connectingConnector
-                        newPorts = {p.id_: p for p in type.connectors}
-                        missingConnectors = set(usedConnectors.keys()) - set(newPorts.keys())
-                        if missingConnectors:
-                            raise TypeHasNotAllUsedConnectors(missingConnectors)
-                        unusedConnectors = set(existingConnectors.keys()) - set(usedConnectors.keys())
+                case _:
+                    raise FeatureNotYetSupported()
 
-                        existingType.icon = type.icon
-                        existingType.image = type.image
-                        existingType.description = type.description
-                        existingType.unit = type.unit
-                        existingType.updated = datetime.datetime.now()
-                        for usedConnectorId, usedConnector in usedConnectors.items():
-                            usedConnector.point = newPorts[usedConnectorId].point
-                            usedConnector.direction = newPorts[usedConnectorId].direction
-
-                            for attribute in list(usedConnector.attributes):
-                                self.session.delete(attribute)
-                            usedConnector.attributes = []
-                            self.session.flush()
-
-                            newAttributes = []
-                            for newAttribute in list(newPorts[usedConnectorId].attributes):
-                                newAttribute.connector = usedConnector
-                                self.session.add(newAttribute)
-                                newAttributes.append(newAttribute)
-                            usedConnector.attributes = newAttributes
-                            self.session.flush()
-
-                        for unusedConnector in list(unusedConnectors):
-                            self.session.delete(existingConnectors[unusedConnector])
-                        existingType.connectors = [p for p in existingType.connectors if p.id_ not in unusedConnectors]
-                        self.session.flush()
-
-                        for newPortId, newPort in newPorts.items():
-                            if newPortId not in usedConnectors:
-                                newPort.type = existingType
-                                self.session.add(newPort)
-                        self.session.flush()
-
-                        existingType.models = []
-                        for model in list(type.models):
-                            model.type = existingType
-                            self.session.add(model)
-                        self.session.flush()
-
-                        existingType.attributes = []
-                        for attribute in list(type.attributes):
-                            attribute.type = existingType
-                            self.session.add(attribute)
-                        self.session.flush()
-
-                        existingType.authors = []
-                        for author in list(type.authors):
-                            author.type = existingType
-                            self.session.add(author)
-                        self.session.flush()
-
-                        self.session.commit()
-                    else:
-                        self.session.add(type)
-                        self.session.commit()
-                except Exception as e:
-                    self.session.rollback()
-                    raise e
-                return type
-            case _:
-                raise FeatureNotYetSupported()
-
-    def update(self: "DatabaseStore", operation: dict, input: str) -> typing.Any:
+    def update(self, operation: Operation, input: str) -> typing.Any:
         raise FeatureNotYetSupported()
 
-    def delete(self: "DatabaseStore", operation: dict) -> typing.Any:
+    def delete(self, operation: Operation) -> typing.Any:
         kitUri = operation["kitUri"]
         kind = operation["kind"]
-        try:
-            kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
-        except sqlalchemy.exc.OperationalError:
+        if not self.initialized():
             raise KitNotFound(kitUri)
-        if kit is None:
-            raise KitNotFound(kitUri)
-        match kind:
-            case "kit":
-                try:
-                    self.session.delete(kit)
-                    self.session.commit()
-                except Exception as e:
-                    self.session.rollback()
-                    raise e
-            case "design":
-                try:
-                    self.session.query(Design, Kit).filter(
-                        Kit.uri == kitUri,
-                        Design.name == operation["designName"],
-                        Design.variant == operation["designVariant"],
-                        Design.view == operation["designView"],
-                    ).delete()
-                    self.session.commit()
-                except Exception as e:
-                    self.session.rollback()
-                    raise e
-            case "type":
-                try:
-                    self.session.query(Type, Kit).filter(
-                        Kit.uri == kitUri,
-                        Type.name == operation["typeName"],
-                        Type.variant == operation["typeVariant"],
-                    ).delete()
-                    self.session.commit()
-                except Exception as e:
-                    self.session.rollback()
-                    raise e
-            case _:
-                raise FeatureNotYetSupported()
+
+        with self._connect() as conn:
+            cursor = conn.execute("SELECT data FROM kit WHERE uri = ?", (kitUri,))
+            row = cursor.fetchone()
+            if row is None:
+                raise KitNotFound(kitUri)
+
+            match kind:
+                case OperationKind.KIT:
+                    conn.execute("DELETE FROM kit WHERE uri = ?", (kitUri,))
+                case OperationKind.DESIGN:
+                    kit_data = json.loads(row[0])
+                    designs = kit_data.get("designs", [])
+                    kit_data["designs"] = [
+                        d for d in designs
+                        if not (
+                            d.get("name") == operation["designName"]
+                            and d.get("variant") == operation["designVariant"]
+                            and d.get("view") == operation["designView"]
+                        )
+                    ]
+                    conn.execute(
+                        "UPDATE kit SET data = ? WHERE uri = ?",
+                        (json.dumps(kit_data), kitUri),
+                    )
+                case OperationKind.TYPE:
+                    kit_data = json.loads(row[0])
+                    types = kit_data.get("types", [])
+                    kit_data["types"] = [
+                        t for t in types
+                        if not (
+                            t.get("name") == operation["typeName"]
+                            and t.get("variant") == operation["typeVariant"]
+                        )
+                    ]
+                    conn.execute(
+                        "UPDATE kit SET data = ? WHERE uri = ?",
+                        (json.dumps(kit_data), kitUri),
+                    )
+                case _:
+                    raise FeatureNotYetSupported()
+
+    def apply_diff(self, kitUri: str, diff: dict) -> dict:
+        """Apply a kit diff directly via SQL. Loads kit JSON, applies diff, stores back.
+        Returns the updated kit dict.
+        [👤semio📚engine💻engine🔖store🛠️applydiff](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/apply_diff)
+        """
+        with self._connect() as conn:
+            cursor = conn.execute("SELECT data FROM kit WHERE uri = ?", (kitUri,))
+            row = cursor.fetchone()
+            if row is None:
+                raise KitNotFound(kitUri)
+            kit_data = json.loads(row[0])
+            updated = applyKitDiffDict(kit_data, diff)
+            conn.execute(
+                "UPDATE kit SET data = ? WHERE uri = ?",
+                (json.dumps(updated), kitUri),
+            )
+            return updated
 
 
 class SSLMode(enum.Enum):
@@ -625,49 +607,46 @@ def cache(remoteUri: str) -> str:
 
 
 class SqliteStore(DatabaseStore):
-    """SQLite-backed store that persists kit data to a local .semio database file.
+    """SQLite-backed store that persists kit data as JSON in a local .semio database file.
     Callers MUST use fromUri to construct instances with a valid local path.
     [👤semio📚engine💻engine🔖store🛠️sqlitestore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/SqliteStore)
     """
 
-    path: pathlib.Path
+    kit_dir: pathlib.Path
 
-    def __init__(self, uri: str, engine: sqlalchemy.engine.Engine, path: pathlib.Path) -> None:
-        super().__init__(uri, engine)
-        self.path = path
+    def __init__(self, uri: str, db_path: str, kit_dir: pathlib.Path) -> None:
+        super().__init__(uri, db_path)
+        self.kit_dir = kit_dir
 
     @classmethod
     def fromUri(cls, uri: str, path: str = "") -> "SqliteStore":
         if path == "":
             path = uri
-        sqlitePath = pathlib.Path(path) / pathlib.Path(KIT_LOCAL_FOLDERNAME) / pathlib.Path(KIT_LOCAL_FILENAME)
-        connectionString = f"sqlite:///{sqlitePath}"
-        engine = sqlalchemy.create_engine(connectionString, echo=True)
-        SessionMaker = sqlalchemy.orm.sessionmaker(bind=engine)
-        try:
-            with SessionMaker() as session:
-                kit = session.query(Kit).first()
-                if kit:
-                    kit.uri = uri
-                    session.commit()
-        except sqlalchemy.exc.OperationalError:
-            pass
-        return SqliteStore(uri, engine, sqlitePath)
+        kit_dir = pathlib.Path(path) / pathlib.Path(KIT_LOCAL_FOLDERNAME)
+        db_path = str(kit_dir / pathlib.Path(KIT_LOCAL_FILENAME))
+        store = SqliteStore(uri, db_path, kit_dir)
+        if store.initialized():
+            try:
+                with store._connect() as conn:
+                    cursor = conn.execute("SELECT uri FROM kit LIMIT 1")
+                    row = cursor.fetchone()
+                    if row and row[0] != uri:
+                        conn.execute("UPDATE kit SET uri = ? WHERE uri = ?", (uri, row[0]))
+            except sqlite3.OperationalError:
+                pass
+        return store
 
-    def initialize(self: "DatabaseStore") -> None:
-        os.makedirs(
-            str(pathlib.Path(self.uri) / pathlib.Path(KIT_LOCAL_FOLDERNAME)),
-            exist_ok=True,
-        )
-        sqlmodel.SQLModel.metadata.create_all(self.engine)
-        SessionMaker = sqlalchemy.orm.sessionmaker(bind=self.engine)
-        with SessionMaker() as session:
-            existingSemio = session.query(Semio).one_or_none()
-            if not existingSemio:
-                session.add(Semio())
-                session.commit()
+    def initialize(self) -> None:
+        os.makedirs(str(self.kit_dir), exist_ok=True)
+        with self._connect() as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS kit (
+                    uri TEXT NOT NULL PRIMARY KEY,
+                    data TEXT NOT NULL
+                )
+            """)
 
-    def postDeleteKit(self: "SqliteStore") -> None:
+    def postDeleteKit(self) -> None:
         os.kill(os.getpid(), signal.SIGTERM)
 
 
@@ -679,12 +658,10 @@ class PostgresStore(DatabaseStore):
 
     @classmethod
     def fromUri(cls, uri: str):
-        # TODO: Get connection string from environment variable.
-
         raise FeatureNotYetSupported()
 
-    def initialize(self: "DatabaseStore") -> None:
-        sqlmodel.SQLModel.metadata.create_all(self.engine)
+    def initialize(self) -> None:
+        raise FeatureNotYetSupported()
 
 
 # region Auth
@@ -830,11 +807,11 @@ class RemoteStore(Store):
         """Remote kits are initialized on the server side."""
         pass
 
-    def get(self, operation: dict) -> typing.Any:
+    def get(self, operation: Operation) -> typing.Any:
         """🔍 Get an entity from the remote store."""
         kind = operation["kind"]
         try:
-            if kind == "kit":
+            if kind == OperationKind.KIT:
                 response = requests.get(self._api_url(), headers=self._headers(), timeout=30)
                 response.raise_for_status()
                 return KitOutput.model_validate(response.json())
@@ -849,11 +826,11 @@ class RemoteStore(Store):
                 raise KitNotFound(self.kitUri)
             raise ServerUnreachable(self.serverUrl)
 
-    def put(self, operation: dict, input: KitInput | DesignInput | TypeInput) -> typing.Any:
+    def put(self, operation: Operation, input: KitInput | DesignInput | TypeInput) -> typing.Any:
         """📥 Put an entity in the remote store."""
         kind = operation["kind"]
         try:
-            if kind == "kit":
+            if kind == OperationKind.KIT:
                 response = requests.put(
                     self._api_url(),
                     json=input.model_dump() if hasattr(input, "model_dump") else input,
@@ -862,7 +839,7 @@ class RemoteStore(Store):
                 )
                 response.raise_for_status()
                 return None
-            elif kind == "type":
+            elif kind == OperationKind.TYPE:
                 typeName = encode(operation.get("typeName", ""))
                 typeVariant = encode(operation.get("typeVariant", ""))
                 path = f"types/{typeName},{typeVariant}"
@@ -874,7 +851,7 @@ class RemoteStore(Store):
                 )
                 response.raise_for_status()
                 return None
-            elif kind == "design":
+            elif kind == OperationKind.DESIGN:
                 designName = encode(operation.get("designName", ""))
                 designVariant = encode(operation.get("designVariant", ""))
                 designView = encode(operation.get("designView", ""))
@@ -896,26 +873,26 @@ class RemoteStore(Store):
                 raise InvalidAuthToken(self.serverUrl)
             raise ServerUnreachable(self.serverUrl)
 
-    def update(self, operation: dict, input: str) -> typing.Any:
+    def update(self, operation: Operation, input: str) -> typing.Any:
         """🔄 Update an entity in the remote store."""
         raise FeatureNotYetSupported()
 
-    def delete(self, operation: dict) -> typing.Any:
+    def delete(self, operation: Operation) -> typing.Any:
         """🗑 Delete an entity from the remote store."""
         kind = operation["kind"]
         try:
-            if kind == "kit":
+            if kind == OperationKind.KIT:
                 response = requests.delete(self._api_url(), headers=self._headers(), timeout=30)
                 response.raise_for_status()
                 return None
-            elif kind == "type":
+            elif kind == OperationKind.TYPE:
                 typeName = encode(operation.get("typeName", ""))
                 typeVariant = encode(operation.get("typeVariant", ""))
                 path = f"types/{typeName},{typeVariant}"
                 response = requests.delete(self._api_url(path), headers=self._headers(), timeout=30)
                 response.raise_for_status()
                 return None
-            elif kind == "design":
+            elif kind == OperationKind.DESIGN:
                 designName = encode(operation.get("designName", ""))
                 designVariant = encode(operation.get("designVariant", ""))
                 designView = encode(operation.get("designView", ""))
@@ -1867,12 +1844,12 @@ async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
 mcp = FastMCP("semio", stateless_http=False, json_response=True)
 
 # Session-scoped state. Keyed by session id for isolation.
-_mcp_session_kits: dict[int, dict] = {}
-_mcp_session_designs: dict[int, dict] = {}
-_mcp_session_types: dict[int, dict] = {}
-_mcp_session_kit_mode: dict[int, str] = {}  # "local" or "remote"
-_mcp_session_kit_source: dict[int, str] = {}  # path or serverUrl+kitUri
-_mcp_session_transactions: dict[int, dict] = {}
+_mcp_session_kits: dict[int, dict[str, typing.Any]] = {}
+_mcp_session_designs: dict[int, dict[str, typing.Any]] = {}
+_mcp_session_types: dict[int, dict[str, typing.Any]] = {}
+_mcp_session_kit_mode: dict[int, str] = {}
+_mcp_session_kit_source: dict[int, str] = {}
+_mcp_session_transactions: dict[int, Transaction] = {}
 _mcp_session_transaction_rollback: set[int] = set()
 
 
@@ -1932,7 +1909,7 @@ def _session_id(ctx) -> int:
     return id(ctx.session) if ctx and hasattr(ctx, "session") else None
 
 
-def _get_session_kit(ctx) -> dict:
+def _get_session_kit(ctx) -> dict[str, typing.Any]:
     """Get kit from session. Raises if start_working_in_local_kit or start_working_in_remote_kit was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_kits:
@@ -1946,7 +1923,7 @@ def _get_session_kit_mode(ctx) -> str:
     return _mcp_session_kit_mode.get(sid, "local")
 
 
-def _get_session_design(ctx) -> dict:
+def _get_session_design(ctx) -> dict[str, typing.Any]:
     """Get current design from session. Raises if start_working_in_design was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_designs:
@@ -1954,7 +1931,7 @@ def _get_session_design(ctx) -> dict:
     return _mcp_session_designs[sid]
 
 
-def _get_session_type(ctx) -> dict:
+def _get_session_type(ctx) -> dict[str, typing.Any]:
     """Get current type from session. Raises if start_working_in_type was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_types:
@@ -1969,7 +1946,7 @@ def _clone_kit(kit: dict | None) -> dict | None:
     return copy.deepcopy(kit)
 
 
-def _get_active_transaction(sid: int | None) -> dict | None:
+def _get_active_transaction(sid: int | None) -> Transaction | None:
     """Return the active transaction for a session, if any."""
     if sid is None:
         return None
@@ -1998,13 +1975,13 @@ def _record_transaction_kit_change(sid: int | None, before_kit: dict | None, aft
         forward_diff = after
         backward_diff = before
     transaction["changes"].append(
-        {
-            "kind": "kit_change",
-            "before_has_kit": before is not None,
-            "after_has_kit": after is not None,
-            "forward_diff": forward_diff,
-            "backward_diff": backward_diff,
-        }
+        TransactionChange(
+            kind="kit_change",
+            before_has_kit=before is not None,
+            after_has_kit=after is not None,
+            forward_diff=forward_diff,
+            backward_diff=backward_diff,
+        )
     )
 
 
@@ -2550,11 +2527,11 @@ def start_transaction(ctx: Context) -> dict:
         sid = _session_id(ctx)
         if _get_active_transaction(sid) is not None:
             return {"error": "A transaction is already active for this session."}
-        _mcp_session_transactions[sid] = {
-            "active": True,
-            "started_at": datetime.datetime.now(datetime.UTC).isoformat(),
-            "changes": [],
-        }
+        _mcp_session_transactions[sid] = Transaction(
+            active=True,
+            started_at=datetime.datetime.now(datetime.UTC).isoformat(),
+            changes=[],
+        )
         return {"ok": True}
     except Exception as e:
         return {"error": str(e)}
@@ -2706,18 +2683,8 @@ def generateSchemas():
         )
 
     sqliteSchemaPath = "../../sqlite/schema.sql"
-    if os.path.exists(sqliteSchemaPath):
-        os.remove(sqliteSchemaPath)
-    metadata_engine = sqlalchemy.create_engine("sqlite:///temp/semio.db")
-    sqlmodel.SQLModel.metadata.create_all(metadata_engine)
-    conn = sqlite3.connect("temp/semio.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT sql FROM sqlite_master WHERE type='table';")
-    sqliteSchema = cursor.fetchall()
-    with open(sqliteSchemaPath, "w", encoding="utf-8") as f:
-        for table in sqliteSchema:
-            f.write(f"{table[0]};\n")
-    conn.close()
+    # SQLite schema is now maintained manually in sqlite/schema.sql
+    # No auto-generation from ORM metadata
 
     with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
         f.write(str(graphqlSchema))

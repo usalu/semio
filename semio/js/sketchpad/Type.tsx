@@ -30,7 +30,7 @@ import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Connector, Coord, findModel, guid, Guid, Kit, Model, Point, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "../semio";
-import { BasicChatPanel, Geometry, Input, Ring, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, ToolbarGroup, TransactionProvider, Tree, TreeItem, TreeRow, TreeStateProvider } from "./elements";
+import { BasicChatPanel, Geometry, Input, Ring, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, ToolbarGroup, TransactionProvider, Tree, TreeItem, TreeRow, TreeStateProvider } from "@semio-elements/ui";
 import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolRenderContext, TypeAppId } from "./shared";
 import {
     AppConfig,
