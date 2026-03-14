@@ -8829,11 +8829,14 @@ const getSqlJs = async () => {
     try {
       const isNode = typeof process !== "undefined" && process.versions?.node;
       if (isNode) {
+        const fs = await import("node:fs");
         const path = await import("path");
         const url = await import("url");
         const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+        const candidatePaths = [path.join(__dirname, "public", "sql-wasm.wasm"), path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm")];
+        const wasmPath = candidatePaths.find((candidate) => fs.existsSync(candidate)) ?? candidatePaths[0];
         cachedSqlJs = await initSqlJs({
-          locateFile: (file: string) => path.join(__dirname, "public", file),
+          locateFile: () => wasmPath,
         });
       } else {
         cachedSqlJs = await initSqlJs({
@@ -11172,6 +11175,507 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 };
 
 // #endregion 🔖Kit Import/Export
+// #region 🔖Kit Model Export
+
+// [🔖semio/js/semio.ts#Kit Model Export](semiorepo://section/semio/js/semio.ts/KIT%20MODEL%20EXPORT)
+// Design model export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
+
+/**
+ * Supported 3D export formats with their MIME types.
+ *
+ *  * [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨exportmodelformats](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/c/EXPORT_MODEL_FORMATS)
+ **/
+export const EXPORT_MODEL_FORMATS: Record<string, string> = {
+  ".glb": "model/gltf-binary",
+  ".gltf": "model/gltf+json",
+  ".obj": "model/obj",
+  ".stl": "model/stl",
+  ".ply": "application/x-ply",
+  ".usdz": "model/vnd.usdz+zip",
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨parseglb](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/parseGlb)
+const parseGlb = (
+  data: ArrayBuffer,
+): { json: any; binChunk: Uint8Array | null } => {
+  const view = new DataView(data);
+  const magic = view.getUint32(0, true);
+  if (magic !== 0x46546c67) throw new Error("Not a valid GLB");
+  let offset = 12;
+  let json: any = null;
+  let binChunk: Uint8Array | null = null;
+  while (offset < data.byteLength) {
+    const chunkLength = view.getUint32(offset, true);
+    const chunkType = view.getUint32(offset + 4, true);
+    offset += 8;
+    if (chunkType === 0x4e4f534a) {
+      const decoder = new TextDecoder();
+      json = JSON.parse(decoder.decode(new Uint8Array(data, offset, chunkLength)));
+    } else if (chunkType === 0x004e4942) {
+      binChunk = new Uint8Array(data, offset, chunkLength);
+    }
+    offset += chunkLength;
+  }
+  return { json, binChunk };
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨buildglb](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/buildGlb)
+const buildGlb = (json: any, bin: Uint8Array): ArrayBuffer => {
+  const encoder = new TextEncoder();
+  let jsonStr = JSON.stringify(json);
+  while (jsonStr.length % 4 !== 0) jsonStr += " ";
+  const jsonBuf = encoder.encode(jsonStr);
+  const binPadded = new Uint8Array(Math.ceil(bin.length / 4) * 4);
+  binPadded.set(bin);
+  const totalLength = 12 + 8 + jsonBuf.length + 8 + binPadded.length;
+  const result = new ArrayBuffer(totalLength);
+  const dv = new DataView(result);
+  dv.setUint32(0, 0x46546c67, true);
+  dv.setUint32(4, 2, true);
+  dv.setUint32(8, totalLength, true);
+  dv.setUint32(12, jsonBuf.length, true);
+  dv.setUint32(16, 0x4e4f534a, true);
+  new Uint8Array(result, 20, jsonBuf.length).set(jsonBuf);
+  const binOffset = 20 + jsonBuf.length;
+  dv.setUint32(binOffset, binPadded.length, true);
+  dv.setUint32(binOffset + 4, 0x004e4942, true);
+  new Uint8Array(result, binOffset + 8, binPadded.length).set(binPadded);
+  return result;
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨blobtoarraybuffer](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/blobToArrayBuffer)
+const blobToArrayBuffer = (blobStr: string): Uint8Array => {
+  const base64 = blobStr.startsWith("data:")
+    ? blobStr.slice(blobStr.indexOf(",") + 1)
+    : blobStr;
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨planetoglbtransform](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/planeToGlbTransform)
+const planeToGlbTransform = (plane: Plane): number[] => {
+  const m = planeToMatrix(plane);
+  const e = m.elements;
+  return [
+    e[0], e[1], e[2], e[3],
+    e[4], e[5], e[6], e[7],
+    e[8], e[9], e[10], e[11],
+    e[12], e[13], e[14], e[15],
+  ];
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨findmatchingmodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/findMatchingModel)
+const findMatchingModel = (kit: Kit, type: Type, tags: string[]): Model | undefined => {
+  if (!type.models || type.models.length === 0) return undefined;
+  if (tags.length === 0) return type.models[0];
+  const kitTags = kit.tags ?? [];
+  const tagGuids = new Set(
+    tags.flatMap((tagName) =>
+      kitTags.filter((t) => t.name === tagName).map((t) => t.guid),
+    ),
+  );
+  for (const model of type.models) {
+    const modelTagGuids = (model.tags ?? []).map((t) => t.guid);
+    if (modelTagGuids.length > 0 && modelTagGuids.every((g) => tagGuids.has(g)))
+      return model;
+  }
+  return type.models[0];
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨mergeglbmodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/mergeGlbModel)
+const mergeGlbModel = (
+  sourceJson: any,
+  sourceBin: Uint8Array | null,
+  targetBufferViews: any[],
+  targetAccessors: any[],
+  targetMeshes: any[],
+  targetMaterials: any[],
+  targetTextures: any[],
+  targetImages: any[],
+  targetSamplers: any[],
+  targetBinChunks: Uint8Array[],
+  currentBinOffset: { value: number },
+): number => {
+  const bufferViewOffset = targetBufferViews.length;
+  const accessorOffset = targetAccessors.length;
+  const materialOffset = targetMaterials.length;
+  const textureOffset = targetTextures.length;
+  const imageOffset = targetImages.length;
+  const samplerOffset = targetSamplers.length;
+
+  if (sourceBin) {
+    for (const bv of sourceJson.bufferViews ?? []) {
+      targetBufferViews.push({
+        buffer: 0,
+        byteOffset: currentBinOffset.value + (bv.byteOffset ?? 0),
+        byteLength: bv.byteLength,
+        ...(bv.byteStride !== undefined ? { byteStride: bv.byteStride } : {}),
+        ...(bv.target !== undefined ? { target: bv.target } : {}),
+      });
+    }
+    const aligned = new Uint8Array(Math.ceil(sourceBin.length / 4) * 4);
+    aligned.set(sourceBin);
+    targetBinChunks.push(aligned);
+    currentBinOffset.value += aligned.length;
+  }
+
+  for (const acc of sourceJson.accessors ?? []) {
+    targetAccessors.push({
+      ...acc,
+      bufferView: (acc.bufferView ?? 0) + bufferViewOffset,
+    });
+  }
+
+  for (const sampler of sourceJson.samplers ?? []) {
+    targetSamplers.push({ ...sampler });
+  }
+
+  for (const img of sourceJson.images ?? []) {
+    const remapped: any = { ...img };
+    if (img.bufferView !== undefined) remapped.bufferView = img.bufferView + bufferViewOffset;
+    targetImages.push(remapped);
+  }
+
+  for (const tex of sourceJson.textures ?? []) {
+    const remapped: any = { ...tex };
+    if (tex.source !== undefined) remapped.source = tex.source + imageOffset;
+    if (tex.sampler !== undefined) remapped.sampler = tex.sampler + samplerOffset;
+    targetTextures.push(remapped);
+  }
+
+  for (const mat of sourceJson.materials ?? []) {
+    const remapped = JSON.parse(JSON.stringify(mat));
+    const remapTexInfo = (info: any) => {
+      if (info?.index !== undefined) info.index += textureOffset;
+    };
+    if (remapped.pbrMetallicRoughness) {
+      remapTexInfo(remapped.pbrMetallicRoughness.baseColorTexture);
+      remapTexInfo(remapped.pbrMetallicRoughness.metallicRoughnessTexture);
+    }
+    remapTexInfo(remapped.normalTexture);
+    remapTexInfo(remapped.occlusionTexture);
+    remapTexInfo(remapped.emissiveTexture);
+    targetMaterials.push(remapped);
+  }
+
+  for (const mesh of sourceJson.meshes ?? []) {
+    const remappedPrimitives = mesh.primitives.map((prim: any) => {
+      const rp: any = {};
+      if (prim.attributes) {
+        rp.attributes = {};
+        for (const [k, v] of Object.entries(prim.attributes)) {
+          rp.attributes[k] = (v as number) + accessorOffset;
+        }
+      }
+      if (prim.indices !== undefined) rp.indices = prim.indices + accessorOffset;
+      if (prim.material !== undefined) rp.material = prim.material + materialOffset;
+      if (prim.mode !== undefined) rp.mode = prim.mode;
+      return rp;
+    });
+    targetMeshes.push({ primitives: remappedPrimitives, ...(mesh.name ? { name: mesh.name } : {}) });
+  }
+
+  return targetMeshes.length - (sourceJson.meshes?.length ?? 0);
+};
+
+/**
+ * Exports the 3D model of a design to a specified format.
+ *
+ * MUST produce a valid 3D file. Uses block definitions for types and instances for pieces.
+ * Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
+ *
+ *  * [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨exportdesignmodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/exportDesignModel)
+ **/
+export const exportDesignModel = async (
+  kit: Kit,
+  designId: string,
+  format: string = ".glb",
+  tags: string[] = [],
+  options: Record<string, unknown> = {},
+): Promise<ArrayBuffer> => {
+  const design = findDesignInKit(kit, designId);
+  const pieces = design.pieces ?? [];
+  const connections = design.connections ?? [];
+  const types = kit.types ?? [];
+
+  if (pieces.length === 0) return buildGlb({ asset: { version: "2.0", generator: "semio" }, scene: 0, scenes: [{ nodes: [] }], nodes: [] }, new Uint8Array(0));
+
+  const typesDict: Record<string, Type> = {};
+  for (const t of types) typesDict[t.guid] = t;
+  const piecesDict: Record<string, Piece> = {};
+  for (const p of pieces) piecesDict[p.guid] = p;
+
+  const adjacency: Record<string, Array<{ connection: Connection; neighborGuid: string }>> = {};
+  for (const p of pieces) adjacency[p.guid] = [];
+  for (const conn of connections) {
+    const connectedGuid = conn.connected.piece.guid;
+    const connectingGuid = conn.connecting.piece.guid;
+    if (adjacency[connectedGuid]) adjacency[connectedGuid].push({ connection: conn, neighborGuid: connectingGuid });
+    if (adjacency[connectingGuid]) adjacency[connectingGuid].push({ connection: conn, neighborGuid: connectedGuid });
+  }
+
+  const piecePlanes: Record<string, Plane> = {};
+  const parentOf: Record<string, string> = {};
+  const childrenOf: Record<string, string[]> = {};
+  for (const p of pieces) childrenOf[p.guid] = [];
+
+  const visited = new Set<string>();
+  const roots: string[] = [];
+
+  const getType = (typeGuid: string): Type | undefined => typesDict[typeGuid];
+  const getConnector = (type: Type | undefined, connectorGuid: string | undefined): Connector | undefined => {
+    if (!type) return undefined;
+    if (!connectorGuid) return type.connectors?.[0];
+    return type.connectors?.find((c) => c.guid === connectorGuid);
+  };
+
+  const queue: string[] = [];
+  for (const p of pieces) {
+    if (p.plane) {
+      piecePlanes[p.guid] = p.plane;
+      visited.add(p.guid);
+      queue.push(p.guid);
+      roots.push(p.guid);
+    }
+  }
+  if (queue.length === 0 && pieces.length > 0) {
+    const firstPiece = pieces[0];
+    const identityPlane = matrixToPlane(new THREE.Matrix4().identity());
+    piecePlanes[firstPiece.guid] = identityPlane;
+    visited.add(firstPiece.guid);
+    queue.push(firstPiece.guid);
+    roots.push(firstPiece.guid);
+  }
+
+  while (queue.length > 0) {
+    const currentGuid = queue.shift()!;
+    const currentPiece = piecesDict[currentGuid];
+    const currentPlane = piecePlanes[currentGuid];
+    for (const edge of adjacency[currentGuid] ?? []) {
+      if (visited.has(edge.neighborGuid)) continue;
+      const conn = edge.connection;
+      const isParent = conn.connected.piece.guid === currentGuid;
+      const parentGuid = isParent ? currentGuid : edge.neighborGuid;
+      const childGuid = isParent ? edge.neighborGuid : currentGuid;
+
+      if (!isParent) continue;
+
+      const parentPiece = piecesDict[parentGuid];
+      const childPiece = piecesDict[childGuid];
+      const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
+      const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
+      const parentConnector = getConnector(parentType, conn.connected.connector?.guid);
+      const childConnector = getConnector(childType, conn.connecting.connector?.guid);
+
+      if (parentConnector && childConnector) {
+        const childPlane = computeChildPlane(currentPlane, parentConnector, childConnector, conn);
+        piecePlanes[childGuid] = childPlane;
+      } else {
+        piecePlanes[childGuid] = currentPlane;
+      }
+
+      parentOf[childGuid] = parentGuid;
+      childrenOf[parentGuid].push(childGuid);
+      visited.add(childGuid);
+      queue.push(childGuid);
+    }
+  }
+
+  for (const p of pieces) {
+    if (!visited.has(p.guid)) {
+      piecePlanes[p.guid] = matrixToPlane(new THREE.Matrix4().identity());
+      roots.push(p.guid);
+    }
+  }
+
+  const targetBufferViews: any[] = [];
+  const targetAccessors: any[] = [];
+  const targetMeshes: any[] = [];
+  const targetMaterials: any[] = [];
+  const targetTextures: any[] = [];
+  const targetImages: any[] = [];
+  const targetSamplers: any[] = [];
+  const targetBinChunks: Uint8Array[] = [];
+  const currentBinOffset = { value: 0 };
+
+  const typeMeshIndex: Record<string, number> = {};
+
+  for (const piece of pieces) {
+    const typeGuid = piece.type?.guid;
+    if (!typeGuid || typeMeshIndex[typeGuid] !== undefined) continue;
+
+    const type = typesDict[typeGuid];
+    if (!type) continue;
+
+    const model = findMatchingModel(kit, type, tags);
+    if (!model) {
+      const boxSize = 0.5;
+      const positions = new Float32Array([
+        -boxSize, -boxSize, boxSize, boxSize, -boxSize, boxSize, boxSize, boxSize, boxSize, -boxSize, boxSize, boxSize,
+        -boxSize, -boxSize, -boxSize, -boxSize, boxSize, -boxSize, boxSize, boxSize, -boxSize, boxSize, -boxSize, -boxSize,
+        -boxSize, boxSize, -boxSize, -boxSize, boxSize, boxSize, boxSize, boxSize, boxSize, boxSize, boxSize, -boxSize,
+        -boxSize, -boxSize, -boxSize, boxSize, -boxSize, -boxSize, boxSize, -boxSize, boxSize, -boxSize, -boxSize, boxSize,
+        boxSize, -boxSize, -boxSize, boxSize, boxSize, -boxSize, boxSize, boxSize, boxSize, boxSize, -boxSize, boxSize,
+        -boxSize, -boxSize, -boxSize, -boxSize, -boxSize, boxSize, -boxSize, boxSize, boxSize, -boxSize, boxSize, -boxSize,
+      ]);
+      const normals = new Float32Array([
+        0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+        0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
+        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+        0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
+        1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
+        -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
+      ]);
+      const indices = new Uint16Array([
+        0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7,
+        8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15,
+        16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23,
+      ]);
+
+      const posBuf = new Uint8Array(positions.buffer);
+      const normBuf = new Uint8Array(normals.buffer);
+      const idxBuf = new Uint8Array(indices.buffer);
+
+      const posOffset = currentBinOffset.value;
+      const posPadded = new Uint8Array(Math.ceil(posBuf.length / 4) * 4);
+      posPadded.set(posBuf);
+      targetBinChunks.push(posPadded);
+      currentBinOffset.value += posPadded.length;
+
+      const normOffset = currentBinOffset.value;
+      const normPadded = new Uint8Array(Math.ceil(normBuf.length / 4) * 4);
+      normPadded.set(normBuf);
+      targetBinChunks.push(normPadded);
+      currentBinOffset.value += normPadded.length;
+
+      const idxOffset = currentBinOffset.value;
+      const idxPadded = new Uint8Array(Math.ceil(idxBuf.length / 4) * 4);
+      idxPadded.set(idxBuf);
+      targetBinChunks.push(idxPadded);
+      currentBinOffset.value += idxPadded.length;
+
+      const posBvIdx = targetBufferViews.length;
+      targetBufferViews.push({ buffer: 0, byteOffset: posOffset, byteLength: posBuf.length, target: 34962 });
+      const normBvIdx = targetBufferViews.length;
+      targetBufferViews.push({ buffer: 0, byteOffset: normOffset, byteLength: normBuf.length, target: 34962 });
+      const idxBvIdx = targetBufferViews.length;
+      targetBufferViews.push({ buffer: 0, byteOffset: idxOffset, byteLength: idxBuf.length, target: 34963 });
+
+      const posAccIdx = targetAccessors.length;
+      targetAccessors.push({ bufferView: posBvIdx, componentType: 5126, count: 24, type: "VEC3", max: [boxSize, boxSize, boxSize], min: [-boxSize, -boxSize, -boxSize] });
+      const normAccIdx = targetAccessors.length;
+      targetAccessors.push({ bufferView: normBvIdx, componentType: 5126, count: 24, type: "VEC3" });
+      const idxAccIdx = targetAccessors.length;
+      targetAccessors.push({ bufferView: idxBvIdx, componentType: 5123, count: 36, type: "SCALAR" });
+
+      typeMeshIndex[typeGuid] = targetMeshes.length;
+      targetMeshes.push({ name: type.name, primitives: [{ attributes: { POSITION: posAccIdx, NORMAL: normAccIdx }, indices: idxAccIdx }] });
+      continue;
+    }
+
+    const file = kit.files?.find((f) => f.guid === model.file.guid);
+    if (!file?.blob) {
+      typeMeshIndex[typeGuid] = -1;
+      continue;
+    }
+
+    const fileBytes = blobToArrayBuffer(file.blob);
+    const ext = file.name.split(".").pop()?.toLowerCase();
+
+    if (ext === "glb") {
+      const { json: srcJson, binChunk } = parseGlb(fileBytes.buffer as ArrayBuffer);
+      if (srcJson) {
+        const meshStart = mergeGlbModel(srcJson, binChunk, targetBufferViews, targetAccessors, targetMeshes, targetMaterials, targetTextures, targetImages, targetSamplers, targetBinChunks, currentBinOffset);
+        typeMeshIndex[typeGuid] = meshStart;
+      } else {
+        typeMeshIndex[typeGuid] = -1;
+      }
+    } else {
+      typeMeshIndex[typeGuid] = -1;
+    }
+  }
+
+  const glNodes: any[] = [];
+  const pieceNodeIndex: Record<string, number> = {};
+
+  const buildNode = (pieceGuid: string): number => {
+    if (pieceNodeIndex[pieceGuid] !== undefined) return pieceNodeIndex[pieceGuid];
+
+    const piece = piecesDict[pieceGuid];
+    const worldPlane = piecePlanes[pieceGuid];
+    const parentGuid = parentOf[pieceGuid];
+    const children = childrenOf[pieceGuid] ?? [];
+
+    let localMatrix: number[];
+    if (parentGuid && piecePlanes[parentGuid]) {
+      const parentWorld = planeToMatrix(piecePlanes[parentGuid]);
+      const childWorld = planeToMatrix(worldPlane);
+      const invParent = parentWorld.clone().invert();
+      const localMat = new THREE.Matrix4().multiplyMatrices(invParent, childWorld);
+      localMatrix = localMat.elements.slice();
+    } else {
+      localMatrix = planeToGlbTransform(worldPlane);
+    }
+
+    const childNodeIndices: number[] = [];
+    for (const childGuid of children) {
+      childNodeIndices.push(buildNode(childGuid));
+    }
+
+    const node: any = { name: piece.name ?? piece.guid };
+    node.matrix = localMatrix;
+
+    const typeGuid = piece.type?.guid;
+    if (typeGuid && typeMeshIndex[typeGuid] !== undefined && typeMeshIndex[typeGuid] >= 0) {
+      node.mesh = typeMeshIndex[typeGuid];
+    }
+    if (childNodeIndices.length > 0) node.children = childNodeIndices;
+
+    const idx = glNodes.length;
+    glNodes.push(node);
+    pieceNodeIndex[pieceGuid] = idx;
+    return idx;
+  };
+
+  const sceneNodes: number[] = [];
+  for (const rootGuid of roots) {
+    sceneNodes.push(buildNode(rootGuid));
+  }
+
+  const totalBinLength = targetBinChunks.reduce((sum, c) => sum + c.length, 0);
+  const mergedBin = new Uint8Array(totalBinLength);
+  let off = 0;
+  for (const chunk of targetBinChunks) {
+    mergedBin.set(chunk, off);
+    off += chunk.length;
+  }
+
+  const gltfJson: any = {
+    asset: { version: "2.0", generator: "semio" },
+    scene: 0,
+    scenes: [{ name: design.name, nodes: sceneNodes }],
+    nodes: glNodes,
+  };
+  if (targetMeshes.length > 0) gltfJson.meshes = targetMeshes;
+  if (targetAccessors.length > 0) gltfJson.accessors = targetAccessors;
+  if (targetBufferViews.length > 0) gltfJson.bufferViews = targetBufferViews;
+  if (targetMaterials.length > 0) gltfJson.materials = targetMaterials;
+  if (targetTextures.length > 0) gltfJson.textures = targetTextures;
+  if (targetImages.length > 0) gltfJson.images = targetImages;
+  if (targetSamplers.length > 0) gltfJson.samplers = targetSamplers;
+  if (totalBinLength > 0) gltfJson.buffers = [{ byteLength: totalBinLength }];
+
+  if (format === ".gltf") {
+    const encoder = new TextEncoder();
+    return encoder.encode(JSON.stringify(gltfJson)).buffer as ArrayBuffer;
+  }
+
+  return buildGlb(gltfJson, mergedBin);
+};
+
+// #endregion 🔖Kit Model Export
 // #region 🔖Validation
 
 // [🔖semio/js/semio.ts#Validation](semiorepo://section/semio/js/semio.ts/VALIDATION)
@@ -11207,6 +11711,7 @@ export interface DomainLocation {
  **/
 export interface Fix {
   title: string;
+  diff?: KitDiff;
 }
 
 /**
@@ -12031,7 +12536,7 @@ defaultConstraints = [
  **/
 export interface SerializableValidationFix {
   title: string;
-  diff: KitDiff;
+  diff?: KitDiff;
 }
 
 /**
@@ -12150,7 +12655,7 @@ export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResu
     if (problemA.fixes.length !== problemB.fixes.length) return false;
     return problemA.fixes.every((fixA, j) => {
       const fixB = problemB.fixes[j];
-      return fixA.title === fixB.title && areKitDiffsEqualIgnoringNewGuids(fixA.diff, fixB.diff);
+      return fixA.title === fixB.title && areKitDiffsEqualIgnoringNewGuids(fixA.diff ?? {}, fixB.diff ?? {});
     });
   });
 };

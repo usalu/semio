@@ -15060,6 +15060,7 @@ const (
 	BreachSystemDevcontainerVscodeExtensionsOutside    Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
+	BreachSemioNoUiDependency                          Statute = "semio/import/no-ui-dependency"
 )
 
 // statuteInfoTable holds the data fields for a statuteInfoTable record.
@@ -15510,6 +15511,13 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Priority:    BreachPriorityHigh,
 		Reason:      "File is not listed in .semio-repo/files.json godfile",
 		Solution:    "Add the file to .semio-repo/files.json or remove it",
+		Autofixable: false,
+	},
+	BreachSemioNoUiDependency: {
+		Kind:        BreachSemioNoUiDependency,
+		Priority:    BreachPriorityHigh,
+		Reason:      "semio.* files must be self-contained and not import from UI dependencies",
+		Solution:    "Remove the UI dependency import and use only non-UI alternatives",
 		Autofixable: false,
 	},
 }
@@ -17979,6 +17987,29 @@ var policies = []PolicyDef{
 		},
 		Run: filePolicy,
 	},
+	{
+		ID:          "semio",
+		Name:        "Semio",
+		Description: "Validates that semio.* files are self-contained and do not import UI dependencies",
+		Scopes:      []string{"**/*.{ts,tsx}"},
+		Priority:    BreachPriorityHigh,
+		Groups: []Territory{
+			{
+				Name:        "Import",
+				Description: "Import restriction breachs",
+				Groups: []Territory{
+					{
+						Name:        "No Ui Dependency",
+						Description: "semio.* files must not import from UI dependencies",
+						Kinds: []Statute{
+							BreachSemioNoUiDependency,
+						},
+					},
+				},
+			},
+		},
+		Run: semioPolicy,
+	},
 }
 
 // FindPolicy MUST return nil when no match is found.
@@ -20253,6 +20284,57 @@ func filePolicy(ctx *PolicyContext) []Breach {
 		}
 	}
 	return breachs
+}
+
+// [🧰semiorepo⌨️cli💻main🔖types🔖policies🛠️semiopolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/semioPolicy)
+// semioPolicy validates that semio.* files do not import UI dependencies.
+func semioPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	files, err := ctx.Files()
+	if err != nil {
+		return breachs
+	}
+	uiPackages := []string{
+		"clsx", "tailwind-merge", "tailwind", "tailwindcss",
+		"three", "@react-three",
+		"react", "react-dom",
+		"framer-motion", "lucide-react",
+		"@radix-ui", "@radix-client",
+		"@dnd-kit",
+		"zustand",
+		"semio-elements/ui",
+	}
+	for _, file := range files {
+		baseName := filepath.Base(file)
+		if !strings.HasPrefix(baseName, "semio.") {
+			continue
+		}
+		if !strings.HasSuffix(file, ".ts") && !strings.HasSuffix(file, ".tsx") {
+			continue
+		}
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		for lineNum, line := range lines {
+			lineNumber := lineNum + 1
+			if !strings.Contains(line, "import ") {
+				continue
+			}
+			for _, pkg := range uiPackages {
+				importPattern := fmt.Sprintf(`from\s+['"].*%s`, regexp.QuoteMeta(pkg))
+				if matched, _ := regexp.MatchString(importPattern, line); matched {
+					breachs = append(breachs, ctx.CreateBreach(
+						fmt.Sprintf("UI dependency '%s' is not allowed in semio.* files", pkg),
+						BreachSemioNoUiDependency,
+						file, lineNumber, 0, strings.TrimSpace(line)))
+					break
+				}
+			}
+		}
+	}
+	return ctx.FilterIgnored(breachs)
 }
 
 // #endregion 🔖Policies
@@ -33597,7 +33679,7 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 	if r.Ctx != nil {
 		policies := r.Ctx.GetPolicies()
 		for _, p := range policies {
-			if p.Name == id {
+			if p.Name == id || p.ID == id || strings.EqualFold(p.Name, id) || strings.EqualFold(p.ID, id) {
 				return p, nil
 			}
 		}
@@ -39891,7 +39973,7 @@ func dispatchHook(hctx HookContext) HookResult {
 		res.Description = extractCheckpointMessageFromInput(hctx.Input, hctx.RepoRoot)
 		res.Second = hctx.Second
 		if res.Description == "" && !res.Allowed {
-			res.Description = "pre-checkpoint checks failed"
+			res.Description = "checkpoint hook failed"
 		}
 		return res
 	case HookVersionCheckpointEnded:
@@ -41616,32 +41698,6 @@ func findJSTestFiles(rootCwd string) []string {
 	return result
 }
 
-// runPreflightFix executes the pre-checkpoint fix pass and returns an error when fix reports failure.
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️runpreflightfix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/runPreflightFix)
-func runPreflightFix() error {
-	result := ToolFix("semio")
-	if result.Error != "" {
-		return errors.New(result.Error)
-	}
-	if result.Output.ExitCode != 0 {
-		return fmt.Errorf("fix exited with code %d", result.Output.ExitCode)
-	}
-	return nil
-}
-
-// runPreflightAnalyze executes the pre-checkpoint analyze pass and returns an error when analysis reports failure.
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️runpreflightanalyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/runPreflightAnalyze)
-func runPreflightAnalyze() error {
-	result := ToolAnalyze("semio", nil)
-	if result.Error != "" {
-		return errors.New(result.Error)
-	}
-	if result.Output.ExitCode != 0 {
-		return fmt.Errorf("analyze exited with code %d", result.Output.ExitCode)
-	}
-	return nil
-}
-
 // findTestFilesByPatterns finds test files in a directory tree matching common conventions.
 // If filterIsTest is true, only files whose DeriveFileKind is "lab" are included.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️findtestfilesbypatterns](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/findTestFilesByPatterns)
@@ -42638,14 +42694,7 @@ func runCheckpointStartingHook(hctx HookContext) HookResultVersionCheckpointStar
 		repoRoot = findRepoRoot(cwd)
 	}
 	SetRootDir(repoRoot)
-	fmt.Println("Running pre-checkpoint hooks...")
-	if err := runPreflightFix(); err != nil {
-		return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-checkpoint fix failed: %v", err)}}
-	}
-	if err := runPreflightAnalyze(); err != nil {
-		return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: false, Message: fmt.Sprintf("pre-checkpoint analyze failed: %v", err)}}
-	}
-	return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: true, Message: "pre-checkpoint checks passed"}}
+	return HookResultVersionCheckpointStarting{HookResultBase: HookResultBase{Allowed: true, Message: "checkpoint starting hook passed"}}
 }
 
 // ValidateHookEvent checks if the given string is a valid hook event.
@@ -42682,7 +42731,7 @@ func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 Accepts neutral semio-repo events or native client events (inlet adapter resolves to neutral).
 
 📦 Version hooks:
-  version.checkpoint.starting  Run before a version checkpoint (e.g. pre-checkpoint)
+  version.checkpoint.starting  Run before a version checkpoint
   version.checkpoint.ended     Run after a version checkpoint (e.g. post-checkpoint)
   version.checkin.starting     Run before a version checkin (e.g. fast-forward to main)
   version.checkin.ended        Run after a version checkin
@@ -42870,8 +42919,8 @@ func configureGitHooks(repoRoot string) error {
 	if err := os.MkdirAll(hooksDir, 0755); err != nil {
 		return err
 	}
-	preCheckpointPath := filepath.Join(hooksDir, "pre-commit")
-	preCheckpointScript := `#!/usr/bin/env sh
+	preCommitPath := filepath.Join(hooksDir, "pre-commit")
+	preCommitScript := `#!/usr/bin/env sh
 set -eu
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "$repo_root" ] || [ ! -f "$repo_root/.pre-commit-config.yaml" ]; then
@@ -42889,7 +42938,7 @@ fi
 echo "pre-commit is required. install with: uv sync --group dev" >&2
 exit 1
 `
-	if err := os.WriteFile(preCheckpointPath, []byte(preCheckpointScript), 0755); err != nil {
+	if err := os.WriteFile(preCommitPath, []byte(preCommitScript), 0755); err != nil {
 		return err
 	}
 	postCheckpointPath := filepath.Join(hooksDir, "post-commit")

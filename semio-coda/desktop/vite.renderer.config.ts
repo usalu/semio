@@ -23,21 +23,23 @@
 // Vite configuration for the Electron renderer process with React and Tailwind.
 // Configuration MUST enable the React and Tailwind CSS plugins.
 
-import { defineConfig } from "vite";
+import type { UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-export default defineConfig(async () => {
-  const tailwind = await import("@tailwindcss/vite");
-  return {
-    resolve: {
-      alias: {
-        "@semio/js": path.resolve(__dirname, "../../semio/js"),
-        "@semio/assets": path.resolve(__dirname, "../../semio/assets"),
-      },
+const configuration: UserConfig = {
+  resolve: {
+    alias: {
+      "@semio/js": path.resolve(__dirname, "../../semio/js"),
+      "@semio/assets": path.resolve(__dirname, "../../semio/assets"),
+      "@semio-elements/ui": path.resolve(__dirname, "../../semio-elements/ui"),
+      "@semio/coda-desktop": path.resolve(__dirname, "."),
     },
-    plugins: [tailwind.default(), react()],
-  };
-});
+  },
+  plugins: [...(tailwindcss() as unknown as NonNullable<UserConfig["plugins"]>), react() as unknown as NonNullable<UserConfig["plugins"]>[number]],
+};
+
+export default configuration;
 
 // #endregion 🔖Configuration

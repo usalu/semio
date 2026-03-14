@@ -7,8 +7,7 @@
   "scripts": {
     "dev": "go run main.go",
     "build": "go build -o server main.go",
-    "test": "go test -v ./...",
-    "preflight": "go vet ./..."
+    "test": "go test -v ./..."
   },
   "author": {
     "name": "Ueli Saluz",

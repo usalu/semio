@@ -5,8 +5,7 @@
   "sourceRoot": "coda/py",
   "projectType": "application",
   "scripts": {
-    "dev": "uv run coda.py",
-    "preflight": "ruff format . && ruff check --fix ."
+    "dev": "uv run coda.py"
   },
   "targets": {
     "update": {

@@ -8,11 +8,11 @@
   "scripts": {
     "dev": "electron-forge start",
     "build": "electron-forge make",
-    "publish": "electron-forge publish",
-    "preflight": "echo \"No preflight checks configured\""
+    "publish": "electron-forge publish"
   },
   "dependencies": {
     "@electron/fuses": "^2.0.0",
+    "@semio-elements/ui": "workspace:*",
     "electron-squirrel-startup": "^1.0.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

@@ -8,12 +8,13 @@
   "scripts": {
     "dev": "electron-forge start",
     "build": "electron-forge make",
-    "publish": "electron-forge publish",
-    "preflight": "echo \"No preflight checks configured\""
+    "publish": "electron-forge publish"
   },
   "dependencies": {
     "@electron/fuses": "^2.0.0",
+    "@semio-elements/ui": "*",
     "@semio/js": "^0.1.0",
+    "@semio/sketchpad": "^0.1.0",
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {

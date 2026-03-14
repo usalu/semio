@@ -18,8 +18,7 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Canvas, HorizontalWindows } from "@semio/js/sketchpad/Sketchpad";
-import { DiagramNode, DiagramSkeleton, Level, LevelProvider, Window, getLevelBgClass } from "@semio-elements/ui";
+import { Canvas, DiagramNode, DiagramSkeleton, HorizontalWindows, Level, LevelProvider, Window, getLevelBgClass } from "@semio-elements/ui";
 
 // #region 🔖Canvas
 const meta = {

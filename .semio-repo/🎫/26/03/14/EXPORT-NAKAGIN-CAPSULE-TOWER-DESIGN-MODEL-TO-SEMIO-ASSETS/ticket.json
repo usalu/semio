@@ -1,0 +1,12 @@
+{
+  "title": "Export Nakagin Capsule Tower Design Model to Semio Assets",
+  "status": "open",
+  "description": "Export the Nakagin Capsule Tower design model from the Metabolism kit to the semio assets folder using the export functionality from semio.ts. The Nakagin Capsule Tower design data exists in the Metabolism kit JSON file and needs to be extracted and exported as a model asset to the semio/assets/models folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/888"
+  },
+  "goal": "🎯assetmanagement",
+  "sessions": [
+    "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪17735168215733661434762060316443877337"
+  ]
+}

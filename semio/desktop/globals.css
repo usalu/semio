@@ -1,5 +1,5 @@
 @import "tailwindcss" source("../js");
-@import "semio/js/globals.css";
+@import "../../semio-elements/ui/globals.css";
 @import "@xyflow/react/dist/style.css";
 
 /* #navbar {

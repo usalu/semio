@@ -20,9 +20,7 @@
       "@semio-elements/ui": ["./index.ts"],
       "@semio-elements/ui/*": ["./*"],
       "@semio/assets": ["../../semio/assets"],
-      "@semio/assets/*": ["../../semio/assets/*"],
-      "@semio/js": ["../../semio/js"],
-      "@semio/js/*": ["../../semio/js/*"]
+      "@semio/assets/*": ["../../semio/assets/*"]
     }
   },
   "exclude": ["node_modules", "storybook-static"]

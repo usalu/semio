@@ -18,6 +18,7 @@
 
 import json
 import os
+import struct
 import sys
 import tempfile
 from typing import Any
@@ -33,12 +34,14 @@ from semio import (
     areKitDiffsDictEqual,
     areKitsDictEqual,
     areValidationResultsEqual,
+    export_design_model,
     export_kit,
     flattenDesignDict,
     getKitChange,
     getKitDiffDict,
     import_kit,
     inverseKitDiffDict,
+    Kit,
     KitData,
     parseValidationResult,
     sumQualityInDesignDict,
@@ -55,6 +58,39 @@ def load_json(filename: str) -> dict:
         raise FileNotFoundError(f"Asset not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def load_kit(filename: str) -> dict:
+    """Load and normalize kit JSON for Kit.parse (flattens parent/folder refs, etc.)."""
+    data = load_json(filename)
+    if "guid" in data and "uri" not in data:
+        data["uri"] = data["guid"]
+    for key in ["types", "designs", "files", "folders", "authors", "concepts", "models", "connectors", "pieces", "connections", "layers", "groups", "stats", "ports", "qualities", "attributes"]:
+        if key not in data or data[key] is None:
+            data[key] = []
+    for collection in ["types", "designs", "folders"]:
+        if collection in data:
+            for item in data[collection]:
+                if "parent" in item and isinstance(item["parent"], dict) and "guid" in item["parent"]:
+                    item["parent"] = item["parent"]["guid"]
+                if "folder" in item and isinstance(item["folder"], dict) and "guid" in item["folder"]:
+                    item["folder"] = item["folder"]["guid"]
+    if "types" in data:
+        for t in data["types"]:
+            if "models" in t:
+                for m in t["models"]:
+                    if "file" in m and isinstance(m["file"], dict) and "guid" in m["file"]:
+                        m["file"] = m["file"]["guid"]
+                    if "file" not in m or m["file"] is None:
+                        m["file"] = ""
+                    if "url" not in m or m["url"] is None:
+                        m["url"] = ""
+                    if "tags" in m and isinstance(m["tags"], list):
+                        new_tags = [tag["guid"] if isinstance(tag, dict) and "guid" in tag else tag for tag in m["tags"]]
+                        m["tags"] = new_tags
+                    elif "tags" not in m:
+                        m["tags"] = []
+    return data
 
 
 def is_close(a, b):
@@ -279,3 +315,34 @@ class TestDesignQualitySum:
             quality = next(q for q in kit_dict.get("qualities", []) if q.get("name") == "effective floor area")
             result = sumQualityInDesignDict(kit_dict, design["guid"], quality["guid"])
             assert abs(result - 2349.53) < TOLERANCE
+
+
+class TestExportDesignModel:
+    def test_export_glb_returns_valid_glb(self):
+        kit_dict = load_kit("kit_metabolism.json")
+        design = find_design(kit_dict, "Nakagin Capsule Tower")
+        kit = Kit.parse(kit_dict)
+        result = export_design_model(kit, "Nakagin Capsule Tower", ".glb")
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+        assert result[:4] == b"glTF"
+        assert struct.unpack("<I", result[4:8])[0] == 2
+        assert struct.unpack("<I", result[8:12])[0] == len(result)
+
+    def test_export_gltf_returns_valid_json(self):
+        kit_dict = load_kit("kit_metabolism.json")
+        design = find_design(kit_dict, "Nakagin Capsule Tower")
+        kit = Kit.parse(kit_dict)
+        result = export_design_model(kit, "Nakagin Capsule Tower", ".gltf")
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+        parsed = json.loads(result.decode("utf-8"))
+        assert "asset" in parsed
+        assert "scenes" in parsed
+
+    def test_export_invalid_format_raises(self):
+        kit_dict = load_kit("kit_metabolism.json")
+        design = find_design(kit_dict, "Nakagin Capsule Tower")
+        kit = Kit.parse(kit_dict)
+        with pytest.raises(ValueError, match="Unsupported export format"):
+            export_design_model(kit, "Nakagin Capsule Tower", ".invalid")

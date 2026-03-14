@@ -9,7 +9,7 @@
     <br/>
     <a href="https://play.semio-tech.com"><img src="semio/assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
     <a href="https://docs.semio-tech.com"><img src="semio/assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
-    <a href="https://js.semio-tech.com"><img src="semio/assets/badges/dev-js.svg" alt="The semio storybook for all javascript components and tests."></a>
+    <a href="https://js.semio-tech.com"><img src="semio/assets/badges/dev-js.svg" alt="The semio-elements Storybook for shared javascript UI elements."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
      <a href="https://github.com/usalu/semio"><img src="semio/assets/badges/repo-semio.svg" alt="The semio repository."></a>

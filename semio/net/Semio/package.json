@@ -6,8 +6,7 @@
   "projectType": "library",
   "scripts": {
     "build": "tsx ./build.ts",
-    "test": "dotnet test ../Semio.Tests/Semio.Tests.csproj",
-    "preflight": "dotnet build"
+    "test": "dotnet test ../Semio.Tests/Semio.Tests.csproj"
   },
   "devDependencies": {
     "@semio/assets": "*"

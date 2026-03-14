@@ -35,6 +35,7 @@ using System.IO.Compression;
 using Microsoft.Data.Sqlite;
 using FluentValidation;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using QuikGraph;
 using QuikGraph.Algorithms;
@@ -7203,6 +7204,596 @@ public class Kit : Entity<Kit>
     }
 
     #endregion 🔖Flatten Design
+
+    #region 🔖Kit Model Export
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitmodelexport](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Kit%20Model%20Export)
+    // Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
+
+    /// <summary>Supported export formats keyed by file extension.</summary>
+    public static Dictionary<string, string> ExportModelFormats => new()
+    {
+        { ".glb", "GL Transmission Format Binary" },
+        { ".gltf", "GL Transmission Format" },
+        { ".obj", "Wavefront OBJ" },
+        { ".stl", "Stereolithography" },
+    };
+
+    /// <summary>
+    /// Exports the 3D model of a design to the specified format.
+    /// Uses block definitions for types and instances for pieces.
+    /// Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
+    /// </summary>
+    public static byte[] ExportDesignModel(Kit kit, string designId, string format = ".glb", string[] tags = null, Dictionary<string, object> options = null)
+    {
+        if (tags == null) tags = Array.Empty<string>();
+        if (options == null) options = new Dictionary<string, object>();
+        if (!ExportModelFormats.ContainsKey(format))
+            throw new ArgumentException($"Unsupported export format: {format}. Supported: {string.Join(", ", ExportModelFormats.Keys)}", nameof(format));
+
+        var design = FindDesign(kit, designId);
+        var pieces = design.Pieces ?? new List<Piece>();
+        var connections = design.Connections ?? new List<Connection>();
+        var types = kit.Types ?? new List<Type>();
+
+        if (pieces.Count == 0)
+            return ExportBuildGlb(new JObject
+            {
+                ["asset"] = new JObject { ["version"] = "2.0", ["generator"] = "semio" },
+                ["scene"] = 0,
+                ["scenes"] = new JArray(new JObject { ["nodes"] = new JArray() }),
+                ["nodes"] = new JArray()
+            }, Array.Empty<byte>());
+
+        var typesDict = new Dictionary<string, Type>();
+        foreach (var t in types) typesDict[t.Guid] = t;
+        var piecesDict = new Dictionary<string, Piece>();
+        foreach (var p in pieces) piecesDict[p.Guid] = p;
+
+        var adjacency = new Dictionary<string, List<(Connection connection, string neighborGuid)>>();
+        foreach (var p in pieces) adjacency[p.Guid] = new List<(Connection, string)>();
+        foreach (var conn in connections)
+        {
+            var connectedGuid = conn.Connected.Piece.Guid;
+            var connectingGuid = conn.Connecting.Piece.Guid;
+            if (adjacency.ContainsKey(connectedGuid))
+                adjacency[connectedGuid].Add((conn, connectingGuid));
+            if (adjacency.ContainsKey(connectingGuid))
+                adjacency[connectingGuid].Add((conn, connectedGuid));
+        }
+
+        var piecePlanes = new Dictionary<string, Plane>();
+        var parentOf = new Dictionary<string, string>();
+        var childrenOf = new Dictionary<string, List<string>>();
+        foreach (var p in pieces) childrenOf[p.Guid] = new List<string>();
+
+        var visited = new HashSet<string>();
+        var roots = new List<string>();
+        var queue = new Queue<string>();
+
+        Type GetType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
+        Connector GetConnector(Type type, string connectorGuid)
+        {
+            if (type == null) return null;
+            if (string.IsNullOrEmpty(connectorGuid))
+                return type.Connectors?.Count > 0 ? type.Connectors[0] : null;
+            return type.Connectors?.FirstOrDefault(c => c.Guid == connectorGuid);
+        }
+
+        foreach (var p in pieces)
+        {
+            if (p.Plane != null)
+            {
+                piecePlanes[p.Guid] = p.Plane;
+                visited.Add(p.Guid);
+                queue.Enqueue(p.Guid);
+                roots.Add(p.Guid);
+            }
+        }
+
+        if (queue.Count == 0 && pieces.Count > 0)
+        {
+            var identityPlane = new Plane
+            {
+                Origin = new Point { X = 0, Y = 0, Z = 0 },
+                XAxis = new Vector { X = 1, Y = 0, Z = 0 },
+                YAxis = new Vector { X = 0, Y = 1, Z = 0 }
+            };
+            piecePlanes[pieces[0].Guid] = identityPlane;
+            visited.Add(pieces[0].Guid);
+            queue.Enqueue(pieces[0].Guid);
+            roots.Add(pieces[0].Guid);
+        }
+
+        while (queue.Count > 0)
+        {
+            var currentGuid = queue.Dequeue();
+            var currentPlane = piecePlanes[currentGuid];
+            if (!adjacency.TryGetValue(currentGuid, out var edges)) continue;
+            foreach (var edge in edges)
+            {
+                if (visited.Contains(edge.neighborGuid)) continue;
+                var conn = edge.connection;
+                var isParent = conn.Connected.Piece.Guid == currentGuid;
+                if (!isParent) continue;
+
+                var childGuid = edge.neighborGuid;
+                var parentPiece = piecesDict[currentGuid];
+                var childPiece = piecesDict[childGuid];
+                var parentType = parentPiece.Type != null ? GetType(parentPiece.Type.Guid) : null;
+                var childType = childPiece.Type != null ? GetType(childPiece.Type.Guid) : null;
+                var parentConnector = GetConnector(parentType, conn.Connected.Connector?.Guid);
+                var childConnector = GetConnector(childType, conn.Connecting.Connector?.Guid);
+
+                if (parentConnector != null && childConnector != null &&
+                    parentConnector.Point != null && parentConnector.Direction != null &&
+                    childConnector.Point != null && childConnector.Direction != null)
+                {
+                    piecePlanes[childGuid] = Design.DefaultComputeChildPlane(
+                        currentPlane, parentConnector.Point, parentConnector.Direction,
+                        childConnector.Point, childConnector.Direction,
+                        conn.Gap, conn.Shift, conn.Rise,
+                        conn.Rotation, conn.Turn, conn.Tilt);
+                }
+                else
+                {
+                    piecePlanes[childGuid] = currentPlane;
+                }
+
+                parentOf[childGuid] = currentGuid;
+                childrenOf[currentGuid].Add(childGuid);
+                visited.Add(childGuid);
+                queue.Enqueue(childGuid);
+            }
+        }
+
+        foreach (var p in pieces)
+        {
+            if (!visited.Contains(p.Guid))
+            {
+                piecePlanes[p.Guid] = new Plane
+                {
+                    Origin = new Point { X = 0, Y = 0, Z = 0 },
+                    XAxis = new Vector { X = 1, Y = 0, Z = 0 },
+                    YAxis = new Vector { X = 0, Y = 1, Z = 0 }
+                };
+                roots.Add(p.Guid);
+            }
+        }
+
+        var targetBufferViews = new JArray();
+        var targetAccessors = new JArray();
+        var targetMeshes = new JArray();
+        var targetMaterials = new JArray();
+        var targetTextures = new JArray();
+        var targetImages = new JArray();
+        var targetSamplers = new JArray();
+        var targetBinChunks = new List<byte[]>();
+        var currentBinOffset = 0;
+        var typeMeshIndex = new Dictionary<string, int>();
+
+        foreach (var piece in pieces)
+        {
+            var typeGuid = piece.Type?.Guid;
+            if (string.IsNullOrEmpty(typeGuid) || typeMeshIndex.ContainsKey(typeGuid)) continue;
+            if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
+
+            var model = ExportFindMatchingModel(kit, type, tags);
+            if (model == null)
+            {
+                typeMeshIndex[typeGuid] = ExportCreateBoxMesh(type.Name,
+                    targetBufferViews, targetAccessors, targetMeshes, targetBinChunks, ref currentBinOffset);
+                continue;
+            }
+
+            var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
+            if (file?.Blob == null)
+            {
+                typeMeshIndex[typeGuid] = -1;
+                continue;
+            }
+
+            var fileBytes = ExportBlobToBytes(file.Blob);
+            var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
+
+            if (ext == ".glb")
+            {
+                var (srcJson, binChunk) = ExportParseGlb(fileBytes);
+                if (srcJson != null)
+                {
+                    typeMeshIndex[typeGuid] = ExportMergeGlbModel(srcJson, binChunk,
+                        targetBufferViews, targetAccessors, targetMeshes,
+                        targetMaterials, targetTextures, targetImages,
+                        targetSamplers, targetBinChunks, ref currentBinOffset);
+                }
+                else
+                {
+                    typeMeshIndex[typeGuid] = -1;
+                }
+            }
+            else
+            {
+                typeMeshIndex[typeGuid] = -1;
+            }
+        }
+
+        var glNodes = new JArray();
+        var pieceNodeIndex = new Dictionary<string, int>();
+
+        int BuildNode(string pieceGuid)
+        {
+            if (pieceNodeIndex.TryGetValue(pieceGuid, out var existing)) return existing;
+
+            var piece = piecesDict[pieceGuid];
+            var worldPlane = piecePlanes[pieceGuid];
+            childrenOf.TryGetValue(pieceGuid, out var children);
+            children ??= new List<string>();
+
+            float[] localMatrix;
+            if (parentOf.TryGetValue(pieceGuid, out var parentGuid) && piecePlanes.ContainsKey(parentGuid))
+            {
+                var parentWorld = ExportPlaneToMatrix4x4(piecePlanes[parentGuid]);
+                var childWorld = ExportPlaneToMatrix4x4(worldPlane);
+                System.Numerics.Matrix4x4.Invert(parentWorld, out var invParent);
+                var localMat = invParent * childWorld;
+                localMatrix = ExportMatrix4x4ToGlbArray(localMat);
+            }
+            else
+            {
+                localMatrix = ExportPlaneToGlbMatrix(worldPlane);
+            }
+
+            var childNodeIndices = new List<int>();
+            foreach (var childGuid in children)
+                childNodeIndices.Add(BuildNode(childGuid));
+
+            var node = new JObject { ["name"] = piece.Name ?? piece.Guid };
+            node["matrix"] = new JArray(localMatrix.Select(f => (JToken)(double)f).ToArray());
+
+            var meshTypeGuid = piece.Type?.Guid;
+            if (!string.IsNullOrEmpty(meshTypeGuid) &&
+                typeMeshIndex.TryGetValue(meshTypeGuid, out var meshIdx) && meshIdx >= 0)
+                node["mesh"] = meshIdx;
+            if (childNodeIndices.Count > 0)
+                node["children"] = new JArray(childNodeIndices.Select(i => (JToken)i).ToArray());
+
+            var idx = glNodes.Count;
+            glNodes.Add(node);
+            pieceNodeIndex[pieceGuid] = idx;
+            return idx;
+        }
+
+        var sceneNodes = new JArray();
+        foreach (var rootGuid in roots)
+            sceneNodes.Add(BuildNode(rootGuid));
+
+        var totalBinLength = targetBinChunks.Sum(c => c.Length);
+        var mergedBin = new byte[totalBinLength];
+        var off = 0;
+        foreach (var chunk in targetBinChunks)
+        {
+            Array.Copy(chunk, 0, mergedBin, off, chunk.Length);
+            off += chunk.Length;
+        }
+
+        var gltfJson = new JObject
+        {
+            ["asset"] = new JObject { ["version"] = "2.0", ["generator"] = "semio" },
+            ["scene"] = 0,
+            ["scenes"] = new JArray(new JObject { ["name"] = design.Name, ["nodes"] = sceneNodes }),
+            ["nodes"] = glNodes
+        };
+        if (targetMeshes.Count > 0) gltfJson["meshes"] = targetMeshes;
+        if (targetAccessors.Count > 0) gltfJson["accessors"] = targetAccessors;
+        if (targetBufferViews.Count > 0) gltfJson["bufferViews"] = targetBufferViews;
+        if (targetMaterials.Count > 0) gltfJson["materials"] = targetMaterials;
+        if (targetTextures.Count > 0) gltfJson["textures"] = targetTextures;
+        if (targetImages.Count > 0) gltfJson["images"] = targetImages;
+        if (targetSamplers.Count > 0) gltfJson["samplers"] = targetSamplers;
+        if (totalBinLength > 0) gltfJson["buffers"] = new JArray(new JObject { ["byteLength"] = totalBinLength });
+
+        if (format == ".gltf")
+            return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
+
+        return ExportBuildGlb(gltfJson, mergedBin);
+    }
+
+    #region 🔖Kit Model Export Helpers
+
+    private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
+    {
+        var origin = new System.Numerics.Vector3(p.Origin.X, p.Origin.Y, p.Origin.Z);
+        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3(p.XAxis.X, p.XAxis.Y, p.XAxis.Z));
+        var yRaw = new System.Numerics.Vector3(p.YAxis.X, p.YAxis.Y, p.YAxis.Z);
+        var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
+        var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
+        return new System.Numerics.Matrix4x4(
+            x.X, y.X, z.X, origin.X,
+            x.Y, y.Y, z.Y, origin.Y,
+            x.Z, y.Z, z.Z, origin.Z,
+            0, 0, 0, 1);
+    }
+
+    private static float[] ExportMatrix4x4ToGlbArray(System.Numerics.Matrix4x4 m)
+    {
+        return new float[]
+        {
+            m.M11, m.M21, m.M31, m.M41,
+            m.M12, m.M22, m.M32, m.M42,
+            m.M13, m.M23, m.M33, m.M43,
+            m.M14, m.M24, m.M34, m.M44
+        };
+    }
+
+    private static float[] ExportPlaneToGlbMatrix(Plane plane)
+    {
+        return ExportMatrix4x4ToGlbArray(ExportPlaneToMatrix4x4(plane));
+    }
+
+    private static (JObject json, byte[] bin) ExportParseGlb(byte[] data)
+    {
+        using var ms = new MemoryStream(data);
+        using var reader = new BinaryReader(ms);
+        var magic = reader.ReadUInt32();
+        if (magic != 0x46546C67) throw new Exception("Not a valid GLB");
+        reader.ReadUInt32();
+        reader.ReadUInt32();
+        JObject json = null;
+        byte[] bin = null;
+        while (ms.Position < data.Length)
+        {
+            var chunkLength = reader.ReadUInt32();
+            var chunkType = reader.ReadUInt32();
+            if (chunkType == 0x4E4F534A)
+                json = JObject.Parse(Encoding.UTF8.GetString(reader.ReadBytes((int)chunkLength)));
+            else if (chunkType == 0x004E4942)
+                bin = reader.ReadBytes((int)chunkLength);
+            else
+                reader.ReadBytes((int)chunkLength);
+        }
+        return (json, bin);
+    }
+
+    private static byte[] ExportBuildGlb(JObject json, byte[] bin)
+    {
+        var jsonStr = json.ToString(Formatting.None);
+        while (jsonStr.Length % 4 != 0) jsonStr += " ";
+        var jsonBytes = Encoding.UTF8.GetBytes(jsonStr);
+        var binPaddedLen = ((bin.Length + 3) / 4) * 4;
+        var binPadded = new byte[binPaddedLen];
+        if (bin.Length > 0) Array.Copy(bin, binPadded, bin.Length);
+        var totalLength = 12 + 8 + jsonBytes.Length + 8 + binPadded.Length;
+        using var ms = new MemoryStream(totalLength);
+        using var writer = new BinaryWriter(ms);
+        writer.Write(0x46546C67u);
+        writer.Write(2u);
+        writer.Write((uint)totalLength);
+        writer.Write((uint)jsonBytes.Length);
+        writer.Write(0x4E4F534Au);
+        writer.Write(jsonBytes);
+        writer.Write((uint)binPadded.Length);
+        writer.Write(0x004E4942u);
+        writer.Write(binPadded);
+        return ms.ToArray();
+    }
+
+    private static byte[] ExportBlobToBytes(string blob)
+    {
+        var base64 = blob;
+        if (blob.StartsWith("data:"))
+        {
+            var commaIdx = blob.IndexOf(',');
+            if (commaIdx >= 0) base64 = blob.Substring(commaIdx + 1);
+        }
+        return Convert.FromBase64String(base64);
+    }
+
+    private static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
+    {
+        if (type.Models == null || type.Models.Count == 0) return null;
+        if (tags == null || tags.Length == 0) return type.Models[0];
+        var kitTags = kit.Tags ?? new List<Tag>();
+        var tagGuids = new HashSet<string>(
+            tags.SelectMany(tagName => kitTags.Where(t => t.Name == tagName).Select(t => t.Guid)));
+        foreach (var model in type.Models)
+        {
+            var modelTagGuids = (model.Tags ?? new List<TagId>()).Select(t => t.Guid).ToList();
+            if (modelTagGuids.Count > 0 && modelTagGuids.All(g => tagGuids.Contains(g)))
+                return model;
+        }
+        return type.Models[0];
+    }
+
+    private static int ExportMergeGlbModel(
+        JObject sourceJson, byte[] sourceBin,
+        JArray targetBufferViews, JArray targetAccessors, JArray targetMeshes,
+        JArray targetMaterials, JArray targetTextures, JArray targetImages,
+        JArray targetSamplers, List<byte[]> targetBinChunks, ref int currentBinOffset)
+    {
+        var bufferViewOffset = targetBufferViews.Count;
+        var accessorOffset = targetAccessors.Count;
+        var materialOffset = targetMaterials.Count;
+        var textureOffset = targetTextures.Count;
+        var imageOffset = targetImages.Count;
+        var samplerOffset = targetSamplers.Count;
+
+        if (sourceBin != null)
+        {
+            foreach (var bv in sourceJson["bufferViews"] ?? new JArray())
+            {
+                var newBv = new JObject
+                {
+                    ["buffer"] = 0,
+                    ["byteOffset"] = currentBinOffset + (bv["byteOffset"]?.Value<int>() ?? 0),
+                    ["byteLength"] = bv["byteLength"]?.Value<int>() ?? 0
+                };
+                if (bv["byteStride"] != null) newBv["byteStride"] = bv["byteStride"];
+                if (bv["target"] != null) newBv["target"] = bv["target"];
+                targetBufferViews.Add(newBv);
+            }
+            var paddedLen = ((sourceBin.Length + 3) / 4) * 4;
+            var aligned = new byte[paddedLen];
+            Array.Copy(sourceBin, aligned, sourceBin.Length);
+            targetBinChunks.Add(aligned);
+            currentBinOffset += aligned.Length;
+        }
+
+        foreach (var acc in sourceJson["accessors"] ?? new JArray())
+        {
+            var newAcc = (JObject)acc.DeepClone();
+            newAcc["bufferView"] = (acc["bufferView"]?.Value<int>() ?? 0) + bufferViewOffset;
+            targetAccessors.Add(newAcc);
+        }
+
+        foreach (var sampler in sourceJson["samplers"] ?? new JArray())
+            targetSamplers.Add((JObject)sampler.DeepClone());
+
+        foreach (var img in sourceJson["images"] ?? new JArray())
+        {
+            var remapped = (JObject)img.DeepClone();
+            if (img["bufferView"] != null) remapped["bufferView"] = img["bufferView"].Value<int>() + bufferViewOffset;
+            targetImages.Add(remapped);
+        }
+
+        foreach (var tex in sourceJson["textures"] ?? new JArray())
+        {
+            var remapped = (JObject)tex.DeepClone();
+            if (tex["source"] != null) remapped["source"] = tex["source"].Value<int>() + imageOffset;
+            if (tex["sampler"] != null) remapped["sampler"] = tex["sampler"].Value<int>() + samplerOffset;
+            targetTextures.Add(remapped);
+        }
+
+        foreach (var mat in sourceJson["materials"] ?? new JArray())
+        {
+            var remapped = (JObject)mat.DeepClone();
+            void RemapTexInfo(JToken info)
+            {
+                if (info?["index"] != null) info["index"] = info["index"].Value<int>() + textureOffset;
+            }
+            var pbr = remapped["pbrMetallicRoughness"];
+            if (pbr != null)
+            {
+                RemapTexInfo(pbr["baseColorTexture"]);
+                RemapTexInfo(pbr["metallicRoughnessTexture"]);
+            }
+            RemapTexInfo(remapped["normalTexture"]);
+            RemapTexInfo(remapped["occlusionTexture"]);
+            RemapTexInfo(remapped["emissiveTexture"]);
+            targetMaterials.Add(remapped);
+        }
+
+        var meshStartIndex = targetMeshes.Count;
+        foreach (var mesh in sourceJson["meshes"] ?? new JArray())
+        {
+            var primitives = new JArray();
+            foreach (var prim in mesh["primitives"] ?? new JArray())
+            {
+                var rp = new JObject();
+                if (prim["attributes"] != null)
+                {
+                    var attrs = new JObject();
+                    foreach (var attr in ((JObject)prim["attributes"]).Properties())
+                        attrs[attr.Name] = attr.Value.Value<int>() + accessorOffset;
+                    rp["attributes"] = attrs;
+                }
+                if (prim["indices"] != null) rp["indices"] = prim["indices"].Value<int>() + accessorOffset;
+                if (prim["material"] != null) rp["material"] = prim["material"].Value<int>() + materialOffset;
+                if (prim["mode"] != null) rp["mode"] = prim["mode"];
+                primitives.Add(rp);
+            }
+            var newMesh = new JObject { ["primitives"] = primitives };
+            if (mesh["name"] != null) newMesh["name"] = mesh["name"];
+            targetMeshes.Add(newMesh);
+        }
+
+        return meshStartIndex;
+    }
+
+    private static int ExportCreateBoxMesh(string name,
+        JArray targetBufferViews, JArray targetAccessors, JArray targetMeshes,
+        List<byte[]> targetBinChunks, ref int currentBinOffset)
+    {
+        const float s = 0.5f;
+        var positions = new float[]
+        {
+            -s,-s,s, s,-s,s, s,s,s, -s,s,s,
+            -s,-s,-s, -s,s,-s, s,s,-s, s,-s,-s,
+            -s,s,-s, -s,s,s, s,s,s, s,s,-s,
+            -s,-s,-s, s,-s,-s, s,-s,s, -s,-s,s,
+            s,-s,-s, s,s,-s, s,s,s, s,-s,s,
+            -s,-s,-s, -s,-s,s, -s,s,s, -s,s,-s,
+        };
+        var normals = new float[]
+        {
+            0,0,1, 0,0,1, 0,0,1, 0,0,1,
+            0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1,
+            0,1,0, 0,1,0, 0,1,0, 0,1,0,
+            0,-1,0, 0,-1,0, 0,-1,0, 0,-1,0,
+            1,0,0, 1,0,0, 1,0,0, 1,0,0,
+            -1,0,0, -1,0,0, -1,0,0, -1,0,0,
+        };
+        var indices = new ushort[]
+        {
+            0,1,2, 0,2,3, 4,5,6, 4,6,7,
+            8,9,10, 8,10,11, 12,13,14, 12,14,15,
+            16,17,18, 16,18,19, 20,21,22, 20,22,23,
+        };
+
+        var posBuf = new byte[positions.Length * 4];
+        Buffer.BlockCopy(positions, 0, posBuf, 0, posBuf.Length);
+        var normBuf = new byte[normals.Length * 4];
+        Buffer.BlockCopy(normals, 0, normBuf, 0, normBuf.Length);
+        var idxBuf = new byte[indices.Length * 2];
+        Buffer.BlockCopy(indices, 0, idxBuf, 0, idxBuf.Length);
+
+        var posOffset = currentBinOffset;
+        var posPadded = new byte[((posBuf.Length + 3) / 4) * 4];
+        Array.Copy(posBuf, posPadded, posBuf.Length);
+        targetBinChunks.Add(posPadded);
+        currentBinOffset += posPadded.Length;
+
+        var normOffset = currentBinOffset;
+        var normPadded = new byte[((normBuf.Length + 3) / 4) * 4];
+        Array.Copy(normBuf, normPadded, normBuf.Length);
+        targetBinChunks.Add(normPadded);
+        currentBinOffset += normPadded.Length;
+
+        var idxOffset = currentBinOffset;
+        var idxPadded = new byte[((idxBuf.Length + 3) / 4) * 4];
+        Array.Copy(idxBuf, idxPadded, idxBuf.Length);
+        targetBinChunks.Add(idxPadded);
+        currentBinOffset += idxPadded.Length;
+
+        var posBvIdx = targetBufferViews.Count;
+        targetBufferViews.Add(new JObject { ["buffer"] = 0, ["byteOffset"] = posOffset, ["byteLength"] = posBuf.Length, ["target"] = 34962 });
+        var normBvIdx = targetBufferViews.Count;
+        targetBufferViews.Add(new JObject { ["buffer"] = 0, ["byteOffset"] = normOffset, ["byteLength"] = normBuf.Length, ["target"] = 34962 });
+        var idxBvIdx = targetBufferViews.Count;
+        targetBufferViews.Add(new JObject { ["buffer"] = 0, ["byteOffset"] = idxOffset, ["byteLength"] = idxBuf.Length, ["target"] = 34963 });
+
+        var posAccIdx = targetAccessors.Count;
+        targetAccessors.Add(new JObject { ["bufferView"] = posBvIdx, ["componentType"] = 5126, ["count"] = 24, ["type"] = "VEC3",
+            ["max"] = new JArray(s, s, s), ["min"] = new JArray(-s, -s, -s) });
+        var normAccIdx = targetAccessors.Count;
+        targetAccessors.Add(new JObject { ["bufferView"] = normBvIdx, ["componentType"] = 5126, ["count"] = 24, ["type"] = "VEC3" });
+        var idxAccIdx = targetAccessors.Count;
+        targetAccessors.Add(new JObject { ["bufferView"] = idxBvIdx, ["componentType"] = 5123, ["count"] = 36, ["type"] = "SCALAR" });
+
+        var meshIdx = targetMeshes.Count;
+        targetMeshes.Add(new JObject
+        {
+            ["name"] = name,
+            ["primitives"] = new JArray(new JObject
+            {
+                ["attributes"] = new JObject { ["POSITION"] = posAccIdx, ["NORMAL"] = normAccIdx },
+                ["indices"] = idxAccIdx
+            })
+        });
+        return meshIdx;
+    }
+
+    #endregion 🔖Kit Model Export Helpers
+
+    #endregion 🔖Kit Model Export
 }
 
 #endregion 🔖Kit

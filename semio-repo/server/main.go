@@ -272,25 +272,6 @@ type DiffIngestResponse struct {
 	Blockers      []string  `json:"blockers"`
 }
 
-// PrecheckpointRequest is the JSON payload for a pre-checkpoint check.
-// [🧰semiorepo⌨️server💻main🔖models✂️precheckpointrequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/PrecheckpointRequest)
-type PrecheckpointRequest struct {
-	TicketID          string `json:"ticket_id"`
-	Patch             string `json:"patch"`
-	Staged            bool   `json:"staged"`
-	CheckpointMessage string `json:"checkpoint_message"`
-}
-
-// PrecheckpointResponse holds the result of a pre-checkpoint check.
-// [🧰semiorepo⌨️server💻main🔖models✂️precheckpointresponse](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/PrecheckpointResponse)
-type PrecheckpointResponse struct {
-	OK           bool      `json:"ok"`
-	Blockers     []string  `json:"blockers"`
-	Warnings     []Warning `json:"warnings"`
-	Breachs      []Breach  `json:"breachs"`
-	AutofixPatch string    `json:"autofix_patch"`
-}
-
 // IndexFileRequest is the JSON payload for indexing a single file.
 // [🧰semiorepo⌨️server💻main🔖models✂️indexfilerequest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Models/d/i/IndexFileRequest)
 type IndexFileRequest struct {
@@ -1181,7 +1162,7 @@ func buildConflictWarnings(conflicts []struct {
 
 // #region 🔖Server
 // [🧰semiorepo⌨️server💻main🔖server](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server)
-// HTTP server with ticket lifecycle, diff ingestion, pre-checkpoint checks, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
+// HTTP server with ticket lifecycle, diff ingestion, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
 
 // Server is the main HTTP server holding configuration, database, event bus, and caches.
 // [🧰semiorepo⌨️server💻main🔖server✂️server](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/Server)
@@ -1543,46 +1524,6 @@ func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 		Warnings:      warnings,
 		Breachs:       breachs,
 		Blockers:      result.Blockers,
-	}
-	s.writeJSON(w, http.StatusOK, response)
-}
-
-// handlePrecheckpoint runs a pre-checkpoint check against a diff patch.
-// [🧰semiorepo⌨️server💻main🔖server🛠️handleprecheckpoint](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server/d/i/handlePrecheckpoint)
-// handlePrecheckpoint MUST perform the handlePrecheckpoint operation.
-func (s *Server) handlePrecheckpoint(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	if !s.requireAuth(r) {
-		s.respondError(w, http.StatusUnauthorized, "unauthorized")
-		return
-	}
-	var payload PrecheckpointRequest
-	if err := s.decodeJSON(r, &payload); err != nil {
-		s.respondError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	if payload.TicketID == "" || payload.Patch == "" {
-		s.respondError(w, http.StatusBadRequest, "ticket_id and patch required")
-		return
-	}
-	ctx, cancel := s.newRequestContext(r)
-	defer cancel()
-	result, warnings, breachs, err := s.processDiff(ctx, payload.TicketID, payload.Patch, nil)
-	if err != nil {
-		s.respondError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	blockers := result.Blockers
-	ok := len(blockers) == 0
-	response := PrecheckpointResponse{
-		OK:           ok,
-		Blockers:     blockers,
-		Warnings:     warnings,
-		Breachs:      breachs,
-		AutofixPatch: "",
 	}
 	s.writeJSON(w, http.StatusOK, response)
 }
@@ -2298,7 +2239,6 @@ func main() {
 	mux.HandleFunc("/tickets", server.handleTicketsQuery)
 	mux.HandleFunc("/tickets/", server.handleTicketDetail)
 	mux.HandleFunc("/diff/ingest", server.handleDiffIngest)
-	mux.HandleFunc("/checks/precheckpoint", server.handlePrecheckpoint)
 	mux.HandleFunc("/repo/reindex", server.handleReindex)
 	mux.HandleFunc("/repo/index-file", server.handleIndexFile)
 	mux.HandleFunc("/warnings", server.handleWarnings)

@@ -25,7 +25,10 @@
 package semio
 
 import (
+	"bytes"
 	"crypto/rand"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -8990,3 +8993,818 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 }
 
 // #endregion 🔖Flatten Design
+
+// #region 🔖ExportDesignModel
+// [👤semio📚go💻semio🔖exportdesignmodel](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model)
+// ExportDesignModel MUST export a design's 3D model to GLB or glTF format.
+
+// ExportModelFormats maps supported export format extensions.
+// [👤semio📚go💻semio🔖exportdesignmodel✂️exportmodelformats](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/ExportModelFormats)
+var ExportModelFormats = map[string]string{
+	".glb":  ".glb",
+	".gltf": ".gltf",
+}
+
+// #region 🔖ExportDesignModel/Helpers
+
+// exportMeshData holds extracted or generated mesh geometry for a single type.
+// [👤semio📚go💻semio🔖exportdesignmodel✂️exportmeshdata](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportMeshData)
+type exportMeshData struct {
+	positionBytes []byte
+	indexBytes    []byte
+	vertexCount   int
+	indexCount    int
+	posMin        [3]float32
+	posMax        [3]float32
+	indexCompKind int
+}
+
+// exportPlaneToGltfMatrix converts a Plane to a column-major 4x4 matrix for glTF.
+// [👤semio📚go💻semio🔖exportdesignmodel🛠️exportplanetogltfmatrix](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportPlaneToGltfMatrix)
+func exportPlaneToGltfMatrix(plane Plane) [16]float64 {
+	ox, oy, oz := plane.Origin.X, plane.Origin.Y, plane.Origin.Z
+	xx, xy, xz := plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z
+	yx, yy, yz := plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z
+	zx := xy*yz - xz*yy
+	zy := xz*yx - xx*yz
+	zz := xx*yy - xy*yx
+	zLen := math.Sqrt(zx*zx + zy*zy + zz*zz)
+	if zLen > 0 {
+		zx /= zLen
+		zy /= zLen
+		zz /= zLen
+	}
+	xLen := math.Sqrt(xx*xx + xy*xy + xz*xz)
+	if xLen > 0 {
+		xx /= xLen
+		xy /= xLen
+		xz /= xLen
+	}
+	yx = zy*xz - zz*xy
+	yy = zz*xx - zx*xz
+	yz = zx*xy - zy*xx
+	yLen := math.Sqrt(yx*yx + yy*yy + yz*yz)
+	if yLen > 0 {
+		yx /= yLen
+		yy /= yLen
+		yz /= yLen
+	}
+	return [16]float64{xx, xy, xz, 0, yx, yy, yz, 0, zx, zy, zz, 0, ox, oy, oz, 1}
+}
+
+// exportDenseToGltfMatrix converts a gonum mat.Dense (row-major) to column-major glTF matrix.
+// [👤semio📚go💻semio🔖exportdesignmodel🛠️exportdensetogltfmatrix](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportDenseToGltfMatrix)
+func exportDenseToGltfMatrix(m *mat.Dense) [16]float64 {
+	return [16]float64{
+		m.At(0, 0), m.At(1, 0), m.At(2, 0), m.At(3, 0),
+		m.At(0, 1), m.At(1, 1), m.At(2, 1), m.At(3, 1),
+		m.At(0, 2), m.At(1, 2), m.At(2, 2), m.At(3, 2),
+		m.At(0, 3), m.At(1, 3), m.At(2, 3), m.At(3, 3),
+	}
+}
+
+// exportCreateBoxMesh generates a unit box placeholder mesh (1x1x1 centered at origin).
+// [👤semio📚go💻semio🔖exportdesignmodel🛠️exportcreateboxmesh](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportCreateBoxMesh)
+func exportCreateBoxMesh() *exportMeshData {
+	s := float32(0.5)
+	vertices := [][3]float32{
+		{-s, -s, -s}, {s, -s, -s}, {s, s, -s}, {-s, s, -s},
+		{-s, -s, s}, {s, -s, s}, {s, s, s}, {-s, s, s},
+	}
+	indices := []uint16{
+		0, 1, 2, 0, 2, 3,
+		4, 6, 5, 4, 7, 6,
+		0, 4, 5, 0, 5, 1,
+		3, 2, 6, 3, 6, 7,
+		0, 3, 7, 0, 7, 4,
+		1, 5, 6, 1, 6, 2,
+	}
+	posBuf := new(bytes.Buffer)
+	for _, v := range vertices {
+		binary.Write(posBuf, binary.LittleEndian, v[0])
+		binary.Write(posBuf, binary.LittleEndian, v[1])
+		binary.Write(posBuf, binary.LittleEndian, v[2])
+	}
+	idxBuf := new(bytes.Buffer)
+	for _, idx := range indices {
+		binary.Write(idxBuf, binary.LittleEndian, idx)
+	}
+	return &exportMeshData{
+		positionBytes: posBuf.Bytes(),
+		indexBytes:    idxBuf.Bytes(),
+		vertexCount:   len(vertices),
+		indexCount:    len(indices),
+		posMin:        [3]float32{-s, -s, -s},
+		posMax:        [3]float32{s, s, s},
+		indexCompKind: 5123,
+	}
+}
+
+// exportDecodeBlobToBytes strips a data URI prefix and base64 decodes the blob content.
+// [👤semio📚go💻semio🔖exportdesignmodel🛠️exportdecodeblobtobytes](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportDecodeBlobToBytes)
+func exportDecodeBlobToBytes(blob string) ([]byte, error) {
+	if idx := strings.Index(blob, ","); idx >= 0 {
+		blob = blob[idx+1:]
+	}
+	decoded, err := base64.StdEncoding.DecodeString(blob)
+	if err != nil {
+		decoded, err = base64.RawStdEncoding.DecodeString(blob)
+		if err != nil {
+			return nil, fmt.Errorf("base64 decode failed: %w", err)
+		}
+	}
+	return decoded, nil
+}
+
+// exportParseGLBMesh parses a GLB binary file and extracts the first mesh's geometry data.
+// [👤semio📚go💻semio🔖exportdesignmodel🛠️exportparseglbmesh](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportParseGLBMesh)
+func exportParseGLBMesh(data []byte) (*exportMeshData, error) {
+	if len(data) < 12 {
+		return nil, fmt.Errorf("GLB too short")
+	}
+	magic := binary.LittleEndian.Uint32(data[0:4])
+	if magic != 0x46546C67 {
+		return nil, fmt.Errorf("not a GLB file")
+	}
+
+	offset := 12
+	if offset+8 > len(data) {
+		return nil, fmt.Errorf("missing JSON chunk header")
+	}
+	jsonChunkLen := int(binary.LittleEndian.Uint32(data[offset : offset+4]))
+	jsonChunkKind := binary.LittleEndian.Uint32(data[offset+4 : offset+8])
+	if jsonChunkKind != 0x4E4F534A {
+		return nil, fmt.Errorf("expected JSON chunk")
+	}
+	offset += 8
+	if offset+jsonChunkLen > len(data) {
+		return nil, fmt.Errorf("JSON chunk overflow")
+	}
+	jsonData := data[offset : offset+jsonChunkLen]
+	offset += jsonChunkLen
+
+	var binData []byte
+	if offset+8 <= len(data) {
+		binChunkLen := int(binary.LittleEndian.Uint32(data[offset : offset+4]))
+		binChunkKind := binary.LittleEndian.Uint32(data[offset+4 : offset+8])
+		if binChunkKind == 0x004E4942 {
+			offset += 8
+			if offset+binChunkLen <= len(data) {
+				binData = data[offset : offset+binChunkLen]
+			}
+		}
+	}
+
+	var gltf map[string]interface{}
+	if err := json.Unmarshal(jsonData, &gltf); err != nil {
+		return nil, fmt.Errorf("failed to parse glTF JSON: %w", err)
+	}
+
+	meshesRaw, ok := gltf["meshes"].([]interface{})
+	if !ok || len(meshesRaw) == 0 {
+		return nil, fmt.Errorf("no meshes in GLB")
+	}
+	mesh, _ := meshesRaw[0].(map[string]interface{})
+	primitivesRaw, _ := mesh["primitives"].([]interface{})
+	if len(primitivesRaw) == 0 {
+		return nil, fmt.Errorf("no primitives in mesh")
+	}
+	prim, _ := primitivesRaw[0].(map[string]interface{})
+
+	accessorsRaw, _ := gltf["accessors"].([]interface{})
+	bufferViewsRaw, _ := gltf["bufferViews"].([]interface{})
+
+	glbInt := func(m map[string]interface{}, key string) int {
+		if v, ok := m[key]; ok {
+			if f, ok := v.(float64); ok {
+				return int(f)
+			}
+		}
+		return 0
+	}
+	glbFloat32Slice := func(m map[string]interface{}, key string) []float32 {
+		arr, ok := m[key].([]interface{})
+		if !ok {
+			return nil
+		}
+		result := make([]float32, len(arr))
+		for i, v := range arr {
+			if f, ok := v.(float64); ok {
+				result[i] = float32(f)
+			}
+		}
+		return result
+	}
+
+	attrs, _ := prim["attributes"].(map[string]interface{})
+	posAccIdxF, ok := attrs["POSITION"].(float64)
+	if !ok {
+		return nil, fmt.Errorf("no POSITION attribute")
+	}
+	posAccIdx := int(posAccIdxF)
+	if posAccIdx >= len(accessorsRaw) {
+		return nil, fmt.Errorf("POSITION accessor out of range")
+	}
+	posAcc, _ := accessorsRaw[posAccIdx].(map[string]interface{})
+	posBVIdx := glbInt(posAcc, "bufferView")
+	if posBVIdx >= len(bufferViewsRaw) {
+		return nil, fmt.Errorf("position bufferView out of range")
+	}
+	posBV, _ := bufferViewsRaw[posBVIdx].(map[string]interface{})
+	posBVOffset := glbInt(posBV, "byteOffset")
+	posAccOffset := glbInt(posAcc, "byteOffset")
+	vertexCount := glbInt(posAcc, "count")
+	posByteStride := glbInt(posBV, "byteStride")
+
+	posStart := posBVOffset + posAccOffset
+	var posBytes []byte
+	if posByteStride == 0 || posByteStride == 12 {
+		posLength := vertexCount * 12
+		if posStart+posLength > len(binData) {
+			return nil, fmt.Errorf("position data out of bounds")
+		}
+		posBytes = make([]byte, posLength)
+		copy(posBytes, binData[posStart:posStart+posLength])
+	} else {
+		posBytes = make([]byte, vertexCount*12)
+		for v := 0; v < vertexCount; v++ {
+			src := posStart + v*posByteStride
+			if src+12 > len(binData) {
+				return nil, fmt.Errorf("position data out of bounds at vertex %d", v)
+			}
+			copy(posBytes[v*12:v*12+12], binData[src:src+12])
+		}
+	}
+
+	minArr := glbFloat32Slice(posAcc, "min")
+	maxArr := glbFloat32Slice(posAcc, "max")
+	var posMin, posMax [3]float32
+	if len(minArr) >= 3 && len(maxArr) >= 3 {
+		posMin = [3]float32{minArr[0], minArr[1], minArr[2]}
+		posMax = [3]float32{maxArr[0], maxArr[1], maxArr[2]}
+	} else {
+		posMin = [3]float32{float32(math.MaxFloat32), float32(math.MaxFloat32), float32(math.MaxFloat32)}
+		posMax = [3]float32{-float32(math.MaxFloat32), -float32(math.MaxFloat32), -float32(math.MaxFloat32)}
+		for v := 0; v < vertexCount; v++ {
+			x := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[v*12:]))
+			y := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[v*12+4:]))
+			z := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[v*12+8:]))
+			if x < posMin[0] {
+				posMin[0] = x
+			}
+			if y < posMin[1] {
+				posMin[1] = y
+			}
+			if z < posMin[2] {
+				posMin[2] = z
+			}
+			if x > posMax[0] {
+				posMax[0] = x
+			}
+			if y > posMax[1] {
+				posMax[1] = y
+			}
+			if z > posMax[2] {
+				posMax[2] = z
+			}
+		}
+	}
+
+	var idxBytes []byte
+	var indexCount int
+	indexCompKind := 5123
+	if idxVal, ok := prim["indices"]; ok {
+		idxAccIdx := int(idxVal.(float64))
+		if idxAccIdx < len(accessorsRaw) {
+			idxAcc, _ := accessorsRaw[idxAccIdx].(map[string]interface{})
+			idxBVIdx := glbInt(idxAcc, "bufferView")
+			if idxBVIdx < len(bufferViewsRaw) {
+				idxBV, _ := bufferViewsRaw[idxBVIdx].(map[string]interface{})
+				idxBVOffset := glbInt(idxBV, "byteOffset")
+				idxAccOffset := glbInt(idxAcc, "byteOffset")
+				indexCount = glbInt(idxAcc, "count")
+				indexCompKind = glbInt(idxAcc, "componentType")
+				if indexCompKind == 0 {
+					indexCompKind = 5123
+				}
+				bytesPerIndex := 2
+				if indexCompKind == 5125 {
+					bytesPerIndex = 4
+				}
+				idxStart := idxBVOffset + idxAccOffset
+				idxLength := indexCount * bytesPerIndex
+				if idxStart+idxLength <= len(binData) {
+					idxBytes = make([]byte, idxLength)
+					copy(idxBytes, binData[idxStart:idxStart+idxLength])
+				}
+			}
+		}
+	}
+
+	return &exportMeshData{
+		positionBytes: posBytes,
+		indexBytes:    idxBytes,
+		vertexCount:   vertexCount,
+		indexCount:    indexCount,
+		posMin:        posMin,
+		posMax:        posMax,
+		indexCompKind: indexCompKind,
+	}, nil
+}
+
+// exportFindModelForKind finds the best matching model for a type given tag filters.
+// [👤semio📚go💻semio🔖exportdesignmodel🛠️exportfindmodelforkind](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportFindModelForKind)
+func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) *Model {
+	if len(typ.Models) == 0 {
+		return nil
+	}
+	if len(tags) == 0 {
+		return &typ.Models[0]
+	}
+	tagNameSet := make(map[string]bool)
+	for _, t := range tags {
+		tagNameSet[t] = true
+	}
+	bestModel := &typ.Models[0]
+	bestCount := 0
+	for i := range typ.Models {
+		model := &typ.Models[i]
+		matchCount := 0
+		for _, tid := range model.Tags {
+			if tag, ok := tagsDict[tid.Guid]; ok {
+				if tagNameSet[tag.Name] {
+					matchCount++
+				}
+			}
+		}
+		if matchCount == len(tags) {
+			return model
+		}
+		if matchCount > bestCount {
+			bestCount = matchCount
+			bestModel = model
+		}
+	}
+	return bestModel
+}
+
+// #endregion 🔖ExportDesignModel/Helpers
+
+// ExportDesignModel exports the 3D model of a design to GLB or glTF format.
+// [👤semio📚go💻semio🔖exportdesignmodel🛠️exportdesignmodel](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/ExportDesignModel)
+func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string, options map[string]interface{}) ([]byte, error) {
+	if _, ok := ExportModelFormats[format]; !ok {
+		return nil, fmt.Errorf("unsupported format: %s", format)
+	}
+
+	design := FindDesignInKit(kit, designGuid)
+	if design == nil {
+		return nil, fmt.Errorf("design not found: %s", designGuid)
+	}
+	if len(design.Pieces) == 0 {
+		return nil, fmt.Errorf("design has no pieces")
+	}
+
+	typesDict := make(map[string]*Type)
+	for i := range kit.Types {
+		typesDict[kit.Types[i].Guid] = &kit.Types[i]
+	}
+	filesDict := make(map[string]*File)
+	for i := range kit.Files {
+		filesDict[kit.Files[i].Guid] = &kit.Files[i]
+	}
+	tagsDict := make(map[string]*Tag)
+	for i := range kit.Tags {
+		tagsDict[kit.Tags[i].Guid] = &kit.Tags[i]
+	}
+	pieceMap := make(map[string]*Piece)
+	for i := range design.Pieces {
+		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+	}
+
+	// #region 🔖ExportDesignModel/BFS
+	piecePlanes := make(map[string]*Plane)
+	parentOf := make(map[string]string)
+	childrenOf := make(map[string][]string)
+	var rootPieceGuids []string
+
+	adjacency := make(map[string][]struct {
+		neighborGuid string
+		connection   *Connection
+	})
+	for i := range design.Connections {
+		conn := &design.Connections[i]
+		srcGuid := conn.Connected.Piece.Guid
+		tgtGuid := conn.Connecting.Piece.Guid
+		if pieceMap[srcGuid] == nil || pieceMap[tgtGuid] == nil {
+			continue
+		}
+		adjacency[srcGuid] = append(adjacency[srcGuid], struct {
+			neighborGuid string
+			connection   *Connection
+		}{tgtGuid, conn})
+		adjacency[tgtGuid] = append(adjacency[tgtGuid], struct {
+			neighborGuid string
+			connection   *Connection
+		}{srcGuid, conn})
+	}
+
+	visited := make(map[string]bool)
+	var bfsExport func(rootGuid string)
+	bfsExport = func(rootGuid string) {
+		queue := []string{rootGuid}
+		visited[rootGuid] = true
+		rootPieceGuids = append(rootPieceGuids, rootGuid)
+		rootPiece := pieceMap[rootGuid]
+		if rootPiece.Plane != nil {
+			piecePlanes[rootGuid] = rootPiece.Plane
+		} else {
+			p := Plane{
+				Origin: Point{X: 0, Y: 0, Z: 0},
+				XAxis:  Vector{X: 1, Y: 0, Z: 0},
+				YAxis:  Vector{X: 0, Y: 1, Z: 0},
+			}
+			piecePlanes[rootGuid] = &p
+		}
+		for len(queue) > 0 {
+			currentGuid := queue[0]
+			queue = queue[1:]
+			currentPlane := piecePlanes[currentGuid]
+			currentPiece := pieceMap[currentGuid]
+
+			for _, neighbor := range adjacency[currentGuid] {
+				if visited[neighbor.neighborGuid] {
+					continue
+				}
+				visited[neighbor.neighborGuid] = true
+				neighborPiece := pieceMap[neighbor.neighborGuid]
+				conn := neighbor.connection
+
+				var parentSide, childSide *Side
+				if conn.Connected.Piece.Guid == currentGuid {
+					parentSide = &conn.Connected
+					childSide = &conn.Connecting
+				} else {
+					parentSide = &conn.Connecting
+					childSide = &conn.Connected
+				}
+
+				var parentType, childType *Type
+				if currentPiece.Type != nil {
+					parentType = typesDict[currentPiece.Type.Guid]
+				}
+				if neighborPiece.Type != nil {
+					childType = typesDict[neighborPiece.Type.Guid]
+				}
+
+				var parentConnectorGuid, childConnectorGuid *string
+				if parentSide.Connector != nil {
+					parentConnectorGuid = &parentSide.Connector.Guid
+				}
+				if childSide.Connector != nil {
+					childConnectorGuid = &childSide.Connector.Guid
+				}
+
+				parentConnector := getConnector(typesDict, parentType, parentConnectorGuid)
+				childConnector := getConnector(typesDict, childType, childConnectorGuid)
+				if parentConnector == nil || childConnector == nil {
+					continue
+				}
+
+				childPlane := computeChildPlane(*currentPlane, *parentConnector, *childConnector, *conn)
+				piecePlanes[neighbor.neighborGuid] = &childPlane
+				parentOf[neighbor.neighborGuid] = currentGuid
+				childrenOf[currentGuid] = append(childrenOf[currentGuid], neighbor.neighborGuid)
+
+				queue = append(queue, neighbor.neighborGuid)
+			}
+		}
+	}
+	for _, piece := range design.Pieces {
+		if !visited[piece.Guid] {
+			bfsExport(piece.Guid)
+		}
+	}
+	// #endregion 🔖ExportDesignModel/BFS
+
+	// #region 🔖ExportDesignModel/MeshData
+	usedTypes := make(map[string]bool)
+	for _, piece := range design.Pieces {
+		if piece.Type != nil {
+			usedTypes[piece.Type.Guid] = true
+		}
+	}
+	boxMesh := exportCreateBoxMesh()
+	typeMeshData := make(map[string]*exportMeshData)
+	for typeGuid := range usedTypes {
+		typ := typesDict[typeGuid]
+		if typ == nil {
+			typeMeshData[typeGuid] = boxMesh
+			continue
+		}
+		model := exportFindModelForKind(typ, tags, tagsDict)
+		if model == nil {
+			typeMeshData[typeGuid] = boxMesh
+			continue
+		}
+		file := filesDict[model.File.Guid]
+		if file == nil || file.Blob == nil || *file.Blob == "" {
+			typeMeshData[typeGuid] = boxMesh
+			continue
+		}
+		glbData, err := exportDecodeBlobToBytes(*file.Blob)
+		if err != nil || len(glbData) < 4 {
+			typeMeshData[typeGuid] = boxMesh
+			continue
+		}
+		if binary.LittleEndian.Uint32(glbData[0:4]) != 0x46546C67 {
+			typeMeshData[typeGuid] = boxMesh
+			continue
+		}
+		meshData, err := exportParseGLBMesh(glbData)
+		if err != nil {
+			typeMeshData[typeGuid] = boxMesh
+			continue
+		}
+		typeMeshData[typeGuid] = meshData
+	}
+	// #endregion 🔖ExportDesignModel/MeshData
+
+	// #region 🔖ExportDesignModel/BuildGLTF
+	typeOrder := make([]string, 0, len(usedTypes))
+	for typeGuid := range usedTypes {
+		typeOrder = append(typeOrder, typeGuid)
+	}
+	sort.Strings(typeOrder)
+	typeMeshIndex := make(map[string]int)
+	for i, typeGuid := range typeOrder {
+		typeMeshIndex[typeGuid] = i
+	}
+
+	var binBuf bytes.Buffer
+	type exportBufView struct {
+		byteOffset int
+		byteLength int
+		target     int
+	}
+	var bufViews []exportBufView
+	type exportAccessor struct {
+		bufferView    int
+		componentKind int
+		count         int
+		accessorKind  string
+		min           []float32
+		max           []float32
+	}
+	var accs []exportAccessor
+	type exportMesh struct {
+		positionAcc int
+		indexAcc    int
+		hasIndices  bool
+	}
+	var gltfMeshList []exportMesh
+
+	for _, typeGuid := range typeOrder {
+		md := typeMeshData[typeGuid]
+
+		for binBuf.Len()%4 != 0 {
+			binBuf.WriteByte(0)
+		}
+		posOffset := binBuf.Len()
+		binBuf.Write(md.positionBytes)
+		posBVIdx := len(bufViews)
+		bufViews = append(bufViews, exportBufView{
+			byteOffset: posOffset,
+			byteLength: len(md.positionBytes),
+			target:     34962,
+		})
+		posAccIdx := len(accs)
+		accs = append(accs, exportAccessor{
+			bufferView:    posBVIdx,
+			componentKind: 5126,
+			count:         md.vertexCount,
+			accessorKind:  "VEC3",
+			min:           md.posMin[:],
+			max:           md.posMax[:],
+		})
+
+		mi := exportMesh{positionAcc: posAccIdx}
+		if md.indexCount > 0 {
+			for binBuf.Len()%4 != 0 {
+				binBuf.WriteByte(0)
+			}
+			idxOffset := binBuf.Len()
+			binBuf.Write(md.indexBytes)
+			idxBVIdx := len(bufViews)
+			bufViews = append(bufViews, exportBufView{
+				byteOffset: idxOffset,
+				byteLength: len(md.indexBytes),
+				target:     34963,
+			})
+			idxAccIdx := len(accs)
+			accs = append(accs, exportAccessor{
+				bufferView:    idxBVIdx,
+				componentKind: md.indexCompKind,
+				count:         md.indexCount,
+				accessorKind:  "SCALAR",
+			})
+			mi.indexAcc = idxAccIdx
+			mi.hasIndices = true
+		}
+		gltfMeshList = append(gltfMeshList, mi)
+	}
+	for binBuf.Len()%4 != 0 {
+		binBuf.WriteByte(0)
+	}
+
+	pieceNodeIndex := make(map[string]int)
+	for i, piece := range design.Pieces {
+		pieceNodeIndex[piece.Guid] = i
+	}
+
+	type exportNode struct {
+		meshIndex int
+		matrix    [16]float64
+		children  []int
+		name      string
+	}
+	nodes := make([]exportNode, len(design.Pieces))
+	for i, piece := range design.Pieces {
+		plane := piecePlanes[piece.Guid]
+		if plane == nil {
+			p := Plane{
+				Origin: Point{X: 0, Y: 0, Z: 0},
+				XAxis:  Vector{X: 1, Y: 0, Z: 0},
+				YAxis:  Vector{X: 0, Y: 1, Z: 0},
+			}
+			plane = &p
+		}
+
+		var matrix [16]float64
+		if parentGuid, hasParent := parentOf[piece.Guid]; hasParent {
+			parentPlane := piecePlanes[parentGuid]
+			if parentPlane != nil {
+				parentMat := planeToMatrix(*parentPlane)
+				childMat := planeToMatrix(*plane)
+				var inv mat.Dense
+				if err := inv.Inverse(parentMat); err == nil {
+					var relative mat.Dense
+					relative.Mul(&inv, childMat)
+					matrix = exportDenseToGltfMatrix(&relative)
+				} else {
+					matrix = exportPlaneToGltfMatrix(*plane)
+				}
+			} else {
+				matrix = exportPlaneToGltfMatrix(*plane)
+			}
+		} else {
+			matrix = exportPlaneToGltfMatrix(*plane)
+		}
+
+		meshIdx := -1
+		if piece.Type != nil {
+			if idx, ok := typeMeshIndex[piece.Type.Guid]; ok {
+				meshIdx = idx
+			}
+		}
+
+		name := piece.Guid
+		if piece.Name != nil && *piece.Name != "" {
+			name = *piece.Name
+		}
+
+		var childIndices []int
+		for _, childGuid := range childrenOf[piece.Guid] {
+			if idx, ok := pieceNodeIndex[childGuid]; ok {
+				childIndices = append(childIndices, idx)
+			}
+		}
+
+		nodes[i] = exportNode{
+			meshIndex: meshIdx,
+			matrix:    matrix,
+			children:  childIndices,
+			name:      name,
+		}
+	}
+
+	var sceneRootNodes []int
+	for _, rootGuid := range rootPieceGuids {
+		if idx, ok := pieceNodeIndex[rootGuid]; ok {
+			sceneRootNodes = append(sceneRootNodes, idx)
+		}
+	}
+
+	gltfNodes := make([]interface{}, len(nodes))
+	for i, n := range nodes {
+		node := map[string]interface{}{
+			"name":   n.name,
+			"matrix": n.matrix,
+		}
+		if n.meshIndex >= 0 {
+			node["mesh"] = n.meshIndex
+		}
+		if len(n.children) > 0 {
+			node["children"] = n.children
+		}
+		gltfNodes[i] = node
+	}
+
+	gltfBufViews := make([]interface{}, len(bufViews))
+	for i, bv := range bufViews {
+		gltfBufViews[i] = map[string]interface{}{
+			"buffer":     0,
+			"byteOffset": bv.byteOffset,
+			"byteLength": bv.byteLength,
+			"target":     bv.target,
+		}
+	}
+
+	gltfAccs := make([]interface{}, len(accs))
+	for i, acc := range accs {
+		a := map[string]interface{}{
+			"bufferView":    acc.bufferView,
+			"componentType": acc.componentKind,
+			"count":         acc.count,
+			"type":          acc.accessorKind,
+		}
+		if acc.min != nil {
+			a["min"] = acc.min
+		}
+		if acc.max != nil {
+			a["max"] = acc.max
+		}
+		gltfAccs[i] = a
+	}
+
+	gltfMeshes := make([]interface{}, len(gltfMeshList))
+	for i, m := range gltfMeshList {
+		primAttrs := map[string]interface{}{
+			"POSITION": m.positionAcc,
+		}
+		prim := map[string]interface{}{
+			"attributes": primAttrs,
+		}
+		if m.hasIndices {
+			prim["indices"] = m.indexAcc
+		}
+		gltfMeshes[i] = map[string]interface{}{
+			"primitives": []interface{}{prim},
+		}
+	}
+
+	gltfDoc := map[string]interface{}{
+		"asset":       map[string]interface{}{"version": "2.0", "generator": "semio"},
+		"scene":       0,
+		"scenes":      []interface{}{map[string]interface{}{"nodes": sceneRootNodes}},
+		"nodes":       gltfNodes,
+		"meshes":      gltfMeshes,
+		"accessors":   gltfAccs,
+		"bufferViews": gltfBufViews,
+	}
+
+	binBytes := binBuf.Bytes()
+
+	if format == ".gltf" {
+		gltfDoc["buffers"] = []interface{}{map[string]interface{}{
+			"byteLength": len(binBytes),
+			"uri":        "data:application/octet-stream;base64," + base64.StdEncoding.EncodeToString(binBytes),
+		}}
+		return json.Marshal(gltfDoc)
+	}
+
+	gltfDoc["buffers"] = []interface{}{map[string]interface{}{
+		"byteLength": len(binBytes),
+	}}
+	jsonBytes, err := json.Marshal(gltfDoc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal glTF JSON: %w", err)
+	}
+	for len(jsonBytes)%4 != 0 {
+		jsonBytes = append(jsonBytes, ' ')
+	}
+	for len(binBytes)%4 != 0 {
+		binBytes = append(binBytes, 0)
+	}
+
+	totalLength := 12 + 8 + len(jsonBytes) + 8 + len(binBytes)
+	out := new(bytes.Buffer)
+	out.Grow(totalLength)
+
+	binary.Write(out, binary.LittleEndian, uint32(0x46546C67))
+	binary.Write(out, binary.LittleEndian, uint32(2))
+	binary.Write(out, binary.LittleEndian, uint32(totalLength))
+
+	binary.Write(out, binary.LittleEndian, uint32(len(jsonBytes)))
+	binary.Write(out, binary.LittleEndian, uint32(0x4E4F534A))
+	out.Write(jsonBytes)
+
+	binary.Write(out, binary.LittleEndian, uint32(len(binBytes)))
+	binary.Write(out, binary.LittleEndian, uint32(0x004E4942))
+	out.Write(binBytes)
+
+	return out.Bytes(), nil
+	// #endregion 🔖ExportDesignModel/BuildGLTF
+}
+
+// #endregion 🔖ExportDesignModel

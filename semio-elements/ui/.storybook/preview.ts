@@ -20,7 +20,7 @@ import type { Preview } from "@storybook/react-vite";
 import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
 
-import "../../../semio/js/globals.css";
+import "../globals.css";
 
 enum Theme {
   SYSTEM = "system",

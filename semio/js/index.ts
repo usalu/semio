@@ -14,37 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Barrel export for the core JavaScript workspace modules.
+// Barrel export for the domain-only JavaScript workspace modules.
 
 // #endregion 🔖Header
 
 // #region 🔖Exports
 // [👤semio📚js💻index🔖exports](semiorepo://p/u/semio/b/l/js/f/index.ts/s/Exports)
-// Public API surface re-exporting sketchpad components, semio domain, and shared configs.
-// MUST re-export all public types alongside their runtime counterparts.
+// Public API surface re-exporting only semio domain logic and types.
+// Exports MUST exclude all sketchpad UI runtime symbols.
 
-import "./i18n";
-
-export type { TooltipConfig } from "@semio-elements/ui";
-export type { AppConfig, CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/shared";
-export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";
-
-export { config as designConfig } from "./sketchpad/Design";
-export { config as docsConfig } from "./sketchpad/Docs";
-export { config as feedbackConfig } from "./sketchpad/Feedback";
-export { config as homeConfig } from "./sketchpad/Home";
-export { config as kitConfig } from "./sketchpad/Kit";
-export { config as qualityConfig } from "./sketchpad/Quality";
-export { config as typeConfig } from "./sketchpad/Type";
-
-export { areKitsEqual, exportKit, importKit } from "./semio";
-export type { KitImportResult } from "./semio";
-
-export { Action, ActionDropdown, ActionGroup, ActionGroupItem, Aside, Avatar, AvatarFallback, AvatarImage, Card, CardGrid, DraggableAvatar, FileTree, Section, Steps, TableAvatar, Tabs, TabsContent, TabsList, TabsTrigger } from "@semio-elements/ui";
-export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps, CardGridProps, CardProps, DraggableAvatarProps, FileTreeNode, SectionProps, StepsProps, TableAvatarProps } from "@semio-elements/ui";
-
-export { default as eslintConfig } from "./eslint.config";
-export { default as postcssConfig } from "./postcss.config";
-export { default as tailwindConfig } from "./tailwind.config";
+export * from "./semio";
 
 // #endregion 🔖Exports

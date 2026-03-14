@@ -1,11 +1,11 @@
 # Summary
 
-Javascript code with shared core (semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (semio/docs) that uses astro with starlight and mdx, and desktop (semio/desktop) that runs in electron.
+Domain-only semio JavaScript core with kit schemas, import/export, geometry, graph, and validation logic shared across apps and tooling.
 
 ### Policies
 
-- NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
-- ALWAYS use colors defined in `@theme inline {…}` from `js/semio/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `js/semio/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
+- NEVER use inline styling. Use tailwindcss (v4). v4 uses `semio-elements/ui/theme.css` for theming and not `{theme:{…}}` in `tailwindconfig`.
+- ALWAYS use colors defined in `@theme inline {…}` from `semio-elements/ui/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `semio-elements/ui/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
 - Borders use semantic kinds via Tailwind color tokens: `border-element` (hover color) and `border-window` (normal border color).
 - GoldenLayout window chrome uses the window background token to match window content surfaces.
 - GoldenLayout stack frames use inset strokes so window borders remain continuous on all four sides.
@@ -18,6 +18,8 @@ Javascript code with shared core (semio/js) that uses storybook and exports a ha
 - Navbar panel toggles always order panels as Details, Chat, then Settings for every app.
 
 # Docs
+
+The Sketchpad runtime, app configs, i18n, pages, and browser-facing tests now live in `semio/sketchpad`. `semio/js` is limited to reusable domain logic from `semio.ts` plus its domain tests.
 
 ## 📁js/semio/
 
@@ -698,7 +700,7 @@ The shared `Footer` component has a fixed `h-medium` height.
 ##### Styling
 
 - NEVER use colors and spacing directly. ALWAYS use semantic variables from `global.css`. Only `global.css` uses colors and pixels directly.
-- NEVER add semantic values and ALWAYS use hardcoded values in `theme.css`. NEVER use `theme.css` outside of `global.css`.
+- NEVER add semantic values and ALWAYS use hardcoded values in `semio-elements/ui/theme.css`. NEVER use `semio-elements/ui/theme.css` outside of `global.css`.
 - ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
   - Single: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
   - Tiny: 3 units - icon size in actions, action text size (e.g. `h-tiny`, `w-tiny`, `text-tiny`)
@@ -791,8 +793,8 @@ Every app supports transactions:
 
 Sketchpad UI elements resolve transactions via React context (not props):
 
-- `js/semio/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
-- `js/semio/sketchpad/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
+- `semio-elements/ui/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
+- `semio-elements/ui/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
 - `js/semio/sketchpad/Design.tsx` diagram piece nodes use non-inset rings (`ring-*`, not `ring-inset`) so rings remain visible on `Avatar` nodes with full-size `AvatarFallback` backgrounds.
 - Elements such as `Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, and `ActionDropdown` call `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps are responsible for scoping transactions by wrapping their UI subtree with `TransactionProvider` using the appropriate transaction hook (per-app or kit-level), so all descendant elements participate consistently.
@@ -2171,15 +2173,15 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 
 ### Sketchpad transactions
 
-- `semio/js/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
+- `semio-elements/ui/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
 - Sketchpad elements (`Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, ...) use `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps wrap their UI subtree with `TransactionProvider` using the appropriate transaction hook so all descendant elements participate in undo/redo consistently.
 
 ### Sketchpad selection + hover visuals
 
-- `semio/js/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
+- `semio-elements/ui/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
 - Hover and selection state for Home/Kit/Design/Type/Quality/Docs/Feedback is stored in the Sketchpad state machine; UI rows and diagram nodes dispatch hover events and visuals read from machine state.
-- `semio/js/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
+- `semio-elements/ui/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
 - `semio/js/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
 - Selection composition is unified across apps through shared semantics: `replace`, `additive`, `subtractive`, `intersect`.
 - Shared selection composition applies stable ordering (`previous` order first, then first-seen additive entries) and dedupes ids at composition boundaries.
@@ -2208,7 +2210,7 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 - Y.js is reserved for Kit data synchronization (per-kit `KitStore` documents).
 - Sketchpad UI state is persisted locally via `localStorage` key `semio.sketchpad.state.<id>` (no Y.js dependency for settings/navigation/panel sizes).
 - Global interaction mode is stored as `SketchpadState.device` and controlled via `useDevice()` / `SET_DEVICE` with i18n IDs `semio.sketchpad.settings.device.*`.
-- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `semio/js/sketchpad/elements.tsx`.
+- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `semio-elements/ui/elements.tsx`.
 
 KitStore keeps kit concepts in the `yConcepts` array as `ConceptStore` entries so snapshots expose full concept data (name, description, icon, attributes) and persistence rehydrates from that array instead of guid placeholders.
 
@@ -2239,7 +2241,7 @@ Panels are rendered under `LevelProvider level="panel"` so panel chrome and cont
 
 ### Size Constants
 
-All size constants are defined in `semio/js/globals.css` and derived from `--spacing`:
+All size constants are defined in `semio-elements/ui/globals.css` and derived from `--spacing`:
 
 - **Single**: 1 unit (e.g. `gap-1`) - spacing between elements and between icon and element
 - **Tiny**: 3 units (e.g. `h-tiny`, `w-tiny`, `text-tiny`) - icon size in actions, action text size

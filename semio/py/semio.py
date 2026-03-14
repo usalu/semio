@@ -3240,7 +3240,7 @@ class Type(
             image=obj.get("image", ""),
             isAbstract=obj.get("isAbstract", False),
             isVirtual=obj.get("isVirtual", False),
-            stock=obj.get("stock"),
+            stock=2147483647 if obj.get("stock") is None else obj.get("stock"),
             unit=obj.get("unit", ""),
             parent=parent_guid,
             folder=folder_guid,
@@ -10473,6 +10473,827 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
             zip_ref.writestr(filename, content)
 
 # endregion Kit Import/Export
+
+# region Kit Model Export
+# [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export)
+# 3D model export utilities for designs. Exports design scene graphs as GLB, GLTF, OBJ, STL, PLY, OFF.
+
+EXPORT_MODEL_FORMATS: dict[str, str] = {
+    ".glb": "model/gltf-binary",
+    ".gltf": "model/gltf+json",
+    ".obj": "model/obj",
+    ".stl": "model/stl",
+    ".ply": "application/x-ply",
+    ".off": "application/x-off",
+}
+"""Supported 3D export formats with their MIME types.
+EXPORT_MODEL_FORMATS MUST map file extension to MIME type.
+[👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exportmodelformats](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/c/EXPORT_MODEL_FORMATS)
+"""
+
+def _parse_glb(data: bytes) -> tuple[dict | None, bytes | None]:
+    """Parse GLB binary into JSON and binary chunks.
+    _parse_glb MUST return (json_dict, bin_chunk) or (None, None) for invalid input.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️parseglb](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_parse_glb)
+    """
+    import struct as _struct
+    if len(data) < 12:
+        return None, None
+    magic = _struct.unpack_from('<I', data, 0)[0]
+    if magic != 0x46546C67:
+        raise ValueError("Not a valid GLB")
+    offset = 12
+    json_data: dict | None = None
+    bin_chunk: bytes | None = None
+    while offset + 8 <= len(data):
+        chunk_length = _struct.unpack_from('<I', data, offset)[0]
+        chunk_type = _struct.unpack_from('<I', data, offset + 4)[0]
+        offset += 8
+        if chunk_type == 0x4E4F534A:
+            json_data = json.loads(data[offset:offset + chunk_length].decode('utf-8'))
+        elif chunk_type == 0x004E4942:
+            bin_chunk = bytes(data[offset:offset + chunk_length])
+        offset += chunk_length
+    return json_data, bin_chunk
+
+def _build_glb(gltf_json: dict, bin_data: bytes) -> bytes:
+    """Build GLB binary from a glTF JSON dict and binary buffer.
+    _build_glb MUST produce a spec-compliant GLB with JSON and BIN chunks.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️buildglb](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_build_glb)
+    """
+    import struct as _struct
+    json_str = json.dumps(gltf_json, separators=(',', ':'))
+    while len(json_str) % 4 != 0:
+        json_str += ' '
+    json_bytes = json_str.encode('utf-8')
+    bin_padded_len = ((len(bin_data) + 3) // 4) * 4
+    bin_padded = bin_data + b'\x00' * (bin_padded_len - len(bin_data))
+    total_length = 12 + 8 + len(json_bytes) + 8 + len(bin_padded)
+    result = bytearray(total_length)
+    _struct.pack_into('<I', result, 0, 0x46546C67)
+    _struct.pack_into('<I', result, 4, 2)
+    _struct.pack_into('<I', result, 8, total_length)
+    _struct.pack_into('<I', result, 12, len(json_bytes))
+    _struct.pack_into('<I', result, 16, 0x4E4F534A)
+    result[20:20 + len(json_bytes)] = json_bytes
+    bin_offset = 20 + len(json_bytes)
+    _struct.pack_into('<I', result, bin_offset, len(bin_padded))
+    _struct.pack_into('<I', result, bin_offset + 4, 0x004E4942)
+    result[bin_offset + 8:bin_offset + 8 + len(bin_padded)] = bin_padded
+    return bytes(result)
+
+def _blob_to_bytes(blob_str: str) -> bytes:
+    """Decode a base64 data URI or plain base64 string to raw bytes.
+    _blob_to_bytes MUST handle both data URI and raw base64 strings.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️blobtobytes](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_blob_to_bytes)
+    """
+    import base64 as _base64
+    if blob_str.startswith("data:"):
+        base64_str = blob_str[blob_str.index(',') + 1:]
+    else:
+        base64_str = blob_str
+    return _base64.b64decode(base64_str)
+
+def _plane_to_matrix_4x4(plane: "Plane") -> numpy.ndarray:
+    """Convert a Plane to a 4x4 column-major transformation matrix.
+    _plane_to_matrix_4x4 MUST produce an orthonormal basis with z = cross(x, y).
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️planetomatrix4x4](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_plane_to_matrix_4x4)
+    """
+    origin = numpy.array([plane.origin.x, plane.origin.y, plane.origin.z])
+    x_axis = numpy.array([plane.xAxis.x, plane.xAxis.y, plane.xAxis.z])
+    y_axis = numpy.array([plane.yAxis.x, plane.yAxis.y, plane.yAxis.z])
+    z_axis = numpy.cross(x_axis, y_axis)
+    nz = numpy.linalg.norm(z_axis)
+    if nz > 1e-10:
+        z_axis = z_axis / nz
+    nx = numpy.linalg.norm(x_axis)
+    if nx > 1e-10:
+        x_axis = x_axis / nx
+    y_axis = numpy.cross(z_axis, x_axis)
+    ny = numpy.linalg.norm(y_axis)
+    if ny > 1e-10:
+        y_axis = y_axis / ny
+    mat = numpy.eye(4)
+    mat[:3, 0] = x_axis
+    mat[:3, 1] = y_axis
+    mat[:3, 2] = z_axis
+    mat[:3, 3] = origin
+    return mat
+
+def _plane_to_glb_transform(plane: "Plane") -> list[float]:
+    """Convert a Plane to a column-major 4x4 float list for glTF node matrix.
+    _plane_to_glb_transform MUST return 16 floats in column-major order.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️planetoglbtransform](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_plane_to_glb_transform)
+    """
+    m = _plane_to_matrix_4x4(plane)
+    return m.flatten(order='F').tolist()
+
+def _identity_plane() -> "Plane":
+    """Create an identity plane at the world origin with standard axes.
+    _identity_plane MUST return a plane with origin=(0,0,0), xAxis=(1,0,0), yAxis=(0,1,0).
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️identityplane](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_identity_plane)
+    """
+    p = Plane()
+    p.origin = Point(x=0.0, y=0.0, z=0.0)
+    p.xAxis = Vector(x=1.0, y=0.0, z=0.0)
+    p.yAxis = Vector(x=0.0, y=1.0, z=0.0)
+    return p
+
+def _type_key_from_id(type_id: "TypeId") -> str:
+    """Build a unique string key from a TypeId (name:variant).
+    _type_key_from_id MUST produce a consistent key for type matching.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️typekeyfromid](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_type_key_from_id)
+    """
+    return f"{type_id.name}:{type_id.variant}"
+
+def _type_key_from_type(t: "Type") -> str:
+    """Build a unique string key from a Type (name:variant).
+    _type_key_from_type MUST produce a consistent key for type matching.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️typekeyfromtype](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_type_key_from_type)
+    """
+    return f"{t.name}:{t.variant}"
+
+def _find_matching_model(kit: "Kit", type_obj: "Type", tags: list[str]) -> typing.Optional["Model"]:
+    """Find the best matching model for a type given requested tags.
+    _find_matching_model MUST return the first model whose tags are all in the requested set, or the first model as fallback.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️findmatchingmodel](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_find_matching_model)
+    """
+    if not type_obj.models or len(type_obj.models) == 0:
+        return None
+    if not tags or len(tags) == 0:
+        return type_obj.models[0]
+    tags_set = set(tags)
+    for model in type_obj.models:
+        model_tag_names = model.tags
+        if model_tag_names and all(t in tags_set for t in model_tag_names):
+            return model
+    return type_obj.models[0]
+
+def _merge_glb_model(
+    source_json: dict,
+    source_bin: bytes | None,
+    target_buffer_views: list,
+    target_accessors: list,
+    target_meshes: list,
+    target_materials: list,
+    target_textures: list,
+    target_images: list,
+    target_samplers: list,
+    target_bin_chunks: list[bytes],
+    current_bin_offset: list[int],
+) -> int:
+    """Merge a source GLB's arrays into the target glTF arrays. Returns the starting mesh index.
+    _merge_glb_model MUST remap all indices (bufferView, accessor, material, texture, image, sampler).
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️mergeglbmodel](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_merge_glb_model)
+    """
+    import copy as _copy
+    buffer_view_offset = len(target_buffer_views)
+    accessor_offset = len(target_accessors)
+    material_offset = len(target_materials)
+    texture_offset = len(target_textures)
+    image_offset = len(target_images)
+    sampler_offset = len(target_samplers)
+
+    if source_bin:
+        for bv in source_json.get("bufferViews", []):
+            new_bv: dict = {
+                "buffer": 0,
+                "byteOffset": current_bin_offset[0] + bv.get("byteOffset", 0),
+                "byteLength": bv["byteLength"],
+            }
+            if "byteStride" in bv:
+                new_bv["byteStride"] = bv["byteStride"]
+            if "target" in bv:
+                new_bv["target"] = bv["target"]
+            target_buffer_views.append(new_bv)
+        aligned_len = ((len(source_bin) + 3) // 4) * 4
+        aligned = source_bin + b'\x00' * (aligned_len - len(source_bin))
+        target_bin_chunks.append(aligned)
+        current_bin_offset[0] += aligned_len
+
+    for acc in source_json.get("accessors", []):
+        new_acc = dict(acc)
+        new_acc["bufferView"] = acc.get("bufferView", 0) + buffer_view_offset
+        target_accessors.append(new_acc)
+
+    for sampler in source_json.get("samplers", []):
+        target_samplers.append(dict(sampler))
+
+    for img in source_json.get("images", []):
+        new_img = dict(img)
+        if "bufferView" in img:
+            new_img["bufferView"] = img["bufferView"] + buffer_view_offset
+        target_images.append(new_img)
+
+    for tex in source_json.get("textures", []):
+        new_tex = dict(tex)
+        if "source" in tex:
+            new_tex["source"] = tex["source"] + image_offset
+        if "sampler" in tex:
+            new_tex["sampler"] = tex["sampler"] + sampler_offset
+        target_textures.append(new_tex)
+
+    for mat in source_json.get("materials", []):
+        new_mat = _copy.deepcopy(mat)
+        def _remap_tex_info(info: dict | None) -> None:
+            if info and "index" in info:
+                info["index"] += texture_offset
+        pbr = new_mat.get("pbrMetallicRoughness")
+        if pbr:
+            _remap_tex_info(pbr.get("baseColorTexture"))
+            _remap_tex_info(pbr.get("metallicRoughnessTexture"))
+        _remap_tex_info(new_mat.get("normalTexture"))
+        _remap_tex_info(new_mat.get("occlusionTexture"))
+        _remap_tex_info(new_mat.get("emissiveTexture"))
+        target_materials.append(new_mat)
+
+    for mesh in source_json.get("meshes", []):
+        remapped_prims = []
+        for prim in mesh["primitives"]:
+            rp: dict = {}
+            if "attributes" in prim:
+                rp["attributes"] = {}
+                for k, v in prim["attributes"].items():
+                    rp["attributes"][k] = v + accessor_offset
+            if "indices" in prim:
+                rp["indices"] = prim["indices"] + accessor_offset
+            if "material" in prim:
+                rp["material"] = prim["material"] + material_offset
+            if "mode" in prim:
+                rp["mode"] = prim["mode"]
+            remapped_prims.append(rp)
+        new_mesh: dict = {"primitives": remapped_prims}
+        if mesh.get("name"):
+            new_mesh["name"] = mesh["name"]
+        target_meshes.append(new_mesh)
+
+    return len(target_meshes) - len(source_json.get("meshes", []))
+
+def _add_box_placeholder(
+    type_name: str,
+    target_buffer_views: list,
+    target_accessors: list,
+    target_meshes: list,
+    target_bin_chunks: list[bytes],
+    current_bin_offset: list[int],
+) -> int:
+    """Add a unit box placeholder mesh for a type without a GLB model. Returns the mesh index.
+    _add_box_placeholder MUST produce a valid glTF mesh with 24 vertices and 36 indices.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️addboxplaceholder](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_add_box_placeholder)
+    """
+    import struct as _struct
+    box = 0.5
+    positions = [
+        -box, -box,  box,  box, -box,  box,  box,  box,  box, -box,  box,  box,
+        -box, -box, -box, -box,  box, -box,  box,  box, -box,  box, -box, -box,
+        -box,  box, -box, -box,  box,  box,  box,  box,  box,  box,  box, -box,
+        -box, -box, -box,  box, -box, -box,  box, -box,  box, -box, -box,  box,
+         box, -box, -box,  box,  box, -box,  box,  box,  box,  box, -box,  box,
+        -box, -box, -box, -box, -box,  box, -box,  box,  box, -box,  box, -box,
+    ]
+    normals = [
+         0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,
+         0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,
+         0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,
+         0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,
+         1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,
+        -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0,
+    ]
+    indices = [
+         0,  1,  2,  0,  2,  3,  4,  5,  6,  4,  6,  7,
+         8,  9, 10,  8, 10, 11, 12, 13, 14, 12, 14, 15,
+        16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23,
+    ]
+
+    pos_buf = _struct.pack(f'<{len(positions)}f', *positions)
+    norm_buf = _struct.pack(f'<{len(normals)}f', *normals)
+    idx_buf = _struct.pack(f'<{len(indices)}H', *indices)
+
+    def _pad4(data: bytes) -> bytes:
+        pad_len = ((len(data) + 3) // 4) * 4
+        return data + b'\x00' * (pad_len - len(data))
+
+    pos_padded = _pad4(pos_buf)
+    pos_offset = current_bin_offset[0]
+    target_bin_chunks.append(pos_padded)
+    current_bin_offset[0] += len(pos_padded)
+
+    norm_padded = _pad4(norm_buf)
+    norm_offset = current_bin_offset[0]
+    target_bin_chunks.append(norm_padded)
+    current_bin_offset[0] += len(norm_padded)
+
+    idx_padded = _pad4(idx_buf)
+    idx_offset = current_bin_offset[0]
+    target_bin_chunks.append(idx_padded)
+    current_bin_offset[0] += len(idx_padded)
+
+    pos_bv_idx = len(target_buffer_views)
+    target_buffer_views.append({"buffer": 0, "byteOffset": pos_offset, "byteLength": len(pos_buf), "target": 34962})
+    norm_bv_idx = len(target_buffer_views)
+    target_buffer_views.append({"buffer": 0, "byteOffset": norm_offset, "byteLength": len(norm_buf), "target": 34962})
+    idx_bv_idx = len(target_buffer_views)
+    target_buffer_views.append({"buffer": 0, "byteOffset": idx_offset, "byteLength": len(idx_buf), "target": 34963})
+
+    pos_acc_idx = len(target_accessors)
+    target_accessors.append({
+        "bufferView": pos_bv_idx, "componentType": 5126, "count": 24, "type": "VEC3",
+        "max": [box, box, box], "min": [-box, -box, -box],
+    })
+    norm_acc_idx = len(target_accessors)
+    target_accessors.append({"bufferView": norm_bv_idx, "componentType": 5126, "count": 24, "type": "VEC3"})
+    idx_acc_idx = len(target_accessors)
+    target_accessors.append({"bufferView": idx_bv_idx, "componentType": 5123, "count": 36, "type": "SCALAR"})
+
+    mesh_idx = len(target_meshes)
+    target_meshes.append({
+        "name": type_name,
+        "primitives": [{"attributes": {"POSITION": pos_acc_idx, "NORMAL": norm_acc_idx}, "indices": idx_acc_idx}],
+    })
+    return mesh_idx
+
+def _read_accessor_floats(accessor: dict, buffer_views: list, bin_data: bytes) -> list[float]:
+    """Read float values from a glTF accessor (VEC3 componentType 5126).
+    _read_accessor_floats MUST return a flat list of floats.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️readaccessorfloats](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_read_accessor_floats)
+    """
+    import struct as _struct
+    bv = buffer_views[accessor["bufferView"]]
+    byte_offset = bv.get("byteOffset", 0) + accessor.get("byteOffset", 0)
+    count = accessor["count"]
+    acc_type = accessor["type"]
+    components = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}.get(acc_type, 1)
+    total = count * components
+    return list(_struct.unpack_from(f'<{total}f', bin_data, byte_offset))
+
+def _read_accessor_indices(accessor: dict, buffer_views: list, bin_data: bytes) -> list[int]:
+    """Read index values from a glTF accessor (SCALAR, various component types).
+    _read_accessor_indices MUST handle uint8, uint16, and uint32 component types.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️readaccessorindices](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_read_accessor_indices)
+    """
+    import struct as _struct
+    bv = buffer_views[accessor["bufferView"]]
+    byte_offset = bv.get("byteOffset", 0) + accessor.get("byteOffset", 0)
+    count = accessor["count"]
+    ct = accessor["componentType"]
+    if ct == 5121:
+        return list(_struct.unpack_from(f'<{count}B', bin_data, byte_offset))
+    elif ct == 5123:
+        return list(_struct.unpack_from(f'<{count}H', bin_data, byte_offset))
+    elif ct == 5125:
+        return list(_struct.unpack_from(f'<{count}I', bin_data, byte_offset))
+    return []
+
+def _extract_world_geometry(
+    gltf_json: dict,
+    bin_data: bytes,
+    nodes: list[dict],
+    scene_nodes: list[int],
+) -> tuple[list[float], list[float], list[int]]:
+    """Extract world-space positions, normals and triangle indices from glTF scene.
+    _extract_world_geometry MUST traverse the node hierarchy applying transforms.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️extractworldgeometry](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_extract_world_geometry)
+    """
+    meshes = gltf_json.get("meshes", [])
+    buffer_views = gltf_json.get("bufferViews", [])
+    accessors = gltf_json.get("accessors", [])
+    all_positions: list[float] = []
+    all_normals: list[float] = []
+    all_indices: list[int] = []
+
+    def _traverse(node_idx: int, parent_mat: numpy.ndarray) -> None:
+        node = nodes[node_idx]
+        local_mat = numpy.eye(4)
+        if "matrix" in node:
+            m = node["matrix"]
+            local_mat = numpy.array(m, dtype=float).reshape(4, 4, order='F')
+        local_world = parent_mat @ local_mat
+
+        if "mesh" in node:
+            mesh = meshes[node["mesh"]]
+            for prim in mesh.get("primitives", []):
+                attrs = prim.get("attributes", {})
+                vtx_offset = len(all_positions) // 3
+                if "POSITION" in attrs:
+                    pos = _read_accessor_floats(accessors[attrs["POSITION"]], buffer_views, bin_data)
+                    nrm: list[float] = []
+                    if "NORMAL" in attrs:
+                        nrm = _read_accessor_floats(accessors[attrs["NORMAL"]], buffer_views, bin_data)
+                    rot3 = local_world[:3, :3]
+                    trans = local_world[:3, 3]
+                    n_verts = len(pos) // 3
+                    for i in range(n_verts):
+                        v = numpy.array(pos[i*3:i*3+3])
+                        vw = rot3 @ v + trans
+                        all_positions.extend(vw.tolist())
+                        if nrm:
+                            n = numpy.array(nrm[i*3:i*3+3])
+                            nw = rot3 @ n
+                            ln = numpy.linalg.norm(nw)
+                            if ln > 1e-10:
+                                nw = nw / ln
+                            all_normals.extend(nw.tolist())
+                        else:
+                            all_normals.extend([0.0, 1.0, 0.0])
+                if "indices" in prim:
+                    idx = _read_accessor_indices(accessors[prim["indices"]], buffer_views, bin_data)
+                    all_indices.extend([j + vtx_offset for j in idx])
+
+        for child_idx in node.get("children", []):
+            _traverse(child_idx, local_world)
+
+    identity = numpy.eye(4)
+    for sn in scene_nodes:
+        _traverse(sn, identity)
+
+    return all_positions, all_normals, all_indices
+
+def _export_obj(positions: list[float], normals: list[float], indices: list[int]) -> bytes:
+    """Build a Wavefront OBJ file from geometry data.
+    _export_obj MUST produce valid OBJ text with v, vn, and f lines.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exportobj](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_export_obj)
+    """
+    lines: list[str] = ["# Generated by semio"]
+    n_verts = len(positions) // 3
+    for i in range(n_verts):
+        lines.append(f"v {positions[i*3]:.6f} {positions[i*3+1]:.6f} {positions[i*3+2]:.6f}")
+    has_normals = len(normals) == len(positions)
+    if has_normals:
+        for i in range(n_verts):
+            lines.append(f"vn {normals[i*3]:.6f} {normals[i*3+1]:.6f} {normals[i*3+2]:.6f}")
+    n_tris = len(indices) // 3
+    for i in range(n_tris):
+        i0 = indices[i*3] + 1
+        i1 = indices[i*3+1] + 1
+        i2 = indices[i*3+2] + 1
+        if has_normals:
+            lines.append(f"f {i0}//{i0} {i1}//{i1} {i2}//{i2}")
+        else:
+            lines.append(f"f {i0} {i1} {i2}")
+    lines.append("")
+    return "\n".join(lines).encode("utf-8")
+
+def _export_stl(positions: list[float], normals: list[float], indices: list[int]) -> bytes:
+    """Build a binary STL file from geometry data.
+    _export_stl MUST produce a valid 84-byte-header + triangle binary STL.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exportstl](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_export_stl)
+    """
+    import struct as _struct
+    n_tris = len(indices) // 3
+    buf = bytearray(84 + n_tris * 50)
+    header = b"semio STL export" + b'\x00' * (80 - len(b"semio STL export"))
+    buf[0:80] = header
+    _struct.pack_into('<I', buf, 80, n_tris)
+    offset = 84
+    for i in range(n_tris):
+        i0, i1, i2 = indices[i*3], indices[i*3+1], indices[i*3+2]
+        v0 = numpy.array(positions[i0*3:i0*3+3])
+        v1 = numpy.array(positions[i1*3:i1*3+3])
+        v2 = numpy.array(positions[i2*3:i2*3+3])
+        n = numpy.cross(v1 - v0, v2 - v0)
+        ln = numpy.linalg.norm(n)
+        if ln > 1e-10:
+            n = n / ln
+        _struct.pack_into('<3f', buf, offset, *n)
+        offset += 12
+        _struct.pack_into('<3f', buf, offset, *v0)
+        offset += 12
+        _struct.pack_into('<3f', buf, offset, *v1)
+        offset += 12
+        _struct.pack_into('<3f', buf, offset, *v2)
+        offset += 12
+        _struct.pack_into('<H', buf, offset, 0)
+        offset += 2
+    return bytes(buf)
+
+def _export_ply(positions: list[float], normals: list[float], indices: list[int]) -> bytes:
+    """Build a PLY (ASCII) file from geometry data.
+    _export_ply MUST produce a valid PLY header followed by vertex and face data.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exportply](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_export_ply)
+    """
+    n_verts = len(positions) // 3
+    n_faces = len(indices) // 3
+    has_normals = len(normals) == len(positions)
+    lines: list[str] = [
+        "ply",
+        "format ascii 1.0",
+        "comment Generated by semio",
+        f"element vertex {n_verts}",
+        "property float x",
+        "property float y",
+        "property float z",
+    ]
+    if has_normals:
+        lines.extend(["property float nx", "property float ny", "property float nz"])
+    lines.extend([
+        f"element face {n_faces}",
+        "property list uchar int vertex_indices",
+        "end_header",
+    ])
+    for i in range(n_verts):
+        line = f"{positions[i*3]:.6f} {positions[i*3+1]:.6f} {positions[i*3+2]:.6f}"
+        if has_normals:
+            line += f" {normals[i*3]:.6f} {normals[i*3+1]:.6f} {normals[i*3+2]:.6f}"
+        lines.append(line)
+    for i in range(n_faces):
+        lines.append(f"3 {indices[i*3]} {indices[i*3+1]} {indices[i*3+2]}")
+    lines.append("")
+    return "\n".join(lines).encode("utf-8")
+
+def _export_off(positions: list[float], normals: list[float], indices: list[int]) -> bytes:
+    """Build an OFF file from geometry data.
+    _export_off MUST produce a valid OFF header followed by vertex and face data.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exportoff](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_export_off)
+    """
+    n_verts = len(positions) // 3
+    n_faces = len(indices) // 3
+    lines: list[str] = [
+        "OFF",
+        f"{n_verts} {n_faces} 0",
+    ]
+    for i in range(n_verts):
+        lines.append(f"{positions[i*3]:.6f} {positions[i*3+1]:.6f} {positions[i*3+2]:.6f}")
+    for i in range(n_faces):
+        lines.append(f"3 {indices[i*3]} {indices[i*3+1]} {indices[i*3+2]}")
+    lines.append("")
+    return "\n".join(lines).encode("utf-8")
+
+def export_design_model(
+    kit: "Kit",
+    design_id: str,
+    format: str = ".glb",
+    tags: list[str] | None = None,
+    options: dict | None = None,
+) -> bytes:
+    """Export the 3D model of a design to a specified format.
+    export_design_model MUST produce a valid 3D file. Uses block definitions for types and instances for pieces.
+    Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🪨exportdesignmodel](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/export_design_model)
+    """
+    if tags is None:
+        tags = []
+    if options is None:
+        options = {}
+    if format not in EXPORT_MODEL_FORMATS:
+        raise ValueError(f"Unsupported export format '{format}'. Supported: {list(EXPORT_MODEL_FORMATS.keys())}")
+
+    design: Design | None = None
+    for d in kit.designs:
+        if d.name == design_id or d.id() == design_id:
+            design = d
+            break
+    if design is None:
+        raise ValueError(f"Design '{design_id}' not found in kit")
+
+    pieces = design.pieces or []
+    connections = design.connections or []
+    types_list = kit.types or []
+
+    if len(pieces) == 0:
+        empty_json = {"asset": {"version": "2.0", "generator": "semio"}, "scene": 0, "scenes": [{"nodes": []}], "nodes": []}
+        if format == ".gltf":
+            return json.dumps(empty_json).encode("utf-8")
+        return _build_glb(empty_json, b'')
+
+    types_dict: dict[str, Type] = {}
+    for t in types_list:
+        types_dict[_type_key_from_type(t)] = t
+
+    pieces_dict: dict[str, Piece] = {}
+    for p in pieces:
+        pieces_dict[p.id_] = p
+
+    adjacency: dict[str, list[tuple[Connection, str]]] = {}
+    for p in pieces:
+        adjacency[p.id_] = []
+    for conn in connections:
+        connected_id = conn.connected.piece.id_
+        connecting_id = conn.connecting.piece.id_
+        if connected_id in adjacency:
+            adjacency[connected_id].append((conn, connecting_id))
+        if connecting_id in adjacency:
+            adjacency[connecting_id].append((conn, connected_id))
+
+    piece_planes: dict[str, Plane] = {}
+    parent_of: dict[str, str] = {}
+    children_of: dict[str, list[str]] = {}
+    for p in pieces:
+        children_of[p.id_] = []
+
+    visited: set[str] = set()
+    roots: list[str] = []
+
+    def _get_type(piece: Piece) -> Type | None:
+        if piece.type is None:
+            return None
+        return types_dict.get(_type_key_from_id(piece.type))
+
+    def _get_connector(type_obj: Type | None, connector_id: ConnectorId | None) -> Connector | None:
+        if type_obj is None:
+            return None
+        if not type_obj.connectors:
+            return None
+        if connector_id is None:
+            return type_obj.connectors[0]
+        return next((c for c in type_obj.connectors if c.id_ == connector_id.id_), None)
+
+    queue: list[str] = []
+    for p in pieces:
+        if p.plane is not None:
+            piece_planes[p.id_] = p.plane
+            visited.add(p.id_)
+            queue.append(p.id_)
+            roots.append(p.id_)
+    if len(queue) == 0 and len(pieces) > 0:
+        piece_planes[pieces[0].id_] = _identity_plane()
+        visited.add(pieces[0].id_)
+        queue.append(pieces[0].id_)
+        roots.append(pieces[0].id_)
+
+    while queue:
+        current_id = queue.pop(0)
+        current_plane = piece_planes[current_id]
+        for conn, neighbor_id in adjacency.get(current_id, []):
+            if neighbor_id in visited:
+                continue
+            is_parent = conn.connected.piece.id_ == current_id
+            if not is_parent:
+                continue
+
+            parent_id = current_id
+            child_id = neighbor_id
+            parent_piece = pieces_dict[parent_id]
+            child_piece = pieces_dict[child_id]
+            parent_type = _get_type(parent_piece)
+            child_type = _get_type(child_piece)
+            parent_connector = _get_connector(parent_type, conn.connected.connector)
+            child_connector = _get_connector(child_type, conn.connecting.connector)
+
+            if parent_connector and child_connector:
+                child_plane = computeChildPlane(current_plane, parent_connector, child_connector, conn)
+                piece_planes[child_id] = child_plane
+            else:
+                piece_planes[child_id] = current_plane
+
+            parent_of[child_id] = parent_id
+            children_of[parent_id].append(child_id)
+            visited.add(child_id)
+            queue.append(child_id)
+
+    for p in pieces:
+        if p.id_ not in visited:
+            piece_planes[p.id_] = _identity_plane()
+            roots.append(p.id_)
+
+    target_buffer_views: list[dict] = []
+    target_accessors: list[dict] = []
+    target_meshes: list[dict] = []
+    target_materials: list[dict] = []
+    target_textures: list[dict] = []
+    target_images: list[dict] = []
+    target_samplers: list[dict] = []
+    target_bin_chunks: list[bytes] = []
+    current_bin_offset: list[int] = [0]
+
+    type_mesh_index: dict[str, int] = {}
+
+    files_list = kit.files_ or []
+
+    for piece in pieces:
+        if piece.type is None:
+            continue
+        tk = _type_key_from_id(piece.type)
+        if tk in type_mesh_index:
+            continue
+
+        type_obj = types_dict.get(tk)
+        if type_obj is None:
+            continue
+
+        model = _find_matching_model(kit, type_obj, tags)
+        if model is None:
+            type_mesh_index[tk] = _add_box_placeholder(
+                type_obj.name, target_buffer_views, target_accessors,
+                target_meshes, target_bin_chunks, current_bin_offset,
+            )
+            continue
+
+        file_obj = next((f for f in files_list if f.name == model.file or f.guid == model.file), None)
+        if file_obj is None or not file_obj.blob:
+            type_mesh_index[tk] = -1
+            continue
+
+        file_bytes = _blob_to_bytes(file_obj.blob)
+        ext = file_obj.name.rsplit('.', 1)[-1].lower() if '.' in file_obj.name else ""
+
+        if ext == "glb":
+            src_json, src_bin = _parse_glb(file_bytes)
+            if src_json:
+                mesh_start = _merge_glb_model(
+                    src_json, src_bin,
+                    target_buffer_views, target_accessors, target_meshes,
+                    target_materials, target_textures, target_images, target_samplers,
+                    target_bin_chunks, current_bin_offset,
+                )
+                type_mesh_index[tk] = mesh_start
+            else:
+                type_mesh_index[tk] = -1
+        else:
+            type_mesh_index[tk] = -1
+
+    gl_nodes: list[dict] = []
+    piece_node_index: dict[str, int] = {}
+
+    def _build_node(piece_id: str) -> int:
+        if piece_id in piece_node_index:
+            return piece_node_index[piece_id]
+
+        piece = pieces_dict[piece_id]
+        world_plane = piece_planes[piece_id]
+        p_guid = parent_of.get(piece_id)
+        children = children_of.get(piece_id, [])
+
+        if p_guid and p_guid in piece_planes:
+            parent_world = _plane_to_matrix_4x4(piece_planes[p_guid])
+            child_world = _plane_to_matrix_4x4(world_plane)
+            inv_parent = numpy.linalg.inv(parent_world)
+            local_mat = inv_parent @ child_world
+            local_matrix = local_mat.flatten(order='F').tolist()
+        else:
+            local_matrix = _plane_to_glb_transform(world_plane)
+
+        child_node_indices: list[int] = []
+        for child_id in children:
+            child_node_indices.append(_build_node(child_id))
+
+        node: dict = {"name": piece.id_}
+        node["matrix"] = local_matrix
+
+        if piece.type is not None:
+            tk = _type_key_from_id(piece.type)
+            if tk in type_mesh_index and type_mesh_index[tk] >= 0:
+                node["mesh"] = type_mesh_index[tk]
+        if child_node_indices:
+            node["children"] = child_node_indices
+
+        idx = len(gl_nodes)
+        gl_nodes.append(node)
+        piece_node_index[piece_id] = idx
+        return idx
+
+    scene_nodes: list[int] = []
+    for root_id in roots:
+        scene_nodes.append(_build_node(root_id))
+
+    total_bin_length = sum(len(c) for c in target_bin_chunks)
+    merged_bin = bytearray(total_bin_length)
+    off = 0
+    for chunk in target_bin_chunks:
+        merged_bin[off:off + len(chunk)] = chunk
+        off += len(chunk)
+
+    gltf_json: dict = {
+        "asset": {"version": "2.0", "generator": "semio"},
+        "scene": 0,
+        "scenes": [{"name": design.name, "nodes": scene_nodes}],
+        "nodes": gl_nodes,
+    }
+    if target_meshes:
+        gltf_json["meshes"] = target_meshes
+    if target_accessors:
+        gltf_json["accessors"] = target_accessors
+    if target_buffer_views:
+        gltf_json["bufferViews"] = target_buffer_views
+    if target_materials:
+        gltf_json["materials"] = target_materials
+    if target_textures:
+        gltf_json["textures"] = target_textures
+    if target_images:
+        gltf_json["images"] = target_images
+    if target_samplers:
+        gltf_json["samplers"] = target_samplers
+    if total_bin_length > 0:
+        gltf_json["buffers"] = [{"byteLength": total_bin_length}]
+
+    if format == ".gltf":
+        return json.dumps(gltf_json).encode("utf-8")
+
+    if format in (".obj", ".stl", ".ply", ".off"):
+        positions, normals_data, indices = _extract_world_geometry(
+            gltf_json, bytes(merged_bin), gl_nodes, scene_nodes,
+        )
+        if format == ".obj":
+            return _export_obj(positions, normals_data, indices)
+        elif format == ".stl":
+            return _export_stl(positions, normals_data, indices)
+        elif format == ".ply":
+            return _export_ply(positions, normals_data, indices)
+        elif format == ".off":
+            return _export_off(positions, normals_data, indices)
+
+    return _build_glb(gltf_json, bytes(merged_bin))
+
+# endregion Kit Model Export
 
 # region Spatial Math
 # [👤semio📚py💻semio🔖domain🔖validation🔖spatialmath](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Spatial%20Math)

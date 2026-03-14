@@ -97,10 +97,113 @@ import { useTranslation } from "react-i18next";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { Link, useNavigate } from "react-router";
 import * as THREE from "three";
-import { Expertise, setExpertiseProvider, useLabel } from "../../semio/js/i18n";
-import { Camera, cn, Plane, Point, Vector } from "../../semio/js/semio";
+import { ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 // #endregion Imports
+
+// #region Utilities
+
+// Generic utility and type definitions that make semio-elements/ui self-contained.
+// These MUST NOT depend on any external semio package.
+
+/**
+ * Merges CSS class names using Tailwind merge.
+ **/
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+/**
+ * Expertise levels for label resolution.
+ **/
+export enum Expertise {
+  BEGINNER = "beginner",
+  NORMAL = "normal",
+  EXPERT = "expert",
+}
+
+let _expertiseProvider: (() => Expertise) | undefined;
+
+/**
+ * Registers a function that returns the current expertise level.
+ **/
+export function setExpertiseProvider(fn: () => Expertise) {
+  _expertiseProvider = fn;
+}
+
+/**
+ * React hook that resolves a localized label by i18n key and expertise level.
+ **/
+export function useLabel(id: string): string | undefined {
+  const { t } = useTranslation();
+  const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
+  const value = t(id as any) as any;
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value && typeof value === "object" && "label" in value) {
+    const label = value.label;
+
+    if (typeof label === "string") {
+      return label;
+    }
+
+    if (label && typeof label === "object") {
+      if (expertise === Expertise.BEGINNER && "beginner" in label && label.beginner !== undefined) {
+        return String(label.beginner);
+      }
+      if ("normal" in label && label.normal !== undefined) {
+        return String(label.normal);
+      }
+      if ("beginner" in label && label.beginner !== undefined) {
+        return String(label.beginner);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * 3D point with x, y, z coordinates.
+ **/
+export interface Point {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/**
+ * 3D direction vector with x, y, z components.
+ **/
+export interface Vector {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/**
+ * 3D coordinate plane defined by an origin point and two axis vectors.
+ **/
+export interface Plane {
+  origin: Point;
+  xAxis: Vector;
+  yAxis: Vector;
+}
+
+/**
+ * 3D camera defined by position, forward direction, and up direction.
+ **/
+export interface Camera {
+  position: Point;
+  forward: Vector;
+  up: Vector;
+}
+
+// #endregion Utilities
 
 // #region Section Specificity
 
@@ -721,18 +824,11 @@ export interface DescriptionTooltipData {
 }
 
 /**
- * getExpertiseFunction holds the data fields for a getExpertiseFunction record.
- * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🪨getexpertisefunction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/getExpertiseFunction)
- **/
-let getExpertiseFunction: (() => Expertise) | undefined;
-
-/**
  * Registers the expertise provider function for tooltips.
  *
  *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️settooltipmodeprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/setTooltipModeProvider)
  **/
 export function setTooltipModeProvider(fn: () => Expertise) {
-  getExpertiseFunction = fn;
   setExpertiseProvider(fn);
 }
 
@@ -742,8 +838,8 @@ export function setTooltipModeProvider(fn: () => Expertise) {
  *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️usetooltipmode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/useTooltipMode)
  **/
 export function useTooltipMode(): Expertise {
-  if (!getExpertiseFunction) return Expertise.BEGINNER;
-  return getExpertiseFunction();
+  if (!_expertiseProvider) return Expertise.BEGINNER;
+  return _expertiseProvider();
 }
 
 /**
@@ -3351,8 +3447,11 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
   const borderClass = getLevelBorderElementClass(level);
   const divideClass = getLevelDivideElementClass(level);
 
+  const controlledValue = (restProps as any).value;
+  const rootDataState = kind === "single" && controlledValue !== undefined ? (controlledValue ? "on" : "off") : undefined;
+
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)} {...(restProps as any)}>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-state={rootDataState} id={id} type={kind} className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)} {...(restProps as any)}>
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -3482,6 +3581,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       defaultValue,
       pressed,
       defaultPressed,
+      onPressedChange,
       id,
       showLabel,
       className,
@@ -8419,5 +8519,34 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
 );
 
 // #endregion Table
+
+// #region Canvas
+
+/**
+ * Container component for canvas window layout.
+ **/
+export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ children, id }) => {
+  return (
+    <div id={id} className="h-full w-full box-border p-single">
+      {children}
+    </div>
+  );
+};
+
+/**
+ * Layout component arranging windows horizontally.
+ **/
+export const HorizontalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <div className="flex flex-row h-full w-full gap-single">{children}</div>;
+};
+
+/**
+ * Layout component arranging windows vertically.
+ **/
+export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
+};
+
+// #endregion Canvas
 
 // #endregion Window Components

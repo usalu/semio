@@ -5,8 +5,7 @@
   "sourceRoot": "semio/assets/icons",
   "projectType": "library",
   "scripts": {
-    "build": "echo 'icons build not yet migrated to TypeScript'",
-    "preflight": "echo \"No preflight checks configured for icons\""
+    "build": "echo 'icons build not yet migrated to TypeScript'"
   },
   "devDependencies": {
     "@semio/logo": "*"

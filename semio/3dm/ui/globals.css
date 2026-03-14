@@ -1,2 +1,1 @@
-@import "tailwindcss" source("../../js");
-@import "../../js/globals.css";
+@import "../../../semio-elements/ui/globals.css";

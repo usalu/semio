@@ -384,4 +384,47 @@ public class Tests
         }
     }
 
+    public class ExportDesignModel
+    {
+        [Fact]
+        public void Nakagin_Capsule_Tower_Export_Glb_Valid_Header()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var result = Kit.ExportDesignModel(kit, design.Guid, ".glb");
+            Assert.NotNull(result);
+            Assert.True(result.Length > 0, "Result must not be empty");
+            Assert.True(result.Length >= 12, "GLB header requires at least 12 bytes");
+            Assert.Equal((byte)'g', result[0]);
+            Assert.Equal((byte)'l', result[1]);
+            Assert.Equal((byte)'T', result[2]);
+            Assert.Equal((byte)'F', result[3]);
+            var version = BitConverter.ToUInt32(result, 4);
+            Assert.Equal(2u, version);
+            var totalLength = BitConverter.ToUInt32(result, 8);
+            Assert.Equal((uint)result.Length, totalLength);
+        }
+
+        [Fact]
+        public void Nakagin_Capsule_Tower_Export_Gltf_Valid_Json()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
+            Assert.NotNull(result);
+            Assert.True(result.Length > 0, "Result must not be empty");
+            var json = System.Text.Encoding.UTF8.GetString(result);
+            var parsed = JsonConvert.DeserializeObject(json);
+            Assert.NotNull(parsed);
+        }
+
+        [Fact]
+        public void Invalid_Format_Throws()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            Assert.Throws<ArgumentException>(() => Kit.ExportDesignModel(kit, design.Guid, ".invalid"));
+        }
+    }
+
 }

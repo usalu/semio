@@ -453,15 +453,15 @@ BuildMonorepoTreeCached MUST perform the BuildMonorepoTreeCached operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Render)
 
-Render MUST produce a complete  output.
+Render MUST produce a complete output.
 
 ## [🧰semiorepo⌨️cli💻main🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Render)
 
-Render MUST produce a complete  output.
+Render MUST produce a complete output.
 
 ## [🧰semiorepo⌨️cli💻main🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Render)
 
-Render MUST produce a complete  output.
+Render MUST produce a complete output.
 
 ## [🧰semiorepo⌨️cli💻main🛠️mermaidescapelabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mermaidEscapeLabel)
 
@@ -3189,7 +3189,7 @@ Extract MUST return the extracted component from the input.
 
 ## [🧰semiorepo⌨️cli💻main🛠️repo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Repo_)
 
-Repo_ MUST complete the operation successfully.
+Repo\_ MUST complete the operation successfully.
 
 ## [🧰semiorepo⌨️cli💻main🛠️bundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Bundles)
 
@@ -3671,7 +3671,7 @@ buildConflictWarnings MUST perform the buildConflictWarnings operation.
 
 ## [🧰semiorepo⌨️server💻main🔖server](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Server)
 
-HTTP server with ticket lifecycle, diff ingestion, pre-checkpoint checks, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
+HTTP server with ticket lifecycle, diff ingestion, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
 
 ## [🧰semiorepo⌨️server💻main🔖processing](semiorepo://p/i/semio-repo/b/b/server/f/main.go/s/Processing)
 
@@ -3917,10 +3917,6 @@ handleTicketClaims MUST perform the handleTicketClaims operation.
 ## [🧰semiorepo⌨️server💻main🛠️handlediffingest](semiorepo://p/i/semio-repo/b/b/server/f/main.go/d/i/handleDiffIngest)
 
 handleDiffIngest MUST perform the handleDiffIngest operation.
-
-## [🧰semiorepo⌨️server💻main🛠️handleprecheckpoint](semiorepo://p/i/semio-repo/b/b/server/f/main.go/d/i/handlePrecheckpoint)
-
-handlePrecheckpoint MUST perform the handlePrecheckpoint operation.
 
 ## [🧰semiorepo⌨️server💻main🛠️handlereindex](semiorepo://p/i/semio-repo/b/b/server/f/main.go/d/i/handleReindex)
 

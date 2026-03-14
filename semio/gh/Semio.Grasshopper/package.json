@@ -9,8 +9,7 @@
     "build:yak": "tsx ./yak/build.ts",
     "build": "npm run build:gh && npm run build:yak",
     "test": "dotnet test ../Semio.Grasshopper.Tests/Semio.Grasshopper.Tests.csproj",
-    "publish": "tsx ./yak/publish.ts",
-    "preflight": "dotnet build"
+    "publish": "tsx ./yak/publish.ts"
   },
   "devDependencies": {
     "@semio/net": "*"

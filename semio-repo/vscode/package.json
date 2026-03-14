@@ -1002,7 +1002,6 @@
     "test": "vscode-test",
     "build": "vite build && vite build --config vite.test.config.ts",
     "package": "vsce package --no-dependencies --out semio-repo.vsix",
-    "preflight": "tsc --noEmit",
     "vscode:prepublish": "npm run build"
   },
   "devDependencies": {

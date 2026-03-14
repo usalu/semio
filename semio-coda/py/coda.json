@@ -8,13 +8,12 @@
         },
         "object": {
             "measure_kinds": [
-                "add",
-                "remove"
+                "change"
             ]
         },
-        "array": {
+        "collection": {
             "measure_kinds": [
-                "append",
+                "add_item",
                 "remove_item"
             ]
         },
@@ -26,53 +25,10 @@
         },
         "category": {
             "measure_kinds": [
-                "include",
-                "exclude"
+                "change"
             ]
         }
     },
-    "measures": [
-        {
-            "id": "increase-gross-floor-area",
-            "kind": "increase",
-            "description": "Increase gross floor area."
-        },
-        {
-            "id": "decrease-gross-floor-area",
-            "kind": "decrease",
-            "description": "Decrease gross floor area."
-        },
-        {
-            "id": "add-space",
-            "kind": "append",
-            "description": "Add one space to a collection of spaces."
-        },
-        {
-            "id": "remove-space",
-            "kind": "remove_item",
-            "description": "Remove one space from a collection of spaces."
-        },
-        {
-            "id": "raise-building-class",
-            "kind": "raise",
-            "description": "Raise building class to a higher level."
-        },
-        {
-            "id": "lower-building-class",
-            "kind": "lower",
-            "description": "Lower building class to a lower level."
-        },
-        {
-            "id": "include-space-category",
-            "kind": "include",
-            "description": "Include a category in the allowed space categories."
-        },
-        {
-            "id": "exclude-space-category",
-            "kind": "exclude",
-            "description": "Exclude a category from the allowed space categories."
-        }
-    ],
     "properties": [
         {
             "id": "building",
@@ -88,85 +44,49 @@
                     "id": "gross-floor-area",
                     "name": "Gross Floor Area",
                     "kind": "number",
-                    "measure_kinds": [
-                        "increase",
-                        "decrease"
-                    ],
                     "description": "The total floor area of the building."
                 },
                 {
                     "id": "energy_demand",
                     "name": "Energy Demand",
                     "kind": "number",
-                    "measure_kinds": [
-                        "increase",
-                        "decrease"
-                    ],
                     "description": "The energy demand of the building per square meter per year."
                 },
                 {
                     "id": "storeys",
                     "name": "Storeys",
-                    "kind": "array",
-                    "measure_kinds": [
-                        "append",
-                        "remove_item"
-                    ],
+                    "kind": "collection",
                     "description": "The storeys of the building.",
                     "items": {
                         "kind": "object",
-                        "measure_kinds": [
-                            "add",
-                            "remove"
-                        ],
                         "properties": [
                             {
                                 "id": "floor_height",
                                 "name": "Floor Height",
                                 "kind": "number",
-                                "measure_kinds": [
-                                    "increase",
-                                    "decrease"
-                                ],
                                 "description": "The height of the floor of the storey."
                             },
                             {
                                 "id": "gross-floor-area",
                                 "name": "Gross Floor Area",
                                 "kind": "number",
-                                "measure_kinds": [
-                                    "increase",
-                                    "decrease"
-                                ],
                                 "description": "The total floor area of the storey."
                             },
                             {
                                 "id": "volume",
                                 "name": "Volume",
                                 "kind": "number",
-                                "measure_kinds": [
-                                    "increase",
-                                    "decrease"
-                                ],
                                 "description": "The volume of the storey."
                             },
                             {
                                 "id": "occupancy",
                                 "name": "Occupancy",
                                 "kind": "number",
-                                "measure_kinds": [
-                                    "increase",
-                                    "decrease"
-                                ]
                             },
                             {
                                 "id": "space-category",
                                 "name": "Space Category",
                                 "kind": "category",
-                                "measure_kinds": [
-                                    "include",
-                                    "exclude"
-                                ],
                                 "values": [
                                     "residential",
                                     "office",
@@ -176,37 +96,21 @@
                             {
                                 "id": "spaces",
                                 "name": "Spaces",
-                                "kind": "array",
-                                "measure_kinds": [
-                                    "append",
-                                    "remove_item"
-                                ],
+                                "kind": "collection",
                                 "description": "The spaces of the storey.",
                                 "items": {
                                     "kind": "object",
-                                    "measure_kinds": [
-                                        "add",
-                                        "remove"
-                                    ],
                                     "properties": [
                                         {
                                             "id": "gross-floor-area",
                                             "name": "Gross Floor Area",
                                             "kind": "number",
-                                            "measure_kinds": [
-                                                "increase",
-                                                "decrease"
-                                            ],
                                             "description": "The total floor area of the space."
                                         },
                                         {
                                             "id": "occupancy",
                                             "name": "Occupancy",
-                                            "kind": "number",
-                                            "measure_kinds": [
-                                                "increase",
-                                                "decrease"
-                                            ]
+                                            "kind": "number"
                                         }
                                     ]
                                 }
@@ -331,10 +235,6 @@
                     "id": "program",
                     "name": "Program",
                     "kind": "number",
-                    "measure_kinds": [
-                        "increase",
-                        "decrease"
-                    ],
                     "description": "The sum of areas of the same program."
                 }
             ],
@@ -424,16 +324,12 @@
             // (12) Vollgeschosse sind Geschosse, deren Oberkante im Mittel mehr als 1,
             //             40 m über die Geländeoberfläche hinausragt und die über mindestens zwei Drittel ihrer Grundfläche eine lichte Höhe von mindestens 2,
             //             30 m haben. Ein gegenüber den Außenwänden zurückgesetztes oberstes Geschoss (Staffelgeschoss) und Geschosse im Dachraum sind nur dann Vollgeschosse, wenn sie die lichte Höhe gemäß Satz 1 über mindestens zwei Drittel der Grundfläche des darunter liegenden Geschosses haben.
-            "id": "berlin-building-code",
+            "id": "ldrbmrtv.blnbo",
             "properties": [
                 {
                     "id": "height",
                     "name": "Height",
                     "kind": "number",
-                    "measure_kinds": [
-                        "increase",
-                        "decrease"
-                    ],
                     "description": "Height is the distance from the average ground surface to the top edge of the finished floor of the highest storey in which a habitable room is possible.",
                     "url": "https://gesetze.berlin.de/perma?d=jlr-BauOBE2005V11P2"
                 },

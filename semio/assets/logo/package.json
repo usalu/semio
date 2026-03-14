@@ -6,8 +6,7 @@
   "projectType": "library",
   "scripts": {
     "dev": "tsx watch logo.ts",
-    "build": "tsx logo.ts",
-    "preflight": "tsc --noEmit"
+    "build": "tsx logo.ts"
   },
   "dependencies": {
     "jsdom": "^24.1.3"

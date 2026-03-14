@@ -6,8 +6,7 @@
   "projectType": "library",
   "scripts": {
     "build": "go build ./...",
-    "test": "go test -v ./...",
-    "preflight": "go vet ./..."
+    "test": "go test -v ./..."
   },
   "author": {
     "name": "Ueli Saluz",

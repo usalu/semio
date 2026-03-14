@@ -7399,6 +7399,30 @@
       "response": {
         "allowed": true
       }
+    },
+    {
+      "native": {
+        "event": {
+          "session_id": "6907512b-a15d-4a4c-88bd-8176283a86f3",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "claude-code",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰12⌚51⏱️37",
+        "session": "⚪6907512ba15d4a4c88bd8176283a86f3",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/6907512b-a15d-4a4c-88bd-8176283a86f3.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
     }
   ]
 }

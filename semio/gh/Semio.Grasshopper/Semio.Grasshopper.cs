@@ -10095,6 +10095,47 @@ public class FlattenDesignComponent : ScriptingComponent
     }
 }
 
+/// <summary>Exports the 3D model of a design to a format (.glb by default).</summary>
+public class ExportDesignModelComponent : ScriptingComponent
+{
+    public ExportDesignModelComponent() : base("Export Design Model", "ExpMdl", "Exports the 3D model of a design to a format.") { }
+    public override Guid ComponentGuid => new("B3D4E5F6-7A8B-49C1-A2D3-E4F5A6B7C8D9");
+    protected override Bitmap Icon => null;
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "Id", "Design GUID", GH_ParamAccess.item);
+        pManager.AddTextParameter("Format", "F", "Output format (.glb, .gltf, .obj, .stl, .3dm)", GH_ParamAccess.item, ".glb");
+        pManager.AddTextParameter("Tags", "T", "Tags to filter models", GH_ParamAccess.list);
+        pManager[2].Optional = true;
+        pManager[3].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddGenericParameter("ModelBytes", "B", "Exported model as byte array", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo kitGoo = null;
+        if (!DA.GetData(0, ref kitGoo)) return;
+        string designId = "";
+        if (!DA.GetData(1, ref designId)) return;
+        string format = ".glb";
+        DA.GetData(2, ref format);
+        var tagsList = new List<string>();
+        DA.GetDataList(3, tagsList);
+
+        try
+        {
+            var result = Kit.ExportDesignModel(kitGoo.Value, designId, format, tagsList.ToArray());
+            DA.SetData(0, result);
+        }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
 public class ReplaceClusterWithDesignComponent : ScriptingComponent
 {
     public ReplaceClusterWithDesignComponent() : base("Replace Cluster", "RepCl", "Replaces a cluster with a design.") { }

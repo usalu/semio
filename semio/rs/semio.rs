@@ -4515,6 +4515,628 @@ pub fn drag_pieces_in_design(
 
 // #endregion 🔖FlattenDesign
 
+// #region 🔖Kit Model Export
+// [👤semio📚rs💻semio🔖kitmodelexport](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export)
+// Kit Model Export MUST provide GLB/glTF export of a design's assembled 3D model.
+
+/// <summary>Supported 3D model export formats (extension, description).</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️exportmodelformats](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/EXPORT_MODEL_FORMATS)
+pub const EXPORT_MODEL_FORMATS: &[(&str, &str)] = &[
+    ("glb", "GLB Binary (glTF 2.0)"),
+    ("gltf", "glTF JSON (glTF 2.0)"),
+];
+
+/// <summary>Decodes a data URI blob (data:mime;base64,...) into raw bytes.</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️decodedatauriblob](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/decode_data_uri_blob)
+#[cfg(not(target_arch = "wasm32"))]
+fn decode_data_uri_blob(blob: &str) -> Option<Vec<u8>> {
+    use base64::Engine;
+    let b64 = if let Some(pos) = blob.find(";base64,") {
+        &blob[pos + 8..]
+    } else {
+        blob
+    };
+    base64::engine::general_purpose::STANDARD.decode(b64).ok()
+}
+
+/// <summary>Parses a GLB binary into its JSON chunk and BIN chunk.</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️parseglb](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/parse_glb)
+#[cfg(not(target_arch = "wasm32"))]
+fn parse_glb(data: &[u8]) -> Option<(serde_json::Value, Vec<u8>)> {
+    if data.len() < 12 {
+        return None;
+    }
+    let magic = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+    if magic != 0x46546C67 {
+        return None;
+    }
+    let mut offset = 12usize;
+    let mut json_value: Option<serde_json::Value> = None;
+    let mut bin_data: Vec<u8> = Vec::new();
+    while offset + 8 <= data.len() {
+        let chunk_length = u32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ]) as usize;
+        let chunk_type = u32::from_le_bytes([
+            data[offset + 4],
+            data[offset + 5],
+            data[offset + 6],
+            data[offset + 7],
+        ]);
+        offset += 8;
+        if offset + chunk_length > data.len() {
+            break;
+        }
+        let chunk_data = &data[offset..offset + chunk_length];
+        if chunk_type == 0x4E4F534A {
+            if let Ok(s) = std::str::from_utf8(chunk_data) {
+                json_value = serde_json::from_str(s.trim()).ok();
+            }
+        } else if chunk_type == 0x004E4942 {
+            bin_data = chunk_data.to_vec();
+        }
+        offset += chunk_length;
+    }
+    json_value.map(|json| (json, bin_data))
+}
+
+/// <summary>Builds a GLB binary from a glTF JSON value and binary buffer.</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️buildglb](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/build_glb)
+#[cfg(not(target_arch = "wasm32"))]
+fn build_glb(json: &serde_json::Value, bin: &[u8]) -> Vec<u8> {
+    let json_str = serde_json::to_string(json).unwrap_or_default();
+    let json_bytes = json_str.as_bytes();
+    let json_padded_len = (json_bytes.len() + 3) & !3;
+    let bin_padded_len = (bin.len() + 3) & !3;
+    let has_bin = !bin.is_empty();
+    let total_length =
+        12 + 8 + json_padded_len + if has_bin { 8 + bin_padded_len } else { 0 };
+    let mut result = Vec::with_capacity(total_length);
+    result.extend_from_slice(&0x46546C67u32.to_le_bytes());
+    result.extend_from_slice(&2u32.to_le_bytes());
+    result.extend_from_slice(&(total_length as u32).to_le_bytes());
+    result.extend_from_slice(&(json_padded_len as u32).to_le_bytes());
+    result.extend_from_slice(&0x4E4F534Au32.to_le_bytes());
+    result.extend_from_slice(json_bytes);
+    result.resize(result.len() + json_padded_len - json_bytes.len(), b' ');
+    if has_bin {
+        result.extend_from_slice(&(bin_padded_len as u32).to_le_bytes());
+        result.extend_from_slice(&0x004E4942u32.to_le_bytes());
+        result.extend_from_slice(bin);
+        result.resize(result.len() + bin_padded_len - bin.len(), 0);
+    }
+    result
+}
+
+/// <summary>Converts a nalgebra Matrix4 to glTF column-major array of 16 f64.</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️matrix4togltfcolumnmajor](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/matrix4_to_gltf_column_major)
+fn matrix4_to_gltf_column_major(m: &Matrix4<f64>) -> [f64; 16] {
+    [
+        m[(0, 0)],
+        m[(1, 0)],
+        m[(2, 0)],
+        m[(3, 0)],
+        m[(0, 1)],
+        m[(1, 1)],
+        m[(2, 1)],
+        m[(3, 1)],
+        m[(0, 2)],
+        m[(1, 2)],
+        m[(2, 2)],
+        m[(3, 2)],
+        m[(0, 3)],
+        m[(1, 3)],
+        m[(2, 3)],
+        m[(3, 3)],
+    ]
+}
+
+/// <summary>Writes a box placeholder mesh into the combined GLB buffers and returns the mesh index.</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️appendboxmesh](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/append_box_mesh)
+#[cfg(not(target_arch = "wasm32"))]
+fn append_box_mesh(
+    combined_bin: &mut Vec<u8>,
+    buffer_views: &mut Vec<serde_json::Value>,
+    accessors: &mut Vec<serde_json::Value>,
+    meshes: &mut Vec<serde_json::Value>,
+) {
+    let s: f32 = 0.5;
+    #[rustfmt::skip]
+    let positions: [f32; 72] = [
+        -s, -s,  s,   s, -s,  s,   s,  s,  s,  -s,  s,  s,
+        -s, -s, -s,  -s,  s, -s,   s,  s, -s,   s, -s, -s,
+        -s,  s, -s,  -s,  s,  s,   s,  s,  s,   s,  s, -s,
+        -s, -s, -s,   s, -s, -s,   s, -s,  s,  -s, -s,  s,
+         s, -s, -s,   s,  s, -s,   s,  s,  s,   s, -s,  s,
+        -s, -s, -s,  -s, -s,  s,  -s,  s,  s,  -s,  s, -s,
+    ];
+    #[rustfmt::skip]
+    let indices: [u16; 36] = [
+         0,  1,  2,   0,  2,  3,
+         4,  5,  6,   4,  6,  7,
+         8,  9, 10,   8, 10, 11,
+        12, 13, 14,  12, 14, 15,
+        16, 17, 18,  16, 18, 19,
+        20, 21, 22,  20, 22, 23,
+    ];
+
+    while combined_bin.len() % 4 != 0 {
+        combined_bin.push(0);
+    }
+    let pos_offset = combined_bin.len();
+    for &f in &positions {
+        combined_bin.extend_from_slice(&f.to_le_bytes());
+    }
+    let pos_byte_length = positions.len() * 4;
+
+    while combined_bin.len() % 4 != 0 {
+        combined_bin.push(0);
+    }
+    let idx_offset = combined_bin.len();
+    for &i in &indices {
+        combined_bin.extend_from_slice(&i.to_le_bytes());
+    }
+    let idx_byte_length = indices.len() * 2;
+
+    let bv_pos_idx = buffer_views.len();
+    buffer_views.push(serde_json::json!({
+        "buffer": 0,
+        "byteOffset": pos_offset,
+        "byteLength": pos_byte_length,
+        "target": 34962
+    }));
+    let bv_idx_idx = buffer_views.len();
+    buffer_views.push(serde_json::json!({
+        "buffer": 0,
+        "byteOffset": idx_offset,
+        "byteLength": idx_byte_length,
+        "target": 34963
+    }));
+
+    let acc_pos_idx = accessors.len();
+    accessors.push(serde_json::json!({
+        "bufferView": bv_pos_idx,
+        "componentType": 5126,
+        "count": 24,
+        "type": "VEC3",
+        "max": [s, s, s],
+        "min": [-s, -s, -s]
+    }));
+    let acc_idx_idx = accessors.len();
+    accessors.push(serde_json::json!({
+        "bufferView": bv_idx_idx,
+        "componentType": 5123,
+        "count": 36,
+        "type": "SCALAR"
+    }));
+
+    meshes.push(serde_json::json!({
+        "primitives": [{
+            "attributes": { "POSITION": acc_pos_idx },
+            "indices": acc_idx_idx
+        }]
+    }));
+}
+
+/// <summary>Selects the best model for a type given desired tag guids.</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️selectmodelfortype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/select_model_for_type)
+fn select_model_for_type<'a>(t: &'a Type, tags: &[String]) -> Option<&'a Model> {
+    let models = t.models.as_ref()?;
+    if models.is_empty() {
+        return None;
+    }
+    if tags.is_empty() {
+        if let Some(m) = models.iter().find(|m| {
+            m.tags
+                .as_ref()
+                .map(|t| t.is_empty())
+                .unwrap_or(true)
+        }) {
+            return Some(m);
+        }
+        return models.first();
+    }
+    let tag_guid_set: HashSet<&str> = tags.iter().map(|s| s.as_str()).collect();
+    let mut best: Option<&Model> = None;
+    let mut best_score = -1.0f64;
+    for model in models {
+        let model_tag_guids: HashSet<&str> = model
+            .tags
+            .as_ref()
+            .map(|tags| tags.iter().map(|t| t.guid.as_str()).collect())
+            .unwrap_or_default();
+        if !tag_guid_set.iter().all(|t| model_tag_guids.contains(t)) {
+            continue;
+        }
+        let intersection = model_tag_guids.intersection(&tag_guid_set).count();
+        let union = model_tag_guids.union(&tag_guid_set).count();
+        let score = if union > 0 {
+            intersection as f64 / union as f64
+        } else {
+            0.0
+        };
+        if score > best_score {
+            best_score = score;
+            best = Some(model);
+        }
+    }
+    if best.is_some() {
+        return best;
+    }
+    models.first()
+}
+
+/// <summary>Merges a source GLB's mesh data into the combined GLB builder.</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️mergeglbmesh](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/merge_glb_mesh)
+#[cfg(not(target_arch = "wasm32"))]
+fn merge_glb_mesh(
+    src_json: &serde_json::Value,
+    src_bin: &[u8],
+    combined_bin: &mut Vec<u8>,
+    buffer_views: &mut Vec<serde_json::Value>,
+    accessors: &mut Vec<serde_json::Value>,
+    meshes: &mut Vec<serde_json::Value>,
+    materials: &mut Vec<serde_json::Value>,
+) -> bool {
+    while combined_bin.len() % 4 != 0 {
+        combined_bin.push(0);
+    }
+    let bin_offset = combined_bin.len();
+    combined_bin.extend_from_slice(src_bin);
+    while combined_bin.len() % 4 != 0 {
+        combined_bin.push(0);
+    }
+
+    let bv_base = buffer_views.len();
+    let acc_base = accessors.len();
+    let mat_base = materials.len();
+
+    if let Some(mats) = src_json.get("materials").and_then(|v| v.as_array()) {
+        for mat in mats {
+            materials.push(mat.clone());
+        }
+    }
+
+    if let Some(bvs) = src_json.get("bufferViews").and_then(|v| v.as_array()) {
+        for bv in bvs {
+            let mut new_bv = bv.clone();
+            new_bv["buffer"] = serde_json::json!(0);
+            let orig_offset = bv.get("byteOffset").and_then(|v| v.as_u64()).unwrap_or(0);
+            new_bv["byteOffset"] = serde_json::json!(bin_offset as u64 + orig_offset);
+            buffer_views.push(new_bv);
+        }
+    }
+
+    if let Some(accs) = src_json.get("accessors").and_then(|v| v.as_array()) {
+        for acc in accs {
+            let mut new_acc = acc.clone();
+            if let Some(bv_idx) = acc.get("bufferView").and_then(|v| v.as_u64()) {
+                new_acc["bufferView"] = serde_json::json!(bv_base as u64 + bv_idx);
+            }
+            accessors.push(new_acc);
+        }
+    }
+
+    let src_meshes = src_json.get("meshes").and_then(|v| v.as_array());
+    if let Some(src_mesh_arr) = src_meshes {
+        if let Some(mesh) = src_mesh_arr.first() {
+            let mut new_mesh = mesh.clone();
+            if let Some(primitives) = new_mesh
+                .get_mut("primitives")
+                .and_then(|v| v.as_array_mut())
+            {
+                for prim in primitives.iter_mut() {
+                    if let Some(attrs) = prim.get_mut("attributes") {
+                        if let Some(obj) = attrs.as_object_mut() {
+                            for (_, val) in obj.iter_mut() {
+                                if let Some(idx) = val.as_u64() {
+                                    *val = serde_json::json!(acc_base as u64 + idx);
+                                }
+                            }
+                        }
+                    }
+                    if let Some(idx_val) = prim.get("indices").and_then(|v| v.as_u64()) {
+                        prim["indices"] = serde_json::json!(acc_base as u64 + idx_val);
+                    }
+                    if let Some(mat_val) = prim.get("material").and_then(|v| v.as_u64()) {
+                        prim["material"] = serde_json::json!(mat_base as u64 + mat_val);
+                    }
+                }
+            }
+            meshes.push(new_mesh);
+            return true;
+        }
+    }
+    false
+}
+
+/// <summary>Exports the 3D model of a design to GLB or glTF format.</summary>
+/// [👤semio📚rs💻semio🔖kitmodelexport🛠️exportdesignmodel](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/export_design_model)
+/// <remarks>
+/// export_design_model MUST assemble all piece instances with their world transforms,
+/// merging per-type GLB meshes (or box placeholders) into a single GLB/glTF output.
+/// </remarks>
+#[cfg(not(target_arch = "wasm32"))]
+pub fn export_design_model(
+    kit: &Kit,
+    design_guid: &str,
+    format: &str,
+    tags: &[String],
+    _options: &HashMap<String, serde_json::Value>,
+) -> Result<Vec<u8>> {
+    let format_lower = format.to_lowercase();
+    let format_lower = format_lower.trim_start_matches('.');
+    if format_lower != "glb" && format_lower != "gltf" {
+        return Err(SemioError::InvalidOperation {
+            message: format!(
+                "Unsupported export format '{}'. Supported: .glb, .gltf",
+                format
+            ),
+        });
+    }
+
+    let design = find_design_in_kit(kit, design_guid).ok_or_else(|| SemioError::NotFound {
+        kind: "Design".to_string(),
+        guid: design_guid.to_string(),
+    })?;
+
+    let pieces = design
+        .pieces
+        .as_ref()
+        .map(|p| p.as_slice())
+        .unwrap_or(&[]);
+    if pieces.is_empty() {
+        let empty_json = serde_json::json!({
+            "asset": { "version": "2.0", "generator": "semio" },
+            "scene": 0,
+            "scenes": [{ "nodes": [] }]
+        });
+        return if format_lower == "glb" {
+            Ok(build_glb(&empty_json, &[]))
+        } else {
+            Ok(serde_json::to_string_pretty(&empty_json)
+                .unwrap_or_default()
+                .into_bytes())
+        };
+    }
+
+    let connections = design
+        .connections
+        .as_ref()
+        .map(|c| c.as_slice())
+        .unwrap_or(&[]);
+
+    let types_map: HashMap<&str, &Type> = kit
+        .types
+        .as_ref()
+        .map(|types| types.iter().map(|t| (t.guid.as_str(), t)).collect())
+        .unwrap_or_default();
+
+    let pieces_map: HashMap<&str, &Piece> =
+        pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+    let files_map: HashMap<&str, &File> = kit
+        .files
+        .as_ref()
+        .map(|files| files.iter().map(|f| (f.guid.as_str(), f)).collect())
+        .unwrap_or_default();
+
+    // #region 🔖BFS World Transforms
+    let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+    for conn in connections {
+        let src = conn.connected.piece.guid.as_str();
+        let tgt = conn.connecting.piece.guid.as_str();
+        if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+            adjacency.entry(src).or_default().push((tgt, conn, true));
+            adjacency.entry(tgt).or_default().push((src, conn, false));
+        }
+    }
+
+    let mut piece_world_matrices: HashMap<&str, Matrix4<f64>> =
+        HashMap::with_capacity(pieces.len());
+    let mut visited: HashSet<&str> = HashSet::with_capacity(pieces.len());
+    let mut queue: VecDeque<&str> = VecDeque::with_capacity(pieces.len());
+    let mut parent_map: HashMap<&str, &str> = HashMap::new();
+
+    for piece in pieces {
+        if visited.contains(piece.guid.as_str()) {
+            continue;
+        }
+        let initial_matrix = piece
+            .plane
+            .as_ref()
+            .map(|p| p.to_matrix())
+            .unwrap_or_else(Matrix4::identity);
+        piece_world_matrices.insert(piece.guid.as_str(), initial_matrix);
+        visited.insert(piece.guid.as_str());
+        queue.push_back(piece.guid.as_str());
+
+        while let Some(current_guid) = queue.pop_front() {
+            let current_matrix = *piece_world_matrices.get(current_guid).unwrap();
+            if let Some(neighbors) = adjacency.get(current_guid) {
+                for &(neighbor_guid, conn, is_connected) in neighbors {
+                    if visited.contains(neighbor_guid) {
+                        continue;
+                    }
+                    let connection_matrix = match compute_connection_matrix_fast(
+                        &types_map,
+                        &pieces_map,
+                        conn,
+                        is_connected,
+                    ) {
+                        Some(m) => m,
+                        None => continue,
+                    };
+                    let new_matrix = current_matrix * connection_matrix;
+                    piece_world_matrices.insert(neighbor_guid, new_matrix);
+                    visited.insert(neighbor_guid);
+                    parent_map.insert(neighbor_guid, current_guid);
+                    queue.push_back(neighbor_guid);
+                }
+            }
+        }
+    }
+    // #endregion 🔖BFS World Transforms
+
+    // #region 🔖Mesh Assembly
+    let mut combined_bin: Vec<u8> = Vec::new();
+    let mut gltf_buffer_views: Vec<serde_json::Value> = Vec::new();
+    let mut gltf_accessors: Vec<serde_json::Value> = Vec::new();
+    let mut gltf_meshes: Vec<serde_json::Value> = Vec::new();
+    let mut gltf_materials: Vec<serde_json::Value> = Vec::new();
+    let mut type_mesh_map: HashMap<String, usize> = HashMap::new();
+
+    for piece in pieces {
+        let type_guid = match &piece.type_ref {
+            Some(tr) => &tr.guid,
+            None => continue,
+        };
+        if type_mesh_map.contains_key(type_guid.as_str()) {
+            continue;
+        }
+        let mesh_idx = gltf_meshes.len();
+        let mut added = false;
+
+        if let Some(t) = types_map.get(type_guid.as_str()) {
+            if let Some(model) = select_model_for_type(t, tags) {
+                if let Some(file) = files_map.get(model.file.guid.as_str()) {
+                    if let Some(blob) = &file.blob {
+                        if let Some(data) = decode_data_uri_blob(blob) {
+                            let is_glb = file.name.ends_with(".glb")
+                                || (data.len() >= 4
+                                    && u32::from_le_bytes([
+                                        data[0], data[1], data[2], data[3],
+                                    ]) == 0x46546C67);
+                            if is_glb {
+                                if let Some((src_json, src_bin)) = parse_glb(&data) {
+                                    added = merge_glb_mesh(
+                                        &src_json,
+                                        &src_bin,
+                                        &mut combined_bin,
+                                        &mut gltf_buffer_views,
+                                        &mut gltf_accessors,
+                                        &mut gltf_meshes,
+                                        &mut gltf_materials,
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if !added {
+            append_box_mesh(
+                &mut combined_bin,
+                &mut gltf_buffer_views,
+                &mut gltf_accessors,
+                &mut gltf_meshes,
+            );
+        }
+        type_mesh_map.insert(type_guid.clone(), mesh_idx);
+    }
+    // #endregion 🔖Mesh Assembly
+
+    // #region 🔖Scene Graph
+    let mut gltf_nodes: Vec<serde_json::Value> = Vec::new();
+    let mut piece_node_indices: HashMap<&str, usize> = HashMap::new();
+    let mut root_node_indices: Vec<usize> = Vec::new();
+
+    for piece in pieces {
+        let node_idx = gltf_nodes.len();
+        piece_node_indices.insert(piece.guid.as_str(), node_idx);
+
+        let world_matrix = piece_world_matrices
+            .get(piece.guid.as_str())
+            .copied()
+            .unwrap_or_else(Matrix4::identity);
+
+        let local_matrix = if let Some(&parent_guid) = parent_map.get(piece.guid.as_str()) {
+            let parent_world = piece_world_matrices
+                .get(parent_guid)
+                .copied()
+                .unwrap_or_else(Matrix4::identity);
+            match parent_world.try_inverse() {
+                Some(inv) => inv * world_matrix,
+                None => world_matrix,
+            }
+        } else {
+            root_node_indices.push(node_idx);
+            world_matrix
+        };
+
+        let mesh_idx = piece
+            .type_ref
+            .as_ref()
+            .and_then(|tr| type_mesh_map.get(&tr.guid))
+            .copied();
+
+        let col_major = matrix4_to_gltf_column_major(&local_matrix);
+        let mut node = serde_json::json!({
+            "matrix": col_major
+        });
+        if let Some(name) = &piece.name {
+            node["name"] = serde_json::json!(name);
+        }
+        if let Some(idx) = mesh_idx {
+            node["mesh"] = serde_json::json!(idx);
+        }
+        gltf_nodes.push(node);
+    }
+
+    let mut children_map: HashMap<&str, Vec<usize>> = HashMap::new();
+    for piece in pieces {
+        if let Some(&pg) = parent_map.get(piece.guid.as_str()) {
+            if let Some(&child_idx) = piece_node_indices.get(piece.guid.as_str()) {
+                children_map.entry(pg).or_default().push(child_idx);
+            }
+        }
+    }
+    for (parent_guid, child_indices) in &children_map {
+        if let Some(&parent_node_idx) = piece_node_indices.get(parent_guid) {
+            gltf_nodes[parent_node_idx]["children"] = serde_json::json!(child_indices);
+        }
+    }
+    // #endregion 🔖Scene Graph
+
+    // #region 🔖Output
+    let mut gltf_root = serde_json::json!({
+        "asset": { "version": "2.0", "generator": "semio" },
+        "scene": 0,
+        "scenes": [{ "nodes": root_node_indices }],
+        "nodes": gltf_nodes,
+        "meshes": gltf_meshes,
+        "accessors": gltf_accessors,
+        "bufferViews": gltf_buffer_views,
+        "buffers": [{ "byteLength": combined_bin.len() }]
+    });
+
+    if !gltf_materials.is_empty() {
+        gltf_root["materials"] = serde_json::json!(gltf_materials);
+    }
+
+    if format_lower == "glb" {
+        Ok(build_glb(&gltf_root, &combined_bin))
+    } else {
+        use base64::Engine;
+        let b64 = base64::engine::general_purpose::STANDARD.encode(&combined_bin);
+        gltf_root["buffers"] = serde_json::json!([{
+            "byteLength": combined_bin.len(),
+            "uri": format!("data:application/octet-stream;base64,{}", b64)
+        }]);
+        Ok(serde_json::to_string_pretty(&gltf_root)
+            .unwrap_or_default()
+            .into_bytes())
+    }
+    // #endregion 🔖Output
+}
+
+// #endregion 🔖Kit Model Export
+
 // #region 🔖Validation Types
 // [👤semio📚rs💻semio🔖validationtypes](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types)
 // Validation Types MUST provide the validation types functionality.
@@ -6751,6 +7373,89 @@ mod tests {
     }
 
     // #endregion 🔖Design Quality Sum Tests
+
+    // #region 🔖Export Design Model Tests
+
+    mod export_design_model {
+        use super::*;
+
+        #[test]
+        fn glb_format_valid_header() {
+            let kit = load_kit("kit_metabolism.json");
+            let design = kit
+                .designs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                .expect("Design not found");
+            let result = export_design_model(
+                &kit,
+                &design.guid,
+                ".glb",
+                &[],
+                &std::collections::HashMap::new(),
+            )
+            .expect("export_design_model failed");
+            assert!(!result.is_empty(), "GLB result should not be empty");
+            assert_eq!(&result[0..4], b"glTF", "GLB magic mismatch");
+            let version = u32::from_le_bytes(result[4..8].try_into().unwrap());
+            assert_eq!(version, 2, "GLB version should be 2");
+            let total_len = u32::from_le_bytes(result[8..12].try_into().unwrap());
+            assert_eq!(
+                total_len as usize,
+                result.len(),
+                "GLB total length mismatch"
+            );
+        }
+
+        #[test]
+        fn gltf_format_valid_json() {
+            let kit = load_kit("kit_metabolism.json");
+            let design = kit
+                .designs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                .expect("Design not found");
+            let result = export_design_model(
+                &kit,
+                &design.guid,
+                ".gltf",
+                &[],
+                &std::collections::HashMap::new(),
+            )
+            .expect("export_design_model failed");
+            assert!(!result.is_empty(), "glTF result should not be empty");
+            let json_str = std::str::from_utf8(&result).expect("glTF should be valid UTF-8");
+            let parsed: serde_json::Value =
+                serde_json::from_str(json_str).expect("glTF should be valid JSON");
+            assert!(parsed.is_object(), "glTF root should be an object");
+        }
+
+        #[test]
+        fn invalid_format_returns_error() {
+            let kit = load_kit("kit_metabolism.json");
+            let design = kit
+                .designs
+                .as_ref()
+                .unwrap()
+                .iter()
+                .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                .expect("Design not found");
+            let result = export_design_model(
+                &kit,
+                &design.guid,
+                ".xyz",
+                &[],
+                &std::collections::HashMap::new(),
+            );
+            assert!(result.is_err(), "Invalid format should return error");
+        }
+    }
+
+    // #endregion 🔖Export Design Model Tests
 }
 
 // #endregion 🔖Tests

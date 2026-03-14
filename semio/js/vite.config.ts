@@ -14,107 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Vite build and development configuration for the JavaScript workspace.
+// Vitest configuration for the semio domain workspace.
 
 // #endregion 🔖Header
 
 // #region 🔖Configuration
 // [👤semio📚js⚙️viteconfig🔖configuration](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration)
-// Vite build and test configuration for the js library.
-// Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
-
-import mdx from "@mdx-js/rollup";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeSlug from "rehype-slug";
-import remarkFrontmatter from "remark-frontmatter";
-import remarkGfm from "remark-gfm";
-import remarkMdxFrontmatter from "remark-mdx-frontmatter";
-import topLevelAwait from "vite-plugin-top-level-await";
-import wasm from "vite-plugin-wasm";
 import { defineConfig } from "vitest/config";
 
-/**
- * Absolute file path of the current module.
-// [👤semio📚js⚙️viteconfig🔖configuration🪨filename](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration/d/i/__filename)
- *
- * Path MUST be derived from import.meta.url.
- **/
-const __filename = fileURLToPath(import.meta.url);
-/**
- * Absolute directory path of the current module.
-// [👤semio📚js⚙️viteconfig🔖configuration🪨dirname](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration/d/i/__dirname)
- *
- * Path MUST be derived from __filename.
- **/
-const __dirname = path.dirname(__filename);
-
-// Vite configuration with plugins, resolve aliases, and test settings.
-// Export MUST call defineConfig with the complete build configuration.
+// Vitest configuration for the domain-only semio package.
+// Export MUST target only domain tests and avoid sketchpad/browser plugins.
 export default defineConfig({
-  publicDir: "public",
-  plugins: [
-    tailwindcss(),
-    {
-      ...mdx({
-        remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
-        rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
-        providerImportSource: "@mdx-js/react",
-      }),
-      enforce: "pre",
-    },
-    react(),
-    wasm(),
-    topLevelAwait(),
-    {
-      name: "serve-wasm-and-assets",
-      enforce: "pre",
-      configureServer(server) {
-        const assetsPath = path.resolve(__dirname, "../assets");
-        const publicPath = path.resolve(__dirname, "public");
-        return () => {
-          server.middlewares.use((req, res, next) => {
-            if (req.url?.endsWith(".wasm")) {
-              const wasmFile = path.join(publicPath, req.url);
-              if (fs.existsSync(wasmFile) && fs.statSync(wasmFile).isFile()) {
-                res.setHeader("Content-Type", "application/wasm");
-                fs.createReadStream(wasmFile).pipe(res);
-                return;
-              }
-            }
-            if (req.url?.startsWith("/assets/")) {
-              const filePath = path.join(assetsPath, req.url.replace("/assets/", ""));
-              if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-                fs.createReadStream(filePath).pipe(res);
-                return;
-              }
-            }
-            next();
-          });
-        };
-      },
-    },
-  ],
-  optimizeDeps: {
-    include: ["golden-layout", "three"],
-    esbuildOptions: {
-      target: "es2020",
-    },
-  },
-  resolve: {
-    dedupe: ["three"],
-    alias: {
-      "@semio-elements/ui": path.resolve(__dirname, "../../semio-elements/ui"),
-      "@semio/assets": path.resolve(__dirname, "../assets"),
-    },
-  },
-  ssr: {
-    noExternal: ["golden-layout"],
-  },
   test: {
     name: "semio",
     environment: "node",

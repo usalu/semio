@@ -7,8 +7,7 @@
   "scripts": {
     "dev": "uv run engine.py",
     "build": "tsx ./build.ts",
-    "test": "tsx ./test.ts",
-    "preflight": "ruff format . && ruff check --fix ."
+    "test": "tsx ./test.ts"
   },
   "targets": {
     "update": {

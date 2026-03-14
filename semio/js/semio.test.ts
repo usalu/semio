@@ -17,11 +17,9 @@
 // #endregion 🔖Header
 
 import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from "@semio/assets";
-import * as ElementsBundle from "@semio-elements/ui";
+import * as ElementsBundle from "../../semio-elements/ui";
+import { Action as UiAction, buildControlTree, ControlDef } from "../../semio-elements/ui";
 import { describe, expect, it } from "vitest";
-import { detectStorybookLaunchKind, isStorybookIndexPayload, readLaunchKind } from "./dev";
-import { buildControlTree, ControlDef } from "@semio-elements/ui";
-import { Action as JsAction } from "./index";
 import {
   applyDesignDiff,
   applyKitDiff,
@@ -32,7 +30,9 @@ import {
   Design,
   deserializeKit,
   dragPiecesInDesign,
+  exportDesignModel,
   exportKit,
+  EXPORT_MODEL_FORMATS,
   flattenDesign,
   getIncludedDesigns,
   getKitChange,
@@ -50,8 +50,6 @@ import {
   validateKit,
   ValidationResult,
 } from "./semio";
-import * as SketchpadElements from "./sketchpad/elements";
-import { applySelectionComposition, getNextPanelVisibilityFromToggle, resolveSelectionCompositionKind, ToolKind } from "./sketchpad/shared";
 
 const TOLERANCE = 0.001;
 
@@ -130,16 +128,6 @@ describe("Change", () => {
         });
       });
     });
-  });
-});
-
-describe("Elements Bundle", () => {
-  it("semio/js consumes semio-elements ui exports without changing runtime identities", () => {
-    expect(SketchpadElements.Action).toBe(ElementsBundle.Action);
-    expect(SketchpadElements.LevelProvider).toBe(ElementsBundle.LevelProvider);
-    expect(SketchpadElements.SectionSpecificity).toBe(ElementsBundle.SectionSpecificity);
-    expect(SketchpadElements.buildControlTree).toBe(ElementsBundle.buildControlTree);
-    expect(JsAction).toBe(ElementsBundle.Action);
   });
 });
 
@@ -299,34 +287,12 @@ describe("Drag", () => {
   });
 });
 
-describe("Sketchpad Selection Composition", () => {
-  it("applies replace/additive/subtractive/intersect and resolves mode from tools/modifiers", () => {
-    expect(applySelectionComposition(["a", "b", "a"], ["c", "c", "b"], "replace")).toEqual(["c", "b"]);
-    expect(applySelectionComposition(["a", "b"], ["b", "c", "c"], "additive")).toEqual(["a", "b", "c"]);
-    expect(applySelectionComposition(["a", "b", "c", "b"], ["b", "x"], "subtractive")).toEqual(["a", "c"]);
-    expect(applySelectionComposition(["a", "b", "c"], ["c", "a", "x"], "intersect")).toEqual(["a", "c"]);
-    expect(applySelectionComposition(["a", "b"], [], "replace")).toEqual([]);
-    expect(applySelectionComposition(["a", "b"], [], "additive")).toEqual(["a", "b"]);
-    expect(applySelectionComposition(["a", "b"], [], "subtractive")).toEqual(["a", "b"]);
-    expect(applySelectionComposition(["a", "b"], [], "intersect")).toEqual([]);
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL)).toBe("replace");
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_ADDITIVE)).toBe("additive");
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_SUBTRACTIVE)).toBe("subtractive");
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_INTERSECT)).toBe("intersect");
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { shiftKey: true })).toBe("additive");
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { ctrlKey: true })).toBe("subtractive");
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { altKey: true })).toBe("subtractive");
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { metaKey: true })).toBe("subtractive");
-    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { shiftKey: true, ctrlKey: true })).toBe("intersect");
-  });
-});
-
 describe("Sketchpad ControlTree", () => {
   it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
     const controls: ControlDef[] = [
-      { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
-      { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
-      { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
+      { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+      { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+      { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
     ];
     const folderSettings = {
       Transform: { path: "Transform", order: 2 },
@@ -346,45 +312,12 @@ describe("Sketchpad ControlTree", () => {
   });
 });
 
-describe("Sketchpad Panel Visibility", () => {
-  it("keeps chat, settings, and property tabs mutually exclusive when toggled on", () => {
-    const initialVisibility = {
-      rightSidePanel: false,
-      chat: false,
-      settings: false,
-      leftSidePanel: false,
-    };
-    const propertyVisible = getNextPanelVisibilityFromToggle(initialVisibility, "rightSidePanel");
-    expect(propertyVisible.rightSidePanel).toBe(true);
-    expect(propertyVisible.chat).toBe(false);
-    expect(propertyVisible.settings).toBe(false);
-    const chatVisible = getNextPanelVisibilityFromToggle(propertyVisible, "chat");
-    expect(chatVisible.rightSidePanel).toBe(false);
-    expect(chatVisible.chat).toBe(true);
-    expect(chatVisible.settings).toBe(false);
-    const settingsVisible = getNextPanelVisibilityFromToggle(chatVisible, "settings");
-    expect(settingsVisible.rightSidePanel).toBe(false);
-    expect(settingsVisible.chat).toBe(false);
-    expect(settingsVisible.settings).toBe(true);
-    const settingsHidden = getNextPanelVisibilityFromToggle(settingsVisible, "settings");
-    expect(settingsHidden.rightSidePanel).toBe(false);
-    expect(settingsHidden.chat).toBe(false);
-    expect(settingsHidden.settings).toBe(false);
-    const leftVisible = getNextPanelVisibilityFromToggle(settingsVisible, "leftSidePanel");
-    expect(leftVisible.leftSidePanel).toBe(true);
-    expect(leftVisible.settings).toBe(true);
-  });
-});
-
-describe("JS Dev Launcher", () => {
-  it("classifies storybook launches as start, reuse, or fail and parses the wrapper inputs", async () => {
-    await expect(detectStorybookLaunchKind(async () => true, async () => false)).resolves.toBe("start");
-    await expect(detectStorybookLaunchKind(async () => false, async () => true)).resolves.toBe("reuse");
-    await expect(detectStorybookLaunchKind(async () => false, async () => false)).resolves.toBe("fail");
-    expect(isStorybookIndexPayload("{\"v\":5,\"entries\":{}}")).toBe(true);
-    expect(isStorybookIndexPayload("{\"hello\":\"world\"}")).toBe(false);
-    expect(readLaunchKind(["storybook"])).toBe("storybook");
-    expect(readLaunchKind([])).toBe("workspace");
+describe("Elements Bundle", () => {
+  it("sources shared element primitives directly from semio-elements ui", () => {
+    expect(UiAction).toBe(ElementsBundle.Action);
+    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);
+    expect(ElementsBundle.LevelProvider).toBeDefined();
+    expect(ElementsBundle.SectionSpecificity).toBeDefined();
   });
 });
 
@@ -399,5 +332,40 @@ describe("Design/Quality/Sum", () => {
       const result = sumQualityInDesign(kit, design!.guid, quality!.guid);
       expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);
     });
+  });
+});
+
+describe("ExportDesignModel", () => {
+  const kit = MetabolismKit as Kit;
+  const design = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+
+  it("exports .glb format with valid GLB header", async () => {
+    const result = await exportDesignModel(kit, design.guid, ".glb");
+    expect(result.byteLength).toBeGreaterThan(0);
+
+    const view = new DataView(result);
+    const magic = view.getUint32(0, true);
+    expect(magic).toBe(0x46546c67);
+
+    const version = view.getUint32(4, true);
+    expect(version).toBe(2);
+
+    const totalLength = view.getUint32(8, true);
+    expect(totalLength).toBe(result.byteLength);
+  });
+
+  it("exports .gltf format as valid JSON string", async () => {
+    const result = await exportDesignModel(kit, design.guid, ".gltf");
+    const decoder = new TextDecoder();
+    const str = decoder.decode(result);
+    expect(() => JSON.parse(str)).not.toThrow();
+    const parsed = JSON.parse(str);
+    expect(parsed).toBeDefined();
+    expect(typeof parsed).toBe("object");
+  });
+
+  it("EXPORT_MODEL_FORMATS includes .glb and .gltf", () => {
+    expect(EXPORT_MODEL_FORMATS[".glb"]).toBeDefined();
+    expect(EXPORT_MODEL_FORMATS[".gltf"]).toBeDefined();
   });
 });

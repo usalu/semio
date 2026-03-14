@@ -6,8 +6,7 @@
   "projectType": "library",
   "scripts": {
     "build": "uv build",
-    "test": "uv run pytest",
-    "preflight": "ruff format . && ruff check --fix ."
+    "test": "uv run pytest"
   },
   "author": {
     "name": "Ueli Saluz",

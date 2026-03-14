@@ -20,8 +20,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Info, Layers, Settings, User } from "lucide-react";
 import { useState } from "react";
-import { Canvas, HorizontalWindows } from "@semio/js/sketchpad/Sketchpad";
-import { Footer, Layout, Level, LevelProvider, Navbar, Page, SidePanel, Window, getLevelBgClass } from "@semio-elements/ui";
+import { Canvas, Footer, HorizontalWindows, Layout, Level, LevelProvider, Navbar, Page, SidePanel, Window, getLevelBgClass } from "@semio-elements/ui";
 
 // #region 🔖Layout
 const meta = {

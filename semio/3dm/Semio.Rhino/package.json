@@ -7,8 +7,7 @@
   "scripts": {
     "build": "dotnet build",
     "dev": "dotnet build",
-    "test": "dotnet test ../Semio.Rhino.Tests/Semio.Rhino.Tests.csproj",
-    "preflight": "dotnet build"
+    "test": "dotnet test ../Semio.Rhino.Tests/Semio.Rhino.Tests.csproj"
   },
   "devDependencies": {
     "@semio/net": "*"

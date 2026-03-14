@@ -59,7 +59,6 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       "@semio-elements/ui": resolve(__dirname, ".."),
-      "@semio/js": resolve(__dirname, "../../../semio/js"),
       "@semio/coda-desktop": resolve(__dirname, "../../../semio-coda/desktop"),
     };
 

@@ -21,9 +21,9 @@
 // #region 🔖Configuration
 // [👤semio🖱️desktop⚙️tailwindconfig🔖configuration](semiorepo://p/u/semio/b/u/desktop/f/tailwind.config.ts/s/Configuration)
 // Tailwind CSS configuration extending the shared semio preset for the desktop application.
-// Configuration MUST use the shared tailwindConfig preset from @semio/js.
+// Configuration MUST use the shared tailwindConfig preset from @semio-elements/ui.
 
-import { tailwindConfig } from "@semio/js";
+import { tailwindConfig } from "@semio-elements/ui";
 import type { Config } from "tailwindcss";
 
 /**

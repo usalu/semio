@@ -32,7 +32,7 @@ import type { Config } from "tailwindcss";
  * Config MUST include content glob patterns.
  **/
 const config: Pick<Config, "content" | "presets"> = {
-  content: ["./**/*.{ts,tsx}"],
+  content: ["./**/*.{ts,tsx}", "../../semio-elements/ui/**/*.{ts,tsx}"],
 };
 
 export default config;

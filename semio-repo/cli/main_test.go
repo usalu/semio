@@ -15654,6 +15654,115 @@ func TestFilePolicyRegistered(t *testing.T) {
 	}
 }
 
+func TestSemioPolicyRegistered(t *testing.T) {
+	policy, found := FindPolicy("semio")
+	if !found {
+		t.Fatal("semio policy not registered")
+	}
+	if policy.Name != "Semio" {
+		t.Errorf("expected policy name Semio, got %s", policy.Name)
+	}
+	allKinds := policy.AllKinds()
+	foundKind := false
+	for _, k := range allKinds {
+		if k == BreachSemioNoUiDependency {
+			foundKind = true
+		}
+	}
+	if !foundKind {
+		t.Error("semio policy should contain BreachSemioNoUiDependency kind")
+	}
+}
+
+func TestSemioPolicyNoUiDependency(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	t.Run("detects tailwind-merge import", func(t *testing.T) {
+		relPath := "semio.ts"
+		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { twMerge } from \"tailwind-merge\";\n"), 0644)
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
+		breachs := semioPolicy(ctx)
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
+		}
+		if breachs[0].Kind != BreachSemioNoUiDependency {
+			t.Errorf("expected BreachSemioNoUiDependency, got %s", breachs[0].Kind)
+		}
+	})
+	t.Run("detects semio-elements/ui import", func(t *testing.T) {
+		relPath := "semio.test.ts"
+		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import * as UI from \"../../semio-elements/ui\";\n"), 0644)
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
+		breachs := semioPolicy(ctx)
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
+		}
+		if breachs[0].Kind != BreachSemioNoUiDependency {
+			t.Errorf("expected BreachSemioNoUiDependency, got %s", breachs[0].Kind)
+		}
+	})
+	t.Run("detects clsx import", func(t *testing.T) {
+		relPath := "semio.ts"
+		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { ClassValue, clsx } from \"clsx\";\n"), 0644)
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
+		breachs := semioPolicy(ctx)
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
+		}
+	})
+	t.Run("detects three import", func(t *testing.T) {
+		relPath := "semio.ts"
+		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import * as THREE from \"three\";\n"), 0644)
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
+		breachs := semioPolicy(ctx)
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
+		}
+	})
+	t.Run("detects multiple ui imports", func(t *testing.T) {
+		relPath := "semio.ts"
+		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { clsx } from \"clsx\";\nimport { twMerge } from \"tailwind-merge\";\nimport * as THREE from \"three\";\n"), 0644)
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
+		breachs := semioPolicy(ctx)
+		if len(breachs) != 3 {
+			t.Fatalf("expected 3 breachs, got %d", len(breachs))
+		}
+	})
+	t.Run("allows non-ui imports", func(t *testing.T) {
+		relPath := "semio.ts"
+		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { z } from \"zod\";\nimport { v7 as uuidv7 } from \"uuid\";\n"), 0644)
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
+		breachs := semioPolicy(ctx)
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs, got %d", len(breachs))
+		}
+	})
+	t.Run("ignores non-semio files", func(t *testing.T) {
+		relPath := "other.ts"
+		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { clsx } from \"clsx\";\n"), 0644)
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{relPath})
+		breachs := semioPolicy(ctx)
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for non-semio file, got %d", len(breachs))
+		}
+	})
+	t.Run("not autofixable", func(t *testing.T) {
+		info := BreachSemioNoUiDependency.Info()
+		if info.Autofixable {
+			t.Error("BreachSemioNoUiDependency should not be autofixable")
+		}
+	})
+}
+
 // #region 🔖Hook
 func TestValidateHookEvent(t *testing.T) {
 	cases := []struct {
@@ -16695,12 +16804,12 @@ func TestConfigureGitHooks(t *testing.T) {
 		if err := configureGitHooks(tmpDir); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		preCheckpointPath := filepath.Join(tmpDir, ".git", "hooks", "pre-commit")
-		preCheckpointData, err := os.ReadFile(preCheckpointPath)
+		preCommitPath := filepath.Join(tmpDir, ".git", "hooks", "pre-commit")
+		preCommitData, err := os.ReadFile(preCommitPath)
 		if err != nil {
-			t.Fatal("pre-checkpoint hook not created")
+			t.Fatal("pre-commit hook not created")
 		}
-		if !strings.Contains(string(preCheckpointData), "pre-commit run --hook-stage pre-commit") {
+		if !strings.Contains(string(preCommitData), "pre-commit run --hook-stage pre-commit") {
 			t.Error("pre-commit hook does not call pre-commit framework")
 		}
 		postCheckpointData, err := os.ReadFile(filepath.Join(tmpDir, ".git", "hooks", "post-commit"))
@@ -16710,7 +16819,7 @@ func TestConfigureGitHooks(t *testing.T) {
 		if !strings.Contains(string(postCheckpointData), "hook version.checkpoint.ended") {
 			t.Error("post-checkpoint hook does not call hook version.checkpoint.ended")
 		}
-		info, err := os.Stat(preCheckpointPath)
+		info, err := os.Stat(preCommitPath)
 		if err != nil {
 			t.Fatal(err)
 		}

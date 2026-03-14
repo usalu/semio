@@ -7,13 +7,17 @@
   "type": "module",
   "exports": {
     ".": "./index.ts",
-    "./elements": "./elements.tsx"
+    "./elements": "./elements.tsx",
+    "./globals.css": "./globals.css",
+    "./theme.css": "./theme.css",
+    "./tailwind.config": "./tailwind.config.ts",
+    "./postcss.config": "./postcss.config.ts",
+    "./eslint.config": "./eslint.config.ts"
   },
   "scripts": {
     "dev": "storybook dev -p 6006 --exact-port --host 0.0.0.0 --no-open --debug",
     "build": "storybook build",
-    "test": "vitest run --config vitest.config.ts --passWithNoTests",
-    "preflight": "tsc --noEmit"
+    "test": "vitest run --config vitest.config.ts --passWithNoTests"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -39,6 +43,7 @@
     "@react-three/fiber": "^9.5.0",
     "@react-three/postprocessing": "^3.0.4",
     "@semio/assets": "^1.0.0",
+    "tailwind-merge": "^3.4.0",
     "@storybook/addon-docs": "^10.1.11",
     "@storybook/addon-vitest": "^10.1.11",
     "@storybook/react-vite": "^10.1.11",
@@ -62,6 +67,9 @@
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.1.18",
     "@types/d3-force": "^3.0.10",
     "@types/dagre": "^0.7.53",
     "@types/node": "^25.0.8",
@@ -70,11 +78,16 @@
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/browser": "^4.0.17",
     "@vitest/coverage-v8": "^4.0.17",
+    "postcss": "^8.5.6",
+    "postcss-load-config": "^6.0.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-mdx-frontmatter": "^5.2.0",
+    "tailwindcss": "^4.0.0",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"
   },

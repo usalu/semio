@@ -61,6 +61,7 @@ export default defineConfig(async () => {
     resolve: {
       alias: {
         "@semio/js": path.resolve(__dirname, "../js"),
+        "@semio/sketchpad": path.resolve(__dirname),
         "@semio/assets": path.resolve(__dirname, "../assets"),
       },
     },
@@ -81,11 +82,11 @@ export default defineConfig(async () => {
         name: "serve-wasm-and-assets",
         enforce: "pre" as const,
         configureServer(server: any) {
-          const jsPublicPath = path.resolve(__dirname, "../js/public");
+          const sketchpadPublicPath = path.resolve(__dirname, "public");
           const assetsPath = path.resolve(__dirname, "../assets");
           server.middlewares.use((req: any, res: any, next: any) => {
             if (req.url?.endsWith(".wasm")) {
-              const wasmFile = path.join(jsPublicPath, req.url);
+              const wasmFile = path.join(sketchpadPublicPath, req.url);
               if (fs.existsSync(wasmFile) && fs.statSync(wasmFile).isFile()) {
                 res.setHeader("Content-Type", "application/wasm");
                 fs.createReadStream(wasmFile).pipe(res);
@@ -106,7 +107,7 @@ export default defineConfig(async () => {
     ],
     optimizeDeps: {
       include: ["golden-layout"],
-      exclude: ["@semio/js"],
+      exclude: ["@semio/js", "@semio/sketchpad"],
       esbuildOptions: {
         target: "es2020",
       },

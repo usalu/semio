@@ -1,0 +1,13 @@
+{
+  "title": "Refactor Coda Desktop To Use Semio Elements UI System",
+  "status": "closed",
+  "description": "Refactor semio-coda desktop renderer and styles so UI uses semio-elements design system exclusively, removing app-specific colors/styling tokens and replacing with semio-elements tokens/components.",
+  "summary": "Refactored coda desktop UI styling to semio-elements tokens across the renderer, removed desktop-specific theme overrides from globals, and fixed the renderer Vite config so targeted TypeScript and renderer build checks now pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/890"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪17735168215733661434762060316443877337"
+  ]
+}

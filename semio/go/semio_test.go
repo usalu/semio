@@ -19,6 +19,7 @@
 package semio
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"math"
 	"os"
@@ -454,5 +455,70 @@ func TestDesignQualitySum(t *testing.T) {
 				t.Errorf("Expected ~2349.53, got %f", result)
 			}
 		})
+	})
+}
+
+func TestExportDesignModel(t *testing.T) {
+	var kit Kit
+	loadJSON(t, "kit_metabolism.json", &kit)
+
+	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
+	if design == nil {
+		t.Fatal("Nakagin Capsule Tower design not found")
+	}
+
+	t.Run("GLB format", func(t *testing.T) {
+		result, err := ExportDesignModel(&kit, design.Guid, ".glb", nil, nil)
+		if err != nil {
+			t.Fatalf("ExportDesignModel failed: %v", err)
+		}
+		if result == nil {
+			t.Fatal("result is nil")
+		}
+		if len(result) == 0 {
+			t.Fatal("result length is 0")
+		}
+		if len(result) < 12 {
+			t.Fatalf("result too short for GLB header: got %d bytes", len(result))
+		}
+		magic := binary.LittleEndian.Uint32(result[0:4])
+		if magic != 0x46546C67 {
+			t.Errorf("GLB magic number mismatch: got 0x%08X, expected 0x46546C67 (glTF)", magic)
+		}
+		version := binary.LittleEndian.Uint32(result[4:8])
+		if version != 2 {
+			t.Errorf("GLB version mismatch: got %d, expected 2", version)
+		}
+		totalLen := binary.LittleEndian.Uint32(result[8:12])
+		if uint32(len(result)) != totalLen {
+			t.Errorf("GLB total length mismatch: got %d, expected %d", totalLen, len(result))
+		}
+	})
+
+	t.Run("GLTF format", func(t *testing.T) {
+		result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+		if err != nil {
+			t.Fatalf("ExportDesignModel failed: %v", err)
+		}
+		if result == nil {
+			t.Fatal("result is nil")
+		}
+		if len(result) == 0 {
+			t.Fatal("result length is 0")
+		}
+		var v interface{}
+		if err := json.Unmarshal(result, &v); err != nil {
+			t.Errorf("result is not valid JSON: %v", err)
+		}
+	})
+
+	t.Run("Invalid format", func(t *testing.T) {
+		result, err := ExportDesignModel(&kit, design.Guid, ".xyz", nil, nil)
+		if err == nil {
+			t.Fatal("expected error for invalid format, got nil")
+		}
+		if result != nil {
+			t.Errorf("expected nil result for invalid format, got %d bytes", len(result))
+		}
 	})
 }

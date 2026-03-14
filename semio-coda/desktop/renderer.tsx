@@ -488,9 +488,9 @@ function IconEvents({ className = "w-4 h-4" }: { className?: string }) {
  **/
 function StatusBadge({ status }: { status?: string }) {
   const colors: Record<string, string> = {
-    compliant: "bg-compliant/15 text-compliant border-compliant/30",
-    violated: "bg-violated/15 text-violated border-violated/30",
-    unknown: "bg-unknown/15 text-unknown border-unknown/30",
+    compliant: "bg-success-bg text-success-foreground border-success-border",
+    violated: "bg-destructive-bg text-destructive-foreground border-destructive-border",
+    unknown: "bg-info-bg text-info-foreground border-info-border",
   };
   const s = status ?? "unknown";
   return (
@@ -515,10 +515,10 @@ function StatusBadge({ status }: { status?: string }) {
  **/
 function Card({ title, children, className = "", action }: { title?: string; children: React.ReactNode; className?: string; action?: React.ReactNode }) {
   return (
-    <div className={`rounded-lg border border-border bg-surface ${className}`}>
+    <div className={`rounded-lg border border-border-window bg-window ${className}`}>
       {(title || action) && (
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          {title && <h3 className="text-sm font-semibold text-text">{title}</h3>}
+        <div className="flex items-center justify-between border-b border-border-window px-4 py-3">
+          {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
           {action}
         </div>
       )}
@@ -540,10 +540,10 @@ function Card({ title, children, className = "", action }: { title?: string; chi
  **/
 function StatCard({ label, value, sublabel }: { label: string; value: string | number; sublabel?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <div className="text-xs font-medium text-text-tertiary uppercase tracking-wider">{label}</div>
-      <div className="mt-1 text-2xl font-bold text-text">{value}</div>
-      {sublabel && <div className="mt-0.5 text-xs text-text-secondary">{sublabel}</div>}
+    <div className="rounded-lg border border-border-window bg-window p-4">
+      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</div>
+      <div className="mt-1 text-2xl font-bold text-foreground">{value}</div>
+      {sublabel && <div className="mt-0.5 text-xs text-muted-foreground">{sublabel}</div>}
     </div>
   );
 }
@@ -575,9 +575,9 @@ function Button({
   className?: string;
 }) {
   const variants: Record<string, string> = {
-    primary: "bg-coda-600 text-white hover:bg-coda-700 disabled:bg-coda-400",
-    secondary: "bg-surface border border-border text-text hover:bg-surface-hover disabled:opacity-50",
-    danger: "bg-violated/10 text-violated border border-violated/30 hover:bg-violated/20 disabled:opacity-50",
+    primary: "bg-active-base text-active-foreground hover:bg-hover-base disabled:opacity-50",
+    secondary: "bg-window border border-border-window text-foreground hover:bg-hover-window disabled:opacity-50",
+    danger: "bg-destructive-bg text-destructive-foreground border border-destructive-border hover:bg-hover-window disabled:opacity-50",
   };
   return (
     <button
@@ -609,7 +609,7 @@ function Button({
  **/
 function Spinner({ label = "Loading..." }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12 text-text-tertiary">
+    <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
       <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -632,7 +632,7 @@ function Spinner({ label = "Loading..." }: { label?: string }) {
  **/
 function EmptyState({ message, action }: { message: string; action?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12 text-text-tertiary">
+    <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
       <p className="text-sm">{message}</p>
       {action}
     </div>
@@ -653,13 +653,13 @@ function EmptyState({ message, action }: { message: string; action?: React.React
 function Collapsible({ title, children, defaultOpen = false, badge }: { title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border border-border rounded-md overflow-hidden">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-text hover:bg-surface-hover transition-colors cursor-pointer">
-        {open ? <IconChevronDown className="w-3.5 h-3.5 text-text-tertiary" /> : <IconChevronRight className="w-3.5 h-3.5 text-text-tertiary" />}
+    <div className="border border-border-window rounded-md overflow-hidden">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-hover-window transition-colors cursor-pointer">
+        {open ? <IconChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <IconChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
         <span className="flex-1 text-left">{title}</span>
         {badge}
       </button>
-      {open && <div className="border-t border-border px-3 py-2">{children}</div>}
+      {open && <div className="border-t border-border-window px-3 py-2">{children}</div>}
     </div>
   );
 }
@@ -684,7 +684,7 @@ function JsonViewer({ data }: { data: unknown }) {
     }
   }, [data]);
   return (
-    <pre className="overflow-auto max-h-96 rounded-md bg-surface-alt border border-border p-3 text-xs font-mono text-text-secondary whitespace-pre-wrap break-all">
+    <pre className="overflow-auto max-h-96 rounded-md bg-panel border border-border-window p-3 text-xs font-mono text-muted-foreground whitespace-pre-wrap break-all">
       {formatted}
     </pre>
   );
@@ -780,21 +780,21 @@ function OntologyTreeNodeView({
   return (
     <div className="select-none">
       <div
-        className={`flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-surface-hover transition-colors ${hasChildren ? "cursor-pointer" : ""}`}
+        className={`flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-hover-window transition-colors ${hasChildren ? "cursor-pointer" : ""}`}
         style={{ paddingLeft: `${depth * 16 + 4}px` }}
         onClick={() => hasChildren && setExpanded(!expanded)}
       >
         {hasChildren ? (
-          expanded ? <IconChevronDown className="w-3 h-3 text-text-tertiary shrink-0" /> : <IconChevronRight className="w-3 h-3 text-text-tertiary shrink-0" />
+          expanded ? <IconChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <IconChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
         ) : (
           <span className="w-3 shrink-0" />
         )}
-        <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-coda-100 text-coda-700 text-[10px] font-bold shrink-0" title={node.kind}>
+        <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-info-bg text-info-foreground text-[10px] font-bold shrink-0" title={node.kind}>
           {ontologyNodeIcon(node.kind)}
         </span>
-        <span className="text-sm font-medium text-text">{node.label}</span>
+        <span className="text-sm font-medium text-foreground">{node.label}</span>
         {node.fragment && node.fragment !== node.label && (
-          <span className="text-xs text-text-tertiary ml-1 truncate">{node.fragment}</span>
+          <span className="text-xs text-muted-foreground ml-1 truncate">{node.fragment}</span>
         )}
       </div>
       {expanded && hasChildren && (
@@ -824,10 +824,10 @@ function OntologyTree({
   defaultExpanded?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface overflow-hidden">
+    <div className="rounded-lg border border-border-window bg-window overflow-hidden">
       {title && (
-        <div className="border-b border-border px-3 py-2">
-          <h3 className="text-sm font-semibold text-text">{title}</h3>
+        <div className="border-b border-border-window px-3 py-2">
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         </div>
       )}
       <div className="p-2 overflow-x-auto">
@@ -902,9 +902,9 @@ interface ValidationReport {
  * Maps truth value to color classes.
  **/
 const truthColors: Record<TruthValue, { dot: string; text: string; bg: string }> = {
-  true: { dot: "bg-compliant", text: "text-compliant", bg: "bg-compliant/10" },
-  false: { dot: "bg-violated", text: "text-violated", bg: "bg-violated/10" },
-  unknown: { dot: "bg-unknown", text: "text-unknown", bg: "bg-unknown/10" },
+  true: { dot: "bg-success-border", text: "text-success-foreground", bg: "bg-success-bg" },
+  false: { dot: "bg-destructive-border", text: "text-destructive-foreground", bg: "bg-destructive-bg" },
+  unknown: { dot: "bg-info-border", text: "text-info-foreground", bg: "bg-info-bg" },
 };
 
 /**
@@ -942,13 +942,13 @@ function ValidationTreeNodeView({
   return (
     <div className="select-none">
       <div
-        className={`flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-surface-hover transition-colors ${hasChildren ? "cursor-pointer" : ""}`}
+        className={`flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-hover-window transition-colors ${hasChildren ? "cursor-pointer" : ""}`}
         style={{ paddingLeft: `${depth * 16 + 4}px` }}
         onClick={() => hasChildren && setExpanded(!expanded)}
         title={node.summary}
       >
         {hasChildren ? (
-          expanded ? <IconChevronDown className="w-3 h-3 text-text-tertiary shrink-0" /> : <IconChevronRight className="w-3 h-3 text-text-tertiary shrink-0" />
+          expanded ? <IconChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <IconChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
         ) : (
           <span className="w-3 shrink-0" />
         )}
@@ -957,21 +957,21 @@ function ValidationTreeNodeView({
         {/* Node content */}
         {isWitness ? (
           <>
-            <span className={`text-sm font-medium ${node.counted === false ? "text-text-tertiary" : "text-text"}`}>
+            <span className={`text-sm font-medium ${node.counted === false ? "text-muted-foreground" : "text-foreground"}`}>
               {node.individual ?? node.label}
             </span>
             {node.counted === true && (
-              <span className="text-[10px] font-medium text-compliant bg-compliant/10 px-1 py-0.5 rounded">counted</span>
+              <span className="text-[10px] font-medium text-success-foreground bg-success-bg px-1 py-0.5 rounded">counted</span>
             )}
             {node.counted === false && (
-              <span className="text-[10px] font-medium text-unknown bg-unknown/10 px-1 py-0.5 rounded">not matching</span>
+              <span className="text-[10px] font-medium text-info-foreground bg-info-bg px-1 py-0.5 rounded">not matching</span>
             )}
           </>
         ) : isDataValue ? (
           <>
-            <span className="text-sm font-mono text-text">{String(node.value ?? node.label)}</span>
+            <span className="text-sm font-mono text-foreground">{String(node.value ?? node.label)}</span>
             {node.datatype && (
-              <span className="text-xs text-text-tertiary">{node.datatype}</span>
+              <span className="text-xs text-muted-foreground">{node.datatype}</span>
             )}
           </>
         ) : (
@@ -979,16 +979,16 @@ function ValidationTreeNodeView({
             <span className={`inline-flex items-center justify-center w-5 h-5 rounded ${colors.bg} ${colors.text} text-[10px] font-bold shrink-0`} title={node.kind}>
               {node.kind === "ClassAssertion" ? "∈" : ontologyNodeIcon(node.kind as OntologyNodeKind)}
             </span>
-            <span className="text-sm font-medium text-text">{node.label}</span>
+            <span className="text-sm font-medium text-foreground">{node.label}</span>
             {node.kind === "ExactCardinality" || node.kind === "MinCardinality" || node.kind === "MaxCardinality" ? (
               node.matchingCount !== undefined && node.expectedCardinality !== undefined && (
-                <span className="text-xs text-text-secondary ml-1">
+                <span className="text-xs text-muted-foreground ml-1">
                   [{node.matchingCount}/{node.expectedCardinality}]
                 </span>
               )
             ) : null}
             {node.fragment && node.fragment !== node.label && (
-              <span className="text-xs text-text-tertiary ml-1 truncate">{node.fragment}</span>
+              <span className="text-xs text-muted-foreground ml-1 truncate">{node.fragment}</span>
             )}
           </>
         )}
@@ -1021,24 +1021,21 @@ function ValidationTree({
   report: ValidationReport;
   defaultExpanded?: boolean;
 }) {
-  const rootColors = truthColors[report.truth];
-
   return (
-    <div className="rounded-lg border border-border bg-surface overflow-hidden">
-      <div className="border-b border-border px-3 py-2 space-y-1">
+    <div className="rounded-lg border border-border-window bg-window overflow-hidden">
+      <div className="border-b border-border-window px-3 py-2 space-y-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-text">Instance: {report.instance}</span>
-          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
-            report.truth === "true"
-              ? "bg-compliant/15 text-compliant border-compliant/30"
-              : report.truth === "false"
-                ? "bg-violated/15 text-violated border-violated/30"
-                : "bg-unknown/15 text-unknown border-unknown/30"
-          }`}>
+          <span className="text-sm font-semibold text-foreground">Instance: {report.instance}</span>
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${report.truth === "true"
+            ? "bg-success-bg text-success-foreground border-success-border"
+            : report.truth === "false"
+              ? "bg-destructive-bg text-destructive-foreground border-destructive-border"
+              : "bg-info-bg text-info-foreground border-info-border"
+            }`}>
             {truthEmoji(report.truth)} {report.truth}
           </span>
         </div>
-        <div className="text-xs text-text-secondary font-mono break-all">{report.expression}</div>
+        <div className="text-xs text-muted-foreground font-mono break-all">{report.expression}</div>
       </div>
       <div className="p-2 overflow-x-auto">
         <ValidationTreeNodeView node={report.tree} defaultExpanded={defaultExpanded} />
@@ -1149,8 +1146,8 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-text">Dashboard</h2>
-        <p className="text-sm text-text-secondary mt-1">Overview of the coda compliance checking status.</p>
+        <h2 className="text-lg font-bold text-foreground">Dashboard</h2>
+        <p className="text-sm text-muted-foreground mt-1">Overview of the coda compliance checking status.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -1164,10 +1161,10 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
         <Card title="Compliance Report">
           <div className="space-y-2">
             {report.rules.map((rule) => (
-              <div key={rule.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+              <div key={rule.id} className="flex items-center justify-between rounded-md border border-border-window px-3 py-2">
                 <div>
-                  <span className="text-sm font-medium text-text">{formatId(rule.id)}</span>
-                  {rule.description && <p className="text-xs text-text-secondary mt-0.5">{rule.description}</p>}
+                  <span className="text-sm font-medium text-foreground">{formatId(rule.id)}</span>
+                  {rule.description && <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>}
                 </div>
                 <StatusBadge status={rule.status} />
               </div>
@@ -1178,19 +1175,19 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
 
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-text">General Configuration</h3>
-          <span className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded">not project-scoped</span>
+          <h3 className="text-sm font-semibold text-foreground">General Configuration</h3>
+          <span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">not project-scoped</span>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {measures && measures.length > 0 && (
             <Card title={`Measures (${measures.length})`}>
               <div className="space-y-1">
                 {measures.map((m) => (
-                  <div key={m.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-hover">
-                    <IconWrench className="w-3.5 h-3.5 text-text-tertiary mt-0.5 shrink-0" />
+                  <div key={m.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-window">
+                    <IconWrench className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
-                      <span className="font-medium text-text">{formatId(m.id)}</span>
-                      {m.description && <p className="text-xs text-text-secondary">{m.description}</p>}
+                      <span className="font-medium text-foreground">{formatId(m.id)}</span>
+                      {m.description && <p className="text-xs text-muted-foreground">{m.description}</p>}
                     </div>
                   </div>
                 ))}
@@ -1202,19 +1199,19 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
             <Card title={`Frameworks (${frameworks.length})`}>
               <div className="space-y-1">
                 {frameworks.map((fw) => (
-                  <div key={fw.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-hover">
-                    <IconReport className="w-3.5 h-3.5 text-text-tertiary mt-0.5 shrink-0" />
+                  <div key={fw.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-window">
+                    <IconReport className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
-                      <span className="font-medium text-text">{formatId(fw.id)}</span>
-                      <p className="text-xs text-text-secondary">
+                      <span className="font-medium text-foreground">{formatId(fw.id)}</span>
+                      <p className="text-xs text-muted-foreground">
                         {fw.properties?.length ?? 0} properties, {fw.rules?.length ?? 0} rules
                       </p>
                     </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>
@@ -1244,17 +1241,17 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-text">Configuration</h2>
-        <p className="text-sm text-text-secondary mt-1">Measures, frameworks, and platforms from the coda configuration. These are general and not project-scoped.</p>
+        <h2 className="text-lg font-bold text-foreground">Configuration</h2>
+        <p className="text-sm text-muted-foreground mt-1">Measures, frameworks, and platforms from the coda configuration. These are general and not project-scoped.</p>
       </div>
 
-      <Card title={`Measures (${measures?.length ?? 0})`} action={<span className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded">general</span>}>
+      <Card title={`Measures (${measures?.length ?? 0})`} action={<span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">general</span>}>
         {measures && measures.length > 0 ? (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-border-window">
             {measures.map((m) => (
               <div key={m.id} className="py-2 first:pt-0 last:pb-0">
-                <div className="text-sm font-medium text-text font-mono">{m.id}</div>
-                {m.description && <p className="text-xs text-text-secondary mt-0.5">{m.description}</p>}
+                <div className="text-sm font-medium text-foreground font-mono">{m.id}</div>
+                {m.description && <p className="text-xs text-muted-foreground mt-0.5">{m.description}</p>}
               </div>
             ))}
           </div>
@@ -1263,50 +1260,50 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
         )}
       </Card>
 
-      <Card title={`Frameworks (${frameworks?.length ?? 0})`} action={<span className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded">general</span>}>
+      <Card title={`Frameworks (${frameworks?.length ?? 0})`} action={<span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">general</span>}>
         {frameworks && frameworks.length > 0 ? (
           <div className="space-y-3">
             {frameworks.map((fw) => (
-              <Collapsible key={fw.id} title={formatId(fw.id)} badge={<span className="text-xs text-text-tertiary">{fw.properties?.length ?? 0} properties, {fw.rules?.length ?? 0} rules</span>}>
+              <Collapsible key={fw.id} title={formatId(fw.id)} badge={<span className="text-xs text-muted-foreground">{fw.properties?.length ?? 0} properties, {fw.rules?.length ?? 0} rules</span>}>
                 <div className="space-y-3">
                   {fw.properties && fw.properties.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Properties</h4>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Properties</h4>
                       <div className="space-y-1.5">
                         {fw.properties.map((prop) => (
-                          <div key={prop.id} className="rounded bg-surface-alt border border-border p-2">
+                          <div key={prop.id} className="rounded bg-panel border border-border-window p-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-text">{prop.name ?? formatId(prop.id)}</span>
-                              {prop.type && <span className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded">{prop.type}</span>}
+                              <span className="text-sm font-medium text-foreground">{prop.name ?? formatId(prop.id)}</span>
+                              {prop.type && <span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">{prop.type}</span>}
                             </div>
-                            {prop.description && <p className="text-xs text-text-secondary mt-1">{prop.description}</p>}
+                            {prop.description && <p className="text-xs text-muted-foreground mt-1">{prop.description}</p>}
                             {prop.url && (
-                              <a className="text-xs text-coda-600 hover:underline mt-1 inline-block" href={prop.url} target="_blank" rel="noreferrer">
+                              <a className="text-xs text-active-base hover:underline mt-1 inline-block" href={prop.url} target="_blank" rel="noreferrer">
                                 Reference
                               </a>
                             )}
                             {prop.levels && prop.levels.length > 0 && (
                               <div className="mt-2 space-y-2">
-                                <span className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Levels ({prop.levels.length})</span>
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Levels ({prop.levels.length})</span>
                                 {prop.levels.map((level) => (
-                                  <div key={level.value} className="rounded border border-border p-2 space-y-1.5">
+                                  <div key={level.value} className="rounded border border-border-window p-2 space-y-1.5">
                                     <div className="flex items-start gap-2 text-xs">
-                                      <span className="bg-coda-600 text-white px-1.5 py-0.5 rounded font-mono shrink-0">{level.value}</span>
+                                      <span className="bg-active-base text-active-foreground px-1.5 py-0.5 rounded font-mono shrink-0">{level.value}</span>
                                       <div>
-                                        {level.name && <span className="font-medium text-text">{level.name}</span>}
-                                        {level.description && <p className="text-text-secondary">{level.description}</p>}
+                                        {level.name && <span className="font-medium text-foreground">{level.name}</span>}
+                                        {level.description && <p className="text-muted-foreground">{level.description}</p>}
                                       </div>
                                     </div>
                                     {level.measures && (
-                                      <div className="space-y-1 pl-2 border-l-2 border-coda-200">
+                                      <div className="space-y-1 pl-2 border-l-2 border-border-window">
                                         {level.measures.lower && level.measures.lower.length > 0 && (
                                           <div>
-                                            <span className="text-xs font-semibold text-text-tertiary">↓ Lower measures:</span>
+                                            <span className="text-xs font-semibold text-muted-foreground">↓ Lower measures:</span>
                                             <div className="mt-0.5 space-y-0.5">
                                               {level.measures.lower.map((lm) => (
                                                 <div key={lm.id} className="text-xs flex items-start gap-1">
-                                                  <span className="bg-coda-100 text-coda-700 px-1 py-0.5 rounded font-mono shrink-0">{lm.id}</span>
-                                                  {lm.instruction && <span className="text-text-secondary">{lm.instruction}</span>}
+                                                  <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{lm.id}</span>
+                                                  {lm.instruction && <span className="text-muted-foreground">{lm.instruction}</span>}
                                                 </div>
                                               ))}
                                             </div>
@@ -1314,12 +1311,12 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                                         )}
                                         {level.measures.higher && level.measures.higher.length > 0 && (
                                           <div>
-                                            <span className="text-xs font-semibold text-text-tertiary">↑ Higher measures:</span>
+                                            <span className="text-xs font-semibold text-muted-foreground">↑ Higher measures:</span>
                                             <div className="mt-0.5 space-y-0.5">
                                               {level.measures.higher.map((hm) => (
                                                 <div key={hm.id} className="text-xs flex items-start gap-1">
-                                                  <span className="bg-coda-100 text-coda-700 px-1 py-0.5 rounded font-mono shrink-0">{hm.id}</span>
-                                                  {hm.instruction && <span className="text-text-secondary">{hm.instruction}</span>}
+                                                  <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{hm.id}</span>
+                                                  {hm.instruction && <span className="text-muted-foreground">{hm.instruction}</span>}
                                                 </div>
                                               ))}
                                             </div>
@@ -1328,13 +1325,13 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                                       </div>
                                     )}
                                     {level.instructions && level.instructions.higher && level.instructions.higher.length > 0 && (
-                                      <div className="space-y-1 pl-2 border-l-2 border-coda-200">
-                                        <span className="text-xs font-semibold text-text-tertiary">↑ Higher instructions:</span>
+                                      <div className="space-y-1 pl-2 border-l-2 border-border-window">
+                                        <span className="text-xs font-semibold text-muted-foreground">↑ Higher instructions:</span>
                                         <div className="mt-0.5 space-y-0.5">
                                           {level.instructions.higher.map((hi) => (
                                             <div key={hi.id} className="text-xs flex items-start gap-1">
-                                              <span className="bg-coda-100 text-coda-700 px-1 py-0.5 rounded font-mono shrink-0">{hi.id}</span>
-                                              {hi.instruction && <span className="text-text-secondary">{hi.instruction}</span>}
+                                              <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{hi.id}</span>
+                                              {hi.instruction && <span className="text-muted-foreground">{hi.instruction}</span>}
                                             </div>
                                           ))}
                                         </div>
@@ -1352,22 +1349,22 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
 
                   {fw.rules && fw.rules.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Rules</h4>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Rules</h4>
                       <div className="space-y-1.5">
                         {fw.rules.map((rule) => (
-                          <div key={rule.id} className="rounded bg-surface-alt border border-border p-2">
-                            <div className="text-sm font-medium text-text">{formatId(rule.id)}</div>
-                            {rule.description && <p className="text-xs text-text-secondary mt-0.5">{rule.description}</p>}
+                          <div key={rule.id} className="rounded bg-panel border border-border-window p-2">
+                            <div className="text-sm font-medium text-foreground">{formatId(rule.id)}</div>
+                            {rule.description && <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>}
                             {rule.clauses && rule.clauses.length > 0 && (
-                              <div className="mt-2 pl-3 border-l-2 border-border space-y-1">
+                              <div className="mt-2 pl-3 border-l-2 border-border-window space-y-1">
                                 {rule.clauses.map((clause) => (
                                   <div key={clause.id} className="text-xs">
-                                    <span className="font-medium text-text">{formatId(clause.id)}</span>
-                                    {clause.description && <span className="text-text-secondary"> — {clause.description}</span>}
+                                    <span className="font-medium text-foreground">{formatId(clause.id)}</span>
+                                    {clause.description && <span className="text-muted-foreground"> — {clause.description}</span>}
                                     {clause.properties && clause.properties.length > 0 && (
                                       <div className="mt-0.5 flex flex-wrap gap-1">
                                         {clause.properties.map((cp, idx) => (
-                                          <span key={`${cp.id}-${cp.value}-${idx}`} className="bg-surface border border-border px-1 py-0.5 rounded font-mono text-text-secondary">
+                                          <span key={`${cp.id}-${cp.value}-${idx}`} className="bg-window border border-border-window px-1 py-0.5 rounded font-mono text-muted-foreground">
                                             {cp.id}={cp.value}
                                           </span>
                                         ))}
@@ -1380,7 +1377,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                             {rule.measures && rule.measures.length > 0 && (
                               <div className="mt-1.5 flex flex-wrap gap-1">
                                 {rule.measures.map((m) => (
-                                  <span key={m} className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded font-mono">
+                                  <span key={m} className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded font-mono">
                                     {m}
                                   </span>
                                 ))}
@@ -1388,10 +1385,10 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                             )}
                             {rule.data && Object.keys(rule.data).length > 0 && (
                               <div className="mt-1.5">
-                                <span className="text-xs text-text-tertiary">Data schema:</span>
+                                <span className="text-xs text-muted-foreground">Data schema:</span>
                                 <div className="mt-0.5 flex flex-wrap gap-1">
                                   {Object.entries(rule.data).map(([k, v]) => (
-                                    <span key={k} className="text-xs bg-surface border border-border px-1 py-0.5 rounded font-mono text-text-secondary">
+                                    <span key={k} className="text-xs bg-window border border-border-window px-1 py-0.5 rounded font-mono text-muted-foreground">
                                       {k}: {String(v)}
                                     </span>
                                   ))}
@@ -1419,22 +1416,22 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
               <Collapsible
                 key={platform.id}
                 title={formatId(platform.id)}
-                badge={<span className="text-xs text-text-tertiary">{platform.measures?.length ?? 0} measures</span>}
+                badge={<span className="text-xs text-muted-foreground">{platform.measures?.length ?? 0} measures</span>}
               >
                 {platform.measures && platform.measures.length > 0 ? (
                   <div className="space-y-2">
                     {platform.measures.map((pm) => (
-                      <div key={pm.id} className="rounded bg-surface-alt border border-border p-2">
-                        <div className="text-sm font-medium text-text font-mono">{pm.id}</div>
-                        {pm.instructions && <p className="text-xs text-text-secondary mt-0.5">{pm.instructions}</p>}
+                      <div key={pm.id} className="rounded bg-panel border border-border-window p-2">
+                        <div className="text-sm font-medium text-foreground font-mono">{pm.id}</div>
+                        {pm.instructions && <p className="text-xs text-muted-foreground mt-0.5">{pm.instructions}</p>}
                         {pm.mcp?.tools && pm.mcp.tools.length > 0 && (
                           <div className="mt-2">
-                            <span className="text-xs font-semibold text-text-tertiary">MCP Tools:</span>
+                            <span className="text-xs font-semibold text-muted-foreground">MCP Tools:</span>
                             <div className="mt-1 space-y-1">
                               {pm.mcp.tools.map((tool) => (
-                                <div key={tool.id} className="text-xs pl-2 border-l border-border">
-                                  <span className="font-mono text-coda-600">{tool.id}</span>
-                                  {tool.instruction && <span className="text-text-secondary"> — {tool.instruction}</span>}
+                                <div key={tool.id} className="text-xs pl-2 border-l border-border-window">
+                                  <span className="font-mono text-active-base">{tool.id}</span>
+                                  {tool.instruction && <span className="text-muted-foreground"> — {tool.instruction}</span>}
                                 </div>
                               ))}
                             </div>
@@ -1444,7 +1441,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-text-tertiary">No measure instructions.</p>
+                  <p className="text-xs text-muted-foreground">No measure instructions.</p>
                 )}
               </Collapsible>
             ))}
@@ -1479,8 +1476,8 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-text">Runs & Iterations</h2>
-        <p className="text-sm text-text-secondary mt-1">Manage and inspect compliance checking runs.</p>
+        <h2 className="text-lg font-bold text-foreground">Runs & Iterations</h2>
+        <p className="text-sm text-muted-foreground mt-1">Manage and inspect compliance checking runs.</p>
       </div>
 
       <Card title="Current Run">
@@ -1489,13 +1486,13 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
         ) : run ? (
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-text-tertiary uppercase tracking-wider w-16">ID</span>
-              <span className="text-sm font-mono text-text">{run.id ?? run.run_id ?? "—"}</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">ID</span>
+              <span className="text-sm font-mono text-foreground">{run.id ?? run.run_id ?? "—"}</span>
             </div>
             {run.started && (
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-text-tertiary uppercase tracking-wider w-16">Started</span>
-                <span className="text-sm text-text">{run.started}</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">Started</span>
+                <span className="text-sm text-foreground">{run.started}</span>
               </div>
             )}
           </div>
@@ -1510,12 +1507,11 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
             {iterations.map((iter) => (
               <div
                 key={iter.index}
-                className={`flex items-center gap-3 rounded-md border px-3 py-2 text-sm ${
-                  String(iteration?.index) === iter.index ? "border-coda-400 bg-coda-50" : "border-border hover:bg-surface-hover"
-                }`}
+                className={`flex items-center gap-3 rounded-md border px-3 py-2 text-sm ${String(iteration?.index) === iter.index ? "border-active-base bg-info-bg" : "border-border-window hover:bg-hover-window"
+                  }`}
               >
-                <span className="font-mono font-bold text-coda-600">#{iter.index}</span>
-                {String(iteration?.index) === iter.index && <span className="text-xs bg-coda-600 text-white px-1.5 py-0.5 rounded">current</span>}
+                <span className="font-mono font-bold text-active-base">#{iter.index}</span>
+                {String(iteration?.index) === iter.index && <span className="text-xs bg-active-base text-active-foreground px-1.5 py-0.5 rounded">current</span>}
               </div>
             ))}
           </div>
@@ -1529,10 +1525,10 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
           <div className="space-y-2">
             {iteration.targets && iteration.targets.length > 0 && (
               <div>
-                <span className="text-xs font-semibold text-text-tertiary uppercase tracking-wider">Targets</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Targets</span>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {iteration.targets.map((tid) => (
-                    <span key={tid} className="text-xs bg-surface-alt border border-border px-2 py-1 rounded font-mono">
+                    <span key={tid} className="text-xs bg-panel border border-border-window px-2 py-1 rounded font-mono">
                       {tid}
                     </span>
                   ))}
@@ -1571,8 +1567,8 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-text">Compliance Report</h2>
-        <p className="text-sm text-text-secondary mt-1">Results from the latest validation iteration.</p>
+        <h2 className="text-lg font-bold text-foreground">Compliance Report</h2>
+        <p className="text-sm text-muted-foreground mt-1">Results from the latest validation iteration.</p>
       </div>
 
       {reportError ? (
@@ -1597,15 +1593,15 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
                 {violatedRules.map((rule) => (
                   <Collapsible key={rule.id} title={formatId(rule.id)} defaultOpen badge={<StatusBadge status="violated" />}>
                     <div className="space-y-2">
-                      {rule.description && <p className="text-sm text-text-secondary">{rule.description}</p>}
+                      {rule.description && <p className="text-sm text-muted-foreground">{rule.description}</p>}
                       {rule.clauses && rule.clauses.length > 0 && (
                         <div className="space-y-1.5">
                           {rule.clauses.map((clause) => (
-                            <div key={clause.id} className="flex items-start gap-2 rounded bg-surface-alt border border-border p-2">
+                            <div key={clause.id} className="flex items-start gap-2 rounded bg-panel border border-border-window p-2">
                               <StatusBadge status={clause.status} />
                               <div>
-                                <span className="text-sm font-medium text-text">{formatId(clause.id)}</span>
-                                {clause.description && <p className="text-xs text-text-secondary">{clause.description}</p>}
+                                <span className="text-sm font-medium text-foreground">{formatId(clause.id)}</span>
+                                {clause.description && <p className="text-xs text-muted-foreground">{clause.description}</p>}
                               </div>
                             </div>
                           ))}
@@ -1613,9 +1609,9 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
                       )}
                       {rule.measures && rule.measures.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          <span className="text-xs text-text-tertiary mr-1">Measures:</span>
+                          <span className="text-xs text-muted-foreground mr-1">Measures:</span>
                           {rule.measures.map((m) => (
-                            <span key={m} className="text-xs bg-coda-100 text-coda-700 px-1.5 py-0.5 rounded font-mono">
+                            <span key={m} className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded font-mono">
                               {m}
                             </span>
                           ))}
@@ -1623,7 +1619,7 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
                       )}
                       {rule.data && Object.keys(rule.data).length > 0 && (
                         <div>
-                          <span className="text-xs text-text-tertiary">Data:</span>
+                          <span className="text-xs text-muted-foreground">Data:</span>
                           <JsonViewer data={rule.data} />
                         </div>
                       )}
@@ -1638,10 +1634,10 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
             <Card title={`Compliant (${compliantRules.length})`}>
               <div className="space-y-1">
                 {compliantRules.map((rule) => (
-                  <div key={rule.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                  <div key={rule.id} className="flex items-center justify-between rounded-md border border-border-window px-3 py-2">
                     <div>
-                      <span className="text-sm font-medium text-text">{formatId(rule.id)}</span>
-                      {rule.description && <p className="text-xs text-text-secondary mt-0.5">{rule.description}</p>}
+                      <span className="text-sm font-medium text-foreground">{formatId(rule.id)}</span>
+                      {rule.description && <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>}
                     </div>
                     <StatusBadge status="compliant" />
                   </div>
@@ -1679,8 +1675,8 @@ function TranslationsPage({ refreshKey }: { refreshKey: number }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-text">Translations</h2>
-        <p className="text-sm text-text-secondary mt-1">Translation outputs for each target in the current iteration.</p>
+        <h2 className="text-lg font-bold text-foreground">Translations</h2>
+        <p className="text-sm text-muted-foreground mt-1">Translation outputs for each target in the current iteration.</p>
       </div>
 
       {targetIds.length === 0 ? (
@@ -1775,8 +1771,8 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-text">Actions</h2>
-        <p className="text-sm text-text-secondary mt-1">Invoke coda tools to run compliance checking workflows.</p>
+        <h2 className="text-lg font-bold text-foreground">Actions</h2>
+        <p className="text-sm text-muted-foreground mt-1">Invoke coda tools to run compliance checking workflows.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1787,14 +1783,14 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
                 <IconPlay className="w-3.5 h-3.5" />
                 Start Run
               </Button>
-              <p className="text-xs text-text-secondary pt-1">Create a new compliance checking run.</p>
+              <p className="text-xs text-muted-foreground pt-1">Create a new compliance checking run.</p>
             </div>
             <div className="flex items-start gap-3">
               <Button variant="primary" onClick={() => runTool("start_iteration", {}, "Start Iteration")} loading={loading === "Start Iteration"} disabled={loading !== null}>
                 <IconRuns className="w-3.5 h-3.5" />
                 Start Iteration
               </Button>
-              <p className="text-xs text-text-secondary pt-1">Begin a new iteration in the current run.</p>
+              <p className="text-xs text-muted-foreground pt-1">Begin a new iteration in the current run.</p>
             </div>
           </div>
         </Card>
@@ -1829,8 +1825,8 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
                 title={entry.action}
                 badge={
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-text-tertiary">{entry.timestamp}</span>
-                    <span className={`w-2 h-2 rounded-full ${entry.success ? "bg-compliant" : "bg-violated"}`} />
+                    <span className="text-xs text-muted-foreground">{entry.timestamp}</span>
+                    <span className={`w-2 h-2 rounded-full ${entry.success ? "bg-success-border" : "bg-destructive-border"}`} />
                   </div>
                 }
               >
@@ -1888,8 +1884,8 @@ function TargetActionCard({
   }, [manualInput, manualMode, targetId, runTool, runCall]);
 
   return (
-    <div className="rounded border border-border p-3 space-y-2">
-      <div className="text-sm font-medium text-text font-mono">{targetId}</div>
+    <div className="rounded border border-border-window p-3 space-y-2">
+      <div className="text-sm font-medium text-foreground font-mono">{targetId}</div>
       <div className="flex gap-2">
         <Button
           onClick={() => runTool("translate", { target_id: targetId }, `Translate ${targetId}`)}
@@ -1920,17 +1916,15 @@ function TargetActionCard({
           <div className="flex gap-2">
             <button
               onClick={() => { setManualMode("translate"); setManualInput(""); }}
-              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
-                manualMode === "translate" ? "bg-coda-600 text-white border-coda-600" : "border-border text-text-secondary hover:bg-surface-hover"
-              }`}
+              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${manualMode === "translate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+                }`}
             >
               Translation
             </button>
             <button
               onClick={() => { setManualMode("validate"); setManualInput(""); }}
-              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
-                manualMode === "validate" ? "bg-coda-600 text-white border-coda-600" : "border-border text-text-secondary hover:bg-surface-hover"
-              }`}
+              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${manualMode === "validate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+                }`}
             >
               Validation
             </button>
@@ -1940,7 +1934,7 @@ function TargetActionCard({
             onChange={(e) => setManualInput(e.target.value)}
             placeholder={`Paste ${manualMode} result JSON here...`}
             rows={5}
-            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400 resize-y"
+            className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base resize-y"
           />
           <div className="flex gap-2 justify-end">
             <Button onClick={() => { setManualMode(null); setManualInput(""); }} variant="secondary" className="text-xs">
@@ -1976,13 +1970,13 @@ function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | nul
   };
   return (
     <div className="space-y-3">
-      <p className="text-xs text-text-secondary">Paste the fix result (report JSON) from an agent to manually save it.</p>
+      <p className="text-xs text-muted-foreground">Paste the fix result (report JSON) from an agent to manually save it.</p>
       <textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Paste fix result JSON here..."
         rows={4}
-        className="w-full rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400 resize-y"
+        className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base resize-y"
       />
       <div className="flex justify-end">
         <Button onClick={handleSubmit} variant="primary" loading={loading === "Manual Save Report"} disabled={disabled || !input.trim()} className="text-xs">
@@ -2009,7 +2003,7 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
   };
   return (
     <div className="space-y-3">
-      <p className="text-xs text-text-secondary">Describe what should be fixed in the design to address compliance breaches.</p>
+      <p className="text-xs text-muted-foreground">Describe what should be fixed in the design to address compliance breaches.</p>
       <div className="flex gap-2">
         <input
           type="text"
@@ -2017,7 +2011,7 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           placeholder="e.g., Increase gross floor area to meet room program requirements"
-          className="flex-1 rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400"
+          className="flex-1 rounded-md border border-border-window bg-window px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
         />
         <Button variant="danger" onClick={handleSubmit} loading={loading?.startsWith("Fix:") ?? false} disabled={disabled || !prompt.trim()}>
           <IconWrench className="w-3.5 h-3.5" />
@@ -2061,8 +2055,8 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-text">Events</h2>
-          <p className="text-sm text-text-secondary mt-1">
+          <h2 className="text-lg font-bold text-foreground">Events</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Real-time event stream from the coda sidecar ({events.length} total).
           </p>
         </div>
@@ -2079,7 +2073,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter events by kind or content..."
-          className="flex-1 rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400"
+          className="flex-1 rounded-md border border-border-window bg-window px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
         />
         {uniqueKinds.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -2087,9 +2081,8 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
               <button
                 key={kind}
                 onClick={() => setFilter(filter === kind ? "" : kind)}
-                className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
-                  filter === kind ? "bg-coda-600 text-white border-coda-600" : "border-border text-text-secondary hover:bg-surface-hover"
-                }`}
+                className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${filter === kind ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+                  }`}
               >
                 {kind}
               </button>
@@ -2111,7 +2104,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
               <Collapsible
                 key={`${evt.timestamp}-${idx}`}
                 title={evt.event}
-                badge={<span className="text-xs text-text-tertiary font-mono">{timeStr}</span>}
+                badge={<span className="text-xs text-muted-foreground font-mono">{timeStr}</span>}
               >
                 <JsonViewer data={evt.data} />
               </Collapsible>
@@ -2206,21 +2199,21 @@ function WelcomePage({
   }, [onProjectReady]);
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-surface overflow-hidden">
+    <div className="flex h-screen w-screen flex-col bg-window overflow-hidden">
       {/* Title Bar */}
-      <div className="flex h-9 items-center border-b border-border bg-surface-alt px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+      <div className="flex h-9 items-center border-b border-border-window bg-panel px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <span className="text-sm font-bold text-coda-600">coda</span>
-          <span className="text-xs text-text-tertiary">ACC Design Assistant</span>
+          <span className="text-sm font-bold text-active-base">coda</span>
+          <span className="text-xs text-muted-foreground">ACC Design Assistant</span>
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <button onClick={onMinimize} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer">
+          <button onClick={onMinimize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
             <IconMinimize />
           </button>
-          <button onClick={onMaximize} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer">
+          <button onClick={onMaximize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
             <IconMaximize />
           </button>
-          <button onClick={onClose} className="rounded p-1.5 text-text-secondary hover:bg-violated/20 hover:text-violated transition-colors cursor-pointer">
+          <button onClick={onClose} className="rounded p-1.5 text-muted-foreground hover:bg-destructive-bg hover:text-destructive-foreground transition-colors cursor-pointer">
             <IconClose />
           </button>
         </div>
@@ -2230,8 +2223,8 @@ function WelcomePage({
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="w-full max-w-2xl space-y-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-coda-600">coda</h1>
-            <p className="mt-2 text-text-secondary">ACC Design Assistant</p>
+            <h1 className="text-3xl font-bold text-active-base">coda</h1>
+            <p className="mt-2 text-muted-foreground">ACC Design Assistant</p>
           </div>
 
           {mode === "choose" && (
@@ -2239,10 +2232,10 @@ function WelcomePage({
               {/* #region Create New Project Card */}
               <button
                 onClick={() => { setMode("create"); setError(null); }}
-                className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border bg-surface p-8 text-left transition-all hover:border-coda-400 hover:bg-coda-50 cursor-pointer"
+                className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border-window bg-window p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer"
               >
-                <div className="rounded-full bg-coda-100 p-4 transition-colors group-hover:bg-coda-200">
-                  <svg className="w-8 h-8 text-coda-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="rounded-full bg-info-bg p-4 transition-colors group-hover:bg-hover-window">
+                  <svg className="w-8 h-8 text-active-base" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
                     <line x1="12" y1="18" x2="12" y2="12" />
@@ -2250,8 +2243,8 @@ function WelcomePage({
                   </svg>
                 </div>
                 <div className="text-center">
-                  <div className="text-base font-semibold text-text">Create New Project</div>
-                  <p className="mt-1 text-sm text-text-secondary">Start fresh with a new coda project in a folder of your choice.</p>
+                  <div className="text-base font-semibold text-foreground">Create New Project</div>
+                  <p className="mt-1 text-sm text-muted-foreground">Start fresh with a new coda project in a folder of your choice.</p>
                 </div>
               </button>
               {/* #endregion */}
@@ -2260,16 +2253,16 @@ function WelcomePage({
               <button
                 onClick={handleOpen}
                 disabled={loading}
-                className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border bg-surface p-8 text-left transition-all hover:border-coda-400 hover:bg-coda-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border-window bg-window p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="rounded-full bg-coda-100 p-4 transition-colors group-hover:bg-coda-200">
-                  <svg className="w-8 h-8 text-coda-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="rounded-full bg-info-bg p-4 transition-colors group-hover:bg-hover-window">
+                  <svg className="w-8 h-8 text-active-base" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                   </svg>
                 </div>
                 <div className="text-center">
-                  <div className="text-base font-semibold text-text">Open Existing Project</div>
-                  <p className="mt-1 text-sm text-text-secondary">Open a folder that already contains a coda project configuration.</p>
+                  <div className="text-base font-semibold text-foreground">Open Existing Project</div>
+                  <p className="mt-1 text-sm text-muted-foreground">Open a folder that already contains a coda project configuration.</p>
                 </div>
               </button>
               {/* #endregion */}
@@ -2277,14 +2270,14 @@ function WelcomePage({
           )}
 
           {(mode === "create" || mode === "open") && (
-            <div className="rounded-xl border border-border bg-surface p-6 space-y-5">
+            <div className="rounded-xl border border-border-window bg-window p-6 space-y-5">
               <div className="flex items-center gap-2">
-                <button onClick={() => { setMode("choose"); setError(null); }} className="text-text-tertiary hover:text-text transition-colors cursor-pointer">
+                <button onClick={() => { setMode("choose"); setError(null); }} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
                 </button>
-                <h2 className="text-base font-semibold text-text">
+                <h2 className="text-base font-semibold text-foreground">
                   {mode === "create" ? "Create New Project" : "Open Existing Project"}
                 </h2>
               </div>
@@ -2292,29 +2285,29 @@ function WelcomePage({
               {mode === "create" && (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-text">Project Name</label>
+                    <label className="text-sm font-medium text-foreground">Project Name</label>
                     <input
                       type="text"
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                       placeholder="My Project"
-                      className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-coda-400 focus:border-coda-400"
+                      className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
                       autoFocus
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-text">Project Folder</label>
+                    <label className="text-sm font-medium text-foreground">Project Folder</label>
                     <div className="flex gap-2">
-                      <div className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-secondary truncate">
+                      <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">
                         {selectedFolder ?? "No folder selected"}
                       </div>
                       <Button onClick={handlePickFolder} variant="secondary">
                         Browse…
                       </Button>
                     </div>
-                    <p className="text-xs text-text-tertiary">A <code className="font-mono">.coda/project.json</code> will be created in this folder.</p>
+                    <p className="text-xs text-muted-foreground">A <code className="font-mono">.coda/project.json</code> will be created in this folder.</p>
                   </div>
                 </div>
               )}
@@ -2322,19 +2315,19 @@ function WelcomePage({
               {mode === "open" && (
                 <div className="space-y-4">
                   <div className="flex gap-2">
-                    <div className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-secondary truncate">
+                    <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">
                       {selectedFolder ?? "No folder selected"}
                     </div>
                     <Button onClick={handlePickFolder} variant="secondary">
                       Browse…
                     </Button>
                   </div>
-                  <p className="text-xs text-text-tertiary">Select a folder that contains a <code className="font-mono">.coda/project.json</code> file.</p>
+                  <p className="text-xs text-muted-foreground">Select a folder that contains a <code className="font-mono">.coda/project.json</code> file.</p>
                 </div>
               )}
 
               {error && (
-                <div className="rounded-md border border-violated/30 bg-violated/10 px-3 py-2 text-sm text-violated">
+                <div className="rounded-md border border-destructive-border bg-destructive-bg px-3 py-2 text-sm text-destructive-foreground">
                   {error}
                 </div>
               )}
@@ -2357,7 +2350,7 @@ function WelcomePage({
           )}
 
           {error && mode === "choose" && (
-            <div className="rounded-md border border-violated/30 bg-violated/10 px-3 py-2 text-sm text-violated text-center">
+            <div className="rounded-md border border-destructive-border bg-destructive-bg px-3 py-2 text-sm text-destructive-foreground text-center">
               {error}
             </div>
           )}
@@ -2458,7 +2451,7 @@ function App() {
 
   if (projectPath === undefined) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-surface">
+      <div className="flex h-screen w-screen items-center justify-center bg-window">
         <Spinner label="Loading..." />
       </div>
     );
@@ -2478,32 +2471,32 @@ function App() {
   const projectName = projectPath.split("/").pop() ?? projectPath;
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-surface overflow-hidden">
+    <div className="flex h-screen w-screen flex-col bg-window overflow-hidden">
       {/* #region Title Bar */}
-      <div className="flex h-9 items-center border-b border-border bg-surface-alt px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+      <div className="flex h-9 items-center border-b border-border-window bg-panel px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <span className="text-sm font-bold text-coda-600">coda</span>
-          <span className="text-xs text-text-tertiary">ACC Design Assistant</span>
-          <span className="text-xs text-text-tertiary ml-1">|</span>
-          <span className="text-xs text-text-tertiary ml-1 font-mono" title={projectPath}>{projectName}</span>
-          {userId && <><span className="text-xs text-text-tertiary ml-1">·</span><span className="text-xs text-text-tertiary ml-1">{userId}</span></>}
-          <span className="text-xs text-text-tertiary ml-1">·</span>
-          <span className={`ml-1 inline-flex items-center gap-1 text-xs ${sidecarConnected ? "text-compliant" : "text-violated"}`} title={sidecarConnected ? "Sidecar connected" : "Sidecar disconnected (offline mode)"}>
-            <span className={`w-1.5 h-1.5 rounded-full ${sidecarConnected ? "bg-compliant" : "bg-violated"}`} />
+          <span className="text-sm font-bold text-active-base">coda</span>
+          <span className="text-xs text-muted-foreground">ACC Design Assistant</span>
+          <span className="text-xs text-muted-foreground ml-1">|</span>
+          <span className="text-xs text-muted-foreground ml-1 font-mono" title={projectPath}>{projectName}</span>
+          {userId && <><span className="text-xs text-muted-foreground ml-1">·</span><span className="text-xs text-muted-foreground ml-1">{userId}</span></>}
+          <span className="text-xs text-muted-foreground ml-1">·</span>
+          <span className={`ml-1 inline-flex items-center gap-1 text-xs ${sidecarConnected ? "text-success-foreground" : "text-destructive-foreground"}`} title={sidecarConnected ? "Sidecar connected" : "Sidecar disconnected (offline mode)"}>
+            <span className={`w-1.5 h-1.5 rounded-full ${sidecarConnected ? "bg-success-border" : "bg-destructive-border"}`} />
             {sidecarConnected ? "Connected" : "Offline"}
           </span>
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <button onClick={handleRefresh} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer" title="Refresh data">
+          <button onClick={handleRefresh} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer" title="Refresh data">
             <IconRefresh className="w-3.5 h-3.5" />
           </button>
-          <button onClick={handleMinimize} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer">
+          <button onClick={handleMinimize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
             <IconMinimize />
           </button>
-          <button onClick={handleMaximize} className="rounded p-1.5 text-text-secondary hover:bg-surface-hover hover:text-text transition-colors cursor-pointer">
+          <button onClick={handleMaximize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
             <IconMaximize />
           </button>
-          <button onClick={handleClose} className="rounded p-1.5 text-text-secondary hover:bg-violated/20 hover:text-violated transition-colors cursor-pointer">
+          <button onClick={handleClose} className="rounded p-1.5 text-muted-foreground hover:bg-destructive-bg hover:text-destructive-foreground transition-colors cursor-pointer">
             <IconClose />
           </button>
         </div>
@@ -2512,7 +2505,7 @@ function App() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* #region Sidebar */}
-        <nav className={`flex flex-col border-r border-border bg-surface-alt shrink-0 transition-all duration-200 ${sidebarCollapsed ? "w-12" : "w-48"}`}>
+        <nav className={`flex flex-col border-r border-border-window bg-panel shrink-0 transition-all duration-200 ${sidebarCollapsed ? "w-12" : "w-48"}`}>
           <div className="flex-1 py-2">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -2521,9 +2514,8 @@ function App() {
                 <button
                   key={item.id}
                   onClick={() => setCurrentPage(item.id)}
-                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer ${
-                    active ? "bg-coda-50 text-coda-700 border-r-2 border-coda-600" : "text-text-secondary hover:bg-surface-hover hover:text-text"
-                  }`}
+                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer ${active ? "bg-info-bg text-active-base border-r-2 border-active-base" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"
+                    }`}
                   title={item.label}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
@@ -2534,7 +2526,7 @@ function App() {
           </div>
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="border-t border-border p-2 text-text-tertiary hover:text-text hover:bg-surface-hover transition-colors cursor-pointer"
+            className="border-t border-border-window p-2 text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer"
             title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <IconChevronRight className={`w-4 h-4 mx-auto transition-transform ${sidebarCollapsed ? "" : "rotate-180"}`} />

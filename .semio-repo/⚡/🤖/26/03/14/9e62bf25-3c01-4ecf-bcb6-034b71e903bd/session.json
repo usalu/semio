@@ -1,0 +1,42 @@
+{
+  "id": "9e62bf25-3c01-4ecf-bcb6-034b71e903bd",
+  "uri": "semiorepo://s/9e62bf25-3c01-4ecf-bcb6-034b71e903bd",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-14T19:46:26Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/9e62bf25-3c01-4ecf-bcb6-034b71e903bd.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-14T19:46:15.695Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "9e62bf25-3c01-4ecf-bcb6-034b71e903bd",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/9e62bf25-3c01-4ecf-bcb6-034b71e903bd.jsonl",
+          "prompt": "Continue",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.prompt.submitting acknowledged",
+            "hookEventName": "UserPromptSubmit"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "prompt": "Continue",
+        "second": "🎆26🌙03☀️14⏰19⌚46⏱️26",
+        "session": "⚪9e62bf253c014ecfbcb6034b71e903bd",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/9e62bf25-3c01-4ecf-bcb6-034b71e903bd.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

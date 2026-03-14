@@ -73,14 +73,14 @@
     {
       "label": "📦build👤semio🌐docs",
       "type": "shell",
-      "command": "npx nx build semio/docs",
+      "command": "npx nx build semio/sites/docs",
       "group": "build",
       "problemMatcher": []
     },
     {
       "label": "📦build👤semio🌐play",
       "type": "shell",
-      "command": "npx nx build semio/play",
+      "command": "npx nx build semio/sites/play",
       "group": "build",
       "problemMatcher": []
     },
@@ -249,131 +249,6 @@
       "type": "shell",
       "command": "npx nx test @semio/net",
       "group": "test",
-      "problemMatcher": []
-    },
-    // ========================================
-    // PREFLIGHT
-    // ========================================
-    {
-      "label": "preflight",
-      "type": "shell",
-      "command": "npm run preflight",
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight🧰semiorepo⌨️cli",
-      "type": "shell",
-      "command": "npx nx preflight semio-repo/cli",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight🧰semiorepo⌨️server",
-      "type": "shell",
-      "command": "npx nx preflight semio-repo/server",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight🧰semiorepo⌨️vscode",
-      "type": "shell",
-      "command": "npx nx preflight semio-repo/vscode",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio📚go",
-      "type": "shell",
-      "command": "npx nx preflight semio/go",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio📚rs",
-      "type": "shell",
-      "command": "npx nx preflight semio/rs",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio📚py",
-      "type": "shell",
-      "command": "npx nx preflight semio/py",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio📚engine",
-      "type": "shell",
-      "command": "npx nx preflight semio/engine",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio📚js",
-      "type": "shell",
-      "command": "npx nx preflight semio/js",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio🌐docs",
-      "type": "shell",
-      "command": "npx nx preflight semio/docs",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio🌐play",
-      "type": "shell",
-      "command": "npx nx preflight semio/play",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio🖱️desktop",
-      "type": "shell",
-      "command": "npx nx preflight semio/desktop",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio📚net",
-      "type": "shell",
-      "command": "npx nx preflight @semio/net",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio🏪assets",
-      "type": "shell",
-      "command": "npx nx preflight semio/assets",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio🏪logo",
-      "type": "shell",
-      "command": "npx nx preflight @semio/logo",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio🏪icons",
-      "type": "shell",
-      "command": "npx nx preflight @semio/icons",
-      "group": "build",
-      "problemMatcher": []
-    },
-    {
-      "label": "🔍preflight👤semio🖱️sketchpad",
-      "type": "shell",
-      "command": "npx nx preflight semio/sketchpad",
-      "group": "build",
       "problemMatcher": []
     },
     // ========================================
@@ -614,7 +489,7 @@
       "label": "🛠️dev👤semio🌐docs",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev semio/docs",
+      "command": "npx nx dev semio/sites/docs",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -637,7 +512,7 @@
       "label": "🛠️dev👤semio🌐play",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev semio/play",
+      "command": "npx nx dev semio/sites/play",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [

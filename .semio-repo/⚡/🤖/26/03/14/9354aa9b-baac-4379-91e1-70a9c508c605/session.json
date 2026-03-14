@@ -1,0 +1,958 @@
+{
+  "id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+  "uri": "semiorepo://s/9354aa9b-baac-4379-91e1-70a9c508c605",
+  "contributor": "🧑‍💻ueli",
+  "client": "cursor-chat",
+  "second": "2026-03-14T17:12:08Z",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts"
+          },
+          "tool_use_id": "tool_15e909db-ba00-4089-bc07-2a1ae1c1f93",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚12⏱️08",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "content": "// #region 🔖Header\n// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from \"@semio/assets\";\nimport * as ElementsBundle from \"../../semio-elements/ui\";\nimport { Action as UiAction, buildControlTree, ControlDef } from \"../../semio-elements/ui\";\nimport { describe, expect, it } from \"vitest\";\nimport {\n  applyDesignDiff,\n  applyKitDiff,\n  areKitDiffsEqual,\n  areKitsEqual,\n  areValidationResultsEqual,\n  createClusteredDesign,\n  Design,\n  deserializeKit,\n  dragPiecesInDesign,\n  exportKit,\n  flattenDesign,\n  getIncludedDesigns,\n  getKitChange,\n  getKitDiff,\n  hasErrors,\n  importKit,\n  inverseKitDiff,\n  Kit,\n  Model,\n  Plane,\n  replaceClusterWithDesign,\n  selectBestModel,\n  serializeKit,\n  sumQualityInDesign,\n  validateKit,\n  ValidationResult,\n} from \"./semio\";\n\nconst TOLERANCE = 0.001;\n\nconst planesEqual = (p1?: Plane, p2?: Plane): boolean =\u003e {\n  if (!p1 || !p2) return false;\n  if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;\n  return (\n    Math.abs(p1.origin.x - p2.origin.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.y - p2.origin.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.z - p2.origin.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.x - p2.xAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.y - p2.xAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.z - p2.xAxis.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.x - p2.yAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.y - p2.yAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.z - p2.yAxis.z) \u003c TOLERANCE\n  );\n};\n\nconst centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean =\u003e {\n  if (!c1 || !c2) return c1 === c2;\n  return Math.abs(c1.u - c2.u) \u003c TOLERANCE \u0026\u0026 Math.abs(c1.v - c2.v) \u003c TOLERANCE;\n};\n\nconst findDesign = (kit: Kit, name: string, parentName?: string) =\u003e {\n  let parentGuid: string | undefined;\n  if (parentName) {\n    const p = kit.designs?.find((d) =\u003e d.name === parentName);\n    if (!p) throw new Error(`Parent ${parentName} not found`);\n    parentGuid = p.guid;\n  }\n  const d = kit.designs?.find((d) =\u003e d.name === name \u0026\u0026 (parentGuid ? d.parent?.guid === parentGuid : !d.parent));\n  if (!d) throw new Error(`Design ${name} not found`);\n  return d;\n};\n\ndescribe(\"Change\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) =\u003e !d.parent) };\n    const kitDiff = MetabolismKitDiff as any;\n    const kitDiffInverted = MetabolismKitDiffInverted as any;\n    const kitDiffed = MetabolismKitDiffed as any;\n\n    it(\"Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit\", () =\u003e {\n      const change = getKitChange(kitOriginal, kitDiffed);\n      const computedDiff = getKitDiff(kitOriginal, kitDiffed);\n      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);\n      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);\n      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);\n      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);\n      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);\n      const appliedForward = applyKitDiff(kitOriginal, change.forward);\n      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);\n      const appliedInverse = applyKitDiff(kitDiffed, change.backward);\n      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);\n    });\n\n    describe(\"Design/Model\", () =\u003e {\n      it(\"selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases\", () =\u003e {\n        const payload = ModelSelectionCases as {\n          cases: Array\u003c{\n            name: string;\n            selectedTagGuids: string[];\n            expectedGuid: string | null;\n            models: Array\u003c{ guid: string; fileGuid: string; tagGuids: string[] }\u003e;\n          }\u003e;\n        };\n        payload.cases.forEach((testCase) =\u003e {\n          const models: Model[] = testCase.models.map((model) =\u003e ({\n            guid: model.guid,\n            file: { guid: model.fileGuid },\n            tags: model.tagGuids.map((guid) =\u003e ({ guid })),\n          }));\n          const selected = selectBestModel(models, testCase.selectedTagGuids);\n          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);\n        });\n      });\n    });\n  });\n});\n\ndescribe(\"Flatten\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n\n  const testFlatten = (designName: string, parentName?: string) =\u003e {\n    const design = findDesign(kit, designName, parentName);\n    const expectedDesign = kit.designs?.find((d) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === design.guid);\n    expect(expectedDesign).toBeDefined();\n    const flatDesignChange = flattenDesign(kit, design.guid);\n    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);\n\n    flatDesign!.pieces?.forEach((p) =\u003e {\n      const expectedPiece = expectedDesign!.pieces?.find((ep) =\u003e ep.name === p.name);\n      expect(expectedPiece).toBeDefined();\n      expect(p.plane).toBeDefined();\n      expect(p.center).toBeDefined();\n      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);\n      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);\n    });\n  };\n\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Nakagin Capsule Tower\");\n    });\n    describe(\"Slanted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Slanted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Twisted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Twisted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Dancing\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Dancing\", \"Nakagin Capsule Tower\");\n      });\n    });\n  });\n\n  describe(\"Capsule Dream\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Capsule Dream\");\n    });\n  });\n});\n\ndescribe(\"Roundtrip\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json\", async () =\u003e {\n      const fs = await import(\"node:fs\");\n      const path = await import(\"node:path\");\n\n      const kit = MetabolismKit as unknown as Kit;\n      const serializedKit = serializeKit(kit);\n      const deserializedKit = deserializeKit(serializedKit);\n      expect(areKitsEqual(kit, deserializedKit)).toBe(true);\n\n      const zipPath = path.join(__dirname, \"../assets/semio/metabolism.zip\");\n      const zipBuffer = fs.readFileSync(zipPath);\n      const { kit: zipKit } = await importKit(zipBuffer.buffer);\n      expect(areKitsEqual(kit, zipKit)).toBe(true);\n\n      const exportedZip = await exportKit(kit);\n      const { kit: reKit } = await importKit(exportedZip);\n      expect(areKitsEqual(kit, reKit)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Validation\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Metabolism Kit -\u003e Validate = Empty report\", () =\u003e {\n      const validKit = MetabolismKit as unknown as Kit;\n      expect(hasErrors(validateKit(validKit))).toBe(false);\n    });\n  });\n\n  describe(\"Invalid\", () =\u003e {\n    it(\"Invalid Kit -\u003e Validate = Invalid Report\", () =\u003e {\n      const invalidKit = InvalidKit as unknown as Kit;\n      const result = validateKit(invalidKit);\n      const expected = InvalidKitValidation as unknown as ValidationResult;\n      expect(areValidationResultsEqual(result, expected)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Cluster\", () =\u003e {\n  it(\"Cluster replacement uses design-guid designPiece and yields included design entry\", () =\u003e {\n    const design = {\n      guid: \"design-root\",\n      name: \"Root\",\n      pieces: [\n        { guid: \"piece-a\", type: { guid: \"type-a\" } },\n        { guid: \"piece-b\", type: { guid: \"type-b\" } },\n        { guid: \"piece-c\", type: { guid: \"type-c\" } },\n      ],\n      connections: [\n        {\n          guid: \"conn-ab\",\n          connecting: { piece: { guid: \"piece-a\" } },\n          connected: { piece: { guid: \"piece-b\" } },\n        },\n        {\n          guid: \"conn-bc\",\n          connecting: { piece: { guid: \"piece-b\" } },\n          connected: { piece: { guid: \"piece-c\" } },\n        },\n      ],\n      createdAt: \"2025-01-01T00:00:00.000Z\",\n      updatedAt: \"2025-01-01T00:00:00.000Z\",\n    } as Design;\n\n    const { clusteredDesign, externalConnections } = createClusteredDesign(design, [\"piece-a\", \"piece-b\"], \"Cluster\");\n    const change = replaceClusterWithDesign(design, [\"piece-a\", \"piece-b\"], clusteredDesign, externalConnections);\n    const updatedDesign = applyDesignDiff(design, change.forward);\n\n    const clusterConnection = updatedDesign.connections?.find((c) =\u003e c.guid === \"conn-bc\");\n    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);\n    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();\n\n    const included = getIncludedDesigns(updatedDesign);\n    expect(included.length).toBe(1);\n    expect(included[0].guid).toBe(clusteredDesign.guid);\n    expect(included[0].designGuid).toBe(clusteredDesign.guid);\n  });\n});\n\ndescribe(\"Drag\", () =\u003e {\n  it(\"Design + Pieces + Offset = DiffDesign\", () =\u003e {\n    const design = DragDesign as unknown as Design;\n    const pieces = DragPieces as unknown as Design;\n    const offset = DragOffset as { u: number; v: number };\n    const expectedDiff = DragDiffDesign as any;\n    const computedDiff = dragPiecesInDesign(design, pieces, offset);\n    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);\n    for (let i = 0; i \u003c computedPieceUpdates.length; i++) {\n      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);\n      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);\n      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);\n    }\n    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);\n    for (let i = 0; i \u003c computedConnUpdates.length; i++) {\n      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);\n      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);\n      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);\n    }\n  });\n});\n\ndescribe(\"Sketchpad ControlTree\", () =\u003e {\n  it(\"builds nested folders from paths and applies case-insensitive filter on leaf keys\", () =\u003e {\n    const controls: ControlDef[] = [\n      { path: \"Transform/Position/X\", controlKind: \"number\", value: 1, onChange: () =\u003e {} },\n      { path: \"Transform/Position/Y\", controlKind: \"number\", value: 2, onChange: () =\u003e {} },\n      { path: \"Appearance/Material/roughness\", controlKind: \"slider\", value: 0.5, onChange: () =\u003e {} },\n    ];\n    const folderSettings = {\n      Transform: { path: \"Transform\", order: 2 },\n      \"Appearance/Material\": { path: \"Appearance/Material\", order: 1, collapsed: true },\n    };\n    const fullTree = buildControlTree(controls, \"\", folderSettings);\n    expect(Object.keys(fullTree)).toEqual([\"Transform\", \"Appearance\"]);\n    expect(fullTree.Transform.kind).toBe(\"folder\");\n    expect(fullTree.Transform.order).toBe(2);\n    expect(fullTree.Transform.children?.Position.kind).toBe(\"folder\");\n    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe(\"control\");\n    expect(fullTree.Appearance.children?.Material.order).toBe(1);\n    const filteredTree = buildControlTree(controls, \"rouGH\", folderSettings);\n    expect(Object.keys(filteredTree)).toEqual([\"Appearance\"]);\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe(\"control\");\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe(\"Appearance/Material/roughness\");\n  });\n});\n\ndescribe(\"Elements Bundle\", () =\u003e {\n  it(\"sources shared element primitives directly from semio-elements ui\", () =\u003e {\n    expect(UiAction).toBe(ElementsBundle.Action);\n    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);\n    expect(ElementsBundle.LevelProvider).toBeDefined();\n    expect(ElementsBundle.SectionSpecificity).toBeDefined();\n  });\n});\n\ndescribe(\"Design/Quality/Sum\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"sums effective floor area to ~2349.53\", () =\u003e {\n      const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent);\n      expect(design).toBeDefined();\n      const quality = kit.qualities?.find((q) =\u003e q.name === \"effective floor area\");\n      expect(quality).toBeDefined();\n      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);\n      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);\n    });\n  });\n});\n",
+          "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+          "attachments": [],
+          "hook_event_name": "beforeReadFile",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚13⏱️01",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts"
+          },
+          "tool_use_id": "tool_a621cffa-00ee-4b65-85d1-9b0ca3238e6",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚14⏱️39",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "content": "// #region 🔖Header\n// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from \"@semio/assets\";\nimport * as ElementsBundle from \"../../semio-elements/ui\";\nimport { Action as UiAction, buildControlTree, ControlDef } from \"../../semio-elements/ui\";\nimport { describe, expect, it } from \"vitest\";\nimport {\n  applyDesignDiff,\n  applyKitDiff,\n  areKitDiffsEqual,\n  areKitsEqual,\n  areValidationResultsEqual,\n  createClusteredDesign,\n  Design,\n  deserializeKit,\n  dragPiecesInDesign,\n  exportKit,\n  flattenDesign,\n  getIncludedDesigns,\n  getKitChange,\n  getKitDiff,\n  hasErrors,\n  importKit,\n  inverseKitDiff,\n  Kit,\n  Model,\n  Plane,\n  replaceClusterWithDesign,\n  selectBestModel,\n  serializeKit,\n  sumQualityInDesign,\n  validateKit,\n  ValidationResult,\n} from \"./semio\";\n\nconst TOLERANCE = 0.001;\n\nconst planesEqual = (p1?: Plane, p2?: Plane): boolean =\u003e {\n  if (!p1 || !p2) return false;\n  if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;\n  return (\n    Math.abs(p1.origin.x - p2.origin.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.y - p2.origin.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.z - p2.origin.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.x - p2.xAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.y - p2.xAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.z - p2.xAxis.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.x - p2.yAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.y - p2.yAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.z - p2.yAxis.z) \u003c TOLERANCE\n  );\n};\n\nconst centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean =\u003e {\n  if (!c1 || !c2) return c1 === c2;\n  return Math.abs(c1.u - c2.u) \u003c TOLERANCE \u0026\u0026 Math.abs(c1.v - c2.v) \u003c TOLERANCE;\n};\n\nconst findDesign = (kit: Kit, name: string, parentName?: string) =\u003e {\n  let parentGuid: string | undefined;\n  if (parentName) {\n    const p = kit.designs?.find((d) =\u003e d.name === parentName);\n    if (!p) throw new Error(`Parent ${parentName} not found`);\n    parentGuid = p.guid;\n  }\n  const d = kit.designs?.find((d) =\u003e d.name === name \u0026\u0026 (parentGuid ? d.parent?.guid === parentGuid : !d.parent));\n  if (!d) throw new Error(`Design ${name} not found`);\n  return d;\n};\n\ndescribe(\"Change\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) =\u003e !d.parent) };\n    const kitDiff = MetabolismKitDiff as any;\n    const kitDiffInverted = MetabolismKitDiffInverted as any;\n    const kitDiffed = MetabolismKitDiffed as any;\n\n    it(\"Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit\", () =\u003e {\n      const change = getKitChange(kitOriginal, kitDiffed);\n      const computedDiff = getKitDiff(kitOriginal, kitDiffed);\n      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);\n      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);\n      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);\n      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);\n      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);\n      const appliedForward = applyKitDiff(kitOriginal, change.forward);\n      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);\n      const appliedInverse = applyKitDiff(kitDiffed, change.backward);\n      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);\n    });\n\n    describe(\"Design/Model\", () =\u003e {\n      it(\"selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases\", () =\u003e {\n        const payload = ModelSelectionCases as {\n          cases: Array\u003c{\n            name: string;\n            selectedTagGuids: string[];\n            expectedGuid: string | null;\n            models: Array\u003c{ guid: string; fileGuid: string; tagGuids: string[] }\u003e;\n          }\u003e;\n        };\n        payload.cases.forEach((testCase) =\u003e {\n          const models: Model[] = testCase.models.map((model) =\u003e ({\n            guid: model.guid,\n            file: { guid: model.fileGuid },\n            tags: model.tagGuids.map((guid) =\u003e ({ guid })),\n          }));\n          const selected = selectBestModel(models, testCase.selectedTagGuids);\n          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);\n        });\n      });\n    });\n  });\n});\n\ndescribe(\"Flatten\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n\n  const testFlatten = (designName: string, parentName?: string) =\u003e {\n    const design = findDesign(kit, designName, parentName);\n    const expectedDesign = kit.designs?.find((d) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === design.guid);\n    expect(expectedDesign).toBeDefined();\n    const flatDesignChange = flattenDesign(kit, design.guid);\n    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);\n\n    flatDesign!.pieces?.forEach((p) =\u003e {\n      const expectedPiece = expectedDesign!.pieces?.find((ep) =\u003e ep.name === p.name);\n      expect(expectedPiece).toBeDefined();\n      expect(p.plane).toBeDefined();\n      expect(p.center).toBeDefined();\n      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);\n      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);\n    });\n  };\n\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Nakagin Capsule Tower\");\n    });\n    describe(\"Slanted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Slanted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Twisted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Twisted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Dancing\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Dancing\", \"Nakagin Capsule Tower\");\n      });\n    });\n  });\n\n  describe(\"Capsule Dream\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Capsule Dream\");\n    });\n  });\n});\n\ndescribe(\"Roundtrip\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json\", async () =\u003e {\n      const fs = await import(\"node:fs\");\n      const path = await import(\"node:path\");\n\n      const kit = MetabolismKit as unknown as Kit;\n      const serializedKit = serializeKit(kit);\n      const deserializedKit = deserializeKit(serializedKit);\n      expect(areKitsEqual(kit, deserializedKit)).toBe(true);\n\n      const zipPath = path.join(__dirname, \"../assets/semio/metabolism.zip\");\n      const zipBuffer = fs.readFileSync(zipPath);\n      const { kit: zipKit } = await importKit(zipBuffer.buffer);\n      expect(areKitsEqual(kit, zipKit)).toBe(true);\n\n      const exportedZip = await exportKit(kit);\n      const { kit: reKit } = await importKit(exportedZip);\n      expect(areKitsEqual(kit, reKit)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Validation\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Metabolism Kit -\u003e Validate = Empty report\", () =\u003e {\n      const validKit = MetabolismKit as unknown as Kit;\n      expect(hasErrors(validateKit(validKit))).toBe(false);\n    });\n  });\n\n  describe(\"Invalid\", () =\u003e {\n    it(\"Invalid Kit -\u003e Validate = Invalid Report\", () =\u003e {\n      const invalidKit = InvalidKit as unknown as Kit;\n      const result = validateKit(invalidKit);\n      const expected = InvalidKitValidation as unknown as ValidationResult;\n      expect(areValidationResultsEqual(result, expected)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Cluster\", () =\u003e {\n  it(\"Cluster replacement uses design-guid designPiece and yields included design entry\", () =\u003e {\n    const design = {\n      guid: \"design-root\",\n      name: \"Root\",\n      pieces: [\n        { guid: \"piece-a\", type: { guid: \"type-a\" } },\n        { guid: \"piece-b\", type: { guid: \"type-b\" } },\n        { guid: \"piece-c\", type: { guid: \"type-c\" } },\n      ],\n      connections: [\n        {\n          guid: \"conn-ab\",\n          connecting: { piece: { guid: \"piece-a\" } },\n          connected: { piece: { guid: \"piece-b\" } },\n        },\n        {\n          guid: \"conn-bc\",\n          connecting: { piece: { guid: \"piece-b\" } },\n          connected: { piece: { guid: \"piece-c\" } },\n        },\n      ],\n      createdAt: \"2025-01-01T00:00:00.000Z\",\n      updatedAt: \"2025-01-01T00:00:00.000Z\",\n    } as Design;\n\n    const { clusteredDesign, externalConnections } = createClusteredDesign(design, [\"piece-a\", \"piece-b\"], \"Cluster\");\n    const change = replaceClusterWithDesign(design, [\"piece-a\", \"piece-b\"], clusteredDesign, externalConnections);\n    const updatedDesign = applyDesignDiff(design, change.forward);\n\n    const clusterConnection = updatedDesign.connections?.find((c) =\u003e c.guid === \"conn-bc\");\n    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);\n    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();\n\n    const included = getIncludedDesigns(updatedDesign);\n    expect(included.length).toBe(1);\n    expect(included[0].guid).toBe(clusteredDesign.guid);\n    expect(included[0].designGuid).toBe(clusteredDesign.guid);\n  });\n});\n\ndescribe(\"Drag\", () =\u003e {\n  it(\"Design + Pieces + Offset = DiffDesign\", () =\u003e {\n    const design = DragDesign as unknown as Design;\n    const pieces = DragPieces as unknown as Design;\n    const offset = DragOffset as { u: number; v: number };\n    const expectedDiff = DragDiffDesign as any;\n    const computedDiff = dragPiecesInDesign(design, pieces, offset);\n    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);\n    for (let i = 0; i \u003c computedPieceUpdates.length; i++) {\n      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);\n      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);\n      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);\n    }\n    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);\n    for (let i = 0; i \u003c computedConnUpdates.length; i++) {\n      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);\n      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);\n      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);\n    }\n  });\n});\n\ndescribe(\"Sketchpad ControlTree\", () =\u003e {\n  it(\"builds nested folders from paths and applies case-insensitive filter on leaf keys\", () =\u003e {\n    const controls: ControlDef[] = [\n      { path: \"Transform/Position/X\", controlKind: \"number\", value: 1, onChange: () =\u003e {} },\n      { path: \"Transform/Position/Y\", controlKind: \"number\", value: 2, onChange: () =\u003e {} },\n      { path: \"Appearance/Material/roughness\", controlKind: \"slider\", value: 0.5, onChange: () =\u003e {} },\n    ];\n    const folderSettings = {\n      Transform: { path: \"Transform\", order: 2 },\n      \"Appearance/Material\": { path: \"Appearance/Material\", order: 1, collapsed: true },\n    };\n    const fullTree = buildControlTree(controls, \"\", folderSettings);\n    expect(Object.keys(fullTree)).toEqual([\"Transform\", \"Appearance\"]);\n    expect(fullTree.Transform.kind).toBe(\"folder\");\n    expect(fullTree.Transform.order).toBe(2);\n    expect(fullTree.Transform.children?.Position.kind).toBe(\"folder\");\n    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe(\"control\");\n    expect(fullTree.Appearance.children?.Material.order).toBe(1);\n    const filteredTree = buildControlTree(controls, \"rouGH\", folderSettings);\n    expect(Object.keys(filteredTree)).toEqual([\"Appearance\"]);\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe(\"control\");\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe(\"Appearance/Material/roughness\");\n  });\n});\n\ndescribe(\"Elements Bundle\", () =\u003e {\n  it(\"sources shared element primitives directly from semio-elements ui\", () =\u003e {\n    expect(UiAction).toBe(ElementsBundle.Action);\n    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);\n    expect(ElementsBundle.LevelProvider).toBeDefined();\n    expect(ElementsBundle.SectionSpecificity).toBeDefined();\n  });\n});\n\ndescribe(\"Design/Quality/Sum\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"sums effective floor area to ~2349.53\", () =\u003e {\n      const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent);\n      expect(design).toBeDefined();\n      const quality = kit.qualities?.find((q) =\u003e q.name === \"effective floor area\");\n      expect(quality).toBeDefined();\n      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);\n      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);\n    });\n  });\n});\n",
+          "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+          "attachments": [],
+          "hook_event_name": "beforeReadFile",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚15⏱️51",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts"
+          },
+          "tool_use_id": "tool_a2f5ed63-083e-4868-a32c-2cf10aed031",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚17⏱️29",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "content": "// #region 🔖Header\n// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from \"@semio/assets\";\nimport * as ElementsBundle from \"../../semio-elements/ui\";\nimport { Action as UiAction, buildControlTree, ControlDef } from \"../../semio-elements/ui\";\nimport { describe, expect, it } from \"vitest\";\nimport {\n  applyDesignDiff,\n  applyKitDiff,\n  areKitDiffsEqual,\n  areKitsEqual,\n  areValidationResultsEqual,\n  createClusteredDesign,\n  Design,\n  deserializeKit,\n  dragPiecesInDesign,\n  exportKit,\n  flattenDesign,\n  getIncludedDesigns,\n  getKitChange,\n  getKitDiff,\n  hasErrors,\n  importKit,\n  inverseKitDiff,\n  Kit,\n  Model,\n  Plane,\n  replaceClusterWithDesign,\n  selectBestModel,\n  serializeKit,\n  sumQualityInDesign,\n  validateKit,\n  ValidationResult,\n} from \"./semio\";\n\nconst TOLERANCE = 0.001;\n\nconst planesEqual = (p1?: Plane, p2?: Plane): boolean =\u003e {\n  if (!p1 || !p2) return false;\n  if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;\n  return (\n    Math.abs(p1.origin.x - p2.origin.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.y - p2.origin.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.z - p2.origin.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.x - p2.xAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.y - p2.xAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.z - p2.xAxis.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.x - p2.yAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.y - p2.yAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.z - p2.yAxis.z) \u003c TOLERANCE\n  );\n};\n\nconst centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean =\u003e {\n  if (!c1 || !c2) return c1 === c2;\n  return Math.abs(c1.u - c2.u) \u003c TOLERANCE \u0026\u0026 Math.abs(c1.v - c2.v) \u003c TOLERANCE;\n};\n\nconst findDesign = (kit: Kit, name: string, parentName?: string) =\u003e {\n  let parentGuid: string | undefined;\n  if (parentName) {\n    const p = kit.designs?.find((d) =\u003e d.name === parentName);\n    if (!p) throw new Error(`Parent ${parentName} not found`);\n    parentGuid = p.guid;\n  }\n  const d = kit.designs?.find((d) =\u003e d.name === name \u0026\u0026 (parentGuid ? d.parent?.guid === parentGuid : !d.parent));\n  if (!d) throw new Error(`Design ${name} not found`);\n  return d;\n};\n\ndescribe(\"Change\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) =\u003e !d.parent) };\n    const kitDiff = MetabolismKitDiff as any;\n    const kitDiffInverted = MetabolismKitDiffInverted as any;\n    const kitDiffed = MetabolismKitDiffed as any;\n\n    it(\"Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit\", () =\u003e {\n      const change = getKitChange(kitOriginal, kitDiffed);\n      const computedDiff = getKitDiff(kitOriginal, kitDiffed);\n      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);\n      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);\n      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);\n      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);\n      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);\n      const appliedForward = applyKitDiff(kitOriginal, change.forward);\n      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);\n      const appliedInverse = applyKitDiff(kitDiffed, change.backward);\n      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);\n    });\n\n    describe(\"Design/Model\", () =\u003e {\n      it(\"selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases\", () =\u003e {\n        const payload = ModelSelectionCases as {\n          cases: Array\u003c{\n            name: string;\n            selectedTagGuids: string[];\n            expectedGuid: string | null;\n            models: Array\u003c{ guid: string; fileGuid: string; tagGuids: string[] }\u003e;\n          }\u003e;\n        };\n        payload.cases.forEach((testCase) =\u003e {\n          const models: Model[] = testCase.models.map((model) =\u003e ({\n            guid: model.guid,\n            file: { guid: model.fileGuid },\n            tags: model.tagGuids.map((guid) =\u003e ({ guid })),\n          }));\n          const selected = selectBestModel(models, testCase.selectedTagGuids);\n          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);\n        });\n      });\n    });\n  });\n});\n\ndescribe(\"Flatten\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n\n  const testFlatten = (designName: string, parentName?: string) =\u003e {\n    const design = findDesign(kit, designName, parentName);\n    const expectedDesign = kit.designs?.find((d) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === design.guid);\n    expect(expectedDesign).toBeDefined();\n    const flatDesignChange = flattenDesign(kit, design.guid);\n    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);\n\n    flatDesign!.pieces?.forEach((p) =\u003e {\n      const expectedPiece = expectedDesign!.pieces?.find((ep) =\u003e ep.name === p.name);\n      expect(expectedPiece).toBeDefined();\n      expect(p.plane).toBeDefined();\n      expect(p.center).toBeDefined();\n      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);\n      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);\n    });\n  };\n\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Nakagin Capsule Tower\");\n    });\n    describe(\"Slanted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Slanted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Twisted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Twisted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Dancing\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Dancing\", \"Nakagin Capsule Tower\");\n      });\n    });\n  });\n\n  describe(\"Capsule Dream\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Capsule Dream\");\n    });\n  });\n});\n\ndescribe(\"Roundtrip\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json\", async () =\u003e {\n      const fs = await import(\"node:fs\");\n      const path = await import(\"node:path\");\n\n      const kit = MetabolismKit as unknown as Kit;\n      const serializedKit = serializeKit(kit);\n      const deserializedKit = deserializeKit(serializedKit);\n      expect(areKitsEqual(kit, deserializedKit)).toBe(true);\n\n      const zipPath = path.join(__dirname, \"../assets/semio/metabolism.zip\");\n      const zipBuffer = fs.readFileSync(zipPath);\n      const { kit: zipKit } = await importKit(zipBuffer.buffer);\n      expect(areKitsEqual(kit, zipKit)).toBe(true);\n\n      const exportedZip = await exportKit(kit);\n      const { kit: reKit } = await importKit(exportedZip);\n      expect(areKitsEqual(kit, reKit)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Validation\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Metabolism Kit -\u003e Validate = Empty report\", () =\u003e {\n      const validKit = MetabolismKit as unknown as Kit;\n      expect(hasErrors(validateKit(validKit))).toBe(false);\n    });\n  });\n\n  describe(\"Invalid\", () =\u003e {\n    it(\"Invalid Kit -\u003e Validate = Invalid Report\", () =\u003e {\n      const invalidKit = InvalidKit as unknown as Kit;\n      const result = validateKit(invalidKit);\n      const expected = InvalidKitValidation as unknown as ValidationResult;\n      expect(areValidationResultsEqual(result, expected)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Cluster\", () =\u003e {\n  it(\"Cluster replacement uses design-guid designPiece and yields included design entry\", () =\u003e {\n    const design = {\n      guid: \"design-root\",\n      name: \"Root\",\n      pieces: [\n        { guid: \"piece-a\", type: { guid: \"type-a\" } },\n        { guid: \"piece-b\", type: { guid: \"type-b\" } },\n        { guid: \"piece-c\", type: { guid: \"type-c\" } },\n      ],\n      connections: [\n        {\n          guid: \"conn-ab\",\n          connecting: { piece: { guid: \"piece-a\" } },\n          connected: { piece: { guid: \"piece-b\" } },\n        },\n        {\n          guid: \"conn-bc\",\n          connecting: { piece: { guid: \"piece-b\" } },\n          connected: { piece: { guid: \"piece-c\" } },\n        },\n      ],\n      createdAt: \"2025-01-01T00:00:00.000Z\",\n      updatedAt: \"2025-01-01T00:00:00.000Z\",\n    } as Design;\n\n    const { clusteredDesign, externalConnections } = createClusteredDesign(design, [\"piece-a\", \"piece-b\"], \"Cluster\");\n    const change = replaceClusterWithDesign(design, [\"piece-a\", \"piece-b\"], clusteredDesign, externalConnections);\n    const updatedDesign = applyDesignDiff(design, change.forward);\n\n    const clusterConnection = updatedDesign.connections?.find((c) =\u003e c.guid === \"conn-bc\");\n    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);\n    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();\n\n    const included = getIncludedDesigns(updatedDesign);\n    expect(included.length).toBe(1);\n    expect(included[0].guid).toBe(clusteredDesign.guid);\n    expect(included[0].designGuid).toBe(clusteredDesign.guid);\n  });\n});\n\ndescribe(\"Drag\", () =\u003e {\n  it(\"Design + Pieces + Offset = DiffDesign\", () =\u003e {\n    const design = DragDesign as unknown as Design;\n    const pieces = DragPieces as unknown as Design;\n    const offset = DragOffset as { u: number; v: number };\n    const expectedDiff = DragDiffDesign as any;\n    const computedDiff = dragPiecesInDesign(design, pieces, offset);\n    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);\n    for (let i = 0; i \u003c computedPieceUpdates.length; i++) {\n      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);\n      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);\n      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);\n    }\n    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);\n    for (let i = 0; i \u003c computedConnUpdates.length; i++) {\n      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);\n      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);\n      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);\n    }\n  });\n});\n\ndescribe(\"Sketchpad ControlTree\", () =\u003e {\n  it(\"builds nested folders from paths and applies case-insensitive filter on leaf keys\", () =\u003e {\n    const controls: ControlDef[] = [\n      { path: \"Transform/Position/X\", controlKind: \"number\", value: 1, onChange: () =\u003e {} },\n      { path: \"Transform/Position/Y\", controlKind: \"number\", value: 2, onChange: () =\u003e {} },\n      { path: \"Appearance/Material/roughness\", controlKind: \"slider\", value: 0.5, onChange: () =\u003e {} },\n    ];\n    const folderSettings = {\n      Transform: { path: \"Transform\", order: 2 },\n      \"Appearance/Material\": { path: \"Appearance/Material\", order: 1, collapsed: true },\n    };\n    const fullTree = buildControlTree(controls, \"\", folderSettings);\n    expect(Object.keys(fullTree)).toEqual([\"Transform\", \"Appearance\"]);\n    expect(fullTree.Transform.kind).toBe(\"folder\");\n    expect(fullTree.Transform.order).toBe(2);\n    expect(fullTree.Transform.children?.Position.kind).toBe(\"folder\");\n    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe(\"control\");\n    expect(fullTree.Appearance.children?.Material.order).toBe(1);\n    const filteredTree = buildControlTree(controls, \"rouGH\", folderSettings);\n    expect(Object.keys(filteredTree)).toEqual([\"Appearance\"]);\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe(\"control\");\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe(\"Appearance/Material/roughness\");\n  });\n});\n\ndescribe(\"Elements Bundle\", () =\u003e {\n  it(\"sources shared element primitives directly from semio-elements ui\", () =\u003e {\n    expect(UiAction).toBe(ElementsBundle.Action);\n    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);\n    expect(ElementsBundle.LevelProvider).toBeDefined();\n    expect(ElementsBundle.SectionSpecificity).toBeDefined();\n  });\n});\n\ndescribe(\"Design/Quality/Sum\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"sums effective floor area to ~2349.53\", () =\u003e {\n      const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent);\n      expect(design).toBeDefined();\n      const quality = kit.qualities?.find((q) =\u003e q.name === \"effective floor area\");\n      expect(quality).toBeDefined();\n      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);\n      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);\n    });\n  });\n});\n",
+          "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+          "attachments": [],
+          "hook_event_name": "beforeReadFile",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚18⏱️24",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "text": "",
+          "duration_ms": 61,
+          "model": "composer-1.5",
+          "hook_event_name": "afterAgentThought",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.thinking.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚18⏱️45",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts"
+          },
+          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/js/semio.test.ts\",\"content_length\":14204}",
+          "duration": 16681.589,
+          "tool_use_id": "tool_a2f5ed63-083e-4868-a32c-2cf10aed031",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚18⏱️45",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts"
+          },
+          "tool_use_id": "tool_7d138ad5-2517-4ebf-8f72-942b2a02b8e",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚18⏱️46",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "content": "// #region 🔖Header\n// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from \"@semio/assets\";\nimport * as ElementsBundle from \"../../semio-elements/ui\";\nimport { Action as UiAction, buildControlTree, ControlDef } from \"../../semio-elements/ui\";\nimport { describe, expect, it } from \"vitest\";\nimport {\n  applyDesignDiff,\n  applyKitDiff,\n  areKitDiffsEqual,\n  areKitsEqual,\n  areValidationResultsEqual,\n  createClusteredDesign,\n  Design,\n  deserializeKit,\n  dragPiecesInDesign,\n  exportKit,\n  flattenDesign,\n  getIncludedDesigns,\n  getKitChange,\n  getKitDiff,\n  hasErrors,\n  importKit,\n  inverseKitDiff,\n  Kit,\n  Model,\n  Plane,\n  replaceClusterWithDesign,\n  selectBestModel,\n  serializeKit,\n  sumQualityInDesign,\n  validateKit,\n  ValidationResult,\n} from \"./semio\";\n\nconst TOLERANCE = 0.001;\n\nconst planesEqual = (p1?: Plane, p2?: Plane): boolean =\u003e {\n  if (!p1 || !p2) return false;\n  if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;\n  return (\n    Math.abs(p1.origin.x - p2.origin.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.y - p2.origin.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.z - p2.origin.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.x - p2.xAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.y - p2.xAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.z - p2.xAxis.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.x - p2.yAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.y - p2.yAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.z - p2.yAxis.z) \u003c TOLERANCE\n  );\n};\n\nconst centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean =\u003e {\n  if (!c1 || !c2) return c1 === c2;\n  return Math.abs(c1.u - c2.u) \u003c TOLERANCE \u0026\u0026 Math.abs(c1.v - c2.v) \u003c TOLERANCE;\n};\n\nconst findDesign = (kit: Kit, name: string, parentName?: string) =\u003e {\n  let parentGuid: string | undefined;\n  if (parentName) {\n    const p = kit.designs?.find((d) =\u003e d.name === parentName);\n    if (!p) throw new Error(`Parent ${parentName} not found`);\n    parentGuid = p.guid;\n  }\n  const d = kit.designs?.find((d) =\u003e d.name === name \u0026\u0026 (parentGuid ? d.parent?.guid === parentGuid : !d.parent));\n  if (!d) throw new Error(`Design ${name} not found`);\n  return d;\n};\n\ndescribe(\"Change\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) =\u003e !d.parent) };\n    const kitDiff = MetabolismKitDiff as any;\n    const kitDiffInverted = MetabolismKitDiffInverted as any;\n    const kitDiffed = MetabolismKitDiffed as any;\n\n    it(\"Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit\", () =\u003e {\n      const change = getKitChange(kitOriginal, kitDiffed);\n      const computedDiff = getKitDiff(kitOriginal, kitDiffed);\n      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);\n      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);\n      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);\n      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);\n      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);\n      const appliedForward = applyKitDiff(kitOriginal, change.forward);\n      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);\n      const appliedInverse = applyKitDiff(kitDiffed, change.backward);\n      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);\n    });\n\n    describe(\"Design/Model\", () =\u003e {\n      it(\"selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases\", () =\u003e {\n        const payload = ModelSelectionCases as {\n          cases: Array\u003c{\n            name: string;\n            selectedTagGuids: string[];\n            expectedGuid: string | null;\n            models: Array\u003c{ guid: string; fileGuid: string; tagGuids: string[] }\u003e;\n          }\u003e;\n        };\n        payload.cases.forEach((testCase) =\u003e {\n          const models: Model[] = testCase.models.map((model) =\u003e ({\n            guid: model.guid,\n            file: { guid: model.fileGuid },\n            tags: model.tagGuids.map((guid) =\u003e ({ guid })),\n          }));\n          const selected = selectBestModel(models, testCase.selectedTagGuids);\n          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);\n        });\n      });\n    });\n  });\n});\n\ndescribe(\"Flatten\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n\n  const testFlatten = (designName: string, parentName?: string) =\u003e {\n    const design = findDesign(kit, designName, parentName);\n    const expectedDesign = kit.designs?.find((d) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === design.guid);\n    expect(expectedDesign).toBeDefined();\n    const flatDesignChange = flattenDesign(kit, design.guid);\n    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);\n\n    flatDesign!.pieces?.forEach((p) =\u003e {\n      const expectedPiece = expectedDesign!.pieces?.find((ep) =\u003e ep.name === p.name);\n      expect(expectedPiece).toBeDefined();\n      expect(p.plane).toBeDefined();\n      expect(p.center).toBeDefined();\n      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);\n      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);\n    });\n  };\n\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Nakagin Capsule Tower\");\n    });\n    describe(\"Slanted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Slanted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Twisted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Twisted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Dancing\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Dancing\", \"Nakagin Capsule Tower\");\n      });\n    });\n  });\n\n  describe(\"Capsule Dream\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Capsule Dream\");\n    });\n  });\n});\n\ndescribe(\"Roundtrip\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json\", async () =\u003e {\n      const fs = await import(\"node:fs\");\n      const path = await import(\"node:path\");\n\n      const kit = MetabolismKit as unknown as Kit;\n      const serializedKit = serializeKit(kit);\n      const deserializedKit = deserializeKit(serializedKit);\n      expect(areKitsEqual(kit, deserializedKit)).toBe(true);\n\n      const zipPath = path.join(__dirname, \"../assets/semio/metabolism.zip\");\n      const zipBuffer = fs.readFileSync(zipPath);\n      const { kit: zipKit } = await importKit(zipBuffer.buffer);\n      expect(areKitsEqual(kit, zipKit)).toBe(true);\n\n      const exportedZip = await exportKit(kit);\n      const { kit: reKit } = await importKit(exportedZip);\n      expect(areKitsEqual(kit, reKit)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Validation\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Metabolism Kit -\u003e Validate = Empty report\", () =\u003e {\n      const validKit = MetabolismKit as unknown as Kit;\n      expect(hasErrors(validateKit(validKit))).toBe(false);\n    });\n  });\n\n  describe(\"Invalid\", () =\u003e {\n    it(\"Invalid Kit -\u003e Validate = Invalid Report\", () =\u003e {\n      const invalidKit = InvalidKit as unknown as Kit;\n      const result = validateKit(invalidKit);\n      const expected = InvalidKitValidation as unknown as ValidationResult;\n      expect(areValidationResultsEqual(result, expected)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Cluster\", () =\u003e {\n  it(\"Cluster replacement uses design-guid designPiece and yields included design entry\", () =\u003e {\n    const design = {\n      guid: \"design-root\",\n      name: \"Root\",\n      pieces: [\n        { guid: \"piece-a\", type: { guid: \"type-a\" } },\n        { guid: \"piece-b\", type: { guid: \"type-b\" } },\n        { guid: \"piece-c\", type: { guid: \"type-c\" } },\n      ],\n      connections: [\n        {\n          guid: \"conn-ab\",\n          connecting: { piece: { guid: \"piece-a\" } },\n          connected: { piece: { guid: \"piece-b\" } },\n        },\n        {\n          guid: \"conn-bc\",\n          connecting: { piece: { guid: \"piece-b\" } },\n          connected: { piece: { guid: \"piece-c\" } },\n        },\n      ],\n      createdAt: \"2025-01-01T00:00:00.000Z\",\n      updatedAt: \"2025-01-01T00:00:00.000Z\",\n    } as Design;\n\n    const { clusteredDesign, externalConnections } = createClusteredDesign(design, [\"piece-a\", \"piece-b\"], \"Cluster\");\n    const change = replaceClusterWithDesign(design, [\"piece-a\", \"piece-b\"], clusteredDesign, externalConnections);\n    const updatedDesign = applyDesignDiff(design, change.forward);\n\n    const clusterConnection = updatedDesign.connections?.find((c) =\u003e c.guid === \"conn-bc\");\n    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);\n    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();\n\n    const included = getIncludedDesigns(updatedDesign);\n    expect(included.length).toBe(1);\n    expect(included[0].guid).toBe(clusteredDesign.guid);\n    expect(included[0].designGuid).toBe(clusteredDesign.guid);\n  });\n});\n\ndescribe(\"Drag\", () =\u003e {\n  it(\"Design + Pieces + Offset = DiffDesign\", () =\u003e {\n    const design = DragDesign as unknown as Design;\n    const pieces = DragPieces as unknown as Design;\n    const offset = DragOffset as { u: number; v: number };\n    const expectedDiff = DragDiffDesign as any;\n    const computedDiff = dragPiecesInDesign(design, pieces, offset);\n    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);\n    for (let i = 0; i \u003c computedPieceUpdates.length; i++) {\n      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);\n      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);\n      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);\n    }\n    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);\n    for (let i = 0; i \u003c computedConnUpdates.length; i++) {\n      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);\n      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);\n      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);\n    }\n  });\n});\n\ndescribe(\"Sketchpad ControlTree\", () =\u003e {\n  it(\"builds nested folders from paths and applies case-insensitive filter on leaf keys\", () =\u003e {\n    const controls: ControlDef[] = [\n      { path: \"Transform/Position/X\", controlKind: \"number\", value: 1, onChange: () =\u003e {} },\n      { path: \"Transform/Position/Y\", controlKind: \"number\", value: 2, onChange: () =\u003e {} },\n      { path: \"Appearance/Material/roughness\", controlKind: \"slider\", value: 0.5, onChange: () =\u003e {} },\n    ];\n    const folderSettings = {\n      Transform: { path: \"Transform\", order: 2 },\n      \"Appearance/Material\": { path: \"Appearance/Material\", order: 1, collapsed: true },\n    };\n    const fullTree = buildControlTree(controls, \"\", folderSettings);\n    expect(Object.keys(fullTree)).toEqual([\"Transform\", \"Appearance\"]);\n    expect(fullTree.Transform.kind).toBe(\"folder\");\n    expect(fullTree.Transform.order).toBe(2);\n    expect(fullTree.Transform.children?.Position.kind).toBe(\"folder\");\n    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe(\"control\");\n    expect(fullTree.Appearance.children?.Material.order).toBe(1);\n    const filteredTree = buildControlTree(controls, \"rouGH\", folderSettings);\n    expect(Object.keys(filteredTree)).toEqual([\"Appearance\"]);\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe(\"control\");\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe(\"Appearance/Material/roughness\");\n  });\n});\n\ndescribe(\"Elements Bundle\", () =\u003e {\n  it(\"sources shared element primitives directly from semio-elements ui\", () =\u003e {\n    expect(UiAction).toBe(ElementsBundle.Action);\n    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);\n    expect(ElementsBundle.LevelProvider).toBeDefined();\n    expect(ElementsBundle.SectionSpecificity).toBeDefined();\n  });\n});\n\ndescribe(\"Design/Quality/Sum\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"sums effective floor area to ~2349.53\", () =\u003e {\n      const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent);\n      expect(design).toBeDefined();\n      const quality = kit.qualities?.find((q) =\u003e q.name === \"effective floor area\");\n      expect(quality).toBeDefined();\n      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);\n      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);\n    });\n  });\n});\n",
+          "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+          "attachments": [],
+          "hook_event_name": "beforeReadFile",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚19⏱️10",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Write",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+            "content": "// #region 🔖Header\n// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from \"@semio/assets\";\nimport * as ElementsBundle from \"../../semio-elements/ui\";\nimport { Action as UiAction, buildControlTree, ControlDef } from \"../../semio-elements/ui\";\nimport { describe, expect, it } from \"vitest\";\nimport {\n  applyDesignDiff,\n  applyKitDiff,\n  areKitDiffsEqual,\n  areKitsEqual,\n  areValidationResultsEqual,\n  createClusteredDesign,\n  Design,\n  deserializeKit,\n  dragPiecesInDesign,\n  exportDesignModel,\n  exportKit,\n  EXPORT_MODEL_FORMATS,\n  flattenDesign,\n  getIncludedDesigns,\n  getKitChange,\n  getKitDiff,\n  hasErrors,\n  importKit,\n  inverseKitDiff,\n  Kit,\n  Model,\n  Plane,\n  replaceClusterWithDesign,\n  selectBestModel,\n  serializeKit,\n  sumQualityInDesign,\n  validateKit,\n  ValidationResult,\n} from \"./semio\";\n\nconst TOLERANCE = 0.001;\n\nconst planesEqual = (p1?: Plane, p2?: Plane): boolean =\u003e {\n  if (!p1 || !p2) return false;\n  if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;\n  return (\n    Math.abs(p1.origin.x - p2.origin.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.y - p2.origin.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.z - p2.origin.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.x - p2.xAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.y - p2.xAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.z - p2.xAxis.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.x - p2.yAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.y - p2.yAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.z - p2.yAxis.z) \u003c TOLERANCE\n  );\n};\n\nconst centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean =\u003e {\n  if (!c1 || !c2) return c1 === c2;\n  return Math.abs(c1.u - c2.u) \u003c TOLERANCE \u0026\u0026 Math.abs(c1.v - c2.v) \u003c TOLERANCE;\n};\n\nconst findDesign = (kit: Kit, name: string, parentName?: string) =\u003e {\n  let parentGuid: string | undefined;\n  if (parentName) {\n    const p = kit.designs?.find((d) =\u003e d.name === parentName);\n    if (!p) throw new Error(`Parent ${parentName} not found`);\n    parentGuid = p.guid;\n  }\n  const d = kit.designs?.find((d) =\u003e d.name === name \u0026\u0026 (parentGuid ? d.parent?.guid === parentGuid : !d.parent));\n  if (!d) throw new Error(`Design ${name} not found`);\n  return d;\n};\n\ndescribe(\"Change\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) =\u003e !d.parent) };\n    const kitDiff = MetabolismKitDiff as any;\n    const kitDiffInverted = MetabolismKitDiffInverted as any;\n    const kitDiffed = MetabolismKitDiffed as any;\n\n    it(\"Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit\", () =\u003e {\n      const change = getKitChange(kitOriginal, kitDiffed);\n      const computedDiff = getKitDiff(kitOriginal, kitDiffed);\n      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);\n      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);\n      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);\n      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);\n      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);\n      const appliedForward = applyKitDiff(kitOriginal, change.forward);\n      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);\n      const appliedInverse = applyKitDiff(kitDiffed, change.backward);\n      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);\n    });\n\n    describe(\"Design/Model\", () =\u003e {\n      it(\"selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases\", () =\u003e {\n        const payload = ModelSelectionCases as {\n          cases: Array\u003c{\n            name: string;\n            selectedTagGuids: string[];\n            expectedGuid: string | null;\n            models: Array\u003c{ guid: string; fileGuid: string; tagGuids: string[] }\u003e;\n          }\u003e;\n        };\n        payload.cases.forEach((testCase) =\u003e {\n          const models: Model[] = testCase.models.map((model) =\u003e ({\n            guid: model.guid,\n            file: { guid: model.fileGuid },\n            tags: model.tagGuids.map((guid) =\u003e ({ guid })),\n          }));\n          const selected = selectBestModel(models, testCase.selectedTagGuids);\n          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);\n        });\n      });\n    });\n  });\n});\n\ndescribe(\"Flatten\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n\n  const testFlatten = (designName: string, parentName?: string) =\u003e {\n    const design = findDesign(kit, designName, parentName);\n    const expectedDesign = kit.designs?.find((d) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === design.guid);\n    expect(expectedDesign).toBeDefined();\n    const flatDesignChange = flattenDesign(kit, design.guid);\n    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);\n\n    flatDesign!.pieces?.forEach((p) =\u003e {\n      const expectedPiece = expectedDesign!.pieces?.find((ep) =\u003e ep.name === p.name);\n      expect(expectedPiece).toBeDefined();\n      expect(p.plane).toBeDefined();\n      expect(p.center).toBeDefined();\n      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);\n      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);\n    });\n  };\n\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Nakagin Capsule Tower\");\n    });\n    describe(\"Slanted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Slanted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Twisted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Twisted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Dancing\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Dancing\", \"Nakagin Capsule Tower\");\n      });\n    });\n  });\n\n  describe(\"Capsule Dream\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Capsule Dream\");\n    });\n  });\n});\n\ndescribe(\"Roundtrip\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json\", async () =\u003e {\n      const fs = await import(\"node:fs\");\n      const path = await import(\"node:path\");\n\n      const kit = MetabolismKit as unknown as Kit;\n      const serializedKit = serializeKit(kit);\n      const deserializedKit = deserializeKit(serializedKit);\n      expect(areKitsEqual(kit, deserializedKit)).toBe(true);\n\n      const zipPath = path.join(__dirname, \"../assets/semio/metabolism.zip\");\n      const zipBuffer = fs.readFileSync(zipPath);\n      const { kit: zipKit } = await importKit(zipBuffer.buffer);\n      expect(areKitsEqual(kit, zipKit)).toBe(true);\n\n      const exportedZip = await exportKit(kit);\n      const { kit: reKit } = await importKit(exportedZip);\n      expect(areKitsEqual(kit, reKit)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Validation\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Metabolism Kit -\u003e Validate = Empty report\", () =\u003e {\n      const validKit = MetabolismKit as unknown as Kit;\n      expect(hasErrors(validateKit(validKit))).toBe(false);\n    });\n  });\n\n  describe(\"Invalid\", () =\u003e {\n    it(\"Invalid Kit -\u003e Validate = Invalid Report\", () =\u003e {\n      const invalidKit = InvalidKit as unknown as Kit;\n      const result = validateKit(invalidKit);\n      const expected = InvalidKitValidation as unknown as ValidationResult;\n      expect(areValidationResultsEqual(result, expected)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Cluster\", () =\u003e {\n  it(\"Cluster replacement uses design-guid designPiece and yields included design entry\", () =\u003e {\n    const design = {\n      guid: \"design-root\",\n      name: \"Root\",\n      pieces: [\n        { guid: \"piece-a\", type: { guid: \"type-a\" } },\n        { guid: \"piece-b\", type: { guid: \"type-b\" } },\n        { guid: \"piece-c\", type: { guid: \"type-c\" } },\n      ],\n      connections: [\n        {\n          guid: \"conn-ab\",\n          connecting: { piece: { guid: \"piece-a\" } },\n          connected: { piece: { guid: \"piece-b\" } },\n        },\n        {\n          guid: \"conn-bc\",\n          connecting: { piece: { guid: \"piece-b\" } },\n          connected: { piece: { guid: \"piece-c\" } },\n        },\n      ],\n      createdAt: \"2025-01-01T00:00:00.000Z\",\n      updatedAt: \"2025-01-01T00:00:00.000Z\",\n    } as Design;\n\n    const { clusteredDesign, externalConnections } = createClusteredDesign(design, [\"piece-a\", \"piece-b\"], \"Cluster\");\n    const change = replaceClusterWithDesign(design, [\"piece-a\", \"piece-b\"], clusteredDesign, externalConnections);\n    const updatedDesign = applyDesignDiff(design, change.forward);\n\n    const clusterConnection = updatedDesign.connections?.find((c) =\u003e c.guid === \"conn-bc\");\n    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);\n    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();\n\n    const included = getIncludedDesigns(updatedDesign);\n    expect(included.length).toBe(1);\n    expect(included[0].guid).toBe(clusteredDesign.guid);\n    expect(included[0].designGuid).toBe(clusteredDesign.guid);\n  });\n});\n\ndescribe(\"Drag\", () =\u003e {\n  it(\"Design + Pieces + Offset = DiffDesign\", () =\u003e {\n    const design = DragDesign as unknown as Design;\n    const pieces = DragPieces as unknown as Design;\n    const offset = DragOffset as { u: number; v: number };\n    const expectedDiff = DragDiffDesign as any;\n    const computedDiff = dragPiecesInDesign(design, pieces, offset);\n    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);\n    for (let i = 0; i \u003c computedPieceUpdates.length; i++) {\n      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);\n      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);\n      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);\n    }\n    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);\n    for (let i = 0; i \u003c computedConnUpdates.length; i++) {\n      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);\n      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);\n      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);\n    }\n  });\n});\n\ndescribe(\"Sketchpad ControlTree\", () =\u003e {\n  it(\"builds nested folders from paths and applies case-insensitive filter on leaf keys\", () =\u003e {\n    const controls: ControlDef[] = [\n      { path: \"Transform/Position/X\", controlKind: \"number\", value: 1, onChange: () =\u003e {} },\n      { path: \"Transform/Position/Y\", controlKind: \"number\", value: 2, onChange: () =\u003e {} },\n      { path: \"Appearance/Material/roughness\", controlKind: \"slider\", value: 0.5, onChange: () =\u003e {} },\n    ];\n    const folderSettings = {\n      Transform: { path: \"Transform\", order: 2 },\n      \"Appearance/Material\": { path: \"Appearance/Material\", order: 1, collapsed: true },\n    };\n    const fullTree = buildControlTree(controls, \"\", folderSettings);\n    expect(Object.keys(fullTree)).toEqual([\"Transform\", \"Appearance\"]);\n    expect(fullTree.Transform.kind).toBe(\"folder\");\n    expect(fullTree.Transform.order).toBe(2);\n    expect(fullTree.Transform.children?.Position.kind).toBe(\"folder\");\n    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe(\"control\");\n    expect(fullTree.Appearance.children?.Material.order).toBe(1);\n    const filteredTree = buildControlTree(controls, \"rouGH\", folderSettings);\n    expect(Object.keys(filteredTree)).toEqual([\"Appearance\"]);\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe(\"control\");\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe(\"Appearance/Material/roughness\");\n  });\n});\n\ndescribe(\"Elements Bundle\", () =\u003e {\n  it(\"sources shared element primitives directly from semio-elements ui\", () =\u003e {\n    expect(UiAction).toBe(ElementsBundle.Action);\n    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);\n    expect(ElementsBundle.LevelProvider).toBeDefined();\n    expect(ElementsBundle.SectionSpecificity).toBeDefined();\n  });\n});\n\ndescribe(\"Design/Quality/Sum\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"sums effective floor area to ~2349.53\", () =\u003e {\n      const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent);\n      expect(design).toBeDefined();\n      const quality = kit.qualities?.find((q) =\u003e q.name === \"effective floor area\");\n      expect(quality).toBeDefined();\n      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);\n      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);\n    });\n  });\n});\n"
+          },
+          "tool_use_id": "tool_7d138ad5-2517-4ebf-8f72-942b2a02b8e",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "path": "👤semio📚js🥼semiotest",
+        "second": "🎆26🌙03☀️14⏰17⌚19⏱️29",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Read",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts"
+          },
+          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/js/semio.test.ts\",\"content_length\":14204}",
+          "duration": 66.043,
+          "tool_use_id": "tool_7d138ad5-2517-4ebf-8f72-942b2a02b8e",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js🥼semiotest📌1📌334"
+        ],
+        "second": "🎆26🌙03☀️14⏰17⌚19⏱️29",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+          "edits": [
+            {
+              "old_string": "",
+              "new_string": "  exportDesignModel,"
+            },
+            {
+              "old_string": "",
+              "new_string": "  EXPORT_MODEL_FORMATS,"
+            }
+          ],
+          "hook_event_name": "afterFileEdit",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚19⏱️44",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "text": "",
+          "duration_ms": 12,
+          "model": "composer-1.5",
+          "hook_event_name": "afterAgentThought",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.thinking.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚20⏱️11",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Write",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+            "content": "// #region 🔖Header\n// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from \"@semio/assets\";\nimport * as ElementsBundle from \"../../semio-elements/ui\";\nimport { Action as UiAction, buildControlTree, ControlDef } from \"../../semio-elements/ui\";\nimport { describe, expect, it } from \"vitest\";\nimport {\n  applyDesignDiff,\n  applyKitDiff,\n  areKitDiffsEqual,\n  areKitsEqual,\n  areValidationResultsEqual,\n  createClusteredDesign,\n  Design,\n  deserializeKit,\n  dragPiecesInDesign,\n  exportDesignModel,\n  exportKit,\n  EXPORT_MODEL_FORMATS,\n  flattenDesign,\n  getIncludedDesigns,\n  getKitChange,\n  getKitDiff,\n  hasErrors,\n  importKit,\n  inverseKitDiff,\n  Kit,\n  Model,\n  Plane,\n  replaceClusterWithDesign,\n  selectBestModel,\n  serializeKit,\n  sumQualityInDesign,\n  validateKit,\n  ValidationResult,\n} from \"./semio\";\n\nconst TOLERANCE = 0.001;\n\nconst planesEqual = (p1?: Plane, p2?: Plane): boolean =\u003e {\n  if (!p1 || !p2) return false;\n  if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;\n  return (\n    Math.abs(p1.origin.x - p2.origin.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.y - p2.origin.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.z - p2.origin.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.x - p2.xAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.y - p2.xAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.z - p2.xAxis.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.x - p2.yAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.y - p2.yAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.z - p2.yAxis.z) \u003c TOLERANCE\n  );\n};\n\nconst centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean =\u003e {\n  if (!c1 || !c2) return c1 === c2;\n  return Math.abs(c1.u - c2.u) \u003c TOLERANCE \u0026\u0026 Math.abs(c1.v - c2.v) \u003c TOLERANCE;\n};\n\nconst findDesign = (kit: Kit, name: string, parentName?: string) =\u003e {\n  let parentGuid: string | undefined;\n  if (parentName) {\n    const p = kit.designs?.find((d) =\u003e d.name === parentName);\n    if (!p) throw new Error(`Parent ${parentName} not found`);\n    parentGuid = p.guid;\n  }\n  const d = kit.designs?.find((d) =\u003e d.name === name \u0026\u0026 (parentGuid ? d.parent?.guid === parentGuid : !d.parent));\n  if (!d) throw new Error(`Design ${name} not found`);\n  return d;\n};\n\ndescribe(\"Change\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) =\u003e !d.parent) };\n    const kitDiff = MetabolismKitDiff as any;\n    const kitDiffInverted = MetabolismKitDiffInverted as any;\n    const kitDiffed = MetabolismKitDiffed as any;\n\n    it(\"Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit\", () =\u003e {\n      const change = getKitChange(kitOriginal, kitDiffed);\n      const computedDiff = getKitDiff(kitOriginal, kitDiffed);\n      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);\n      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);\n      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);\n      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);\n      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);\n      const appliedForward = applyKitDiff(kitOriginal, change.forward);\n      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);\n      const appliedInverse = applyKitDiff(kitDiffed, change.backward);\n      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);\n    });\n\n    describe(\"Design/Model\", () =\u003e {\n      it(\"selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases\", () =\u003e {\n        const payload = ModelSelectionCases as {\n          cases: Array\u003c{\n            name: string;\n            selectedTagGuids: string[];\n            expectedGuid: string | null;\n            models: Array\u003c{ guid: string; fileGuid: string; tagGuids: string[] }\u003e;\n          }\u003e;\n        };\n        payload.cases.forEach((testCase) =\u003e {\n          const models: Model[] = testCase.models.map((model) =\u003e ({\n            guid: model.guid,\n            file: { guid: model.fileGuid },\n            tags: model.tagGuids.map((guid) =\u003e ({ guid })),\n          }));\n          const selected = selectBestModel(models, testCase.selectedTagGuids);\n          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);\n        });\n      });\n    });\n  });\n});\n\ndescribe(\"Flatten\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n\n  const testFlatten = (designName: string, parentName?: string) =\u003e {\n    const design = findDesign(kit, designName, parentName);\n    const expectedDesign = kit.designs?.find((d) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === design.guid);\n    expect(expectedDesign).toBeDefined();\n    const flatDesignChange = flattenDesign(kit, design.guid);\n    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);\n\n    flatDesign!.pieces?.forEach((p) =\u003e {\n      const expectedPiece = expectedDesign!.pieces?.find((ep) =\u003e ep.name === p.name);\n      expect(expectedPiece).toBeDefined();\n      expect(p.plane).toBeDefined();\n      expect(p.center).toBeDefined();\n      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);\n      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);\n    });\n  };\n\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Nakagin Capsule Tower\");\n    });\n    describe(\"Slanted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Slanted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Twisted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Twisted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Dancing\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Dancing\", \"Nakagin Capsule Tower\");\n      });\n    });\n  });\n\n  describe(\"Capsule Dream\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Capsule Dream\");\n    });\n  });\n});\n\ndescribe(\"Roundtrip\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json\", async () =\u003e {\n      const fs = await import(\"node:fs\");\n      const path = await import(\"node:path\");\n\n      const kit = MetabolismKit as unknown as Kit;\n      const serializedKit = serializeKit(kit);\n      const deserializedKit = deserializeKit(serializedKit);\n      expect(areKitsEqual(kit, deserializedKit)).toBe(true);\n\n      const zipPath = path.join(__dirname, \"../assets/semio/metabolism.zip\");\n      const zipBuffer = fs.readFileSync(zipPath);\n      const { kit: zipKit } = await importKit(zipBuffer.buffer);\n      expect(areKitsEqual(kit, zipKit)).toBe(true);\n\n      const exportedZip = await exportKit(kit);\n      const { kit: reKit } = await importKit(exportedZip);\n      expect(areKitsEqual(kit, reKit)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Validation\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Metabolism Kit -\u003e Validate = Empty report\", () =\u003e {\n      const validKit = MetabolismKit as unknown as Kit;\n      expect(hasErrors(validateKit(validKit))).toBe(false);\n    });\n  });\n\n  describe(\"Invalid\", () =\u003e {\n    it(\"Invalid Kit -\u003e Validate = Invalid Report\", () =\u003e {\n      const invalidKit = InvalidKit as unknown as Kit;\n      const result = validateKit(invalidKit);\n      const expected = InvalidKitValidation as unknown as ValidationResult;\n      expect(areValidationResultsEqual(result, expected)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Cluster\", () =\u003e {\n  it(\"Cluster replacement uses design-guid designPiece and yields included design entry\", () =\u003e {\n    const design = {\n      guid: \"design-root\",\n      name: \"Root\",\n      pieces: [\n        { guid: \"piece-a\", type: { guid: \"type-a\" } },\n        { guid: \"piece-b\", type: { guid: \"type-b\" } },\n        { guid: \"piece-c\", type: { guid: \"type-c\" } },\n      ],\n      connections: [\n        {\n          guid: \"conn-ab\",\n          connecting: { piece: { guid: \"piece-a\" } },\n          connected: { piece: { guid: \"piece-b\" } },\n        },\n        {\n          guid: \"conn-bc\",\n          connecting: { piece: { guid: \"piece-b\" } },\n          connected: { piece: { guid: \"piece-c\" } },\n        },\n      ],\n      createdAt: \"2025-01-01T00:00:00.000Z\",\n      updatedAt: \"2025-01-01T00:00:00.000Z\",\n    } as Design;\n\n    const { clusteredDesign, externalConnections } = createClusteredDesign(design, [\"piece-a\", \"piece-b\"], \"Cluster\");\n    const change = replaceClusterWithDesign(design, [\"piece-a\", \"piece-b\"], clusteredDesign, externalConnections);\n    const updatedDesign = applyDesignDiff(design, change.forward);\n\n    const clusterConnection = updatedDesign.connections?.find((c) =\u003e c.guid === \"conn-bc\");\n    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);\n    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();\n\n    const included = getIncludedDesigns(updatedDesign);\n    expect(included.length).toBe(1);\n    expect(included[0].guid).toBe(clusteredDesign.guid);\n    expect(included[0].designGuid).toBe(clusteredDesign.guid);\n  });\n});\n\ndescribe(\"Drag\", () =\u003e {\n  it(\"Design + Pieces + Offset = DiffDesign\", () =\u003e {\n    const design = DragDesign as unknown as Design;\n    const pieces = DragPieces as unknown as Design;\n    const offset = DragOffset as { u: number; v: number };\n    const expectedDiff = DragDiffDesign as any;\n    const computedDiff = dragPiecesInDesign(design, pieces, offset);\n    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);\n    for (let i = 0; i \u003c computedPieceUpdates.length; i++) {\n      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);\n      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);\n      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);\n    }\n    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);\n    for (let i = 0; i \u003c computedConnUpdates.length; i++) {\n      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);\n      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);\n      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);\n    }\n  });\n});\n\ndescribe(\"Sketchpad ControlTree\", () =\u003e {\n  it(\"builds nested folders from paths and applies case-insensitive filter on leaf keys\", () =\u003e {\n    const controls: ControlDef[] = [\n      { path: \"Transform/Position/X\", controlKind: \"number\", value: 1, onChange: () =\u003e {} },\n      { path: \"Transform/Position/Y\", controlKind: \"number\", value: 2, onChange: () =\u003e {} },\n      { path: \"Appearance/Material/roughness\", controlKind: \"slider\", value: 0.5, onChange: () =\u003e {} },\n    ];\n    const folderSettings = {\n      Transform: { path: \"Transform\", order: 2 },\n      \"Appearance/Material\": { path: \"Appearance/Material\", order: 1, collapsed: true },\n    };\n    const fullTree = buildControlTree(controls, \"\", folderSettings);\n    expect(Object.keys(fullTree)).toEqual([\"Transform\", \"Appearance\"]);\n    expect(fullTree.Transform.kind).toBe(\"folder\");\n    expect(fullTree.Transform.order).toBe(2);\n    expect(fullTree.Transform.children?.Position.kind).toBe(\"folder\");\n    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe(\"control\");\n    expect(fullTree.Appearance.children?.Material.order).toBe(1);\n    const filteredTree = buildControlTree(controls, \"rouGH\", folderSettings);\n    expect(Object.keys(filteredTree)).toEqual([\"Appearance\"]);\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe(\"control\");\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe(\"Appearance/Material/roughness\");\n  });\n});\n\ndescribe(\"Elements Bundle\", () =\u003e {\n  it(\"sources shared element primitives directly from semio-elements ui\", () =\u003e {\n    expect(UiAction).toBe(ElementsBundle.Action);\n    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);\n    expect(ElementsBundle.LevelProvider).toBeDefined();\n    expect(ElementsBundle.SectionSpecificity).toBeDefined();\n  });\n});\n\ndescribe(\"Design/Quality/Sum\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"sums effective floor area to ~2349.53\", () =\u003e {\n      const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent);\n      expect(design).toBeDefined();\n      const quality = kit.qualities?.find((q) =\u003e q.name === \"effective floor area\");\n      expect(quality).toBeDefined();\n      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);\n      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);\n    });\n  });\n});\n"
+          },
+          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/js/semio.test.ts\",\"success\":true}",
+          "duration": 386.958,
+          "tool_use_id": "tool_7d138ad5-2517-4ebf-8f72-942b2a02b8e",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "path": "👤semio📚js🥼semiotest",
+        "second": "🎆26🌙03☀️14⏰17⌚20⏱️10",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Write",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+            "content": "// #region 🔖Header\n// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from \"@semio/assets\";\nimport * as ElementsBundle from \"../../semio-elements/ui\";\nimport { Action as UiAction, buildControlTree, ControlDef } from \"../../semio-elements/ui\";\nimport { describe, expect, it } from \"vitest\";\nimport {\n  applyDesignDiff,\n  applyKitDiff,\n  areKitDiffsEqual,\n  areKitsEqual,\n  areValidationResultsEqual,\n  createClusteredDesign,\n  Design,\n  deserializeKit,\n  dragPiecesInDesign,\n  exportDesignModel,\n  exportKit,\n  EXPORT_MODEL_FORMATS,\n  flattenDesign,\n  getIncludedDesigns,\n  getKitChange,\n  getKitDiff,\n  hasErrors,\n  importKit,\n  inverseKitDiff,\n  Kit,\n  Model,\n  Plane,\n  replaceClusterWithDesign,\n  selectBestModel,\n  serializeKit,\n  sumQualityInDesign,\n  validateKit,\n  ValidationResult,\n} from \"./semio\";\n\nconst TOLERANCE = 0.001;\n\nconst planesEqual = (p1?: Plane, p2?: Plane): boolean =\u003e {\n  if (!p1 || !p2) return false;\n  if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;\n  return (\n    Math.abs(p1.origin.x - p2.origin.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.y - p2.origin.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.z - p2.origin.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.x - p2.xAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.y - p2.xAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.z - p2.xAxis.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.x - p2.yAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.y - p2.yAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.z - p2.yAxis.z) \u003c TOLERANCE\n  );\n};\n\nconst centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean =\u003e {\n  if (!c1 || !c2) return c1 === c2;\n  return Math.abs(c1.u - c2.u) \u003c TOLERANCE \u0026\u0026 Math.abs(c1.v - c2.v) \u003c TOLERANCE;\n};\n\nconst findDesign = (kit: Kit, name: string, parentName?: string) =\u003e {\n  let parentGuid: string | undefined;\n  if (parentName) {\n    const p = kit.designs?.find((d) =\u003e d.name === parentName);\n    if (!p) throw new Error(`Parent ${parentName} not found`);\n    parentGuid = p.guid;\n  }\n  const d = kit.designs?.find((d) =\u003e d.name === name \u0026\u0026 (parentGuid ? d.parent?.guid === parentGuid : !d.parent));\n  if (!d) throw new Error(`Design ${name} not found`);\n  return d;\n};\n\ndescribe(\"Change\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) =\u003e !d.parent) };\n    const kitDiff = MetabolismKitDiff as any;\n    const kitDiffInverted = MetabolismKitDiffInverted as any;\n    const kitDiffed = MetabolismKitDiffed as any;\n\n    it(\"Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit\", () =\u003e {\n      const change = getKitChange(kitOriginal, kitDiffed);\n      const computedDiff = getKitDiff(kitOriginal, kitDiffed);\n      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);\n      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);\n      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);\n      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);\n      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);\n      const appliedForward = applyKitDiff(kitOriginal, change.forward);\n      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);\n      const appliedInverse = applyKitDiff(kitDiffed, change.backward);\n      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);\n    });\n\n    describe(\"Design/Model\", () =\u003e {\n      it(\"selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases\", () =\u003e {\n        const payload = ModelSelectionCases as {\n          cases: Array\u003c{\n            name: string;\n            selectedTagGuids: string[];\n            expectedGuid: string | null;\n            models: Array\u003c{ guid: string; fileGuid: string; tagGuids: string[] }\u003e;\n          }\u003e;\n        };\n        payload.cases.forEach((testCase) =\u003e {\n          const models: Model[] = testCase.models.map((model) =\u003e ({\n            guid: model.guid,\n            file: { guid: model.fileGuid },\n            tags: model.tagGuids.map((guid) =\u003e ({ guid })),\n          }));\n          const selected = selectBestModel(models, testCase.selectedTagGuids);\n          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);\n        });\n      });\n    });\n  });\n});\n\ndescribe(\"Flatten\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n\n  const testFlatten = (designName: string, parentName?: string) =\u003e {\n    const design = findDesign(kit, designName, parentName);\n    const expectedDesign = kit.designs?.find((d) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === design.guid);\n    expect(expectedDesign).toBeDefined();\n    const flatDesignChange = flattenDesign(kit, design.guid);\n    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);\n\n    flatDesign!.pieces?.forEach((p) =\u003e {\n      const expectedPiece = expectedDesign!.pieces?.find((ep) =\u003e ep.name === p.name);\n      expect(expectedPiece).toBeDefined();\n      expect(p.plane).toBeDefined();\n      expect(p.center).toBeDefined();\n      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);\n      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);\n    });\n  };\n\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Nakagin Capsule Tower\");\n    });\n    describe(\"Slanted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Slanted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Twisted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Twisted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Dancing\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Dancing\", \"Nakagin Capsule Tower\");\n      });\n    });\n  });\n\n  describe(\"Capsule Dream\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Capsule Dream\");\n    });\n  });\n});\n\ndescribe(\"Roundtrip\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json\", async () =\u003e {\n      const fs = await import(\"node:fs\");\n      const path = await import(\"node:path\");\n\n      const kit = MetabolismKit as unknown as Kit;\n      const serializedKit = serializeKit(kit);\n      const deserializedKit = deserializeKit(serializedKit);\n      expect(areKitsEqual(kit, deserializedKit)).toBe(true);\n\n      const zipPath = path.join(__dirname, \"../assets/semio/metabolism.zip\");\n      const zipBuffer = fs.readFileSync(zipPath);\n      const { kit: zipKit } = await importKit(zipBuffer.buffer);\n      expect(areKitsEqual(kit, zipKit)).toBe(true);\n\n      const exportedZip = await exportKit(kit);\n      const { kit: reKit } = await importKit(exportedZip);\n      expect(areKitsEqual(kit, reKit)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Validation\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Metabolism Kit -\u003e Validate = Empty report\", () =\u003e {\n      const validKit = MetabolismKit as unknown as Kit;\n      expect(hasErrors(validateKit(validKit))).toBe(false);\n    });\n  });\n\n  describe(\"Invalid\", () =\u003e {\n    it(\"Invalid Kit -\u003e Validate = Invalid Report\", () =\u003e {\n      const invalidKit = InvalidKit as unknown as Kit;\n      const result = validateKit(invalidKit);\n      const expected = InvalidKitValidation as unknown as ValidationResult;\n      expect(areValidationResultsEqual(result, expected)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Cluster\", () =\u003e {\n  it(\"Cluster replacement uses design-guid designPiece and yields included design entry\", () =\u003e {\n    const design = {\n      guid: \"design-root\",\n      name: \"Root\",\n      pieces: [\n        { guid: \"piece-a\", type: { guid: \"type-a\" } },\n        { guid: \"piece-b\", type: { guid: \"type-b\" } },\n        { guid: \"piece-c\", type: { guid: \"type-c\" } },\n      ],\n      connections: [\n        {\n          guid: \"conn-ab\",\n          connecting: { piece: { guid: \"piece-a\" } },\n          connected: { piece: { guid: \"piece-b\" } },\n        },\n        {\n          guid: \"conn-bc\",\n          connecting: { piece: { guid: \"piece-b\" } },\n          connected: { piece: { guid: \"piece-c\" } },\n        },\n      ],\n      createdAt: \"2025-01-01T00:00:00.000Z\",\n      updatedAt: \"2025-01-01T00:00:00.000Z\",\n    } as Design;\n\n    const { clusteredDesign, externalConnections } = createClusteredDesign(design, [\"piece-a\", \"piece-b\"], \"Cluster\");\n    const change = replaceClusterWithDesign(design, [\"piece-a\", \"piece-b\"], clusteredDesign, externalConnections);\n    const updatedDesign = applyDesignDiff(design, change.forward);\n\n    const clusterConnection = updatedDesign.connections?.find((c) =\u003e c.guid === \"conn-bc\");\n    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);\n    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();\n\n    const included = getIncludedDesigns(updatedDesign);\n    expect(included.length).toBe(1);\n    expect(included[0].guid).toBe(clusteredDesign.guid);\n    expect(included[0].designGuid).toBe(clusteredDesign.guid);\n  });\n});\n\ndescribe(\"Drag\", () =\u003e {\n  it(\"Design + Pieces + Offset = DiffDesign\", () =\u003e {\n    const design = DragDesign as unknown as Design;\n    const pieces = DragPieces as unknown as Design;\n    const offset = DragOffset as { u: number; v: number };\n    const expectedDiff = DragDiffDesign as any;\n    const computedDiff = dragPiecesInDesign(design, pieces, offset);\n    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);\n    for (let i = 0; i \u003c computedPieceUpdates.length; i++) {\n      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);\n      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);\n      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);\n    }\n    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);\n    for (let i = 0; i \u003c computedConnUpdates.length; i++) {\n      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);\n      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);\n      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);\n    }\n  });\n});\n\ndescribe(\"Sketchpad ControlTree\", () =\u003e {\n  it(\"builds nested folders from paths and applies case-insensitive filter on leaf keys\", () =\u003e {\n    const controls: ControlDef[] = [\n      { path: \"Transform/Position/X\", controlKind: \"number\", value: 1, onChange: () =\u003e {} },\n      { path: \"Transform/Position/Y\", controlKind: \"number\", value: 2, onChange: () =\u003e {} },\n      { path: \"Appearance/Material/roughness\", controlKind: \"slider\", value: 0.5, onChange: () =\u003e {} },\n    ];\n    const folderSettings = {\n      Transform: { path: \"Transform\", order: 2 },\n      \"Appearance/Material\": { path: \"Appearance/Material\", order: 1, collapsed: true },\n    };\n    const fullTree = buildControlTree(controls, \"\", folderSettings);\n    expect(Object.keys(fullTree)).toEqual([\"Transform\", \"Appearance\"]);\n    expect(fullTree.Transform.kind).toBe(\"folder\");\n    expect(fullTree.Transform.order).toBe(2);\n    expect(fullTree.Transform.children?.Position.kind).toBe(\"folder\");\n    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe(\"control\");\n    expect(fullTree.Appearance.children?.Material.order).toBe(1);\n    const filteredTree = buildControlTree(controls, \"rouGH\", folderSettings);\n    expect(Object.keys(filteredTree)).toEqual([\"Appearance\"]);\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe(\"control\");\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe(\"Appearance/Material/roughness\");\n  });\n});\n\ndescribe(\"Elements Bundle\", () =\u003e {\n  it(\"sources shared element primitives directly from semio-elements ui\", () =\u003e {\n    expect(UiAction).toBe(ElementsBundle.Action);\n    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);\n    expect(ElementsBundle.LevelProvider).toBeDefined();\n    expect(ElementsBundle.SectionSpecificity).toBeDefined();\n  });\n});\n\ndescribe(\"Design/Quality/Sum\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"sums effective floor area to ~2349.53\", () =\u003e {\n      const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent);\n      expect(design).toBeDefined();\n      const quality = kit.qualities?.find((q) =\u003e q.name === \"effective floor area\");\n      expect(quality).toBeDefined();\n      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);\n      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);\n    });\n  });\n});\n\ndescribe(\"ExportDesignModel\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent)!;\n\n  it(\"exports .glb format with valid GLB header\", async () =\u003e {\n    const result = await exportDesignModel(kit, design.guid, \".glb\");\n    expect(result.byteLength).toBeGreaterThan(0);\n\n    const view = new DataView(result);\n    const magic = view.getUint32(0, true);\n    expect(magic).toBe(0x46546c67);\n\n    const version = view.getUint32(4, true);\n    expect(version).toBe(2);\n\n    const totalLength = view.getUint32(8, true);\n    expect(totalLength).toBe(result.byteLength);\n  });\n\n  it(\"exports .gltf format as valid JSON string\", async () =\u003e {\n    const result = await exportDesignModel(kit, design.guid, \".gltf\");\n    const decoder = new TextDecoder();\n    const str = decoder.decode(result);\n    expect(() =\u003e JSON.parse(str)).not.toThrow();\n    const parsed = JSON.parse(str);\n    expect(parsed).toBeDefined();\n    expect(typeof parsed).toBe(\"object\");\n  });\n\n  it(\"EXPORT_MODEL_FORMATS includes .glb and .gltf\", () =\u003e {\n    expect(EXPORT_MODEL_FORMATS[\".glb\"]).toBeDefined();\n    expect(EXPORT_MODEL_FORMATS[\".gltf\"]).toBeDefined();\n  });\n});\n"
+          },
+          "tool_use_id": "tool_83aced1e-6a3b-45c5-b71f-43840cb8e0c",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "path": "👤semio📚js🥼semiotest",
+        "second": "🎆26🌙03☀️14⏰17⌚20⏱️12",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+          "edits": [
+            {
+              "old_string": "",
+              "new_string": "\ndescribe(\"ExportDesignModel\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent)!;\n\n  it(\"exports .glb format with valid GLB header\", async () =\u003e {\n    const result = await exportDesignModel(kit, design.guid, \".glb\");\n    expect(result.byteLength).toBeGreaterThan(0);\n\n    const view = new DataView(result);\n    const magic = view.getUint32(0, true);\n    expect(magic).toBe(0x46546c67);\n\n    const version = view.getUint32(4, true);\n    expect(version).toBe(2);\n\n    const totalLength = view.getUint32(8, true);\n    expect(totalLength).toBe(result.byteLength);\n  });\n\n  it(\"exports .gltf format as valid JSON string\", async () =\u003e {\n    const result = await exportDesignModel(kit, design.guid, \".gltf\");\n    const decoder = new TextDecoder();\n    const str = decoder.decode(result);\n    expect(() =\u003e JSON.parse(str)).not.toThrow();\n    const parsed = JSON.parse(str);\n    expect(parsed).toBeDefined();\n    expect(typeof parsed).toBe(\"object\");\n  });\n\n  it(\"EXPORT_MODEL_FORMATS includes .glb and .gltf\", () =\u003e {\n    expect(EXPORT_MODEL_FORMATS[\".glb\"]).toBeDefined();\n    expect(EXPORT_MODEL_FORMATS[\".gltf\"]).toBeDefined();\n  });\n});"
+            }
+          ],
+          "hook_event_name": "afterFileEdit",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚20⏱️36",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "text": "",
+          "duration_ms": 1,
+          "model": "composer-1.5",
+          "hook_event_name": "afterAgentThought",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.thinking.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚21⏱️03",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Write",
+          "tool_input": {
+            "file_path": "/workspaces/semio/semio/js/semio.test.ts",
+            "content": "// #region 🔖Header\n// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from \"@semio/assets\";\nimport * as ElementsBundle from \"../../semio-elements/ui\";\nimport { Action as UiAction, buildControlTree, ControlDef } from \"../../semio-elements/ui\";\nimport { describe, expect, it } from \"vitest\";\nimport {\n  applyDesignDiff,\n  applyKitDiff,\n  areKitDiffsEqual,\n  areKitsEqual,\n  areValidationResultsEqual,\n  createClusteredDesign,\n  Design,\n  deserializeKit,\n  dragPiecesInDesign,\n  exportDesignModel,\n  exportKit,\n  EXPORT_MODEL_FORMATS,\n  flattenDesign,\n  getIncludedDesigns,\n  getKitChange,\n  getKitDiff,\n  hasErrors,\n  importKit,\n  inverseKitDiff,\n  Kit,\n  Model,\n  Plane,\n  replaceClusterWithDesign,\n  selectBestModel,\n  serializeKit,\n  sumQualityInDesign,\n  validateKit,\n  ValidationResult,\n} from \"./semio\";\n\nconst TOLERANCE = 0.001;\n\nconst planesEqual = (p1?: Plane, p2?: Plane): boolean =\u003e {\n  if (!p1 || !p2) return false;\n  if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;\n  return (\n    Math.abs(p1.origin.x - p2.origin.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.y - p2.origin.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.origin.z - p2.origin.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.x - p2.xAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.y - p2.xAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.xAxis.z - p2.xAxis.z) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.x - p2.yAxis.x) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.y - p2.yAxis.y) \u003c TOLERANCE \u0026\u0026\n    Math.abs(p1.yAxis.z - p2.yAxis.z) \u003c TOLERANCE\n  );\n};\n\nconst centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean =\u003e {\n  if (!c1 || !c2) return c1 === c2;\n  return Math.abs(c1.u - c2.u) \u003c TOLERANCE \u0026\u0026 Math.abs(c1.v - c2.v) \u003c TOLERANCE;\n};\n\nconst findDesign = (kit: Kit, name: string, parentName?: string) =\u003e {\n  let parentGuid: string | undefined;\n  if (parentName) {\n    const p = kit.designs?.find((d) =\u003e d.name === parentName);\n    if (!p) throw new Error(`Parent ${parentName} not found`);\n    parentGuid = p.guid;\n  }\n  const d = kit.designs?.find((d) =\u003e d.name === name \u0026\u0026 (parentGuid ? d.parent?.guid === parentGuid : !d.parent));\n  if (!d) throw new Error(`Design ${name} not found`);\n  return d;\n};\n\ndescribe(\"Change\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) =\u003e !d.parent) };\n    const kitDiff = MetabolismKitDiff as any;\n    const kitDiffInverted = MetabolismKitDiffInverted as any;\n    const kitDiffed = MetabolismKitDiffed as any;\n\n    it(\"Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit\", () =\u003e {\n      const change = getKitChange(kitOriginal, kitDiffed);\n      const computedDiff = getKitDiff(kitOriginal, kitDiffed);\n      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);\n      const computedInverseDiff = inverseKitDiff(kitOriginal, change.forward);\n      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);\n      expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);\n      expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);\n      const appliedForward = applyKitDiff(kitOriginal, change.forward);\n      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);\n      const appliedInverse = applyKitDiff(kitDiffed, change.backward);\n      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);\n    });\n\n    describe(\"Design/Model\", () =\u003e {\n      it(\"selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases\", () =\u003e {\n        const payload = ModelSelectionCases as {\n          cases: Array\u003c{\n            name: string;\n            selectedTagGuids: string[];\n            expectedGuid: string | null;\n            models: Array\u003c{ guid: string; fileGuid: string; tagGuids: string[] }\u003e;\n          }\u003e;\n        };\n        payload.cases.forEach((testCase) =\u003e {\n          const models: Model[] = testCase.models.map((model) =\u003e ({\n            guid: model.guid,\n            file: { guid: model.fileGuid },\n            tags: model.tagGuids.map((guid) =\u003e ({ guid })),\n          }));\n          const selected = selectBestModel(models, testCase.selectedTagGuids);\n          expect(selected?.guid ?? null).toBe(testCase.expectedGuid);\n        });\n      });\n    });\n  });\n});\n\ndescribe(\"Flatten\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n\n  const testFlatten = (designName: string, parentName?: string) =\u003e {\n    const design = findDesign(kit, designName, parentName);\n    const expectedDesign = kit.designs?.find((d) =\u003e d.name === \"Flat\" \u0026\u0026 d.parent?.guid === design.guid);\n    expect(expectedDesign).toBeDefined();\n    const flatDesignChange = flattenDesign(kit, design.guid);\n    const flatDesign = applyDesignDiff(design, flatDesignChange.forward);\n\n    flatDesign!.pieces?.forEach((p) =\u003e {\n      const expectedPiece = expectedDesign!.pieces?.find((ep) =\u003e ep.name === p.name);\n      expect(expectedPiece).toBeDefined();\n      expect(p.plane).toBeDefined();\n      expect(p.center).toBeDefined();\n      expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);\n      expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);\n    });\n  };\n\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Nakagin Capsule Tower\");\n    });\n    describe(\"Slanted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Slanted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Twisted\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Twisted\", \"Nakagin Capsule Tower\");\n      });\n    });\n    describe(\"Dancing\", () =\u003e {\n      it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n        testFlatten(\"Dancing\", \"Nakagin Capsule Tower\");\n      });\n    });\n  });\n\n  describe(\"Capsule Dream\", () =\u003e {\n    it(\"Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat\", () =\u003e {\n      testFlatten(\"Capsule Dream\");\n    });\n  });\n});\n\ndescribe(\"Roundtrip\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json\", async () =\u003e {\n      const fs = await import(\"node:fs\");\n      const path = await import(\"node:path\");\n\n      const kit = MetabolismKit as unknown as Kit;\n      const serializedKit = serializeKit(kit);\n      const deserializedKit = deserializeKit(serializedKit);\n      expect(areKitsEqual(kit, deserializedKit)).toBe(true);\n\n      const zipPath = path.join(__dirname, \"../assets/semio/metabolism.zip\");\n      const zipBuffer = fs.readFileSync(zipPath);\n      const { kit: zipKit } = await importKit(zipBuffer.buffer);\n      expect(areKitsEqual(kit, zipKit)).toBe(true);\n\n      const exportedZip = await exportKit(kit);\n      const { kit: reKit } = await importKit(exportedZip);\n      expect(areKitsEqual(kit, reKit)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Validation\", () =\u003e {\n  describe(\"Metabolism\", () =\u003e {\n    it(\"Metabolism Kit -\u003e Validate = Empty report\", () =\u003e {\n      const validKit = MetabolismKit as unknown as Kit;\n      expect(hasErrors(validateKit(validKit))).toBe(false);\n    });\n  });\n\n  describe(\"Invalid\", () =\u003e {\n    it(\"Invalid Kit -\u003e Validate = Invalid Report\", () =\u003e {\n      const invalidKit = InvalidKit as unknown as Kit;\n      const result = validateKit(invalidKit);\n      const expected = InvalidKitValidation as unknown as ValidationResult;\n      expect(areValidationResultsEqual(result, expected)).toBe(true);\n    });\n  });\n});\n\ndescribe(\"Cluster\", () =\u003e {\n  it(\"Cluster replacement uses design-guid designPiece and yields included design entry\", () =\u003e {\n    const design = {\n      guid: \"design-root\",\n      name: \"Root\",\n      pieces: [\n        { guid: \"piece-a\", type: { guid: \"type-a\" } },\n        { guid: \"piece-b\", type: { guid: \"type-b\" } },\n        { guid: \"piece-c\", type: { guid: \"type-c\" } },\n      ],\n      connections: [\n        {\n          guid: \"conn-ab\",\n          connecting: { piece: { guid: \"piece-a\" } },\n          connected: { piece: { guid: \"piece-b\" } },\n        },\n        {\n          guid: \"conn-bc\",\n          connecting: { piece: { guid: \"piece-b\" } },\n          connected: { piece: { guid: \"piece-c\" } },\n        },\n      ],\n      createdAt: \"2025-01-01T00:00:00.000Z\",\n      updatedAt: \"2025-01-01T00:00:00.000Z\",\n    } as Design;\n\n    const { clusteredDesign, externalConnections } = createClusteredDesign(design, [\"piece-a\", \"piece-b\"], \"Cluster\");\n    const change = replaceClusterWithDesign(design, [\"piece-a\", \"piece-b\"], clusteredDesign, externalConnections);\n    const updatedDesign = applyDesignDiff(design, change.forward);\n\n    const clusterConnection = updatedDesign.connections?.find((c) =\u003e c.guid === \"conn-bc\");\n    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);\n    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();\n\n    const included = getIncludedDesigns(updatedDesign);\n    expect(included.length).toBe(1);\n    expect(included[0].guid).toBe(clusteredDesign.guid);\n    expect(included[0].designGuid).toBe(clusteredDesign.guid);\n  });\n});\n\ndescribe(\"Drag\", () =\u003e {\n  it(\"Design + Pieces + Offset = DiffDesign\", () =\u003e {\n    const design = DragDesign as unknown as Design;\n    const pieces = DragPieces as unknown as Design;\n    const offset = DragOffset as { u: number; v: number };\n    const expectedDiff = DragDiffDesign as any;\n    const computedDiff = dragPiecesInDesign(design, pieces, offset);\n    const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) =\u003e a.piece.guid.localeCompare(b.piece.guid));\n    expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);\n    for (let i = 0; i \u003c computedPieceUpdates.length; i++) {\n      expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);\n      expect(computedPieceUpdates[i].diff.center?.u).toBe(expectedPieceUpdates[i].diff.center.u);\n      expect(computedPieceUpdates[i].diff.center?.v).toBe(expectedPieceUpdates[i].diff.center.v);\n    }\n    const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) =\u003e a.connection.guid.localeCompare(b.connection.guid));\n    expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);\n    for (let i = 0; i \u003c computedConnUpdates.length; i++) {\n      expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);\n      expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);\n      expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);\n    }\n  });\n});\n\ndescribe(\"Sketchpad ControlTree\", () =\u003e {\n  it(\"builds nested folders from paths and applies case-insensitive filter on leaf keys\", () =\u003e {\n    const controls: ControlDef[] = [\n      { path: \"Transform/Position/X\", controlKind: \"number\", value: 1, onChange: () =\u003e {} },\n      { path: \"Transform/Position/Y\", controlKind: \"number\", value: 2, onChange: () =\u003e {} },\n      { path: \"Appearance/Material/roughness\", controlKind: \"slider\", value: 0.5, onChange: () =\u003e {} },\n    ];\n    const folderSettings = {\n      Transform: { path: \"Transform\", order: 2 },\n      \"Appearance/Material\": { path: \"Appearance/Material\", order: 1, collapsed: true },\n    };\n    const fullTree = buildControlTree(controls, \"\", folderSettings);\n    expect(Object.keys(fullTree)).toEqual([\"Transform\", \"Appearance\"]);\n    expect(fullTree.Transform.kind).toBe(\"folder\");\n    expect(fullTree.Transform.order).toBe(2);\n    expect(fullTree.Transform.children?.Position.kind).toBe(\"folder\");\n    expect(fullTree.Transform.children?.Position.children?.X.kind).toBe(\"control\");\n    expect(fullTree.Appearance.children?.Material.order).toBe(1);\n    const filteredTree = buildControlTree(controls, \"rouGH\", folderSettings);\n    expect(Object.keys(filteredTree)).toEqual([\"Appearance\"]);\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.kind).toBe(\"control\");\n    expect(filteredTree.Appearance.children?.Material.children?.roughness.path).toBe(\"Appearance/Material/roughness\");\n  });\n});\n\ndescribe(\"Elements Bundle\", () =\u003e {\n  it(\"sources shared element primitives directly from semio-elements ui\", () =\u003e {\n    expect(UiAction).toBe(ElementsBundle.Action);\n    expect(buildControlTree).toBe(ElementsBundle.buildControlTree);\n    expect(ElementsBundle.LevelProvider).toBeDefined();\n    expect(ElementsBundle.SectionSpecificity).toBeDefined();\n  });\n});\n\ndescribe(\"Design/Quality/Sum\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  describe(\"Nakagin Capsule Tower\", () =\u003e {\n    it(\"sums effective floor area to ~2349.53\", () =\u003e {\n      const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent);\n      expect(design).toBeDefined();\n      const quality = kit.qualities?.find((q) =\u003e q.name === \"effective floor area\");\n      expect(quality).toBeDefined();\n      const result = sumQualityInDesign(kit, design!.guid, quality!.guid);\n      expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);\n    });\n  });\n});\n\ndescribe(\"ExportDesignModel\", () =\u003e {\n  const kit = MetabolismKit as Kit;\n  const design = kit.designs?.find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent)!;\n\n  it(\"exports .glb format with valid GLB header\", async () =\u003e {\n    const result = await exportDesignModel(kit, design.guid, \".glb\");\n    expect(result.byteLength).toBeGreaterThan(0);\n\n    const view = new DataView(result);\n    const magic = view.getUint32(0, true);\n    expect(magic).toBe(0x46546c67);\n\n    const version = view.getUint32(4, true);\n    expect(version).toBe(2);\n\n    const totalLength = view.getUint32(8, true);\n    expect(totalLength).toBe(result.byteLength);\n  });\n\n  it(\"exports .gltf format as valid JSON string\", async () =\u003e {\n    const result = await exportDesignModel(kit, design.guid, \".gltf\");\n    const decoder = new TextDecoder();\n    const str = decoder.decode(result);\n    expect(() =\u003e JSON.parse(str)).not.toThrow();\n    const parsed = JSON.parse(str);\n    expect(parsed).toBeDefined();\n    expect(typeof parsed).toBe(\"object\");\n  });\n\n  it(\"EXPORT_MODEL_FORMATS includes .glb and .gltf\", () =\u003e {\n    expect(EXPORT_MODEL_FORMATS[\".glb\"]).toBeDefined();\n    expect(EXPORT_MODEL_FORMATS[\".gltf\"]).toBeDefined();\n  });\n});\n"
+          },
+          "tool_output": "{\"file_path\":\"/workspaces/semio/semio/js/semio.test.ts\",\"success\":true}",
+          "duration": 220.242,
+          "tool_use_id": "tool_83aced1e-6a3b-45c5-b71f-43840cb8e0c",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "path": "👤semio📚js🥼semiotest",
+        "second": "🎆26🌙03☀️14⏰17⌚21⏱️01",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Shell",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 npx vitest run semio/js/semio.test.ts --reporter=verbose 2\u003e\u00261",
+            "cwd": "",
+            "timeout": 30000
+          },
+          "tool_use_id": "1a4202d0-bf41-419f-810b-34202a57f765",
+          "cwd": "",
+          "hook_event_name": "preToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "files": [
+          "👤semio📚js🥼semiotest"
+        ],
+        "kind": "agent.tool.test.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚21⏱️03",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "tests": [
+          ""
+        ],
+        "timeout": "30000",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "command": "cd /workspaces/semio \u0026\u0026 npx vitest run semio/js/semio.test.ts --reporter=verbose 2\u003e\u00261",
+          "cwd": "",
+          "sandbox": false,
+          "hook_event_name": "beforeShellExecution",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "files": [
+          "👤semio📚js🥼semiotest"
+        ],
+        "kind": "agent.tool.test.starting",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚21⏱️27",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "tests": [
+          ""
+        ],
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "command": "cd /workspaces/semio \u0026\u0026 npx vitest run semio/js/semio.test.ts --reporter=verbose 2\u003e\u00261",
+          "output": "\n RUN  v4.0.17 /workspaces/semio\n\n ✓ |semio| semio.test.ts \u003e Change \u003e Metabolism \u003e Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit 624ms\n ✓ |semio| semio.test.ts \u003e Change \u003e Metabolism \u003e Design/Model \u003e selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases 1ms\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Nakagin Capsule Tower \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 74ms\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Nakagin Capsule Tower \u003e Slanted \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 32ms\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Nakagin Capsule Tower \u003e Twisted \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 42ms\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Nakagin Capsule Tower \u003e Dancing \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 47ms\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Capsule Dream \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 1132ms\n ✓ |semio| semio.test.ts \u003e Roundtrip \u003e Metabolism \u003e Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json 12626ms\n ✓ |semio| semio.test.ts \u003e Validation \u003e Metabolism \u003e Metabolism Kit -\u003e Validate = Empty report 13ms\n ✓ |semio| semio.test.ts \u003e Validation \u003e Invalid \u003e Invalid Kit -\u003e Validate = Invalid Report 16ms\n ✓ |semio| semio.test.ts \u003e Cluster \u003e Cluster replacement uses design-guid designPiece and yields included design entry 1ms\n ✓ |semio| semio.test.ts \u003e Drag \u003e Design + Pieces + Offset = DiffDesign 1ms\n ✓ |semio| semio.test.ts \u003e Sketchpad ControlTree \u003e builds nested folders from paths and applies case-insensitive filter on leaf keys 1ms\n ✓ |semio| semio.test.ts \u003e Elements Bundle \u003e sources shared element primitives directly from semio-elements ui 0ms\n ✓ |semio| semio.test.ts \u003e Design/Quality/Sum \u003e Nakagin Capsule Tower \u003e sums effective floor area to ~2349.53 1ms\n ✓ |semio| semio.test.ts \u003e ExportDesignModel \u003e exports .glb format with valid GLB header 29ms\n ✓ |semio| semio.test.ts \u003e ExportDesignModel \u003e exports .gltf format as valid JSON string 31ms\n ✓ |semio| semio.test.ts \u003e ExportDesignModel \u003e EXPORT_MODEL_FORMATS includes .glb and .gltf 0ms\n\n Test Files  1 passed (1)\n      Tests  18 passed (18)\n   Start at  17:21:45\n   Duration  26.48s (transform 6.47s, setup 0ms, import 11.65s, tests 14.68s, environment 0ms)\n\n",
+          "duration": 29240.535,
+          "sandbox": false,
+          "hook_event_name": "afterShellExecution",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "files": [
+          "👤semio📚js🥼semiotest"
+        ],
+        "kind": "agent.tool.test.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚22⏱️15",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "model": "composer-1.5",
+          "tool_name": "Shell",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 npx vitest run semio/js/semio.test.ts --reporter=verbose 2\u003e\u00261",
+            "cwd": "",
+            "timeout": 30000
+          },
+          "tool_output": "{\"output\":\"\\n RUN  v4.0.17 /workspaces/semio\\n\\n ✓ |semio| semio.test.ts \u003e Change \u003e Metabolism \u003e Kit + Change.Forward = DiffedKit \u0026 DiffedKit + Change.Backward = Kit 624ms\\n ✓ |semio| semio.test.ts \u003e Change \u003e Metabolism \u003e Design/Model \u003e selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases 1ms\\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Nakagin Capsule Tower \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 74ms\\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Nakagin Capsule Tower \u003e Slanted \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 32ms\\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Nakagin Capsule Tower \u003e Twisted \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 42ms\\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Nakagin Capsule Tower \u003e Dancing \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 47ms\\n ✓ |semio| semio.test.ts \u003e Flatten \u003e Capsule Dream \u003e Kit -\u003e Flatten -\u003e Diff -\u003e Apply = Flat 1132ms\\n ✓ |semio| semio.test.ts \u003e Roundtrip \u003e Metabolism \u003e Json -\u003e Memory -\u003e Json, Json -\u003e Zip, Zip -\u003e Json 12626ms\\n ✓ |semio| semio.test.ts \u003e Validation \u003e Metabolism \u003e Metabolism Kit -\u003e Validate = Empty report 13ms\\n ✓ |semio| semio.test.ts \u003e Validation \u003e Invalid \u003e Invalid Kit -\u003e Validate = Invalid Report 16ms\\n ✓ |semio| semio.test.ts \u003e Cluster \u003e Cluster replacement uses design-guid designPiece and yields included design entry 1ms\\n ✓ |semio| semio.test.ts \u003e Drag \u003e Design + Pieces + Offset = DiffDesign 1ms\\n ✓ |semio| semio.test.ts \u003e Sketchpad ControlTree \u003e builds nested folders from paths and applies case-insensitive filter on leaf keys 1ms\\n ✓ |semio| semio.test.ts \u003e Elements Bundle \u003e sources shared element primitives directly from semio-elements ui 0ms\\n ✓ |semio| semio.test.ts \u003e Design/Quality/Sum \u003e Nakagin Capsule Tower \u003e sums effective floor area to ~2349.53 1ms\\n ✓ |semio| semio.test.ts \u003e ExportDesignModel \u003e exports .glb format with valid GLB header 29ms\\n ✓ |semio| semio.test.ts \u003e ExportDesignModel \u003e exports .gltf format as valid JSON string 31ms\\n ✓ |semio| semio.test.ts \u003e ExportDesignModel \u003e EXPORT_MODEL_FORMATS includes .glb and .gltf 0ms\\n\\n Test Files  1 passed (1)\\n      Tests  18 passed (18)\\n   Start at  17:21:45\\n   Duration  26.48s (transform 6.47s, setup 0ms, import 11.65s, tests 14.68s, environment 0ms)\\n\\n\",\"exitCode\":0}",
+          "duration": 29240.535,
+          "tool_use_id": "1a4202d0-bf41-419f-810b-34202a57f765",
+          "cwd": "",
+          "hook_event_name": "postToolUse",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "files": [
+          "👤semio📚js🥼semiotest"
+        ],
+        "kind": "agent.tool.test.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚22⏱️34",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "9354aa9b-baac-4379-91e1-70a9c508c605",
+          "generation_id": "83d712c3-4c0c-4497-b066-7caab895227a",
+          "text": "",
+          "duration_ms": 87,
+          "model": "composer-1.5",
+          "hook_event_name": "afterAgentThought",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.thinking.ended",
+        "llm": "composer-1.5",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰17⌚22⏱️39",
+        "session": "⚪9354aa9bbaac437991e170a9c508c605",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9354aa9b-baac-4379-91e1-70a9c508c605/9354aa9b-baac-4379-91e1-70a9c508c605.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}
