@@ -11,27 +11,58 @@ configure_emoji_fonts() {
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
 <fontconfig>
+  <!-- Add emoji font families to generic font families -->
   <alias>
     <family>sans-serif</family>
     <prefer>
+      <family>Noto Sans</family>
       <family>Noto Color Emoji</family>
     </prefer>
   </alias>
   <alias>
     <family>serif</family>
     <prefer>
+      <family>Noto Serif</family>
       <family>Noto Color Emoji</family>
     </prefer>
   </alias>
   <alias>
     <family>monospace</family>
     <prefer>
+      <family>Noto Sans Mono</family>
       <family>Noto Color Emoji</family>
     </prefer>
   </alias>
+  
+  <!-- Ensure emoji font is found for emoji characters -->
+  <match target="pattern">
+    <test name="lang">
+      <string>en</string>
+    </test>
+    <test name="family">
+      <string>emoji</string>
+    </test>
+    <edit name="family" mode="prepend">
+      <string>Noto Color Emoji</string>
+    </edit>
+  </match>
+  
+  <!-- Force emoji rendering for color emoji -->
+  <match target="pattern">
+    <test name="family">
+      <string>Noto Color Emoji</string>
+    </test>
+    <edit name="fontformat" mode="assign">
+      <string>TrueType</string>
+    </edit>
+    <edit name="scalable" mode="assign">
+      <bool>true</bool>
+    </edit>
+  </match>
 </fontconfig>
 FONTCONFIG
   sudo fc-cache -f
+  echo "✅ Emoji font configuration updated."
 }
 #endregion 🔖EmojiFonts
 #region 🔖Startup
@@ -144,10 +175,18 @@ fi
 #endregion 🔖GitSafe
 #region 🔖Node
 echo "Installing npm dependencies..."
-npm install
+if npm install; then
+  echo "✅ npm dependencies installed successfully."
+else
+  echo "⚠️  npm install failed, but continuing..."
+fi
 #region 🔖GeminiCli
 echo "Installing Gemini CLI..."
-npm install -g @google/gemini-cli
+if npm install -g @google/gemini-cli; then
+  echo "✅ Gemini CLI installed successfully."
+else
+  echo "⚠️  Gemini CLI installation failed, but continuing..."
+fi
 #endregion 🔖GeminiCli
 #endregion 🔖Node
 #region 🔖GitKrakenDesktop
@@ -158,43 +197,71 @@ install_gitkraken_cli
 #endregion 🔖GitKrakenCli
 #region 🔖Python
 echo "Setting up Python environment..."
-uv sync
+if uv sync; then
+  echo "✅ Python environment setup completed."
+else
+  echo "⚠️  uv sync failed, but continuing..."
+fi
 #endregion 🔖Python
 #region 🔖Go
 echo "Building Go binaries..."
-cd ./semio-repo/cli
-go build
-cd ../..
+if cd ./semio-repo/cli && go build; then
+  echo "✅ Go CLI built successfully."
+  cd ../..
+else
+  echo "⚠️  Go build failed, but continuing..."
+  cd ../..
+fi
 #endregion 🔖Go
 #region 🔖Dotnet
 echo "Restoring .NET packages..."
-dotnet restore net/Semio.sln
+if dotnet restore net/Semio.sln; then
+  echo "✅ .NET packages restored successfully."
+else
+  echo "⚠️  .NET restore failed, but continuing..."
+fi
 #endregion 🔖Dotnet
 #region 🔖Rust
 echo "Adding Rust wasm target..."
-rustup target add wasm32-unknown-unknown || true
+if rustup target add wasm32-unknown-unknown; then
+  echo "✅ Rust wasm target added."
+else
+  echo "⚠️  Rust wasm target addition failed, but continuing..."
+fi
 echo "Configuring Rust wasm settings..."
 mkdir -p "$HOME/.cargo"
 cat <<'CONFIG' > "$HOME/.cargo/config.toml"
 [target.wasm32-unknown-unknown]
 rustflags = ["--cfg", "getrandom_backend=wasm_js"]
 CONFIG
+echo "✅ Rust wasm configuration completed."
 #endregion 🔖Rust
 #region 🔖Playwright
 echo "Installing Playwright browsers..."
 mkdir -p "$WORKSPACE/node_modules/.cache/ms-playwright"
-PLAYWRIGHT_BROWSERS_PATH="$WORKSPACE/node_modules/.cache/ms-playwright" npx playwright install --with-deps chromium
+if PLAYWRIGHT_BROWSERS_PATH="$WORKSPACE/node_modules/.cache/ms-playwright" npx playwright install --with-deps chromium; then
+  echo "✅ Playwright browsers installed successfully."
+else
+  echo "⚠️  Playwright installation failed, but continuing..."
+fi
 #endregion 🔖Playwright
 #region 🔖GitHooks
 echo "Configuring git hooks and agent hook configs..."
-./semio-repo/cli/cli configure || true
+if ./semio-repo/cli/cli configure; then
+  echo "✅ Git hooks configured successfully."
+else
+  echo "⚠️  Git hooks configuration failed, but continuing..."
+fi
 #endregion 🔖GitHooks
 #region 🔖VSCode
 echo "Building semio VSCode extension..."
-cd semio-repo/vscode
-npm run build
-npm run package
-cd ../..
+if cd semio-repo/vscode && npm run build && npm run package; then
+  echo "✅ VSCode extension built successfully."
+  cd ../..
+else
+  echo "⚠️  VSCode extension build failed, but continuing..."
+  cd ../..
+fi
 #endregion 🔖VSCode
 #region 🔖Antigravity
 echo "Installing Antigravity server..."

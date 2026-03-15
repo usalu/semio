@@ -1,0 +1,13 @@
+{
+  "title": "Refactor UI Navigation Breadcrumb and Panel Toggles Into Elements",
+  "status": "closed",
+  "description": "Move navigation breadcrumb and panel toggles from sketchpad into the UI component in semio-elements/ui. Every UI has navigation breadcrumbs and left/right panel toggles in the navbar. Refactor cleanly so sketchpad uses the generic UI component for these.",
+  "summary": "Refactored UI component: navbar has breadcrumb and panel toggles. Added UIPanelVisibility, UIPanelToggles, useUI exposes panelVisibility/togglePanel.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/905"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "7cbb5151-fced-45e4-ab35-2e288e71068c"
+  ]
+}

@@ -572,15 +572,8 @@ export function applySelectionComposition<T>(previous: T[] | undefined, incoming
   return uniquePrevious.filter((value) => incomingSet.has(value));
 }
 
-export enum WindowKind {
-  TABLE = "table",
-  SCENE = "scene",
-  DIAGRAM = "diagram",
-  CUSTOM = "custom",
-  SETTINGS = "settings",
-  CHAT = "chat",
-  WORKBENCH = "workbench",
-}
+export { WindowKind, createDefaultLayout, parseWindowLayout, stringifyWindowLayout, deduplicateWindowLayout } from "../../../semio-elements/ui";
+export type { UIWindowControl as WindowControl, UIWindowKindDefinition as WindowKindDefinition } from "../../../semio-elements/ui";
 
 /**
  * Panel layout positions: left, right, middle, or bottom.
@@ -1337,133 +1330,18 @@ export interface WindowConfig {
   defaultSize?: number;
 }
 
-/**
- * A window control with kind, ID, icon, options, and change handler.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🛠️windowcontrol](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/d/i/WindowControl)
- **/
-export interface WindowControl {
-  kind: "toggle" | "dropdown";
-  id: string;
-  icon?: ReactNode;
-  value?: string;
-  options?: {
-    id: string;
-    value: string;
-    icon?: ReactNode;
-  }[];
-  onChange?: (value: string) => void;
-}
-
-/**
- * Definition of a window kind with label, icon, component, controls, and variants.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🛠️windowkinddefinition](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/d/i/WindowKindDefinition)
- **/
-export interface WindowKindDefinition {
-  id: string;
-  label?: string | any;
-  icon?: ReactNode;
-  component: (props: any) => ReactNode;
-  controls?: WindowControl[];
-  variants?: {
-    id: string;
-    icon?: ReactNode;
-    componentProps?: Record<string, any>;
-  }[];
-}
+// WindowControl and WindowKindDefinition are re-exported from elements.tsx above.
 
 /**
  * App-level window configuration with window kinds and default layout.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🛠️appwindowconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/d/i/AppWindowConfig)
  **/
 export interface AppWindowConfig {
   windowKinds: WindowKindDefinition[];
   defaultLayout?: any;
 }
 
-/**
- * Parses a window layout from a string, object, or undefined input.
- * MUST return undefined for null, empty, or unparseable inputs and parse valid JSON strings.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🛠️parsewindowlayout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/d/i/parseWindowLayout)
- **/
-export function parseWindowLayout(layout: unknown): any | undefined {
-  if (layout === undefined || layout === null) return undefined;
-  if (typeof layout === "string") {
-    const trimmed = layout.trim();
-    if (!trimmed) return undefined;
-    try {
-      return JSON.parse(trimmed);
-    } catch {
-      return undefined;
-    }
-  }
-  if (typeof layout === "object") return layout;
-  return undefined;
-}
-
-/**
- * Removes duplicate and disallowed window components from a layout.
- * MUST remove duplicate component entries and filter out disallowed window IDs.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🛠️deduplicatewindowlayout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/d/i/deduplicateWindowLayout)
- **/
-export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[]): any | undefined {
-  if (!layout || typeof layout !== "object") return layout;
-
-  const seenComponents = new Set<string>();
-
-  const deduplicateContent = (content: any[]): any[] => {
-    if (!Array.isArray(content)) return content;
-
-    return content
-      .map((item) => {
-        if (!item || typeof item !== "object") return item;
-
-        if (item.type === "component") {
-          const componentName = item.componentName;
-          if (seenComponents.has(componentName)) {
-            return null;
-          }
-          if (!allowedWindowIds.includes(componentName)) {
-            return null;
-          }
-          seenComponents.add(componentName);
-          return item;
-        }
-
-        if (item.content && Array.isArray(item.content)) {
-          const deduped = deduplicateContent(item.content);
-          if (deduped.length === 0) return null;
-          return { ...item, content: deduped };
-        }
-
-        return item;
-      })
-      .filter((item) => item !== null);
-  };
-
-  const root = layout.root;
-  if (!root || typeof root !== "object") return layout;
-
-  if (root.content && Array.isArray(root.content)) {
-    const dedupedContent = deduplicateContent(root.content);
-    return { ...layout, root: { ...root, content: dedupedContent } };
-  }
-
-  return layout;
-}
-
-/**
- * Serializes a window layout to a JSON string.
- * MUST return undefined when serialization fails.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🛠️stringifywindowlayout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/d/i/stringifyWindowLayout)
- **/
-export function stringifyWindowLayout(layout: unknown): string | undefined {
-  if (layout === undefined || layout === null) return undefined;
-  try {
-    return JSON.stringify(layout);
-  } catch {
-    return undefined;
-  }
-}
+// parseWindowLayout, deduplicateWindowLayout, stringifyWindowLayout, createDefaultLayout
+// are re-exported from elements.tsx above.
 
 /**
  * Props for an app window component with kind, children, and className.
@@ -1475,30 +1353,7 @@ export interface AppWindowProps {
   className?: string;
 }
 
-/**
- * Creates a default GoldenLayout configuration from window IDs and direction.
- * MUST generate a GoldenLayout config with one stack per window ID.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🛠️createdefaultlayout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/d/i/createDefaultLayout)
- **/
-export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): any {
-  return {
-    root: {
-      type: direction === "row" ? "row" : "column",
-      content: windowIds.map((id, index) => ({
-        type: "stack",
-        content: [
-          {
-            type: "component",
-            componentName: id,
-            title: titles && titles[index] ? titles[index] : id,
-            componentState: {},
-          },
-        ],
-        ...(sizes && sizes[index] !== undefined ? { size: `${sizes[index]}%` } : {}),
-      })),
-    },
-  };
-}
+// createDefaultLayout is re-exported from elements.tsx above.
 
 // #endregion Window
 
@@ -1563,16 +1418,8 @@ export interface ToolGroupProps {
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖focus](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FOCUS)
 // MUST define the focus item interface for search and navigation targets.
 
-/**
- * A focusable item with ID, label, optional description, and category.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🛠️focusitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/d/i/FocusItem)
- **/
-export interface FocusItem {
-  id: string;
-  label: string;
-  description?: string;
-  category?: string;
-}
+// FocusItem is re-exported from elements.tsx as UIFindItem.
+export type { UIFindItem as FocusItem } from "../../../semio-elements/ui";
 
 // #endregion Focus
 

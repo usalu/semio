@@ -2008,6 +2008,15 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
   }
 }
 
+function isDefinitionEntityId(id: string): boolean {
+  for (const [emoji, entityKind] of ENTITY_EMOJIS.entries()) {
+    if (id.includes(emoji) && entityKind.startsWith("definition-")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * [🧰semiorepo🖱️vscode💻extension🔖providers🛠️semiocodelensprovider](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Providers/d/i/SemioCodeLensProvider)
  * SemioCodeLensProvider provides Summarize and Navigate to CodeLenses for all entity IDs.
@@ -2019,8 +2028,6 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
     const text = document.getText();
     const regex = buildEntityIdRegex();
     let match;
-
-    const defDocstrings: { id: string, range: vscode.Range }[] = [];
 
     while ((match = regex.exec(text)) !== null) {
       if (token.isCancellationRequested) break;
@@ -2043,64 +2050,12 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
         arguments: [uri || id]
       }));
 
-      let isDefinition = false;
-      for (const [emoji, entityKind] of ENTITY_EMOJIS.entries()) {
-        if (id.startsWith(emoji) && entityKind.startsWith("definition-")) {
-          isDefinition = true;
-          break;
-        }
-      }
-      if (isDefinition) {
-        defDocstrings.push({ id, range });
-      }
-    }
-
-    if (defDocstrings.length > 0 && !token.isCancellationRequested) {
-      try {
-        const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
-          'vscode.executeDocumentSymbolProvider',
-          document.uri
-        );
-
-        if (symbols && !token.isCancellationRequested) {
-          const flattenSymbols = (syms: vscode.DocumentSymbol[]): vscode.DocumentSymbol[] => {
-            let flat: vscode.DocumentSymbol[] = [];
-            for (const s of syms) {
-              flat.push(s);
-              if (s.children && s.children.length > 0) {
-                flat = flat.concat(flattenSymbols(s.children));
-              }
-            }
-            return flat;
-          };
-          const allSymbols = flattenSymbols(symbols);
-
-          for (const doc of defDocstrings) {
-            // Find the closest native symbol that starts on or after the docstring's line
-            const validSymbols = allSymbols.filter(s => s.range.start.line >= doc.range.start.line);
-            
-            validSymbols.sort((a, b) => {
-              const diffA = a.range.start.line - doc.range.start.line;
-              const diffB = b.range.start.line - doc.range.start.line;
-              if (diffA !== diffB) return diffA - diffB;
-              // If on the same line, pick the most specific (smallest) range
-              const linesA = a.range.end.line - a.range.start.line;
-              const linesB = b.range.end.line - b.range.start.line;
-              return linesA - linesB;
-            });
-
-            if (validSymbols.length > 0) {
-              const targetSymbol = validSymbols[0];
-              lenses.push(new vscode.CodeLens(targetSymbol.selectionRange, {
-                title: "Analyze",
-                command: "semio.analyze",
-                arguments: [doc.id]
-              }));
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Failed to execute document symbol provider", e);
+      if (isDefinitionEntityId(id)) {
+        lenses.push(new vscode.CodeLens(range, {
+          title: "Analyze",
+          command: "semio.analyze",
+          arguments: [id]
+        }));
       }
     }
 

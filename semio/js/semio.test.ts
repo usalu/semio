@@ -19,6 +19,7 @@
 import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from "@semio/assets";
 import * as ElementsBundle from "../../semio-elements/ui";
 import { Action as UiAction, buildControlTree, ControlDef } from "../../semio-elements/ui";
+import { getOntologyNodeDescriptor, getValidationNodeDescriptor, type OntologyTreeNode, type ValidationTreeNode } from "../../semio-coda/desktop/renderer";
 import { describe, expect, it } from "vitest";
 import {
   applyDesignDiff,
@@ -290,9 +291,9 @@ describe("Drag", () => {
 describe("Sketchpad ControlTree", () => {
   it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
     const controls: ControlDef[] = [
-      { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
-      { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
-      { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
+      { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
+      { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
+      { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
     ];
     const folderSettings = {
       Transform: { path: "Transform", order: 2 },
@@ -318,6 +319,79 @@ describe("Elements Bundle", () => {
     expect(buildControlTree).toBe(ElementsBundle.buildControlTree);
     expect(ElementsBundle.LevelProvider).toBeDefined();
     expect(ElementsBundle.SectionSpecificity).toBeDefined();
+  });
+});
+
+describe("Coda Tree Descriptors", () => {
+  it("keeps ontology fragments and validation witness/count semantics stable", () => {
+    const ontologyNode: OntologyTreeNode = {
+      id: "ontology-1",
+      kind: "ExactCardinality",
+      label: "EXACTLY 2 verbindet",
+      fragment: "verbindet exactly 2 (...)",
+      children: [],
+    };
+    const ontologyDescriptor = getOntologyNodeDescriptor(ontologyNode);
+    expect(ontologyDescriptor.icon).toBe("=n");
+    expect(ontologyDescriptor.primaryText).toBe("EXACTLY 2 verbindet");
+    expect(ontologyDescriptor.secondaryText).toBe("verbindet exactly 2 (...)");
+
+    const countedWitness: ValidationTreeNode = {
+      id: "validation-1",
+      kind: "Witness",
+      label: "Geschoss_EG",
+      individual: "Geschoss_EG",
+      truth: "true",
+      counted: true,
+      summary: "counted filler 1 of 2",
+      children: [],
+    };
+    const countedWitnessDescriptor = getValidationNodeDescriptor(countedWitness);
+    expect(countedWitnessDescriptor.primaryText).toBe("Geschoss_EG");
+    expect(countedWitnessDescriptor.chips).toContain("counted");
+    expect(countedWitnessDescriptor.dimmed).toBe(false);
+
+    const notMatchingWitness: ValidationTreeNode = {
+      id: "validation-2",
+      kind: "Witness",
+      label: "Technikraum_Dach",
+      individual: "Technikraum_Dach",
+      truth: "unknown",
+      counted: false,
+      summary: "additional filler that does not satisfy the restriction",
+      children: [],
+    };
+    const notMatchingWitnessDescriptor = getValidationNodeDescriptor(notMatchingWitness);
+    expect(notMatchingWitnessDescriptor.chips).toContain("not matching");
+    expect(notMatchingWitnessDescriptor.dimmed).toBe(true);
+
+    const cardinalityNode: ValidationTreeNode = {
+      id: "validation-3",
+      kind: "ExactCardinality",
+      label: "EXACTLY 1 in",
+      fragment: "in exactly 1 (...)",
+      truth: "true",
+      expectedCardinality: 1,
+      matchingCount: 1,
+      children: [],
+    };
+    const cardinalityDescriptor = getValidationNodeDescriptor(cardinalityNode);
+    expect(cardinalityDescriptor.icon).toBe("=n");
+    expect(cardinalityDescriptor.chips).toContain("1/1");
+    expect(cardinalityDescriptor.secondaryText).toBe("in exactly 1 (...)");
+
+    const dataValueNode: ValidationTreeNode = {
+      id: "validation-4",
+      kind: "DataValue",
+      label: "180.0",
+      value: "180.0",
+      datatype: "xsd:float",
+      truth: "true",
+      children: [],
+    };
+    const dataValueDescriptor = getValidationNodeDescriptor(dataValueNode);
+    expect(dataValueDescriptor.primaryText).toBe("180.0");
+    expect(dataValueDescriptor.chips).toContain("xsd:float");
   });
 });
 

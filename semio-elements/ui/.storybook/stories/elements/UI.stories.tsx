@@ -12,8 +12,19 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Home, Info, Layers, Settings, User, FileText, BarChart } from "lucide-react";
-import { UI, UIAppConfig, WindowKind, FooterItem, LevelProvider, Level, getLevelBgClass } from "@semio-elements/ui";
+import { Home, Info, Layers, Settings, FileText, BarChart, Undo, Redo, Save, Copy, Scissors, ClipboardPaste, FolderOpen, File, BookOpen, MessageSquare } from "lucide-react";
+import {
+  UI,
+  UIAppConfig,
+  UISearchItem,
+  UIToolbarItem,
+  UIFindItem,
+  createDefaultLayout,
+  BreadcrumbItemData,
+  Tree,
+  TreeSection,
+  TreeItem,
+} from "@semio-elements/ui";
 
 // #region 🔖UI
 
@@ -30,71 +41,413 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const ExampleWindowContent = ({ title, color = "bg-window" }: { title: string; color?: string }) => (
-  <div className={`flex items-center justify-center h-full ${color}`}>
-    <h2 className="text-xl font-bold">{title}</h2>
+// #region 🔖Windows
+
+const EditorWindow = () => (
+  <div className="flex items-center justify-center h-full bg-window">
+    <h2 className="text-xl font-bold">Editor Window</h2>
   </div>
 );
 
-const simpleApps: UIAppConfig[] = [
+const PreviewWindow = () => (
+  <div className="flex items-center justify-center h-full bg-panel">
+    <h2 className="text-xl font-bold">Preview Window</h2>
+  </div>
+);
+
+const StatsWindow = () => (
+  <div className="flex items-center justify-center h-full bg-window">
+    <h2 className="text-xl font-bold">Statistics</h2>
+  </div>
+);
+
+// #endregion 🔖Windows
+
+// #region 🔖TreePanels
+
+const ExplorerTree = () => (
+  <Tree>
+    <TreeSection label="src" icon={<FolderOpen size={14} />} defaultOpen>
+      <TreeItem label="index.ts" icon={<File size={14} />} />
+      <TreeItem label="app.tsx" icon={<File size={14} />} />
+      <TreeSection label="components" icon={<FolderOpen size={14} />} defaultOpen>
+        <TreeItem label="Button.tsx" icon={<File size={14} />} />
+        <TreeItem label="Card.tsx" icon={<File size={14} />} />
+        <TreeItem label="Layout.tsx" icon={<File size={14} />} />
+      </TreeSection>
+      <TreeSection label="utils" icon={<FolderOpen size={14} />}>
+        <TreeItem label="helpers.ts" icon={<File size={14} />} />
+        <TreeItem label="constants.ts" icon={<File size={14} />} />
+      </TreeSection>
+    </TreeSection>
+    <TreeSection label="public" icon={<FolderOpen size={14} />}>
+      <TreeItem label="favicon.ico" icon={<File size={14} />} />
+    </TreeSection>
+  </Tree>
+);
+
+const PropertiesTree = () => (
+  <Tree>
+    <TreeSection label="Element" icon={<Info size={14} />} defaultOpen>
+      <TreeItem label="id: editor-1" />
+      <TreeItem label="kind: text" />
+      <TreeItem label="visible: true" />
+    </TreeSection>
+    <TreeSection label="Style" icon={<Settings size={14} />} defaultOpen>
+      <TreeItem label="width: 100%" />
+      <TreeItem label="height: auto" />
+      <TreeItem label="padding: 16px" />
+    </TreeSection>
+  </Tree>
+);
+
+const MetricsTree = () => (
+  <Tree>
+    <TreeSection label="Performance" icon={<BarChart size={14} />} defaultOpen>
+      <TreeItem label="FPS: 60" />
+      <TreeItem label="Memory: 128MB" />
+      <TreeItem label="CPU: 12%" />
+    </TreeSection>
+    <TreeSection label="Network" icon={<BarChart size={14} />}>
+      <TreeItem label="Requests: 42" />
+      <TreeItem label="Latency: 12ms" />
+    </TreeSection>
+  </Tree>
+);
+
+// #endregion 🔖TreePanels
+
+// #region 🔖SearchItems
+
+const searchItems: UISearchItem[] = [
+  { id: "s1", label: "index.ts", description: "Main entry point", icon: <File size={14} />, category: "Files", onSelect: () => {} },
+  { id: "s2", label: "app.tsx", description: "Root application component", icon: <File size={14} />, category: "Files", onSelect: () => {} },
+  { id: "s3", label: "Button.tsx", description: "Button component", icon: <File size={14} />, category: "Components", onSelect: () => {} },
+  { id: "s4", label: "Card.tsx", description: "Card component", icon: <File size={14} />, category: "Components", onSelect: () => {} },
+  { id: "s5", label: "Layout.tsx", description: "Layout component", icon: <File size={14} />, category: "Components", onSelect: () => {} },
+  { id: "s6", label: "Settings", description: "Application settings", icon: <Settings size={14} />, category: "Pages", onSelect: () => {} },
+  { id: "s7", label: "Documentation", description: "Read the docs", icon: <BookOpen size={14} />, category: "Pages", onSelect: () => {} },
+];
+
+// #endregion 🔖SearchItems
+
+// #region 🔖FindItems
+
+const editorFindItems: UIFindItem[] = [
+  { id: "f1", label: "function handleClick", description: "Line 42", category: "Functions" },
+  { id: "f2", label: "function renderEditor", description: "Line 87", category: "Functions" },
+  { id: "f3", label: "const EDITOR_CONFIG", description: "Line 12", category: "Constants" },
+  { id: "f4", label: "interface EditorProps", description: "Line 5", category: "Interfaces" },
+  { id: "f5", label: "class EditorState", description: "Line 120", category: "Classes" },
+];
+
+// #endregion 🔖FindItems
+
+// #region 🔖ToolbarItems
+
+const editorToolbarItems: UIToolbarItem[] = [
+  { id: "undo", icon: <Undo size={14} />, label: "Undo", onClick: () => {}, order: 0 },
+  { id: "redo", icon: <Redo size={14} />, label: "Redo", onClick: () => {}, order: 1 },
+  { id: "sep1", kind: "separator", order: 2 },
+  { id: "cut", icon: <Scissors size={14} />, onClick: () => {}, order: 3 },
+  { id: "copy", icon: <Copy size={14} />, onClick: () => {}, order: 4 },
+  { id: "paste", icon: <ClipboardPaste size={14} />, onClick: () => {}, order: 5 },
+  { id: "sep2", kind: "separator", order: 6 },
+  { id: "save", icon: <Save size={14} />, label: "Save", onClick: () => {}, order: 7 },
+];
+
+// #endregion 🔖ToolbarItems
+
+// #region 🔖Apps
+
+const editorApp: UIAppConfig = {
+  id: "editor",
+  label: "Editor",
+  icon: <FileText size={16} />,
+  windowConfig: {
+    windowKinds: [
+      { id: "editor", label: "Editor", component: EditorWindow },
+      { id: "preview", label: "Preview", component: PreviewWindow },
+    ],
+    defaultLayout: createDefaultLayout(["editor", "preview"], "row", [60, 40]),
+  },
+  leftPanelTabs: [
+    { id: "explorer", icon: Layers, order: 0, content: <ExplorerTree /> },
+    { id: "settings", icon: Settings, order: 1, content: <div className="p-2">Settings content.</div> },
+  ],
+  rightPanelTabs: [
+    { id: "properties", icon: Info, order: 0, content: <PropertiesTree /> },
+  ],
+  toolbarItems: editorToolbarItems,
+  footerItems: [
+    { id: "status", content: "Ready", order: 0 },
+    { id: "line", content: "Ln 42, Col 8", order: 1 },
+  ],
+  findItems: editorFindItems,
+  onFindSelect: (itemId) => console.log("Find selected:", itemId),
+};
+
+const dashboardApp: UIAppConfig = {
+  id: "dashboard",
+  label: "Dashboard",
+  icon: <BarChart size={16} />,
+  windowConfig: {
+    windowKinds: [
+      { id: "stats", label: "Statistics", component: StatsWindow },
+    ],
+    defaultLayout: createDefaultLayout(["stats"]),
+  },
+  leftPanelTabs: [
+    { id: "metrics", icon: BarChart, order: 0, content: <MetricsTree /> },
+  ],
+  footerItems: [
+    { id: "last-updated", content: "Updated 2m ago", order: 0 },
+  ],
+};
+
+// #endregion 🔖Apps
+
+// #region 🔖Breadcrumb
+
+const breadcrumbItems: BreadcrumbItemData[] = [
   {
-    id: "editor",
-    label: "Editor",
-    icon: <FileText size={16} />,
-    windows: [
-      { id: "main-editor", label: "Main Editor", content: <ExampleWindowContent title="Main Editor Window" />, defaultSize: 60 },
-      { id: "preview", label: "Preview", content: <ExampleWindowContent title="Preview Window" color="bg-panel" />, defaultSize: 40 },
+    id: "home",
+    content: (
+      <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
+        <Home size={16} />
+      </a>
+    ),
+    options: [
+      { label: "Local Projects", href: "/?kind=local" },
+      { label: "Remote Projects", href: "/?kind=remote" },
+      { label: "Recent", href: "/?kind=recent" },
     ],
-    leftPanelTabs: [
-      { id: "explorer", icon: Layers, order: 0, content: <div className="p-2">Explorer content</div> },
-      { id: "settings", icon: Settings, order: 1, content: <div className="p-2">Settings content</div> },
-    ],
-    rightPanelTabs: [
-      { id: "properties", icon: Info, order: 0, content: <div className="p-2">Properties content</div> },
-    ],
-    bottomPanelSections: [
-      { id: "console", content: <div className="p-2 font-mono text-xs">Console output...</div>, defaultOpen: true, order: 0 },
-    ],
-    footerItems: [
-      { id: "status", content: "Ready", order: 0 },
-      { id: "line", content: "Ln 42, Col 8", order: 1 },
-    ],
+    onNavigate: (href) => console.log("Navigate to:", href),
   },
   {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: <BarChart size={16} />,
-    windows: [
-      { id: "stats", label: "Statistics", content: <ExampleWindowContent title="Statistics" />, windowKind: WindowKind.TABLE },
+    id: "project",
+    content: (
+      <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
+        My Project
+      </a>
+    ),
+    options: [
+      { label: "Project A", href: "/projects/a" },
+      { label: "Project B", href: "/projects/b" },
+      { label: "Project C", href: "/projects/c" },
     ],
-    leftPanelTabs: [
-      { id: "metrics", icon: BarChart, order: 0, content: <div className="p-2">Metrics list</div> },
+    onNavigate: (href) => console.log("Navigate to:", href),
+  },
+  {
+    id: "artifactKind",
+    content: (
+      <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
+        <FileText size={16} />
+      </a>
+    ),
+    options: [
+      { label: "Files", href: "/projects/a?kind=files" },
+      { label: "Components", href: "/projects/a?kind=components" },
+      { label: "Settings", href: "/projects/a?kind=settings" },
     ],
-    footerItems: [
-      { id: "last-updated", content: "Updated 2m ago", order: 0 },
-    ],
+    onNavigate: (href) => console.log("Navigate to:", href),
+  },
+  {
+    id: "file",
+    content: (
+      <span className="text-foreground px-single flex items-center gap-single h-full">
+        main.ts
+      </span>
+    ),
   },
 ];
 
+// #endregion 🔖Breadcrumb
+
+// #region 🔖Stories
+
 export const Default: Story = {
   args: {
-    apps: simpleApps,
-    navbarLeading: [{ key: "home", content: <Home size={18} /> }],
-    navbarTrailing: [{ key: "user", content: <User size={18} /> }],
+    apps: [editorApp, dashboardApp],
+    breadcrumbItems,
+    searchItems,
     footerItems: [{ id: "version", content: "v1.0.0", order: 100 }],
   },
 };
 
 export const SingleApp: Story = {
   args: {
-    apps: [simpleApps[0]],
+    apps: [editorApp],
+    breadcrumbItems,
+    searchItems,
   },
 };
 
-export const MultipleApps: Story = {
+export const NoBreadcrumb: Story = {
   args: {
-    apps: simpleApps,
+    apps: [editorApp, dashboardApp],
     defaultAppId: "dashboard",
+    searchItems,
+  },
+};
+
+export const WithToolbarItems: Story = {
+  args: {
+    apps: [editorApp],
+    breadcrumbItems,
+    searchItems,
+    toolbarItems: [
+      { id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 },
+    ],
+  },
+};
+
+export const WithToolbarContent: Story = {
+  args: {
+    apps: [
+      {
+        ...editorApp,
+        toolbarItems: undefined,
+        toolbarContent: (
+          <div className="flex items-center gap-2 px-3 py-1 bg-panel border rounded-md shadow-sm pointer-events-auto">
+            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Undo</button>
+            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Redo</button>
+            <div className="w-px h-4 bg-border" />
+            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Save</button>
+          </div>
+        ),
+      },
+    ],
+    breadcrumbItems,
+  },
+};
+
+export const WithSearch: Story = {
+  args: {
+    apps: [
+      {
+        id: "minimal",
+        label: "Minimal",
+        windowConfig: {
+          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Press Ctrl+P to search</div> }],
+          defaultLayout: createDefaultLayout(["main"]),
+        },
+      },
+    ],
+    searchItems,
+  },
+};
+
+export const WithFind: Story = {
+  args: {
+    apps: [
+      {
+        id: "code",
+        label: "Code",
+        windowConfig: {
+          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Press Ctrl+F to find</div> }],
+          defaultLayout: createDefaultLayout(["main"]),
+        },
+        findItems: editorFindItems,
+        onFindSelect: (itemId) => console.log("Find selected:", itemId),
+      },
+    ],
+  },
+};
+
+export const WithTreePanels: Story = {
+  args: {
+    apps: [
+      {
+        id: "tree-demo",
+        label: "Tree Demo",
+        windowConfig: {
+          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Every panel has a tree</div> }],
+          defaultLayout: createDefaultLayout(["main"]),
+        },
+        leftPanelTabs: [
+          { id: "explorer", icon: Layers, order: 0, content: <ExplorerTree /> },
+        ],
+        rightPanelTabs: [
+          { id: "properties", icon: Info, order: 0, content: <PropertiesTree /> },
+        ],
+      },
+    ],
+    breadcrumbItems: [
+      {
+        id: "root",
+        content: (
+          <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
+            <Home size={16} />
+          </a>
+        ),
+      },
+      {
+        id: "section",
+        content: (
+          <span className="text-foreground px-single flex items-center gap-single h-full">
+            Workspace
+          </span>
+        ),
+      },
+    ],
+    searchItems,
+  },
+};
+
+export const FullFeatured: Story = {
+  args: {
+    apps: [editorApp, dashboardApp],
+    breadcrumbItems,
+    searchItems,
+    footerItems: [{ id: "version", content: "v1.0.0", order: 100 }],
+    toolbarItems: [
+      { id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 },
+    ],
+  },
+};
+
+export const ThreeColumnLayout: Story = {
+  args: {
+    apps: [
+      {
+        id: "three-col",
+        label: "Three Columns",
+        windowConfig: {
+          windowKinds: [
+            { id: "left", label: "Left", component: () => <div className="flex items-center justify-center h-full">Left</div> },
+            { id: "center", label: "Center", component: () => <div className="flex items-center justify-center h-full">Center</div> },
+            { id: "right", label: "Right", component: () => <div className="flex items-center justify-center h-full">Right</div> },
+          ],
+          defaultLayout: createDefaultLayout(["left", "center", "right"], "row", [25, 50, 25]),
+        },
+        leftPanelTabs: [
+          { id: "nav", icon: Layers, order: 0, content: <ExplorerTree /> },
+        ],
+        rightPanelTabs: [
+          { id: "props", icon: Info, order: 0, content: <PropertiesTree /> },
+        ],
+      },
+    ],
+    breadcrumbItems: [
+      {
+        id: "root",
+        content: (
+          <a className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable">
+            <Home size={16} />
+          </a>
+        ),
+      },
+      {
+        id: "section",
+        content: (
+          <span className="text-foreground px-single flex items-center gap-single h-full">
+            Workspace
+          </span>
+        ),
+      },
+    ],
+    searchItems,
   },
 };
 
@@ -104,41 +457,15 @@ export const MinimalApp: Story = {
       {
         id: "minimal",
         label: "Minimal",
-        windows: [{ id: "main", label: "Main", content: <ExampleWindowContent title="Minimal App" /> }],
+        windowConfig: {
+          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Minimal App</div> }],
+          defaultLayout: createDefaultLayout(["main"]),
+        },
       },
     ],
   },
 };
 
-const createLevelRender = (level: Level): Story["render"] => (args) => (
-  <LevelProvider level={level}>
-    <div className={`h-screen ${getLevelBgClass(level)}`}>
-      <UI {...args} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { apps: simpleApps },
-  render: createLevelRender("base"),
-};
-
-export const WithToolbar: Story = {
-  args: {
-    apps: [
-      {
-        ...simpleApps[0],
-        toolbarContent: (
-          <div className="flex items-center gap-2 px-3 py-1 bg-panel border rounded-md shadow-sm">
-            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Undo</button>
-            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Redo</button>
-            <div className="w-px h-4 bg-border" />
-            <button className="px-2 py-1 hover:bg-hover-panel rounded text-sm">Save</button>
-          </div>
-        ),
-      },
-    ],
-  },
-};
+// #endregion 🔖Stories
 
 // #endregion 🔖UI

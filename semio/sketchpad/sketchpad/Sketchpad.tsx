@@ -18090,6 +18090,7 @@ const LayoutWrapper: FC = () => {
 
   const leftSidePanelTabs = useSidePanelTabs("left");
   const rightSidePanelTabs = useSidePanelTabs("right");
+
   const [activeLeftTabId, setActiveLeftTabId] = useActiveLeftTabId();
   const [activeRightTabId, setActiveRightTabId] = useActiveRightTabId();
   const wasRightSidePanelVisibleRef = useRef(false);
@@ -18400,75 +18401,44 @@ const LayoutWrapper: FC = () => {
   }, [currentPath, isDesignApp, isTypeApp, isQualityApp, isKitApp, design, type, kitGuid, filteredKind, filteredName, kitKind, kit, homeKind, homeName, homeVersion]);
   const isAtRoot = currentPath === "/" || (currentPath === "/kits" && !kitGuid);
 
-  const fullscreenToggleId = isFullscreen ? "semio.sketchpad.navbar.exitFullscreen" : "semio.sketchpad.navbar.fullscreen";
-
+  // Fixed navbar layout matching UI defaults: [breadcrumb (flex-1)] [search] [find] [panelToggles]
+  // Navigation buttons are integrated into the breadcrumb area.
   const navbarItems = useMemo(() => {
     const items: NavbarItem[] = [];
     items.push({
-      key: "navigationButtons",
+      key: "breadcrumb",
+      className: "flex-1 min-w-0",
       content: (
-        <ButtonGroup id="semio.sketchpad.navbar.navigationButtons">
-          <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={() => sketchpadCommands.navigateBack("semio.sketchpad.navbar.back")} disabled={!navigationHistory.canGoBack}>
-            <NavigateBackIcon size={16} />
-          </ButtonGroupItem>
-          <ButtonGroupItem value="forward" id="semio.sketchpad.navbar.forward" onClick={() => sketchpadCommands.navigateForward("semio.sketchpad.navbar.forward")} disabled={!navigationHistory.canGoForward}>
-            <NavigateForwardIcon size={16} />
-          </ButtonGroupItem>
-          <ButtonGroupItem
-            value="up"
-            id="semio.sketchpad.navbar.up"
-            onClick={() => {
-              if (upTarget) navigate(upTarget);
-            }}
-            disabled={isAtRoot}
-          >
-            <NavigateUpIcon size={16} />
-          </ButtonGroupItem>
-        </ButtonGroup>
+        <div className="flex items-center h-full min-w-0">
+          <ButtonGroup id="semio.sketchpad.navbar.navigationButtons">
+            <ButtonGroupItem value="back" id="semio.sketchpad.navbar.back" onClick={() => sketchpadCommands.navigateBack("semio.sketchpad.navbar.back")} disabled={!navigationHistory.canGoBack}>
+              <NavigateBackIcon size={16} />
+            </ButtonGroupItem>
+            <ButtonGroupItem value="forward" id="semio.sketchpad.navbar.forward" onClick={() => sketchpadCommands.navigateForward("semio.sketchpad.navbar.forward")} disabled={!navigationHistory.canGoForward}>
+              <NavigateForwardIcon size={16} />
+            </ButtonGroupItem>
+            <ButtonGroupItem
+              value="up"
+              id="semio.sketchpad.navbar.up"
+              onClick={() => {
+                if (upTarget) navigate(upTarget);
+              }}
+              disabled={isAtRoot}
+            >
+              <NavigateUpIcon size={16} />
+            </ButtonGroupItem>
+          </ButtonGroup>
+          <div className="flex-1 min-w-0">
+            <Navigation />
+          </div>
+        </div>
       ),
     });
-    items.push({ key: "navigation", content: <Navigation />, className: "flex-1 min-w-0" });
     items.push({ key: "search", content: <Search /> });
     items.push({ key: "focus", content: <Focus /> });
     items.push({ key: "panelToggles", content: <PanelToggles /> });
-    items.push({
-      key: "fullscreenToggle",
-      content: (
-        <Toggle
-          id={fullscreenToggleId}
-          pressed={isFullscreen}
-          onPressedChange={() => {
-            if (typeof document !== "undefined") {
-              if (!isFullscreen) {
-                const target = document.documentElement;
-                if (target && target.requestFullscreen) {
-                  const result = target.requestFullscreen();
-                  if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => { });
-                  } else {
-                    sketchpadCommands.toggleFullscreen(fullscreenToggleId);
-                  }
-                }
-              } else {
-                if (document.fullscreenElement && document.exitFullscreen) {
-                  const result = document.exitFullscreen();
-                  if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => { });
-                  } else {
-                    sketchpadCommands.toggleFullscreen(fullscreenToggleId);
-                  }
-                }
-              }
-              return;
-            }
-            sketchpadCommands.toggleFullscreen(fullscreenToggleId);
-          }}
-          icon={isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
-        />
-      ),
-    });
     return items;
-  }, [navigationHistory, upTarget, isAtRoot, navigate, sketchpadCommands, fullscreenToggleId, isFullscreen]);
+  }, [navigationHistory, upTarget, isAtRoot, navigate, sketchpadCommands]);
 
   const activeInteraction = useActiveInteraction();
   const panelOpacity = activeInteraction === "dragging" ? 0.3 : 1;

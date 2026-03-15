@@ -43,7 +43,6 @@
     "@react-three/fiber": "^9.5.0",
     "@react-three/postprocessing": "^3.0.4",
     "@semio/assets": "^1.0.0",
-    "tailwind-merge": "^3.4.0",
     "@storybook/addon-docs": "^10.1.11",
     "@storybook/addon-vitest": "^10.1.11",
     "@storybook/react-vite": "^10.1.11",
@@ -54,6 +53,7 @@
     "cmdk": "^1.1.1",
     "d3-force": "^3.0.0",
     "dagre": "^0.8.5",
+    "fuse.js": "^7.1.0",
     "golden-layout": "^2.6.0",
     "i18next": "^25.7.4",
     "motion": "^12.26.2",
@@ -63,6 +63,7 @@
     "react-resizable-panels": "^4.2.1",
     "react-router": "^7.12.0",
     "storybook": "^10.1.11",
+    "tailwind-merge": "^3.4.0",
     "three": "^0.182.0"
   },
   "devDependencies": {

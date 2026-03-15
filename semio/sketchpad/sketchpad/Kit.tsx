@@ -4686,6 +4686,7 @@ const AppContent: FC = () => {
   }, [kitDesignsKey, kitTypesKey, selectedKinds, selectedName]);
 
   useEffect(() => {
+    console.log("[DEBUG] Kit details useEffect fired, appType:", appType, "selection:", JSON.stringify(selection));
     if (appType !== "kit") {
       return;
     }
@@ -7652,6 +7653,7 @@ const KitDiagramInner: FC = () => {
   }, [commitDiagramNodes, baseEdgeIdsKey, baseNodeIdsKey]);
 
   useEffect(() => {
+    console.log("[DEBUG] Kit diagram nodes useEffect fired, baseNodes len:", baseNodes.length);
     const previousPositions = new Map(diagramNodesRef.current.map((node) => [node.id, node.position]));
     const nextNodes = baseNodes.map((node) => {
       const previousPosition = previousPositions.get(node.id);

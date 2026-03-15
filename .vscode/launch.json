@@ -32,40 +32,6 @@
       }
     },
     {
-      "name": "🛠️dev👤semio⌨️engine",
-      "preLaunchTask": "semio/engine dev",
-      "type": "debugpy",
-      "request": "attach",
-      "connect": {
-        "host": "localhost",
-        "port": 5678
-      },
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}/semio/engine",
-          "remoteRoot": "."
-        }
-      ]
-    },
-    {
-      "name": "🛠️dev👤semio📚js",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "dev",
-        "@semio/js"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:5173)",
-        "uriFormat": "%s"
-      }
-    },
-    {
       "name": "🛠️dev👤semio-elements📚ui📖storybook",
       "type": "node",
       "request": "launch",
@@ -102,7 +68,7 @@
       }
     },
     {
-      "name": "dev semio 3dm",
+      "name": "🛠️dev👤semio🖱️3dm",
       "preLaunchTask": "semio/3dm ui dev",
       "type": "chrome",
       "request": "launch",
@@ -120,7 +86,25 @@
       }
     },
     {
-      "name": "dev semio docs",
+      "name": "🛠️dev👤semio🌐sitesplay",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev",
+        "semio/sites/play"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:4000)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev👤semio🌐docs",
       "preLaunchTask": "semio/sites/docs dev",
       "type": "node",
       "request": "launch",
@@ -139,24 +123,6 @@
       }
     },
     {
-      "name": "dev semio play",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "dev",
-        "semio/sites/play"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:4000)",
-        "uriFormat": "%s"
-      }
-    },
-    {
       "name": "🛠️dev👤semio🖱️desktop",
       "type": "node",
       "request": "launch",
@@ -165,19 +131,6 @@
         "nx",
         "dev",
         "semio/desktop"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "🛠️dev👤semio🏪logo",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "dev",
-        "@semio/logo"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -200,41 +153,6 @@
         "pattern": "(http://localhost:5173)",
         "uriFormat": "%s"
       }
-    },
-    {
-      "name": "🛠️dev👤semio⚙️engine🤖mcp",
-      "preLaunchTask": "inspector mcp",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": [
-        "--directory",
-        "semio/engine",
-        "run",
-        "engine.py",
-        "--mcp-stdio"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "🛠️dev🧰semiorepo⌨️cli",
-      "type": "go",
-      "request": "launch",
-      "mode": "debug",
-      "program": "${workspaceFolder}/semio-repo/cli",
-      "cwd": "${workspaceFolder}",
-      "args": [
-        "help"
-      ]
-    },
-    {
-      "name": "🛠️dev🧰semiorepo⌨️server",
-      "type": "go",
-      "request": "launch",
-      "mode": "debug",
-      "program": "${workspaceFolder}/semio-repo/server",
-      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🛠️dev🧰semiorepo⌨️vscode",
@@ -308,60 +226,6 @@
       }
     },
     {
-      "name": "🛠️dev📄go",
-      "type": "go",
-      "request": "launch",
-      "mode": "debug",
-      "program": "${file}",
-      "cwd": "${fileDirname}"
-    },
-    {
-      "name": "🛠️dev📄py",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${file}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build👤semio📚go",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/go"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build👤semio📚rs",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/rs"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build👤semio📚py",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/py"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "📦build👤semio📚engine",
       "type": "node",
       "request": "launch",
@@ -375,40 +239,14 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build👤semio📚js",
+      "name": "📦build👤semio🌐sites",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/js"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build👤semio🌐docs",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/sites/docs"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build👤semio🌐play",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/sites/play"
+        "semio/sites"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -427,20 +265,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build👤semio📚net",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "@semio/net"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build👤semio📚3dm",
+      "name": "📦build👤semio🖱️3dm",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
@@ -453,40 +278,14 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build👤semio🏪logo",
+      "name": "📦build👤semio🏪assets",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
         "build",
-        "@semio/logo"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build👤semio🏪icons",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "@semio/icons"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "📦build👤semio🖱️sketchpad",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/sketchpad"
+        "semio/assets"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"

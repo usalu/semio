@@ -89,10 +89,12 @@ import {
 import "@xyflow/react/dist/style.css";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
+import Fuse, { type FuseResult } from "fuse.js";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import * as dagre from "dagre";
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { useTranslation } from "react-i18next";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { Link, useNavigate } from "react-router";
@@ -4587,21 +4589,140 @@ export interface TreeSectionAction {
   id?: string;
 }
 
+export enum TreeItemCollapsibleState {
+  None = 0,
+  Collapsed = 1,
+  Expanded = 2,
+}
+
+export type TreeSelectionMode = "single" | "multiple";
+
+export interface TreeDataActivationContext {
+  path: string[];
+  selectedIds: string[];
+  sectionId: string;
+}
+
+export interface TreeDataItem {
+  id: string;
+  label: React.ReactNode;
+  icon?: React.ReactNode;
+  description?: React.ReactNode;
+  items?: TreeDataItem[];
+  getItems?: () => Promise<TreeDataItem[]>;
+  actions?: TreeSectionAction[];
+  className?: string;
+  isHighlighted?: boolean;
+  isSelected?: boolean;
+  isDragHandle?: boolean;
+  defaultOpen?: boolean;
+  collapsibleState?: TreeItemCollapsibleState;
+  emptyState?: React.ReactNode;
+  draggable?: boolean;
+  onClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
+  onDoubleClick?: (event: React.MouseEvent, context: TreeDataActivationContext) => void;
+}
+
+export interface TreeDataSection {
+  id: string;
+  label: React.ReactNode;
+  icon?: React.ReactNode;
+  items?: TreeDataItem[];
+  getItems?: () => Promise<TreeDataItem[]>;
+  actions?: TreeSectionAction[];
+  className?: string;
+  defaultOpen?: boolean;
+  emptyState?: React.ReactNode;
+  onDoubleClick?: (event: React.MouseEvent) => void;
+}
+
+export interface TreeDragAndDropController {
+  getDragData?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => Record<string, string> | undefined;
+  onDragStart?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
+  onDragEnd?: (context: { items: TreeDataItem[]; sourceItem: TreeDataItem; section: TreeDataSection }) => void;
+  handleDrop?: (context: { target: TreeDataItem | TreeDataSection; targetKind: "item" | "section"; data: Record<string, string>; sourceItems: TreeDataItem[]; section: TreeDataSection }) => void | Promise<void>;
+}
+
+interface TreeSelectionComputationArgs {
+  selectionMode: TreeSelectionMode;
+  selectedIds: string[];
+  orderedIds: string[];
+  targetId: string;
+  anchorId?: string;
+  additiveKey: boolean;
+  rangeKey: boolean;
+}
+
+interface TreeSelectionComputationResult {
+  selectedIds: string[];
+  anchorId?: string;
+}
+
+const normalizeTreeSelectedIds = (selectedIds: string[], selectionMode: TreeSelectionMode): string[] => {
+  const uniqueIds = Array.from(new Set(selectedIds.filter(Boolean)));
+  return selectionMode === "single" ? uniqueIds.slice(0, 1) : uniqueIds;
+};
+
+const getTreeItemDefaultOpen = (item: TreeDataItem): boolean => item.defaultOpen ?? item.collapsibleState === TreeItemCollapsibleState.Expanded;
+
+const getTreeNextSelectionState = ({ selectionMode, selectedIds, orderedIds, targetId, anchorId, additiveKey, rangeKey }: TreeSelectionComputationArgs): TreeSelectionComputationResult => {
+  if (selectionMode === "single") {
+    return { selectedIds: [targetId], anchorId: targetId };
+  }
+
+  if (rangeKey) {
+    const fallbackAnchorId = anchorId ?? selectedIds[selectedIds.length - 1] ?? targetId;
+    const anchorIndex = orderedIds.indexOf(fallbackAnchorId);
+    const targetIndex = orderedIds.indexOf(targetId);
+    if (anchorIndex !== -1 && targetIndex !== -1) {
+      const startIndex = Math.min(anchorIndex, targetIndex);
+      const endIndex = Math.max(anchorIndex, targetIndex);
+      return { selectedIds: orderedIds.slice(startIndex, endIndex + 1), anchorId: fallbackAnchorId };
+    }
+  }
+
+  if (additiveKey) {
+    const nextSelectedIds = selectedIds.includes(targetId) ? selectedIds.filter((id) => id !== targetId) : [...selectedIds, targetId];
+    return { selectedIds: nextSelectedIds, anchorId: targetId };
+  }
+
+  return { selectedIds: [targetId], anchorId: targetId };
+};
+
+const collectTreeItemMap = (items: TreeDataItem[], map: Record<string, TreeDataItem> = {}): Record<string, TreeDataItem> => {
+  items.forEach((item) => {
+    map[item.id] = item;
+    if (item.items?.length) {
+      collectTreeItemMap(item.items, map);
+    }
+  });
+  return map;
+};
+
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treesectionprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeSectionProps)
  * TreeSectionProps holds the data fields for a TreeSectionProps record.
  **/
 interface TreeSectionProps {
-  label?: string;
+  label?: React.ReactNode;
   id?: string;
   icon?: React.ReactNode;
   children?: React.ReactNode;
   defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  expandable?: boolean;
+  loading?: boolean;
   className?: string;
   actions?: TreeSectionAction[];
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
   onDoubleClick?: (event: React.MouseEvent) => void;
+  draggable?: boolean;
+  onDragStart?: React.DragEventHandler<HTMLDivElement>;
+  onDragOver?: React.DragEventHandler<HTMLDivElement>;
+  onDragLeave?: React.DragEventHandler<HTMLDivElement>;
+  onDrop?: React.DragEventHandler<HTMLDivElement>;
 }
 
 /**
@@ -4622,6 +4743,11 @@ interface SortableTreeItemProps {
   isLastItem?: boolean;
   actions?: TreeSectionAction[];
   onDoubleClick?: (event: React.MouseEvent) => void;
+  draggable?: boolean;
+  onDragStart?: React.DragEventHandler<HTMLDivElement>;
+  onDragOver?: React.DragEventHandler<HTMLDivElement>;
+  onDragLeave?: React.DragEventHandler<HTMLDivElement>;
+  onDrop?: React.DragEventHandler<HTMLDivElement>;
 }
 
 /**
@@ -4641,9 +4767,18 @@ interface TreeItemProps {
   sortableId?: string;
   isDragHandle?: boolean;
   defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  expandable?: boolean;
+  loading?: boolean;
   isLastItem?: boolean;
   actions?: TreeSectionAction[];
   onDoubleClick?: (event: React.MouseEvent) => void;
+  draggable?: boolean;
+  onDragStart?: React.DragEventHandler<HTMLDivElement>;
+  onDragOver?: React.DragEventHandler<HTMLDivElement>;
+  onDragLeave?: React.DragEventHandler<HTMLDivElement>;
+  onDrop?: React.DragEventHandler<HTMLDivElement>;
 }
 
 /**
@@ -4657,36 +4792,130 @@ interface SortableTreeItemsProps {
 }
 
 /**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treeRootProps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeRootProps)
+ * TreeRootProps holds the data fields for a TreeRootProps record.
+ **/
+interface TreeRootProps {
+  children?: React.ReactNode;
+  className?: string;
+  showLines?: boolean;
+  sections?: TreeDataSection[];
+  selectionMode?: TreeSelectionMode;
+  selectedIds?: string[];
+  defaultSelectedIds?: string[];
+  onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
+  dragAndDropController?: TreeDragAndDropController;
+  emptyState?: React.ReactNode;
+}
+
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treeDataRenderingContextValue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeDataRenderingContextValue)
+ * TreeDataRenderingContextValue holds the data fields for a TreeDataRenderingContextValue record.
+ **/
+interface TreeDataRenderingContextValue {
+  sectionItemsById: Record<string, TreeDataItem[]>;
+  itemItemsById: Record<string, TreeDataItem[]>;
+  loadingById: Record<string, boolean>;
+  selectedIds: string[];
+  draggedIds: string[];
+  loadSectionItems: (section: TreeDataSection) => Promise<void>;
+  loadItemItems: (item: TreeDataItem) => Promise<void>;
+  handleSelectItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
+  handleDoubleClickItem: (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => void;
+  handleDragStart: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
+  handleDragEnd: (item: TreeDataItem, section: TreeDataSection) => void;
+  handleDropOnItem: (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => void;
+  handleDropOnSection: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
+  handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+}
+
+const TreeDataRenderingContext = React.createContext<TreeDataRenderingContextValue | null>(null);
+
+const treeDefaultDragMimeKind = "application/vnd.code.tree.item";
+
+const getTreeSectionStateId = (sectionId: string): string => `tree-section-${sectionId}`;
+
+const getTreeItemStateId = (itemId: string): string => `tree-item-${itemId}`;
+
+const getTreeSectionLoadingId = (sectionId: string): string => `tree-section-loading-${sectionId}`;
+
+const getTreeItemLoadingId = (itemId: string): string => `tree-item-loading-${itemId}`;
+
+const getTreeSectionItems = (section: TreeDataSection, sectionItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => sectionItemsById[section.id] ?? section.items ?? [];
+
+const getTreeItemItems = (item: TreeDataItem, itemItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => itemItemsById[item.id] ?? item.items ?? [];
+
+const getTreeItemOrderedIds = (sections: TreeDataSection[], sectionItemsById: Record<string, TreeDataItem[]>, itemItemsById: Record<string, TreeDataItem[]>): string[] => {
+  const orderedIds: string[] = [];
+
+  const visitItems = (items: TreeDataItem[]) => {
+    items.forEach((item) => {
+      orderedIds.push(item.id);
+      const childItems = getTreeItemItems(item, itemItemsById);
+      if (childItems.length > 0) {
+        visitItems(childItems);
+      }
+    });
+  };
+
+  sections.forEach((section) => {
+    visitItems(getTreeSectionItems(section, sectionItemsById));
+  });
+
+  return orderedIds;
+};
+
+/**
  * Collapsible tree section header with optional action buttons.
  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treesection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeSection)
  **/
-export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
+export const TreeSection: React.FC<TreeSectionProps> = ({
+  label,
+  id,
+  icon,
+  children,
+  defaultOpen = true,
+  open: controlledOpen,
+  onOpenChange,
+  expandable,
+  loading = false,
+  className = "",
+  actions = [],
+  onPointerEnter: onSectionPointerEnter,
+  onPointerLeave: onSectionPointerLeave,
+  onDoubleClick,
+  draggable = false,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}) => {
   const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
-  const { t } = useTranslation();
-  const mode = useTooltipMode();
   const displayLabel = id ? useLabel(id) : label;
-  const sectionId = `section-${displayLabel}`;
-  const { open, setOpen } = useTreeOpenState(sectionId, defaultOpen);
+  const sectionStateId = getTreeSectionStateId(id ?? String(displayLabel ?? "section"));
+  const treeOpenState = useTreeOpenState(sectionStateId, defaultOpen);
+  const open = controlledOpen ?? treeOpenState.open;
+  const setOpen = React.useCallback((value: boolean) => {
+    treeOpenState.setOpen(value);
+    onOpenChange?.(value);
+  }, [onOpenChange, treeOpenState]);
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
-  const childrenArray = React.Children.toArray(children);
-  const childrenInfo = {
-    length: childrenArray.length,
-    types: childrenArray.map((c) => {
-      if (React.isValidElement(c)) {
-        return { type: c.type, props: Object.keys(c.props || {}) };
-      }
-      return typeof c;
-    }),
-  };
+  const isExpandable = expandable ?? hasChildren;
+  const rowClassName = cn(
+    "relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0",
+    isExpandable ? "cursor-foldable" : "cursor-selectable",
+    className,
+  );
 
-  if (!hasChildren) {
+  if (!isExpandable) {
     return (
       <div
         data-slot="tree-section-row"
         id={id}
-        className={`relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-selectable ${className}`}
+        className={rowClassName}
         style={{ paddingLeft: `${detailPanelIndentPx(level)}px`, height: "20px", marginBottom: "6px" }}
+        draggable={draggable}
         onPointerEnter={() => {
           setIsHovered(true);
           onSectionPointerEnter?.();
@@ -4695,6 +4924,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
           setIsHovered(false);
           onSectionPointerLeave?.();
         }}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
         onDoubleClick={(event) => {
           if (!onDoubleClick) return;
           event.preventDefault();
@@ -4704,6 +4937,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
       >
         <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
         <div className="w-[14px] flex-shrink-0" />
+        {loading && <Spinner size="small" className="text-muted-foreground" />}
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
         {id ? (
           <Tooltip>
@@ -4743,9 +4977,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
         <div
           data-slot="tree-section-row"
           id={id}
-          className={`relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0 cursor-foldable ${className}`}
+          className={rowClassName}
           style={{ paddingLeft: `${detailPanelIndentPx(level)}px`, height: "20px", marginBottom: "6px" }}
           role="button"
+          draggable={draggable}
           onPointerEnter={() => {
             setIsHovered(true);
             onSectionPointerEnter?.();
@@ -4754,6 +4989,10 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
             setIsHovered(false);
             onSectionPointerLeave?.();
           }}
+          onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
           onDoubleClick={(event) => {
             if (!onDoubleClick) return;
             event.preventDefault();
@@ -4762,7 +5001,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, child
           }}
         >
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
-          {open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
+          {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           {id ? (
             <Tooltip>
@@ -5003,6 +5242,15 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   isLastItem = false,
   actions = [],
   onDoubleClick,
+  open: controlledOpen,
+  onOpenChange,
+  expandable,
+  loading = false,
+  draggable = false,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }) => {
   const resolvedLabel = id ? useLabel(id) : label;
   if (sortable && sortableId) {
@@ -5027,15 +5275,21 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 
   const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
   const itemKey = id ?? resolvedLabel ?? sortableId ?? "tree-item";
-  const itemId = `item-${itemKey}`;
-  const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
+  const itemId = getTreeItemStateId(String(itemKey));
+  const treeOpenState = useTreeOpenState(itemId, defaultOpen);
+  const open = controlledOpen ?? treeOpenState.open;
+  const setOpen = React.useCallback((value: boolean) => {
+    treeOpenState.setOpen(value);
+    onOpenChange?.(value);
+  }, [onOpenChange, treeOpenState]);
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
-  const baseClasses = `relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${hasChildren ? "cursor-foldable" : "cursor-selectable"}`;
+  const isExpandable = expandable ?? hasChildren;
+  const baseClasses = `relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? "cursor-foldable" : "cursor-selectable"}`;
   const stateClasses = `${isSelected ? "bg-active-base text-active-foreground" : ""} ${isHighlighted ? "bg-active-base text-active-foreground" : ""}`;
   const itemClasses = `${baseClasses} ${stateClasses} ${className}`;
 
-  if (hasChildren && resolvedLabel) {
+  if (isExpandable && resolvedLabel) {
     return (
       <>
         <div
@@ -5044,6 +5298,11 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           id={id}
           className={itemClasses}
           style={{ paddingLeft: `${detailPanelIndentPx(level)}px` }}
+          draggable={draggable}
+          onDragStart={onDragStart}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
           onDoubleClick={(event) => {
             if (!onDoubleClick) return;
             event.preventDefault();
@@ -5062,7 +5321,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               setOpen(!open);
             }}
           >
-            {open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
+            {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-[14px] flex-shrink-0" /> : <ChevronRightIcon className="size-[14px] flex-shrink-0" />}
           </button>
           {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
           <span
@@ -5104,9 +5363,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   return (
-    <div data-slot="tree-item-row" role="treeitem" id={id} className={itemClasses} style={{ paddingLeft: `${detailPanelIndentPx(level)}px` }} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div data-slot="tree-item-row" role="treeitem" id={id} className={itemClasses} style={{ paddingLeft: `${detailPanelIndentPx(level)}px` }} draggable={draggable} onDragStart={onDragStart} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       <div className="w-[14px] flex-shrink-0" />
+      {loading && <Spinner size="small" className="text-muted-foreground" />}
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as React.ReactNode}</span>
       {actions.length > 0 && (
@@ -5159,6 +5419,30 @@ export const HelperRow: React.FC<{ children: React.ReactNode; className?: string
   </TreeItem>
 );
 
+const getTreeItemLabel = (item: TreeDataItem): React.ReactNode => {
+  if (!item.description) {
+    return item.label;
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col">
+      <span className="truncate">{item.label}</span>
+      <span className="truncate text-[10px] text-muted-foreground">{item.description}</span>
+    </div>
+  );
+};
+
+const getTreeDropData = (event: React.DragEvent<HTMLDivElement>): Record<string, string> => {
+  return Array.from(event.dataTransfer.types).reduce<Record<string, string>>((result, kind) => {
+    try {
+      result[kind] = event.dataTransfer.getData(kind);
+    } catch {
+      result[kind] = "";
+    }
+    return result;
+  }, {});
+};
+
 /**
  * Data interface for a node in a file tree.
  * [👤semio📚js🗃️sketchpad💻elements🔖tree🛠️filetreenode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/FileTreeNode)
@@ -5175,17 +5459,241 @@ export interface FileTreeNode {
  * Hierarchical tree view component with optional file tree rendering.
  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/Tree)
  **/
-export const Tree: React.FC<{ children: React.ReactNode; className?: string; showLines?: boolean }> & {
-  Files: React.FC<TreeFilesProps>;
-  Section: React.FC<TreeFilesProps>;
-} = ({ children, className = "", showLines = true }) => {
+export const Tree = (({
+  children,
+  className = "",
+  showLines = true,
+  sections,
+  selectionMode = "single",
+  selectedIds: controlledSelectedIds,
+  defaultSelectedIds = [],
+  onSelectionChange,
+  dragAndDropController,
+  emptyState,
+}: TreeRootProps) => {
+  const [sectionItemsById, setSectionItemsById] = React.useState<Record<string, TreeDataItem[]>>(() => (sections ?? []).reduce<Record<string, TreeDataItem[]>>((result, section) => {
+    if (section.items) {
+      result[section.id] = section.items;
+    }
+    return result;
+  }, {}));
+  const [itemItemsById, setItemItemsById] = React.useState<Record<string, TreeDataItem[]>>({});
+  const [loadingById, setLoadingById] = React.useState<Record<string, boolean>>({});
+  const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = React.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
+  const [draggedIds, setDraggedIds] = React.useState<string[]>([]);
+  const resolvedSections = sections ?? [];
+  const anchorIdRef = React.useRef<string | undefined>(normalizeTreeSelectedIds(defaultSelectedIds, selectionMode)[0]);
+  const resolvedSelectedIds = React.useMemo(() => normalizeTreeSelectedIds(controlledSelectedIds ?? uncontrolledSelectedIds, selectionMode), [controlledSelectedIds, uncontrolledSelectedIds, selectionMode]);
+
+  React.useEffect(() => {
+    setSectionItemsById((previousItems) => {
+      const nextItems = { ...previousItems };
+      resolvedSections.forEach((section) => {
+        if (section.items) {
+          nextItems[section.id] = section.items;
+        }
+      });
+      return nextItems;
+    });
+  }, [resolvedSections]);
+
+  const itemMap = React.useMemo(() => {
+    const map: Record<string, TreeDataItem> = {};
+    resolvedSections.forEach((section) => {
+      collectTreeItemMap(getTreeSectionItems(section, sectionItemsById), map);
+    });
+    Object.values(itemItemsById).forEach((items) => {
+      collectTreeItemMap(items, map);
+    });
+    return map;
+  }, [itemItemsById, resolvedSections, sectionItemsById]);
+
+  const updateSelection = React.useCallback((nextSelectedIds: string[]) => {
+    const normalizedIds = normalizeTreeSelectedIds(nextSelectedIds, selectionMode);
+    if (controlledSelectedIds === undefined) {
+      setUncontrolledSelectedIds(normalizedIds);
+    }
+    onSelectionChange?.(normalizedIds, normalizedIds.map((id) => itemMap[id]).filter(Boolean));
+  }, [controlledSelectedIds, itemMap, onSelectionChange, selectionMode]);
+
+  const loadSectionItems = React.useCallback(async (section: TreeDataSection) => {
+    if (!section.getItems || sectionItemsById[section.id] !== undefined || loadingById[getTreeSectionLoadingId(section.id)]) {
+      return;
+    }
+    setLoadingById((previousItems) => ({ ...previousItems, [getTreeSectionLoadingId(section.id)]: true }));
+    try {
+      const nextItems = await section.getItems();
+      setSectionItemsById((previousItems) => ({ ...previousItems, [section.id]: nextItems }));
+    } finally {
+      setLoadingById((previousItems) => ({ ...previousItems, [getTreeSectionLoadingId(section.id)]: false }));
+    }
+  }, [loadingById, sectionItemsById]);
+
+  const loadItemItems = React.useCallback(async (item: TreeDataItem) => {
+    if (!item.getItems || itemItemsById[item.id] !== undefined || loadingById[getTreeItemLoadingId(item.id)]) {
+      return;
+    }
+    setLoadingById((previousItems) => ({ ...previousItems, [getTreeItemLoadingId(item.id)]: true }));
+    try {
+      const nextItems = await item.getItems();
+      setItemItemsById((previousItems) => ({ ...previousItems, [item.id]: nextItems }));
+    } finally {
+      setLoadingById((previousItems) => ({ ...previousItems, [getTreeItemLoadingId(item.id)]: false }));
+    }
+  }, [itemItemsById, loadingById]);
+
+  const handleDragOver = React.useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handleSelectItem = React.useCallback((event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
+    const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
+    const nextSelection = getTreeNextSelectionState({
+      selectionMode,
+      selectedIds: resolvedSelectedIds,
+      orderedIds,
+      targetId: item.id,
+      anchorId: anchorIdRef.current,
+      additiveKey: event.metaKey || event.ctrlKey,
+      rangeKey: event.shiftKey,
+    });
+    anchorIdRef.current = nextSelection.anchorId;
+    updateSelection(nextSelection.selectedIds);
+    item.onClick?.(event, { path, selectedIds: nextSelection.selectedIds, sectionId: section.id });
+  }, [itemItemsById, resolvedSections, resolvedSelectedIds, sectionItemsById, selectionMode, updateSelection]);
+
+  const handleDoubleClickItem = React.useCallback((event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
+    item.onDoubleClick?.(event, { path, selectedIds: resolvedSelectedIds, sectionId: section.id });
+  }, [resolvedSelectedIds]);
+
+  const handleDragStart = React.useCallback((event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
+    const nextDraggedIds = resolvedSelectedIds.includes(item.id) ? resolvedSelectedIds : [item.id];
+    const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
+    setDraggedIds(nextDraggedIds);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData(treeDefaultDragMimeKind, JSON.stringify(nextDraggedIds));
+    const customData = dragAndDropController?.getDragData?.({ items: sourceItems, sourceItem: item, section });
+    Object.entries(customData ?? {}).forEach(([kind, value]) => {
+      event.dataTransfer.setData(kind, value);
+    });
+    dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
+  }, [dragAndDropController, itemMap, resolvedSelectedIds]);
+
+  const handleDrop = React.useCallback((event: React.DragEvent<HTMLDivElement>, target: TreeDataItem | TreeDataSection, targetKind: "item" | "section", section: TreeDataSection) => {
+    event.preventDefault();
+    const sourceIds = draggedIds.length > 0 ? draggedIds : JSON.parse(event.dataTransfer.getData(treeDefaultDragMimeKind) || "[]");
+    dragAndDropController?.handleDrop?.({
+      target,
+      targetKind,
+      data: getTreeDropData(event),
+      sourceItems: sourceIds.map((id: string) => itemMap[id]).filter(Boolean),
+      section,
+    });
+    setDraggedIds([]);
+  }, [dragAndDropController, draggedIds, itemMap]);
+
+  const DataItemView: React.FC<{ item: TreeDataItem; section: TreeDataSection; path: string[]; isLastItem: boolean }> = ({ item, section, path, isLastItem }) => {
+    const childItems = getTreeItemItems(item, itemItemsById);
+    const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), getTreeItemDefaultOpen(item));
+    const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
+    const hasDynamicChildren = Boolean(item.getItems);
+    const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState);
+    const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
+
+    React.useEffect(() => {
+      if (treeOpenState.open && hasDynamicChildren) {
+        void loadItemItems(item);
+      }
+    }, [hasDynamicChildren, item, treeOpenState.open]);
+
+    return (
+      <TreeItem
+        id={item.id}
+        label={getTreeItemLabel(item)}
+        icon={item.icon}
+        className={item.className}
+        isSelected={item.isSelected ?? resolvedSelectedIds.includes(item.id)}
+        isHighlighted={item.isHighlighted}
+        isDragHandle={item.isDragHandle}
+        defaultOpen={getTreeItemDefaultOpen(item)}
+        open={treeOpenState.open}
+        onOpenChange={treeOpenState.setOpen}
+        expandable={isExpandable}
+        loading={isLoading}
+        isLastItem={isLastItem}
+        actions={item.actions}
+        draggable={item.draggable ?? Boolean(dragAndDropController)}
+        onClick={(event) => handleSelectItem(event, item, section, path)}
+        onDoubleClick={(event) => handleDoubleClickItem(event, item, section, path)}
+        onDragStart={(event) => handleDragStart(event, item, section)}
+        onDragOver={handleDragOver}
+        onDrop={(event) => handleDrop(event, item, "item", section)}
+      >
+        {childItems.map((childItem, index) => (
+          <DataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
+        ))}
+        {!isLoading && childItems.length === 0 && item.emptyState && (
+          <TreeItem>
+            <TreeContent>{item.emptyState}</TreeContent>
+          </TreeItem>
+        )}
+      </TreeItem>
+    );
+  };
+
+  const DataSectionView: React.FC<{ section: TreeDataSection }> = ({ section }) => {
+    const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? true);
+    const items = getTreeSectionItems(section, sectionItemsById);
+    const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
+    const hasDynamicChildren = Boolean(section.getItems);
+    const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState);
+
+    React.useEffect(() => {
+      if (treeOpenState.open && hasDynamicChildren) {
+        void loadSectionItems(section);
+      }
+    }, [hasDynamicChildren, section, treeOpenState.open]);
+
+    return (
+      <TreeSection
+        id={section.id}
+        label={section.label}
+        icon={section.icon}
+        className={section.className}
+        defaultOpen={section.defaultOpen}
+        open={treeOpenState.open}
+        onOpenChange={treeOpenState.setOpen}
+        expandable={isExpandable}
+        loading={isLoading}
+        actions={section.actions}
+        onDoubleClick={section.onDoubleClick}
+        onDragOver={handleDragOver}
+        onDrop={(event) => handleDrop(event, section, "section", section)}
+      >
+        {items.map((item, index) => (
+          <DataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
+        ))}
+        {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}
+      </TreeSection>
+    );
+  };
+
   return (
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true }}>
-        <div className={`w-full min-w-0 overflow-hidden ${className}`}>{children}</div>
+        <div className={`w-full min-w-0 overflow-hidden ${className}`}>
+          {resolvedSections.length > 0 ? resolvedSections.map((section) => (
+            <DataSectionView key={section.id} section={section} />
+          )) : children}
+          {resolvedSections.length === 0 && !children && emptyState}
+        </div>
       </TreeContext.Provider>
     </TreeStateProvider>
   );
+}) as React.FC<TreeRootProps> & {
+  Files: React.FC<TreeFilesProps>;
+  Section: React.FC<TreeFilesProps>;
 };
 
 // #region Basic Chat Panel
@@ -5323,6 +5831,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
   const hasChildren = node.children && node.children.length > 0;
   const Icon = node.isFolder ? FolderIcon : DocumentIcon;
 
+  const baseClasses = "flex items-center gap-single text-sm rounded-small cursor-selectable select-none";
   const stateClasses = isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground";
   const itemClasses = `${baseClasses} ${stateClasses}`;
   const handleClick = (e: React.MouseEvent) => {
@@ -5407,6 +5916,7 @@ const TreeFiles: React.FC<TreeFilesProps> = ({ title, nodes, currentPath, onNavi
   );
 };
 
+Tree.Files = TreeFiles;
 Tree.Section = Tree.Files;
 
 /** Alias for Tree.Files rendering a file tree from FileTreeNode data.
@@ -8439,18 +8949,23 @@ export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ child
 // #region UI
 
 // Domain-neutral composite component providing a full application shell.
-// Consumers register apps with window layouts, panel tabs, toolbar and footer items.
-// The UI component manages app switching, panel state, and the overall layout.
+// An app has window kinds (rendered with golden-layout) and registers
+// left/right side panel tabs and footer items.
+// Every UI has a toolbar, a search (Ctrl+P command palette), panel toggles, and breadcrumb.
+// Every app has a find (Ctrl+F scoped command palette).
+// Every panel has a tree.
 
 /**
  * Window kind classification for app windows.
  **/
 export enum WindowKind {
-  GRAPH = "graph",
-  SCENE = "scene",
   TABLE = "table",
-  PAGE = "page",
+  SCENE = "scene",
+  DIAGRAM = "diagram",
   CUSTOM = "custom",
+  SETTINGS = "settings",
+  CHAT = "chat",
+  WORKBENCH = "workbench",
 }
 
 /**
@@ -8471,42 +8986,655 @@ export enum Mode {
 }
 
 /**
- * Configuration for a single window within an app.
+ * A window control with kind, ID, icon, options, and change handler.
  **/
-export interface UIWindowConfig {
+export interface UIWindowControl {
+  kind: "toggle" | "dropdown";
   id: string;
-  label: string;
-  content: React.ReactNode;
-  defaultSize?: number;
-  controls?: React.ReactNode;
-  windowKind?: WindowKind;
+  icon?: React.ReactNode;
+  value?: string;
+  options?: {
+    id: string;
+    value: string;
+    icon?: React.ReactNode;
+  }[];
+  onChange?: (value: string) => void;
 }
 
 /**
+ * Definition of a window kind with label, icon, component, and controls.
+ * Each window kind can be registered with golden-layout.
+ **/
+export interface UIWindowKindDefinition {
+  id: string;
+  label?: string;
+  icon?: React.ReactNode;
+  component: React.ComponentType<any>;
+  controls?: UIWindowControl[];
+  variants?: {
+    id: string;
+    icon?: React.ReactNode;
+    componentProps?: Record<string, any>;
+  }[];
+}
+
+/**
+ * App-level window configuration with window kinds and default golden-layout config.
+ **/
+export interface UIWindowConfig {
+  windowKinds: UIWindowKindDefinition[];
+  defaultLayout?: any;
+}
+
+/**
+ * Creates a default golden-layout configuration from window IDs and direction.
+ * MUST generate a golden-layout config with one stack per window ID.
+ **/
+export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): any {
+  return {
+    root: {
+      type: direction === "row" ? "row" : "column",
+      content: windowIds.map((id, index) => ({
+        type: "stack",
+        content: [
+          {
+            type: "component",
+            componentName: id,
+            title: titles?.[index] ?? id,
+            componentState: {},
+          },
+        ],
+        ...(sizes?.[index] !== undefined ? { size: `${sizes[index]}%` } : {}),
+      })),
+    },
+  };
+}
+
+/**
+ * Parses a window layout from a string, object, or undefined input.
+ * MUST return undefined for null, empty, or unparseable inputs.
+ **/
+export function parseWindowLayout(layout: unknown): any | undefined {
+  if (layout === undefined || layout === null) return undefined;
+  if (typeof layout === "string") {
+    const trimmed = layout.trim();
+    if (!trimmed) return undefined;
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return undefined;
+    }
+  }
+  if (typeof layout === "object") return layout;
+  return undefined;
+}
+
+/**
+ * Serializes a window layout to a JSON string.
+ * MUST return undefined when serialization fails.
+ **/
+export function stringifyWindowLayout(layout: unknown): string | undefined {
+  if (layout === undefined || layout === null) return undefined;
+  try {
+    return JSON.stringify(layout);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Removes duplicate and disallowed window components from a layout.
+ **/
+export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[]): any | undefined {
+  if (!layout || typeof layout !== "object") return layout;
+  const seenComponents = new Set<string>();
+  const deduplicateContent = (content: any[]): any[] => {
+    if (!Array.isArray(content)) return content;
+    return content
+      .map((item) => {
+        if (!item || typeof item !== "object") return item;
+        if (item.type === "component") {
+          const componentName = item.componentName;
+          if (seenComponents.has(componentName) || !allowedWindowIds.includes(componentName)) return null;
+          seenComponents.add(componentName);
+          return item;
+        }
+        if (item.content && Array.isArray(item.content)) {
+          const deduped = deduplicateContent(item.content);
+          if (deduped.length === 0) return null;
+          return { ...item, content: deduped };
+        }
+        return item;
+      })
+      .filter((item) => item !== null);
+  };
+  const root = layout.root;
+  if (!root || typeof root !== "object") return layout;
+  if (root.content && Array.isArray(root.content)) {
+    const dedupedContent = deduplicateContent(root.content);
+    return { ...layout, root: { ...root, content: dedupedContent } };
+  }
+  return layout;
+}
+
+/**
+ * Window controls group component rendering toggle and dropdown controls.
+ **/
+const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ controls }) => (
+  <ActionGroup id="window-controls-group">
+    {controls.map((control) => {
+      if (control.kind === "toggle") {
+        return (
+          <ActionGroupItem key={control.id} id={control.id} onClick={() => control.onChange?.(control.value === "on" ? "off" : "on")}>
+            {control.icon}
+          </ActionGroupItem>
+        );
+      }
+      return (
+        <ActionGroupItem key={control.id} id={control.id}>
+          {control.icon}
+        </ActionGroupItem>
+      );
+    })}
+  </ActionGroup>
+);
+
+/**
+ * Golden-layout canvas that renders window kinds.
+ * Dynamically imports golden-layout and registers each window kind as a component.
+ **/
+const UICanvas: React.FC<{
+  windowConfig: UIWindowConfig;
+  layoutState?: any;
+  onLayoutChange?: (config: any) => void;
+  onActiveWindowChange?: (windowId: string) => void;
+}> = ({ windowConfig, layoutState, onLayoutChange, onActiveWindowChange }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const layoutRef = React.useRef<any>(null);
+
+  React.useEffect(() => {
+    if (!containerRef.current || layoutRef.current) return;
+
+    const loadGoldenLayout = async () => {
+      try {
+        const goldenLayoutModule = await import("golden-layout");
+        const GoldenLayout = (goldenLayoutModule as any).GoldenLayout;
+        if (!GoldenLayout || typeof GoldenLayout !== "function") {
+          console.error("[UICanvas] GoldenLayout is not a constructor");
+          return;
+        }
+
+        const normalizeLayoutConfig = (config: any): any => {
+          if (Array.isArray(config)) return config.map(normalizeLayoutConfig);
+          const normalized: any = {};
+          for (const [key, value] of Object.entries(config)) {
+            const unitKey = `${key}Unit`;
+            if (unitKey in config) {
+              const unit = (config as any)[unitKey];
+              normalized[key] = typeof value === "number" ? `${value}${unit}` : typeof value === "string" ? `${parseFloat(value) || 1}${unit}` : `1${unit}`;
+            } else if ((key === "size" || key === "width" || key === "height") && typeof value === "number") {
+              normalized[key] = `${value}%`;
+            } else if (key === "content" && Array.isArray(value)) {
+              normalized[key] = value.map(normalizeLayoutConfig);
+            } else if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+              normalized[key] = normalizeLayoutConfig(value);
+            } else {
+              normalized[key] = value;
+            }
+          }
+          return normalized;
+        };
+
+        const rawConfig = parseWindowLayout(layoutState) || parseWindowLayout(windowConfig.defaultLayout);
+        if (!rawConfig) {
+          console.error("[UICanvas] No layout config");
+          return;
+        }
+        const config = normalizeLayoutConfig(rawConfig);
+
+        const layout = new GoldenLayout(config, containerRef.current!);
+        let isInitialized = false;
+
+        windowConfig.windowKinds.forEach((windowKind) => {
+          layout.registerComponent(windowKind.id, (container: any) => {
+            const element = container.getElement();
+            let domElement: HTMLElement;
+            if (element instanceof HTMLElement) {
+              domElement = element;
+            } else if (Array.isArray(element) && element[0] instanceof HTMLElement) {
+              domElement = element[0];
+            } else if (element?.[0] instanceof HTMLElement) {
+              domElement = element[0];
+            } else if (element?.nodeType === 1) {
+              domElement = element as HTMLElement;
+            } else {
+              console.error("[UICanvas] Could not extract DOM element from container");
+              return;
+            }
+
+            const root = createRoot(domElement);
+            const WindowComponent = windowKind.component;
+
+            const clickGoldenLayoutControl = (selector: string) => {
+              const stackElement = domElement.closest(".lm_item.lm_stack") as HTMLElement | null;
+              const controlElement = stackElement?.querySelector(selector) as HTMLElement | null;
+              controlElement?.click();
+            };
+
+            root.render(
+              <Window
+                id={windowKind.id}
+                isVisible={true}
+                showControls={true}
+                onOpenInNewWindow={() => clickGoldenLayoutControl(".lm_popout")}
+                onMaximize={() => clickGoldenLayoutControl(".lm_maximise")}
+                onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
+                onClose={() => clickGoldenLayoutControl(".lm_close")}
+                controls={windowKind.controls ? <UIWindowControlsGroup controls={windowKind.controls} /> : undefined}
+              >
+                <WindowComponent />
+              </Window>,
+            );
+
+            container.on("destroy", () => {
+              setTimeout(() => root.unmount(), 0);
+            });
+          });
+        });
+
+        layout.on("stateChanged", () => {
+          if (!onLayoutChange || !isInitialized) return;
+          try {
+            onLayoutChange(layout.toConfig());
+          } catch (error: any) {
+            if (!error?.message?.includes("not yet initialised")) {
+              console.warn("[UICanvas] Failed to get layout config:", error);
+            }
+          }
+        });
+
+        layout.on("tab", (tab: any) => {
+          if (tab._header) {
+            tab._header.on("click", () => {
+              const componentName = tab._contentItem?.config?.componentName;
+              if (componentName && onActiveWindowChange) onActiveWindowChange(componentName);
+            });
+          }
+        });
+
+        layout.init();
+        isInitialized = true;
+        layoutRef.current = layout;
+
+        const handleResize = () => layout.updateSize();
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+          window.removeEventListener("resize", handleResize);
+          try {
+            layout.destroy();
+          } catch { }
+          layoutRef.current = null;
+        };
+      } catch (error) {
+        console.error("[UICanvas] Failed to load GoldenLayout:", error);
+      }
+    };
+
+    loadGoldenLayout();
+  }, [windowConfig, layoutState, onLayoutChange, onActiveWindowChange]);
+
+  return <div ref={containerRef} className="w-full h-full" />;
+};
+
+// #region UISearch
+
+/**
+ * A searchable item for the global UI command palette.
+ * Consumers provide items; the UI renders them in a CommandDialog with fuzzy search.
+ **/
+export interface UISearchItem {
+  id: string;
+  label: string;
+  description?: string;
+  icon?: React.ReactNode;
+  category?: string;
+  onSelect: () => void;
+}
+
+/**
+ * Global search command palette for the UI (Ctrl+P / Cmd+P).
+ * Uses Fuse.js for fuzzy matching and CommandDialog for rendering.
+ **/
+const UISearch: React.FC<{
+  items: UISearchItem[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  placeholder?: string;
+  emptyMessage?: string;
+}> = ({ items, open, onOpenChange, placeholder = "Search...", emptyMessage = "No results found." }) => {
+  const [query, setQuery] = React.useState("");
+
+  const fuse = React.useMemo(
+    () =>
+      new Fuse(items, {
+        keys: [
+          { name: "label", weight: 2 },
+          { name: "description", weight: 1 },
+          { name: "category", weight: 0.5 },
+        ],
+        threshold: 0.4,
+        includeScore: true,
+      }),
+    [items],
+  );
+
+  const results = React.useMemo(() => {
+    if (query.trim()) return fuse.search(query).slice(0, 20);
+    return items.slice(0, 20).map((item, idx) => ({ item, refIndex: idx, score: 0 }) as FuseResult<UISearchItem>);
+  }, [fuse, query, items]);
+
+  const grouped = React.useMemo(() => {
+    const groups: Record<string, FuseResult<UISearchItem>[]> = {};
+    results.forEach((result) => {
+      const category = result.item.category || "";
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(result);
+    });
+    return groups;
+  }, [results]);
+
+  const handleSelect = React.useCallback(
+    (item: UISearchItem) => {
+      onOpenChange(false);
+      setQuery("");
+      item.onSelect();
+    },
+    [onOpenChange],
+  );
+
+  return (
+    <CommandDialog title="Search" description="Search for items..." open={open} onOpenChange={onOpenChange}>
+      <CommandInput id="ui.search.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
+      <CommandList>
+        <CommandEmpty>{emptyMessage}</CommandEmpty>
+        {Object.entries(grouped).map(([category, categoryResults]) => (
+          <CommandGroup key={category || "__default"} heading={category || undefined}>
+            {categoryResults.map((result, idx) => (
+              <CommandItem key={`${result.item.id}-${idx}`} onSelect={() => handleSelect(result.item)}>
+                <div className="flex items-center gap-single">
+                  {result.item.icon}
+                  <div className="flex flex-col">
+                    <span>{result.item.label}</span>
+                    {result.item.description && <span className="text-xs text-muted-foreground">{result.item.description}</span>}
+                  </div>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
+      </CommandList>
+    </CommandDialog>
+  );
+};
+
+// #endregion UISearch
+
+// #region UIFind
+
+/**
+ * A findable item scoped to an app for the per-app find palette.
+ **/
+export interface UIFindItem {
+  id: string;
+  label: string;
+  description?: string;
+  category?: string;
+}
+
+/**
+ * Context value for per-app find functionality.
+ * Apps set find items and a callback; the UI renders the find palette.
+ **/
+export interface UIFindContextValue {
+  findItems: UIFindItem[];
+  setFindItems: (items: UIFindItem[]) => void;
+  setOnFindItem: (callback: ((itemId: string) => void) | undefined) => void;
+  triggerFindItem: (itemId: string) => void;
+}
+
+const UIFindContext = React.createContext<UIFindContextValue | null>(null);
+
+/**
+ * Provider for per-app find functionality.
+ * Wraps children and exposes find items + trigger via context.
+ **/
+export const UIFindProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [findItems, setFindItems] = React.useState<UIFindItem[]>([]);
+  const onFindItemCallbackRef = React.useRef<((itemId: string) => void) | undefined>(undefined);
+
+  const setFindItemsStable = React.useCallback((items: UIFindItem[]) => {
+    setFindItems(items);
+  }, []);
+
+  const setOnFindItem = React.useCallback((callback: ((itemId: string) => void) | undefined) => {
+    onFindItemCallbackRef.current = callback;
+  }, []);
+
+  const triggerFindItem = React.useCallback((itemId: string) => {
+    if (onFindItemCallbackRef.current) {
+      onFindItemCallbackRef.current(itemId);
+    }
+  }, []);
+
+  const contextValue = React.useMemo(
+    () => ({ findItems, setFindItems: setFindItemsStable, setOnFindItem, triggerFindItem }),
+    [findItems, setFindItemsStable, setOnFindItem, triggerFindItem],
+  );
+  return <UIFindContext.Provider value={contextValue}>{children}</UIFindContext.Provider>;
+};
+
+/**
+ * Hook to access the find context. Throws if used outside UIFindProvider.
+ **/
+export function useUIFind(): UIFindContextValue {
+  const context = React.useContext(UIFindContext);
+  if (!context) throw new Error("useUIFind must be used within UIFindProvider");
+  return context;
+}
+
+/**
+ * Hook to access the find context. Returns null if outside UIFindProvider.
+ **/
+export function useUIFindSafe(): UIFindContextValue | null {
+  return React.useContext(UIFindContext);
+}
+
+/**
+ * Per-app find command palette (Ctrl+F / Cmd+F).
+ * Renders a CommandDialog with fuzzy search over the active app's find items.
+ **/
+const UIFind: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  placeholder?: string;
+  emptyMessage?: string;
+}> = ({ open, onOpenChange, placeholder = "Find...", emptyMessage = "No results found." }) => {
+  const [query, setQuery] = React.useState("");
+  const findContext = React.useContext(UIFindContext);
+  const findItems = findContext?.findItems || [];
+  const triggerFindItem = findContext?.triggerFindItem;
+
+  const fuse = React.useMemo(
+    () =>
+      new Fuse(findItems, {
+        keys: [
+          { name: "label", weight: 2 },
+          { name: "description", weight: 1 },
+          { name: "category", weight: 0.5 },
+        ],
+        threshold: 0.4,
+        includeScore: true,
+      }),
+    [findItems],
+  );
+
+  const results = React.useMemo(() => {
+    if (query.trim()) return fuse.search(query).slice(0, 20);
+    return findItems.slice(0, 20).map((item, idx) => ({ item, refIndex: idx, score: 0 }) as FuseResult<UIFindItem>);
+  }, [fuse, query, findItems]);
+
+  const grouped = React.useMemo(() => {
+    const groups: Record<string, FuseResult<UIFindItem>[]> = {};
+    results.forEach((result) => {
+      const category = result.item.category || "";
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(result);
+    });
+    return groups;
+  }, [results]);
+
+  const handleSelect = React.useCallback(
+    (item: UIFindItem) => {
+      onOpenChange(false);
+      setQuery("");
+      if (triggerFindItem) triggerFindItem(item.id);
+    },
+    [onOpenChange, triggerFindItem],
+  );
+
+  if (!findContext || findItems.length === 0) return null;
+
+  return (
+    <CommandDialog title="Find" description="Find items in this app..." open={open} onOpenChange={onOpenChange}>
+      <CommandInput id="ui.find.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
+      <CommandList>
+        <CommandEmpty>{emptyMessage}</CommandEmpty>
+        {Object.entries(grouped).map(([category, categoryResults]) => (
+          <CommandGroup key={category || "__default"} heading={category || undefined}>
+            {categoryResults.map((result, idx) => (
+              <CommandItem key={`${result.item.id}-${idx}`} onSelect={() => handleSelect(result.item)}>
+                <div className="flex flex-col">
+                  <span>{result.item.label}</span>
+                  {result.item.description && <span className="text-xs text-muted-foreground">{result.item.description}</span>}
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
+      </CommandList>
+    </CommandDialog>
+  );
+};
+
+// #endregion UIFind
+
+// #region UIToolbar
+
+/**
+ * A toolbar action item registered by an app or the UI.
+ **/
+export interface UIToolbarItem {
+  id: string;
+  icon?: React.ReactNode;
+  label?: string;
+  onClick?: () => void;
+  kind?: "button" | "toggle" | "separator";
+  pressed?: boolean;
+  onPressedChange?: (pressed: boolean) => void;
+  order?: number;
+}
+
+/**
+ * Renders a floating toolbar zone with structured items.
+ * Each app can provide toolbar items; the UI merges them with global items.
+ **/
+const UIToolbar: React.FC<{
+  items: UIToolbarItem[];
+  className?: string;
+}> = ({ items, className }) => {
+  const sorted = React.useMemo(() => [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [items]);
+
+  if (sorted.length === 0) return null;
+
+  return (
+    <div className={cn("flex items-center justify-center pointer-events-none", className)}>
+      <ToolbarZone className="pointer-events-auto">
+        {sorted.map((item) => {
+          if (item.kind === "separator") {
+            return <ToolbarDivider key={item.id} />;
+          }
+          if (item.kind === "toggle") {
+            return (
+              <ToolbarItem key={item.id}>
+                <Toggle
+                  kind="icon"
+                  id={item.id}
+                  pressed={item.pressed ?? false}
+                  onPressedChange={(p) => item.onPressedChange?.(p)}
+                  icon={item.icon}
+                />
+              </ToolbarItem>
+            );
+          }
+          return (
+            <ToolbarItem key={item.id}>
+              <button
+                onClick={item.onClick}
+                className="flex items-center gap-single px-single py-tiny hover:bg-hover-panel rounded text-sm cursor-pointer"
+              >
+                {item.icon}
+                {item.label && <span>{item.label}</span>}
+              </button>
+            </ToolbarItem>
+          );
+        })}
+      </ToolbarZone>
+    </div>
+  );
+};
+
+// #endregion UIToolbar
+
+/**
  * Configuration for a single app registered with the UI.
+ * An app has window kinds (with golden-layout) and registers
+ * left/right side panel tabs, footer items, toolbar items, and find items.
  **/
 export interface UIAppConfig {
   id: string;
   label: string;
   icon?: React.ReactNode;
-  windows: UIWindowConfig[];
+  windowConfig: UIWindowConfig;
   leftPanelTabs?: SidePanelTabConfig[];
   rightPanelTabs?: SidePanelTabConfig[];
-  bottomPanelSections?: PanelSection[];
   toolbarContent?: React.ReactNode;
+  toolbarItems?: UIToolbarItem[];
   footerItems?: FooterItem[];
+  findItems?: UIFindItem[];
+  onFindSelect?: (itemId: string) => void;
 }
 
 /**
  * Props for the UI composite component.
+ * Navbar is fixed: [breadcrumb (flex-1)] [search] [find] [left panel toggle] [right panel toggle].
  **/
 export interface UIProps {
   apps: UIAppConfig[];
   defaultAppId?: string;
-  navbarLeading?: NavbarItem[];
-  navbarTrailing?: NavbarItem[];
+  breadcrumbItems?: BreadcrumbItemData[];
   footerItems?: FooterItem[];
+  searchItems?: UISearchItem[];
+  toolbarItems?: UIToolbarItem[];
   className?: string;
+}
+
+/**
+ * Panel visibility state for the UI.
+ **/
+export interface UIPanelVisibility {
+  leftSidePanel: boolean;
+  rightSidePanel: boolean;
 }
 
 /**
@@ -8516,6 +9644,8 @@ interface UIContextValue {
   activeAppId: string;
   setActiveAppId: (id: string) => void;
   apps: UIAppConfig[];
+  panelVisibility: UIPanelVisibility;
+  togglePanel: (panel: keyof UIPanelVisibility) => void;
 }
 
 const UIContext = React.createContext<UIContextValue | undefined>(undefined);
@@ -8530,100 +9660,299 @@ export function useUI(): UIContextValue {
 }
 
 /**
- * Domain-neutral composite component providing a full application shell.
- * Manages multiple apps with window layouts, panels, toolbar and footer.
+ * Left panel toggle for the navbar.
+ * Uses the first tab icon as the toggle icon.
+ * Styled to match sketchpad: border border-element, h-medium.
  **/
-export const UI: React.FC<UIProps> = ({ apps, defaultAppId, navbarLeading = [], navbarTrailing = [], footerItems: globalFooterItems = [], className }) => {
+const UILeftPanelToggle: React.FC<{
+  tabs?: SidePanelTabConfig[];
+  visible: boolean;
+  onToggle: () => void;
+}> = ({ tabs, visible, onToggle }) => {
+  if (!tabs || tabs.length === 0) return null;
+  const Icon = tabs[0]?.icon;
+  return (
+    <div className="flex items-stretch border border-element overflow-hidden h-medium">
+      <Toggle
+        kind="icon"
+        id="ui.panelToggle.left"
+        pressed={visible}
+        onPressedChange={onToggle}
+        className="border-0"
+        icon={Icon ? <Icon size={16} /> : <ChevronLeftIcon className="size-small" />}
+      />
+    </div>
+  );
+};
+
+/**
+ * Right panel toggle for the navbar.
+ * Uses the first tab icon as the toggle icon.
+ * Styled to match sketchpad: border border-element, h-medium.
+ **/
+const UIRightPanelToggle: React.FC<{
+  tabs?: SidePanelTabConfig[];
+  visible: boolean;
+  onToggle: () => void;
+}> = ({ tabs, visible, onToggle }) => {
+  if (!tabs || tabs.length === 0) return null;
+  const Icon = tabs[0]?.icon;
+  return (
+    <div className="flex items-stretch border border-element overflow-hidden h-medium">
+      <Toggle
+        kind="icon"
+        id="ui.panelToggle.right"
+        pressed={visible}
+        onPressedChange={onToggle}
+        className="border-0"
+        icon={Icon ? <Icon size={16} /> : <ChevronRightIcon className="size-small" />}
+      />
+    </div>
+  );
+};
+
+/**
+ * Domain-neutral composite component providing a full application shell.
+ * The UI only has apps. An app has window kinds (rendered with golden-layout)
+ * and registers left/right side panel tabs, footer items, toolbar items, and find items.
+ * Every UI has: toolbar, search (Ctrl+P), breadcrumb, panel toggles.
+ * Every app has: find (Ctrl+F).
+ * Every panel has: tree.
+ * Fixed navbar layout: [breadcrumb (flex-1)] [search] [find] [left panel toggle] [right panel toggle].
+ **/
+export const UI: React.FC<UIProps> = ({
+  apps,
+  defaultAppId,
+  breadcrumbItems = [],
+  footerItems: globalFooterItems = [],
+  searchItems = [],
+  toolbarItems: globalToolbarItems = [],
+  className,
+}) => {
   const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? "");
   const [leftPanelSize, setLeftPanelSize] = React.useState(280);
   const [rightPanelSize, setRightPanelSize] = React.useState(300);
-  const [bottomPanelSize, setBottomPanelSize] = React.useState(200);
+  const [panelVisibility, setPanelVisibility] = React.useState<UIPanelVisibility>({ leftSidePanel: false, rightSidePanel: true });
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  const [findOpen, setFindOpen] = React.useState(false);
+
+  // Keyboard shortcuts: Ctrl+P for search, Ctrl+F for find
+  React.useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key.toLowerCase() === "p") {
+          const activeEl = document.activeElement as HTMLElement | null;
+          if (!searchOpen && activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) return;
+          event.preventDefault();
+          event.stopPropagation();
+          setSearchOpen((prev) => !prev);
+        } else if (event.key === "f") {
+          event.preventDefault();
+          setFindOpen((prev) => !prev);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
+  }, [searchOpen]);
+
+  const togglePanel = React.useCallback((panel: keyof UIPanelVisibility) => {
+    setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
+  }, []);
 
   const activeApp = apps.find((a) => a.id === activeAppId) ?? apps[0];
   if (!activeApp) return null;
 
-  const appNavItems: NavbarItem[] = apps.map((app) => ({
-    key: app.id,
-    content: (
-      <button
-        onClick={() => setActiveAppId(app.id)}
-        className={cn("flex items-center gap-single px-small py-single cursor-pointer transition-colors", app.id === activeAppId ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground")}
-      >
-        {app.icon}
-        <span>{app.label}</span>
-      </button>
-    ),
-  }));
+  const hasLeftPanel = activeApp.leftPanelTabs && activeApp.leftPanelTabs.length > 0;
+  const hasRightPanel = activeApp.rightPanelTabs && activeApp.rightPanelTabs.length > 0;
 
-  const allNavbarItems = [...navbarLeading, ...appNavItems, ...navbarTrailing];
+  // Merge toolbar items: global + app-specific
+  const mergedToolbarItems = [...globalToolbarItems, ...(activeApp.toolbarItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  // Fixed navbar: [breadcrumb (flex-1)] [search] [find] [left panel toggle] [right panel toggle]
+  const navbarItems: NavbarItem[] = [];
+
+  // Breadcrumb (fills remaining space, always first)
+  navbarItems.push({
+    key: "breadcrumb",
+    className: "flex-1 min-w-0",
+    content: breadcrumbItems.length > 0 ? <Breadcrumb items={breadcrumbItems} /> : null,
+  });
+
+  // Search toggle
+  navbarItems.push({
+    key: "search",
+    content: (
+      <Toggle
+        kind="icon"
+        id="ui.search.toggle"
+        pressed={searchOpen}
+        onPressedChange={setSearchOpen}
+        icon={<SearchIcon size={16} />}
+      />
+    ),
+  });
+
+  // Find toggle
+  navbarItems.push({
+    key: "find",
+    content: (
+      <Toggle
+        kind="icon"
+        id="ui.find.toggle"
+        pressed={findOpen}
+        onPressedChange={setFindOpen}
+        icon={<SearchIcon size={16} />}
+      />
+    ),
+  });
+
+  // Left panel toggle
+  navbarItems.push({
+    key: "leftPanel",
+    content: (
+      <UILeftPanelToggle
+        tabs={activeApp.leftPanelTabs}
+        visible={panelVisibility.leftSidePanel}
+        onToggle={() => togglePanel("leftSidePanel")}
+      />
+    ),
+  });
+
+  // Right panel toggle
+  navbarItems.push({
+    key: "rightPanel",
+    content: (
+      <UIRightPanelToggle
+        tabs={activeApp.rightPanelTabs}
+        visible={panelVisibility.rightSidePanel}
+        onToggle={() => togglePanel("rightSidePanel")}
+      />
+    ),
+  });
 
   const mergedFooterItems = [...globalFooterItems, ...(activeApp.footerItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  const hasLeftPanel = activeApp.leftPanelTabs && activeApp.leftPanelTabs.length > 0;
-  const hasRightPanel = activeApp.rightPanelTabs && activeApp.rightPanelTabs.length > 0;
-  const hasBottomPanel = activeApp.bottomPanelSections && activeApp.bottomPanelSections.length > 0;
-
-  const windowContent = (
-    <Canvas>
-      {activeApp.windows.length === 1 ? (
-        <Window id={activeApp.windows[0].id} controls={activeApp.windows[0].controls}>
-          {activeApp.windows[0].content}
-        </Window>
-      ) : (
-        <HorizontalWindows>
-          {activeApp.windows.map((w) => (
-            <Window key={w.id} id={w.id} defaultSize={w.defaultSize} controls={w.controls}>
-              {w.content}
-            </Window>
-          ))}
-        </HorizontalWindows>
-      )}
-    </Canvas>
-  );
+  // Determine toolbar: structured items take precedence, then toolbarContent fallback
+  const toolbarElement = mergedToolbarItems.length > 0 ? <UIToolbar items={mergedToolbarItems} /> : activeApp.toolbarContent;
 
   return (
-    <UIContext.Provider value={{ activeAppId, setActiveAppId, apps }}>
-      <Layout
-        className={className}
-        navbar={<Navbar items={allNavbarItems} />}
-        footer={mergedFooterItems.length > 0 ? <Footer items={mergedFooterItems} /> : undefined}
-        toolbar={activeApp.toolbarContent}
-        leftSidePanel={
-          hasLeftPanel
-            ? {
-              position: "left" as const,
-              visible: true,
-              size: leftPanelSize,
-              onSizeChange: setLeftPanelSize,
-              tabs: activeApp.leftPanelTabs!,
-            }
-            : undefined
-        }
-        rightSidePanel={
-          hasRightPanel
-            ? {
-              position: "right" as const,
-              visible: true,
-              size: rightPanelSize,
-              onSizeChange: setRightPanelSize,
-              tabs: activeApp.rightPanelTabs!,
-            }
-            : undefined
-        }
-        bottomPanel={
-          hasBottomPanel
-            ? {
-              visible: true,
-              size: bottomPanelSize,
-              onSizeChange: setBottomPanelSize,
-              sections: activeApp.bottomPanelSections!,
-            }
-            : undefined
-        }
-        canvas={windowContent}
-      />
+    <UIContext.Provider value={{ activeAppId, setActiveAppId, apps, panelVisibility, togglePanel }}>
+      <UIFindProvider>
+        <UIFindItemsSync findItems={activeApp.findItems} onFindSelect={activeApp.onFindSelect} />
+        <Layout
+          className={className}
+          navbar={<Navbar items={navbarItems} />}
+          footer={mergedFooterItems.length > 0 ? <Footer items={mergedFooterItems} /> : undefined}
+          toolbar={toolbarElement}
+          leftSidePanel={
+            hasLeftPanel
+              ? {
+                position: "left" as const,
+                visible: panelVisibility.leftSidePanel,
+                size: leftPanelSize,
+                onSizeChange: setLeftPanelSize,
+                tabs: activeApp.leftPanelTabs!,
+              }
+              : undefined
+          }
+          rightSidePanel={
+            hasRightPanel
+              ? {
+                position: "right" as const,
+                visible: panelVisibility.rightSidePanel,
+                size: rightPanelSize,
+                onSizeChange: setRightPanelSize,
+                tabs: activeApp.rightPanelTabs!,
+              }
+              : undefined
+          }
+          canvas={<UICanvas windowConfig={activeApp.windowConfig} />}
+        />
+        {searchItems.length > 0 && <UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} />}
+        <UIFind open={findOpen} onOpenChange={setFindOpen} />
+      </UIFindProvider>
     </UIContext.Provider>
   );
 };
 
+/**
+ * Internal component that syncs app-level find items into the UIFindContext.
+ * Automatically updates find items and callback when the active app changes.
+ **/
+const UIFindItemsSync: React.FC<{
+  findItems?: UIFindItem[];
+  onFindSelect?: (itemId: string) => void;
+}> = ({ findItems, onFindSelect }) => {
+  const findCtx = React.useContext(UIFindContext);
+  React.useEffect(() => {
+    if (findCtx) {
+      findCtx.setFindItems(findItems ?? []);
+      findCtx.setOnFindItem(onFindSelect);
+    }
+  }, [findItems, onFindSelect, findCtx]);
+  return null;
+};
+
 // #endregion UI
+
+const treeVitest = (import.meta as ImportMeta & {
+  vitest?: {
+    describe: typeof import("vitest").describe;
+    expect: typeof import("vitest").expect;
+    it: typeof import("vitest").it;
+  };
+}).vitest;
+
+if (treeVitest) {
+  const { describe, expect, it } = treeVitest;
+
+  describe("tree helpers", () => {
+    it("normalizes selected ids for single and multiple selection", () => {
+      expect(normalizeTreeSelectedIds(["a", "a", "b"], "single")).toEqual(["a"]);
+      expect(normalizeTreeSelectedIds(["a", "a", "b"], "multiple")).toEqual(["a", "b"]);
+    });
+
+    it("computes additive and range multi selection", () => {
+      expect(getTreeNextSelectionState({
+        selectionMode: "multiple",
+        selectedIds: ["a"],
+        orderedIds: ["a", "b", "c", "d"],
+        targetId: "c",
+        anchorId: "a",
+        additiveKey: false,
+        rangeKey: true,
+      })).toEqual({ selectedIds: ["a", "b", "c"], anchorId: "a" });
+
+      expect(getTreeNextSelectionState({
+        selectionMode: "multiple",
+        selectedIds: ["a"],
+        orderedIds: ["a", "b", "c", "d"],
+        targetId: "c",
+        anchorId: "a",
+        additiveKey: true,
+        rangeKey: false,
+      })).toEqual({ selectedIds: ["a", "c"], anchorId: "c" });
+    });
+
+    it("orders nested tree items across sections", () => {
+      const sections: TreeDataSection[] = [
+        {
+          id: "section-a",
+          label: "Section A",
+          items: [
+            { id: "item-a", label: "Item A", items: [{ id: "item-a-1", label: "Item A1" }] },
+            { id: "item-b", label: "Item B" },
+          ],
+        },
+        {
+          id: "section-b",
+          label: "Section B",
+          items: [{ id: "item-c", label: "Item C" }],
+        },
+      ];
+
+      expect(getTreeItemOrderedIds(sections, {}, {})).toEqual(["item-a", "item-a-1", "item-b", "item-c"]);
+    });
+  });
+}

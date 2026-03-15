@@ -27,6 +27,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 
+import { Tree, TreeItem } from "../../semio-elements/ui";
+
 import "./globals.css";
 
 // #region 🔖Types
@@ -731,6 +733,14 @@ function ontologyNodeIcon(kind: OntologyNodeKind): string {
   }
 }
 
+function getOntologyNodeDescriptor(node: OntologyTreeNode): { icon: string; primaryText: string; secondaryText?: string } {
+  return {
+    icon: ontologyNodeIcon(node.kind),
+    primaryText: node.label,
+    secondaryText: node.fragment && node.fragment !== node.label ? node.fragment : undefined,
+  };
+}
+
 /**
  * Renders a single ontology tree node with expand/collapse.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree🛠️ontologytreenodeview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/i/OntologyTreeNodeView)
@@ -738,44 +748,35 @@ function ontologyNodeIcon(kind: OntologyNodeKind): string {
  **/
 function OntologyTreeNodeView({
   node,
-  depth = 0,
   defaultExpanded = true,
 }: {
   node: OntologyTreeNode;
-  depth?: number;
   defaultExpanded?: boolean;
 }) {
-  const hasChildren = node.children.length > 0;
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const descriptor = getOntologyNodeDescriptor(node);
 
   return (
-    <div className="select-none">
-      <div
-        className={`flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-hover-window transition-colors ${hasChildren ? "cursor-pointer" : ""}`}
-        style={{ paddingLeft: `${depth * 16 + 4}px` }}
-        onClick={() => hasChildren && setExpanded(!expanded)}
-      >
-        {hasChildren ? (
-          expanded ? <IconChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <IconChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
-        ) : (
-          <span className="w-3 shrink-0" />
-        )}
-        <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-info-bg text-info-foreground text-[10px] font-bold shrink-0" title={node.kind}>
-          {ontologyNodeIcon(node.kind)}
+    <TreeItem
+      id={node.id}
+      defaultOpen={defaultExpanded}
+      label={(
+        <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="inline-flex items-center justify-center h-5 min-w-5 rounded bg-info-bg px-1 text-[10px] font-bold text-info-foreground shrink-0" title={node.kind}>
+              {descriptor.icon}
+            </span>
+            <span className="min-w-0 truncate text-sm font-medium text-foreground">{descriptor.primaryText}</span>
+          </span>
+          {descriptor.secondaryText && (
+            <span className="pl-7 text-[11px] text-muted-foreground">{descriptor.secondaryText}</span>
+          )}
         </span>
-        <span className="text-sm font-medium text-foreground">{node.label}</span>
-        {node.fragment && node.fragment !== node.label && (
-          <span className="text-xs text-muted-foreground ml-1 truncate">{node.fragment}</span>
-        )}
-      </div>
-      {expanded && hasChildren && (
-        <div>
-          {node.children.map((child) => (
-            <OntologyTreeNodeView key={child.id} node={child} depth={depth + 1} defaultExpanded={defaultExpanded} />
-          ))}
-        </div>
       )}
-    </div>
+    >
+      {node.children.map((child) => (
+        <OntologyTreeNodeView key={child.id} node={child} defaultExpanded={defaultExpanded} />
+      ))}
+    </TreeItem>
   );
 }
 
@@ -801,7 +802,9 @@ function OntologyTree({
         </div>
       )}
       <div className="p-2 overflow-x-auto">
-        <OntologyTreeNodeView node={root} defaultExpanded={defaultExpanded} />
+        <Tree className="min-w-0">
+          <OntologyTreeNodeView node={root} defaultExpanded={defaultExpanded} />
+        </Tree>
       </div>
     </div>
   );
@@ -884,6 +887,43 @@ function truthEmoji(truth: TruthValue): string {
   }
 }
 
+function hasValidationCardinalityBadge(kind: ValidationNodeKind): boolean {
+  return kind === "ExactCardinality" || kind === "MinCardinality" || kind === "MaxCardinality";
+}
+
+function getValidationNodeDescriptor(node: ValidationTreeNode): {
+  icon?: string;
+  primaryText: string;
+  secondaryText?: string;
+  chips: string[];
+  dimmed: boolean;
+} {
+  const isWitness = node.kind === "Witness";
+  const isDataValue = node.kind === "DataValue";
+  const chips: string[] = [];
+
+  if (hasValidationCardinalityBadge(node.kind) && node.matchingCount !== undefined && node.expectedCardinality !== undefined) {
+    chips.push(`${node.matchingCount}/${node.expectedCardinality}`);
+  }
+  if (node.counted === true) {
+    chips.push("counted");
+  }
+  if (node.counted === false) {
+    chips.push("not matching");
+  }
+  if (isDataValue && node.datatype) {
+    chips.push(node.datatype);
+  }
+
+  return {
+    icon: isWitness || isDataValue ? undefined : node.kind === "ClassAssertion" ? "∈" : ontologyNodeIcon(node.kind as OntologyNodeKind),
+    primaryText: isDataValue ? String(node.value ?? node.label) : isWitness ? (node.individual ?? node.label) : node.label,
+    secondaryText: !isDataValue && node.fragment && node.fragment !== node.label ? node.fragment : undefined,
+    chips,
+    dimmed: isWitness && node.counted === false,
+  };
+}
+
 /**
  * Renders a single validation tree node with expand/collapse, truth badges, and witnesses.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree🛠️validationtreenodeview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/i/ValidationTreeNodeView)
@@ -891,85 +931,59 @@ function truthEmoji(truth: TruthValue): string {
  **/
 function ValidationTreeNodeView({
   node,
-  depth = 0,
   defaultExpanded = true,
 }: {
   node: ValidationTreeNode;
-  depth?: number;
   defaultExpanded?: boolean;
 }) {
-  const hasChildren = node.children.length > 0;
-  const [expanded, setExpanded] = useState(defaultExpanded);
   const colors = truthColors[node.truth];
-  const isWitness = node.kind === "Witness";
-  const isDataValue = node.kind === "DataValue";
+  const descriptor = getValidationNodeDescriptor(node);
 
   return (
-    <div className="select-none">
-      <div
-        className={`flex items-center gap-1.5 py-0.5 px-1 rounded hover:bg-hover-window transition-colors ${hasChildren ? "cursor-pointer" : ""}`}
-        style={{ paddingLeft: `${depth * 16 + 4}px` }}
-        onClick={() => hasChildren && setExpanded(!expanded)}
-        title={node.summary}
-      >
-        {hasChildren ? (
-          expanded ? <IconChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <IconChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
-        ) : (
-          <span className="w-3 shrink-0" />
-        )}
-        {/* Truth indicator */}
-        <span className="text-xs shrink-0" title={`${node.truth}`}>{truthEmoji(node.truth)}</span>
-        {/* Node content */}
-        {isWitness ? (
-          <>
-            <span className={`text-sm font-medium ${node.counted === false ? "text-muted-foreground" : "text-foreground"}`}>
-              {node.individual ?? node.label}
+    <TreeItem
+      id={node.id}
+      defaultOpen={defaultExpanded}
+      label={(
+        <span className="flex min-w-0 flex-col gap-0.5 py-0.5" title={node.summary}>
+          <span className="flex min-w-0 items-center gap-2">
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${colors.bg} ${colors.text}`}>
+              <span>{truthEmoji(node.truth)}</span>
+              <span>{node.truth}</span>
             </span>
-            {node.counted === true && (
-              <span className="text-[10px] font-medium text-success-foreground bg-success-bg px-1 py-0.5 rounded">counted</span>
+            {descriptor.icon && (
+              <span className={`inline-flex items-center justify-center h-5 min-w-5 rounded px-1 text-[10px] font-bold shrink-0 ${colors.bg} ${colors.text}`} title={node.kind}>
+                {descriptor.icon}
+              </span>
             )}
-            {node.counted === false && (
-              <span className="text-[10px] font-medium text-info-foreground bg-info-bg px-1 py-0.5 rounded">not matching</span>
-            )}
-          </>
-        ) : isDataValue ? (
-          <>
-            <span className="text-sm font-mono text-foreground">{String(node.value ?? node.label)}</span>
-            {node.datatype && (
-              <span className="text-xs text-muted-foreground">{node.datatype}</span>
-            )}
-          </>
-        ) : (
-          <>
-            <span className={`inline-flex items-center justify-center w-5 h-5 rounded ${colors.bg} ${colors.text} text-[10px] font-bold shrink-0`} title={node.kind}>
-              {node.kind === "ClassAssertion" ? "∈" : ontologyNodeIcon(node.kind as OntologyNodeKind)}
+            <span className={`min-w-0 truncate text-sm font-medium ${descriptor.dimmed ? "text-muted-foreground" : node.kind === "DataValue" ? "font-mono text-foreground" : "text-foreground"}`}>
+              {descriptor.primaryText}
             </span>
-            <span className="text-sm font-medium text-foreground">{node.label}</span>
-            {node.kind === "ExactCardinality" || node.kind === "MinCardinality" || node.kind === "MaxCardinality" ? (
-              node.matchingCount !== undefined && node.expectedCardinality !== undefined && (
-                <span className="text-xs text-muted-foreground ml-1">
-                  [{node.matchingCount}/{node.expectedCardinality}]
-                </span>
-              )
-            ) : null}
-            {node.fragment && node.fragment !== node.label && (
-              <span className="text-xs text-muted-foreground ml-1 truncate">{node.fragment}</span>
-            )}
-          </>
-        )}
-        {/* Summary tooltip as text */}
-        {node.summary && !isWitness && !isDataValue && (
-          <span className={`text-xs ${colors.text} ml-auto shrink-0`}>{node.truth}</span>
-        )}
-      </div>
-      {expanded && hasChildren && (
-        <div>
-          {node.children.map((child) => (
-            <ValidationTreeNodeView key={child.id} node={child} depth={depth + 1} defaultExpanded={defaultExpanded} />
-          ))}
-        </div>
+            {descriptor.chips.map((chip) => (
+              <span
+                key={`${node.id}-${chip}`}
+                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${chip === "counted"
+                  ? "bg-success-bg text-success-foreground"
+                  : chip === "not matching"
+                    ? "bg-info-bg text-info-foreground"
+                    : "bg-panel text-muted-foreground border border-border-window"
+                  }`}
+              >
+                {chip}
+              </span>
+            ))}
+          </span>
+          {(descriptor.secondaryText || node.summary) && (
+            <span className="pl-10 text-[11px] text-muted-foreground">
+              {[descriptor.secondaryText, node.summary].filter(Boolean).join(" • ")}
+            </span>
+          )}
+        </span>
       )}
-    </div>
+    >
+      {node.children.map((child) => (
+        <ValidationTreeNodeView key={child.id} node={child} defaultExpanded={defaultExpanded} />
+      ))}
+    </TreeItem>
   );
 }
 
@@ -1002,7 +1016,9 @@ function ValidationTree({
         <div className="text-xs text-muted-foreground font-mono break-all">{report.expression}</div>
       </div>
       <div className="p-2 overflow-x-auto">
-        <ValidationTreeNodeView node={report.tree} defaultExpanded={defaultExpanded} />
+        <Tree className="min-w-0">
+          <ValidationTreeNodeView node={report.tree} defaultExpanded={defaultExpanded} />
+        </Tree>
       </div>
     </div>
   );
@@ -2501,16 +2517,18 @@ function App() {
 
 export default App;
 
-export { OntologyTree, ValidationTree };
+export { OntologyTree, ValidationTree, getOntologyNodeDescriptor, getValidationNodeDescriptor };
 export type { OntologyTreeNode, OntologyNodeKind, ValidationTreeNode, ValidationNodeKind, TruthValue, ValidationReport };
 
-const rootElement = document.getElementById("root");
-if (rootElement) {
-  createRoot(rootElement).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  );
+if (typeof document !== "undefined") {
+  const rootElement = document.getElementById("root");
+  if (rootElement) {
+    createRoot(rootElement).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    );
+  }
 }
 
 // #endregion 🔖App

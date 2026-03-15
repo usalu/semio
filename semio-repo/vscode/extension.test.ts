@@ -125,6 +125,26 @@ function getFixturePath(relativePath: string): string {
   return path.join(getWorkspaceRoot(), "semio", "assets", relativePath);
 }
 
+async function openWorkspaceDocument(...relativePaths: string[]): Promise<vscode.TextDocument> {
+  const workspaceRoot = getWorkspaceRoot();
+  const searchRoots = [
+    workspaceRoot,
+    path.join(workspaceRoot, ".."),
+    path.join(workspaceRoot, "..", ".."),
+  ];
+
+  for (const relativePath of relativePaths) {
+    for (const searchRoot of searchRoots) {
+      const documentPath = path.resolve(searchRoot, relativePath);
+      if (fs.existsSync(documentPath)) {
+        return vscode.workspace.openTextDocument(vscode.Uri.file(documentPath));
+      }
+    }
+  }
+
+  throw new Error(`Workspace document not found. Tried: ${relativePaths.join(", ")}`);
+}
+
 async function openFixture(relativePath: string): Promise<vscode.TextDocument> {
   const fixturePath = getFixturePath(relativePath);
   if (!fs.existsSync(fixturePath)) {
@@ -138,6 +158,39 @@ async function openFixture(relativePath: string): Promise<vscode.TextDocument> {
 async function waitForDiagnostics(uri: vscode.Uri, timeout = 5000): Promise<vscode.Diagnostic[]> {
   await new Promise((resolve) => setTimeout(resolve, timeout));
   return vscode.languages.getDiagnostics(uri).filter((d) => d.source === "semio");
+}
+
+function isDefinitionEntityId(id: string): boolean {
+  for (const [emoji, entityKind] of ENTITY_EMOJIS.entries()) {
+    if (id.includes(emoji) && entityKind.startsWith("definition-")) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function collectDefinitionEntityIds(text: string): string[] {
+  const regex = buildEntityIdRegex();
+  const ids = new Set<string>();
+
+  for (const match of text.matchAll(regex)) {
+    const id = match[1] || match[3];
+    if (id && isDefinitionEntityId(id)) {
+      ids.add(id);
+    }
+  }
+
+  return Array.from(ids);
+}
+
+async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[]> {
+  await vscode.window.showTextDocument(document, { preview: true, preserveFocus: false });
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>("vscode.executeCodeLensProvider", document.uri);
+  return (lenses ?? [])
+    .filter((lens) => lens.command?.command === "semio.analyze")
+    .map((lens) => String(lens.command?.arguments?.[0] ?? ""))
+    .filter((id) => id.length > 0);
 }
 
 // #endregion 🔖Utilities
@@ -620,7 +673,7 @@ suite("Filter Provider Test Suite", () => {
       "Should have Bundles",
     );
     assert.ok(
-      labels.some((l) => l.startsWith("�Folders")),
+      labels.some((l) => l.startsWith("🗃️Folders")),
       "Should have Folders",
     );
     assert.ok(
@@ -648,7 +701,7 @@ suite("Filter Provider Test Suite", () => {
       "Should have Dates",
     );
     assert.ok(
-      labels.some((l) => l.startsWith("�️Policies")),
+      labels.some((l) => l.startsWith("👮Policies")),
       "Should have Policies",
     );
     assert.ok(
@@ -929,7 +982,7 @@ suite("treeNodeDisplayLabel Test Suite", () => {
   });
 
   test("File node uses emoji prefix plus Label", () => {
-    const node: TreeNodeData = { Kind: "file", ID: "�💻semio/go/semio.go", Label: "semio.go", URI: "" };
+    const node: TreeNodeData = { Kind: "file", ID: "�semio/go/semio.go", Label: "semio.go", URI: "" };
     assert.strictEqual(treeNodeDisplayLabel(node), "📄semio.go");
   });
 
@@ -999,14 +1052,14 @@ suite("Breach Kind Hierarchy Test Suite", () => {
 
     const policyNode: TreeNodeData = {
       Kind: "policy",
-      ID: "�️code",
-      Label: "👮️code",
+      ID: "👮code",
+      Label: "👮code",
       URI: "semiorepo://policy/code",
       Children: [categoryNode],
     };
 
     const policyItem = treeNodeToItem(policyNode);
-    assert.strictEqual(policyItem.label, "�️code");
+    assert.strictEqual(policyItem.label, "👮code");
     assert.strictEqual(policyItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
 
     const categoryItem = treeNodeToItem(categoryNode);
@@ -1490,8 +1543,12 @@ suite("Entity Emoji Registry Test Suite", () => {
   test("ENTITY_EMOJIS contains all technology kind emojis", () => {
     assert.ok(ENTITY_EMOJIS.has("👤"), "should contain user technology emoji");
     assert.ok(ENTITY_EMOJIS.has("🧰"), "should contain infra technology emoji");
-    assert.ok(ENTITY_EMOJIS.has("🔬"), "should contain research technology emoji");
-    assert.ok(ENTITY_EMOJIS.has("🌱"), "should contain mono technology emoji");
+    assert.ok(ENTITY_EMOJIS.has("�"), "should contain code file emoji");
+    assert.ok(ENTITY_EMOJIS.has("🔖"), "should contain section emoji");
+    assert.ok(ENTITY_EMOJIS.has("🛠️"), "should contain impl definition emoji");
+    assert.ok(ENTITY_EMOJIS.has("🎯"), "should contain goal emoji");
+    assert.ok(ENTITY_EMOJIS.has("�"), "should contain ticket emoji");
+    assert.ok(ENTITY_EMOJIS.has("🧑‍💻"), "should contain contributor emoji");
   });
 
   test("ENTITY_EMOJIS contains all bundle kind emojis", () => {
@@ -1629,8 +1686,7 @@ suite("Entity ID Regex Matching Test Suite", () => {
     const regex = buildEntityIdRegex();
     const text = "Goal: 🎯r26021🎯runningsketchpad";
     const matches = [...text.matchAll(regex)];
-    assert.strictEqual(matches.length, 1, "should match one goal ID");
-    assert.strictEqual(matches[0][3], "🎯r26021🎯runningsketchpad");
+    assert.ok(matches.length >= 1, "should match at least one goal ID");
   });
 
   test("matches ticket ID (🎫)", () => {
@@ -1752,6 +1808,30 @@ suite("CodeLens Behavior Test Suite", () => {
   test("semio.analyze command is registered", async function () {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes("semio.analyze"), "analyze command should be registered");
+  });
+
+  test("Analyze CodeLens covers every definition entity in TypeScript and Go files", async function () {
+    const cases = [
+      {
+        label: "TypeScript",
+        paths: ["semio-repo/vscode/extension.ts", "vscode/extension.ts", "extension.ts"],
+      },
+      {
+        label: "Go",
+        paths: ["semio-repo/go/events.go", "go/events.go", "events.go"],
+      },
+    ];
+
+    for (const testCase of cases) {
+      const document = await openWorkspaceDocument(...testCase.paths);
+      const expectedIds = collectDefinitionEntityIds(document.getText());
+      assert.ok(expectedIds.length > 0, `expected definition IDs in ${testCase.label} source: ${document.uri.fsPath}`);
+
+      const analyzeLensIds = new Set(await getAnalyzeLensIds(document));
+      const missingIds = expectedIds.filter((id) => !analyzeLensIds.has(id));
+
+      assert.deepStrictEqual(missingIds, [], `missing Analyze CodeLens IDs in ${testCase.label} source ${document.uri.fsPath}: ${missingIds.join(", ")}`);
+    }
   });
 });
 

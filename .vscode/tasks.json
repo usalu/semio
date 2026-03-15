@@ -606,6 +606,23 @@
       }
     },
     // ========================================
+    // UTILITIES
+    // ========================================
+    {
+      "label": "🐧gitkraken",
+      "type": "shell",
+      "command": "${workspaceFolder}/.devcontainer/gitkraken-launch.sh",
+      "args": [
+        "${workspaceFolder}"
+      ],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    // ========================================
     // MCP
     // ========================================
     {

@@ -11221,6 +11221,8 @@ func TestExtractSessionIDFromInput(t *testing.T) {
 		{"conversation_id", `{"conversation_id": "test-6"}`, "test-6"},
 		{"agent_id", `{"agent_id": "test-7"}`, "test-7"},
 		{"agentId", `{"agentId": "test-8"}`, "test-8"},
+		{"nested conversation id", `{"native":{"event":{"conversation_id":"test-9"}}}`, "test-9"},
+		{"transcript basename fallback", `{"native":{"event":{"transcript_path":"/tmp/transcripts/test-10.jsonl"}}}`, "test-10"},
 		{"whitespace", `{"sessionId": " test-9 "}`, "test-9"},
 		{"missing", `{"other": "value"}`, ""},
 		{"wrong type", `{"sessionId": 123}`, ""},
@@ -11233,6 +11235,25 @@ func TestExtractSessionIDFromInput(t *testing.T) {
 				t.Errorf("expected %q, got %q", tt.expected, result)
 			}
 		})
+	}
+}
+
+func TestExtractTranscriptAndLLMFromNestedInput(t *testing.T) {
+	input := json.RawMessage(`{
+		"native": {
+			"event": {
+				"model": "composer-1.5",
+				"transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/session-1/session-1.jsonl"
+			}
+		}
+	}`)
+
+	if got := extractTranscriptFromInput(input); got != "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/session-1/session-1.jsonl" {
+		t.Fatalf("expected nested transcript path, got %q", got)
+	}
+
+	if got := extractLLMFromInput(input); got != "composer-1.5" {
+		t.Fatalf("expected nested model, got %q", got)
 	}
 }
 
@@ -16937,7 +16958,7 @@ func TestBlockedToolPatterns(t *testing.T) {
 	}
 	for _, ep := range expectedPatterns {
 		found := false
-		for _, bp := range BlockedToolPatterns {
+		for bp := range BlockedToolPatterns {
 			if bp == ep {
 				found = true
 				break
@@ -19726,14 +19747,19 @@ func TestPopulateEventDataTerminalEnded(t *testing.T) {
 	if res.Command != "npm test" {
 		t.Errorf("expected command=npm test, got %s", res.Command)
 	}
-	if res.PID != "12345" {
-		t.Errorf("expected pid=12345, got %s", res.PID)
+	if res.PID != 12345 {
+		t.Errorf("expected pid=12345, got %d", res.PID)
 	}
 	if !res.Terminated {
 		t.Error("expected terminated=true")
 	}
-	if res.Stdout != "all passed" {
-		t.Errorf("expected stdout=all passed, got %s", res.Stdout)
+	if res.Output != nil {
+		var outputStr string
+		if err := json.Unmarshal(res.Output, &outputStr); err != nil {
+			t.Errorf("expected output to be JSON string, got error: %v", err)
+		} else if outputStr != "all passed" {
+			t.Errorf("expected stdout=all passed, got %s", outputStr)
+		}
 	}
 }
 
@@ -20544,10 +20570,10 @@ func TestHookResultJSONFields(t *testing.T) {
 			MessageID: "msg-123",
 		},
 		Command:    "npm test",
-		PID:        "12345",
+		PID:        12345,
 		Terminated: true,
-		Stdout:     "passed",
-		Stderr:     "warn",
+		Stdout:     json.RawMessage(`"passed"`),
+		Stderr:     json.RawMessage(`"warn"`),
 	}
 	data, err := json.Marshal(result)
 	if err != nil {
@@ -20696,14 +20722,17 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 				t.Errorf("parent: want %q, got %q", tc.expectPar, parent)
 			}
 			tmpDir := t.TempDir()
-			inputSecond := extractSecondFromInput(input)
-			if inputSecond == "" {
-				inputSecond = time.Now().UTC().Format(time.RFC3339)
+			inputSecond := extractSecondFromInput(string(input))
+			var secondStr string
+			if inputSecond == 0 {
+				secondStr = time.Now().UTC().Format(time.RFC3339)
+			} else {
+				secondStr = fmt.Sprintf("%d", inputSecond)
 			}
 			hctx := HookContext{
 				Event:      event,
 				Client:     tc.client,
-				Second:     inputSecond,
+				Second:     secondStr,
 				RepoRoot:   tmpDir,
 				ToolName:   tc.toolName,
 				Input:      input,
@@ -20770,7 +20799,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 			if wantSession != "" && evt["session"] != wantSession {
 				t.Errorf("log session: want %s, got %v", wantSession, evt["session"])
 			}
-			wantSecond := resolveEventSecondID(extractSecondFromInput(input))
+			wantSecond := resolveEventSecondID(secondStr)
 			if wantSecond != "" && evt["second"] != wantSecond {
 				t.Errorf("log second: want %s, got %v", wantSecond, evt["second"])
 			}
@@ -21076,7 +21105,10 @@ func TestEventIDsUseSemioRepoFormat(t *testing.T) {
 		t.Errorf("file ID should not contain path separators: %s", fileID)
 	}
 
-	rangeRef := resolveRangeRef(filepath.Join(tmpDir, "src", "main.go") + "#L10")
+	rangeRef, err := resolveRangeRef(filepath.Join(tmpDir, "src", "main.go") + "#L10")
+	if err != nil {
+		t.Errorf("unexpected error resolving range ref: %v", err)
+	}
 	if rangeRef == "" {
 		t.Error("expected non-empty range ref")
 	}
@@ -21087,7 +21119,10 @@ func TestEventIDsUseSemioRepoFormat(t *testing.T) {
 		t.Errorf("expected line number 10 in range ref, got: %s", rangeRef)
 	}
 
-	rangeRefFull := resolveRangeRef(filepath.Join(tmpDir, "src", "main.go") + "#L10-L20")
+	rangeRefFull, err := resolveRangeRef(filepath.Join(tmpDir, "src", "main.go") + "#L10-L20")
+	if err != nil {
+		t.Errorf("unexpected error resolving full range ref: %v", err)
+	}
 	if !strings.Contains(rangeRefFull, "📌10📌20") {
 		t.Errorf("expected 📌10📌20 in full range ref, got: %s", rangeRefFull)
 	}

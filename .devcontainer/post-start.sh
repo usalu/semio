@@ -10,28 +10,58 @@ configure_emoji_fonts() {
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
 <fontconfig>
+  <!-- Add emoji font families to generic font families -->
   <alias>
     <family>sans-serif</family>
     <prefer>
+      <family>Noto Sans</family>
       <family>Noto Color Emoji</family>
     </prefer>
   </alias>
   <alias>
     <family>serif</family>
     <prefer>
+      <family>Noto Serif</family>
       <family>Noto Color Emoji</family>
     </prefer>
   </alias>
   <alias>
     <family>monospace</family>
     <prefer>
+      <family>Noto Sans Mono</family>
       <family>Noto Color Emoji</family>
     </prefer>
   </alias>
+  
+  <!-- Ensure emoji font is found for emoji characters -->
+  <match target="pattern">
+    <test name="lang">
+      <string>en</string>
+    </test>
+    <test name="family">
+      <string>emoji</string>
+    </test>
+    <edit name="family" mode="prepend">
+      <string>Noto Color Emoji</string>
+    </edit>
+  </match>
+  
+  <!-- Force emoji rendering for color emoji -->
+  <match target="pattern">
+    <test name="family">
+      <string>Noto Color Emoji</family>
+    </test>
+    <edit name="fontformat" mode="assign">
+      <string>TrueType</string>
+    </edit>
+    <edit name="scalable" mode="assign">
+      <bool>true</bool>
+    </edit>
+  </match>
 </fontconfig>
 FONTCONFIG
   sudo fc-cache -f
-  echo "Fixed emoji font fallback."
+  echo "✅ Emoji font fallback configured."
 }
 #endregion 🔖EmojiFonts
 #region 🔖Startup

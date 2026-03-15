@@ -1,0 +1,9 @@
+{
+  "title": "Refactor Semio Elements Tree Api",
+  "status": "open",
+  "description": "Refactor semio-elements tree to a clean VS Code-inspired data API with sections, nested items, async child loading, drag-and-drop controller hooks, multi-select, and inline coverage in the existing package files.",
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "ef88cd33-fea2-4344-a639-a52881d857e6"
+  ]
+}

@@ -259,6 +259,12 @@ configure_gitkraken_workspace() {
     return 0
   fi
 
+  # Skip workspace configuration if authentication is needed
+  if ! gk auth status >/dev/null 2>&1; then
+    echo "⚠️  GitKraken CLI not authenticated, skipping workspace bootstrap."
+    return 0
+  fi
+
   mapfile -t gitkraken_repos < <(collect_gitkraken_workspace_repos)
   if [ "${#gitkraken_repos[@]}" -eq 0 ]; then
     echo "⚠️  No git repositories found for GitKraken workspace bootstrap."
@@ -292,14 +298,14 @@ configure_gitkraken_workspace() {
     done
     if [ "${#missing_repos[@]}" -gt 0 ]; then
       missing_csv="$(IFS=,; printf '%s' "${missing_repos[*]}")"
-      gk ws update "$GITKRAKEN_WORKSPACE_NAME" --add-repos "$missing_csv" >/dev/null
+      gk ws update "$GITKRAKEN_WORKSPACE_NAME" --add-repos "$missing_csv" >/dev/null 2>&1 || true
       echo "✅ GitKraken workspace updated: $GITKRAKEN_WORKSPACE_NAME"
     else
       echo "✅ GitKraken workspace already current: $GITKRAKEN_WORKSPACE_NAME"
     fi
   else
     repo_csv="$(IFS=,; printf '%s' "${gitkraken_repos[*]}")"
-    gk ws create "$GITKRAKEN_WORKSPACE_NAME" --add-repos "$repo_csv" >/dev/null
+    gk ws create "$GITKRAKEN_WORKSPACE_NAME" --add-repos "$repo_csv" >/dev/null 2>&1 || true
     created="1"
     echo "✅ GitKraken workspace created: $GITKRAKEN_WORKSPACE_NAME"
   fi
@@ -307,7 +313,7 @@ configure_gitkraken_workspace() {
   if [ -n "$created" ] || [ "${#missing_repos[@]}" -gt 0 ]; then
     gk ws refresh "$GITKRAKEN_WORKSPACE_NAME" >/dev/null 2>&1 || true
   fi
-  gk ws set "$GITKRAKEN_WORKSPACE_NAME" >/dev/null
+  gk ws set "$GITKRAKEN_WORKSPACE_NAME" >/dev/null 2>&1 || true
   echo "✅ GitKraken default workspace set: $GITKRAKEN_WORKSPACE_NAME"
 }
 #endregion 🔖GitKrakenWorkspace
@@ -315,6 +321,38 @@ configure_gitkraken_workspace() {
 install_gitkraken_desktop
 install_gitkraken_cli
 configure_gitkraken_workspace
+
+#region 🔖GitKrakenAutoStart
+start_gitkraken_if_needed() {
+  if ! command -v gitkraken >/dev/null 2>&1; then
+    echo "⚠️  GitKraken Desktop not available, skipping auto-start."
+    return 0
+  fi
+
+  # Check if GitKraken is already running
+  if pgrep -f "gitkraken" >/dev/null 2>&1; then
+    echo "✅ GitKraken is already running."
+    return 0
+  fi
+
+  # Check if we're in WSL environment
+  if grep -q "Microsoft\|WSL" /proc/version 2>/dev/null; then
+    echo "🚀 Starting GitKraken with WSL-compatible flags..."
+    # Start GitKraken with no-sandbox and no-debug flags for WSL compatibility
+    gitkraken --no-sandbox --no-debug --path "$WORKSPACE" >/dev/null 2>&1 &
+    echo "✅ GitKraken started in background."
+  else
+    echo "🚀 Starting GitKraken..."
+    gitkraken --no-debug --path "$WORKSPACE" >/dev/null 2>&1 &
+    echo "✅ GitKraken started in background."
+  fi
+}
+
+# Only auto-start if not explicitly disabled
+if [ "${SEMIO_GITKRAKEN_AUTO_START:-true}" = "true" ]; then
+  start_gitkraken_if_needed
+fi
+#endregion 🔖GitKrakenAutoStart
 
 #region 🔖McpConfig
 sync_mcp_client_configs() {
@@ -452,27 +490,112 @@ EOF
 }
 #endregion 🔖McpConfig
 
+#region 🔖VSCodeChatPersistence
+merge_dir_contents_if_present() {
+  local source_dir="$1"
+  local target_dir="$2"
+  if [ ! -d "$source_dir" ]; then
+    return 0
+  fi
+  mkdir -p "$target_dir"
+  cp -a -n "$source_dir"/. "$target_dir"/ 2>/dev/null || true
+}
+
+reconcile_vscode_chat_workspace_storage() {
+  local storage_root="${HOME:-/home/vscode}/.vscode-server/data/User/workspaceStorage"
+  local provider=""
+  local provider_dir=""
+  local active_workspace=""
+  local target_provider_dir=""
+  local source_provider_dir=""
+  local active_dirs=()
+  local provider_sources=()
+  local provider_names=(
+    "GitHub.copilot-chat"
+    "openai.chatgpt"
+  )
+
+  if [ ! -d "$storage_root" ]; then
+    return 0
+  fi
+
+  while IFS= read -r active_workspace; do
+    [ -n "$active_workspace" ] || continue
+    active_dirs+=("$active_workspace")
+  done < <(find "$storage_root" -mindepth 1 -maxdepth 1 -type d -exec test -e '{}/vscode.lock' ';' -print | sort)
+
+  if [ "${#active_dirs[@]}" -eq 0 ]; then
+    return 0
+  fi
+
+  for provider in "${provider_names[@]}"; do
+    provider_sources=()
+    while IFS= read -r provider_dir; do
+      [ -n "$provider_dir" ] || continue
+      provider_sources+=("$provider_dir")
+    done < <(find "$storage_root" -mindepth 2 -maxdepth 2 -type d -name "$provider" | sort)
+
+    if [ "${#provider_sources[@]}" -lt 2 ]; then
+      continue
+    fi
+
+    for active_workspace in "${active_dirs[@]}"; do
+      target_provider_dir="${active_workspace}/${provider}"
+      if [ ! -d "$target_provider_dir" ]; then
+        for source_provider_dir in "${provider_sources[@]}"; do
+          if [ "$source_provider_dir" != "$target_provider_dir" ]; then
+            mkdir -p "$active_workspace"
+            cp -a "$source_provider_dir" "$target_provider_dir" 2>/dev/null || true
+            break
+          fi
+        done
+      fi
+
+      for source_provider_dir in "${provider_sources[@]}"; do
+        if [ "$source_provider_dir" = "$target_provider_dir" ]; then
+          continue
+        fi
+        merge_dir_contents_if_present "${source_provider_dir}/transcripts" "${target_provider_dir}/transcripts"
+        merge_dir_contents_if_present "${source_provider_dir}/chat-session-resources" "${target_provider_dir}/chat-session-resources"
+      done
+    done
+  done
+
+  echo "✅ Reconciled persisted VS Code chat workspace storage."
+}
+#endregion 🔖VSCodeChatPersistence
+
 #region 🔖InstallExtension
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
   exec 201>"$INSTALL_LOCK_FILE"
-  if flock -w 120 201; then
+  if flock -w 180 201; then  # Increased timeout from 120 to 180 seconds
     needs_rebuild=""
     if [ ! -f "$VSIX_PATH" ]; then
       needs_rebuild="1"
+      echo "📦 Extension VSIX not found, rebuilding..."
     else
       for src in semio-repo/vscode/extension.ts semio-repo/vscode/queries.ts semio-repo/vscode/package.json semio-repo/vscode/vite.config.ts; do
         if [ -f "$src" ] && [ "$VSIX_PATH" -ot "$src" ]; then
           needs_rebuild="1"
+          echo "📦 Extension source updated, rebuilding..."
           break
         fi
       done
     fi
     if [ -n "$needs_rebuild" ]; then
-      (cd semio-repo/vscode && npm run package)
+      echo "🔨 Building semio VSCode extension..."
+      if (cd semio-repo/vscode && npm run package); then
+        echo "✅ Extension build completed."
+      else
+        echo "⚠️  Extension build failed, continuing without extension install."
+        flock -u 201
+        exec 201>&-
+        # Continue with other setup even if extension build fails
+      fi
     fi
     if [ -f "semio-repo/vscode/package.json" ]; then
-      EXTENSION_PUBLISHER=$(node -p "require('./semio-repo/vscode/package.json').publisher")
-      EXTENSION_NAME=$(node -p "require('./semio-repo/vscode/package.json').name")
+      EXTENSION_PUBLISHER=$(node -p "require('./semio-repo/vscode/package.json').publisher" 2>/dev/null || echo "")
+      EXTENSION_NAME=$(node -p "require('./semio-repo/vscode/package.json').name" 2>/dev/null || echo "")
     fi
     if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
       EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"
@@ -480,26 +603,32 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     if [ -f "$VSIX_PATH" ]; then
       installed_any=""
       for ide_cli in "${IDE_CLIS[@]}"; do
+        echo "📦 Trying to install extension via $ide_cli..."
         install_output="$("$ide_cli" --install-extension "$VSIX_PATH" --force 2>&1)" || true
         if echo "$install_output" | grep -Fq "$WSL_ERROR"; then
+          echo "⚠️  $ide_cli not available from WSL, trying next CLI..."
           continue
         fi
         if [ -n "$EXTENSION_ID" ]; then
           list_output="$("$ide_cli" --list-extensions 2>&1)" || true
           if echo "$list_output" | grep -Fq "$WSL_ERROR"; then
+            echo "⚠️  $ide_cli not available from WSL, trying next CLI..."
             continue
           fi
           if echo "$list_output" | grep -Fqx "$EXTENSION_ID"; then
             echo "✅ Extension installed via $ide_cli"
             installed_any="1"
+            break  # Success, no need to try other CLIs
           fi
         else
           echo "✅ Extension installed via $ide_cli"
           installed_any="1"
+          break  # Success, no need to try other CLIs
         fi
       done
       if [ -z "$installed_any" ]; then
         echo "⚠️  No IDE CLI could install the extension from this attach session."
+        echo "💡 You may need to install the extension manually from the VSIX file: $VSIX_PATH"
       fi
     else
       echo "⚠️  Extension file not found at $VSIX_PATH"
@@ -509,11 +638,14 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     echo "⚠️  Timed out waiting for extension install lock, skipping extension install for this attach."
   fi
   exec 201>&-
+else
+  echo "ℹ️  No IDE CLIs detected, skipping extension installation."
 fi
 #endregion 🔖InstallExtension
 
 #region 🔖McpConfig
 sync_mcp_client_configs
+reconcile_vscode_chat_workspace_storage
 #endregion 🔖McpConfig
 
 echo "✅ Post-attach setup complete."
