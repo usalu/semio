@@ -28,7 +28,6 @@ import { Config } from "postcss-load-config";
 /**
  * PostCSS configuration with the Tailwind CSS PostCSS plugin.
 // [👤semio🌐play⚙️postcssconfig🔖configuration🪨config](semiorepo://p/u/semio/b/w/play/f/postcss.config.ts/s/Configuration/d/i/config)
- *
  * Config MUST include the @tailwindcss/postcss plugin.
  **/
 const config: Config = {

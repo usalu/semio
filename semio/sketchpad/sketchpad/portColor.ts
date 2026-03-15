@@ -29,8 +29,7 @@ import { arePortsCompatible } from "@semio/js/semio";
  * Compatibility state of a port relative to the selected port.
  *
  * MUST be one of none, selected, compatible, or incompatible.
- *
- *  * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️portcompatibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/PortCompatibilityState)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️portcompatibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/PortCompatibilityState)
  **/
 export type PortCompatibilityState = "none" | "selected" | "compatible" | "incompatible";
 
@@ -38,8 +37,7 @@ export type PortCompatibilityState = "none" | "selected" | "compatible" | "incom
  * HSL color tones for rendering a port in the UI.
  *
  * MUST contain base, surface, surfaceStrong, border and text values.
- *
- *  * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️porttone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/PortTone)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️porttone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/PortTone)
  **/
 export type PortTone = {
   base: string;
@@ -191,8 +189,7 @@ const createPortGroupMap = (ports: Port[]): Map<string, string> => {
  * Extracts a normalized port GUID from a string or port reference object.
  *
  * MUST delegate to normalizePortRef for consistent handling.
- *
- *  * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortGuid)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortGuid)
  **/
 export const getPortGuid = (value: unknown): string | undefined => normalizePortRef(value);
 
@@ -200,8 +197,7 @@ export const getPortGuid = (value: unknown): string | undefined => normalizePort
  * Extracts the port GUID from a connector's port reference.
  *
  * MUST return undefined when the connector or its port is missing.
- *
- *  * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getconnectorportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getConnectorPortGuid)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getconnectorportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getConnectorPortGuid)
  **/
 export const getConnectorPortGuid = (connector: Pick<Connector, "port"> | undefined | null): string | undefined => normalizePortRef(connector?.port);
 
@@ -209,8 +205,7 @@ export const getConnectorPortGuid = (connector: Pick<Connector, "port"> | undefi
  * Resolves the color tone for a port based on its compatibility group.
  *
  * MUST return the default tone when the port GUID is missing.
- *
- *  * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getporttone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortTone)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getporttone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortTone)
  **/
 export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTone => {
   const normalizedGuid = normalizeGuid(portGuid);
@@ -224,8 +219,7 @@ export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTo
  * Determines the compatibility state of a candidate port relative to a selected port.
  *
  * MUST return none when no port is selected.
- *
- *  * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getportcompatibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortCompatibilityState)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getportcompatibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortCompatibilityState)
  **/
 export const getPortCompatibilityState = (candidatePortGuid: string | undefined, selectedPortGuid: string | undefined, ports: Port[]): PortCompatibilityState => {
   const normalizedCandidate = normalizeGuid(candidatePortGuid);

@@ -46,8 +46,7 @@ declare global {
 /**
  * Invokes a window control action via the preload bridge.
 // [👤semio🖱️desktop💻renderer🔖renderer🛠️invokewindowcontrol](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/invokeWindowControl)
- *
- * MUST fall back gracefully when window controls are unavailable.
+ *MUST fall back gracefully when window controls are unavailable.
  **/
 const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
   if (window.windowControls) {
@@ -60,8 +59,7 @@ const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
 /**
  * Window event handlers for minimize, maximize and close actions.
 // [👤semio🖱️desktop💻renderer🔖renderer🪨windowevents](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/windowEvents)
- *
- * MUST delegate to invokeWindowControl for each action.
+ *MUST delegate to invokeWindowControl for each action.
  **/
 const windowEvents = {
   minimize: () => invokeWindowControl("minimize"),
@@ -72,8 +70,7 @@ const windowEvents = {
 /**
  * OS bridge for retrieving the current user identity.
 // [👤semio🖱️desktop💻renderer🔖renderer🪨os](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/os)
- *
- * MUST use the preload-exposed getUserId API.
+ *MUST use the preload-exposed getUserId API.
  **/
 const os = {
   getUserId: async () => await window.os.getUserId(),
@@ -82,8 +79,7 @@ const os = {
 /**
  * Root React component that loads the user identity and renders the sketchpad.
 // [👤semio🖱️desktop💻renderer🔖renderer🛠️app](semiorepo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/App)
- *
- * MUST show a loading state until the user ID is resolved.
+ *MUST show a loading state until the user ID is resolved.
  **/
 function App() {
   const [userId, setUserId] = useState<string>("");

@@ -28,7 +28,6 @@ import { Config } from "postcss-load-config";
 /**
  * PostCSS configuration with import and nesting plugins.
 // [🔬coda🖱️desktop⚙️postcssconfig🔖configuration🪨config](semiorepo://p/r/coda/b/u/desktop/f/postcss.config.ts/s/Configuration/d/i/config)
- *
  * Config MUST include postcss-import and postcss-nesting plugins.
  **/
 const config: Config = {

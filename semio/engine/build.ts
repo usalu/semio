@@ -30,7 +30,6 @@ import { join } from "path";
 /**
  * Engine build working directory.
 // [👤semio📚engine💻build🔖build🪨cwd](semiorepo://p/u/semio/b/l/engine/f/build.ts/s/Build/d/i/cwd)
- *
  * MUST resolve to the engine folder.
  **/
 const cwd = __dirname;
@@ -51,7 +50,6 @@ if (existsSync(join(cwd, "dist"))) {
 /**
  * PyInstaller CLI arguments for bundling the engine binary.
 // [👤semio📚engine💻build🔖build🪨args](semiorepo://p/u/semio/b/l/engine/f/build.ts/s/Build/d/i/args)
- *
  * MUST include all required metadata and hidden imports.
  **/
 const args = [

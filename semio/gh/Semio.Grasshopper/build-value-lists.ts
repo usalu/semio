@@ -30,7 +30,6 @@ import { join } from "path";
 /**
  * Build output directory for generated value list files.
 // [👤semio📚gh🛅semiograsshopper💻buildvaluelists🔖valuelistgeneration🪨builddir](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts/s/Value%20List%20Generation/d/i/buildDir)
- *
  * MUST be created if it does not exist.
  **/
 const buildDir = join(__dirname, "build");
@@ -41,7 +40,6 @@ if (!existsSync(buildDir)) {
 /**
  * Converts a CSV file into a Grasshopper value list text format.
 // [👤semio📚gh🛅semiograsshopper💻buildvaluelists🔖valuelistgeneration🛠️convertcsvtovaluelist](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build-value-lists.ts/s/Value%20List%20Generation/d/i/convertCsvToValueList)
- *
  * MUST read the CSV, extract key-value pairs, and write the output file.
  **/
 function convertCsvToValueList(csvPath: string, outputPath: string, keyColumn: string, valueColumn: string): void {

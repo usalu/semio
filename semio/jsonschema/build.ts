@@ -29,14 +29,12 @@ import { join } from "path";
 /**
  * Input JSON Schema file path.
 // [👤semio🛂jsonschema💻build🔖schemaexport🪨inputfilepath](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/s/Schema%20Export/d/i/inputFilePath)
- *
  * MUST point to the kit.json schema file.
  **/
 const inputFilePath = join(__dirname, "kit.json");
 /**
  * Output file path for the unescaped JSON Schema.
 // [👤semio🛂jsonschema💻build🔖schemaexport🪨outputfilepath](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/s/Schema%20Export/d/i/outputFilePath)
- *
  * MUST be written next to the input file.
  **/
 const outputFilePath = join(__dirname, "kit_unescaped.json");
@@ -44,14 +42,12 @@ const outputFilePath = join(__dirname, "kit_unescaped.json");
 /**
  * Raw JSON content read from the input schema file.
 // [👤semio🛂jsonschema💻build🔖schemaexport🪨jsoncontent](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/s/Schema%20Export/d/i/jsonContent)
- *
  * MUST be read as UTF-8.
  **/
 const jsonContent = readFileSync(inputFilePath, "utf-8");
 /**
  * Unescaped JSON content with backslash sequences resolved.
 // [👤semio🛂jsonschema💻build🔖schemaexport🪨unescapedcontent](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts/s/Schema%20Export/d/i/unescapedContent)
- *
  * MUST replace all escaped characters.
  **/
 const unescapedContent = jsonContent.replace(/\\(.)/g, "$1");

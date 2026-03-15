@@ -46,6 +46,12 @@ using Svg;
 using Svg.Transforms;
 using UnitsNet;
 using Formatting = Newtonsoft.Json.Formatting;
+using SharpGLTF.Geometry;
+using SharpGLTF.Geometry.VertexTypes;
+using SharpGLTF.Materials;
+using SharpGLTF.Scenes;
+using GltfModel = SharpGLTF.Schema2.ModelRoot;
+using GltfNode = SharpGLTF.Schema2.Node;
 
 #endregion 🔖Imports
 
@@ -7208,6 +7214,8 @@ public class Kit : Entity<Kit>
     #region 🔖Kit Model Export
     // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitmodelexport](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Kit%20Model%20Export)
     // Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
+    // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
+    // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
 
     /// <summary>Supported export formats keyed by file extension.</summary>
     public static Dictionary<string, string> ExportModelFormats => new()
@@ -7236,13 +7244,7 @@ public class Kit : Entity<Kit>
         var types = kit.Types ?? new List<Type>();
 
         if (pieces.Count == 0)
-            return ExportBuildGlb(new JObject
-            {
-                ["asset"] = new JObject { ["version"] = "2.0", ["generator"] = "semio" },
-                ["scene"] = 0,
-                ["scenes"] = new JArray(new JObject { ["nodes"] = new JArray() }),
-                ["nodes"] = new JArray()
-            }, Array.Empty<byte>());
+            return ExportSceneBuilderToFormat(new SceneBuilder("empty"), format);
 
         var typesDict = new Dictionary<string, Type>();
         foreach (var t in types) typesDict[t.Guid] = t;
@@ -7360,141 +7362,70 @@ public class Kit : Entity<Kit>
             }
         }
 
-        var targetBufferViews = new JArray();
-        var targetAccessors = new JArray();
-        var targetMeshes = new JArray();
-        var targetMaterials = new JArray();
-        var targetTextures = new JArray();
-        var targetImages = new JArray();
-        var targetSamplers = new JArray();
-        var targetBinChunks = new List<byte[]>();
-        var currentBinOffset = 0;
-        var typeMeshIndex = new Dictionary<string, int>();
-
+        var typeMeshBuilders = new Dictionary<string, IMeshBuilder<MaterialBuilder>>();
         foreach (var piece in pieces)
         {
             var typeGuid = piece.Type?.Guid;
-            if (string.IsNullOrEmpty(typeGuid) || typeMeshIndex.ContainsKey(typeGuid)) continue;
+            if (string.IsNullOrEmpty(typeGuid) || typeMeshBuilders.ContainsKey(typeGuid)) continue;
             if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
 
             var model = ExportFindMatchingModel(kit, type, tags);
-            if (model == null)
+            if (model != null)
             {
-                typeMeshIndex[typeGuid] = ExportCreateBoxMesh(type.Name,
-                    targetBufferViews, targetAccessors, targetMeshes, targetBinChunks, ref currentBinOffset);
-                continue;
-            }
-
-            var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
-            if (file?.Blob == null)
-            {
-                typeMeshIndex[typeGuid] = -1;
-                continue;
-            }
-
-            var fileBytes = ExportBlobToBytes(file.Blob);
-            var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
-
-            if (ext == ".glb")
-            {
-                var (srcJson, binChunk) = ExportParseGlb(fileBytes);
-                if (srcJson != null)
+                var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
+                if (file?.Blob != null)
                 {
-                    typeMeshIndex[typeGuid] = ExportMergeGlbModel(srcJson, binChunk,
-                        targetBufferViews, targetAccessors, targetMeshes,
-                        targetMaterials, targetTextures, targetImages,
-                        targetSamplers, targetBinChunks, ref currentBinOffset);
-                }
-                else
-                {
-                    typeMeshIndex[typeGuid] = -1;
+                    var fileBytes = ExportBlobToBytes(file.Blob);
+                    var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
+                    if (ext == ".glb")
+                    {
+                        var mb = ExportGlbToMeshBuilder(fileBytes, type.Name);
+                        if (mb != null) { typeMeshBuilders[typeGuid] = mb; continue; }
+                    }
                 }
             }
-            else
-            {
-                typeMeshIndex[typeGuid] = -1;
-            }
+            typeMeshBuilders[typeGuid] = ExportCreateBoxMeshBuilder(type.Name);
         }
 
-        var glNodes = new JArray();
-        var pieceNodeIndex = new Dictionary<string, int>();
+        var sceneBuilder = new SceneBuilder(design.Name ?? "design");
 
-        int BuildNode(string pieceGuid)
+        void BuildNodeHierarchy(string pieceGuid, NodeBuilder parent)
         {
-            if (pieceNodeIndex.TryGetValue(pieceGuid, out var existing)) return existing;
-
             var piece = piecesDict[pieceGuid];
             var worldPlane = piecePlanes[pieceGuid];
-            childrenOf.TryGetValue(pieceGuid, out var children);
-            children ??= new List<string>();
 
-            float[] localMatrix;
-            if (parentOf.TryGetValue(pieceGuid, out var parentGuid) && piecePlanes.ContainsKey(parentGuid))
+            NodeBuilder node;
+            if (parent != null)
             {
-                var parentWorld = ExportPlaneToMatrix4x4(piecePlanes[parentGuid]);
+                node = parent.CreateNode(piece.Name ?? piece.Guid);
+                var parentWorld = ExportPlaneToMatrix4x4(piecePlanes[parentOf[pieceGuid]]);
                 var childWorld = ExportPlaneToMatrix4x4(worldPlane);
-                System.Numerics.Matrix4x4.Invert(parentWorld, out var invParent);
-                var localMat = invParent * childWorld;
-                localMatrix = ExportMatrix4x4ToGlbArray(localMat);
+                System.Numerics.Matrix4x4.Invert(parentWorld, out var parentInv);
+                node.LocalMatrix = childWorld * parentInv;
             }
             else
             {
-                localMatrix = ExportPlaneToGlbMatrix(worldPlane);
+                node = new NodeBuilder(piece.Name ?? piece.Guid);
+                node.LocalMatrix = ExportPlaneToMatrix4x4(worldPlane);
             }
 
-            var childNodeIndices = new List<int>();
-            foreach (var childGuid in children)
-                childNodeIndices.Add(BuildNode(childGuid));
-
-            var node = new JObject { ["name"] = piece.Name ?? piece.Guid };
-            node["matrix"] = new JArray(localMatrix.Select(f => (JToken)(double)f).ToArray());
-
             var meshTypeGuid = piece.Type?.Guid;
-            if (!string.IsNullOrEmpty(meshTypeGuid) &&
-                typeMeshIndex.TryGetValue(meshTypeGuid, out var meshIdx) && meshIdx >= 0)
-                node["mesh"] = meshIdx;
-            if (childNodeIndices.Count > 0)
-                node["children"] = new JArray(childNodeIndices.Select(i => (JToken)i).ToArray());
+            if (!string.IsNullOrEmpty(meshTypeGuid) && typeMeshBuilders.TryGetValue(meshTypeGuid, out var meshBuilder))
+                sceneBuilder.AddRigidMesh(meshBuilder, node);
+            else
+                sceneBuilder.AddNode(node);
 
-            var idx = glNodes.Count;
-            glNodes.Add(node);
-            pieceNodeIndex[pieceGuid] = idx;
-            return idx;
+            if (childrenOf.TryGetValue(pieceGuid, out var children))
+            {
+                foreach (var childGuid in children)
+                    BuildNodeHierarchy(childGuid, node);
+            }
         }
 
-        var sceneNodes = new JArray();
         foreach (var rootGuid in roots)
-            sceneNodes.Add(BuildNode(rootGuid));
+            BuildNodeHierarchy(rootGuid, null);
 
-        var totalBinLength = targetBinChunks.Sum(c => c.Length);
-        var mergedBin = new byte[totalBinLength];
-        var off = 0;
-        foreach (var chunk in targetBinChunks)
-        {
-            Array.Copy(chunk, 0, mergedBin, off, chunk.Length);
-            off += chunk.Length;
-        }
-
-        var gltfJson = new JObject
-        {
-            ["asset"] = new JObject { ["version"] = "2.0", ["generator"] = "semio" },
-            ["scene"] = 0,
-            ["scenes"] = new JArray(new JObject { ["name"] = design.Name, ["nodes"] = sceneNodes }),
-            ["nodes"] = glNodes
-        };
-        if (targetMeshes.Count > 0) gltfJson["meshes"] = targetMeshes;
-        if (targetAccessors.Count > 0) gltfJson["accessors"] = targetAccessors;
-        if (targetBufferViews.Count > 0) gltfJson["bufferViews"] = targetBufferViews;
-        if (targetMaterials.Count > 0) gltfJson["materials"] = targetMaterials;
-        if (targetTextures.Count > 0) gltfJson["textures"] = targetTextures;
-        if (targetImages.Count > 0) gltfJson["images"] = targetImages;
-        if (targetSamplers.Count > 0) gltfJson["samplers"] = targetSamplers;
-        if (totalBinLength > 0) gltfJson["buffers"] = new JArray(new JObject { ["byteLength"] = totalBinLength });
-
-        if (format == ".gltf")
-            return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
-
-        return ExportBuildGlb(gltfJson, mergedBin);
+        return ExportSceneBuilderToFormat(sceneBuilder, format);
     }
 
     #region 🔖Kit Model Export Helpers
@@ -7507,73 +7438,10 @@ public class Kit : Entity<Kit>
         var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
         var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
         return new System.Numerics.Matrix4x4(
-            x.X, y.X, z.X, origin.X,
-            x.Y, y.Y, z.Y, origin.Y,
-            x.Z, y.Z, z.Z, origin.Z,
-            0, 0, 0, 1);
-    }
-
-    private static float[] ExportMatrix4x4ToGlbArray(System.Numerics.Matrix4x4 m)
-    {
-        return new float[]
-        {
-            m.M11, m.M21, m.M31, m.M41,
-            m.M12, m.M22, m.M32, m.M42,
-            m.M13, m.M23, m.M33, m.M43,
-            m.M14, m.M24, m.M34, m.M44
-        };
-    }
-
-    private static float[] ExportPlaneToGlbMatrix(Plane plane)
-    {
-        return ExportMatrix4x4ToGlbArray(ExportPlaneToMatrix4x4(plane));
-    }
-
-    private static (JObject json, byte[] bin) ExportParseGlb(byte[] data)
-    {
-        using var ms = new MemoryStream(data);
-        using var reader = new BinaryReader(ms);
-        var magic = reader.ReadUInt32();
-        if (magic != 0x46546C67) throw new Exception("Not a valid GLB");
-        reader.ReadUInt32();
-        reader.ReadUInt32();
-        JObject json = null;
-        byte[] bin = null;
-        while (ms.Position < data.Length)
-        {
-            var chunkLength = reader.ReadUInt32();
-            var chunkType = reader.ReadUInt32();
-            if (chunkType == 0x4E4F534A)
-                json = JObject.Parse(Encoding.UTF8.GetString(reader.ReadBytes((int)chunkLength)));
-            else if (chunkType == 0x004E4942)
-                bin = reader.ReadBytes((int)chunkLength);
-            else
-                reader.ReadBytes((int)chunkLength);
-        }
-        return (json, bin);
-    }
-
-    private static byte[] ExportBuildGlb(JObject json, byte[] bin)
-    {
-        var jsonStr = json.ToString(Formatting.None);
-        while (jsonStr.Length % 4 != 0) jsonStr += " ";
-        var jsonBytes = Encoding.UTF8.GetBytes(jsonStr);
-        var binPaddedLen = ((bin.Length + 3) / 4) * 4;
-        var binPadded = new byte[binPaddedLen];
-        if (bin.Length > 0) Array.Copy(bin, binPadded, bin.Length);
-        var totalLength = 12 + 8 + jsonBytes.Length + 8 + binPadded.Length;
-        using var ms = new MemoryStream(totalLength);
-        using var writer = new BinaryWriter(ms);
-        writer.Write(0x46546C67u);
-        writer.Write(2u);
-        writer.Write((uint)totalLength);
-        writer.Write((uint)jsonBytes.Length);
-        writer.Write(0x4E4F534Au);
-        writer.Write(jsonBytes);
-        writer.Write((uint)binPadded.Length);
-        writer.Write(0x004E4942u);
-        writer.Write(binPadded);
-        return ms.ToArray();
+            x.X, x.Y, x.Z, 0,
+            y.X, y.Y, y.Z, 0,
+            z.X, z.Y, z.Z, 0,
+            origin.X, origin.Y, origin.Z, 1);
     }
 
     private static byte[] ExportBlobToBytes(string blob)
@@ -7603,192 +7471,275 @@ public class Kit : Entity<Kit>
         return type.Models[0];
     }
 
-    private static int ExportMergeGlbModel(
-        JObject sourceJson, byte[] sourceBin,
-        JArray targetBufferViews, JArray targetAccessors, JArray targetMeshes,
-        JArray targetMaterials, JArray targetTextures, JArray targetImages,
-        JArray targetSamplers, List<byte[]> targetBinChunks, ref int currentBinOffset)
+    private static IMeshBuilder<MaterialBuilder> ExportGlbToMeshBuilder(byte[] glbBytes, string name)
     {
-        var bufferViewOffset = targetBufferViews.Count;
-        var accessorOffset = targetAccessors.Count;
-        var materialOffset = targetMaterials.Count;
-        var textureOffset = targetTextures.Count;
-        var imageOffset = targetImages.Count;
-        var samplerOffset = targetSamplers.Count;
+        var srcModel = GltfModel.ReadGLB(new MemoryStream(glbBytes));
+        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
 
-        if (sourceBin != null)
+        foreach (var srcMesh in srcModel.LogicalMeshes)
         {
-            foreach (var bv in sourceJson["bufferViews"] ?? new JArray())
+            foreach (var srcPrim in srcMesh.Primitives)
             {
-                var newBv = new JObject
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+
+                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
+                var normals = normAccessor?.AsVector3Array();
+
+                var matBuilder = new MaterialBuilder(srcPrim.Material?.Name ?? "default")
+                    .WithMetallicRoughnessShader();
+
+                if (srcPrim.Material != null)
                 {
-                    ["buffer"] = 0,
-                    ["byteOffset"] = currentBinOffset + (bv["byteOffset"]?.Value<int>() ?? 0),
-                    ["byteLength"] = bv["byteLength"]?.Value<int>() ?? 0
-                };
-                if (bv["byteStride"] != null) newBv["byteStride"] = bv["byteStride"];
-                if (bv["target"] != null) newBv["target"] = bv["target"];
-                targetBufferViews.Add(newBv);
-            }
-            var paddedLen = ((sourceBin.Length + 3) / 4) * 4;
-            var aligned = new byte[paddedLen];
-            Array.Copy(sourceBin, aligned, sourceBin.Length);
-            targetBinChunks.Add(aligned);
-            currentBinOffset += aligned.Length;
-        }
-
-        foreach (var acc in sourceJson["accessors"] ?? new JArray())
-        {
-            var newAcc = (JObject)acc.DeepClone();
-            newAcc["bufferView"] = (acc["bufferView"]?.Value<int>() ?? 0) + bufferViewOffset;
-            targetAccessors.Add(newAcc);
-        }
-
-        foreach (var sampler in sourceJson["samplers"] ?? new JArray())
-            targetSamplers.Add((JObject)sampler.DeepClone());
-
-        foreach (var img in sourceJson["images"] ?? new JArray())
-        {
-            var remapped = (JObject)img.DeepClone();
-            if (img["bufferView"] != null) remapped["bufferView"] = img["bufferView"].Value<int>() + bufferViewOffset;
-            targetImages.Add(remapped);
-        }
-
-        foreach (var tex in sourceJson["textures"] ?? new JArray())
-        {
-            var remapped = (JObject)tex.DeepClone();
-            if (tex["source"] != null) remapped["source"] = tex["source"].Value<int>() + imageOffset;
-            if (tex["sampler"] != null) remapped["sampler"] = tex["sampler"].Value<int>() + samplerOffset;
-            targetTextures.Add(remapped);
-        }
-
-        foreach (var mat in sourceJson["materials"] ?? new JArray())
-        {
-            var remapped = (JObject)mat.DeepClone();
-            void RemapTexInfo(JToken info)
-            {
-                if (info?["index"] != null) info["index"] = info["index"].Value<int>() + textureOffset;
-            }
-            var pbr = remapped["pbrMetallicRoughness"];
-            if (pbr != null)
-            {
-                RemapTexInfo(pbr["baseColorTexture"]);
-                RemapTexInfo(pbr["metallicRoughnessTexture"]);
-            }
-            RemapTexInfo(remapped["normalTexture"]);
-            RemapTexInfo(remapped["occlusionTexture"]);
-            RemapTexInfo(remapped["emissiveTexture"]);
-            targetMaterials.Add(remapped);
-        }
-
-        var meshStartIndex = targetMeshes.Count;
-        foreach (var mesh in sourceJson["meshes"] ?? new JArray())
-        {
-            var primitives = new JArray();
-            foreach (var prim in mesh["primitives"] ?? new JArray())
-            {
-                var rp = new JObject();
-                if (prim["attributes"] != null)
-                {
-                    var attrs = new JObject();
-                    foreach (var attr in ((JObject)prim["attributes"]).Properties())
-                        attrs[attr.Name] = attr.Value.Value<int>() + accessorOffset;
-                    rp["attributes"] = attrs;
+                    var baseColor = srcPrim.Material.FindChannel("BaseColor");
+                    if (baseColor.HasValue)
+                        matBuilder.UseChannel(KnownChannel.BaseColor).Parameter = baseColor.Value.Color;
                 }
-                if (prim["indices"] != null) rp["indices"] = prim["indices"].Value<int>() + accessorOffset;
-                if (prim["material"] != null) rp["material"] = prim["material"].Value<int>() + materialOffset;
-                if (prim["mode"] != null) rp["mode"] = prim["mode"];
-                primitives.Add(rp);
+
+                var prim = meshBuilder.UsePrimitive(matBuilder);
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var i0 = (int)indices[i];
+                        var i1 = (int)indices[i + 1];
+                        var i2 = (int)indices[i + 2];
+                        prim.AddTriangle(
+                            new VertexPositionNormal(positions[i0], normals != null ? normals[i0] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i1], normals != null ? normals[i1] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i2], normals != null ? normals[i2] : System.Numerics.Vector3.UnitZ));
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i + 2 < positions.Count; i += 3)
+                    {
+                        prim.AddTriangle(
+                            new VertexPositionNormal(positions[i], normals != null ? normals[i] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i + 1], normals != null ? normals[i + 1] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i + 2], normals != null ? normals[i + 2] : System.Numerics.Vector3.UnitZ));
+                    }
+                }
             }
-            var newMesh = new JObject { ["primitives"] = primitives };
-            if (mesh["name"] != null) newMesh["name"] = mesh["name"];
-            targetMeshes.Add(newMesh);
         }
 
-        return meshStartIndex;
+        return meshBuilder;
     }
 
-    private static int ExportCreateBoxMesh(string name,
-        JArray targetBufferViews, JArray targetAccessors, JArray targetMeshes,
-        List<byte[]> targetBinChunks, ref int currentBinOffset)
+    private static IMeshBuilder<MaterialBuilder> ExportCreateBoxMeshBuilder(string name)
     {
-        const float s = 0.5f;
-        var positions = new float[]
+        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
+        var material = new MaterialBuilder("default").WithUnlitShader();
+        var prim = meshBuilder.UsePrimitive(material);
+
+        const float h = 0.5f;
+        var v = new System.Numerics.Vector3[]
         {
-            -s,-s,s, s,-s,s, s,s,s, -s,s,s,
-            -s,-s,-s, -s,s,-s, s,s,-s, s,-s,-s,
-            -s,s,-s, -s,s,s, s,s,s, s,s,-s,
-            -s,-s,-s, s,-s,-s, s,-s,s, -s,-s,s,
-            s,-s,-s, s,s,-s, s,s,s, s,-s,s,
-            -s,-s,-s, -s,-s,s, -s,s,s, -s,s,-s,
+            new(-h, -h, -h), new(h, -h, -h), new(h, h, -h), new(-h, h, -h),
+            new(-h, -h, h), new(h, -h, h), new(h, h, h), new(-h, h, h)
         };
-        var normals = new float[]
+        var uz = System.Numerics.Vector3.UnitZ;
+        var ux = System.Numerics.Vector3.UnitX;
+        var uy = System.Numerics.Vector3.UnitY;
+        VertexPositionNormal V(System.Numerics.Vector3 pos, System.Numerics.Vector3 nrm) => new(pos, nrm);
+        prim.AddTriangle(V(v[4], uz), V(v[5], uz), V(v[6], uz));
+        prim.AddTriangle(V(v[4], uz), V(v[6], uz), V(v[7], uz));
+        prim.AddTriangle(V(v[1], -uz), V(v[0], -uz), V(v[3], -uz));
+        prim.AddTriangle(V(v[1], -uz), V(v[3], -uz), V(v[2], -uz));
+        prim.AddTriangle(V(v[3], uy), V(v[7], uy), V(v[6], uy));
+        prim.AddTriangle(V(v[3], uy), V(v[6], uy), V(v[2], uy));
+        prim.AddTriangle(V(v[0], -uy), V(v[1], -uy), V(v[5], -uy));
+        prim.AddTriangle(V(v[0], -uy), V(v[5], -uy), V(v[4], -uy));
+        prim.AddTriangle(V(v[1], ux), V(v[2], ux), V(v[6], ux));
+        prim.AddTriangle(V(v[1], ux), V(v[6], ux), V(v[5], ux));
+        prim.AddTriangle(V(v[0], -ux), V(v[4], -ux), V(v[7], -ux));
+        prim.AddTriangle(V(v[0], -ux), V(v[7], -ux), V(v[3], -ux));
+
+        return meshBuilder;
+    }
+
+    private static byte[] ExportSceneBuilderToFormat(SceneBuilder sceneBuilder, string format)
+    {
+        var modelRoot = sceneBuilder.ToGltf2();
+        modelRoot.Asset.Generator = "semio";
+
+        switch (format)
         {
-            0,0,1, 0,0,1, 0,0,1, 0,0,1,
-            0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1,
-            0,1,0, 0,1,0, 0,1,0, 0,1,0,
-            0,-1,0, 0,-1,0, 0,-1,0, 0,-1,0,
-            1,0,0, 1,0,0, 1,0,0, 1,0,0,
-            -1,0,0, -1,0,0, -1,0,0, -1,0,0,
-        };
-        var indices = new ushort[]
-        {
-            0,1,2, 0,2,3, 4,5,6, 4,6,7,
-            8,9,10, 8,10,11, 12,13,14, 12,14,15,
-            16,17,18, 16,18,19, 20,21,22, 20,22,23,
-        };
-
-        var posBuf = new byte[positions.Length * 4];
-        Buffer.BlockCopy(positions, 0, posBuf, 0, posBuf.Length);
-        var normBuf = new byte[normals.Length * 4];
-        Buffer.BlockCopy(normals, 0, normBuf, 0, normBuf.Length);
-        var idxBuf = new byte[indices.Length * 2];
-        Buffer.BlockCopy(indices, 0, idxBuf, 0, idxBuf.Length);
-
-        var posOffset = currentBinOffset;
-        var posPadded = new byte[((posBuf.Length + 3) / 4) * 4];
-        Array.Copy(posBuf, posPadded, posBuf.Length);
-        targetBinChunks.Add(posPadded);
-        currentBinOffset += posPadded.Length;
-
-        var normOffset = currentBinOffset;
-        var normPadded = new byte[((normBuf.Length + 3) / 4) * 4];
-        Array.Copy(normBuf, normPadded, normBuf.Length);
-        targetBinChunks.Add(normPadded);
-        currentBinOffset += normPadded.Length;
-
-        var idxOffset = currentBinOffset;
-        var idxPadded = new byte[((idxBuf.Length + 3) / 4) * 4];
-        Array.Copy(idxBuf, idxPadded, idxBuf.Length);
-        targetBinChunks.Add(idxPadded);
-        currentBinOffset += idxPadded.Length;
-
-        var posBvIdx = targetBufferViews.Count;
-        targetBufferViews.Add(new JObject { ["buffer"] = 0, ["byteOffset"] = posOffset, ["byteLength"] = posBuf.Length, ["target"] = 34962 });
-        var normBvIdx = targetBufferViews.Count;
-        targetBufferViews.Add(new JObject { ["buffer"] = 0, ["byteOffset"] = normOffset, ["byteLength"] = normBuf.Length, ["target"] = 34962 });
-        var idxBvIdx = targetBufferViews.Count;
-        targetBufferViews.Add(new JObject { ["buffer"] = 0, ["byteOffset"] = idxOffset, ["byteLength"] = idxBuf.Length, ["target"] = 34963 });
-
-        var posAccIdx = targetAccessors.Count;
-        targetAccessors.Add(new JObject { ["bufferView"] = posBvIdx, ["componentType"] = 5126, ["count"] = 24, ["type"] = "VEC3",
-            ["max"] = new JArray(s, s, s), ["min"] = new JArray(-s, -s, -s) });
-        var normAccIdx = targetAccessors.Count;
-        targetAccessors.Add(new JObject { ["bufferView"] = normBvIdx, ["componentType"] = 5126, ["count"] = 24, ["type"] = "VEC3" });
-        var idxAccIdx = targetAccessors.Count;
-        targetAccessors.Add(new JObject { ["bufferView"] = idxBvIdx, ["componentType"] = 5123, ["count"] = 36, ["type"] = "SCALAR" });
-
-        var meshIdx = targetMeshes.Count;
-        targetMeshes.Add(new JObject
-        {
-            ["name"] = name,
-            ["primitives"] = new JArray(new JObject
+            case ".glb":
             {
-                ["attributes"] = new JObject { ["POSITION"] = posAccIdx, ["NORMAL"] = normAccIdx },
-                ["indices"] = idxAccIdx
-            })
-        });
-        return meshIdx;
+                using var ms = new MemoryStream();
+                modelRoot.WriteGLB(ms);
+                return ms.ToArray();
+            }
+            case ".gltf":
+            {
+                var tmpDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid());
+                System.IO.Directory.CreateDirectory(tmpDir);
+                try
+                {
+                    var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
+                    modelRoot.SaveGLTF(gltfPath);
+                    return System.IO.File.ReadAllBytes(gltfPath);
+                }
+                finally
+                {
+                    System.IO.Directory.Delete(tmpDir, true);
+                }
+            }
+            case ".obj":
+                return ExportModelRootToObj(modelRoot);
+            case ".stl":
+                return ExportModelRootToStl(modelRoot);
+            default:
+                throw new ArgumentException($"Unsupported export format: {format}");
+        }
+    }
+
+    private static byte[] ExportModelRootToObj(GltfModel model)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("# Generated by semio");
+        int vertexOffset = 1;
+        int normalOffset = 1;
+
+        foreach (var node in model.DefaultScene.VisualChildren)
+            ExportNodeToObj(node, System.Numerics.Matrix4x4.Identity, sb, ref vertexOffset, ref normalOffset);
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private static void ExportNodeToObj(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
+        StringBuilder sb, ref int vertexOffset, ref int normalOffset)
+    {
+        var worldMatrix = node.LocalMatrix * parentWorld;
+
+        if (node.Mesh != null)
+        {
+            sb.AppendLine($"g {node.Name ?? "mesh"}");
+            foreach (var srcPrim in node.Mesh.Primitives)
+            {
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
+                var normals = normAccessor?.AsVector3Array();
+
+                int startVert = vertexOffset;
+                int startNorm = normalOffset;
+
+                foreach (var pos in positions)
+                {
+                    var wp = System.Numerics.Vector3.Transform(pos, worldMatrix);
+                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "v {0:G9} {1:G9} {2:G9}", wp.X, wp.Y, wp.Z));
+                    vertexOffset++;
+                }
+
+                if (normals != null)
+                {
+                    foreach (var norm in normals)
+                    {
+                        var wn = System.Numerics.Vector3.Normalize(
+                            System.Numerics.Vector3.TransformNormal(norm, worldMatrix));
+                        sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "vn {0:G9} {1:G9} {2:G9}", wn.X, wn.Y, wn.Z));
+                        normalOffset++;
+                    }
+                }
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var i0 = (int)indices[i] + startVert;
+                        var i1 = (int)indices[i + 1] + startVert;
+                        var i2 = (int)indices[i + 2] + startVert;
+                        if (normals != null)
+                        {
+                            var n0 = (int)indices[i] + startNorm;
+                            var n1 = (int)indices[i + 1] + startNorm;
+                            var n2 = (int)indices[i + 2] + startNorm;
+                            sb.AppendLine($"f {i0}//{n0} {i1}//{n1} {i2}//{n2}");
+                        }
+                        else
+                        {
+                            sb.AppendLine($"f {i0} {i1} {i2}");
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach (var child in node.VisualChildren)
+            ExportNodeToObj(child, worldMatrix, sb, ref vertexOffset, ref normalOffset);
+    }
+
+    private static byte[] ExportModelRootToStl(GltfModel model)
+    {
+        var triangles = new List<(System.Numerics.Vector3 normal, System.Numerics.Vector3 v0, System.Numerics.Vector3 v1, System.Numerics.Vector3 v2)>();
+
+        foreach (var node in model.DefaultScene.VisualChildren)
+            ExportNodeToStlTriangles(node, System.Numerics.Matrix4x4.Identity, triangles);
+
+        using var ms = new MemoryStream();
+        using var writer = new BinaryWriter(ms);
+
+        var header = new byte[80];
+        Encoding.ASCII.GetBytes("semio STL", 0, 9, header, 0);
+        writer.Write(header);
+        writer.Write((uint)triangles.Count);
+
+        foreach (var (normal, v0, v1, v2) in triangles)
+        {
+            writer.Write(normal.X); writer.Write(normal.Y); writer.Write(normal.Z);
+            writer.Write(v0.X); writer.Write(v0.Y); writer.Write(v0.Z);
+            writer.Write(v1.X); writer.Write(v1.Y); writer.Write(v1.Z);
+            writer.Write(v2.X); writer.Write(v2.Y); writer.Write(v2.Z);
+            writer.Write((ushort)0);
+        }
+
+        return ms.ToArray();
+    }
+
+    private static void ExportNodeToStlTriangles(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
+        List<(System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3)> triangles)
+    {
+        var worldMatrix = node.LocalMatrix * parentWorld;
+
+        if (node.Mesh != null)
+        {
+            foreach (var srcPrim in node.Mesh.Primitives)
+            {
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var p0 = System.Numerics.Vector3.Transform(positions[(int)indices[i]], worldMatrix);
+                        var p1 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 1]], worldMatrix);
+                        var p2 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 2]], worldMatrix);
+                        var normal = System.Numerics.Vector3.Normalize(
+                            System.Numerics.Vector3.Cross(p1 - p0, p2 - p0));
+                        if (float.IsNaN(normal.X)) normal = System.Numerics.Vector3.UnitZ;
+                        triangles.Add((normal, p0, p1, p2));
+                    }
+                }
+            }
+        }
+
+        foreach (var child in node.VisualChildren)
+            ExportNodeToStlTriangles(child, worldMatrix, triangles);
     }
 
     #endregion 🔖Kit Model Export Helpers

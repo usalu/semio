@@ -29,7 +29,6 @@ import type { Config } from "tailwindcss";
 /**
  * Tailwind CSS configuration with content paths and shared preset.
 // [👤semio🖱️sketchpad⚙️tailwindconfig🔖configuration🪨config](semiorepo://p/u/semio/b/u/sketchpad/f/tailwind.config.ts/s/Configuration/d/i/config)
- *
  * Config MUST include content glob patterns and the tailwindConfig preset.
  **/
 const config: Pick<Config, "content" | "presets"> = {

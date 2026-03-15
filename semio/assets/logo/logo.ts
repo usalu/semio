@@ -56,7 +56,7 @@ interface GroupData {
   };
 }
 
-// KeyframeData holds the data fields for a KeyframeData record.
+* KeyframeData holds the data fields for a KeyframeData record.
  * [👤semio🏪assets🛅logo💻logo🔖types✂️keyframedata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/KeyframeData)
  **/
 interface KeyframeData {
@@ -74,202 +74,202 @@ interface KeyframeData {
  * Functions for parsing SVG files and generating animated SVG logos.
  **/
 function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
-  const tx = translate.x;
-  const ty = translate.y;
-  const angle = (rotate.angle * Math.PI) / 180;
-  const cx = rotate.cx;
-  const cy = rotate.cy;
-  const sx = scale.x === 0 ? 1 : scale.x;
-  const sy = scale.y === 0 ? 1 : scale.y;
+    const tx = translate.x;
+    const ty = translate.y;
+    const angle = (rotate.angle * Math.PI) / 180;
+    const cx = rotate.cx;
+    const cy = rotate.cy;
+    const sx = scale.x === 0 ? 1 : scale.x;
+    const sy = scale.y === 0 ? 1 : scale.y;
 
-  let a = 1,
-    b = 0,
-    c = 0,
-    d = 1,
-    e = 0,
-    f = 0;
+    let a = 1,
+      b = 0,
+      c = 0,
+      d = 1,
+      e = 0,
+      f = 0;
 
-  e += tx;
-  f += ty;
+    e += tx;
+    f += ty;
 
-  if (angle !== 0) {
-    e -= cx;
-    f -= cy;
+    if (angle !== 0) {
+      e -= cx;
+      f -= cy;
 
-    const cos_a = Math.cos(angle);
-    const sin_a = Math.sin(angle);
-    const new_a = a * cos_a - b * sin_a;
-    const new_b = a * sin_a + b * cos_a;
-    const new_c = c * cos_a - d * sin_a;
-    const new_d = c * sin_a + d * cos_a;
-    const new_e = e * cos_a - f * sin_a;
-    const new_f = e * sin_a + f * cos_a;
+      const cos_a = Math.cos(angle);
+      const sin_a = Math.sin(angle);
+      const new_a = a * cos_a - b * sin_a;
+      const new_b = a * sin_a + b * cos_a;
+      const new_c = c * cos_a - d * sin_a;
+      const new_d = c * sin_a + d * cos_a;
+      const new_e = e * cos_a - f * sin_a;
+      const new_f = e * sin_a + f * cos_a;
 
-    a = new_a;
-    b = new_b;
-    c = new_c;
-    d = new_d;
-    e = new_e;
-    f = new_f;
+      a = new_a;
+      b = new_b;
+      c = new_c;
+      d = new_d;
+      e = new_e;
+      f = new_f;
 
-    e += cx;
-    f += cy;
+      e += cx;
+      f += cy;
+    }
+
+    a *= sx;
+    b *= sx;
+    c *= sy;
+    d *= sy;
+
+    return `${a} ${b} ${c} ${d} ${e} ${f}`;
   }
 
-  a *= sx;
-  b *= sx;
-  c *= sy;
-  d *= sy;
-
-  return `${a} ${b} ${c} ${d} ${e} ${f}`;
-}
-
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
- * [👤semio🏪assets🛅logo💻logo🔖logogeneration🪨parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
+  // [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
+  * [👤semio🏪assets🛅logo💻logo🔖logogeneration🪨parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
  * parseTransform holds the data fields for a parseTransform record.
  **/
 function parseTransform(transformStr: string): TransformData {
-  const result: TransformData = {
-    translate: { x: 0, y: 0 },
-    rotate: { angle: 0, cx: 0, cy: 0 },
-    scale: { x: 1, y: 1 },
-  };
+        const result: TransformData = {
+          translate: { x: 0, y: 0 },
+          rotate: { angle: 0, cx: 0, cy: 0 },
+          scale: { x: 1, y: 1 },
+        };
 
-  if (!transformStr) return result;
+        if (!transformStr) return result;
 
-  const matrixMatch = transformStr.match(/matrix\(([^)]+)\)/);
-  if (matrixMatch) {
-    const values = matrixMatch[1].split(/[,\s]+/).map(Number);
-    if (values.length === 6) {
-      const [a, b, c, d, e, f] = values;
+        const matrixMatch = transformStr.match(/matrix\(([^)]+)\)/);
+        if (matrixMatch) {
+          const values = matrixMatch[1].split(/[,\s]+/).map(Number);
+          if (values.length === 6) {
+            const [a, b, c, d, e, f] = values;
 
-      result.translate.x = e;
-      result.translate.y = f;
+            result.translate.x = e;
+            result.translate.y = f;
 
-      const det = a * d - b * c;
-      const hasReflection = det < 0;
+            const det = a * d - b * c;
+            const hasReflection = det < 0;
 
-      const scaleXMag = Math.sqrt(a * a + b * b);
-      const scaleYMag = Math.sqrt(c * c + d * d);
+            const scaleXMag = Math.sqrt(a * a + b * b);
+            const scaleYMag = Math.sqrt(c * c + d * d);
 
-      let rotation = Math.atan2(b, a) * (180 / Math.PI);
+            let rotation = Math.atan2(b, a) * (180 / Math.PI);
 
-      if (Math.abs(a) === 1 && b === 0 && c === 0 && Math.abs(d) === 1) {
-        result.scale.x = a;
-        result.scale.y = d;
-        result.rotate.angle = 0;
-      } else if (a === 0 && Math.abs(b) >= 1 && Math.abs(c) >= 1 && d === 0) {
-        const bSign = Math.sign(b);
-        const cSign = Math.sign(c);
-        const scaleValueB = Math.abs(b);
-        const scaleValueC = Math.abs(c);
+            if (Math.abs(a) === 1 && b === 0 && c === 0 && Math.abs(d) === 1) {
+              result.scale.x = a;
+              result.scale.y = d;
+              result.rotate.angle = 0;
+            } else if (a === 0 && Math.abs(b) >= 1 && Math.abs(c) >= 1 && d === 0) {
+              const bSign = Math.sign(b);
+              const cSign = Math.sign(c);
+              const scaleValueB = Math.abs(b);
+              const scaleValueC = Math.abs(c);
 
-        if (bSign === -1 && cSign === -1) {
-          result.scale.x = -scaleValueB;
-          result.scale.y = scaleValueC;
-          result.rotate.angle = 90;
-        } else if (bSign === 1 && cSign === -1) {
-          result.scale.x = scaleValueB;
-          result.scale.y = scaleValueC;
-          result.rotate.angle = -90;
-        } else if (bSign === -1 && cSign === 1) {
-          result.scale.x = scaleValueB;
-          result.scale.y = scaleValueC;
-          result.rotate.angle = 90;
-        } else {
-          result.scale.x = scaleValueB;
-          result.scale.y = -scaleValueC;
-          result.rotate.angle = -90;
+              if (bSign === -1 && cSign === -1) {
+                result.scale.x = -scaleValueB;
+                result.scale.y = scaleValueC;
+                result.rotate.angle = 90;
+              } else if (bSign === 1 && cSign === -1) {
+                result.scale.x = scaleValueB;
+                result.scale.y = scaleValueC;
+                result.rotate.angle = -90;
+              } else if (bSign === -1 && cSign === 1) {
+                result.scale.x = scaleValueB;
+                result.scale.y = scaleValueC;
+                result.rotate.angle = 90;
+              } else {
+                result.scale.x = scaleValueB;
+                result.scale.y = -scaleValueC;
+                result.rotate.angle = -90;
+              }
+            } else {
+              if (hasReflection) {
+                result.scale.x = Math.sign(a) * scaleXMag;
+                result.scale.y = Math.sign(d) * scaleYMag;
+                result.rotate.angle = rotation;
+              } else {
+                result.scale.x = scaleXMag;
+                result.scale.y = scaleYMag;
+                result.rotate.angle = rotation;
+              }
+            }
+
+            if (result.scale.x === 0) result.scale.x = 1;
+            if (result.scale.y === 0) result.scale.y = 1;
+          }
+          return result;
         }
-      } else {
-        if (hasReflection) {
-          result.scale.x = Math.sign(a) * scaleXMag;
-          result.scale.y = Math.sign(d) * scaleYMag;
-          result.rotate.angle = rotation;
-        } else {
-          result.scale.x = scaleXMag;
-          result.scale.y = scaleYMag;
-          result.rotate.angle = rotation;
+
+        const translateMatch = transformStr.match(/translate\(([^)]+)\)/);
+        if (translateMatch) {
+          const values = translateMatch[1].split(/[,\s]+/).map(Number);
+          result.translate.x = values[0] || 0;
+          result.translate.y = values[1] || 0;
         }
+
+        const rotateMatch = transformStr.match(/rotate\(([^)]+)\)/);
+        if (rotateMatch) {
+          const values = rotateMatch[1].split(/[,\s]+/).map(Number);
+          result.rotate.angle = values[0] || 0;
+          result.rotate.cx = values[1] || 0;
+
+          nsformStr.match(/scale\(([^)]+)\)/);
+          const values = scaleMatch[1 values[0] || 1;
+          const scaleY = values[1] || values[0] || 1;
+
+          result.scale.x = scaleX === 0 ? 1 : scaleX;
+          result.scale.y = scaleY === 0 ? 1 : scaleY;
+        }
+
+        return result;
       }
 
-      if (result.scale.x === 0) result.scale.x = 1;
-      if (result.scale.y === 0) result.scale.y = 1;
-    }
-    return result;
-  }
-
-  const translateMatch = transformStr.match(/translate\(([^)]+)\)/);
-  if (translateMatch) {
-    const values = translateMatch[1].split(/[,\s]+/).map(Number);
-    result.translate.x = values[0] || 0;
-    result.translate.y = values[1] || 0;
-  }
-
-  const rotateMatch = transformStr.match(/rotate\(([^)]+)\)/);
-  if (rotateMatch) {
-    const values = rotateMatch[1].split(/[,\s]+/).map(Number);
-    result.rotate.angle = values[0] || 0;
-    result.rotate.cx = values[1] || 0;
-
-    nsformStr.match(/scale\(([^)]+)\)/);
-      const values = scaleMatch[1 values[0] || 1;
-      const scaleY = values[1] || values[0] || 1;
-
-      result.scale.x = scaleX === 0 ? 1 : scaleX;
-      result.scale.y = scaleY === 0 ? 1 : scaleY;
-    }
-
-    return result;
-  }
-
-  //#region 🔖Parse SVG
+//#region 🔖Parse SVG
 // [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖parsesvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Parse%20SVG)
-  // MUST read SVG content and extract all group transforms and path attributes.
-  // Parses an SVG file and returns keyframe data with group transforms and paths.
-  function parseSVGFile(filePath: string): KeyframeData {
-    const svgContent = fs.readFileSync(filePath, "utf-8");
-    const dom = new JSDOM(svgContent, { contentType: "text/xml" });
-    const document = dom.window.document;
+// MUST read SVG content and extract all group transforms and path attributes.
+// Parses an SVG file and returns keyframe data with group transforms and paths.
+function parseSVGFile(filePath: string): KeyframeData {
+  const svgContent = fs.readFileSync(filePath, "utf-8");
+  const dom = new JSDOM(svgContent, { contentType: "text/xml" });
+  const document = dom.window.document;
 
-    const groups: GroupData[] = [];
-    const gElements = document.querySelectorAll("g[id]");
+  const groups: GroupData[] = [];
+  const gElements = document.querySelectorAll("g[id]");
 
-    gElements.forEach((g) => {
-      const id = g.getAttribute("id")!;
-      const transformStr = g.getAttribute("transform") || "";
-      const pathElement = g.querySelector("path");
+  gElements.forEach((g) => {
+    const id = g.getAttribute("id")!;
+    const transformStr = g.getAttribute("transform") || "";
+    const pathElement = g.querySelector("path");
 
-      if (pathElement) {
-        const transform = parseTransform(transformStr);
-        const groupData: GroupData = {
-          id,
-          transform,
-          path: {
-            d: pathElement.getAttribute("d") || "",
-            stroke: pathElement.getAttribute("stroke") || "none",
-            strokeWidth: pathElement.getAttribute("stroke-width") || "0",
+    if (pathElement) {
+      const transform = parseTransform(transformStr);
+      const groupData: GroupData = {
+        id,
+        transform,
+        path: {
+          d: pathElement.getAttribute("d") || "",
+          stroke: pathElement.getAttribute("stroke") || "none",
+          strokeWidth: pathElement.getAttribute("stroke-width") || "0",
         };
 
         groups.push(groupData);
       }
     });
 
-    return { groups };
-  }
-  //#endregion 🔖Parse SVG
+  return { groups };
+}
+//#endregion 🔖Parse SVG
 
-  //#region 🔖Generate Keyframe Sequence
+//#region 🔖Generate Keyframe Sequence
 // [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖generatekeyframesequence](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Generate%20Keyframe%20Sequence)
-  // MUST produce forward and reverse sequence for smooth animation looping.
-  // Generates a palindromic keyframe sequence with triple repetition per frame.
-  function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
-    const sequence: KeyframeData[] = [];
+// MUST produce forward and reverse sequence for smooth animation looping.
+// Generates a palindromic keyframe sequence with triple repetition per frame.
+function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
+  const sequence: KeyframeData[] = [];
 
-    for (let i = 0; i < keyframes.length; i++) {
-      sequence.push(keyframes[i]);
-      sequence.push(keyframes[i]);
-      sequence.push(keyframes[i]);
+  for (let i = 0; i < keyframes.length; i++) {
+    sequence.push(keyframes[i]);
+    sequence.push(keyframes[i]);
+    sequence.push(keyframes[i]);
 
     for (let i = keyframes.length - 2; i > 0; i--) {
       sequence.push(keyframes[i]);
@@ -283,7 +283,7 @@ function parseTransform(transformStr: string): TransformData {
   //#endregion 🔖Generate Keyframe Sequence
 
   //#region 🔖Create Animated SVG
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖createanimatedsvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Create%20Animated%20SVG)
+  // [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖createanimatedsvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Create%20Animated%20SVG)
   // MUST generate translate, rotate, scale, fill, stroke, and stroke-width animations.
   // Creates an animated SVG file with SMIL animations from keyframe data.
   function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void {

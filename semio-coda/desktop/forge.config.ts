@@ -35,7 +35,6 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 /**
  * Electron Forge configuration with Vite plugin and security fuses.
 // [🔬coda🖱️desktop⚙️forgeconfig🔖configuration🪨config](semiorepo://p/r/coda/b/u/desktop/f/forge.config.ts/s/Configuration/d/i/config)
- *
  * Config MUST include VitePlugin with main, preload, and renderer entries.
  **/
 const config: ForgeConfig = {

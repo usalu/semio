@@ -157,10 +157,8 @@ const DEFAULT_FORM_DATA: FeedbackFormData = {
 
 /**
  * Triadic hook for feedback form data state.
- *
- * MUST return current form data, setter, and writability flag.
- *
- *  * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🛠️usefeedbackformdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/d/i/useFeedbackFormData)
+ *MUST return current form data, setter, and writability flag.
+ * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🛠️usefeedbackformdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/d/i/useFeedbackFormData)
  **/
 export function useFeedbackFormData(): HookResult<FeedbackFormData> {
   const actor = useSketchpadActor();
@@ -178,10 +176,8 @@ export function useFeedbackFormData(): HookResult<FeedbackFormData> {
 
 /**
  * Triadic hook for feedback submission loading state.
- *
- * MUST return current submitting flag, setter, and writability flag.
- *
- *  * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🛠️usefeedbackissubmitting](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/d/i/useFeedbackIsSubmitting)
+ *MUST return current submitting flag, setter, and writability flag.
+ * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🛠️usefeedbackissubmitting](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/d/i/useFeedbackIsSubmitting)
  **/
 export function useFeedbackIsSubmitting(): HookResult<boolean> {
   const actor = useSketchpadActor();
@@ -199,10 +195,8 @@ export function useFeedbackIsSubmitting(): HookResult<boolean> {
 
 /**
  * Triadic hook for feedback submission completion state.
- *
- * MUST return current submitted flag, setter, and writability flag.
- *
- *  * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🛠️usefeedbackissubmitted](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/d/i/useFeedbackIsSubmitted)
+ *MUST return current submitted flag, setter, and writability flag.
+ * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🛠️usefeedbackissubmitted](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/d/i/useFeedbackIsSubmitted)
  **/
 export function useFeedbackIsSubmitted(): HookResult<boolean> {
   const actor = useSketchpadActor();
@@ -220,10 +214,8 @@ export function useFeedbackIsSubmitted(): HookResult<boolean> {
 
 /**
  * Triadic hook for feedback error state.
- *
- * MUST return current error message, setter, and writability flag.
- *
- *  * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🛠️usefeedbackerror](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/d/i/useFeedbackError)
+ *MUST return current error message, setter, and writability flag.
+ * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🛠️usefeedbackerror](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/d/i/useFeedbackError)
  **/
 export function useFeedbackError(): HookResult<string | undefined> {
   const actor = useSketchpadActor();
@@ -241,10 +233,8 @@ export function useFeedbackError(): HookResult<string | undefined> {
 
 /**
  * Triadic hook for resetting the feedback form to defaults.
- *
- * MUST return reset callback and availability flag.
- *
- *  * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖app🛠️feedbacktoolbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/App/d/i/FeedbackToolbar)
+ *MUST return reset callback and availability flag.
+ * [👤semio📚js🗃️sketchpad💻feedback🔖triadichooks🔖app🛠️feedbacktoolbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Triadic%20Hooks/s/App/d/i/FeedbackToolbar)
  **/
 export function useFeedbackReset(): [(() => void) | undefined, boolean] {
   const actor = useSketchpadActor();
@@ -568,8 +558,7 @@ export default Feedback;
 
 /**
  * Feedback app configuration with routing, component, and panel definitions.
- *
- *  * [👤semio📚js🗃️sketchpad💻feedback🔖config🪨config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Config/d/i/config)
+ * [👤semio📚js🗃️sketchpad💻feedback🔖config🪨config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Config/d/i/config)
  **/
 export const config = {
   id: "feedback",

@@ -466,10 +466,9 @@ async function initDesign(page: Page) {
 
   const allRowIds = await page.evaluate(() => {
     return Array.from(document.querySelectorAll("[data-row-id]"))
-      .map((el) => el.getAttribute("data-row-id"))
-      .slice(0, 20);
+      .map((el) => el.getAttribute("data-row-id"));
   });
-  console.log(`[initDesign] Available row IDs: ${JSON.stringify(allRowIds)}`);
+  console.log(`[initDesign] Available row IDs (${allRowIds.length}): ${JSON.stringify(allRowIds.slice(0, 30))}`);
 
   const designRowIds = allRowIds.filter((id) => id?.startsWith("design-"));
   console.log(`[initDesign] Design row IDs: ${JSON.stringify(designRowIds)}`);

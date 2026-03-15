@@ -28,7 +28,6 @@ import { execSync } from "child_process";
 /**
  * MSBuild executable path for Visual Studio 2022.
 // [👤semio📚net🛅semio💻build🔖build🪨msbuild](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/s/Build/d/i/msbuild)
- *
  * MUST point to the installed MSBuild binary.
  **/
 const msbuild = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe";

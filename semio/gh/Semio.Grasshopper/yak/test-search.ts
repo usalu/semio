@@ -29,7 +29,6 @@ import { execSync } from "child_process";
 /**
  * Path to the Yak package manager executable.
 // [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearch🔖script🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts/s/Script/d/i/yak)
- *
  * Yak path MUST point to the Rhino 8 System directory.
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";

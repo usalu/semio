@@ -28,7 +28,6 @@ import type { Config } from "tailwindcss";
 /**
  * Tailwind CSS configuration with content paths for the coda desktop app.
 // [🔬coda🖱️desktop⚙️tailwindconfig🔖configuration🪨config](semiorepo://p/r/coda/b/u/desktop/f/tailwind.config.ts/s/Configuration/d/i/config)
- *
  * Config MUST include content glob patterns.
  **/
 const config: Pick<Config, "content" | "presets"> = {

@@ -39,14 +39,12 @@ import wasm from "vite-plugin-wasm";
 /**
  * Absolute file path of the current module.
 // [👤semio🖱️sketchpad⚙️viteconfig🔖configuration🪨filename](semiorepo://p/u/semio/b/u/sketchpad/f/vite.config.ts/s/Configuration/d/i/__filename)
- *
  * Path MUST be derived from import.meta.url.
  **/
 const __filename = fileURLToPath(import.meta.url);
 /**
  * Absolute directory path of the current module.
 // [👤semio🖱️sketchpad⚙️viteconfig🔖configuration🪨dirname](semiorepo://p/u/semio/b/u/sketchpad/f/vite.config.ts/s/Configuration/d/i/__dirname)
- *
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);

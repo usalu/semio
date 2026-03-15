@@ -28,7 +28,6 @@ import { execSync } from "child_process";
 /**
  * Yak CLI executable path for Rhino 8.
 // [👤semio📚gh🛅semiograsshopper🗃️yak💻login🔖login🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/login.ts/s/Login/d/i/yak)
- *
  * MUST point to the installed Yak binary.
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";

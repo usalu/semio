@@ -35,7 +35,6 @@ if (started) {
 /**
  * Creates the main Electron browser window with preload and vite integration.
 // [👤semio🖱️desktop💻main🔖mainprocess🛠️createwindow](semiorepo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process/d/i/createWindow)
- *
  * MUST load the vite dev server URL in development and the built file in production.
  **/
 const createWindow = () => {

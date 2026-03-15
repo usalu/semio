@@ -37,8 +37,7 @@ import { Mode } from "./shared";
 
 /**
  * Footer controls component for tutorial playback.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🪨tutorialcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/d/i/TutorialControls)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🪨tutorialcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/d/i/TutorialControls)
  **/
 export const TutorialControls: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -127,8 +126,7 @@ const TutorialControlsContent: FC = () => {
 
 /**
  * Footer controls component for tutorial recording.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖recordingcontrols🪨recordingcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Recording%20Controls/d/i/RecordingControls)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖recordingcontrols🪨recordingcontrols](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Recording%20Controls/d/i/RecordingControls)
  **/
 export const RecordingControls: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -213,8 +211,7 @@ const RecordingControlsContent: FC = () => {
 
 /**
  * Footer button component toggling tutorial recording.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖recordbutton🪨recordbutton](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Record%20Button/d/i/RecordButton)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖recordbutton🪨recordbutton](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Record%20Button/d/i/RecordButton)
  **/
 export const RecordButton: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -263,8 +260,7 @@ export const RecordButton: FC = () => {
 
 /**
  * Overlay component rendering focus highlights and animated cursor.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖tutorialoverlay🪨tutorialoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Tutorial%20Overlay/d/i/TutorialOverlay)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialcontrols🔖tutorialoverlay🪨tutorialoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Controls/s/Tutorial%20Overlay/d/i/TutorialOverlay)
  **/
 export const TutorialOverlay: FC = () => {
   const isTutorialActive = useIsTutorialActive();
@@ -433,8 +429,7 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
 
 /**
  * Built-in hello tutorial introducing basic semio concepts.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖builtintutorials🪨hellotutorial](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Built-in%20Tutorials/d/i/helloTutorial)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖builtintutorials🪨hellotutorial](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Built-in%20Tutorials/d/i/helloTutorial)
  **/
 export const helloTutorial: Tutorial = {
   id: guid(),
@@ -513,8 +508,7 @@ export const helloTutorial: Tutorial = {
 
 /**
  * Built-in sketchpad tour tutorial for core features.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖builtintutorials🪨sketchpadtour](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Built-in%20Tutorials/d/i/sketchpadTour)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖builtintutorials🪨sketchpadtour](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Built-in%20Tutorials/d/i/sketchpadTour)
  **/
 export const sketchpadTour: Tutorial = {
   id: guid(),
@@ -580,8 +574,7 @@ export const sketchpadTour: Tutorial = {
 
 /**
  * Context passed to tutorial command handlers.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commands🛠️tutorialcommandcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Commands/d/i/TutorialCommandContext)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commands🛠️tutorialcommandcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Commands/d/i/TutorialCommandContext)
  **/
 export interface TutorialCommandContext {
   tutorialStore: any;
@@ -589,8 +582,7 @@ export interface TutorialCommandContext {
 
 /**
  * Result returned from tutorial command execution.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commands🛠️tutorialcommandresult](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Commands/d/i/TutorialCommandResult)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commands🛠️tutorialcommandresult](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Commands/d/i/TutorialCommandResult)
  **/
 export interface TutorialCommandResult {
   success: boolean;
@@ -599,8 +591,7 @@ export interface TutorialCommandResult {
 
 /**
  * Map of tutorial command names to handler functions.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commands🪨tutorialcommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Commands/d/i/tutorialCommands)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commands🪨tutorialcommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Commands/d/i/tutorialCommands)
  **/
 export const tutorialCommands = {
   "semio.tutorial.start": (context: TutorialCommandContext, tutorial: Tutorial): TutorialCommandResult => {
@@ -643,8 +634,7 @@ export const tutorialCommands = {
 
 /**
  * Map of dev-mode recording command names to handler functions.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commands🪨devcommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Commands/d/i/devCommands)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commands🪨devcommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Commands/d/i/devCommands)
  **/
 export const devCommands = {
   "semio.recording.start": (context: TutorialCommandContext, name: string, tutorialId?: string): TutorialCommandResult => {
@@ -678,8 +668,7 @@ export const devCommands = {
 
 /**
  * Hook intercepting commands to record events and check milestone completion.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commandinterceptor🪨usetutorialcommandinterceptor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Command%20Interceptor/d/i/useTutorialCommandInterceptor)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖commandinterceptor🪨usetutorialcommandinterceptor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Command%20Interceptor/d/i/useTutorialCommandInterceptor)
  **/
 export const useTutorialCommandInterceptor = (onCommandExecute: (command: string, origin?: string, args?: any) => void) => {
   const store = useTutorialStore();
@@ -708,26 +697,22 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
 
 /**
  * Hook returning the tutorial store instance.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨usetutorialstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useTutorialStore)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨usetutorialstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useTutorialStore)
  **/
 export const useTutorialStore = () => useTutorialContext().store;
 /**
  * Hook returning the current tutorial state.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨usetutorialstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useTutorialState)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨usetutorialstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useTutorialState)
  **/
 export const useTutorialState = () => useTutorialContext().state;
 /**
  * Hook returning the currently active tutorial.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useactivetutorial](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useActiveTutorial)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useactivetutorial](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useActiveTutorial)
  **/
 export const useActiveTutorial = () => useTutorialContext().state.activeTutorial;
 /**
  * Hook returning the current milestone of the active tutorial.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨usecurrentmilestone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useCurrentMilestone)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨usecurrentmilestone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useCurrentMilestone)
  **/
 export const useCurrentMilestone = () => {
   const { state } = useTutorialContext();
@@ -736,52 +721,44 @@ export const useCurrentMilestone = () => {
 };
 /**
  * Hook returning the current playback state.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useplaybackstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/usePlaybackState)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useplaybackstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/usePlaybackState)
  **/
 export const usePlaybackState = () => useTutorialContext().state.playbackState;
 /**
  * Hook returning the current playback time.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useplaybacktime](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/usePlaybackTime)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useplaybacktime](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/usePlaybackTime)
  **/
 export const usePlaybackTime = () => useTutorialContext().state.playbackTime;
 /**
  * Hook returning the current recording state.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨userecordingstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useRecordingState)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨userecordingstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useRecordingState)
  **/
 export const useRecordingState = () => useTutorialContext().state.recordingState;
 /**
  * Hook returning the active recording.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useactiverecording](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useActiveRecording)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useactiverecording](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useActiveRecording)
  **/
 export const useActiveRecording = () => useTutorialContext().state.activeRecording;
 /**
  * Hook returning all available tutorials.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useavailabletutorials](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useAvailableTutorials)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useavailabletutorials](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useAvailableTutorials)
  **/
 export const useAvailableTutorials = () => useTutorialContext().state.availableTutorials;
 /**
  * Hook returning whether recording is active.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useisrecording](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useIsRecording)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useisrecording](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useIsRecording)
  **/
 export const useIsRecording = () => useTutorialContext().state.recordingState === TutorialRecordingState.RECORDING;
 /**
  * Hook returning whether a tutorial is actively playing.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useistutorialactive](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useIsTutorialActive)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖hooks🪨useistutorialactive](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Hooks/d/i/useIsTutorialActive)
  **/
 export const useIsTutorialActive = () => {
   const state = useTutorialContext().state;
   return state.playbackState !== TutorialPlaybackState.IDLE && state.playbackState !== TutorialPlaybackState.COMPLETED;
 };
 /**
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖hooks🪨usetutorialprogress](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Hooks/d/i/useTutorialProgress)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖hooks🪨usetutorialprogress](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Hooks/d/i/useTutorialProgress)
  **/
 export const useTutorialProgress = () => {
   const { state } = useTutorialContext();
@@ -816,8 +793,7 @@ const TutorialContext = createContext<TutorialContextValue | null>(null);
 
 /**
  * Provider component supplying tutorial store and state to descendants.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖context🪨tutorialprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Context/d/i/TutorialProvider)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖context🪨tutorialprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Context/d/i/TutorialProvider)
  **/
 export const TutorialProvider: FC<{ store: TutorialStore; children: ReactNode }> = ({ store, children }) => {
   const [state, setState] = useState<TutorialState>(store.snapshot());
@@ -860,8 +836,7 @@ const useTutorialContext = () => {
 
 /**
  * A single step within a tutorial with optional triggers and animations.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialmilestone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialMilestone)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialmilestone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialMilestone)
  **/
 export interface TutorialMilestone {
   id: Guid;
@@ -893,8 +868,7 @@ export interface TutorialMilestone {
 
 /**
  * A complete tutorial with ordered milestones.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorial](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/Tutorial)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorial](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/Tutorial)
  **/
 export interface Tutorial {
   id: Guid;
@@ -909,8 +883,7 @@ export interface Tutorial {
 
 /**
  * A timestamped event captured during tutorial recording.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialrecordingevent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialRecordingEvent)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialrecordingevent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialRecordingEvent)
  **/
 export interface TutorialRecordingEvent {
   timestamp: number;
@@ -928,8 +901,7 @@ export interface TutorialRecordingEvent {
 
 /**
  * A complete recording session with captured events.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialrecording](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialRecording)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialrecording](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialRecording)
  **/
 export interface TutorialRecording {
   id: Guid;
@@ -942,8 +914,7 @@ export interface TutorialRecording {
 
 /**
  * Playback lifecycle states for a tutorial.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialplaybackstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialPlaybackState)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialplaybackstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialPlaybackState)
  **/
 export enum TutorialPlaybackState {
   IDLE = "idle",
@@ -954,8 +925,7 @@ export enum TutorialPlaybackState {
 
 /**
  * Recording lifecycle states for a tutorial.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialrecordingstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialRecordingState)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialrecordingstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialRecordingState)
  **/
 export enum TutorialRecordingState {
   IDLE = "idle",
@@ -965,8 +935,7 @@ export enum TutorialRecordingState {
 
 /**
  * Complete state of the tutorial system.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialState)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialState)
  **/
 export interface TutorialState {
   activeTutorial: Tutorial | null;
@@ -978,8 +947,7 @@ export interface TutorialState {
 
 /**
  * Partial state diff for updating tutorial state.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialdiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialDiff)
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖types🔖tutorialentities🛠️tutorialdiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Types/s/Tutorial%20Entities/d/i/TutorialDiff)
  **/
 export interface TutorialDiff {
   activeTutorial?: Tutorial | null;
@@ -1001,10 +969,8 @@ export interface TutorialDiff {
 
 /**
  * Tutorial store managing playback, recording, and milestone navigation.
- *
- * TutorialStore MUST synchronize state changes through the notify pattern.
- *
- *  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖store🛠️tutorialstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Store/d/i/TutorialStore)
+ *TutorialStore MUST synchronize state changes through the notify pattern.
+ * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖store🛠️tutorialstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Store/d/i/TutorialStore)
  **/
 export class TutorialStore {
   private state: TutorialState;

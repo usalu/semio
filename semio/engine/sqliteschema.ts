@@ -29,14 +29,12 @@ import { join } from "path";
 /**
  * Path to the debug SQLite database.
 // [👤semio📚engine💻sqliteschema🔖schemaexport🪨dbpath](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts/s/Schema%20Export/d/i/dbPath)
- *
  * MUST point to the engine debug build output.
  **/
 const dbPath = join(__dirname, "debug", "semio.db");
 /**
  * Path to the exported SQL schema file.
 // [👤semio📚engine💻sqliteschema🔖schemaexport🪨outputpath](semiorepo://p/u/semio/b/l/engine/f/sqliteschema.ts/s/Schema%20Export/d/i/outputPath)
- *
  * MUST resolve to the monorepo sqlite schema location.
  **/
 const outputPath = join(__dirname, "..", "..", "sqlite", "schema.sql");

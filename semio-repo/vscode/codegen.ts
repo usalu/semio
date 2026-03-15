@@ -28,7 +28,6 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
 /**
  * GraphQL codegen configuration targeting the schema and query documents.
 // [🧰semiorepo🖱️vscode💻codegen🔖configuration🪨config](semiorepo://p/i/semio-repo/b/u/vscode/f/codegen.ts/s/Configuration/d/i/config)
- *
  * Config MUST reference the GraphQL schema and generate client preset output.
  **/
 const config: CodegenConfig = {

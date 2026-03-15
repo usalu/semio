@@ -28,55 +28,45 @@ import { join } from "path";
 
 /**
  * Post-build working directory.
- *
  * MUST resolve to the engine folder.
  **/
-/**
-// cwd holds the data fields for a cwd record.
+ * cwd holds the data fields for a cwd record.
  * [👤semio📚engine💻postbuild🔖postbuild🪨cwd](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/cwd)
  **/
 const cwd = __dirname;
 /**
  * Path to the PyInstaller-produced engine executable.
- *
  * MUST match the PyInstaller output name.
  **/
-/**
-// exePath holds the data fields for a exePath record.
+ * exePath holds the data fields for a exePath record.
  * [👤semio📚engine💻postbuild🔖postbuild🪨exepath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/exePath)
  **/
 const exePath = join(cwd, "dist", "semio-engine", "semio-engine.exe");
 /**
  * Path to the PyInstaller internal dependencies folder.
 // [👤semio📚engine💻postbuild🔖postbuild🪨internalpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/internalPath)
- *
  * MUST be co-located with the executable.
  **/
 const internalPath = join(cwd, "dist", "semio-engine", "_internal");
 /**
  * Grasshopper plugin binary output directory.
 // [👤semio📚engine💻postbuild🔖postbuild🪨grasshopperbinpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/grasshopperBinPath)
- *
  * MUST match the .NET build output path.
  **/
 const grasshopperBinPath = join(cwd, "..", "..", "net", "Semio.Grasshopper", "bin", "Debug", "net48");
 /**
  * Target path for the engine executable in the Grasshopper bin folder.
- *
  * MUST use the same executable name as the PyInstaller output.
  **/
-/**
-// grasshopperExePath holds the data fields for a grasshopperExePath record.
+ * grasshopperExePath holds the data fields for a grasshopperExePath record.
  * [👤semio📚engine💻postbuild🔖postbuild🪨grasshopperexepath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/grasshopperExePath)
  **/
 const grasshopperExePath = join(grasshopperBinPath, "semio-engine.exe");
 /**
  * Target path for the internal dependencies in the Grasshopper bin folder.
- *
  * MUST mirror the PyInstaller _internal directory structure.
  **/
-/**
-// grasshopperInternalPath holds the data fields for a grasshopperInternalPath record.
+ * grasshopperInternalPath holds the data fields for a grasshopperInternalPath record.
  * [👤semio📚engine💻postbuild🔖postbuild🪨grasshopperinternalpath](semiorepo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/grasshopperInternalPath)
  **/
 const grasshopperInternalPath = join(grasshopperBinPath, "_internal");

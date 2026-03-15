@@ -54,10 +54,8 @@ i18n
 
 /**
  * React hook that resolves a hotkey string by i18n key.
- *
  * MUST return undefined when no hotkey is configured.
- *
- *  * [👤semio📚js💻i18n🔖i18n🛠️usehotkey](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n/d/i/useHotkey)
+ * [👤semio📚js💻i18n🔖i18n🛠️usehotkey](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n/d/i/useHotkey)
  **/
 export function useHotkey(id: string): string | undefined {
   const { t } = useI18nTranslation();

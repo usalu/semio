@@ -1748,6 +1748,11 @@ suite("CodeLens Behavior Test Suite", () => {
     await vscode.commands.executeCommand("semio.summarize", "🧰unknownentity");
     assert.ok(true, "should not throw on unknown entity");
   });
+
+  test("semio.analyze command is registered", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.analyze"), "analyze command should be registered");
+  });
 });
 
 // #endregion 🔖CodeLens Behavior Tests

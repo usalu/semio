@@ -16,8 +16,7 @@
 
 /** missingEnd holds the data fields for a missingEnd record.
  * missingEnd MUST hold an integer.
- *
- *  * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻wrongid🔖missingend🪨missingend](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/MissingEnd/d/i/missingEnd)
+ * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻wrongid🔖missingend🪨missingend](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/MissingEnd/d/i/missingEnd)
  **/
 const missingEnd = 1;
 
@@ -29,8 +28,7 @@ const missingEnd = 1;
 
 /** mismatchName holds the data fields for a mismatchName record.
  * mismatchName MUST hold an integer.
- *
- *  * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻wrongid🔖alpha🪨mismatchname](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/Alpha/d/i/mismatchName)
+ * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻wrongid🔖alpha🪨mismatchname](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/Alpha/d/i/mismatchName)
  **/
 const mismatchName = 2;
 

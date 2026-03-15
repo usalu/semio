@@ -30,14 +30,12 @@ import { join } from "path";
 /**
  * Yak build working directory.
 // [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/cwd)
- *
  * MUST resolve to the yak folder.
  **/
 const cwd = __dirname;
 /**
  * Distribution directory for the Yak package output.
 // [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨distdir](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/distDir)
- *
  * MUST be cleaned and prepared before building.
  **/
 const distDir = join(cwd, "dist");
@@ -59,7 +57,6 @@ copyFileSync(join(cwd, "manifest.yml"), join(distDir, "manifest.yml"));
 /**
  * Yak CLI executable path for Rhino 8.
 // [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/yak)
- *
  * MUST point to the installed Yak binary.
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";

@@ -30,7 +30,6 @@ import { join } from "path";
 /**
  * Grasshopper build working directory.
 // [👤semio📚gh🛅semiograsshopper💻build🔖build🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/s/Build/d/i/cwd)
- *
  * MUST resolve to the Grasshopper project folder.
  **/
 const cwd = __dirname;
@@ -40,7 +39,6 @@ execSync("tsx ./build-value-lists.ts", { cwd, stdio: "inherit" });
 /**
  * MSBuild executable path for Visual Studio 2022.
 // [👤semio📚gh🛅semiograsshopper💻build🔖build🪨msbuild](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/s/Build/d/i/msbuild)
- *
  * MUST point to the installed MSBuild binary.
  **/
 const msbuild = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe";
@@ -51,7 +49,6 @@ execSync(`"${msbuild}" Semio.sln /p:Configuration=Debug`, { cwd, stdio: "inherit
 /**
  * Yak distribution output folder path.
 // [👤semio📚gh🛅semiograsshopper💻build🔖build🪨yakdistfolder](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/s/Build/d/i/yakDistFolder)
- *
  * MUST be cleaned and recreated before copying build artifacts.
  **/
 const yakDistFolder = join(cwd, "..", "..", "yak", "dist");
@@ -63,14 +60,12 @@ mkdirSync(yakDistFolder, { recursive: true });
 /**
  * Debug build output folder containing compiled binaries.
 // [👤semio📚gh🛅semiograsshopper💻build🔖build🪨binfolder](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/s/Build/d/i/binFolder)
- *
  * MUST contain the .NET Framework 4.8 build output.
  **/
 const binFolder = join(cwd, "bin", "Debug", "net48");
 /**
  * List of all files in the build output folder.
 // [👤semio📚gh🛅semiograsshopper💻build🔖build🪨files](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/build.ts/s/Build/d/i/files)
- *
  * MUST be copied to the Yak distribution folder.
  **/
 const files = readdirSync(binFolder);

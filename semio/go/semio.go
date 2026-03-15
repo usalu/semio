@@ -1,7 +1,7 @@
 // #region 🔖Header
 // [👤semio📚go💻semio](semiorepo://p/u/semio/b/l/go/f/semio.go)
 
-// 2026 Ueli Saluz <ueli@semio-tech.de>
+// 2026 Ueli Saluz  <ueli@semio-tech.de>
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -28,7 +28,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -37,6 +36,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/qmuntal/gltf"
+	"github.com/qmuntal/gltf/modeler"
 	"gonum.org/v1/gonum/mat"
 )
 

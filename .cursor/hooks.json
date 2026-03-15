@@ -25,11 +25,6 @@
         "command": "./semio-repo/cli/cli hook afterShellExecution cursor-chat"
       }
     ],
-    "afterTabFileEdit": [
-      {
-        "command": "./semio-repo/cli/cli hook afterTabFileEdit cursor-chat"
-      }
-    ],
     "beforeMCPExecution": [
       {
         "command": "./semio-repo/cli/cli hook beforeMCPExecution cursor-chat"
@@ -48,11 +43,6 @@
     "beforeSubmitPrompt": [
       {
         "command": "./semio-repo/cli/cli hook beforeSubmitPrompt cursor-chat"
-      }
-    ],
-    "beforeTabFileRead": [
-      {
-        "command": "./semio-repo/cli/cli hook beforeTabFileRead cursor-chat"
       }
     ],
     "postToolUse": [

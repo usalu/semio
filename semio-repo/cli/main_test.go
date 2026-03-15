@@ -5126,6 +5126,33 @@ func TestSectionWrongIdentificationAutofix(t *testing.T) {
 	}
 }
 
+func TestNestedTypeScriptSectionIdentification(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	if err := os.MkdirAll(subDir, 0o755); err != nil {
+		t.Fatalf("failed to create src dir: %v", err)
+	}
+	content := "// #region 🔖Header\n// [" + FileHeaderId("src/shared.ts") + "](" + FileHeaderUri("src/shared.ts") + ")\n// 2025 Test <t@t.com>\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n// Summary of the file.\n// #endregion 🔖Header\n\n// #region 🔖Types\n// [" + SectionHeaderId("src/shared.ts", "Types") + "](" + SectionHeaderUri("src/shared.ts", "Types") + ")\n// Type declarations.\n\n// #region 🔖YPath Types\n// [" + SectionHeaderId("src/shared.ts", "Types#YPath Types") + "](" + SectionHeaderUri("src/shared.ts", "Types#YPath Types") + ")\n// MUST define path segment and path kinds for navigating Y.js document structures.\n\nexport type YPathSegment = { kind: \"mapKey\"; key: string };\n\n// #endregion 🔖YPath Types\n\n// #endregion 🔖Types\n"
+	testFile := "src/shared.ts"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	ctx := NewPolicyContextWithFiles(Scope{Kind: ScopeFile, FilePath: testFile}, []Bundle{}, []string{testFile})
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	for _, v := range breachs {
+		if v.Kind == BreachCodeSectionMissingIdentification || v.Kind == BreachCodeSectionWrongIdentificationId || v.Kind == BreachCodeSectionWrongIdentificationUri {
+			t.Fatalf("unexpected nested section identification breach %s at line %d: %s", v.Kind, v.Line, v.Summary)
+		}
+	}
+}
+
 func TestDefinitionWrongIdentificationAutofixGoTypeUsesInterfaceKind(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
@@ -5358,6 +5385,15 @@ func TestDefinitionNativeDocstringAutofix(t *testing.T) {
 	if !strings.Contains(fixedContent, "§doWork") {
 		t.Fatal("expected identification in JSDoc after autofix")
 	}
+	if !strings.Contains(fixedContent, " * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)") {
+		t.Fatal("expected identification emitted as a single JSDoc line after autofix")
+	}
+	if strings.Contains(fixedContent, " *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)") {
+		t.Fatal("did not expect doubled asterisk marker before definition identification after autofix")
+	}
+	if strings.Contains(fixedContent, " *\n * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)") {
+		t.Fatal("did not expect an extra blank JSDoc separator before definition identification after autofix")
+	}
 }
 
 func TestPythonTripleQuoteDocstringAutofix(t *testing.T) {
@@ -5528,6 +5564,10 @@ func TestSectionHeaderIdAndUri(t *testing.T) {
 	}
 	if strings.HasPrefix(id, emojiText(EmojiSection)) {
 		t.Fatalf("section header id should include file parent before section emoji: %s", id)
+	}
+	nestedId := SectionHeaderId("src/shared.ts", "Types#YPath Types")
+	if !strings.Contains(nestedId, emojiText(EmojiSection)+Flat("Types")+emojiText(EmojiSection)+Flat("YPath Types")) {
+		t.Fatalf("nested section header id should include section emoji before each nested segment, got: %s", nestedId)
 	}
 	uri := SectionHeaderUri("src/app.ts", "Functions")
 	if !strings.Contains(uri, "/s/") {

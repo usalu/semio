@@ -1,0 +1,308 @@
+{
+  "id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+  "uri": "semiorepo://s/61198a04-6990-487c-9797-7f7efd15e1a4",
+  "contributor": "🧑‍💻ueli",
+  "client": "windsurf-chat",
+  "second": "2026-03-14T23:15:50Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_user_prompt",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:15:49.404954351Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "user_prompt": "disable the semio repo cursor tab hooks"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰23⌚15⏱️50",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:16:15.333824015Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "query": "cursor tab hooks"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰23⌚16⏱️16",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:17:34.884367284Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "mcp_result": "- [🎯Goals](semiorepo://gs)\n  - [🎯aioptimizedrepo](semiorepo://g/AI-OPTIMIZED-REPO) - `AI-optimized Repo` - `open` - `AI-optimized Repo goal`\n    - [🎯aioptimizedrepo🎫fixplatformhookconfigurations](semiorepo://y/26/m/02/d/18/tk/FIX-PLATFORM-HOOK-CONFIGURATIONS) - `Fix Platform Hook Configurations` - `closed` - `a long while ago` - `Fixed platform hook configurations to use only native hook event names per spec. Removed unsupported platforms (antigravity, codex). Fixed droid to use .factory/hooks.json with simple string dict format. Updated windsurf (removed post_run_command) and cursor (added afterAgentResponse, afterAgentThought, beforeTabFileRead, afterTabFileEdit). All tests pass.`\n",
+            "mcp_server_name": "semio-repo",
+            "mcp_tool_arguments": {
+              "query": "cursor tab hooks"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰23⌚17⏱️35",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:18:49.419148067Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "file_path": "/workspaces/semio/.cursor/hooks.json"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅cursor⚙️hooks"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅cursor⚙️hooks📌1📌105"
+        ],
+        "second": "🎆26🌙03☀️14⏰23⌚18⏱️54",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:19:42.266564929Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "file_path": "/workspaces/semio/.cursor/hooks.json"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅cursor⚙️hooks"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🛅cursor⚙️hooks📌1📌105"
+        ],
+        "second": "🎆26🌙03☀️14⏰23⌚19⏱️45",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:20:41.096630392Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\"beforeTabFileRead\": [\n      {\n        \"command\": \"./semio-repo/cli/cli hook beforeTabFileRead cursor-chat\"\n      }\n    ],",
+                "new_string": ""
+              }
+            ],
+            "file_path": "/workspaces/semio/.cursor/hooks.json"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰23⌚20⏱️44",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:21:30.851239913Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\"beforeTabFileRead\": [\n      {\n        \"command\": \"./semio-repo/cli/cli hook beforeTabFileRead cursor-chat\"\n      }\n    ],",
+                "new_string": ""
+              }
+            ],
+            "file_path": "/workspaces/semio/.cursor/hooks.json"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰23⌚21⏱️34",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:22:16.132144347Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\"afterTabFileEdit\": [\n      {\n        \"command\": \"./semio-repo/cli/cli hook afterTabFileEdit cursor-chat\"\n      }\n    ],",
+                "new_string": ""
+              }
+            ],
+            "file_path": "/workspaces/semio/.cursor/hooks.json"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰23⌚22⏱️20",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:23:01.784777104Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "\"afterTabFileEdit\": [\n      {\n        \"command\": \"./semio-repo/cli/cli hook afterTabFileEdit cursor-chat\"\n      }\n    ],",
+                "new_string": ""
+              }
+            ],
+            "file_path": "/workspaces/semio/.cursor/hooks.json"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰23⌚23⏱️04",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_cascade_response",
+          "trajectory_id": "61198a04-6990-487c-9797-7f7efd15e1a4",
+          "timestamp": "2026-03-14T23:23:52.906828309Z",
+          "execution_id": "bf4766ea-0850-457a-aee0-5380c2ad9aae",
+          "tool_info": {
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n### Planner Response\n\nI'll help you disable the semio repo cursor tab hooks. Let me first search for information about the cursor hooks in the repository.\n\n*Running MCP tool*\n\n### Planner Response\n\nLet me search more specifically for cursor hook configurations:\n\n*Grep searched codebase*\n\n### Planner Response\n\nLet me search more specifically for cursor hook files:\n\n*Searched filesystem*\n\n### Planner Response\n\nLet me look for cursor-specific hook configuration files:\n\n*Searched filesystem*\n\n*Viewed file:///workspaces/semio/.cursor/hooks.json*\n\n### Planner Response\n\nI can see the cursor hooks configuration. The tab-related hooks are `beforeTabFileRead` and `afterTabFileEdit`. To disable the semio repo cursor tab hooks, I need to remove these specific entries from the hooks configuration.\n\n*Edited relevant file*\n\n*Edited relevant file*\n\n### Planner Response\n\nI've successfully disabled the semio repo cursor tab hooks by removing the `beforeTabFileRead` and `afterTabFileEdit` hook entries from the [/workspaces/semio/.cursor/hooks.json](file:///workspaces/semio/.cursor/hooks.json:0:0-0:0) configuration file. The tab-related hooks will no longer trigger the semio-repo CLI commands."
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️14⏰23⌚23⏱️55",
+        "session": "⚪61198a046990487c97977f7efd15e1a4"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

@@ -28,14 +28,12 @@ import { execSync } from "child_process";
 /**
  * Yak CLI executable path for Rhino 8.
 // [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push/d/i/yak)
- *
  * MUST point to the installed Yak binary.
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 /**
  * Yak package filename from CLI argument or default.
 // [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush🪨packagefile](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push/d/i/packageFile)
- *
  * MUST resolve to a valid .yak package file.
  **/
 const packageFile = process.argv[2] || "semio-2.1.0-any-win.yak";

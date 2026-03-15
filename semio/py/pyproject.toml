@@ -19,6 +19,7 @@ dependencies = [
     "pytransform3d>=3.0.0",
     "sqlalchemy>=2.0.0",
     "sqlmodel>=0.0.18",
+    "trimesh>=4.0.0",
 ]
 
 [project.urls]

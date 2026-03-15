@@ -30,14 +30,12 @@ import { defineConfig } from "vite";
 /**
  * Absolute file path of the current module.
 // [🧰semiorepo🖱️vscode⚙️viteconfig🔖configuration🪨filename](semiorepo://p/i/semio-repo/b/u/vscode/f/vite.config.ts/s/Configuration/d/i/__filename)
- *
  * Path MUST be derived from import.meta.url.
  **/
 const __filename = fileURLToPath(import.meta.url);
 /**
  * Absolute directory path of the current module.
 // [🧰semiorepo🖱️vscode⚙️viteconfig🔖configuration🪨dirname](semiorepo://p/i/semio-repo/b/u/vscode/f/vite.config.ts/s/Configuration/d/i/__dirname)
- *
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
