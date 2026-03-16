@@ -566,3 +566,29 @@ func TestExportDesignModelSceneGraphReport(t *testing.T) {
 		t.Fatalf("failed to write report: %v", err)
 	}
 }
+
+func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
+	modelPath := filepath.Join(AssetsPath, "nakagin-capsule-tower.gltf")
+	if _, err := os.Stat(modelPath); err != nil {
+		t.Skipf("nakagin-capsule-tower.gltf not found: %v", err)
+	}
+	insights, err := GetGeometricInsightsForModel(modelPath)
+	if err != nil {
+		t.Fatalf("GetGeometricInsightsForModel: %v", err)
+	}
+	if insights.VertexCount == 0 {
+		t.Error("expected VertexCount > 0")
+	}
+	if insights.FaceCount == 0 {
+		t.Error("expected FaceCount > 0")
+	}
+	if insights.TotalSurfaceArea <= 0 {
+		t.Error("expected TotalSurfaceArea > 0")
+	}
+	if insights.DimensionX <= 0 || insights.DimensionY <= 0 || insights.DimensionZ <= 0 {
+		t.Error("expected positive dimensions")
+	}
+	if insights.Centroid[0] == 0 && insights.Centroid[1] == 0 && insights.Centroid[2] == 0 && insights.VertexCount > 0 {
+		t.Error("expected non-zero centroid for non-empty model")
+	}
+}

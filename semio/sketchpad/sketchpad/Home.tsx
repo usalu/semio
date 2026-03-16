@@ -41,15 +41,11 @@ import {
   TutorialIcon,
   UserIcon,
 } from "@semio/assets";
-import { formatDistanceToNow } from "date-fns";
-import { de, enUS } from "date-fns/locale";
 import React, { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "@semio/js/semio";
 import { docsRegistry } from "./Docs";
-import { Action, BasicChatPanel, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider } from "../../../semio-elements/ui";
+import { Action, BasicChatPanel, dateFnsDe as de, dateFnsEnUS as enUS, formatDistanceToNow, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider, useNavigate, useSearchParams, useTranslation } from "../../../semio-elements/ui";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
 import { applySelectionComposition, createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, resolveSelectionCompositionKind, Theme, ToolKind } from "./shared";
 import {

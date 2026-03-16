@@ -23,9 +23,7 @@
 // Initializes i18next with language detection, React bindings and expertise-aware label hooks.
 // MUST fall back to English when the detected language is unavailable.
 
-import i18n from "i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
-import { initReactI18next, useTranslation as useI18nTranslation } from "react-i18next";
+import { i18next as i18n, LanguageDetector, initReactI18next, useTranslation as useI18nTranslation } from "../../semio-elements/ui";
 import de from "./sketchpad/locales/de.json?raw";
 import en from "./sketchpad/locales/en.json?raw";
 

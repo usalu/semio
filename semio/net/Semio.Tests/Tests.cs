@@ -384,6 +384,27 @@ public class Tests
         }
     }
 
+    public class GetGeometricInsightsForModel
+    {
+        [Fact]
+        public void Nakagin_Capsule_Tower_Gltf_Returns_Insights()
+        {
+            var path = Path.Combine(AssetsPath, "nakagin-capsule-tower.gltf");
+            if (!System.IO.File.Exists(path))
+                return;
+            var insights = Kit.GetGeometricInsightsForModel(path);
+            Assert.NotNull(insights.BoundingBoxMin);
+            Assert.NotNull(insights.BoundingBoxMax);
+            Assert.True(insights.DimensionX >= 0);
+            Assert.True(insights.DimensionY >= 0);
+            Assert.True(insights.DimensionZ >= 0);
+            Assert.True(insights.VertexCount > 0);
+            Assert.True(insights.FaceCount > 0);
+            Assert.True(insights.TotalSurfaceArea >= 0);
+            Assert.NotNull(insights.Centroid);
+        }
+    }
+
     public class ExportDesignModel
     {
         [Fact]

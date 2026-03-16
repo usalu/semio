@@ -19,14 +19,11 @@
 
 // #region Imports
 
-import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { AddIcon, AwardIcon, ChatIcon, CodeIcon, HandIcon, IntersectIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SettingsIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
-import { useTranslation } from "react-i18next";
 import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff, sumQualityInDesign } from "@semio/js/semio";
-import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "../../../semio-elements/ui";
+import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance, DragEndEvent } from "../../../semio-elements/ui";
 import {
   Diagram as BaseDiagram,
   calculateDiagramLayout,
@@ -51,6 +48,10 @@ import {
   TreeItem,
   TreeRow,
   TreeStateProvider,
+  useDraggable,
+  useDroppable,
+  useHotkeys,
+  useTranslation,
 } from "../../../semio-elements/ui";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId } from "./shared";
 import { AppConfig, applySelectionComposition, AppPlugin, createPanelDefinition, Expertise, isSelectionToolKind, Mode, PanelKind, registerAppPlugin, registerEventHandler, resolveSelectionCompositionKind, Theme, ToolKind, toSelectionToolKind } from "./shared";

@@ -21,8 +21,7 @@
 
 import { CodeIcon, DetailsIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { ComponentType, ReactNode } from "react";
-import { AnyActorRef, assign, fromCallback } from "xstate";
-import * as Y from "yjs";
+import { type AnyActorRef, assign, fromCallback, Y } from "../../../semio-elements/ui";
 import { Guid, Kit, KitDiff } from "@semio/js/semio";
 
 // #endregion Imports

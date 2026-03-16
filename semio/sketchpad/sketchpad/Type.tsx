@@ -19,18 +19,11 @@
 
 // #region Imports
 
-import { arrayMove } from "@dnd-kit/sortable";
-import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
-import { ThreeEvent, useLoader } from "@react-three/fiber";
-import { useSelector } from "@xstate/react";
 import React, { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
-import { useSearchParams } from "react-router";
-import * as THREE from "three";
-import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
 import { Author, AuthorId, Camera, Connector, Coord, findModel, guid, Guid, Kit, Model, Point, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "@semio/js/semio";
-import { BasicChatPanel, Geometry, Input, Ring, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Stepper, Textarea, Toggle, ToggleGroup, ToolbarGroup, TransactionProvider, Tree, TreeItem, TreeRow, TreeStateProvider } from "../../../semio-elements/ui";
+import type { ThreeEvent } from "../../../semio-elements/ui";
+import { arrayMove, BasicChatPanel, Geometry, Input, Line, OBJLoader, Ring, Scene as SceneComponent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, SortableTreeItems, Sphere, Stepper, Textarea, THREE, Toggle, ToggleGroup, ToolbarGroup, TransactionProvider, Tree, TreeItem, TreeRow, TreeStateProvider, useFBX, useGLTF, useHotkeys, useLoader, useSearchParams, useXStateSelector as useSelector } from "../../../semio-elements/ui";
 import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolRenderContext, TypeAppId } from "./shared";
 import {
   AppConfig,

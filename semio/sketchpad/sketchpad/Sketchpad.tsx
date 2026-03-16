@@ -21,7 +21,7 @@
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Imports)
 // External and internal module imports.
 
-import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
+import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "../../../semio-elements/ui";
 import {
   AddIcon,
   AwardIcon,
@@ -48,16 +48,11 @@ import {
   TypeIcon,
   UserIcon,
 } from "@semio/assets";
-import { useSelector } from "@xstate/react";
-import Fuse, { FuseResult } from "fuse.js";
 import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { useHotkeys as useReactHotkeys } from "react-hotkeys-hook";
-import { useTranslation as useI18nTranslation } from "react-i18next";
-import { BrowserRouter, MemoryRouter, Outlet, Route, Routes, useLocation, useParams, useNavigate as useReactNavigate, useSearchParams } from "react-router";
-import { IndexeddbPersistence } from "y-indexeddb";
-import * as Y from "yjs";
+import { BrowserRouter, Fuse, IndexeddbPersistence, MemoryRouter, Outlet, Route, Routes, useHotkeys as useReactHotkeys, useLocation, useNavigate as useReactNavigate, useParams, useSearchParams, useTranslation as useI18nTranslation, useXStateSelector as useSelector, Y } from "../../../semio-elements/ui";
+import type { FuseResult } from "../../../semio-elements/ui";
 import i18n, { useHotkey, useLabel } from "../i18n";
 import {
   applyKitDiff,
@@ -15053,7 +15048,7 @@ class AppRegistry {
  **/
 const appRegistry = new AppRegistry();
 
-import { ActorRefFrom, AnyActorRef, assign, createActor, setup, SnapshotFrom } from "xstate";
+import { type ActorRefFrom, type AnyActorRef, assign, createActor, setup, type SnapshotFrom } from "../../../semio-elements/ui";
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖appsregistry🪨appconfigsloadpromise](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps%20Registry/d/i/appConfigsLoadPromise)
 /**

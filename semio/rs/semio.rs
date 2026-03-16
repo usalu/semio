@@ -25,6 +25,7 @@
 #![allow(dead_code)]
 #![allow(clippy::too_many_arguments)]
 
+use base64::Engine;
 use nalgebra::{Matrix4, Point3, Vector3};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -5574,6 +5575,324 @@ pub fn export_design_model(
 
 // #endregion 🔖Kit Model Export
 
+// #region 🔖Geometric Insights
+// [👤semio📚rs💻semio🔖geometricinsights](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights)
+// Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+
+/// Geometric KPIs for a GLB/GLTF model. All units follow the model coordinate system.
+/// [👤semio📚rs💻semio🔖geometricinsights🪨geometricinsights](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights/d/i/GeometricInsights)
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GeometricInsights {
+    pub bounding_box_min: Option<[f64; 3]>,
+    pub bounding_box_max: Option<[f64; 3]>,
+    pub dimension_x: f64,
+    pub dimension_y: f64,
+    pub dimension_z: f64,
+    pub characteristic_length: f64,
+    pub footprint_area: f64,
+    pub total_surface_area: f64,
+    pub enclosed_volume: f64,
+    pub surface_to_volume_ratio: f64,
+    pub aspect_ratio_xy: f64,
+    pub aspect_ratio_xz: f64,
+    pub aspect_ratio_yz: f64,
+    pub centroid: Option<[f64; 3]>,
+    pub vertex_count: usize,
+    pub face_count: usize,
+    pub euler_characteristic: i32,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn read_gltf_mesh_data(json: &serde_json::Value, bin: &[u8]) -> Option<(Vec<[f32; 3]>, Vec<u32>, [f32; 3], [f32; 3])> {
+    let accessors = json.get("accessors")?.as_array()?;
+    let buffer_views = json.get("bufferViews")?.as_array()?;
+    let gltf_int = |v: Option<&serde_json::Value>| v.and_then(|x| x.as_u64()).unwrap_or(0) as usize;
+    let mut positions: Vec<[f32; 3]> = Vec::new();
+    let mut indices: Vec<u32> = Vec::new();
+    let mut pos_min = [f32::MAX; 3];
+    let mut pos_max = [f32::MIN; 3];
+
+    for mesh in json.get("meshes")?.as_array()? {
+        for prim in mesh.get("primitives")?.as_array()? {
+            let attrs = prim.get("attributes")?;
+            let pos_acc_idx = gltf_int(attrs.get("POSITION"));
+            let pos_acc = accessors.get(pos_acc_idx)?;
+            let bv_idx = gltf_int(pos_acc.get("bufferView"));
+            let bv = buffer_views.get(bv_idx)?;
+            let count = gltf_int(pos_acc.get("count"));
+            let bv_offset = gltf_int(bv.get("byteOffset"));
+            let acc_offset = gltf_int(pos_acc.get("byteOffset"));
+            let stride = gltf_int(bv.get("byteStride")).max(12);
+            let base = bv_offset + acc_offset;
+            let vertex_base = positions.len();
+            for i in 0..count {
+                let start = base + i * stride;
+                if start + 12 > bin.len() {
+                    break;
+                }
+                let x = f32::from_le_bytes([bin[start], bin[start + 1], bin[start + 2], bin[start + 3]]);
+                let y = f32::from_le_bytes([bin[start + 4], bin[start + 5], bin[start + 6], bin[start + 7]]);
+                let z = f32::from_le_bytes([bin[start + 8], bin[start + 9], bin[start + 10], bin[start + 11]]);
+                let v = [x, y, z];
+                positions.push(v);
+                pos_min[0] = pos_min[0].min(x);
+                pos_min[1] = pos_min[1].min(y);
+                pos_min[2] = pos_min[2].min(z);
+                pos_max[0] = pos_max[0].max(x);
+                pos_max[1] = pos_max[1].max(y);
+                pos_max[2] = pos_max[2].max(z);
+            }
+            if let Some(idx_val) = prim.get("indices") {
+                let idx_acc = accessors.get(gltf_int(Some(idx_val)))?;
+                let bv_idx = gltf_int(idx_acc.get("bufferView"));
+                let bv = buffer_views.get(bv_idx)?;
+                let count = gltf_int(idx_acc.get("count"));
+                let component_type = gltf_int(idx_acc.get("componentType"));
+                let bv_offset = gltf_int(bv.get("byteOffset"));
+                let acc_offset = gltf_int(idx_acc.get("byteOffset"));
+                let bytes_per = match component_type {
+                    5121 => 1,
+                    5123 => 2,
+                    5125 => 4,
+                    _ => 4,
+                };
+                let stride = gltf_int(bv.get("byteStride")).max(bytes_per);
+                let base = bv_offset + acc_offset;
+                for i in 0..count {
+                    let start = base + i * stride;
+                    let idx = match component_type {
+                        5121 => bin.get(start).copied().unwrap_or(0) as u32,
+                        5123 => u16::from_le_bytes([bin[start], bin[start + 1]]) as u32,
+                        _ => u32::from_le_bytes([bin[start], bin[start + 1], bin[start + 2], bin[start + 3]]),
+                    };
+                    indices.push(vertex_base as u32 + idx);
+                }
+            } else {
+                for i in 0..(count / 3) {
+                    indices.push(vertex_base as u32 + (i * 3) as u32);
+                    indices.push(vertex_base as u32 + (i * 3 + 1) as u32);
+                    indices.push(vertex_base as u32 + (i * 3 + 2) as u32);
+                }
+            }
+        }
+    }
+    if positions.is_empty() || indices.is_empty() {
+        return None;
+    }
+    Some((positions, indices, pos_min, pos_max))
+}
+
+/// Computes key performance indicators for the geometry of a GLB/GLTF model.
+/// Model MUST be path (&str) or raw bytes (&[u8]). Uses parse_glb for GLB; JSON+buffer for GLTF.
+/// [👤semio📚rs💻semio🔖geometricinsights🛠️getgeometricinsightsformodel](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights/d/i/get_geometric_insights_for_model)
+#[cfg(not(target_arch = "wasm32"))]
+pub fn get_geometric_insights_for_model(model: &[u8]) -> Result<GeometricInsights> {
+    let (json, bin) = if model.len() >= 4 && u32::from_le_bytes([model[0], model[1], model[2], model[3]]) == 0x46546C67 {
+        parse_glb(model).ok_or_else(|| SemioError::InvalidOperation { message: "Invalid GLB".to_string() })?
+    } else {
+        let json: serde_json::Value = serde_json::from_slice(model)
+            .map_err(|e| SemioError::InvalidOperation { message: format!("Invalid glTF JSON: {}", e) })?;
+        let mut bin_data = Vec::new();
+        if let Some(buffers) = json.get("buffers").and_then(|b| b.as_array()) {
+            if let Some(buf) = buffers.first().and_then(|b| b.as_object()) {
+                if let Some(uri) = buf.get("uri").and_then(|u| u.as_str()) {
+                    if uri.starts_with("data:") {
+                        if let Some(b64) = uri.split(',').nth(1) {
+                            let b64_clean: String = b64.chars().filter(|c| !c.is_whitespace()).collect();
+                            bin_data = base64::engine::general_purpose::STANDARD
+                                .decode(&b64_clean)
+                                .or_else(|_| base64::engine::general_purpose::STANDARD_NO_PAD.decode(&b64_clean))
+                                .unwrap_or_default();
+                        }
+                    }
+                }
+            }
+        }
+        (json, bin_data)
+    };
+
+    let (positions, indices, pos_min, pos_max) = read_gltf_mesh_data(&json, &bin)
+        .ok_or_else(|| SemioError::InvalidOperation { message: "No mesh data in model".to_string() })?;
+
+    let n = positions.len();
+    let mut sum = [0.0_f64; 3];
+    for p in &positions {
+        sum[0] += p[0] as f64;
+        sum[1] += p[1] as f64;
+        sum[2] += p[2] as f64;
+    }
+    let centroid = [sum[0] / n as f64, sum[1] / n as f64, sum[2] / n as f64];
+    let dim_x = (pos_max[0] - pos_min[0]) as f64;
+    let dim_y = (pos_max[1] - pos_min[1]) as f64;
+    let dim_z = (pos_max[2] - pos_min[2]) as f64;
+    let mut area = 0.0_f64;
+    let mut volume = 0.0_f64;
+    for chunk in indices.chunks(3) {
+        if chunk.len() < 3 {
+            break;
+        }
+        let a = positions[chunk[0] as usize];
+        let b = positions[chunk[1] as usize];
+        let c = positions[chunk[2] as usize];
+        let ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+        let ac = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+        let cross = [
+            ab[1] * ac[2] - ab[2] * ac[1],
+            ab[2] * ac[0] - ab[0] * ac[2],
+            ab[0] * ac[1] - ab[1] * ac[0],
+        ];
+        area += 0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt() as f64;
+        volume += (1.0 / 6.0) * (a[0] as f64 * (b[1] as f64 * c[2] as f64 - b[2] as f64 * c[1] as f64)
+            + a[1] as f64 * (b[2] as f64 * c[0] as f64 - b[0] as f64 * c[2] as f64)
+            + a[2] as f64 * (b[0] as f64 * c[1] as f64 - b[1] as f64 * c[0] as f64));
+    }
+    volume = volume.abs();
+    let face_count = indices.len() / 3;
+    let surface_to_vol = if volume > 1e-20 { area / volume } else { 0.0 };
+    let char_len = (dim_x * dim_y * dim_z).cbrt();
+    let mut aspect_xy = 0.0;
+    let mut aspect_xz = 0.0;
+    let mut aspect_yz = 0.0;
+    if dim_y > 1e-10 && dim_x > 1e-10 {
+        aspect_xy = dim_x / dim_y;
+    }
+    if dim_z > 1e-10 && dim_x > 1e-10 {
+        aspect_xz = dim_x / dim_z;
+    }
+    if dim_z > 1e-10 && dim_y > 1e-10 {
+        aspect_yz = dim_y / dim_z;
+    }
+    let euler = n as i32 - (3 * face_count) as i32 / 2 + face_count as i32;
+
+    Ok(GeometricInsights {
+        bounding_box_min: Some([pos_min[0] as f64, pos_min[1] as f64, pos_min[2] as f64]),
+        bounding_box_max: Some([pos_max[0] as f64, pos_max[1] as f64, pos_max[2] as f64]),
+        dimension_x: dim_x,
+        dimension_y: dim_y,
+        dimension_z: dim_z,
+        characteristic_length: char_len,
+        footprint_area: dim_x * dim_y,
+        total_surface_area: area,
+        enclosed_volume: volume,
+        surface_to_volume_ratio: surface_to_vol,
+        aspect_ratio_xy: aspect_xy,
+        aspect_ratio_xz: aspect_xz,
+        aspect_ratio_yz: aspect_yz,
+        centroid: Some(centroid),
+        vertex_count: n,
+        face_count,
+        euler_characteristic: euler,
+    })
+}
+
+/// Loads model from path and returns geometric insights. Model MUST be .glb or .gltf.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn get_geometric_insights_for_model_path(path: &str) -> Result<GeometricInsights> {
+    let data = std::fs::read(path).map_err(|e| SemioError::InvalidOperation {
+        message: format!("Failed to read model file: {}", e),
+    })?;
+    if path.to_lowercase().ends_with(".gltf") {
+        let json: serde_json::Value = serde_json::from_slice(&data)
+            .map_err(|e| SemioError::InvalidOperation { message: format!("Invalid glTF JSON: {}", e) })?;
+        let mut bin_data = Vec::new();
+        if let Some(buffers) = json.get("buffers").and_then(|b| b.as_array()) {
+            if let Some(buf) = buffers.first().and_then(|b| b.as_object()) {
+                if let Some(uri) = buf.get("uri").and_then(|u| u.as_str()) {
+                    if uri.starts_with("data:") {
+                        if let Some(b64) = uri.split(',').nth(1) {
+                            let b64_clean: String = b64.chars().filter(|c| !c.is_whitespace()).collect();
+                            bin_data = base64::engine::general_purpose::STANDARD
+                                .decode(&b64_clean)
+                                .or_else(|_| base64::engine::general_purpose::STANDARD_NO_PAD.decode(&b64_clean))
+                                .unwrap_or_default();
+                        }
+                    } else {
+                        let dir = std::path::Path::new(path).parent().unwrap_or(std::path::Path::new("."));
+                        let bin_path = dir.join(uri);
+                        if let Ok(b) = std::fs::read(&bin_path) {
+                            bin_data = b;
+                        }
+                    }
+                }
+            }
+        }
+        let (positions, indices, pos_min, pos_max) = read_gltf_mesh_data(&json, &bin_data)
+            .ok_or_else(|| SemioError::InvalidOperation { message: "No mesh data in model".to_string() })?;
+        let n = positions.len();
+        let mut sum = [0.0_f64; 3];
+        for p in &positions {
+            sum[0] += p[0] as f64;
+            sum[1] += p[1] as f64;
+            sum[2] += p[2] as f64;
+        }
+        let centroid = [sum[0] / n as f64, sum[1] / n as f64, sum[2] / n as f64];
+        let dim_x = (pos_max[0] - pos_min[0]) as f64;
+        let dim_y = (pos_max[1] - pos_min[1]) as f64;
+        let dim_z = (pos_max[2] - pos_min[2]) as f64;
+        let mut area = 0.0_f64;
+        let mut volume = 0.0_f64;
+        for chunk in indices.chunks(3) {
+            if chunk.len() < 3 {
+                break;
+            }
+            let a = positions[chunk[0] as usize];
+            let b = positions[chunk[1] as usize];
+            let c = positions[chunk[2] as usize];
+            let ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+            let ac = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+            let cross = [
+                ab[1] * ac[2] - ab[2] * ac[1],
+                ab[2] * ac[0] - ab[0] * ac[2],
+                ab[0] * ac[1] - ab[1] * ac[0],
+            ];
+            area += 0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt() as f64;
+            volume += (1.0 / 6.0) * (a[0] as f64 * (b[1] as f64 * c[2] as f64 - b[2] as f64 * c[1] as f64)
+                + a[1] as f64 * (b[2] as f64 * c[0] as f64 - b[0] as f64 * c[2] as f64)
+                + a[2] as f64 * (b[0] as f64 * c[1] as f64 - b[1] as f64 * c[0] as f64));
+        }
+        volume = volume.abs();
+        let face_count = indices.len() / 3;
+        let surface_to_vol = if volume > 1e-20 { area / volume } else { 0.0 };
+        let char_len = (dim_x * dim_y * dim_z).cbrt();
+        let mut aspect_xy = 0.0;
+        let mut aspect_xz = 0.0;
+        let mut aspect_yz = 0.0;
+        if dim_y > 1e-10 && dim_x > 1e-10 {
+            aspect_xy = dim_x / dim_y;
+        }
+        if dim_z > 1e-10 && dim_x > 1e-10 {
+            aspect_xz = dim_x / dim_z;
+        }
+        if dim_z > 1e-10 && dim_y > 1e-10 {
+            aspect_yz = dim_y / dim_z;
+        }
+        let euler = n as i32 - (3 * face_count) as i32 / 2 + face_count as i32;
+        return Ok(GeometricInsights {
+            bounding_box_min: Some([pos_min[0] as f64, pos_min[1] as f64, pos_min[2] as f64]),
+            bounding_box_max: Some([pos_max[0] as f64, pos_max[1] as f64, pos_max[2] as f64]),
+            dimension_x: dim_x,
+            dimension_y: dim_y,
+            dimension_z: dim_z,
+            characteristic_length: char_len,
+            footprint_area: dim_x * dim_y,
+            total_surface_area: area,
+            enclosed_volume: volume,
+            surface_to_volume_ratio: surface_to_vol,
+            aspect_ratio_xy: aspect_xy,
+            aspect_ratio_xz: aspect_xz,
+            aspect_ratio_yz: aspect_yz,
+            centroid: Some(centroid),
+            vertex_count: n,
+            face_count,
+            euler_characteristic: euler,
+        });
+    }
+    get_geometric_insights_for_model(&data)
+}
+
+// #endregion 🔖Geometric Insights
+
 // #region 🔖Validation Types
 // [👤semio📚rs💻semio🔖validationtypes](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types)
 // Validation Types MUST provide the validation types functionality.
@@ -7631,6 +7950,33 @@ mod tests {
     }
 
     // #endregion 🔖DesignModel Tests
+
+    // #region 🔖Model/KPI Tests
+    // [👤semio📚rs💻semio🔖tests🔖modelkpi](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Model%20KPI)
+    // Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf.
+
+    mod model_kpi {
+        use super::*;
+
+        #[test]
+        fn nakagin_capsule_tower_gltf_returns_insights() {
+            let path = format!("{}/nakagin-capsule-tower.gltf", ASSETS_DIR);
+            let path = std::path::Path::new(&path);
+            if !path.exists() {
+                return;
+            }
+            let data = std::fs::read(path).expect("read gltf file");
+            let insights = get_geometric_insights_for_model(&data).expect("get_geometric_insights_for_model");
+            assert!(insights.vertex_count > 0, "expected vertex_count > 0");
+            assert!(insights.face_count > 0, "expected face_count > 0");
+            assert!(insights.total_surface_area >= 0.0);
+            assert!(insights.bounding_box_min.is_some());
+            assert!(insights.bounding_box_max.is_some());
+            assert!(insights.centroid.is_some());
+        }
+    }
+
+    // #endregion 🔖Model/KPI Tests
 
     // #region 🔖Flatten Tests
     // [👤semio📚rs💻semio🔖tests🔖flattentests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Flatten%20Tests)

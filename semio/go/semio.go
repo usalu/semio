@@ -33,6 +33,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -9190,10 +9192,15 @@ func exportParseGLBMesh(data []byte) (*exportMeshData, error) {
 	if err := json.Unmarshal(jsonData, &gltf); err != nil {
 		return nil, fmt.Errorf("failed to parse glTF JSON: %w", err)
 	}
+	return exportParseGltfToMeshData(gltf, binData)
+}
 
+// exportParseGltfToMeshData extracts merged mesh geometry from a glTF JSON map and binary buffer.
+// [👤semio📚go💻semio🔖exportdesignmodel🛠️exportparsegltftomeshdata](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportParseGltfToMeshData)
+func exportParseGltfToMeshData(gltf map[string]interface{}, binData []byte) (*exportMeshData, error) {
 	meshesRaw, ok := gltf["meshes"].([]interface{})
 	if !ok || len(meshesRaw) == 0 {
-		return nil, fmt.Errorf("no meshes in GLB")
+		return nil, fmt.Errorf("no meshes in glTF")
 	}
 	accessorsRaw, _ := gltf["accessors"].([]interface{})
 	bufferViewsRaw, _ := gltf["bufferViews"].([]interface{})
@@ -9914,3 +9921,190 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 }
 
 // #endregion 🔖ExportDesignModel
+
+// #region 🔖Geometric Insights
+// [👤semio📚go💻semio🔖geometricinsights](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Geometric%20Insights)
+// Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+
+// GeometricInsights holds computed geometric KPIs for a GLB/GLTF model.
+// [👤semio📚go💻semio🔖geometricinsights🪨geometricinsights](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Geometric%20Insights/d/i/GeometricInsights)
+type GeometricInsights struct {
+	BoundingBoxMin     [3]float64
+	BoundingBoxMax     [3]float64
+	DimensionX         float64
+	DimensionY         float64
+	DimensionZ         float64
+	CharacteristicLen  float64
+	FootprintArea      float64
+	TotalSurfaceArea   float64
+	EnclosedVolume     float64
+	SurfaceToVolume    float64
+	AspectRatioXY      float64
+	AspectRatioXZ      float64
+	AspectRatioYZ      float64
+	Centroid           [3]float64
+	VertexCount        int
+	FaceCount          int
+	EulerCharacteristic int
+}
+
+func geometricInsightsFromMeshData(md *exportMeshData) GeometricInsights {
+	out := GeometricInsights{}
+	if md == nil || md.vertexCount == 0 {
+		return out
+	}
+	pos := md.positionBytes
+	idx := md.indexBytes
+	out.BoundingBoxMin[0] = float64(md.posMin[0])
+	out.BoundingBoxMin[1] = float64(md.posMin[1])
+	out.BoundingBoxMin[2] = float64(md.posMin[2])
+	out.BoundingBoxMax[0] = float64(md.posMax[0])
+	out.BoundingBoxMax[1] = float64(md.posMax[1])
+	out.BoundingBoxMax[2] = float64(md.posMax[2])
+	out.DimensionX = float64(md.posMax[0] - md.posMin[0])
+	out.DimensionY = float64(md.posMax[1] - md.posMin[1])
+	out.DimensionZ = float64(md.posMax[2] - md.posMin[2])
+	vol := out.DimensionX * out.DimensionY * out.DimensionZ
+	if vol > 0 {
+		out.CharacteristicLen = math.Cbrt(vol)
+	}
+	out.FootprintArea = out.DimensionX * out.DimensionY
+	out.VertexCount = md.vertexCount
+	out.FaceCount = md.indexCount / 3
+	var sumX, sumY, sumZ float64
+	for i := 0; i < md.vertexCount; i++ {
+		x := math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12 : i*12+4]))
+		y := math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12+4 : i*12+8]))
+		z := math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12+8 : i*12+12]))
+		sumX += float64(x)
+		sumY += float64(y)
+		sumZ += float64(z)
+	}
+	out.Centroid[0] = sumX / float64(md.vertexCount)
+	out.Centroid[1] = sumY / float64(md.vertexCount)
+	out.Centroid[2] = sumZ / float64(md.vertexCount)
+	var area float64
+	var volume float64
+	for i := 0; i+2 < md.indexCount; i += 3 {
+		if len(idx) < (i+3)*4 {
+			break
+		}
+		i0 := binary.LittleEndian.Uint32(idx[i*4 : i*4+4])
+		i1 := binary.LittleEndian.Uint32(idx[(i+1)*4 : (i+1)*4+4])
+		i2 := binary.LittleEndian.Uint32(idx[(i+2)*4 : (i+2)*4+4])
+		ax := math.Float32frombits(binary.LittleEndian.Uint32(pos[i0*12 : i0*12+4]))
+		ay := math.Float32frombits(binary.LittleEndian.Uint32(pos[i0*12+4 : i0*12+8]))
+		az := math.Float32frombits(binary.LittleEndian.Uint32(pos[i0*12+8 : i0*12+12]))
+		bx := math.Float32frombits(binary.LittleEndian.Uint32(pos[i1*12 : i1*12+4]))
+		by := math.Float32frombits(binary.LittleEndian.Uint32(pos[i1*12+4 : i1*12+8]))
+		bz := math.Float32frombits(binary.LittleEndian.Uint32(pos[i1*12+8 : i1*12+12]))
+		cx := math.Float32frombits(binary.LittleEndian.Uint32(pos[i2*12 : i2*12+4]))
+		cy := math.Float32frombits(binary.LittleEndian.Uint32(pos[i2*12+4 : i2*12+8]))
+		cz := math.Float32frombits(binary.LittleEndian.Uint32(pos[i2*12+8 : i2*12+12]))
+		abx := float64(bx - ax)
+		aby := float64(by - ay)
+		abz := float64(bz - az)
+		acx := float64(cx - ax)
+		acy := float64(cy - ay)
+		acz := float64(cz - az)
+		crossX := aby*acz - abz*acy
+		crossY := abz*acx - abx*acz
+		crossZ := abx*acy - aby*acx
+		area += 0.5 * math.Sqrt(crossX*crossX+crossY*crossY+crossZ*crossZ)
+		volume += (1.0 / 6.0) * (float64(ax)*(float64(by)*float64(cz)-float64(bz)*float64(cy)) +
+			float64(ay)*(float64(bz)*float64(cx)-float64(bx)*float64(cz)) +
+			float64(az)*(float64(bx)*float64(cy)-float64(by)*float64(cx)))
+	}
+	out.TotalSurfaceArea = area
+	volume = math.Abs(volume)
+	out.EnclosedVolume = volume
+	if volume > 1e-20 && area > 0 {
+		out.SurfaceToVolume = area / volume
+	}
+	if out.DimensionY > 1e-10 && out.DimensionX > 1e-10 {
+		out.AspectRatioXY = out.DimensionX / out.DimensionY
+	}
+	if out.DimensionZ > 1e-10 && out.DimensionX > 1e-10 {
+		out.AspectRatioXZ = out.DimensionX / out.DimensionZ
+	}
+	if out.DimensionZ > 1e-10 && out.DimensionY > 1e-10 {
+		out.AspectRatioYZ = out.DimensionY / out.DimensionZ
+	}
+	out.EulerCharacteristic = out.VertexCount - (3*out.FaceCount)/2 + out.FaceCount
+	return out
+}
+
+// GetGeometricInsightsForModel computes key performance indicators for the geometry of a GLB/GLTF model.
+// Model MUST be path (string) or raw bytes ([]byte). Uses GLB or GLTF parsing.
+// [👤semio📚go💻semio🔖geometricinsights🛠️getgeometricinsightsformodel](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Geometric%20Insights/d/i/GetGeometricInsightsForModel)
+func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) {
+	var md *exportMeshData
+	var err error
+	switch v := model.(type) {
+	case string:
+		data, errRead := os.ReadFile(v)
+		if errRead != nil {
+			return GeometricInsights{}, fmt.Errorf("read model file: %w", errRead)
+		}
+		lower := strings.ToLower(v)
+		if strings.HasSuffix(lower, ".glb") {
+			md, err = exportParseGLBMesh(data)
+		} else if strings.HasSuffix(lower, ".gltf") {
+			var gltf map[string]interface{}
+			if errJSON := json.Unmarshal(data, &gltf); errJSON != nil {
+				return GeometricInsights{}, fmt.Errorf("parse glTF JSON: %w", errJSON)
+			}
+			buffersRaw, _ := gltf["buffers"].([]interface{})
+			var binData []byte
+			if len(buffersRaw) > 0 {
+				if buf, ok := buffersRaw[0].(map[string]interface{}); ok {
+					if uri, _ := buf["uri"].(string); uri != "" {
+						if strings.HasPrefix(uri, "data:") {
+							idx := strings.Index(uri, ",")
+							if idx >= 0 {
+								binData, _ = base64.StdEncoding.DecodeString(uri[idx+1:])
+							}
+						} else {
+							dir := filepath.Dir(v)
+							binPath := filepath.Join(dir, uri)
+							binData, _ = os.ReadFile(binPath)
+						}
+					}
+				}
+			}
+			md, err = exportParseGltfToMeshData(gltf, binData)
+		} else {
+			return GeometricInsights{}, fmt.Errorf("model MUST be .glb or .gltf, got %s", v)
+		}
+	case []byte:
+		if len(v) >= 4 && binary.LittleEndian.Uint32(v[0:4]) == 0x46546C67 {
+			md, err = exportParseGLBMesh(v)
+		} else {
+			var gltf map[string]interface{}
+			if errJSON := json.Unmarshal(v, &gltf); errJSON != nil {
+				return GeometricInsights{}, fmt.Errorf("parse glTF JSON: %w", errJSON)
+			}
+			buffersRaw, _ := gltf["buffers"].([]interface{})
+			var binData []byte
+			if len(buffersRaw) > 0 {
+				if buf, ok := buffersRaw[0].(map[string]interface{}); ok {
+					if uri, _ := buf["uri"].(string); uri != "" && strings.HasPrefix(uri, "data:") {
+						idx := strings.Index(uri, ",")
+						if idx >= 0 {
+							binData, _ = base64.StdEncoding.DecodeString(uri[idx+1:])
+						}
+					}
+				}
+			}
+			md, err = exportParseGltfToMeshData(gltf, binData)
+		}
+	default:
+		return GeometricInsights{}, fmt.Errorf("model must be string path or []byte, got %T", model)
+	}
+	if err != nil {
+		return GeometricInsights{}, err
+	}
+	return geometricInsightsFromMeshData(md), nil
+}
+
+// #endregion 🔖Geometric Insights

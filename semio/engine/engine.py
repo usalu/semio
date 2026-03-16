@@ -1946,6 +1946,33 @@ def _clone_kit(kit: dict | None) -> dict | None:
     return copy.deepcopy(kit)
 
 
+def _sync_session_design_and_type(sid: int | None):
+    """Realign current design and type selections with the current session kit after mutations or rollbacks."""
+    if sid is None:
+        return
+    kit = _mcp_session_kits.get(sid)
+    current_design = _mcp_session_designs.get(sid)
+    if kit is None:
+        _mcp_session_designs.pop(sid, None)
+        _mcp_session_types.pop(sid, None)
+        return
+    if current_design is not None:
+        design_guid = current_design.get("guid")
+        synced_design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
+        if synced_design is None:
+            _mcp_session_designs.pop(sid, None)
+        else:
+            _mcp_session_designs[sid] = synced_design
+    current_type = _mcp_session_types.get(sid)
+    if current_type is not None:
+        type_guid = current_type.get("guid")
+        synced_type = next((t for t in kit.get("types", []) if t.get("guid") == type_guid), None)
+        if synced_type is None:
+            _mcp_session_types.pop(sid, None)
+        else:
+            _mcp_session_types[sid] = synced_type
+
+
 def _get_active_transaction(sid: int | None) -> Transaction | None:
     """Return the active transaction for a session, if any."""
     if sid is None:
@@ -1991,6 +2018,7 @@ def _set_session_kit(ctx, kit: dict):
     before = _mcp_session_kits.get(sid)
     _record_transaction_kit_change(sid, before, kit)
     _mcp_session_kits[sid] = kit
+    _sync_session_design_and_type(sid)
 
 
 def _clear_session_kit(ctx):
@@ -1999,6 +2027,36 @@ def _clear_session_kit(ctx):
     before = _mcp_session_kits.get(sid)
     _record_transaction_kit_change(sid, before, None)
     _mcp_session_kits.pop(sid, None)
+    _sync_session_design_and_type(sid)
+
+
+def _replace_design_in_session_kit(ctx: Context, design: dict) -> dict:
+    """Replace or append a design in the current session kit and keep the current design selection synced."""
+    sid = _session_id(ctx)
+    kit = _clone_kit(_get_session_kit(ctx))
+    designs = list(kit.get("designs", []))
+    replaced = False
+    for index, existing_design in enumerate(designs):
+        if existing_design.get("guid") == design.get("guid"):
+            designs[index] = design
+            replaced = True
+            break
+    if not replaced:
+        designs.append(design)
+    kit["designs"] = designs
+    _set_session_kit(ctx, kit)
+    synced_design = next((item for item in _mcp_session_kits[sid].get("designs", []) if item.get("guid") == design.get("guid")), None)
+    if synced_design is not None:
+        _mcp_session_designs[sid] = synced_design
+        return synced_design
+    raise ValueError(f"Design with guid {design.get('guid')} could not be stored in the current kit.")
+
+
+def _mutate_current_design(ctx: Context, mutator: typing.Callable[[dict], None]) -> dict:
+    """Clone, mutate, and persist the current design in the current session kit."""
+    design = copy.deepcopy(_get_session_design(ctx))
+    mutator(design)
+    return _replace_design_in_session_kit(ctx, design)
 
 
 def _rollback_session_transaction(sid: int):
@@ -2022,6 +2080,7 @@ def _rollback_session_transaction(sid: int):
         if backward_diff is not None:
             current = _clone_kit(_mcp_session_kits.get(sid, {}))
             _mcp_session_kits[sid] = applyKitDiffDict(current, backward_diff)
+    _sync_session_design_and_type(sid)
 
 
 @mcp.tool()
@@ -2039,6 +2098,29 @@ def start_working_in_local_kit(path: str, ctx: Context) -> dict:
         _mcp_session_kit_mode[sid] = "local"
         _mcp_session_kit_source[sid] = path
         return {"ok": True, "mode": "local", "path": path}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def start_new_kit(name: str, version: str, ctx: Context) -> dict:
+    """Start a new in-memory kit for this MCP session with flat top-level fields only."""
+    try:
+        sid = _session_id(ctx)
+        kit = {
+            "name": name,
+            "version": version,
+            "authors": [],
+            "qualities": [],
+            "types": [],
+            "designs": [],
+        }
+        _set_session_kit(ctx, kit)
+        _mcp_session_designs.pop(sid, None)
+        _mcp_session_types.pop(sid, None)
+        _mcp_session_kit_mode[sid] = "local"
+        _mcp_session_kit_source[sid] = "<memory>"
+        return {"ok": True, "name": name, "version": version}
     except Exception as e:
         return {"error": str(e)}
 
@@ -2422,6 +2504,206 @@ def find_attribute_value(entity: dict, name: str, default_value: str = None) -> 
 
 
 @mcp.tool()
+def read_current_kit(ctx: Context) -> dict:
+    """Read the current session kit."""
+    try:
+        return _get_session_kit(ctx)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def start_new_design(
+    guid: str,
+    name: str,
+    description: str,
+    unit: str,
+    icon: str,
+    image: str,
+    created_at: str,
+    updated_at: str,
+    ctx: Context,
+) -> dict:
+    """Create and select a new current design with flat metadata fields only."""
+    try:
+        design = {
+            "guid": guid,
+            "name": name,
+            "description": description,
+            "unit": unit,
+            "icon": icon,
+            "image": image,
+            "createdAt": created_at,
+            "updatedAt": updated_at,
+            "authors": [],
+            "props": [],
+            "pieces": [],
+            "connections": [],
+        }
+        stored_design = _replace_design_in_session_kit(ctx, design)
+        return {"ok": True, "guid": stored_design["guid"], "name": stored_design["name"]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def add_current_design_author(guid: str, ctx: Context) -> dict:
+    """Append a flat author reference to the current design."""
+    try:
+        design = _mutate_current_design(ctx, lambda current_design: current_design.setdefault("authors", []).append({"guid": guid}))
+        return {"ok": True, "authorCount": len(design.get("authors", []))}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def add_current_design_prop(guid: str, quality_guid: str, value: str, unit: str, ctx: Context) -> dict:
+    """Append a flat prop entry to the current design."""
+    try:
+        def mutate(current_design: dict):
+            current_design.setdefault("props", []).append(
+                {
+                    "guid": guid,
+                    "quality": {"guid": quality_guid},
+                    "value": value,
+                    "unit": unit,
+                }
+            )
+
+        design = _mutate_current_design(ctx, mutate)
+        return {"ok": True, "propCount": len(design.get("props", []))}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def add_current_design_piece(
+    guid: str,
+    name: str,
+    kind_guid: str,
+    ctx: Context,
+    description: str = "",
+    is_hidden: bool = False,
+    is_locked: bool = False,
+) -> dict:
+    """Append a flat piece entry to the current design without placement fields."""
+    try:
+        def mutate(current_design: dict):
+            current_design.setdefault("pieces", []).append(
+                {
+                    "guid": guid,
+                    "name": name,
+                    "description": description,
+                    "isHidden": is_hidden,
+                    "isLocked": is_locked,
+                    "type": {"guid": kind_guid},
+                }
+            )
+
+        design = _mutate_current_design(ctx, mutate)
+        return {"ok": True, "pieceCount": len(design.get("pieces", []))}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def add_current_design_piece_with_plane(
+    guid: str,
+    name: str,
+    kind_guid: str,
+    center_u: float,
+    center_v: float,
+    origin_x: float,
+    origin_y: float,
+    origin_z: float,
+    x_axis_x: float,
+    x_axis_y: float,
+    x_axis_z: float,
+    y_axis_x: float,
+    y_axis_y: float,
+    y_axis_z: float,
+    ctx: Context,
+    description: str = "",
+    is_hidden: bool = False,
+    is_locked: bool = False,
+) -> dict:
+    """Append a flat piece entry to the current design with explicit placement fields."""
+    try:
+        def mutate(current_design: dict):
+            current_design.setdefault("pieces", []).append(
+                {
+                    "guid": guid,
+                    "name": name,
+                    "description": description,
+                    "isHidden": is_hidden,
+                    "isLocked": is_locked,
+                    "type": {"guid": kind_guid},
+                    "center": {"u": center_u, "v": center_v},
+                    "plane": {
+                        "origin": {"x": origin_x, "y": origin_y, "z": origin_z},
+                        "xAxis": {"x": x_axis_x, "y": x_axis_y, "z": x_axis_z},
+                        "yAxis": {"x": y_axis_x, "y": y_axis_y, "z": y_axis_z},
+                    },
+                }
+            )
+
+        design = _mutate_current_design(ctx, mutate)
+        return {"ok": True, "pieceCount": len(design.get("pieces", []))}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+def add_current_design_connection(
+    guid: str,
+    connected_piece_guid: str,
+    connected_connector_guid: str,
+    connecting_piece_guid: str,
+    connecting_connector_guid: str,
+    rotation: float,
+    u: float,
+    v: float,
+    shift: float,
+    ctx: Context,
+    description: str = "",
+    gap: float = 0,
+    rise: float = 0,
+    tilt: float = 0,
+    turn: float = 0,
+) -> dict:
+    """Append a flat connection entry to the current design without nested arguments."""
+    try:
+        def mutate(current_design: dict):
+            current_design.setdefault("connections", []).append(
+                {
+                    "guid": guid,
+                    "gap": gap,
+                    "description": description,
+                    "connected": {
+                        "piece": {"guid": connected_piece_guid},
+                        "connector": {"guid": connected_connector_guid},
+                    },
+                    "tilt": tilt,
+                    "rotation": rotation,
+                    "rise": rise,
+                    "turn": turn,
+                    "connecting": {
+                        "piece": {"guid": connecting_piece_guid},
+                        "connector": {"guid": connecting_connector_guid},
+                    },
+                    "shift": shift,
+                    "u": u,
+                    "v": v,
+                }
+            )
+
+        design = _mutate_current_design(ctx, mutate)
+        return {"ok": True, "connectionCount": len(design.get("connections", []))}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
 def start_working_in_design(guid: str, ctx: Context) -> dict:
     """Start working in a design within the current kit.
     Callers MUST have called start_working_in_local_kit first. Selects the design by GUID.
@@ -2439,7 +2721,7 @@ def start_working_in_design(guid: str, ctx: Context) -> dict:
         return {"error": str(e)}
 
 
-def read_current_design(ctx: Context) -> dict:
+def _read_current_design(ctx: Context) -> dict:
     """Read the current design that was set via start_working_in_design.
     [👤semio📚engine💻engine🔖mcp🛠️readcurrentdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_design)
     """
@@ -2447,6 +2729,12 @@ def read_current_design(ctx: Context) -> dict:
         return _get_session_design(ctx)
     except Exception as e:
         return {"error": str(e)}
+
+
+@mcp.tool()
+def read_current_design(ctx: Context) -> dict:
+    """Read the current design that was set via start_working_in_design or start_new_design."""
+    return _read_current_design(ctx)
 
 
 @mcp.tool()
@@ -2480,7 +2768,7 @@ def start_working_in_type(guid: str, ctx: Context) -> dict:
         return {"error": str(e)}
 
 
-def read_current_type(ctx: Context) -> dict:
+def _read_current_type(ctx: Context) -> dict:
     """Read the current type that was set via start_working_in_type.
     [👤semio📚engine💻engine🔖mcp🛠️readcurrenttype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_type)
     """
@@ -2488,6 +2776,12 @@ def read_current_type(ctx: Context) -> dict:
         return _get_session_type(ctx)
     except Exception as e:
         return {"error": str(e)}
+
+
+@mcp.tool()
+def read_current_type(ctx: Context) -> dict:
+    """Read the current type that was set via start_working_in_type."""
+    return _read_current_type(ctx)
 
 
 @mcp.tool()

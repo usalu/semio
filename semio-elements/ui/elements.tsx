@@ -7385,7 +7385,7 @@ export {
   useStoreApi,
   ViewportPortal
 };
-export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
+export type { Connection, Connection as RFConnection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
 /**
  * Base pixel unit for diagram node sizing.
@@ -10148,6 +10148,88 @@ const UIFindItemsSync: React.FC<{
 };
 
 // #endregion UI
+
+// #region Framework Re-exports
+
+// Re-exports of framework libraries for downstream consumers.
+// Apps like sketchpad MUST import these through @semio-elements/ui
+// instead of depending on the underlying framework libraries directly.
+
+// #region 🔖DnD Kit
+export { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
+export type { DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
+export { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+export { CSS as DndCSS } from "@dnd-kit/utilities";
+// #endregion 🔖DnD Kit
+
+// #region 🔖Three.js
+export * as THREE from "three";
+export { Camera as ThreeCamera } from "three";
+export { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+export { Edges, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Sphere, useFBX, useGLTF } from "@react-three/drei";
+export { Select as DreiSelect } from "@react-three/drei";
+export { Canvas as ThreeCanvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+export type { ThreeEvent } from "@react-three/fiber";
+// #endregion 🔖Three.js
+
+// #region 🔖XY Flow (additions not already exported inline)
+export { ConnectionMode, MiniMap } from "@xyflow/react";
+// #endregion 🔖XY Flow
+
+// #region 🔖Dagre
+export * as dagre from "dagre";
+// #endregion 🔖Dagre
+
+// #region 🔖State Management
+export { useSelector as useXStateSelector } from "@xstate/react";
+export { type ActorRefFrom, type AnyActorRef, assign, createActor, fromCallback, setup, type SnapshotFrom } from "xstate";
+// #endregion 🔖State Management
+
+// #region 🔖Routing
+export { BrowserRouter, MemoryRouter, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
+export { Link } from "react-router";
+// #endregion 🔖Routing
+
+// #region 🔖I18n
+export { default as i18next } from "i18next";
+export { default as LanguageDetector } from "i18next-browser-languagedetector";
+export { initReactI18next, useTranslation } from "react-i18next";
+// #endregion 🔖I18n
+
+// #region 🔖Hotkeys
+export { useHotkeys } from "react-hotkeys-hook";
+// #endregion 🔖Hotkeys
+
+// #region 🔖Date
+export { formatDistanceToNow } from "date-fns";
+export { de as dateFnsDe, enUS as dateFnsEnUS } from "date-fns/locale";
+// #endregion 🔖Date
+
+// #region 🔖Search
+export { default as Fuse } from "fuse.js";
+export type { FuseResult } from "fuse.js";
+// #endregion 🔖Search
+
+// #region 🔖Collaboration
+export * as Y from "yjs";
+export { IndexeddbPersistence } from "y-indexeddb";
+// #endregion 🔖Collaboration
+
+// #region 🔖MDX
+export { MDXProvider } from "@mdx-js/react";
+// #endregion 🔖MDX
+
+// #region 🔖Styling
+export { cva } from "class-variance-authority";
+export type { VariantProps } from "class-variance-authority";
+export { clsx } from "clsx";
+// #endregion 🔖Styling
+
+// #region 🔖Resizable Panels
+export * as ResizablePrimitive from "react-resizable-panels";
+// #endregion 🔖Resizable Panels
+
+// #endregion Framework Re-exports
 
 const treeVitest = (import.meta as ImportMeta & {
   vitest?: {

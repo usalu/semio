@@ -26,7 +26,6 @@
 // [👤semio📚js🗃️sketchpad💻kittsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/IMPORTS)
 // Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.
 
-import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import {
   AddIcon,
   AlertCircleIcon,
@@ -64,15 +63,7 @@ import {
   TypeIcon,
   UserIcon,
 } from "@semio/assets";
-import { useSelector } from "@xstate/react";
-import { formatDistanceToNow } from "date-fns";
-import { de, enUS } from "date-fns/locale";
 import React, { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, useSearchParams } from "react-router";
-import { Camera } from "three";
-import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
 import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Port, Quality, File as SemioFile, Tag, Type, TypeDiff } from "@semio/js/semio";
 import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
@@ -127,13 +118,15 @@ import {
   useTypeScope,
   Window
 } from "./Sketchpad";
-import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "../../../semio-elements/ui";
+import type { ConnectionLineComponentProps, DragEndEvent, DragOverEvent, DragStartEvent, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "../../../semio-elements/ui";
 import {
   Action,
   applyNodeChanges,
   BasicChatPanel,
   BaseEdge,
   Button,
+  dateFnsDe as de,
+  dateFnsEnUS as enUS,
   Diagram,
   forceCollide,
   forceLink,
@@ -141,6 +134,7 @@ import {
   forceSimulation,
   forceX,
   forceY,
+  formatDistanceToNow,
   getBezierPath,
   Handle,
   Input,
@@ -158,6 +152,7 @@ import {
   Table,
   TableAvatar,
   Textarea,
+  ThreeCamera as Camera,
   Toggle,
   ToggleGroup,
   ToolbarDivider,
@@ -169,8 +164,16 @@ import {
   TreeItem,
   TreeRow,
   TreeStateProvider,
+  useDroppable,
+  useHotkeys,
   useInternalNode,
-  useReactFlow
+  useNavigate,
+  useParams,
+  useReactFlow,
+  useSearchParams,
+  useTranslation,
+  useXStateSelector as useSelector,
+  Y,
 } from "../../../semio-elements/ui";
 import {
   addToSelection,

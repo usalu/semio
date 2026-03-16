@@ -1,0 +1,13 @@
+{
+  "title": "Fix Gltf Mesh Embedding Parity",
+  "status": "closed",
+  "description": "Fix Nakagin Capsule Tower GLTF export so JS, Python, Go, and Rust embed the selected kind mesh instead of placeholders or helper primitives, align export reports and tests with the .NET baseline, and validate cross-runtime report generation.",
+  "summary": "Fixed Nakagin Capsule Tower GLTF mesh embedding parity across JS, Python, Go, and Rust by removing placeholder/helper output paths, aligning mesh ingestion with the selected kind models, fixing the Python raw-kit empty-scene export, and updating cross-runtime export tests to validate self-contained reports and real embedded mesh names. Verified the Python export tests and the cross-runtime Nakagin report harness after regeneration, and confirmed all runtimes now emit triangle-only selected kind meshes with matching mesh-name sets and matching total triangle counts versus the .NET baseline.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/925"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "b5e19907-510f-4e33-9132-bc0781b737f8"
+  ]
+}

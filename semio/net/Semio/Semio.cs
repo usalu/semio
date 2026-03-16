@@ -7658,6 +7658,142 @@ public class Kit : Entity<Kit>
         }
     }
 
+    #region 🔖Geometric Insights
+    // [👤semio📚net🛅semio💻semio🔖geometricinsights](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Geometric%20Insights)
+    // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+
+    /// <summary>Geometric KPIs for a GLB/GLTF model. All units follow the model coordinate system.</summary>
+    public class GeometricInsights
+    {
+        public Vector3? BoundingBoxMin { get; set; }
+        public Vector3? BoundingBoxMax { get; set; }
+        public double DimensionX { get; set; }
+        public double DimensionY { get; set; }
+        public double DimensionZ { get; set; }
+        public double CharacteristicLength { get; set; }
+        public double FootprintArea { get; set; }
+        public double TotalSurfaceArea { get; set; }
+        public double EnclosedVolume { get; set; }
+        public double SurfaceToVolumeRatio { get; set; }
+        public double AspectRatioXy { get; set; }
+        public double AspectRatioXz { get; set; }
+        public double AspectRatioYz { get; set; }
+        public Vector3? Centroid { get; set; }
+        public int VertexCount { get; set; }
+        public int FaceCount { get; set; }
+        public int EulerCharacteristic { get; set; }
+    }
+
+    /// <summary>Computes key performance indicators for the geometry of a GLB/GLTF model. Model MUST be path (string) or raw bytes (byte[]).</summary>
+    public static GeometricInsights GetGeometricInsightsForModel(object model)
+    {
+        GltfModel root;
+        if (model is string path)
+        {
+            if (!System.IO.File.Exists(path))
+                throw new FileNotFoundException("Model file not found", path);
+            var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+            if (ext != ".glb" && ext != ".gltf")
+                throw new ArgumentException("Model MUST be .glb or .gltf", nameof(model));
+            root = GltfModel.Load(path);
+        }
+        else if (model is byte[] bytes)
+        {
+            using var ms = new MemoryStream(bytes);
+            if (bytes.Length >= 4 && Encoding.ASCII.GetString(bytes, 0, 4) == "glTF")
+                root = GltfModel.ReadGLB(ms);
+            else
+            {
+                var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid().ToString("N") + ".gltf");
+                try
+                {
+                    System.IO.File.WriteAllBytes(tmp, bytes);
+                    root = GltfModel.Load(tmp);
+                }
+                finally { try { System.IO.File.Delete(tmp); } catch { } }
+            }
+        }
+        else
+            throw new ArgumentException("Model must be string path or byte[]", nameof(model));
+
+        var out_ = new GeometricInsights();
+        var min = new Vector3(float.MaxValue);
+        var max = new Vector3(float.MinValue);
+        double totalArea = 0, totalVolume = 0;
+        var sumPos = Vector3.Zero;
+        int vertexCount = 0, faceCount = 0;
+
+        foreach (var mesh in root.LogicalMeshes)
+        {
+            foreach (var prim in mesh.Primitives)
+            {
+                var posAcc = prim.GetVertexAccessor("POSITION");
+                if (posAcc == null) continue;
+                var positions = posAcc.AsVector3Array();
+                var idxAcc = prim.IndexAccessor;
+                int n = positions.Count;
+                vertexCount += n;
+                for (int i = 0; i < n; i++)
+                {
+                    var p = positions[i];
+                    sumPos += p;
+                    min = Vector3.Min(min, p);
+                    max = Vector3.Max(max, p);
+                }
+                if (idxAcc != null)
+                {
+                    var indices = idxAcc.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        int i0 = (int)indices[i], i1 = (int)indices[i + 1], i2 = (int)indices[i + 2];
+                        var a = positions[i0]; var b = positions[i1]; var c = positions[i2];
+                        var ab = b - a; var ac = c - a;
+                        var cross = Vector3.Cross(ab, ac);
+                        totalArea += 0.5 * cross.Length();
+                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
+                        faceCount++;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i + 2 < n; i += 3)
+                    {
+                        var a = positions[i]; var b = positions[i + 1]; var c = positions[i + 2];
+                        var ab = b - a; var ac = c - a;
+                        totalArea += 0.5 * Vector3.Cross(ab, ac).Length();
+                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
+                        faceCount++;
+                    }
+                }
+            }
+        }
+
+        if (vertexCount == 0) return out_;
+
+        out_.BoundingBoxMin = min;
+        out_.BoundingBoxMax = max;
+        out_.DimensionX = max.X - min.X;
+        out_.DimensionY = max.Y - min.Y;
+        out_.DimensionZ = max.Z - min.Z;
+        out_.CharacteristicLength = Math.Cbrt(out_.DimensionX * out_.DimensionY * out_.DimensionZ);
+        out_.FootprintArea = out_.DimensionX * out_.DimensionY;
+        out_.TotalSurfaceArea = totalArea;
+        out_.VertexCount = vertexCount;
+        out_.FaceCount = faceCount;
+        out_.Centroid = sumPos / vertexCount;
+        totalVolume = Math.Abs(totalVolume);
+        out_.EnclosedVolume = totalVolume;
+        if (totalVolume > 1e-20 && totalArea > 0)
+            out_.SurfaceToVolumeRatio = totalArea / totalVolume;
+        if (out_.DimensionY > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXy = out_.DimensionX / out_.DimensionY;
+        if (out_.DimensionZ > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXz = out_.DimensionX / out_.DimensionZ;
+        if (out_.DimensionZ > 1e-10 && out_.DimensionY > 1e-10) out_.AspectRatioYz = out_.DimensionY / out_.DimensionZ;
+        out_.EulerCharacteristic = vertexCount - (3 * faceCount) / 2 + faceCount;
+        return out_;
+    }
+
+    #endregion 🔖Geometric Insights
+
     private static byte[] ExportModelRootToObj(GltfModel model)
     {
         var sb = new StringBuilder();

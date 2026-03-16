@@ -221,9 +221,19 @@ class TestMcp:
     def test_mcp_tool_surface_keeps_only_allowed_prefixes(self):
         names = sorted(tool.name for tool in engine.mcp._tool_manager.list_tools())
         assert names == [
+            "add_current_design_author",
+            "add_current_design_connection",
+            "add_current_design_piece",
+            "add_current_design_piece_with_plane",
+            "add_current_design_prop",
             "finish_working_in_design",
             "finish_working_in_kit",
             "finish_working_in_type",
+            "read_current_design",
+            "read_current_kit",
+            "read_current_type",
+            "start_new_design",
+            "start_new_kit",
             "start_transaction",
             "start_working_in_design",
             "start_working_in_local_kit",
@@ -637,6 +647,131 @@ class TestMcp:
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.abort_transaction(mock_ctx)
         assert "error" in result
+
+    def test_stateful_flat_tools_build_exact_nakagin_capsule_tower_json(self, kitMetabolismJson: dict):
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        expected_design = next(
+            d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent")
+        )
+
+        started_kit = engine.start_new_kit("Temporary Kit", "1.0.0", mock_ctx)
+        assert started_kit.get("ok") is True
+
+        started_transaction = engine.start_transaction(mock_ctx)
+        assert started_transaction.get("ok") is True
+        aborted_design = engine.start_new_design(
+            "aborted-design",
+            "Aborted Draft",
+            "should be rolled back",
+            "m",
+            "icons/aborted.svg",
+            "images/aborted.png",
+            "2025-01-01T00:00:00.000Z",
+            "2025-01-01T00:00:00.000Z",
+            mock_ctx,
+        )
+        assert aborted_design.get("ok") is True
+        aborted_piece = engine.add_current_design_piece(
+            "aborted-piece",
+            "x",
+            "aborted-kind",
+            mock_ctx,
+        )
+        assert aborted_piece.get("ok") is True
+        aborted = engine.transaction_abort(mock_ctx)
+        assert aborted.get("ok") is True
+        current_kit_after_abort = engine.read_current_kit(mock_ctx)
+        assert current_kit_after_abort.get("designs") == []
+        assert "error" in engine.read_current_design(mock_ctx)
+
+        started_transaction = engine.start_transaction(mock_ctx)
+        assert started_transaction.get("ok") is True
+        created_design = engine.start_new_design(
+            expected_design["guid"],
+            expected_design["name"],
+            expected_design["description"],
+            expected_design["unit"],
+            expected_design["icon"],
+            expected_design["image"],
+            expected_design["createdAt"],
+            expected_design["updatedAt"],
+            mock_ctx,
+        )
+        assert created_design.get("ok") is True
+
+        for author in expected_design.get("authors", []):
+            result = engine.add_current_design_author(author["guid"], mock_ctx)
+            assert result.get("ok") is True
+
+        for prop in expected_design.get("props", []):
+            result = engine.add_current_design_prop(
+                prop["guid"],
+                prop["quality"]["guid"],
+                prop["value"],
+                prop["unit"],
+                mock_ctx,
+            )
+            assert result.get("ok") is True
+
+        for piece in expected_design.get("pieces", []):
+            if "plane" in piece and "center" in piece:
+                plane = piece["plane"]
+                result = engine.add_current_design_piece_with_plane(
+                    piece["guid"],
+                    piece["name"],
+                    piece["type"]["guid"],
+                    piece["center"]["u"],
+                    piece["center"]["v"],
+                    plane["origin"]["x"],
+                    plane["origin"]["y"],
+                    plane["origin"]["z"],
+                    plane["xAxis"]["x"],
+                    plane["xAxis"]["y"],
+                    plane["xAxis"]["z"],
+                    plane["yAxis"]["x"],
+                    plane["yAxis"]["y"],
+                    plane["yAxis"]["z"],
+                    mock_ctx,
+                    description=piece["description"],
+                    is_hidden=piece["isHidden"],
+                    is_locked=piece["isLocked"],
+                )
+            else:
+                result = engine.add_current_design_piece(
+                    piece["guid"],
+                    piece["name"],
+                    piece["type"]["guid"],
+                    mock_ctx,
+                    description=piece["description"],
+                    is_hidden=piece["isHidden"],
+                    is_locked=piece["isLocked"],
+                )
+            assert result.get("ok") is True
+
+        for connection in expected_design.get("connections", []):
+            result = engine.add_current_design_connection(
+                connection["guid"],
+                connection["connected"]["piece"]["guid"],
+                connection["connected"]["connector"]["guid"],
+                connection["connecting"]["piece"]["guid"],
+                connection["connecting"]["connector"]["guid"],
+                connection["rotation"],
+                connection["u"],
+                connection["v"],
+                connection["shift"],
+                mock_ctx,
+                description=connection["description"],
+                gap=connection["gap"],
+                rise=connection["rise"],
+                tilt=connection["tilt"],
+                turn=connection["turn"],
+            )
+            assert result.get("ok") is True
+
+        finalized = engine.transaction_finalize(mock_ctx)
+        assert finalized.get("ok") is True
+        current_design = engine.read_current_design(mock_ctx)
+        assert current_design == expected_design
 
 
 # endregion MCP Tests

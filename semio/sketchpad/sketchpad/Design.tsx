@@ -21,7 +21,6 @@
 // [👤semio📚js🗃️sketchpad💻design🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports)
 // Imports for Design app MUST include all shared sketchpad, React, and UI dependencies.
 
-import { useSelector } from "@xstate/react";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "@semio/js/semio";
 import type { AppConfig, AppPlugin, AppWindowConfig, DesignAppId, Field, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolRenderContext } from "./shared";
 import {
@@ -71,17 +70,8 @@ import {
 
 // #region Imports
 
-import { DragEndEvent, useDraggable } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
-import { ThreeEvent, useLoader } from "@react-three/fiber";
 import { AddIcon, ChatIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, IntersectIcon, PieceIcon, PortIcon, RemoveIcon, SceneIcon, SelectToolIcon, SettingsIcon, TableViewIcon, TypeIcon } from "@semio/assets";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
-import { useTranslation } from "react-i18next";
-import { useLocation, useSearchParams } from "react-router";
-import * as THREE from "three";
-import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
 import {
   areDesignsInSameFamily,
@@ -117,9 +107,10 @@ import {
   toThreeRotation,
   Type
 } from "@semio/js/semio";
-import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection } from "../../../semio-elements/ui";
+import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, RFConnection, DragEndEvent, ThreeEvent } from "../../../semio-elements/ui";
 import {
   applyNodeChanges,
+  arrayMove,
   Avatar,
   AvatarFallback,
   BasicChatPanel,
@@ -128,9 +119,13 @@ import {
   Combobox,
   Diagram,
   DraggableAvatar,
+  DreiSelect,
+  Edges,
   Geometry,
   Handle,
   Input,
+  Line,
+  OBJLoader,
   Position,
   ReactFlowProvider,
   Scene,
@@ -139,6 +134,7 @@ import {
   SortableTreeItems,
   Stepper,
   Textarea,
+  THREE,
   Toggle,
   ToggleGroup,
   ToolbarGroup,
@@ -147,8 +143,17 @@ import {
   TreeItem,
   TreeRow,
   TreeStateProvider,
+  useDraggable,
+  useFBX,
+  useGLTF,
+  useHotkeys,
+  useLoader,
+  useLocation,
   useReactFlow,
+  useSearchParams,
   useStoreApi,
+  useTranslation,
+  useXStateSelector as useSelector,
   ViewportPortal
 } from "../../../semio-elements/ui";
 import { getConnectorPortGuid, getPortCompatibilityState, getPortTone } from "./portColor";
@@ -1357,7 +1362,6 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
       actor.send({ type: "DESIGN.SET_SELECTION", kitGuid: this.kitGuid, designGuid: this.designGuid, selection: this.state.selection || {} } as any);
     }
     if (result.diff?.activeTool !== undefined && actor) {
-      console.log(`[DEBUG] Sending DESIGN.SET_ACTIVE_TOOL to actor: tool=${result.diff.activeTool}, actor=${!!actor}`);
       actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid: this.kitGuid, designGuid: this.designGuid, tool: result.diff.activeTool } as any);
     }
     return result as T;
@@ -9791,7 +9795,7 @@ const ModelDesign: FC = () => {
 
   return (
     <>
-      <Select box multiple onChange={onChange}>
+      <DreiSelect box multiple onChange={onChange}>
         <group>
           {showPieces && flatDesign?.pieces?.map((piece: Piece) => (
             <PieceScopeProvider key={piece.guid} guid={piece.guid}>
@@ -9802,7 +9806,7 @@ const ModelDesign: FC = () => {
             <PresenceThree key={id} {...presence} />
           ))}
         </group>
-      </Select>
+      </DreiSelect>
     </>
   );
 };
