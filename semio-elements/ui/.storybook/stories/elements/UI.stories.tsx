@@ -22,8 +22,6 @@ import {
   createDefaultLayout,
   BreadcrumbItemData,
   Tree,
-  TreeSection,
-  TreeItem,
 } from "@semio-elements/ui";
 
 // #region 🔖UI
@@ -66,53 +64,102 @@ const StatsWindow = () => (
 // #region 🔖TreePanels
 
 const ExplorerTree = () => (
-  <Tree>
-    <TreeSection label="src" icon={<FolderOpen size={14} />} defaultOpen>
-      <TreeItem label="index.ts" icon={<File size={14} />} />
-      <TreeItem label="app.tsx" icon={<File size={14} />} />
-      <TreeSection label="components" icon={<FolderOpen size={14} />} defaultOpen>
-        <TreeItem label="Button.tsx" icon={<File size={14} />} />
-        <TreeItem label="Card.tsx" icon={<File size={14} />} />
-        <TreeItem label="Layout.tsx" icon={<File size={14} />} />
-      </TreeSection>
-      <TreeSection label="utils" icon={<FolderOpen size={14} />}>
-        <TreeItem label="helpers.ts" icon={<File size={14} />} />
-        <TreeItem label="constants.ts" icon={<File size={14} />} />
-      </TreeSection>
-    </TreeSection>
-    <TreeSection label="public" icon={<FolderOpen size={14} />}>
-      <TreeItem label="favicon.ico" icon={<File size={14} />} />
-    </TreeSection>
-  </Tree>
+  <Tree
+    sections={[
+      {
+        id: "explorer.src",
+        label: "src",
+        icon: <FolderOpen size={14} />,
+        defaultOpen: true,
+        items: [
+          { id: "explorer.src.index", label: "index.ts", icon: <File size={14} /> },
+          { id: "explorer.src.app", label: "app.tsx", icon: <File size={14} /> },
+          {
+            id: "explorer.src.components",
+            label: "components",
+            icon: <FolderOpen size={14} />,
+            defaultOpen: true,
+            items: [
+              { id: "explorer.src.components.button", label: "Button.tsx", icon: <File size={14} /> },
+              { id: "explorer.src.components.card", label: "Card.tsx", icon: <File size={14} /> },
+              { id: "explorer.src.components.layout", label: "Layout.tsx", icon: <File size={14} /> },
+            ],
+          },
+          {
+            id: "explorer.src.utils",
+            label: "utils",
+            icon: <FolderOpen size={14} />,
+            items: [
+              { id: "explorer.src.utils.helpers", label: "helpers.ts", icon: <File size={14} /> },
+              { id: "explorer.src.utils.constants", label: "constants.ts", icon: <File size={14} /> },
+            ],
+          },
+        ],
+      },
+      {
+        id: "explorer.public",
+        label: "public",
+        icon: <FolderOpen size={14} />,
+        items: [{ id: "explorer.public.favicon", label: "favicon.ico", icon: <File size={14} /> }],
+      },
+    ]}
+  />
 );
 
 const PropertiesTree = () => (
-  <Tree>
-    <TreeSection label="Element" icon={<Info size={14} />} defaultOpen>
-      <TreeItem label="id: editor-1" />
-      <TreeItem label="kind: text" />
-      <TreeItem label="visible: true" />
-    </TreeSection>
-    <TreeSection label="Style" icon={<Settings size={14} />} defaultOpen>
-      <TreeItem label="width: 100%" />
-      <TreeItem label="height: auto" />
-      <TreeItem label="padding: 16px" />
-    </TreeSection>
-  </Tree>
+  <Tree
+    sections={[
+      {
+        id: "properties.element",
+        label: "Element",
+        icon: <Info size={14} />,
+        defaultOpen: true,
+        items: [
+          { id: "properties.element.id", label: "id: editor-1" },
+          { id: "properties.element.kind", label: "kind: text" },
+          { id: "properties.element.visible", label: "visible: true" },
+        ],
+      },
+      {
+        id: "properties.style",
+        label: "Style",
+        icon: <Settings size={14} />,
+        defaultOpen: true,
+        items: [
+          { id: "properties.style.width", label: "width: 100%" },
+          { id: "properties.style.height", label: "height: auto" },
+          { id: "properties.style.padding", label: "padding: 16px" },
+        ],
+      },
+    ]}
+  />
 );
 
 const MetricsTree = () => (
-  <Tree>
-    <TreeSection label="Performance" icon={<BarChart size={14} />} defaultOpen>
-      <TreeItem label="FPS: 60" />
-      <TreeItem label="Memory: 128MB" />
-      <TreeItem label="CPU: 12%" />
-    </TreeSection>
-    <TreeSection label="Network" icon={<BarChart size={14} />}>
-      <TreeItem label="Requests: 42" />
-      <TreeItem label="Latency: 12ms" />
-    </TreeSection>
-  </Tree>
+  <Tree
+    sections={[
+      {
+        id: "metrics.performance",
+        label: "Performance",
+        icon: <BarChart size={14} />,
+        defaultOpen: true,
+        items: [
+          { id: "metrics.performance.fps", label: "FPS: 60" },
+          { id: "metrics.performance.memory", label: "Memory: 128MB" },
+          { id: "metrics.performance.cpu", label: "CPU: 12%" },
+        ],
+      },
+      {
+        id: "metrics.network",
+        label: "Network",
+        icon: <BarChart size={14} />,
+        items: [
+          { id: "metrics.network.requests", label: "Requests: 42" },
+          { id: "metrics.network.latency", label: "Latency: 12ms" },
+        ],
+      },
+    ]}
+  />
 );
 
 // #endregion 🔖TreePanels
@@ -464,6 +511,81 @@ export const MinimalApp: Story = {
       },
     ],
   },
+};
+
+export const Mobile: Story = {
+  args: {
+    apps: [editorApp, dashboardApp],
+    breadcrumbItems: [
+      breadcrumbItems[0],
+      breadcrumbItems[3],
+    ],
+    searchItems,
+    footerItems: [{ id: "version", content: "v1.0.0", order: 100 }],
+    mobile: true,
+  },
+  parameters: {
+    viewport: { defaultViewport: "mobile1" },
+    layout: "fullscreen",
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: "375px", height: "667px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const MobileSingleApp: Story = {
+  args: {
+    apps: [editorApp],
+    breadcrumbItems: [
+      breadcrumbItems[0],
+      breadcrumbItems[3],
+    ],
+    searchItems,
+    mobile: true,
+  },
+  parameters: {
+    viewport: { defaultViewport: "mobile1" },
+    layout: "fullscreen",
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: "375px", height: "667px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const MobileNoPanels: Story = {
+  args: {
+    apps: [
+      {
+        id: "viewer",
+        label: "Viewer",
+        windowConfig: {
+          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full text-lg">Full Screen Canvas</div> }],
+          defaultLayout: createDefaultLayout(["main"]),
+        },
+      },
+    ],
+    breadcrumbItems: [breadcrumbItems[0]],
+    mobile: true,
+  },
+  parameters: {
+    viewport: { defaultViewport: "mobile1" },
+    layout: "fullscreen",
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: "375px", height: "667px", overflow: "hidden", border: "1px solid var(--border-color)" }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 // #endregion 🔖Stories

@@ -1,0 +1,12 @@
+{
+  "title": "Make Sketchpad Design App Tests Comply",
+  "status": "open",
+  "description": "Get all design app tests complying without removing functionality.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/907"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪39333ab6669840a3a59d42577e7b6e19"
+  ]
+}

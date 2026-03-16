@@ -1,0 +1,12 @@
+{
+  "title": "Normalize CLI Hook Test Targets",
+  "status": "open",
+  "description": "Finish the semio-repo CLI hook normalization work by fixing remaining full-suite regressions after labs versus tests payload normalization. Repair native hook event mapping, second extraction/log normalization, search line-range extraction, and docs generation region leakage in semio-repo/cli/main.go and existing tests. Ensure full semio-repo/cli tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/918"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪6fc3990c834c4e2aaf1daa7faac2d8bf"
+  ]
+}

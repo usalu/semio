@@ -1698,9 +1698,10 @@ const Home: FC = () => {
       order: 100,
       content: () => (
         <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <SettingsContent />
-          </Tree>
+          <Tree
+            className="min-w-0 overflow-hidden p-double"
+            sections={[{ id: "semio.sketchpad.app.home.settings.content", label: null, content: <SettingsContent /> }]}
+          />
         </TreeStateProvider>
       ),
     });
@@ -1711,9 +1712,10 @@ const Home: FC = () => {
       order: 101,
       content: () => (
         <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <ChatPlaceholder />
-          </Tree>
+          <Tree
+            className="min-w-0 overflow-hidden p-double"
+            sections={[{ id: "semio.sketchpad.app.home.chat.content", label: null, content: <ChatPlaceholder /> }]}
+          />
         </TreeStateProvider>
       ),
     });

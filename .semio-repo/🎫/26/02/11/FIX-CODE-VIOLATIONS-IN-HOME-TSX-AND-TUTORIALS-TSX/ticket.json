@@ -1,10 +1,13 @@
 {
-  "title": "Fix Code Breachs in Home Tsx and Tutorials Tsx",
+  "title": "Fix Code Violations in Home Tsx and Tutorials Tsx",
   "status": "closed",
   "description": "Fix all code breachs in Home.tsx (44) and Tutorials.tsx (59) by adding section summary comments and definition summary+spec comments",
-  "summary": "Added section summary comments (with MUST keyword for spec satisfaction) to 17 sections in Home.tsx and 14 sections in Tutorials.tsx. Added definition summary comments before all exported definitions: 18 in Home.tsx (enum/interface/type/const/re-exports/default export) and 33 in Tutorials.tsx (const/interface/enum/class). Added spec comment with RFC2119 keyword for the TutorialStore class. Total ~103 breachs fixed across both files.",
+  "summary": "Validated the current sketchpad Home surface on the current codebase, confirmed the Home Playwright path and production build pass, and determined the repo autofix/audit path currently corrupts Home.tsx while reporting unrelated bundle README breaches outside Home scope.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/523"
   },
-  "goal": "🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections"
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections",
+  "sessions": [
+    "⚪fb4f6f3189464583a0d6663fa3d7cd10"
+  ]
 }

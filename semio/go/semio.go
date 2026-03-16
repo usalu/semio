@@ -28,6 +28,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -36,8 +37,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/qmuntal/gltf"
-	"github.com/qmuntal/gltf/modeler"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -9050,18 +9049,49 @@ func exportPlaneToGltfMatrix(plane Plane) [16]float64 {
 		yy /= yLen
 		yz /= yLen
 	}
-	return [16]float64{xx, xy, xz, 0, yx, yy, yz, 0, zx, zy, zz, 0, ox, oy, oz, 1}
+	return exportApplySemioToGltfBasis([16]float64{xx, xy, xz, 0, yx, yy, yz, 0, zx, zy, zz, 0, ox, oy, oz, 1})
 }
 
 // exportDenseToGltfMatrix converts a gonum mat.Dense (row-major) to column-major glTF matrix.
 // [👤semio📚go💻semio🔖exportdesignmodel🛠️exportdensetogltfmatrix](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Export%20Design%20Model/d/i/exportDenseToGltfMatrix)
 func exportDenseToGltfMatrix(m *mat.Dense) [16]float64 {
-	return [16]float64{
+	return exportApplySemioToGltfBasis([16]float64{
 		m.At(0, 0), m.At(1, 0), m.At(2, 0), m.At(3, 0),
 		m.At(0, 1), m.At(1, 1), m.At(2, 1), m.At(3, 1),
 		m.At(0, 2), m.At(1, 2), m.At(2, 2), m.At(3, 2),
 		m.At(0, 3), m.At(1, 3), m.At(2, 3), m.At(3, 3),
+	})
+}
+
+func exportApplySemioToGltfBasis(matrix [16]float64) [16]float64 {
+	basis := [16]float64{
+		1, 0, 0, 0,
+		0, 0, -1, 0,
+		0, 1, 0, 0,
+		0, 0, 0, 1,
 	}
+	basisInv := [16]float64{
+		1, 0, 0, 0,
+		0, 0, 1, 0,
+		0, -1, 0, 0,
+		0, 0, 0, 1,
+	}
+	left := exportMultiplyColumnMajor4x4(basis, matrix)
+	return exportMultiplyColumnMajor4x4(left, basisInv)
+}
+
+func exportMultiplyColumnMajor4x4(left [16]float64, right [16]float64) [16]float64 {
+	var result [16]float64
+	for column := 0; column < 4; column++ {
+		for row := 0; row < 4; row++ {
+			sum := 0.0
+			for k := 0; k < 4; k++ {
+				sum += left[k*4+row] * right[column*4+k]
+			}
+			result[column*4+row] = sum
+		}
+	}
+	return result
 }
 
 // exportCreateBoxMesh generates a unit box placeholder mesh (1x1x1 centered at origin).
@@ -9165,13 +9195,6 @@ func exportParseGLBMesh(data []byte) (*exportMeshData, error) {
 	if !ok || len(meshesRaw) == 0 {
 		return nil, fmt.Errorf("no meshes in GLB")
 	}
-	mesh, _ := meshesRaw[0].(map[string]interface{})
-	primitivesRaw, _ := mesh["primitives"].([]interface{})
-	if len(primitivesRaw) == 0 {
-		return nil, fmt.Errorf("no primitives in mesh")
-	}
-	prim, _ := primitivesRaw[0].(map[string]interface{})
-
 	accessorsRaw, _ := gltf["accessors"].([]interface{})
 	bufferViewsRaw, _ := gltf["bufferViews"].([]interface{})
 
@@ -9183,133 +9206,184 @@ func exportParseGLBMesh(data []byte) (*exportMeshData, error) {
 		}
 		return 0
 	}
-	glbFloat32Slice := func(m map[string]interface{}, key string) []float32 {
-		arr, ok := m[key].([]interface{})
+
+	getBufferView := func(index int) (map[string]interface{}, error) {
+		if index < 0 || index >= len(bufferViewsRaw) {
+			return nil, fmt.Errorf("bufferView out of range")
+		}
+		bufferView, ok := bufferViewsRaw[index].(map[string]interface{})
 		if !ok {
-			return nil
+			return nil, fmt.Errorf("invalid bufferView")
 		}
-		result := make([]float32, len(arr))
-		for i, v := range arr {
-			if f, ok := v.(float64); ok {
-				result[i] = float32(f)
-			}
-		}
-		return result
+		return bufferView, nil
 	}
 
-	attrs, _ := prim["attributes"].(map[string]interface{})
-	posAccIdxF, ok := attrs["POSITION"].(float64)
-	if !ok {
-		return nil, fmt.Errorf("no POSITION attribute")
-	}
-	posAccIdx := int(posAccIdxF)
-	if posAccIdx >= len(accessorsRaw) {
-		return nil, fmt.Errorf("POSITION accessor out of range")
-	}
-	posAcc, _ := accessorsRaw[posAccIdx].(map[string]interface{})
-	posBVIdx := glbInt(posAcc, "bufferView")
-	if posBVIdx >= len(bufferViewsRaw) {
-		return nil, fmt.Errorf("position bufferView out of range")
-	}
-	posBV, _ := bufferViewsRaw[posBVIdx].(map[string]interface{})
-	posBVOffset := glbInt(posBV, "byteOffset")
-	posAccOffset := glbInt(posAcc, "byteOffset")
-	vertexCount := glbInt(posAcc, "count")
-	posByteStride := glbInt(posBV, "byteStride")
-
-	posStart := posBVOffset + posAccOffset
-	var posBytes []byte
-	if posByteStride == 0 || posByteStride == 12 {
-		posLength := vertexCount * 12
-		if posStart+posLength > len(binData) {
-			return nil, fmt.Errorf("position data out of bounds")
+	getAccessor := func(index int) (map[string]interface{}, error) {
+		if index < 0 || index >= len(accessorsRaw) {
+			return nil, fmt.Errorf("accessor out of range")
 		}
-		posBytes = make([]byte, posLength)
-		copy(posBytes, binData[posStart:posStart+posLength])
-	} else {
-		posBytes = make([]byte, vertexCount*12)
-		for v := 0; v < vertexCount; v++ {
-			src := posStart + v*posByteStride
-			if src+12 > len(binData) {
-				return nil, fmt.Errorf("position data out of bounds at vertex %d", v)
-			}
-			copy(posBytes[v*12:v*12+12], binData[src:src+12])
+		accessor, ok := accessorsRaw[index].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid accessor")
 		}
+		return accessor, nil
 	}
 
-	minArr := glbFloat32Slice(posAcc, "min")
-	maxArr := glbFloat32Slice(posAcc, "max")
-	var posMin, posMax [3]float32
-	if len(minArr) >= 3 && len(maxArr) >= 3 {
-		posMin = [3]float32{minArr[0], minArr[1], minArr[2]}
-		posMax = [3]float32{maxArr[0], maxArr[1], maxArr[2]}
-	} else {
-		posMin = [3]float32{float32(math.MaxFloat32), float32(math.MaxFloat32), float32(math.MaxFloat32)}
-		posMax = [3]float32{-float32(math.MaxFloat32), -float32(math.MaxFloat32), -float32(math.MaxFloat32)}
-		for v := 0; v < vertexCount; v++ {
-			x := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[v*12:]))
-			y := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[v*12+4:]))
-			z := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[v*12+8:]))
-			if x < posMin[0] {
-				posMin[0] = x
-			}
-			if y < posMin[1] {
-				posMin[1] = y
-			}
-			if z < posMin[2] {
-				posMin[2] = z
-			}
-			if x > posMax[0] {
-				posMax[0] = x
-			}
-			if y > posMax[1] {
-				posMax[1] = y
-			}
-			if z > posMax[2] {
-				posMax[2] = z
-			}
+	readAccessorBytes := func(accessor map[string]interface{}, elementSize int) ([]byte, int, error) {
+		bufferViewIndex := glbInt(accessor, "bufferView")
+		bufferView, err := getBufferView(bufferViewIndex)
+		if err != nil {
+			return nil, 0, err
 		}
+		count := glbInt(accessor, "count")
+		bufferViewOffset := glbInt(bufferView, "byteOffset")
+		accessorOffset := glbInt(accessor, "byteOffset")
+		stride := glbInt(bufferView, "byteStride")
+		if stride == 0 {
+			stride = elementSize
+		}
+		start := bufferViewOffset + accessorOffset
+		if start < 0 || start > len(binData) {
+			return nil, 0, fmt.Errorf("accessor data out of bounds")
+		}
+		out := make([]byte, count*elementSize)
+		for i := 0; i < count; i++ {
+			src := start + i*stride
+			if src+elementSize > len(binData) {
+				return nil, 0, fmt.Errorf("accessor data out of bounds at element %d", i)
+			}
+			copy(out[i*elementSize:(i+1)*elementSize], binData[src:src+elementSize])
+		}
+		return out, count, nil
 	}
 
-	var idxBytes []byte
-	var indexCount int
-	indexCompKind := 5123
-	if idxVal, ok := prim["indices"]; ok {
-		idxAccIdx := int(idxVal.(float64))
-		if idxAccIdx < len(accessorsRaw) {
-			idxAcc, _ := accessorsRaw[idxAccIdx].(map[string]interface{})
-			idxBVIdx := glbInt(idxAcc, "bufferView")
-			if idxBVIdx < len(bufferViewsRaw) {
-				idxBV, _ := bufferViewsRaw[idxBVIdx].(map[string]interface{})
-				idxBVOffset := glbInt(idxBV, "byteOffset")
-				idxAccOffset := glbInt(idxAcc, "byteOffset")
-				indexCount = glbInt(idxAcc, "count")
-				indexCompKind = glbInt(idxAcc, "componentType")
-				if indexCompKind == 0 {
-					indexCompKind = 5123
+	readIndices := func(accessor map[string]interface{}) ([]uint32, error) {
+		componentKind := glbInt(accessor, "componentType")
+		bytesPerIndex := 2
+		switch componentKind {
+		case 5121:
+			bytesPerIndex = 1
+		case 5123:
+			bytesPerIndex = 2
+		case 5125:
+			bytesPerIndex = 4
+		default:
+			return nil, fmt.Errorf("unsupported index component type %d", componentKind)
+		}
+		idxBytes, count, err := readAccessorBytes(accessor, bytesPerIndex)
+		if err != nil {
+			return nil, err
+		}
+		indices := make([]uint32, count)
+		for i := 0; i < count; i++ {
+			switch componentKind {
+			case 5121:
+				indices[i] = uint32(idxBytes[i])
+			case 5123:
+				indices[i] = uint32(binary.LittleEndian.Uint16(idxBytes[i*2 : i*2+2]))
+			case 5125:
+				indices[i] = binary.LittleEndian.Uint32(idxBytes[i*4 : i*4+4])
+			}
+		}
+		return indices, nil
+	}
+
+	posMin := [3]float32{float32(math.MaxFloat32), float32(math.MaxFloat32), float32(math.MaxFloat32)}
+	posMax := [3]float32{-float32(math.MaxFloat32), -float32(math.MaxFloat32), -float32(math.MaxFloat32)}
+	positionBytes := new(bytes.Buffer)
+	indexBytes := new(bytes.Buffer)
+	totalVertices := 0
+	totalIndices := 0
+
+	for _, meshRaw := range meshesRaw {
+		mesh, ok := meshRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		primitivesRaw, _ := mesh["primitives"].([]interface{})
+		for _, primitiveRaw := range primitivesRaw {
+			prim, ok := primitiveRaw.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			attrs, _ := prim["attributes"].(map[string]interface{})
+			posAccessorIndexFloat, ok := attrs["POSITION"].(float64)
+			if !ok {
+				continue
+			}
+			posAccessor, err := getAccessor(int(posAccessorIndexFloat))
+			if err != nil {
+				continue
+			}
+			posBytes, vertexCount, err := readAccessorBytes(posAccessor, 12)
+			if err != nil || vertexCount == 0 {
+				continue
+			}
+			vertexBase := uint32(totalVertices)
+			positionBytes.Write(posBytes)
+			for vertexIndex := 0; vertexIndex < vertexCount; vertexIndex++ {
+				x := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[vertexIndex*12 : vertexIndex*12+4]))
+				y := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[vertexIndex*12+4 : vertexIndex*12+8]))
+				z := math.Float32frombits(binary.LittleEndian.Uint32(posBytes[vertexIndex*12+8 : vertexIndex*12+12]))
+				if x < posMin[0] {
+					posMin[0] = x
 				}
-				bytesPerIndex := 2
-				if indexCompKind == 5125 {
-					bytesPerIndex = 4
+				if y < posMin[1] {
+					posMin[1] = y
 				}
-				idxStart := idxBVOffset + idxAccOffset
-				idxLength := indexCount * bytesPerIndex
-				if idxStart+idxLength <= len(binData) {
-					idxBytes = make([]byte, idxLength)
-					copy(idxBytes, binData[idxStart:idxStart+idxLength])
+				if z < posMin[2] {
+					posMin[2] = z
+				}
+				if x > posMax[0] {
+					posMax[0] = x
+				}
+				if y > posMax[1] {
+					posMax[1] = y
+				}
+				if z > posMax[2] {
+					posMax[2] = z
 				}
 			}
+			var indices []uint32
+			if indicesValue, ok := prim["indices"]; ok {
+				indexAccessor, err := getAccessor(int(indicesValue.(float64)))
+				if err != nil {
+					continue
+				}
+				indices, err = readIndices(indexAccessor)
+				if err != nil || len(indices) == 0 {
+					continue
+				}
+			} else {
+				triangleVertexCount := vertexCount - (vertexCount % 3)
+				if triangleVertexCount == 0 {
+					continue
+				}
+				indices = make([]uint32, triangleVertexCount)
+				for i := 0; i < triangleVertexCount; i++ {
+					indices[i] = uint32(i)
+				}
+			}
+			for _, index := range indices {
+				binary.Write(indexBytes, binary.LittleEndian, vertexBase+index)
+			}
+			totalVertices += vertexCount
+			totalIndices += len(indices)
 		}
+	}
+
+	if totalVertices == 0 || totalIndices == 0 {
+		return nil, fmt.Errorf("no triangle mesh primitives in GLB")
 	}
 
 	return &exportMeshData{
-		positionBytes: posBytes,
-		indexBytes:    idxBytes,
-		vertexCount:   vertexCount,
-		indexCount:    indexCount,
+		positionBytes: positionBytes.Bytes(),
+		indexBytes:    indexBytes.Bytes(),
+		vertexCount:   totalVertices,
+		indexCount:    totalIndices,
 		posMin:        posMin,
 		posMax:        posMax,
-		indexCompKind: indexCompKind,
+		indexCompKind: 5125,
 	}, nil
 }
 
@@ -9320,33 +9394,64 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 		return nil
 	}
 	if len(tags) == 0 {
-		return &typ.Models[0]
-	}
-	tagNameSet := make(map[string]bool)
-	for _, t := range tags {
-		tagNameSet[t] = true
-	}
-	bestModel := &typ.Models[0]
-	bestCount := 0
-	for i := range typ.Models {
-		model := &typ.Models[i]
-		matchCount := 0
-		for _, tid := range model.Tags {
-			if tag, ok := tagsDict[tid.Guid]; ok {
-				if tagNameSet[tag.Name] {
-					matchCount++
-				}
+		for i := range typ.Models {
+			if len(typ.Models[i].Tags) == 0 {
+				return &typ.Models[i]
 			}
 		}
-		if matchCount == len(tags) {
-			return model
+		return &typ.Models[0]
+	}
+	selectedTagGuids := make(map[string]bool)
+	for _, t := range tags {
+		if _, ok := tagsDict[t]; ok {
+			selectedTagGuids[t] = true
+			continue
 		}
-		if matchCount > bestCount {
-			bestCount = matchCount
+		for _, tag := range tagsDict {
+			if tag.Name == t {
+				selectedTagGuids[tag.Guid] = true
+			}
+		}
+	}
+	bestModel := (*Model)(nil)
+	bestScore := -1.0
+	for i := range typ.Models {
+		model := &typ.Models[i]
+		modelTagGuids := make(map[string]bool)
+		for _, tid := range model.Tags {
+			modelTagGuids[tid.Guid] = true
+		}
+		containsAll := true
+		intersection := 0
+		for guid := range selectedTagGuids {
+			if !modelTagGuids[guid] {
+				containsAll = false
+				break
+			}
+			intersection++
+		}
+		if !containsAll {
+			continue
+		}
+		union := len(selectedTagGuids)
+		for guid := range modelTagGuids {
+			if !selectedTagGuids[guid] {
+				union++
+			}
+		}
+		score := 0.0
+		if union > 0 {
+			score = float64(intersection) / float64(union)
+		}
+		if score > bestScore {
+			bestScore = score
 			bestModel = model
 		}
 	}
-	return bestModel
+	if bestModel != nil {
+		return bestModel
+	}
+	return &typ.Models[0]
 }
 
 // #endregion 🔖ExportDesignModel/Helpers
@@ -9495,36 +9600,31 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 			usedTypes[piece.Type.Guid] = true
 		}
 	}
-	boxMesh := exportCreateBoxMesh()
 	typeMeshData := make(map[string]*exportMeshData)
+	typeMeshNames := make(map[string]string)
 	for typeGuid := range usedTypes {
 		typ := typesDict[typeGuid]
 		if typ == nil {
-			typeMeshData[typeGuid] = boxMesh
 			continue
 		}
 		model := exportFindModelForKind(typ, tags, tagsDict)
 		if model == nil {
-			typeMeshData[typeGuid] = boxMesh
 			continue
 		}
 		file := filesDict[model.File.Guid]
 		if file == nil || file.Blob == nil || *file.Blob == "" {
-			typeMeshData[typeGuid] = boxMesh
 			continue
 		}
+		typeMeshNames[typeGuid] = file.Name
 		glbData, err := exportDecodeBlobToBytes(*file.Blob)
 		if err != nil || len(glbData) < 4 {
-			typeMeshData[typeGuid] = boxMesh
 			continue
 		}
 		if binary.LittleEndian.Uint32(glbData[0:4]) != 0x46546C67 {
-			typeMeshData[typeGuid] = boxMesh
 			continue
 		}
 		meshData, err := exportParseGLBMesh(glbData)
 		if err != nil {
-			typeMeshData[typeGuid] = boxMesh
 			continue
 		}
 		typeMeshData[typeGuid] = meshData
@@ -9533,7 +9633,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 	// #region 🔖ExportDesignModel/BuildGLTF
 	typeOrder := make([]string, 0, len(usedTypes))
-	for typeGuid := range usedTypes {
+	for typeGuid := range typeMeshData {
 		typeOrder = append(typeOrder, typeGuid)
 	}
 	sort.Strings(typeOrder)
@@ -9562,6 +9662,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		positionAcc int
 		indexAcc    int
 		hasIndices  bool
+		name        string
 	}
 	var gltfMeshList []exportMesh
 
@@ -9590,6 +9691,9 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		})
 
 		mi := exportMesh{positionAcc: posAccIdx}
+		if meshName, ok := typeMeshNames[typeGuid]; ok {
+			mi.name = meshName
+		}
 		if md.indexCount > 0 {
 			for binBuf.Len()%4 != 0 {
 				binBuf.WriteByte(0)
@@ -9750,6 +9854,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 			prim["indices"] = m.indexAcc
 		}
 		gltfMeshes[i] = map[string]interface{}{
+			"name":       m.name,
 			"primitives": []interface{}{prim},
 		}
 	}

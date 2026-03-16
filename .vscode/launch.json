@@ -10,6 +10,13 @@
       "cwd": "${workspaceFolder}"
     },
     {
+      "name": "🚀f3d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "if [ -z \"$DISPLAY\" ]; then echo '⚠️ F3D requires a display. Please run in a GUI environment or use X11 forwarding.'; else /usr/bin/f3d; fi",
+      "cwd": "${workspaceFolder}"
+    },
+    {
       "name": "🚀mcpinspector",
       "type": "node",
       "request": "launch",

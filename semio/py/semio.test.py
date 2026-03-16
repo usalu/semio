@@ -18,6 +18,7 @@
 
 import json
 import os
+from pathlib import Path
 import struct
 import sys
 import tempfile
@@ -37,6 +38,8 @@ from semio import (
     export_design_model,
     export_kit,
     flattenDesignDict,
+    GeometricInsights,
+    get_geometric_insights_for_model,
     getKitChange,
     getKitDiffDict,
     import_kit,
@@ -50,6 +53,7 @@ from semio import (
 
 TOLERANCE = 0.001
 ASSETS_DIR = "../assets/semio"
+REPORTS_DIR = Path(__file__).resolve().parents[2] / "reports" / "export-design-model"
 
 
 def load_json(filename: str) -> dict:
@@ -319,10 +323,8 @@ class TestDesignQualitySum:
 
 class TestExportDesignModel:
     def test_export_glb_returns_valid_glb(self):
-        kit_dict = load_kit("kit_metabolism.json")
-        design = find_design(kit_dict, "Nakagin Capsule Tower")
-        kit = Kit.parse(kit_dict)
-        result = export_design_model(kit, "Nakagin Capsule Tower", ".glb")
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".glb")
         assert isinstance(result, bytes)
         assert len(result) > 0
         assert result[:4] == b"glTF"
@@ -330,10 +332,8 @@ class TestExportDesignModel:
         assert struct.unpack("<I", result[8:12])[0] == len(result)
 
     def test_export_gltf_returns_valid_json(self):
-        kit_dict = load_kit("kit_metabolism.json")
-        design = find_design(kit_dict, "Nakagin Capsule Tower")
-        kit = Kit.parse(kit_dict)
-        result = export_design_model(kit, "Nakagin Capsule Tower", ".gltf")
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".gltf")
         assert isinstance(result, bytes)
         assert len(result) > 0
         parsed = json.loads(result.decode("utf-8"))
@@ -341,8 +341,47 @@ class TestExportDesignModel:
         assert "scenes" in parsed
 
     def test_export_invalid_format_raises(self):
-        kit_dict = load_kit("kit_metabolism.json")
-        design = find_design(kit_dict, "Nakagin Capsule Tower")
-        kit = Kit.parse(kit_dict)
+        kit_dict = load_json("kit_metabolism.json")
         with pytest.raises(ValueError, match="Unsupported export format"):
-            export_design_model(kit, "Nakagin Capsule Tower", ".invalid")
+            export_design_model(kit_dict, "Nakagin Capsule Tower", ".invalid")
+
+    def test_export_scene_graph_report(self):
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".gltf")
+        parsed = json.loads(result.decode("utf-8"))
+        assert "nodes" in parsed
+        assert "scenes" in parsed
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        (REPORTS_DIR / "py.gltf").write_bytes(result)
+
+
+class TestGetGeometricInsightsForModel:
+    """Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf."""
+
+    def test_nakagin_capsule_tower_gltf_returns_insights(self):
+        model_path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, "nakagin-capsule-tower.gltf")
+        if not os.path.exists(model_path):
+            pytest.skip("nakagin-capsule-tower.gltf not found")
+        insights = get_geometric_insights_for_model(model_path)
+        assert isinstance(insights, GeometricInsights)
+        assert insights.bounding_box_min is not None
+        assert insights.bounding_box_max is not None
+        assert insights.dimension_x is not None and insights.dimension_x >= 0
+        assert insights.dimension_y is not None and insights.dimension_y >= 0
+        assert insights.dimension_z is not None and insights.dimension_z >= 0
+        assert insights.characteristic_length is not None and insights.characteristic_length >= 0
+        assert insights.total_surface_area is not None and insights.total_surface_area >= 0
+        assert insights.vertex_count is not None and insights.vertex_count > 0
+        assert insights.face_count is not None and insights.face_count > 0
+        assert insights.centroid is not None
+        assert insights.euler_characteristic is not None
+
+    def test_nakagin_capsule_tower_from_bytes_gltf(self):
+        model_path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, "nakagin-capsule-tower.gltf")
+        if not os.path.exists(model_path):
+            pytest.skip("nakagin-capsule-tower.gltf not found")
+        with open(model_path, "rb") as f:
+            data = f.read()
+        insights = get_geometric_insights_for_model(data)
+        assert isinstance(insights, GeometricInsights)
+        assert insights.face_count is not None and insights.face_count > 0

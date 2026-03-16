@@ -7379,7 +7379,7 @@ public class Kit : Entity<Kit>
                     var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
                     if (ext == ".glb")
                     {
-                        var mb = ExportGlbToMeshBuilder(fileBytes, type.Name);
+                        var mb = ExportGlbToMeshBuilder(fileBytes, file.Name);
                         if (mb != null) { typeMeshBuilders[typeGuid] = mb; continue; }
                     }
                 }
@@ -7437,11 +7437,26 @@ public class Kit : Entity<Kit>
         var yRaw = new System.Numerics.Vector3(p.YAxis.X, p.YAxis.Y, p.YAxis.Z);
         var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
         var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
-        return new System.Numerics.Matrix4x4(
+        return ExportApplySemioToGltfBasis(new System.Numerics.Matrix4x4(
             x.X, x.Y, x.Z, 0,
             y.X, y.Y, y.Z, 0,
             z.X, z.Y, z.Z, 0,
-            origin.X, origin.Y, origin.Z, 1);
+            origin.X, origin.Y, origin.Z, 1));
+    }
+
+    private static System.Numerics.Matrix4x4 ExportApplySemioToGltfBasis(System.Numerics.Matrix4x4 matrix)
+    {
+        var basis = new System.Numerics.Matrix4x4(
+            1, 0, 0, 0,
+            0, 0, -1, 0,
+            0, 1, 0, 0,
+            0, 0, 0, 1);
+        var inverse = new System.Numerics.Matrix4x4(
+            1, 0, 0, 0,
+            0, 0, 1, 0,
+            0, -1, 0, 0,
+            0, 0, 0, 1);
+        return System.Numerics.Matrix4x4.Multiply(System.Numerics.Matrix4x4.Multiply(inverse, matrix), basis);
     }
 
     private static byte[] ExportBlobToBytes(string blob)
@@ -7458,16 +7473,40 @@ public class Kit : Entity<Kit>
     private static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
     {
         if (type.Models == null || type.Models.Count == 0) return null;
-        if (tags == null || tags.Length == 0) return type.Models[0];
+        if (tags == null || tags.Length == 0)
+        {
+            var defaultModel = type.Models.FirstOrDefault(m => m.Tags == null || m.Tags.Count == 0);
+            return defaultModel ?? type.Models[0];
+        }
         var kitTags = kit.Tags ?? new List<Tag>();
-        var tagGuids = new HashSet<string>(
-            tags.SelectMany(tagName => kitTags.Where(t => t.Name == tagName).Select(t => t.Guid)));
+        var selectedTagGuids = new HashSet<string>();
+        foreach (var tagValue in tags)
+        {
+            var byGuid = kitTags.FirstOrDefault(t => t.Guid == tagValue);
+            if (byGuid != null)
+            {
+                selectedTagGuids.Add(byGuid.Guid);
+                continue;
+            }
+            foreach (var tag in kitTags.Where(t => t.Name == tagValue))
+                selectedTagGuids.Add(tag.Guid);
+        }
+        Model bestModel = null;
+        double bestScore = -1;
         foreach (var model in type.Models)
         {
-            var modelTagGuids = (model.Tags ?? new List<TagId>()).Select(t => t.Guid).ToList();
-            if (modelTagGuids.Count > 0 && modelTagGuids.All(g => tagGuids.Contains(g)))
-                return model;
+            var modelTagGuids = new HashSet<string>((model.Tags ?? new List<TagId>()).Select(t => t.Guid));
+            if (!selectedTagGuids.All(modelTagGuids.Contains)) continue;
+            var intersection = modelTagGuids.Intersect(selectedTagGuids).Count();
+            var union = modelTagGuids.Union(selectedTagGuids).Count();
+            var score = union > 0 ? (double)intersection / union : 0;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestModel = model;
+            }
         }
+        if (bestModel != null) return bestModel;
         return type.Models[0];
     }
 
@@ -7583,7 +7622,27 @@ public class Kit : Entity<Kit>
                 {
                     var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
                     modelRoot.SaveGLTF(gltfPath);
-                    return System.IO.File.ReadAllBytes(gltfPath);
+                    var gltfJson = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(gltfPath));
+                    foreach (var buffer in gltfJson["buffers"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                    {
+                        var uri = buffer["uri"]?.Value<string>();
+                        if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
+                        var path = System.IO.Path.Combine(tmpDir, uri);
+                        if (!System.IO.File.Exists(path)) continue;
+                        var bytes = System.IO.File.ReadAllBytes(path);
+                        buffer["uri"] = "data:application/octet-stream;base64," + Convert.ToBase64String(bytes);
+                    }
+                    foreach (var image in gltfJson["images"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                    {
+                        var uri = image["uri"]?.Value<string>();
+                        if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
+                        var path = System.IO.Path.Combine(tmpDir, uri);
+                        if (!System.IO.File.Exists(path)) continue;
+                        var mime = image["mimeType"]?.Value<string>() ?? "application/octet-stream";
+                        var bytes = System.IO.File.ReadAllBytes(path);
+                        image["uri"] = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                    }
+                    return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
                 }
                 finally
                 {

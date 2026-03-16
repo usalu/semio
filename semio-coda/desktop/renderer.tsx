@@ -802,9 +802,7 @@ function OntologyTree({
         </div>
       )}
       <div className="p-2 overflow-x-auto">
-        <Tree className="min-w-0">
-          <OntologyTreeNodeView node={root} defaultExpanded={defaultExpanded} />
-        </Tree>
+        <Tree className="min-w-0" sections={[{ id: "ontology-root", label: null, content: <OntologyTreeNodeView node={root} defaultExpanded={defaultExpanded} /> }]} />
       </div>
     </div>
   );
@@ -1016,9 +1014,7 @@ function ValidationTree({
         <div className="text-xs text-muted-foreground font-mono break-all">{report.expression}</div>
       </div>
       <div className="p-2 overflow-x-auto">
-        <Tree className="min-w-0">
-          <ValidationTreeNodeView node={report.tree} defaultExpanded={defaultExpanded} />
-        </Tree>
+        <Tree className="min-w-0" sections={[{ id: "validation-root", label: null, content: <ValidationTreeNodeView node={report.tree} defaultExpanded={defaultExpanded} /> }]} />
       </div>
     </div>
   );

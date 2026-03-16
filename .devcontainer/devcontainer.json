@@ -90,6 +90,7 @@
     "source=${localWorkspaceFolderBasename}-gitkraken-desktop,target=/home/vscode/.gitkraken,type=volume",
     "source=${localWorkspaceFolderBasename}-gitkraken-cli,target=/home/vscode/.local/share/GitKrakenCLI,type=volume",
     "source=${localWorkspaceFolderBasename}-gitkraken-workspaces,target=/home/vscode/.local/share/gk,type=volume",
+    "source=${localWorkspaceFolderBasename}-f3d,target=/home/vscode/.config/F3D,type=volume",
     "source=${localWorkspaceFolderBasename}-cursor-server,target=/home/vscode/.cursor-server,type=volume",
     "source=${localWorkspaceFolderBasename}-antigravity-server,target=/home/vscode/.antigravity-server,type=volume",
     "source=${localWorkspaceFolderBasename}-vscode-server,target=/home/vscode/.vscode-server,type=volume",
@@ -102,10 +103,12 @@
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
     "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
     "SEMIO_GITKRAKEN_AUTO_START": "true",
+    "SEMIO_F3D_AUTO_START": "true",
     "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL": "",
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8",
-    "LC_CTYPE": "en_US.UTF-8"
+    "LC_CTYPE": "en_US.UTF-8",
+    "DISPLAY": ":99"
   },
   "remoteEnv": {
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright"

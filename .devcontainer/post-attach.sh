@@ -99,6 +99,56 @@ install_gitkraken_cli() {
 }
 #endregion 🔖GitKrakenCliHelpers
 
+#region 🔖F3DHelpers
+install_f3d() {
+  if command -v f3d >/dev/null 2>&1; then
+    return 0
+  fi
+
+  case "$(uname -m)" in
+    x86_64|amd64)
+      local f3d_arch="x86_64"
+      ;;
+    aarch64|arm64)
+      local f3d_arch="arm64"
+      ;;
+    *)
+      echo "⚠️  Skipping F3D install for unsupported architecture: $(uname -m)"
+      return 0
+      ;;
+  esac
+
+  echo "Installing F3D for Linux..."
+  local temp_dir
+  temp_dir="$(mktemp -d)"
+  trap 'rm -rf "$temp_dir"' RETURN
+  
+  # Try to download the latest release
+  local release_json
+  release_json="$(curl -fsSL https://api.github.com/repos/f3d-app/f3d/releases/latest)"
+  local download_url
+  download_url="$(
+    printf '%s' "$release_json" | jq -r \
+      --arg suffix "Linux-${f3d_arch}.deb" \
+      '.assets[] | select(.name | endswith($suffix)) | .browser_download_url' | head -n 1
+  )"
+  
+  if [ -z "$download_url" ] || [ "$download_url" = "null" ]; then
+    echo "⚠️  Unable to resolve F3D download URL for architecture: ${f3d_arch}, trying fallback..."
+    # Fallback to a known version
+    download_url="https://github.com/f3d-app/f3d/releases/download/v3.4.1/F3D-3.4.1-Linux-${f3d_arch}.deb"
+  fi
+
+  curl -fsSL "$download_url" -o "$temp_dir/f3d.deb"
+  sudo apt-get update
+  sudo apt-get install -y "$temp_dir/f3d.deb"
+  rm -rf "$temp_dir"
+  trap - RETURN
+
+  echo "F3D installed."
+}
+#endregion 🔖F3DHelpers
+
 #region 🔖DetectIDE
 find_working_clis() {
   shopt -s nullglob
@@ -321,6 +371,7 @@ configure_gitkraken_workspace() {
 install_gitkraken_desktop
 install_gitkraken_cli
 configure_gitkraken_workspace
+install_f3d
 
 #region 🔖GitKrakenAutoStart
 start_gitkraken_if_needed() {
@@ -335,6 +386,18 @@ start_gitkraken_if_needed() {
     return 0
   fi
 
+  # Set up virtual display if needed
+  if [ -z "$DISPLAY" ]; then
+    export DISPLAY=:99
+  fi
+
+  # Start Xvfb if not running
+  if ! pgrep -f "Xvfb.*:99" >/dev/null 2>&1; then
+    echo "🖥️  Starting virtual display..."
+    Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset >/dev/null 2>&1 &
+    sleep 2
+  fi
+
   # Check if we're in WSL environment
   if grep -q "Microsoft\|WSL" /proc/version 2>/dev/null; then
     echo "🚀 Starting GitKraken with WSL-compatible flags..."
@@ -343,7 +406,7 @@ start_gitkraken_if_needed() {
     echo "✅ GitKraken started in background."
   else
     echo "🚀 Starting GitKraken..."
-    gitkraken --no-debug --path "$WORKSPACE" >/dev/null 2>&1 &
+    gitkraken --no-debug --no-sandbox --path "$WORKSPACE" >/dev/null 2>&1 &
     echo "✅ GitKraken started in background."
   fi
 }
@@ -353,6 +416,45 @@ if [ "${SEMIO_GITKRAKEN_AUTO_START:-true}" = "true" ]; then
   start_gitkraken_if_needed
 fi
 #endregion 🔖GitKrakenAutoStart
+
+#region 🔖F3DAutoStart
+start_f3d_if_needed() {
+  if ! command -v f3d >/dev/null 2>&1; then
+    echo "⚠️  F3D not available, skipping auto-start."
+    return 0
+  fi
+
+  # Check if F3D is already running
+  if pgrep -f "f3d" >/dev/null 2>&1; then
+    echo "✅ F3D is already running."
+    return 0
+  fi
+
+  # Check if display is available
+  if [ -z "$DISPLAY" ]; then
+    echo "⚠️  No display available, skipping F3D auto-start. F3D requires a GUI environment."
+    echo "💡 To use F3D, please run in a GUI environment or set up X11 forwarding."
+    return 0
+  fi
+
+  # Check if we're in WSL environment
+  if grep -q "Microsoft\|WSL" /proc/version 2>/dev/null; then
+    echo "🚀 Starting F3D with WSL-compatible flags..."
+    # Start F3D with no-sandbox for WSL compatibility
+    f3d --no-sandbox >/dev/null 2>&1 &
+    echo "✅ F3D started in background."
+  else
+    echo "🚀 Starting F3D..."
+    f3d >/dev/null 2>&1 &
+    echo "✅ F3D started in background."
+  fi
+}
+
+# Only auto-start if not explicitly disabled
+if [ "${SEMIO_F3D_AUTO_START:-true}" = "true" ]; then
+  start_f3d_if_needed
+fi
+#endregion 🔖F3DAutoStart
 
 #region 🔖McpConfig
 sync_mcp_client_configs() {

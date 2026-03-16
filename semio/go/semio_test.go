@@ -521,4 +521,48 @@ func TestExportDesignModel(t *testing.T) {
 			t.Errorf("expected nil result for invalid format, got %d bytes", len(result))
 		}
 	})
+
+	t.Run("Scene graph report", func(t *testing.T) {
+		result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+		if err != nil {
+			t.Fatalf("ExportDesignModel failed: %v", err)
+		}
+		var parsed interface{}
+		if err := json.Unmarshal(result, &parsed); err != nil {
+			t.Fatalf("result is not valid JSON: %v", err)
+		}
+		reportsDir := filepath.Join("..", "..", "reports", "export-design-model")
+		if err := os.MkdirAll(reportsDir, 0o755); err != nil {
+			t.Fatalf("failed to create reports directory: %v", err)
+		}
+		reportPath := filepath.Join(reportsDir, "go.gltf")
+		if err := os.WriteFile(reportPath, result, 0o644); err != nil {
+			t.Fatalf("failed to write report: %v", err)
+		}
+	})
+}
+
+func TestExportDesignModelSceneGraphReport(t *testing.T) {
+	var kit Kit
+	loadJSON(t, "kit_metabolism.json", &kit)
+	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
+	if design == nil {
+		t.Fatal("Nakagin Capsule Tower design not found")
+	}
+	result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+	if err != nil {
+		t.Fatalf("ExportDesignModel failed: %v", err)
+	}
+	var parsed interface{}
+	if err := json.Unmarshal(result, &parsed); err != nil {
+		t.Fatalf("result is not valid JSON: %v", err)
+	}
+	reportsDir := filepath.Join("..", "..", "reports", "export-design-model")
+	if err := os.MkdirAll(reportsDir, 0o755); err != nil {
+		t.Fatalf("failed to create reports directory: %v", err)
+	}
+	reportPath := filepath.Join(reportsDir, "go.gltf")
+	if err := os.WriteFile(reportPath, result, 0o644); err != nil {
+		t.Fatalf("failed to write report: %v", err)
+	}
 }

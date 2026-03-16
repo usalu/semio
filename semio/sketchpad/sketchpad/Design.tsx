@@ -58,9 +58,13 @@ import {
   identitySelector,
   useDesignScope,
   useKitScope,
+  useSketchpadScope,
   usePieceScope,
   useSketchpadActor,
   useSketchpadActorSafe,
+  DesignScopeContext,
+  KitScopeContext,
+  SketchpadScopeContext,
 } from "./Sketchpad";
 
 // #endregion Internal State Management
@@ -142,7 +146,6 @@ import {
   Tree,
   TreeItem,
   TreeRow,
-  TreeSection,
   TreeStateProvider,
   useReactFlow,
   useStoreApi,
@@ -1353,6 +1356,10 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     if (result.diff?.selection && actor) {
       actor.send({ type: "DESIGN.SET_SELECTION", kitGuid: this.kitGuid, designGuid: this.designGuid, selection: this.state.selection || {} } as any);
     }
+    if (result.diff?.activeTool !== undefined && actor) {
+      console.log(`[DEBUG] Sending DESIGN.SET_ACTIVE_TOOL to actor: tool=${result.diff.activeTool}, actor=${!!actor}`);
+      actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid: this.kitGuid, designGuid: this.designGuid, tool: result.diff.activeTool } as any);
+    }
     return result as T;
   }
 
@@ -1439,7 +1446,7 @@ if (typeof window !== "undefined") {
     action: (context: any, event: any) => {
       const key = `${event.kitGuid}:${event.designGuid}`;
       const app = context.designApps[key] || createDefaultDesignAppState();
-      return { designApps: { ...context.designApps, [key]: { ...app, focusedPiece: event.pieceGuid } } };
+      return { designApps: { ...context.designApps, [key]: { ...app, focusedPieceGuid: event.pieceGuid } } };
     },
   });
   registerEventHandler("DESIGN.SET_DIAGRAM_CENTER", {
@@ -1557,6 +1564,7 @@ const DesignAppActorContext = createContext<any>(null);
  **/
 const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => {
   useDesignAppInitialize();
+  useDesignAppYjsToXStateSync();
   return <>{children}</>;
 };
 
@@ -1810,7 +1818,17 @@ export function useDesignAppActiveToolField(): Field<ToolKind> {
  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappactivetool](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppActiveTool)
  **/
 export function useDesignAppActiveTool(): HookResult<ToolKind> {
-  return fieldToHookResult(useDesignAppActiveToolField());
+  const designScope = useDesignScope();
+  const store = useDesignStore() as DesignStore | null;
+  const activeTool = useDesignApp((state) => state.activeTool) as ToolKind | undefined;
+  const canSet = designScope !== null && store !== null;
+  const setActiveTool = useCallback(
+    (value: ToolKind) => {
+      if (store) store.execute("semio.designApp.setActiveTool", value);
+    },
+    [store],
+  );
+  return [activeTool ?? ToolKind.SELECTION_NORMAL, setActiveTool, canSet];
 }
 
 /**
@@ -2900,28 +2918,41 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? id?.kit ?? "";
   const designGuid = designScope?.guid ?? id?.design ?? "";
-
-  const state = useDesignApp((s) => s, id);
+  const store = useDesignStore(undefined, id) as DesignStore | null;
+  const state = useSyncExternalStore(
+    useCallback((callback: () => void) => {
+      if (!store) return () => { };
+      return store.subscribe(callback);
+    }, [store]),
+    useCallback(() => store?.snapshot() ?? null, [store]),
+    useCallback(() => store?.snapshot() ?? null, [store]),
+  );
+  const lastSyncedStateRef = useRef<string>("");
 
   useEffect(() => {
     if (!actor || !state || !kitGuid || !designGuid) return;
+
+    const nextState = {
+      panelVisibility: state.panelVisibility,
+      selection: state.selection,
+      hover: state.hover,
+      focusedPieceGuid: state.focusedPieceGuid,
+      selectedModelTags: state.selectedModelTags ?? {},
+      diagramCenter: state.diagramCenter ? { x: state.diagramCenter.u, y: state.diagramCenter.v } : undefined,
+      diagramScale: state.diagramScale,
+      camera: state.camera,
+      activeTool: state.activeTool,
+      fullscreenWindow: state.fullscreenWindow,
+    };
+    const nextStateHash = JSON.stringify(nextState);
+    if (lastSyncedStateRef.current === nextStateHash) return;
+    lastSyncedStateRef.current = nextStateHash;
 
     actor.send({
       type: "DESIGN.SYNC",
       kitGuid,
       designGuid,
-      state: {
-        panelVisibility: state.panelVisibility,
-        selection: state.selection,
-        hover: state.hover,
-        focusedPiece: state.focusedPieceGuid,
-        selectedModelTags: state.selectedModelTags ?? {},
-        diagramCenter: state.diagramCenter ? { x: state.diagramCenter.u, y: state.diagramCenter.v } : undefined,
-        diagramScale: state.diagramScale,
-        camera: state.camera,
-        activeTool: state.activeTool,
-        fullscreenWindow: state.fullscreenWindow,
-      },
+      state: nextState,
     });
   }, [actor, state, kitGuid, designGuid]);
 }
@@ -3571,6 +3602,16 @@ export const DesignAppFooter: FC = () => {
   const selectedModelTagsRef = useRef(selectedModelTags);
   const addModelTagForAllTypesRef = useRef(addModelTagForAllTypes);
   const removeModelTagFromAllTypesRef = useRef(removeModelTagFromAllTypes);
+  const footerTagsKey = useMemo(
+    () => JSON.stringify({
+      appType,
+      allModelTagGuids,
+      designTypeGuids,
+      selectedModelTags,
+      tagNames: Array.from(tagNameMap.entries()),
+    }),
+    [appType, allModelTagGuids, designTypeGuids, selectedModelTags, tagNameMap],
+  );
 
   useEffect(() => {
     typesRef.current = types;
@@ -3630,7 +3671,7 @@ export const DesignAppFooter: FC = () => {
         removeFooterItem(`semio.sketchpad.app.design.footer.tag.${tagGuid}`);
       });
     };
-  }, [appType, addFooterItem, removeFooterItem, allModelTagGuids, tagNameMap, selectedModelTags, designTypeGuids]);
+  }, [footerTagsKey, addFooterItem, removeFooterItem]);
 
   return null;
 };
@@ -3661,6 +3702,13 @@ const getDesignFilterStore = (): DesignFilterStore => {
 };
 const setDesignFilterState = (next: DesignFilterState) => {
   const store = getDesignFilterStore();
+  if (
+    store.state.showPieces === next.showPieces
+    && store.state.showConnections === next.showConnections
+    && store.state.showPorts === next.showPorts
+  ) {
+    return;
+  }
   store.state = next;
   store.listeners.forEach((l) => l());
 };
@@ -3773,6 +3821,7 @@ export const DesignSelectSettings: FC = () => {
         id="semio.sketchpad.app.design.tools.select.mode.additive"
         icon={<AddIcon className="size-tiny" />}
         text={additiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_ADDITIVE}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_ADDITIVE : ToolKind.SELECTION_NORMAL)}
       />
       <Toggle
@@ -4056,21 +4105,21 @@ export const WindowLibrary: FC = () => {
 
   return (
     <div>
-      <TreeSection id="semio.sketchpad.app.design.windowLibrary.scene" defaultOpen={true}>
+      <TreeItem id="semio.sketchpad.app.design.windowLibrary.scene" defaultOpen={true}>
         {sceneTemplates.map((template) => (
           <DraggableWindowItem key={template.id} template={template} />
         ))}
-      </TreeSection>
-      <TreeSection id="semio.sketchpad.app.design.windowLibrary.diagram" defaultOpen={true}>
+      </TreeItem>
+      <TreeItem id="semio.sketchpad.app.design.windowLibrary.diagram" defaultOpen={true}>
         {diagramTemplates.map((template) => (
           <DraggableWindowItem key={template.id} template={template} />
         ))}
-      </TreeSection>
-      <TreeSection id="semio.sketchpad.app.design.windowLibrary.table" defaultOpen={false}>
+      </TreeItem>
+      <TreeItem id="semio.sketchpad.app.design.windowLibrary.table" defaultOpen={false}>
         {tableTemplates.map((template) => (
           <DraggableWindowItem key={template.id} template={template} />
         ))}
-      </TreeSection>
+      </TreeItem>
     </div>
   );
 };
@@ -7687,7 +7736,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         return changed ? result : oldNodes;
       }
       const oldNodeMap = new Map(oldNodes.map(n => [n.id, n]));
-      return baseNodes.map(newNode => {
+      const nextNodes = baseNodes.map(newNode => {
         const pieceId = getPieceIdFromNode(newNode as DiagramNode);
         const shouldBeSelected = selectedPieces.has(pieceId) || selectedConnections.has(pieceId);
         const oldNode = oldNodeMap.get(newNode.id);
@@ -7700,6 +7749,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         if (positionSame && dataSame && oldNode.type === newNode.type && oldNode.selected === shouldBeSelected && oldNode.measured === measured) return oldNode;
         return { ...newNode, measured, selected: shouldBeSelected };
       });
+      if (nextNodes.length === oldNodes.length && nextNodes.every((node, index) => node === oldNodes[index])) {
+        return oldNodes;
+      }
+      return nextNodes;
     });
     requestAnimationFrame(() => { isSyncingSelectionRef.current = false; });
   }, [baseNodes, selection]);
@@ -9760,6 +9813,56 @@ const ModelDesign: FC = () => {
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨designappscene](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/DesignAppScene)
  **/
+/** SceneContextBridge re-provides DOM-tree React contexts inside the R3F reconciler.
+ * R3F v9 creates a separate React root, so contexts from the DOM tree are not available.
+ * This bridge reads context values in the DOM tree and re-provides them inside R3F.
+ **/
+const SceneContextBridge: FC<{
+  designScope: React.ContextType<typeof DesignScopeContext>;
+  kitScope: React.ContextType<typeof KitScopeContext>;
+  sketchpadScope: React.ContextType<typeof SketchpadScopeContext>;
+  designAppScope: React.ContextType<typeof DesignAppScopeContext>;
+  designAppActor: React.ContextType<typeof DesignAppActorContext>;
+  designFilterState: React.ContextType<typeof DesignFilterContext>;
+  hoverIntentValue: React.ContextType<typeof HoverIntentContext>;
+  transactionPiecesValue: React.ContextType<typeof TransactionPiecesContext>;
+  hoverPiecesValue: React.ContextType<typeof HoverPiecesContext>;
+  children: React.ReactNode;
+}> = ({
+  designScope,
+  kitScope,
+  sketchpadScope,
+  designAppScope,
+  designAppActor,
+  designFilterState,
+  hoverIntentValue,
+  transactionPiecesValue,
+  hoverPiecesValue,
+  children,
+}) => {
+  return (
+    <SketchpadScopeContext.Provider value={sketchpadScope}>
+      <KitScopeContext.Provider value={kitScope}>
+        <DesignScopeContext.Provider value={designScope}>
+          <DesignAppScopeContext.Provider value={designAppScope}>
+            <DesignAppActorContext.Provider value={designAppActor}>
+              <DesignFilterContext.Provider value={designFilterState}>
+                <HoverIntentContext.Provider value={hoverIntentValue}>
+                  <TransactionPiecesContext.Provider value={transactionPiecesValue}>
+                    <HoverPiecesContext.Provider value={hoverPiecesValue}>
+                      {children}
+                    </HoverPiecesContext.Provider>
+                  </TransactionPiecesContext.Provider>
+                </HoverIntentContext.Provider>
+              </DesignFilterContext.Provider>
+            </DesignAppActorContext.Provider>
+          </DesignAppScopeContext.Provider>
+        </DesignScopeContext.Provider>
+      </KitScopeContext.Provider>
+    </SketchpadScopeContext.Provider>
+  );
+};
+
 const DesignAppScene: FC = () => {
   const [transaction] = useDesignAppTransaction();
   const [addPiece] = useDesignAppAddPiece();
@@ -9778,6 +9881,19 @@ const DesignAppScene: FC = () => {
   const { setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
   const sceneDropZoneRef = useRef<HTMLDivElement | null>(null);
   const sceneId = useRef(guid()).current;
+
+  // Read all context values in DOM tree for bridging into R3F
+  const designScope = useDesignScope();
+  const kitScope = useKitScope();
+  const sketchpadScope = useSketchpadScope();
+  const designAppScope = useDesignAppScope();
+  const designAppActor = useDesignAppActor();
+  const designFilterState = useDesignFilters();
+  const hoverIntentValue = useContext(HoverIntentContext);
+  const transactionPiecesValue = useContext(TransactionPiecesContext);
+  const hoverPiecesValue = useContext(HoverPiecesContext);
+
+
 
   const handleSceneDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -9893,7 +10009,19 @@ const DesignAppScene: FC = () => {
         projection={projection}
         onProjectionChange={setProjection}
       >
-        <ModelDesign />
+        <SceneContextBridge
+          designScope={designScope}
+          kitScope={kitScope}
+          sketchpadScope={sketchpadScope}
+          designAppScope={designAppScope}
+          designAppActor={designAppActor}
+          designFilterState={designFilterState}
+          hoverIntentValue={hoverIntentValue}
+          transactionPiecesValue={transactionPiecesValue}
+          hoverPiecesValue={hoverPiecesValue}
+        >
+          <ModelDesign />
+        </SceneContextBridge>
       </Scene>
     </div>
   );
@@ -10042,7 +10170,7 @@ const App: FC<AppProps> = () => {
 
   const windowLayout = useMemo(() => {
     if (!storedWindowLayout) {
-      return storedWindowLayout;
+      return defaultLayout;
     }
     const removeLegacySideTabsFromWindowLayout = (layoutNode: any): any => {
       if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
@@ -10071,32 +10199,42 @@ const App: FC<AppProps> = () => {
     };
     const sanitizedLayout = removeLegacySideTabsFromWindowLayout(storedWindowLayout);
 
-    const hasSceneWindow = (layout: any): boolean => {
+    const hasWindowKind = (layout: any, windowKind: DesignAppWindowKind): boolean => {
       if (!layout) return false;
 
-      if (layout.type === "component" && layout.componentName === DesignAppWindowKind.Scene) return true;
+      if (layout.type === "component" && layout.componentName === windowKind) return true;
 
       if (layout.root && typeof layout.root === "object") {
-        return hasSceneWindow(layout.root);
+        return hasWindowKind(layout.root, windowKind);
       }
 
       if (layout.content && Array.isArray(layout.content)) {
-        return layout.content.some((item: any) => hasSceneWindow(item));
+        return layout.content.some((item: any) => hasWindowKind(item, windowKind));
       }
       if (layout.contentItems && Array.isArray(layout.contentItems)) {
-        return layout.contentItems.some((item: any) => hasSceneWindow(item));
+        return layout.contentItems.some((item: any) => hasWindowKind(item, windowKind));
       }
 
       return false;
     };
 
-    const hasScene = hasSceneWindow(sanitizedLayout);
-    if (!hasScene) {
-      return undefined;
+    const hasScene = hasWindowKind(sanitizedLayout, DesignAppWindowKind.Scene);
+    const hasDiagram = hasWindowKind(sanitizedLayout, DesignAppWindowKind.Diagram);
+    if (!hasScene || !hasDiagram) {
+      return defaultLayout;
     }
 
     return sanitizedLayout;
-  }, [storedWindowLayout]);
+  }, [defaultLayout, storedWindowLayout]);
+
+  const storedWindowLayoutHash = useMemo(
+    () => (storedWindowLayout === undefined ? "__undefined__" : JSON.stringify(storedWindowLayout)),
+    [storedWindowLayout],
+  );
+  const windowLayoutHash = useMemo(
+    () => (windowLayout === undefined ? "__undefined__" : JSON.stringify(windowLayout)),
+    [windowLayout],
+  );
 
   useEffect(() => {
     if (!store || !storedWindowLayout) return;
@@ -10108,17 +10246,18 @@ const App: FC<AppProps> = () => {
       }
       return;
     }
-    if (windowLayout !== storedWindowLayout) {
+    if (windowLayoutHash !== storedWindowLayoutHash) {
       try {
         store.change({ windowLayout });
       } catch (error) {
         console.error("[DesignApp] Failed to migrate layout:", error);
       }
     }
-  }, [store, storedWindowLayout, windowLayout]);
+  }, [store, storedWindowLayout, storedWindowLayoutHash, windowLayout, windowLayoutHash]);
 
   const windowConfig: AppWindowConfig = useMemo(() => {
     return {
+      defaultLayout,
       windowKinds: [
         {
           id: DesignAppWindowKind.Diagram,
@@ -10131,7 +10270,6 @@ const App: FC<AppProps> = () => {
           component: (props: any) => <SceneWindow />,
         },
       ],
-      defaultLayout,
     };
   }, [defaultLayout, reactFlowInstanceRef]);
 
@@ -10152,6 +10290,20 @@ const App: FC<AppProps> = () => {
   const kitAppCommands = useKitAppCommands();
   const sketchpadCommands = useSketchpadCommands();
   const { navigateToType, navigateToDesign, navigateToKit } = sketchpadCommands;
+  const designDetailsKey = useMemo(
+    () => JSON.stringify({
+      designGuid: design?.guid ?? null,
+      pieceGuids: (design?.pieces ?? []).map((entry) => entry.guid),
+      connectionGuids: (design?.connections ?? []).map((entry) => entry.guid),
+      includedDesignGuids: getIncludedDesigns(design || ({} as Design)).map((entry) => entry.guid),
+      selectionPieces: (selection.pieces ?? []).map((entry) => resolveSelectionEntryGuid(entry) ?? entry),
+      selectionConnections: (selection.connections ?? []).map((entry) => resolveSelectionEntryGuid(entry) ?? entry),
+      selectionConnector: selection.connector ?? null,
+      selectionConnectors: selection.connectors ?? [],
+      kitGuid,
+    }),
+    [design, selection, kitGuid],
+  );
 
   useHotkeys(
     "ctrl+a",
@@ -10175,16 +10327,16 @@ const App: FC<AppProps> = () => {
   const appType = useAppType();
 
   useEffect(() => {
-    if (appType !== "design") return;
     addSidePanelTab("right", {
       id: "semio.sketchpad.app.design.settings",
       icon: SettingsIcon,
       order: 100,
       content: () => (
         <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <DesignSettingsContent />
-          </Tree>
+          <Tree
+            className="min-w-0 overflow-hidden p-double"
+            sections={[{ id: "semio.sketchpad.app.design.settings.content", label: null, content: <DesignSettingsContent /> }]}
+          />
         </TreeStateProvider>
       ),
     });
@@ -10198,7 +10350,7 @@ const App: FC<AppProps> = () => {
       removeSidePanelTab("right", "semio.sketchpad.app.design.settings");
       removeSidePanelTab("right", "semio.sketchpad.app.design.chat");
     };
-  }, [appType, addSidePanelTab, removeSidePanelTab]);
+  }, [addSidePanelTab, removeSidePanelTab]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -10235,7 +10387,7 @@ const App: FC<AppProps> = () => {
   }, [activeTool, setActiveTool]);
 
   useEffect(() => {
-    if (appType !== "design") return;
+    const detailDesignGuid = design?.guid;
 
     const selectionPieceEntries = (selection.pieces || []) as any[];
     const selectionConnectionEntries = (selection.connections || []) as any[];
@@ -10284,9 +10436,9 @@ const App: FC<AppProps> = () => {
         order: 50,
         defaultOpen: true,
         content: () =>
-          design && kitGuid ? (
+          detailDesignGuid && kitGuid ? (
             <KitScopeProvider guid={kitGuid}>
-              <DesignScopeProvider guid={design.guid}>
+              <DesignScopeProvider guid={detailDesignGuid}>
                 <DesignSection />
               </DesignScopeProvider>
             </KitScopeProvider>
@@ -10301,9 +10453,9 @@ const App: FC<AppProps> = () => {
         order: 0,
         defaultOpen: true,
         content: () =>
-          design && kitGuid ? (
+          detailDesignGuid && kitGuid ? (
             <KitScopeProvider guid={kitGuid}>
-              <DesignScopeProvider guid={design.guid}>
+              <DesignScopeProvider guid={detailDesignGuid}>
                 <ConnectorSection pieceGuid={connectorPieceId} connectorGuid={connectorId} />
               </DesignScopeProvider>
             </KitScopeProvider>
@@ -10315,9 +10467,9 @@ const App: FC<AppProps> = () => {
         order: 50,
         defaultOpen: true,
         content: () =>
-          design && kitGuid ? (
+          detailDesignGuid && kitGuid ? (
             <KitScopeProvider guid={kitGuid}>
-              <DesignScopeProvider guid={design.guid}>
+              <DesignScopeProvider guid={detailDesignGuid}>
                 <DesignSection />
               </DesignScopeProvider>
             </KitScopeProvider>
@@ -10333,9 +10485,9 @@ const App: FC<AppProps> = () => {
           order: 0,
           defaultOpen: true,
           content: () =>
-            design && kitGuid ? (
+            detailDesignGuid && kitGuid ? (
               <KitScopeProvider guid={kitGuid}>
-                <DesignScopeProvider guid={design.guid}>
+                <DesignScopeProvider guid={detailDesignGuid}>
                   <PiecesSection />
                 </DesignScopeProvider>
               </KitScopeProvider>
@@ -10350,9 +10502,9 @@ const App: FC<AppProps> = () => {
           order: 10,
           defaultOpen: true,
           content: () =>
-            design && kitGuid ? (
+            detailDesignGuid && kitGuid ? (
               <KitScopeProvider guid={kitGuid}>
-                <DesignScopeProvider guid={design.guid}>
+                <DesignScopeProvider guid={detailDesignGuid}>
                   <ConnectionsSection connections={selectedConnections} isSingle={selectedConnections.length === 1} count={selectedConnections.length} />
                 </DesignScopeProvider>
               </KitScopeProvider>
@@ -10377,9 +10529,9 @@ const App: FC<AppProps> = () => {
         order: 50,
         defaultOpen: true,
         content: () =>
-          design && kitGuid ? (
+          detailDesignGuid && kitGuid ? (
             <KitScopeProvider guid={kitGuid}>
-              <DesignScopeProvider guid={design.guid}>
+              <DesignScopeProvider guid={detailDesignGuid}>
                 <DesignSection />
               </DesignScopeProvider>
             </KitScopeProvider>
@@ -10411,10 +10563,9 @@ const App: FC<AppProps> = () => {
       removeSection("details", selectionMultipleId);
       removeSection("details", "semio.sketchpad.app.kit.properties");
     };
-  }, [selection, addSection, removeSection, appType, t, design, kitGuid]);
+  }, [designDetailsKey, addSection, removeSection, kitGuid]);
 
   useEffect(() => {
-    if (appType !== "design") return;
     addSection("workbench", {
       id: "semio.sketchpad.app.kit.pieces",
       specificity: 20,
@@ -10431,7 +10582,7 @@ const App: FC<AppProps> = () => {
       removeSection("workbench", "semio.sketchpad.app.kit.pieces");
       removeSection("tools", "semio.sketchpad.app.design.windows");
     };
-  }, [appType, addSection, removeSection]);
+  }, [addSection, removeSection]);
 
   const PiecesWorkbenchContent: FC = () => {
     const kit = useKit() as Kit;
@@ -10796,8 +10947,6 @@ const DesignApp: FC = () => {
   const removeSection = useRemovePanelSection();
 
   useEffect(() => {
-    if (appType !== "design") return;
-
     addSection("toolbar", {
       id: "semio.sketchpad.app.design.tools.select",
       specificity: 20,
@@ -10826,7 +10975,7 @@ const DesignApp: FC = () => {
       removeSection("toolbar", "semio.sketchpad.app.design.tools.select");
       removeSection("toolbar", "semio.sketchpad.app.design.toolbar.filters");
     };
-  }, [appType, addSection, removeSection]);
+  }, [addSection, removeSection]);
 
   return (
     <DesignFilterProvider>

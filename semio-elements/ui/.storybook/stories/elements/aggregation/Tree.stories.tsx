@@ -20,7 +20,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { File, Folder, Settings } from "lucide-react";
 import React from "react";
-import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, Level, LevelProvider, Tree, TreeContent, TreeItem, TreeSection, getLevelBgClass } from "@semio-elements/ui";
+import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, Level, LevelProvider, Tree, TreeContent, TreeItem, getLevelBgClass } from "@semio-elements/ui";
 
 // #region 🔖Tree
 const meta = {
@@ -36,46 +36,79 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    children: (
+const treeSections = [
+  {
+    id: "tree.story.kit",
+    label: "Kit",
+    icon: <Folder size={14} />,
+    items: [
+      {
+        id: "tree.story.kit.types",
+        label: "Types",
+        icon: <Folder size={12} />,
+        items: [
+          {
+            id: "tree.story.kit.types.capsules",
+            label: "Capsules",
+            icon: <Folder size={12} />,
+            items: [
+              {
+                id: "tree.story.kit.types.capsules.variants",
+                label: "Variants",
+                icon: <Folder size={12} />,
+                items: [
+                  { id: "tree.story.kit.types.capsules.variants.j", label: "Capsule J", icon: <File size={12} /> },
+                  { id: "tree.story.kit.types.capsules.variants.l", label: "Capsule L", icon: <File size={12} /> },
+                  { id: "tree.story.kit.types.capsules.variants.p", label: "Capsule P", icon: <File size={12} /> },
+                ],
+              },
+              {
+                id: "tree.story.kit.types.capsules.balcony",
+                label: "Balcony",
+                icon: <Folder size="XL" />,
+                items: [
+                  { id: "tree.story.kit.types.capsules.balcony.j", label: "With Balcony J", icon: <File size={12} /> },
+                  { id: "tree.story.kit.types.capsules.balcony.l", label: "With Balcony L", icon: <File size={12} /> },
+                ],
+              },
+            ],
+          },
+          {
+            id: "tree.story.kit.types.bases",
+            label: "Bases",
+            icon: <Folder size={12} />,
+            items: [{ id: "tree.story.kit.types.bases.blob", label: "Base Blob", icon: <File size={12} /> }],
+          },
+        ],
+      },
+      { id: "tree.story.kit.designs", label: "Designs", icon: <File size={12} /> },
+      { id: "tree.story.kit.qualities", label: "Qualities", icon: <File size={12} /> },
+    ],
+  },
+  {
+    id: "tree.story.settings",
+    label: "Settings",
+    icon: <Settings size={14} />,
+    content: (
       <>
-        <TreeSection label="Kit" icon={<Folder size={14} />}>
-          <TreeItem label="Types" icon={<Folder size={12} />}>
-            <TreeItem label="Capsules" icon={<Folder size={12} />}>
-              <TreeItem label="Variants" icon={<Folder size={12} />}>
-                <TreeItem label="Capsule J" icon={<File size={12} />} />
-                <TreeItem label="Capsule L" icon={<File size={12} />} />
-                <TreeItem label="Capsule P" icon={<File size={12} />} />
-              </TreeItem>
-              <TreeItem label="Balcony" icon={<Folder size={'XL'} />}>
-                <TreeItem label="With Balcony J" icon={<File size={12} />} />
-                <TreeItem label="With Balcony L" icon={<File size={12} />} />
-              </TreeItem>
-            </TreeItem>
-            <TreeItem label="Bases" icon={<Folder size={12} />}>
-              <TreeItem label="Base Blob" icon={<File size={12} />} />
-            </TreeItem>
-          </TreeItem>
-          <TreeItem label="Designs" icon={<File size={12} />} />
-          <TreeItem label="Qualities" icon={<File size={12} />} />
-        </TreeSection>
-        <TreeSection label="Settings" icon={<Settings size={14} />}>
-          <TreeItem label="General">
-            <TreeContent>
-              <Input id="kit-name-input" value="Metabolism" />
-              <Input id="version-input" value="1.0.0" />
-            </TreeContent>
-          </TreeItem>
-          <TreeItem label="Advanced">
-            <TreeContent>
-              <Button>Export Kit</Button>
-            </TreeContent>
-          </TreeItem>
-        </TreeSection>
+        <TreeItem label="General">
+          <TreeContent>
+            <Input id="kit-name-input" value="Metabolism" />
+            <Input id="version-input" value="1.0.0" />
+          </TreeContent>
+        </TreeItem>
+        <TreeItem label="Advanced">
+          <TreeContent>
+            <Button>Export Kit</Button>
+          </TreeContent>
+        </TreeItem>
       </>
     ),
   },
+];
+
+export const Default: Story = {
+  args: { sections: treeSections },
   render: (args) => (
     <div className="border p-4">
       <Tree {...args} />
@@ -83,74 +116,36 @@ export const Default: Story = {
   ),
 };
 
-const TreeChildren = (
-  <>
-    <TreeSection label="Kit" icon={<Folder size={14} />}>
-      <TreeItem label="Types" icon={<Folder size={12} />}>
-        <TreeItem label="Capsules" icon={<Folder size={12} />}>
-          <TreeItem label="Variants" icon={<Folder size={12} />}>
-            <TreeItem label="Capsule J" icon={<File size={12} />} />
-            <TreeItem label="Capsule L" icon={<File size={12} />} />
-            <TreeItem label="Capsule P" icon={<File size={12} />} />
-          </TreeItem>
-          <TreeItem label="Balcony" icon={<Folder size={12} />}>
-            <TreeItem label="With Balcony J" icon={<File size={12} />} />
-            <TreeItem label="With Balcony L" icon={<File size={12} />} />
-          </TreeItem>
-        </TreeItem>
-        <TreeItem label="Bases" icon={<Folder size={12} />}>
-          <TreeItem label="Base Blob" icon={<File size={12} />} />
-        </TreeItem>
-      </TreeItem>
-      <TreeItem label="Designs" icon={<File size={12} />} />
-      <TreeItem label="Qualities" icon={<File size={12} />} />
-    </TreeSection>
-    <TreeSection label="Settings" icon={<Settings size={14} />}>
-      <TreeItem label="General">
-        <TreeContent>
-          <Input id="kit-name-input-level" value="Metabolism" />
-          <Input id="version-input-level" value="1.0.0" />
-        </TreeContent>
-      </TreeItem>
-      <TreeItem label="Advanced">
-        <TreeContent>
-          <Button>Export Kit</Button>
-        </TreeContent>
-      </TreeItem>
-    </TreeSection>
-  </>
-);
-
 const createLevelRender = (level: Level) => () => (
   <LevelProvider level={level}>
     <div className={`border p-4 ${getLevelBgClass(level)}`}>
-      <Tree>{TreeChildren}</Tree>
+      <Tree sections={treeSections} />
     </div>
   </LevelProvider>
 );
 
 export const Base: Story = {
-  args: { children: TreeChildren },
+  args: { sections: treeSections },
   render: createLevelRender("base"),
 };
 
 export const Window: Story = {
-  args: { children: TreeChildren },
+  args: { sections: treeSections },
   render: createLevelRender("window"),
 };
 
 export const Panel: Story = {
-  args: { children: TreeChildren },
+  args: { sections: treeSections },
   render: createLevelRender("panel"),
 };
 
 export const Overlay: Story = {
-  args: { children: TreeChildren },
+  args: { sections: treeSections },
   render: createLevelRender("overlay"),
 };
 
 export const Temporary: Story = {
-  args: { children: TreeChildren },
+  args: { sections: treeSections },
   render: createLevelRender("temporary"),
 };
 
@@ -221,7 +216,7 @@ const ControlTreeDemo = () => {
 };
 
 export const ControlTreeStory: Story = {
-  args: { children: null },
+  args: { sections: [] },
   render: () => <ControlTreeDemo />,
 };
 

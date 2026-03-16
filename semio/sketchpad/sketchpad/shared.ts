@@ -2602,11 +2602,11 @@ export interface KeyedAppEventHandlerConfig<TAppKey extends string, TAppState> e
   getKey: (event: any) => string;
 }
 
-const EXCLUSIVE_SIDE_PANEL_KEYS: (keyof PanelVisibility)[] = ["rightSidePanel", "chat", "settings"];
+const EXCLUSIVE_SIDE_PANEL_KEYS: (keyof PanelVisibility)[] = ["rightSidePanel"];
 
 /**
  * Returns the next panel visibility state for a toggle event.
- * MUST keep right side panel, chat, and settings mutually exclusive when one is activated.
+ * MUST keep the dedicated right side panel visibility toggle isolated from other panel flags.
  * [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories🛠️getnextpanelvisibilityfromtoggle](semiorepo://definition/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES/GET-NEXT-PANEL-VISIBILITY-FROM-TOGGLE)
  **/
 export function getNextPanelVisibilityFromToggle(panelVisibility: PanelVisibility, panel: keyof PanelVisibility): PanelVisibility {

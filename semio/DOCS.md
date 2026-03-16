@@ -50,25 +50,6 @@ Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `Metabolis
 
 </details>
 
-## [👤semio🌐docs](semiorepo://p/u/semio/b/w/docs)
-
-<details>
-<summary><strong>📚 Resources:</strong></summary>
-
-- [Markdown](https://www.markdownguide.org) - `guide`
-- [MDX](https://mdxjs.com/docs) - `official`
-- [Astro](https://astro.build/docs) - `official`
-- [Starlight](https://starlight.astro.build) - `official`
-
-</details>
-
-<details>
-<summary><strong>📺 Channels:</strong></summary>
-
-- [Coding in Public](https://www.youtube.com/@CodinginPublic) - `astro`
-
-</details>
-
 ## [👤semio📚engine](semiorepo://p/u/semio/b/l/engine)
 
 ## Files
@@ -79,6 +60,8 @@ Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `Metabolis
 - `sqliteschema.ts` - SQLite schema generation utilities
 
 ## [👤semio📚js](semiorepo://p/u/semio/b/l/js)
+
+The Sketchpad runtime, app configs, i18n, pages, and browser-facing tests now live in `semio/sketchpad`. `semio/js` is limited to reusable domain logic from `semio.ts` plus its domain tests.
 
 ## 📁js/semio/
 
@@ -759,7 +742,7 @@ The shared `Footer` component has a fixed `h-medium` height.
 ##### Styling
 
 - NEVER use colors and spacing directly. ALWAYS use semantic variables from `global.css`. Only `global.css` uses colors and pixels directly.
-- NEVER add semantic values and ALWAYS use hardcoded values in `theme.css`. NEVER use `theme.css` outside of `global.css`.
+- NEVER add semantic values and ALWAYS use hardcoded values in `semio-elements/ui/theme.css`. NEVER use `semio-elements/ui/theme.css` outside of `global.css`.
 - ALWAYS use the standardized unit-based sizing system defined in globals.css (derived from `--spacing`):
   - Single: 1 unit - spacing between elements and between icon and element (e.g. `gap-1`)
   - Tiny: 3 units - icon size in actions, action text size (e.g. `h-tiny`, `w-tiny`, `text-tiny`)
@@ -852,8 +835,8 @@ Every app supports transactions:
 
 Sketchpad UI elements resolve transactions via React context (not props):
 
-- `js/semio/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
-- `js/semio/sketchpad/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
+- `semio-elements/ui/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
+- `semio-elements/ui/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
 - `js/semio/sketchpad/Design.tsx` diagram piece nodes use non-inset rings (`ring-*`, not `ring-inset`) so rings remain visible on `Avatar` nodes with full-size `AvatarFallback` backgrounds.
 - Elements such as `Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, and `ActionDropdown` call `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps are responsible for scoping transactions by wrapping their UI subtree with `TransactionProvider` using the appropriate transaction hook (per-app or kit-level), so all descendant elements participate consistently.
@@ -1510,7 +1493,7 @@ interface PanelSection {
 
 - **LEFT**: Workbench, Tools (grouped)
 - **RIGHT**: Details, Chat, Settings (grouped)
-- **MIDDLE**: HUD, Stats (grouped, transparent)
+- **MIDDLE**: Stats (transparent)
 - **BOTTOM**: Toolbar
 
 #### Tool System
@@ -2232,16 +2215,19 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 
 ### Sketchpad transactions
 
-- `semio/js/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
+- `semio-elements/ui/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
 - Sketchpad elements (`Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, ...) use `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps wrap their UI subtree with `TransactionProvider` using the appropriate transaction hook so all descendant elements participate in undo/redo consistently.
 
 ### Sketchpad selection + hover visuals
 
-- `semio/js/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
+- `semio-elements/ui/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
 - Hover and selection state for Home/Kit/Design/Type/Quality/Docs/Feedback is stored in the Sketchpad state machine; UI rows and diagram nodes dispatch hover events and visuals read from machine state.
-- `semio/js/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
+- `semio-elements/ui/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
 - `semio/js/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
+- Selection composition is unified across apps through shared semantics: `replace`, `additive`, `subtractive`, `intersect`.
+- Shared selection composition applies stable ordering (`previous` order first, then first-seen additive entries) and dedupes ids at composition boundaries.
+- Selection modifier resolution is unified across apps: `Shift => additive`, `Alt/Ctrl/Meta => subtractive`, combined modifiers => `intersect`.
 
 ### Sketchpad windows
 
@@ -2266,7 +2252,7 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 - Y.js is reserved for Kit data synchronization (per-kit `KitStore` documents).
 - Sketchpad UI state is persisted locally via `localStorage` key `semio.sketchpad.state.<id>` (no Y.js dependency for settings/navigation/panel sizes).
 - Global interaction mode is stored as `SketchpadState.device` and controlled via `useDevice()` / `SET_DEVICE` with i18n IDs `semio.sketchpad.settings.device.*`.
-- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `semio/js/sketchpad/elements.tsx`.
+- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `semio-elements/ui/elements.tsx`.
 
 KitStore keeps kit concepts in the `yConcepts` array as `ConceptStore` entries so snapshots expose full concept data (name, description, icon, attributes) and persistence rehydrates from that array instead of guid placeholders.
 
@@ -2297,7 +2283,7 @@ Panels are rendered under `LevelProvider level="panel"` so panel chrome and cont
 
 ### Size Constants
 
-All size constants are defined in `semio/js/globals.css` and derived from `--spacing`:
+All size constants are defined in `semio-elements/ui/globals.css` and derived from `--spacing`:
 
 - **Single**: 1 unit (e.g. `gap-1`) - spacing between elements and between icon and element
 - **Tiny**: 3 units (e.g. `h-tiny`, `w-tiny`, `text-tiny`) - icon size in actions, action text size
@@ -2366,24 +2352,6 @@ The code runs in different environments (different browsers, electron, mobile/de
 
 </details>
 
-## [👤semio📚js🗃️sketchpad](semiorepo://p/u/semio/b/l/js/f/sketchpad)
-
-## elements.tsx
-
-`Table` supports row-level hover callbacks for app hover state dispatch.
-
-## Home.tsx
-
-Home app hover state is stored in the Sketchpad state machine and updated via hover commands for table rows.
-
-## Kit.tsx
-
-Kit app hover state covers all artifact kinds and is updated via table and diagram hover dispatch.
-
-## Sketchpad.tsx
-
-Home command hooks forward hover events, including clear, into the Sketchpad state machine.
-
 ## [👤semio📚net](semiorepo://p/u/semio/b/l/net)
 
 ## Semio.cs
@@ -2423,6 +2391,53 @@ Components use virtual methods to define their inputs/outputs:
 
 Components can override these to hardcode their parameter structure, ensuring stable input/output definitions across schema changes.
 
+## [👤semio🌐docs](semiorepo://p/u/semio/b/w/docs)
+
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+
+- [Markdown](https://www.markdownguide.org) - `guide`
+- [MDX](https://mdxjs.com/docs) - `official`
+- [Astro](https://astro.build/docs) - `official`
+- [Starlight](https://starlight.astro.build) - `official`
+
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [Coding in Public](https://www.youtube.com/@CodinginPublic) - `astro`
+
+</details>
+
+## [👤semio🖱️sketchpad](semiorepo://p/u/semio/b/u/sketchpad)
+
+Detailed app/runtime guidance remains in [`./sketchpad/README.md`](./sketchpad/README.md). This bundle now owns the Sketchpad React runtime exported as `@semio/sketchpad`, while `@semio/js` keeps only domain logic.
+
+## [👤semio📚3dm🛅semiorhino💻semiorhino](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs)
+
+Rhino 8 plugin hosting a WebView2 panel for importing semio kits and models.
+
+## [👤semio📚3dm🛅semiorhinotests💻tests](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs)
+
+Unit tests for the Semio.Rhino bridge registry and layer service.
+
+## [👤semio📚3dm🛅ui🗃️src💻rhinopanel](semiorepo://p/u/semio/b/l/3dm/fd/req/ui/fd/org/src/f/RhinoPanel.tsx)
+
+Main panel component rendering the semio kit/type/model tree view for Rhino.
+
+## [👤semio📚3dm🛅ui🗃️src💻bridge](semiorepo://p/u/semio/b/l/3dm/fd/req/ui/fd/org/src/f/bridge.ts)
+
+Bridge client for JSON-RPC style communication with the native Rhino C# host.
+
+## [👤semio📚3dm🛅ui🗃️src💻bridge🔖webviewglobal](semiorepo://p/u/semio/b/l/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/WebViewGlobal)
+
+Global type augmentation for the WebView2 chrome.webview API.
+
+## [👤semio📚3dm🛅ui🗃️src💻index](semiorepo://p/u/semio/b/l/3dm/fd/req/ui/fd/org/src/f/index.tsx)
+
+Entry point for the semio 3dm React UI embedded in Rhino WebView2.
+
 ## [👤semio🏪assets💻icons](semiorepo://p/u/semio/b/a/assets/f/icons.ts)
 
 Re-exports Lucide React icons with domain-specific semantic aliases.
@@ -2450,6 +2465,14 @@ Generates a palindromic keyframe sequence with triple repetition per frame.
 ## [👤semio🏪assets🛅logo💻logo🔖createanimatedsvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Create%20Animated%20SVG)
 
 Creates an animated SVG file with SMIL animations from keyframe data.
+
+## [👤semio🏪assets🛅logo💻logo🛠️parsesvgfile](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/d/i/parseSVGFile)
+
+Parses an SVG file and returns keyframe data with group transforms and paths.
+
+## [👤semio🏪assets🛅logo💻logo🛠️generatekeyframesequence](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/d/i/generateKeyframeSequence)
+
+Generates a palindromic keyframe sequence with triple repetition per frame.
 
 ## [👤semio🏪assets🗃️repo🗃️some🗃️folder💻fileemptyregion](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_empty_region.tsx)
 
@@ -2543,17 +2566,13 @@ Entry point for the Electron renderer process mounting the React app.
 
 Electron renderer process that mounts the Sketchpad React app with window controls.
 
-## [👤semio🌐docs💻index](semiorepo://p/u/semio/b/w/docs/f/index.tsx)
-
-Entry point for the documentation site React app.
-
-## [👤semio🌐docs💻index🔖entrypoint](semiorepo://p/u/semio/b/w/docs/f/index.tsx/s/Entrypoint)
-
-Docs entrypoint that mounts the Sketchpad React component with StrictMode.
-
 ## [👤semio📚engine💻build](semiorepo://p/u/semio/b/l/engine/f/build.ts)
 
 Build script for the semio engine Python package.
+
+## [👤semio📚engine💻engine🔖mcp](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp)
+
+Call start_working_in_local_kit(path) first; then use start_working_in_design/start_working_in_type to scope further.
 
 ## [👤semio📚engine💻generateschemas](semiorepo://p/u/semio/b/l/engine/f/generate-schemas.ts)
 
@@ -2570,6 +2589,16 @@ Exports the SQLite schema definition for the engine database.
 ## [👤semio📚gh🛅semiograsshopper💻semiograsshopper](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs)
 
 Main Grasshopper plugin providing domain components for Rhino.
+
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖importedrhinoobjectresolution](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/ImportedRhinoObjectResolution)
+
+/ <summary>
+/ Resolves a single imported Rhino model object by metadata identifier.
+/
+/ Specs:
+/ Tries native object IDs first, then deterministic fallback IDs ("rhino-object-{index}") used by import metadata.
+/ Returns null when no matching source model object can be found.
+/ </summary>
 
 ## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️goo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/Goo)
 
@@ -2625,6 +2654,23 @@ Main Grasshopper plugin providing domain components for Rhino.
 
 / Abstract Grasshopper component for constructing entity diffs.
 / [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️diffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/DiffComponent)
+
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️changegoo](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/ChangeGoo)
+
+/ Generic Grasshopper data wrapper for semio change types.
+
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️changeparam](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/ChangeParam)
+
+/ Generic Grasshopper parameter for semio change types.
+
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️changecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/ChangeComponent)
+
+/ Abstract Grasshopper component for constructing entity changes.
+
+## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️applydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/ApplyDiffComponent)
+
+/ Abstract Grasshopper component for applying an entity diff to an entity.
+/ [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖bases🛠️applydiffcomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/Bases/d/i/ApplyDiffComponent)
 
 ## [👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializecomponent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/d/i/SerializeComponent)
 
@@ -2777,6 +2823,29 @@ KitToSqlite writes a Kit to a SQLite database file
 
 KitFromZip extracts a Kit and its files from a zip archive
 
+## [👤semio📚go💻kitsqlite🛠️buildfilepath](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/buildFilePath)
+
+buildFilePath constructs the file path from the folder hierarchy and file name
+
+## [👤semio📚go💻kitsqlite🛠️buildfolderpath](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/buildFolderPath)
+
+buildFolderPath constructs the folder path from the folder hierarchy
+
+## [👤semio📚go💻kitsqlite🛠️blobencode](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/blobEncode)
+
+blobEncode encodes bytes to a data URI string with the mime type inferred from filename.
+Falls back to "application/octet-stream" when the extension is unknown.
+
+## [👤semio📚go💻kitsqlite🛠️mimefromfilename](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/mimeFromFilename)
+
+mimeFromFilename returns the mime type for a given filename based on its extension.
+Returns "application/octet-stream" when the extension is unknown.
+
+## [👤semio📚go💻kitsqlite🛠️blobdecode](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/blobDecode)
+
+blobDecode decodes a data URI string to bytes.
+Supports "data:<mime>;base64,<data>" format as well as raw base64 for backwards compatibility.
+
 ## [👤semio📚go💻kitsqlite🛠️kittozip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/d/i/KitToZip)
 
 KitToZip packages a Kit and its files into a zip archive
@@ -2788,6 +2857,7 @@ Core domain library in Go implementing the semio data model and operations.
 ## [👤semio📚go💻semio🔖utils](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Utils)
 
 Guid generates a new random 128-bit hex-encoded unique identifier.
+ptrString returns a pointer to the given string value.
 
 ## [👤semio📚go💻semio🔖entityids](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Entity%20IDs)
 
@@ -2901,9 +2971,9 @@ NewKit creates a new kit with the given name and a generated GUID.
 
 AreKitsEqual compares two kits for structural equality.
 
-## [👤semio📚go💻semio🔖kitdiffhelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers)
+## [👤semio📚go💻semio🔖kitchangehelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers)
 
-AddTypeToKit creates a diff that adds a single type to a kit.
+AddTypeToKit creates a change that adds a single type to a kit.
 
 ## [👤semio📚go💻semio🔖validation](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Validation)
 
@@ -2917,13 +2987,90 @@ ProblemSerialized is the JSON-serializable representation of a validation proble
 
 planeToMatrix holds the data fields for a planeToMatrix record.
 
+## [👤semio📚go💻semio🔖exportdesignmodel](semiorepo://p/u/semio/b/l/go/f/semio.go/s/ExportDesignModel)
+
+ExportModelFormats maps supported export format extensions.
+
+## [👤semio📚go💻semio🔖exportdesignmodelhelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/ExportDesignModel/Helpers)
+
+exportMeshData holds extracted or generated mesh geometry for a single type.
+
 ## [👤semio📚go💻semio🪨assetspath](semiorepo://p/u/semio/b/l/go/f/semio.go/d/c/AssetsPath)
 
 AssetsPath holds the data fields for a AssetsPath record.
 
-## [👤semio📚go💻semio🛠️guid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Guid)
+## [👤semio📚go💻semio🛠️ptrstring](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ptrString)
 
 Guid generates a new random 128-bit hex-encoded unique identifier.
+ptrString returns a pointer to the given string value.
+
+## [👤semio📚go💻semio🛠️ptrfloat64](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ptrFloat64)
+
+ptrFloat64 holds the data fields for a ptrFloat64 record.
+
+## [👤semio📚go💻semio🛠️floatequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/floatEqual)
+
+floatEqual holds the data fields for a floatEqual record.
+
+## [👤semio📚go💻semio🛠️optfloatequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/optFloatEqual)
+
+optFloatEqual holds the data fields for a optFloatEqual record.
+
+## [👤semio📚go💻semio🛠️optboolequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/optBoolEqual)
+
+optBoolEqual holds the data fields for a optBoolEqual record.
+
+## [👤semio📚go💻semio🛠️optstringequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/optStringEqual)
+
+optStringEqual holds the data fields for a optStringEqual record.
+
+## [👤semio📚go💻semio🛠️arelocationidsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areLocationIdsEqual)
+
+areLocationIdsEqual holds the data fields for a areLocationIdsEqual record.
+
+## [👤semio📚go💻semio🛠️aretypeidsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areTypeIdsEqual)
+
+areTypeIdsEqual holds the data fields for a areTypeIdsEqual record.
+
+## [👤semio📚go💻semio🛠️aredesignidsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areDesignIdsEqual)
+
+areDesignIdsEqual holds the data fields for a areDesignIdsEqual record.
+
+## [👤semio📚go💻semio🛠️areportidsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/arePortIdsEqual)
+
+arePortIdsEqual holds the data fields for a arePortIdsEqual record.
+
+## [👤semio📚go💻semio🛠️arelayeridsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areLayerIdsEqual)
+
+areLayerIdsEqual holds the data fields for a areLayerIdsEqual record.
+
+## [👤semio📚go💻semio🛠️normalizeoptint](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/normalizeOptInt)
+
+normalizeOptInt holds the data fields for a normalizeOptInt record.
+
+## [👤semio📚go💻semio🛠️areauthoridsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areAuthorIdsEqual)
+
+areAuthorIdsEqual holds the data fields for a areAuthorIdsEqual record.
+
+## [👤semio📚go💻semio🛠️areconceptidsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areConceptIdsEqual)
+
+areConceptIdsEqual holds the data fields for a areConceptIdsEqual record.
+
+## [👤semio📚go💻semio🛠️areportidslicesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/arePortIdSlicesEqual)
+
+arePortIdSlicesEqual holds the data fields for a arePortIdSlicesEqual record.
+
+## [👤semio📚go💻semio🛠️areattributesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areAttributesEqual)
+
+areAttributesEqual holds the data fields for a areAttributesEqual record.
+
+## [👤semio📚go💻semio🛠️arepropsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/arePropsEqual)
+
+arePropsEqual holds the data fields for a arePropsEqual record.
+
+## [👤semio📚go💻semio🛠️guid](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Guid)
+
+Guid holds the data fields for a Guid record.
 
 ## [👤semio📚go💻semio🛠️normalize](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/Normalize)
 
@@ -3361,6 +3508,106 @@ KitDiff represents changes to a kit entity.
 
 KitsDiff represents a collection of kit additions, removals and updates.
 
+## [👤semio📚go💻semio✂️change](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/Change)
+
+Change represents a reversible entity change with forward and backward diffs.
+
+## [👤semio📚go💻semio✂️attributechange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/AttributeChange)
+
+AttributeChange holds the data fields for a AttributeChange record.
+
+## [👤semio📚go💻semio✂️locationchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/LocationChange)
+
+LocationChange holds the data fields for a LocationChange record.
+
+## [👤semio📚go💻semio✂️authorchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/AuthorChange)
+
+AuthorChange holds the data fields for a AuthorChange record.
+
+## [👤semio📚go💻semio✂️filechange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/FileChange)
+
+FileChange holds the data fields for a FileChange record.
+
+## [👤semio📚go💻semio✂️folderchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/FolderChange)
+
+FolderChange holds the data fields for a FolderChange record.
+
+## [👤semio📚go💻semio✂️benchmarkchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/BenchmarkChange)
+
+BenchmarkChange holds the data fields for a BenchmarkChange record.
+
+## [👤semio📚go💻semio✂️qualitychange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/QualityChange)
+
+QualityChange holds the data fields for a QualityChange record.
+
+## [👤semio📚go💻semio✂️portchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PortChange)
+
+PortChange holds the data fields for a PortChange record.
+
+## [👤semio📚go💻semio✂️propchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PropChange)
+
+PropChange holds the data fields for a PropChange record.
+
+## [👤semio📚go💻semio✂️tagchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/TagChange)
+
+TagChange holds the data fields for a TagChange record.
+
+## [👤semio📚go💻semio✂️conceptchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConceptChange)
+
+ConceptChange holds the data fields for a ConceptChange record.
+
+## [👤semio📚go💻semio✂️modelchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ModelChange)
+
+ModelChange holds the data fields for a ModelChange record.
+
+## [👤semio📚go💻semio✂️connectorchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConnectorChange)
+
+ConnectorChange holds the data fields for a ConnectorChange record.
+
+## [👤semio📚go💻semio✂️typechange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/TypeChange)
+
+TypeChange holds the data fields for a TypeChange record.
+
+## [👤semio📚go💻semio✂️layerchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/LayerChange)
+
+LayerChange holds the data fields for a LayerChange record.
+
+## [👤semio📚go💻semio✂️piecechange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/PieceChange)
+
+PieceChange holds the data fields for a PieceChange record.
+
+## [👤semio📚go💻semio✂️groupchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/GroupChange)
+
+GroupChange holds the data fields for a GroupChange record.
+
+## [👤semio📚go💻semio✂️sidechange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/SideChange)
+
+SideChange holds the data fields for a SideChange record.
+
+## [👤semio📚go💻semio✂️connectionchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/ConnectionChange)
+
+ConnectionChange holds the data fields for a ConnectionChange record.
+
+## [👤semio📚go💻semio✂️statchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/StatChange)
+
+StatChange holds the data fields for a StatChange record.
+
+## [👤semio📚go💻semio✂️designchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/DesignChange)
+
+DesignChange holds the data fields for a DesignChange record.
+
+## [👤semio📚go💻semio✂️kitchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/KitChange)
+
+KitChange holds the data fields for a KitChange record.
+
+## [👤semio📚go💻semio🛠️getdesignchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/GetDesignChange)
+
+GetDesignChange holds the data fields for a GetDesignChange record.
+
+## [👤semio📚go💻semio🛠️getkitchange](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/GetKitChange)
+
+GetKitChange holds the data fields for a GetKitChange record.
+
 ## [👤semio📚go💻semio🛠️serializekit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/SerializeKit)
 
 SerializeKit marshals a kit to indented JSON bytes.
@@ -3424,6 +3671,10 @@ FindConceptInKit returns a pointer to the concept with the given GUID or nil.
 ## [👤semio📚go💻semio🛠️findauthorinkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/FindAuthorInKit)
 
 FindAuthorInKit returns a pointer to the author with the given GUID or nil.
+
+## [👤semio📚go💻semio🛠️sumqualityindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/SumQualityInDesign)
+
+For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
 
 ## [👤semio📚go💻semio🛠️newkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/NewKit)
 
@@ -3685,9 +3936,249 @@ inverseAuthorsDiff holds the data fields for a inverseAuthorsDiff record.
 
 inverseAuthorDiff performs the inverseAuthorDiff operation.
 
+## [👤semio📚go💻semio🛠️inverseconnectorsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseConnectorsDiff)
+
+inverseConnectorsDiff holds the data fields for a inverseConnectorsDiff record.
+
+## [👤semio📚go💻semio🛠️inverseconnectordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseConnectorDiff)
+
+inverseConnectorDiff holds the data fields for a inverseConnectorDiff record.
+
+## [👤semio📚go💻semio🛠️inversemodelsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseModelsDiff)
+
+inverseModelsDiff holds the data fields for a inverseModelsDiff record.
+
+## [👤semio📚go💻semio🛠️inversemodeldiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseModelDiff)
+
+inverseModelDiff holds the data fields for a inverseModelDiff record.
+
+## [👤semio📚go💻semio🛠️inversepiecesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inversePiecesDiff)
+
+inversePiecesDiff holds the data fields for a inversePiecesDiff record.
+
+## [👤semio📚go💻semio🛠️inversepiecediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inversePieceDiff)
+
+inversePieceDiff holds the data fields for a inversePieceDiff record.
+
+## [👤semio📚go💻semio🛠️inverseconnectionsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseConnectionsDiff)
+
+inverseConnectionsDiff holds the data fields for a inverseConnectionsDiff record.
+
+## [👤semio📚go💻semio🛠️inverseconnectiondiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseConnectionDiff)
+
+inverseConnectionDiff holds the data fields for a inverseConnectionDiff record.
+
+## [👤semio📚go💻semio🛠️inversesidediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseSideDiff)
+
+inverseSideDiff holds the data fields for a inverseSideDiff record.
+
+## [👤semio📚go💻semio🛠️inverseattributediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseAttributeDiff)
+
+inverseAttributesDiff holds the data fields for a inverseAttributesDiff record.
+
+## [👤semio📚go💻semio🛠️inverseattributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseAttributesDiff)
+
+inverseAttributesDiff performs the inverseAttributesDiff operation.
+
+## [👤semio📚go💻semio🛠️inversepropsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inversePropsDiff)
+
+inversePropsDiff holds the data fields for a inversePropsDiff record.
+
+## [👤semio📚go💻semio🛠️inversepropdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inversePropDiff)
+
+inversePropDiff holds the data fields for a inversePropDiff record.
+
+## [👤semio📚go💻semio🛠️inversestatsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseStatsDiff)
+
+inverseStatsDiff holds the data fields for a inverseStatsDiff record.
+
+## [👤semio📚go💻semio🛠️inversestatdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseStatDiff)
+
+inverseStatDiff holds the data fields for a inverseStatDiff record.
+
+## [👤semio📚go💻semio🛠️inverselayersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseLayersDiff)
+
+inverseLayersDiff holds the data fields for a inverseLayersDiff record.
+
+## [👤semio📚go💻semio🛠️inverselayerdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseLayerDiff)
+
+inverseLayerDiff performs the inverseLayerDiff operation.
+
+## [👤semio📚go💻semio🛠️inversegroupsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseGroupsDiff)
+
+inverseGroupsDiff holds the data fields for a inverseGroupsDiff record.
+
+## [👤semio📚go💻semio🛠️inversegroupdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/inverseGroupDiff)
+
+inverseGroupDiff holds the data fields for a inverseGroupDiff record.
+
 ## [👤semio📚go💻semio🛠️normalizestr](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/normalizeStr)
 
 normalizeStr holds the data fields for a normalizeStr record.
+
+## [👤semio📚go💻semio🛠️normalizeint64](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/normalizeInt64)
+
+normalizeInt64 holds the data fields for a normalizeInt64 record.
+
+## [👤semio📚go💻semio🛠️arefolderidsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areFolderIdsEqual)
+
+areFolderIdsEqual holds the data fields for a areFolderIdsEqual record.
+
+## [👤semio📚go💻semio🛠️getattributediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getAttributeDiff)
+
+getAttributesDiff holds the data fields for a getAttributesDiff record.
+
+## [👤semio📚go💻semio🛠️isattributediffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isAttributeDiffEmpty)
+
+isAttributeDiffEmpty performs the isAttributeDiffEmpty operation.
+
+## [👤semio📚go💻semio🛠️getattributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getAttributesDiff)
+
+getAttributesDiff holds the data fields for a getAttributesDiff record.
+
+## [👤semio📚go💻semio🛠️isattributesdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isAttributesDiffEmpty)
+
+isAttributesDiffEmpty holds the data fields for a isAttributesDiffEmpty record.
+
+## [👤semio📚go💻semio🛠️getpropsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getPropsDiff)
+
+getPropsDiff holds the data fields for a getPropsDiff record.
+
+## [👤semio📚go💻semio🛠️getpropdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getPropDiff)
+
+getPropDiff holds the data fields for a getPropDiff record.
+
+## [👤semio📚go💻semio🛠️ispropdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isPropDiffEmpty)
+
+isPropDiffEmpty holds the data fields for a isPropDiffEmpty record.
+
+## [👤semio📚go💻semio🛠️getstatsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getStatsDiff)
+
+getStatsDiff holds the data fields for a getStatsDiff record.
+
+## [👤semio📚go💻semio🛠️getstatdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getStatDiff)
+
+getStatDiff holds the data fields for a getStatDiff record.
+
+## [👤semio📚go💻semio🛠️isstatdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isStatDiffEmpty)
+
+isStatDiffEmpty holds the data fields for a isStatDiffEmpty record.
+
+## [👤semio📚go💻semio🛠️getlayersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getLayersDiff)
+
+getLayersDiff holds the data fields for a getLayersDiff record.
+
+## [👤semio📚go💻semio🛠️getlayerdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getLayerDiff)
+
+getLayerDiff holds the data fields for a getLayerDiff record.
+
+## [👤semio📚go💻semio🛠️islayerdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isLayerDiffEmpty)
+
+isLayerDiffEmpty holds the data fields for a isLayerDiffEmpty record.
+
+## [👤semio📚go💻semio🛠️getgroupsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getGroupsDiff)
+
+getGroupsDiff holds the data fields for a getGroupsDiff record.
+
+## [👤semio📚go💻semio🛠️getgroupdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getGroupDiff)
+
+getGroupDiff holds the data fields for a getGroupDiff record.
+
+## [👤semio📚go💻semio🛠️isgroupdiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isGroupDiffEmpty)
+
+isGroupDiffEmpty holds the data fields for a isGroupDiffEmpty record.
+
+## [👤semio📚go💻semio🛠️applyattributediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyAttributeDiff)
+
+applyAttributesDiff holds the data fields for a applyAttributesDiff record.
+
+## [👤semio📚go💻semio🛠️applyattributesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyAttributesDiff)
+
+applyAttributesDiff holds the data fields for a applyAttributesDiff record.
+
+## [👤semio📚go💻semio🛠️applypropsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyPropsDiff)
+
+applyPropsDiff holds the data fields for a applyPropsDiff record.
+
+## [👤semio📚go💻semio🛠️applypropdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyPropDiff)
+
+applyPropDiff holds the data fields for a applyPropDiff record.
+
+## [👤semio📚go💻semio🛠️applystatsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyStatsDiff)
+
+applyStatsDiff holds the data fields for a applyStatsDiff record.
+
+## [👤semio📚go💻semio🛠️applystatdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyStatDiff)
+
+applyStatDiff holds the data fields for a applyStatDiff record.
+
+## [👤semio📚go💻semio🛠️applylayersdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyLayersDiff)
+
+applyLayersDiff holds the data fields for a applyLayersDiff record.
+
+## [👤semio📚go💻semio🛠️applylayerdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyLayerDiff)
+
+applyLayerDiff holds the data fields for a applyLayerDiff record.
+
+## [👤semio📚go💻semio🛠️applygroupsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyGroupsDiff)
+
+applyGroupsDiff holds the data fields for a applyGroupsDiff record.
+
+## [👤semio📚go💻semio🛠️applygroupdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyGroupDiff)
+
+applyGroupDiff holds the data fields for a applyGroupDiff record.
+
+## [👤semio📚go💻semio🛠️getconnectorsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getConnectorsDiff)
+
+getConnectorsDiff holds the data fields for a getConnectorsDiff record.
+
+## [👤semio📚go💻semio🛠️getconnectordiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getConnectorDiff)
+
+getConnectorDiff holds the data fields for a getConnectorDiff record.
+
+## [👤semio📚go💻semio🛠️isconnectordiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isConnectorDiffEmpty)
+
+isConnectorDiffEmpty holds the data fields for a isConnectorDiffEmpty record.
+
+## [👤semio📚go💻semio🛠️getmodeldiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getModelDiff)
+
+getModelsDiff holds the data fields for a getModelsDiff record.
+
+## [👤semio📚go💻semio🛠️getmodelsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getModelsDiff)
+
+getModelsDiff holds the data fields for a getModelsDiff record.
+
+## [👤semio📚go💻semio🛠️getpiecesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getPiecesDiff)
+
+getPiecesDiff holds the data fields for a getPiecesDiff record.
+
+## [👤semio📚go💻semio🛠️getpiecediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getPieceDiff)
+
+getPieceDiff holds the data fields for a getPieceDiff record.
+
+## [👤semio📚go💻semio🛠️areplanesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/arePlanesEqual)
+
+arePlanesEqual holds the data fields for a arePlanesEqual record.
+
+## [👤semio📚go💻semio🛠️ispiecediffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isPieceDiffEmpty)
+
+isPieceDiffEmpty holds the data fields for a isPieceDiffEmpty record.
+
+## [👤semio📚go💻semio🛠️getconnectionsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getConnectionsDiff)
+
+getConnectionsDiff holds the data fields for a getConnectionsDiff record.
+
+## [👤semio📚go💻semio🛠️getsidediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getSideDiff)
+
+getSideDiff holds the data fields for a getSideDiff record.
+
+## [👤semio📚go💻semio🛠️getconnectiondiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/getConnectionDiff)
+
+getConnectionDiff holds the data fields for a getConnectionDiff record.
+
+## [👤semio📚go💻semio🛠️isconnectiondiffempty](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/isConnectionDiffEmpty)
+
+isConnectionDiffEmpty holds the data fields for a isConnectionDiffEmpty record.
 
 ## [👤semio📚go💻semio🛠️aretypesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areTypesEqual)
 
@@ -3736,6 +4227,26 @@ areFoldersEqual holds the data fields for a areFoldersEqual record.
 ## [👤semio📚go💻semio🛠️areauthorsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areAuthorsEqual)
 
 areAuthorsEqual holds the data fields for a areAuthorsEqual record.
+
+## [👤semio📚go💻semio🛠️arecoordsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areCoordsEqual)
+
+areCoordsEqual holds the data fields for a areCoordsEqual record.
+
+## [👤semio📚go💻semio🛠️aresidesequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areSidesEqual)
+
+areSidesEqual holds the data fields for a areSidesEqual record.
+
+## [👤semio📚go💻semio🛠️arestatsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areStatsEqual)
+
+areStatsEqual holds the data fields for a areStatsEqual record.
+
+## [👤semio📚go💻semio🛠️arelayersequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areLayersEqual)
+
+areLayersEqual holds the data fields for a areLayersEqual record.
+
+## [👤semio📚go💻semio🛠️aregroupsequal](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/areGroupsEqual)
+
+areGroupsEqual holds the data fields for a areGroupsEqual record.
 
 ## [👤semio📚go💻semio🛠️applykitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ApplyKitDiff)
 
@@ -3788,6 +4299,10 @@ applyConnectionsDiff holds the data fields for a applyConnectionsDiff record.
 ## [👤semio📚go💻semio🛠️applyconnectiondiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyConnectionDiff)
 
 applyConnectionDiff holds the data fields for a applyConnectionDiff record.
+
+## [👤semio📚go💻semio🛠️applysidediff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applySideDiff)
+
+applySideDiff holds the data fields for a applySideDiff record.
 
 ## [👤semio📚go💻semio🛠️applytagsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/applyTagsDiff)
 
@@ -3843,51 +4358,51 @@ FilterDesignsWithoutParent returns only root-level designs with no parent.
 
 ## [👤semio📚go💻semio🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddTypeToKit)
 
-AddTypeToKit creates a diff that adds a single type to a kit.
+AddTypeToKit creates a change that adds a single type to a kit.
 
 ## [👤semio📚go💻semio🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveTypeFromKit)
 
-RemoveTypeFromKit creates a diff that removes a type by GUID.
+RemoveTypeFromKit creates a change that removes a type by GUID.
 
 ## [👤semio📚go💻semio🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddDesignToKit)
 
-AddDesignToKit creates a diff that adds a single design to a kit.
+AddDesignToKit creates a change that adds a single design to a kit.
 
 ## [👤semio📚go💻semio🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveDesignFromKit)
 
-RemoveDesignFromKit creates a diff that removes a design by GUID.
+RemoveDesignFromKit creates a change that removes a design by GUID.
 
 ## [👤semio📚go💻semio🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddFileToKit)
 
-AddFileToKit creates a diff that adds a single file to a kit.
+AddFileToKit creates a change that adds a single file to a kit.
 
 ## [👤semio📚go💻semio🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveFileFromKit)
 
-RemoveFileFromKit creates a diff that removes a file by GUID.
+RemoveFileFromKit creates a change that removes a file by GUID.
 
 ## [👤semio📚go💻semio🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddPortToKit)
 
-AddPortToKit creates a diff that adds a single port to a kit.
+AddPortToKit creates a change that adds a single port to a kit.
 
 ## [👤semio📚go💻semio🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemovePortFromKit)
 
-RemovePortFromKit creates a diff that removes a port by GUID.
+RemovePortFromKit creates a change that removes a port by GUID.
 
 ## [👤semio📚go💻semio🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddTagToKit)
 
-AddTagToKit creates a diff that adds a single tag to a kit.
+AddTagToKit creates a change that adds a single tag to a kit.
 
 ## [👤semio📚go💻semio🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveTagFromKit)
 
-RemoveTagFromKit creates a diff that removes a tag by GUID.
+RemoveTagFromKit creates a change that removes a tag by GUID.
 
 ## [👤semio📚go💻semio🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/AddConceptToKit)
 
-AddConceptToKit creates a diff that adds a single concept to a kit.
+AddConceptToKit creates a change that adds a single concept to a kit.
 
 ## [👤semio📚go💻semio🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/RemoveConceptFromKit)
 
-RemoveConceptFromKit creates a diff that removes a concept by GUID.
+RemoveConceptFromKit creates a change that removes a concept by GUID.
 
 ## [👤semio📚go💻semio✂️semioentitykind](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/SemioEntityKind)
 
@@ -4101,33 +4616,53 @@ planesEqualApprox holds the data fields for a planesEqualApprox record.
 
 ApplyDesignDiff applies a design diff to a base design.
 
-## [👤semio📚js💻dev](semiorepo://p/u/semio/b/l/js/f/dev.ts)
+## [👤semio📚go💻semio🛠️dragpiecesindesign](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/DragPiecesInDesign)
 
-Development server entry point for the JavaScript workspace.
+DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
 
-## [👤semio📚js💻dev🔖dev](semiorepo://p/u/semio/b/l/js/f/dev.ts/s/Dev)
+## [👤semio📚go💻semio🪨exportmodelformats](semiorepo://p/u/semio/b/l/go/f/semio.go/d/c/ExportModelFormats)
 
-Spawns parallel sketchpad and storybook dev servers.
+ExportModelFormats maps supported export format extensions.
 
-## [👤semio📚js💻globald](semiorepo://p/u/semio/b/l/js/f/global.d.ts)
+## [👤semio📚go💻semio✂️exportmeshdata](semiorepo://p/u/semio/b/l/go/f/semio.go/d/f/exportMeshData)
 
-Global type declarations for the JavaScript workspace.
+exportMeshData holds extracted or generated mesh geometry for a single type.
 
-## [👤semio📚js💻i18n](semiorepo://p/u/semio/b/l/js/f/i18n.ts)
+## [👤semio📚go💻semio🛠️exportplanetogltfmatrix](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/exportPlaneToGltfMatrix)
 
-Internationalization setup and translation utilities for the UI.
+exportPlaneToGltfMatrix converts a Plane to a column-major 4x4 matrix for glTF.
 
-## [👤semio📚js💻i18n🔖i18n](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n)
+## [👤semio📚go💻semio🛠️exportdensetogltfmatrix](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/exportDenseToGltfMatrix)
 
-Initializes i18next with language detection, React bindings and expertise-aware label hooks.
+exportDenseToGltfMatrix converts a gonum mat.Dense (row-major) to column-major glTF matrix.
+
+## [👤semio📚go💻semio🛠️exportcreateboxmesh](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/exportCreateBoxMesh)
+
+exportCreateBoxMesh generates a unit box placeholder mesh (1x1x1 centered at origin).
+
+## [👤semio📚go💻semio🛠️exportdecodeblobtobytes](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/exportDecodeBlobToBytes)
+
+exportDecodeBlobToBytes strips a data URI prefix and base64 decodes the blob content.
+
+## [👤semio📚go💻semio🛠️exportparseglbmesh](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/exportParseGLBMesh)
+
+exportParseGLBMesh parses a GLB binary file and extracts the first mesh's geometry data.
+
+## [👤semio📚go💻semio🛠️exportfindmodelforkind](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/exportFindModelForKind)
+
+exportFindModelForKind finds the best matching model for a type given tag filters.
+
+## [👤semio📚go💻semio🛠️exportdesignmodel](semiorepo://p/u/semio/b/l/go/f/semio.go/d/i/ExportDesignModel)
+
+ExportDesignModel exports the 3D model of a design to GLB or glTF format.
 
 ## [👤semio📚js💻index](semiorepo://p/u/semio/b/l/js/f/index.ts)
 
-Barrel export for the core JavaScript workspace modules.
+Barrel export for the domain-only JavaScript workspace modules.
 
 ## [👤semio📚js💻index🔖exports](semiorepo://p/u/semio/b/l/js/f/index.ts/s/Exports)
 
-Public API surface re-exporting sketchpad components, semio domain, and shared configs.
+Public API surface re-exporting only semio domain logic and types.
 
 ## [👤semio📚js💻semio](semiorepo://p/u/semio/b/l/js/f/semio.ts)
 
@@ -4233,6 +4768,16 @@ cachedSqlJs holds the data fields for a cachedSqlJs record.
 
 getSqlJs holds the data fields for a getSqlJs record.
 
+## [👤semio📚js💻semio🛠️buildfolderpath](semiorepo://p/u/semio/b/l/js/f/semio.ts/d/i/buildFolderPath)
+
+buildFolderPath builds a slash-separated folder path from root to the given folder guid.
+Uses proper mime type inferred from file extension.
+
+## [👤semio📚js💻semio🛠️buildfilepath](semiorepo://p/u/semio/b/l/js/f/semio.ts/d/i/buildFilePath)
+
+buildFilePath builds the full path of a kit file including its folder hierarchy.
+Uses proper mime type inferred from file extension.
+
 ## [👤semio📚js💻semio🪨sqlitetokit](semiorepo://p/u/semio/b/l/js/f/semio.ts/d/c/sqliteToKit)
 
 sqliteToKit holds the data fields for a sqliteToKit record.
@@ -4256,580 +4801,6 @@ getPrimitiveDesignFromContext holds the data fields for a getPrimitiveDesignFrom
 ## [👤semio📚js💻semio🛠️isguid](semiorepo://p/u/semio/b/l/js/f/semio.ts/d/i/isGuid)
 
 isGuid holds the data fields for a isGuid record.
-
-## [👤semio📚js💻site](semiorepo://p/u/semio/b/l/js/f/site.tsx)
-
-Landing page and marketing site React component.
-
-## [👤semio📚js💻site🔖entrypoint](semiorepo://p/u/semio/b/l/js/f/site.tsx/s/Entrypoint)
-
-Site entrypoint that mounts the Sketchpad React component into the DOM.
-
-## [👤semio📚js🗃️sketchpad💻design](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx)
-
-Design app providing diagram and scene windows for editing designs.
-
-## [👤semio📚js🗃️sketchpad💻docs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx)
-
-Documentation viewer app with workbench and detail panels.
-
-## [👤semio📚js🗃️sketchpad💻feedback](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx)
-
-Feedback collection app with rating hooks and submission forms.
-
-## [👤semio📚js🗃️sketchpad💻home](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx)
-
-Home screen app showing recent projects and getting started content.
-
-## [👤semio📚js🗃️sketchpad💻kit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx)
-
-Kit editor app for managing types, designs and qualities.
-
-## [👤semio📚js🗃️sketchpad💻kit🛠️foldersection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/d/i/FolderSection)
-
-FolderSection holds the data fields for a FolderSection record.
-
-## [👤semio📚js🗃️sketchpad💻quality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx)
-
-Quality inspection app for viewing and editing quality attributes.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx)
-
-Main sketchpad container managing app tabs, panels and window layout.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Imports)
-
-External and internal module imports.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store)
-
-Reactive stores backed by Yjs for collaborative state management.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖plainappstorenoyjs](<semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Plain%20App%20Store%20(No%20YJS)>)
-
-Non-YJS application stores using plain in-memory state with transaction support.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖fileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/File%20Provider)
-
-In-memory file storage provider for temporary or test scenarios.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖memoryfileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Memory%20File%20Provider)
-
-In-memory file storage provider for temporary or test scenarios.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖localfileproviderindexeddb](<semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Local%20File%20Provider%20(IndexedDB)>)
-
-Browser-local file storage provider backed by IndexedDB.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖remotefileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Remote%20File%20Provider)
-
-Remote file storage provider backed by a REST API.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖compositefileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Composite%20File%20Provider)
-
-Composite file storage provider that delegates to multiple underlying providers.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖kits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kits)
-
-Yjs-backed attribute store for kit metadata.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖coord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Coord)
-
-Yjs-backed coordinate store managing u/v values.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖vec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Vec)
-
-Yjs-backed 3D vector component store managing x/y/z values.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖point](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Point)
-
-Yjs-backed 3D point store managing x/y/z coordinates.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖vector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Vector)
-
-Yjs-backed 3D direction vector store managing x/y/z components.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖plane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Plane)
-
-Yjs-backed 3D plane store managing origin point and direction vectors.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖camera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Camera)
-
-Yjs-backed camera store managing view target and perspective planes.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖location](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Location)
-
-Yjs-backed location store managing geographical and licensing metadata.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖author](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Author)
-
-Yjs-backed author store managing author identity and attributes.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖file](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/File)
-
-Yjs-backed file store managing file metadata and content references.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖folder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Folder)
-
-Yjs-backed folder store managing folder hierarchy and file references.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖benchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Benchmark)
-
-Yjs-backed benchmark store managing performance measurement data.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖quality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Quality)
-
-Yjs-backed quality store managing quality criteria definitions.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖connector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector)
-
-Yjs-backed connector store managing type connectors and their ports.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖type](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type)
-
-Yjs-backed type store managing architectural type definitions and connectors.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖layer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Layer)
-
-Yjs-backed layer store managing visibility layers in designs.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖piece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece)
-
-Yjs-backed piece store managing design piece instances and their transforms.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖group](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group)
-
-Yjs-backed group store managing piece grouping within designs.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖side](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Side)
-
-Side store managing connection endpoints for pieces.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖connection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connection)
-
-Yjs-backed connection store managing piece-to-piece connections.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖stat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Stat)
-
-Yjs-backed stat store managing statistical measurement data.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖design](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design)
-
-Yjs-backed design store managing complete design layouts with pieces and connections.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖ypathapi](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/YPath%20API)
-
-Path-based observation and subscription API for deep design Yjs map access.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖kit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit)
-
-Yjs-backed kit store managing the complete kit data structure.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖ypathapi](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/YPath%20API)
-
-Path-based observation and subscription API for deep kit Yjs map access.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖targetedkithooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Targeted%20Kit%20Hooks)
-
-React hooks for accessing specific kit data through scope providers.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Commands)
-
-Kit command definitions for import, export, and sync operations.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖machine](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine)
-
-Type definitions for app state, machine input, and context structures.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Types)
-
-Type definitions for app state, machine input, and context structures.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖appstatetypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/App%20State%20Types)
-
-State shape interfaces for all application views: home, kit, design, type, quality.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖helpers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Helpers)
-
-Helper functions for path migration, default state creation, and store initialization.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖sketchpadmachine](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Machine)
-
-XState state machine definition for the sketchpad application lifecycle.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖sketchpadselectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Selectors)
-
-Selector functions for extracting state from the sketchpad machine context.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖factory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Factory)
-
-Factory function to instantiate the sketchpad actor.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖legacytypeexports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Legacy%20Type%20Exports)
-
-Legacy type exports for backward compatibility with existing consumers.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖actortypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Actor%20Types)
-
-Type aliases for the sketchpad XState actor references and snapshots.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖apps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps)
-
-App-specific hooks for design, type, kit, and sketchpad views.
-Design app hooks for piece and connection selection, hover, and diff state.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖design](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design)
-
-Design app hooks for piece and connection selection, hover, and diff state.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖sketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad)
-
-Core reactive observation, synchronization hooks, and sketchpad store implementation.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖xstatehooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/XState%20Hooks)
-
-React hooks for accessing XState sketchpad actor state and sending events.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Commands)
-
-Exported sketchpad command map for theme, language, mode, device, and navigation.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖appsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps%20Registry)
-
-Dynamic app panel loader for registering app-specific panels.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Navbar)
-
-Focus-based navigation context provider for navbar breadcrumbs and search.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖sidepaneltabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/SidePanel%20Tabs)
-
-Context provider managing side panel and HUD panel tab registration.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖origin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Origin)
-
-Context provider for tracking the origin URL of the sketchpad instance.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖footeritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Footer%20Items)
-
-Context provider for dynamically registering footer bar items.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖globalfooteritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Global%20Footer%20Items)
-
-Global footer items component that registers persistent footer entries.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖conceptfilter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/ConceptFilter)
-
-Filter component for narrowing results by architectural concepts.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖toolgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/ToolGroup)
-
-Toolbar group component for switching between tool modes.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖dragdrop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/DragDrop)
-
-Context provider for drag-and-drop type placement interactions.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖hotkeys](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Hotkeys)
-
-Keyboard shortcut hook with configurable hotkey overrides.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Canvas)
-
-Canvas layout components for window management and multi-pane rendering.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖approuter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/App%20Router)
-
-React Router integration with scope providers and route-based app switching.
-
-## [👤semio📚js🗃️sketchpad💻sketchpad🔖sketchpadcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Components)
-
-Top-level sketchpad React components for rendering the complete application.
-
-## [👤semio📚js🗃️sketchpad💻tutorials](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx)
-
-Interactive tutorial system with step-by-step guided workflows.
-
-## [👤semio📚js🗃️sketchpad💻type](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx)
-
-Type editor app for defining and editing type properties and ports.
-
-## [👤semio📚js🗃️sketchpad💻type🪨emptymodeltagarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/d/c/EMPTY_MODEL_TAG_ARRAY)
-
-EMPTY_MODEL_TAG_ARRAY holds the data fields for a EMPTY_MODEL_TAG_ARRAY record.
-
-## [👤semio📚js🗃️sketchpad🗃️apps💻index](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts)
-
-Barrel export for all sketchpad app components.
-
-## [👤semio📚js🗃️sketchpad🗃️apps💻index🔖exports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/fd/org/apps/f/index.ts/s/Exports)
-
-Re-exports of app plugin utilities and types from the shared module.
-
-## [👤semio📚js🗃️sketchpad💻elements](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx)
-
-Shared UI elements and primitive components for sketchpad apps.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Imports)
-
-External library and internal module imports used across all sections.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖sectionspecificity](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section%20Specificity)
-
-Enum defining priority levels for section content ownership.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖interactioncontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Interaction%20Context)
-
-React context for tracking active UI interactions.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖levelcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Level%20Context)
-
-React context for UI depth level tracking.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖element](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Element)
-
-Core element types, transaction context, and level-based CSS class helpers.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖command](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command)
-
-Command palette UI built on cmdk primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer)
-
-Status bar component at the bottom of the layout.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖layout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout)
-
-Top-level layout orchestrating navbar, panels, canvas, and footer.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover)
-
-Floating popover component built on Radix primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖tooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip)
-
-Tooltip components with expertise-level adaptive content.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖basecomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components)
-
-Foundational internal components like Label.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components)
-
-Read-only display wrappers for tooltips and callouts.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖aside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aside)
-
-Callout boxes for notes, tips, cautions, and dangers.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖avatar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Avatar)
-
-User avatar components with image, fallback, drag, and table variants.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖card](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Card)
-
-Card container and grid layout for content blocks.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Spinner)
-
-Animated loading spinner in small, medium, or large sizes.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖loadingrow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/LoadingRow)
-
-Skeleton loading row with pulsing icon and name.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖diagramnode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/DiagramNode)
-
-Individual diagram node element with selection and hover states.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖hovercard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/HoverCard)
-
-Hover-triggered card built on Radix primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖section](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Section)
-
-Collapsible section container with heading and specificity.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖steps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Steps)
-
-Ordered step list container for tutorial or wizard flows.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components)
-
-Compact action button group with dropdown support.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖actiongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/ActionGroup)
-
-Compact action button group with dropdown support.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖combobox](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Combobox)
-
-Searchable dropdown with popover options list.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input)
-
-Text input field with label, validation, and clear support.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖select](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Select)
-
-Dropdown select built on Radix primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖slider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Slider)
-
-Range slider built on Radix primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖stepper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Stepper)
-
-Numeric stepper with increment/decrement and drag adjustment.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖textarea](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Textarea)
-
-Multi-line text input with label and validation.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖toggle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Toggle)
-
-Toggle button with pressed/unpressed states.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖togglegroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/ToggleGroup)
-
-Group of mutually exclusive or multi-select toggles.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components)
-
-Collapsible accordion built on Radix primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖accordion](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Accordion)
-
-Collapsible accordion built on Radix primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖dialog](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog)
-
-Modal dialog built on Radix primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖scrollable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scrollable)
-
-Custom scrollable area built on Radix ScrollArea.
-Scrollable holds the data fields for a Scrollable record.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖band](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Band)
-
-Horizontal band of navigation items with labels and icons.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖strip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Strip)
-
-Vertical strip of icon items for compact navigation.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navbar)
-
-Top navigation bar with icon items.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖tabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs)
-
-Tab container built on Radix primitives.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree)
-
-Hierarchical tree view with sections, items, and file trees.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖navigationcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navigation%20Components)
-
-Breadcrumb trail for hierarchical page navigation.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖breadcrumb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Breadcrumb)
-
-Breadcrumb trail for hierarchical page navigation.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components)
-
-Resizable dockable panel with sections and collapse support.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖panel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel)
-
-Resizable dockable panel with sections and collapse support.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖panelgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/PanelGroup)
-
-Flex container grouping multiple panels together.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖leftpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/LeftPanel)
-
-Left-docked panel variant with right resize handle.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/RightPanel)
-
-Right-docked panel variant with left resize handle.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/MiddlePanel)
-
-Center panel variant without resize handles.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖bottompanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/BottomPanel)
-
-Bottom-docked panel variant with top resize handle.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖sidepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/SidePanel)
-
-Collapsible side panel with tabbed content.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖hudpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/HudPanel)
-
-Floating heads-up display panel with tabs.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components)
-
-Draggable, resizable floating window with dashed border.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖window](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window)
-
-Draggable, resizable floating window with dashed border.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖page](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Page)
-
-Full-page content wrapper with frontmatter and footer.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Diagram)
-
-Interactive node-edge diagram built on ReactFlow and D3 force.
-
-## [👤semio📚js🗃️sketchpad💻elements🔖table](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Table)
-
-Sortable, hierarchical data table with drag-drop support.
-
-## [👤semio📚js🗃️sketchpad💻elements🛠️popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/d/i/Popover)
-
-Popover holds the data fields for a Popover record.
-
-## [👤semio📚js🗃️sketchpad💻elements🛠️spinner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/d/i/Spinner)
-
-Spinner holds the data fields for a Spinner record.
-
-## [👤semio📚js🗃️sketchpad💻elements✂️loadingrowprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/d/f/LoadingRowProps)
-
-LoadingRowProps holds the data fields for a LoadingRowProps record.
-
-## [👤semio📚js🗃️sketchpad💻kitselectionhelper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts)
-
-Geometry and selection utilities for kit diagram interactions.
-
-## [👤semio📚js🗃️sketchpad💻portcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts)
-
-Color mapping utilities for port visualization in diagrams.
-
-## [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color)
-
-Assigns deterministic HSL color tones to ports based on compatibility groups.
-
-## [👤semio📚js🗃️sketchpad💻shared](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts)
-
-Shared state management types, hooks and store factories for sketchpad.
-
-## [👤semio📚js💻viteenvd](semiorepo://p/u/semio/b/l/js/f/vite-env.d.ts)
-
-Vite client type declarations for the JavaScript workspace.
-
-## [👤semio📚js💻viteenvd🔖declarations](semiorepo://p/u/semio/b/l/js/f/vite-env.d.ts/s/Declarations)
-
-Ambient module declarations for non-standard import types.
 
 ## [👤semio🛂jsonschema💻build](semiorepo://p/u/semio/b/s/jsonschema/f/build.ts)
 
@@ -4856,17 +4827,13 @@ Core .NET library implementing the semio domain model and serialization.
 / FluentValidation validator base for Entity subclasses.
 / [👤semio📚net🛅semio💻semio🔖entitying🛠️entityvalidator](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/EntityValidator)
 
+## [👤semio📚net🛅semio💻semio🛠️change](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/d/i/Change)
+
+/ <summary>Change holds the data fields for a Change record.</summary>
+
 ## [👤semio📚net🛅semio💻build](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts)
 
 Build script for the Semio .NET library assembly.
-
-## [👤semio🌐play💻index](semiorepo://p/u/semio/b/w/play/f/index.tsx)
-
-Entry point for the playground React app for interactive experimentation.
-
-## [👤semio🌐play💻index🔖entrypoint](semiorepo://p/u/semio/b/w/play/f/index.tsx/s/Entrypoint)
-
-Play application entrypoint registering sketchpad apps and rendering the root.
 
 ## [👤semio📚py💻semio🔖imports](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Imports)
 
@@ -5028,6 +4995,10 @@ Helper functions for querying design hierarchies and families.
 
 Helper functions for querying type hierarchies and families.
 
+## [👤semio📚py💻semio🔖kitqueryhelpers](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Kit%20Query%20Helpers)
+
+Helper functions for querying entities in kits.
+
 ## [👤semio📚py💻semio🔖movedgraphenenodes](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Moved%20Graphene%20Nodes)
 
 Graphene node definitions moved here due to forward-reference resolution order.
@@ -5047,6 +5018,18 @@ Graph construction and traversal for piece connectivity analysis.
 ## [👤semio📚py💻semio🔖flattendesign](semiorepo://p/u/semio/b/l/py/f/semio.py/s/FlattenDesign)
 
 Design flattening to resolve nested sub-designs into a single coordinate space.
+
+## [👤semio📚py💻semio🔖kitoperations](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Kit%20Operations)
+
+Dict-based pure functions for kit operations exposed via MCP.
+
+## [👤semio📚py💻semio🔖clustering](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Clustering)
+
+Functions for clustering and expanding design pieces.
+
+## [👤semio📚py💻semio🔖kitqueryhelpersdict](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Kit%20Query%20Helpers%20Dict)
+
+Dict-based kit query helper functions.
 
 ## [👤semio📚py💻semio🔖kitdiffoperations](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Kit%20Diff%20Operations)
 
@@ -5093,10 +5076,21 @@ Spatial math utilities for vector normalization and plane computation.
 / <remarks>
 / </remarks>
 
+## [👤semio📚rs💻semio🔖kitchangehelpers](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers)
+
+/ Computes a CollectionDiff between two optional collections of guid-identified items.
+/ Uses a caller-provided `compute_diff` function for entity-level diffs.
+/ [👤semio📚rs💻semio🔖kitchangehelpers🛠️getguidcollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_guid_collection_diff)
+
 ## [👤semio📚rs💻semio🔖flattendesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign)
 
 / <summary>FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
 / [👤semio📚rs💻semio🔖flattendesign🛠️flattenedpiece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/FlattenedPiece)
+
+## [👤semio📚rs💻semio🔖kitmodelexport](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export)
+
+/ <summary>Supported 3D model export formats (extension, description).</summary>
+/ [👤semio📚rs💻semio🔖kitmodelexport🛠️exportmodelformats](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/EXPORT_MODEL_FORMATS)
 
 ## [👤semio📚rs💻semio🪨semioerror](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/c/SemioError)
 
@@ -5623,6 +5617,10 @@ Spatial math utilities for vector normalization and plane computation.
 / <remarks>
 / </remarks>
 
+## [👤semio📚rs💻semio🛠️sumqualityindesign](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/sum_quality_in_design)
+
+/ For each piece, it checks piece-level props first, then falls back to type-level props.
+
 ## [👤semio📚rs💻semio🛠️serializekit](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/serialize_kit)
 
 / <summary>serialize_kit holds the data fields for a serialize_kit record.</summary>
@@ -5856,6 +5854,141 @@ Spatial math utilities for vector normalization and plane computation.
 / [👤semio📚rs💻semio🔖difftypes🛠️kitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/KitDiff)
 / <remarks>
 / </remarks>
+
+## [👤semio📚rs💻semio🛠️change](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/Change)
+
+/ <summary>Change holds the data fields for a Change record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️change](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/Change)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️attributechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/AttributeChange)
+
+/ <summary>AttributeChange holds the data fields for a AttributeChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️attributechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AttributeChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️authorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/AuthorChange)
+
+/ <summary>AuthorChange holds the data fields for a AuthorChange record.</summary>
+/ [👤semio📚rs💻semio🔖difftypes🛠️authorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AuthorChange)
+
+## [👤semio📚rs💻semio✂️filechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/FileChange)
+
+/ <summary>FileChange holds the data fields for a FileChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️filechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FileChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️folderchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/FolderChange)
+
+/ <summary>FolderChange holds the data fields for a FolderChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️folderchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FolderChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️qualitychange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/QualityChange)
+
+/ <summary>QualityChange holds the data fields for a QualityChange record.</summary>
+/ [👤semio📚rs💻semio🔖difftypes🛠️qualitychange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/QualityChange)
+
+## [👤semio📚rs💻semio✂️portchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/PortChange)
+
+/ <summary>PortChange holds the data fields for a PortChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️portchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PortChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️propchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/PropChange)
+
+/ <summary>PropChange holds the data fields for a PropChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️propchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PropChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️tagchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/TagChange)
+
+/ <summary>TagChange holds the data fields for a TagChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️tagchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TagChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️conceptchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/ConceptChange)
+
+/ <summary>ConceptChange holds the data fields for a ConceptChange record.</summary>
+/ [👤semio📚rs💻semio🔖difftypes🛠️conceptchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConceptChange)
+
+## [👤semio📚rs💻semio✂️modelchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/ModelChange)
+
+/ <summary>ModelChange holds the data fields for a ModelChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️modelchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ModelChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️connectorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/ConnectorChange)
+
+/ <summary>ConnectorChange holds the data fields for a ConnectorChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️connectorchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectorChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️typechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/TypeChange)
+
+/ <summary>TypeChange holds the data fields for a TypeChange record.</summary>
+/ [👤semio📚rs💻semio🔖difftypes🛠️typechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TypeChange)
+
+## [👤semio📚rs💻semio✂️layerchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/LayerChange)
+
+/ <summary>LayerChange holds the data fields for a LayerChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️layerchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/LayerChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️piecechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/PieceChange)
+
+/ <summary>PieceChange holds the data fields for a PieceChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️piecechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PieceChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️groupchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/GroupChange)
+
+/ <summary>GroupChange holds the data fields for a GroupChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️groupchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/GroupChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️sidechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/SideChange)
+
+/ <summary>SideChange holds the data fields for a SideChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️sidechange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/SideChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️connectionchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/ConnectionChange)
+
+/ <summary>ConnectionChange holds the data fields for a ConnectionChange record.</summary>
+/ [👤semio📚rs💻semio🔖difftypes🛠️connectionchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectionChange)
+
+## [👤semio📚rs💻semio✂️statchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/StatChange)
+
+/ <summary>StatChange holds the data fields for a StatChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️statchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/StatChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️designchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/DesignChange)
+
+/ <summary>DesignChange holds the data fields for a DesignChange record.</summary>
+/ <remarks>
+/ [👤semio📚rs💻semio🔖difftypes🛠️designchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignChange)
+/ </remarks>
+
+## [👤semio📚rs💻semio✂️kitchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/KitChange)
+
+/ <summary>KitChange holds the data fields for a KitChange record.</summary>
+/ [👤semio📚rs💻semio🔖difftypes🛠️kitchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/KitChange)
 
 ## [👤semio📚rs💻semio✂️hasguid](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/f/HasGuid)
 
@@ -6262,6 +6395,42 @@ Spatial math utilities for vector normalization and plane computation.
 / [👤semio📚rs💻semio🔖applydiff🛠️applykitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_kit_diff)
 / </remarks>
 
+## [👤semio📚rs💻semio🛠️getguidcollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/get_guid_collection_diff)
+
+/ Computes a CollectionDiff between two optional collections of guid-identified items.
+/ Uses a caller-provided `compute_diff` function for entity-level diffs.
+/ [👤semio📚rs💻semio🔖kitchangehelpers🛠️getguidcollectiondiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_guid_collection_diff)
+
+## [👤semio📚rs💻semio🛠️getkitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/get_kit_diff)
+
+/ Computes the KitDiff that transforms `before` into `after`.
+/ [👤semio📚rs💻semio🔖kitchangehelpers🛠️getkitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_kit_diff)
+
+## [👤semio📚rs💻semio🛠️getdesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/get_design_diff)
+
+/ Computes the DesignDiff that transforms `before` into `after`.
+/ [👤semio📚rs💻semio🔖kitchangehelpers🛠️getdesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_design_diff)
+
+## [👤semio📚rs💻semio🛠️inversekitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/inverse_kit_diff)
+
+/ Computes the inverse of a KitDiff given the original Kit state.
+/ [👤semio📚rs💻semio🔖kitchangehelpers🛠️inversekitdiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/inverse_kit_diff)
+
+## [👤semio📚rs💻semio🛠️inversedesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/inverse_design_diff)
+
+/ Computes the inverse of a DesignDiff given the original Design state.
+/ [👤semio📚rs💻semio🔖kitchangehelpers🛠️inversedesigndiff](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/inverse_design_diff)
+
+## [👤semio📚rs💻semio🛠️getkitchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/get_kit_change)
+
+/ Computes a reversible KitChange from two kit states.
+/ [👤semio📚rs💻semio🔖kitchangehelpers🛠️getkitchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_kit_change)
+
+## [👤semio📚rs💻semio🛠️getdesignchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/get_design_change)
+
+/ Computes a reversible DesignChange from two design states.
+/ [👤semio📚rs💻semio🔖kitchangehelpers🛠️getdesignchange](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_design_change)
+
 ## [👤semio📚rs💻semio🛠️flattenedpiece](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/FlattenedPiece)
 
 / <summary>FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
@@ -6336,6 +6505,21 @@ Spatial math utilities for vector normalization and plane computation.
 / <remarks>
 / [👤semio📚rs💻semio🔖flattendesign🛠️connectortoplane](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/connector_to_plane)
 / </remarks>
+
+## [👤semio📚rs💻semio🪨exportmodelformats](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/c/EXPORT_MODEL_FORMATS)
+
+/ <summary>Supported 3D model export formats (extension, description).</summary>
+/ [👤semio📚rs💻semio🔖kitmodelexport🛠️exportmodelformats](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/EXPORT_MODEL_FORMATS)
+
+## [👤semio📚rs💻semio🛠️matrix4togltfcolumnmajor](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/matrix4_to_gltf_column_major)
+
+/ <summary>Converts a nalgebra Matrix4 to glTF column-major array of 16 f64.</summary>
+/ [👤semio📚rs💻semio🔖kitmodelexport🛠️matrix4togltfcolumnmajor](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/matrix4_to_gltf_column_major)
+
+## [👤semio📚rs💻semio🛠️selectmodelfortype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/select_model_for_type)
+
+/ <summary>Selects the best model for a type given desired tag guids.</summary>
+/ [👤semio📚rs💻semio🔖kitmodelexport🛠️selectmodelfortype](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/select_model_for_type)
 
 ## [👤semio📚rs💻semio🛠️validationproblem](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/ValidationProblem)
 
@@ -6461,7 +6645,7 @@ Spatial math utilities for vector normalization and plane computation.
 / <summary>sqlite holds the data fields for a sqlite record.</summary>
 / [👤semio📚rs💻semio🔖sqliteimport🔖export🛠️sqlite](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/SQLite%20Import/Export/d/i/sqlite)
 
-## [👤semio📚rs💻semio🛠️ziproundtrip](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/zip_roundtrip)
+## [👤semio📚rs💻semio🛠️mimefromfilename](semiorepo://p/u/semio/b/l/rs/f/semio.rs/d/i/mime_from_filename)
 
 / <summary>zip_roundtrip holds the data fields for a zip_roundtrip record.</summary>
 / [👤semio📚rs💻semio🔖zipimport🔖export🛠️ziproundtrip](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export/d/i/zip_roundtrip)
@@ -6478,6 +6662,42 @@ Spatial math utilities for vector normalization and plane computation.
 / [👤semio📚rs💻semio🔖tests🛠️tests](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/d/i/tests)
 / </remarks>
 
+## [👤semio🌐docs💻index](semiorepo://p/u/semio/b/w/docs/f/index.tsx)
+
+Entry point for the documentation site React app.
+
+## [👤semio🌐docs💻index🔖entrypoint](semiorepo://p/u/semio/b/w/docs/f/index.tsx/s/Entrypoint)
+
+Docs entrypoint that mounts the Sketchpad React component with StrictMode.
+
+## [👤semio🌐play💻index](semiorepo://p/u/semio/b/w/play/f/index.tsx)
+
+Entry point for the playground React app for interactive experimentation.
+
+## [👤semio🌐play💻index🔖entrypoint](semiorepo://p/u/semio/b/w/play/f/index.tsx/s/Entrypoint)
+
+Play application entrypoint registering sketchpad apps and rendering the root.
+
+## [👤semio🖱️sketchpad💻globald](semiorepo://p/u/semio/b/u/sketchpad/f/global.d.ts)
+
+Global type declarations for the JavaScript workspace.
+
+## [👤semio🖱️sketchpad💻i18n](semiorepo://p/u/semio/b/u/sketchpad/f/i18n.ts)
+
+Internationalization setup and translation utilities for the UI.
+
+## [👤semio🖱️sketchpad💻i18n🔖i18n](semiorepo://p/u/semio/b/u/sketchpad/f/i18n.ts/s/I18n)
+
+Initializes i18next with language detection, React bindings and expertise-aware label hooks.
+
+## [👤semio🖱️sketchpad💻index](semiorepo://p/u/semio/b/u/sketchpad/f/index.ts)
+
+Public bundle exports for the semio sketchpad runtime and app configs.
+
+## [👤semio🖱️sketchpad💻index🔖exports](semiorepo://p/u/semio/b/u/sketchpad/f/index.ts/s/Exports)
+
+Public API surface for sketchpad runtime, shared helpers, and app configs.
+
 ## [👤semio🖱️sketchpad💻index](semiorepo://p/u/semio/b/u/sketchpad/f/index.tsx)
 
 Entry point for the standalone sketchpad web application.
@@ -6485,3 +6705,335 @@ Entry point for the standalone sketchpad web application.
 ## [👤semio🖱️sketchpad💻index🔖entrypoint](semiorepo://p/u/semio/b/u/sketchpad/f/index.tsx/s/Entrypoint)
 
 Sketchpad application entrypoint registering apps and rendering the root.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻design](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Design.tsx)
+
+Design app providing diagram and scene windows for editing designs.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻design🪨emptyedgesarray](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Design.tsx/d/c/EMPTY_EDGES_ARRAY)
+
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻docs](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Docs.tsx)
+
+js/semio/sketchpad/Docs.tsx
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻feedback](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Feedback.tsx)
+
+js/semio/sketchpad/Feedback.tsx
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻home](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Home.tsx)
+
+js/semio/sketchpad/Home.tsx
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻kit](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Kit.tsx)
+
+Kit editor app for managing types, designs and qualities.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻quality](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Quality.tsx)
+
+js/semio/sketchpad/Quality.tsx
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx)
+
+Main sketchpad container managing app tabs, panels and window layout.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖imports](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Imports)
+
+External and internal module imports.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖store](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Store)
+
+Reactive stores backed by Yjs for collaborative state management.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖plainappstorenoyjs](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Plain%20App%20Store%20(No%20YJS))
+
+Non-YJS application stores using plain in-memory state with transaction support.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖fileprovider](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/File%20Provider)
+
+In-memory file storage provider for temporary or test scenarios.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖memoryfileprovider](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Memory%20File%20Provider)
+
+In-memory file storage provider for temporary or test scenarios.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖localfileproviderindexeddb](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Local%20File%20Provider%20(IndexedDB))
+
+Browser-local file storage provider backed by IndexedDB.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖remotefileprovider](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Remote%20File%20Provider)
+
+Remote file storage provider backed by a REST API.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖compositefileprovider](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Composite%20File%20Provider)
+
+Composite file storage provider that delegates to multiple underlying providers.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖kits](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Kits)
+
+Yjs-backed attribute store for kit metadata.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖coord](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Coord)
+
+Yjs-backed coordinate store managing u/v values.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖vec](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Vec)
+
+Yjs-backed 3D vector component store managing x/y/z values.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖point](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Point)
+
+Yjs-backed 3D point store managing x/y/z coordinates.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖vector](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Vector)
+
+Yjs-backed 3D direction vector store managing x/y/z components.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖plane](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Plane)
+
+Yjs-backed 3D plane store managing origin point and direction vectors.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖camera](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Camera)
+
+Yjs-backed camera store managing view target and perspective planes.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖location](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Location)
+
+Yjs-backed location store managing geographical and licensing metadata.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖author](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Author)
+
+Yjs-backed author store managing author identity and attributes.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖file](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/File)
+
+Yjs-backed file store managing file metadata and content references.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖folder](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Folder)
+
+Yjs-backed folder store managing folder hierarchy and file references.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖benchmark](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Benchmark)
+
+Yjs-backed benchmark store managing performance measurement data.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖quality](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Quality)
+
+Yjs-backed quality store managing quality criteria definitions.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖prop](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Prop)
+
+Yjs-backed prop store managing design property definitions.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖model](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Model)
+
+Yjs-backed model store managing 3D model representations.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖connector](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector)
+
+Yjs-backed connector store managing type connectors and their ports.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖type](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Type)
+
+Yjs-backed type store managing architectural type definitions and connectors.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖layer](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Layer)
+
+Yjs-backed layer store managing visibility layers in designs.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖piece](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece)
+
+Yjs-backed piece store managing design piece instances and their transforms.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖group](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Group)
+
+Yjs-backed group store managing piece grouping within designs.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖side](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Side)
+
+Side store managing connection endpoints for pieces.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖connection](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Connection)
+
+Yjs-backed connection store managing piece-to-piece connections.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖stat](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Stat)
+
+Yjs-backed stat store managing statistical measurement data.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖design](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Design)
+
+Yjs-backed design store managing complete design layouts with pieces and connections.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖ypathapi](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/YPath%20API)
+
+Path-based observation and subscription API for deep design Yjs map access.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖kit](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit)
+
+Yjs-backed kit store managing the complete kit data structure.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖ypathapi](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/YPath%20API)
+
+Path-based observation and subscription API for deep kit Yjs map access.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖targetedkithooks](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Targeted%20Kit%20Hooks)
+
+React hooks for accessing specific kit data through scope providers.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖commands](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Commands)
+
+Kit command definitions for import, export, and sync operations.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖machine](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine)
+
+Type definitions for app state, machine input, and context structures.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖types](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Types)
+
+Type definitions for app state, machine input, and context structures.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖appstatetypes](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/App%20State%20Types)
+
+State shape interfaces for all application views: home, kit, design, type, quality.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖helpers](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Helpers)
+
+Helper functions for path migration, default state creation, and store initialization.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖sketchpadmachine](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Machine)
+
+XState state machine definition for the sketchpad application lifecycle.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖sketchpadselectors](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Selectors)
+
+Selector functions for extracting state from the sketchpad machine context.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖factory](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Factory)
+
+Factory function to instantiate the sketchpad actor.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖legacytypeexports](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Legacy%20Type%20Exports)
+
+Legacy type exports for backward compatibility with existing consumers.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖actortypes](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Actor%20Types)
+
+Type aliases for the sketchpad XState actor references and snapshots.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖apps](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps)
+
+App-specific hooks for design, type, kit, and sketchpad views.
+Design app hooks for piece and connection selection, hover, and diff state.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖design](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Design)
+
+Design app hooks for piece and connection selection, hover, and diff state.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖sketchpad](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad)
+
+Core reactive observation, synchronization hooks, and sketchpad store implementation.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖xstatehooks](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/XState%20Hooks)
+
+React hooks for accessing XState sketchpad actor state and sending events.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖commands](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Commands)
+
+Exported sketchpad command map for theme, language, mode, device, and navigation.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖appsregistry](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps%20Registry)
+
+Dynamic app panel loader for registering app-specific panels.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖navbar](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Navbar)
+
+Focus-based navigation context provider for navbar breadcrumbs and search.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖sidepaneltabs](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/SidePanel%20Tabs)
+
+Context provider managing side panel and HUD panel tab registration.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖origin](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Origin)
+
+Context provider for tracking the origin URL of the sketchpad instance.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖footeritems](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Footer%20Items)
+
+Context provider for dynamically registering footer bar items.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖globalfooteritems](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Global%20Footer%20Items)
+
+Global footer items component that registers persistent footer entries.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖conceptfilter](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/ConceptFilter)
+
+Filter component for narrowing results by architectural concepts.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖toolgroup](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/ToolGroup)
+
+Toolbar group component for switching between tool modes.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖dragdrop](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/DragDrop)
+
+Context provider for drag-and-drop type placement interactions.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖hotkeys](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Hotkeys)
+
+Keyboard shortcut hook with configurable hotkey overrides.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖canvas](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Canvas)
+
+Canvas layout components for window management and multi-pane rendering.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖approuter](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/App%20Router)
+
+React Router integration with scope providers and route-based app switching.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🔖sketchpadcomponents](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Components)
+
+Top-level sketchpad React components for rendering the complete application.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻sketchpad🪨selectuiisinkit](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Sketchpad.tsx/d/c/selectUiIsInKit)
+
+selectUiIsInKit holds the data fields for a selectUiIsInKit record.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻tutorials](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Tutorials.tsx)
+
+js/semio/sketchpad/Tutorials.tsx
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻type](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/Type.tsx)
+
+js/semio/sketchpad/Type.tsx
+
+## [👤semio🖱️sketchpad🗃️sketchpad🗃️apps💻index](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/fd/org/apps/f/index.ts)
+
+js/semio/sketchpad/apps/index.ts
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻kitselectionhelper](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/kitSelectionHelper.ts)
+
+Geometry and selection utilities for kit diagram interactions.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻kitselectionhelpers](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/kitSelectionHelpers.ts)
+
+js/semio/sketchpad/kitSelectionHelpers.ts
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻portcolor🔖portcolor](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/portColor.ts/s/Port%20Color)
+
+Assigns deterministic HSL color tones to ports based on compatibility groups.
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻shared](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/shared.ts)
+
+js/semio/sketchpad/shared.ts
+
+## [👤semio🖱️sketchpad🗃️sketchpad💻shared🔖focus](semiorepo://p/u/semio/b/u/sketchpad/fd/org/sketchpad/f/shared.ts/s/Focus)
+
+FocusItem is re-exported from elements.tsx as UIFindItem.
+
+## [👤semio🖱️sketchpad💻viteenvd](semiorepo://p/u/semio/b/u/sketchpad/f/vite-env.d.ts)
+
+Vite client type declarations for the JavaScript workspace.
+
+## [👤semio🖱️sketchpad💻viteenvd🔖declarations](semiorepo://p/u/semio/b/u/sketchpad/f/vite-env.d.ts/s/Declarations)
+
+Ambient module declarations for non-standard import types.

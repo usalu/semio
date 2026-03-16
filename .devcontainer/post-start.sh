@@ -75,6 +75,7 @@ sudo chown -R vscode:vscode /home/vscode/.codeium 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.gitkraken 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.local/share/GitKrakenCLI 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.local/share/gk 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.config/F3D 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.cursor-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.antigravity-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true

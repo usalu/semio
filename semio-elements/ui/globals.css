@@ -657,6 +657,9 @@
 
 .touch {
   --spacing: var(--spacing-touch);
+  --toolbar-item-height: var(--size-large);
+  --toolbar-gap: var(--spacing-double);
+  --toolbar-padding-inline: var(--spacing-double);
   --text-xs: 0.75rem;
   --text-xs--line-height: calc(1 / 0.75);
   --text-sm: 0.875rem;
@@ -683,6 +686,27 @@
   --text-8xl--line-height: 1;
   --text-9xl: 8rem;
   --text-9xl--line-height: 1;
+}
+
+.touch .lm_header {
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+}
+
+.touch .lm_tab {
+  padding: 4px 12px !important;
+  padding-bottom: 5px !important;
+}
+
+.touch .lm_title {
+  font-size: var(--text-sm) !important;
+  line-height: var(--text-sm--line-height) !important;
+}
+
+.touch [data-slot="mobile-panel-tab-button"] {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 @layer base {

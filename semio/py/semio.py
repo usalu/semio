@@ -21,6 +21,7 @@
 # Standard library, third-party and framework imports.
 from __future__ import annotations
 import abc
+import base64
 import dataclasses
 import datetime
 import json
@@ -3660,7 +3661,8 @@ class Piece(
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        entity = cls(id_=obj["id_"])
+        piece_id = obj.get("id_", obj.get("guid", ""))
+        entity = cls(id_=piece_id)
         typeObj = obj.get("type", None)
         designObj = obj.get("designPiece", None)
         if (typeObj is None and designObj is None) or (typeObj is not None and designObj is not None):
@@ -10517,6 +10519,16 @@ def _plane_to_matrix_4x4(plane: "Plane") -> numpy.ndarray:
     mat[:3, 3] = origin
     return mat
 
+def _semio_matrix_to_gltf_matrix(matrix: numpy.ndarray) -> numpy.ndarray:
+    basis = numpy.array([
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, -1.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ])
+    basis_inv = numpy.linalg.inv(basis)
+    return basis @ matrix @ basis_inv
+
 def _identity_plane() -> "Plane":
     """Create an identity plane at the world origin with standard axes.
     _identity_plane MUST return a plane with origin=(0,0,0), xAxis=(1,0,0), yAxis=(0,1,0).
@@ -10550,13 +10562,152 @@ def _find_matching_model(kit: "Kit", type_obj: "Type", tags: list[str]) -> typin
     if not type_obj.models or len(type_obj.models) == 0:
         return None
     if not tags or len(tags) == 0:
-        return type_obj.models[0]
+        default_model = next((model for model in type_obj.models if len(model.tags or []) == 0), None)
+        return default_model if default_model is not None else type_obj.models[0]
     tags_set = set(tags)
     for model in type_obj.models:
         model_tag_names = model.tags
         if model_tag_names and all(t in tags_set for t in model_tag_names):
             return model
     return type_obj.models[0]
+
+def _load_glb_mesh_from_bytes(raw: bytes, mesh_name: str | None = None) -> "typing.Any | None":
+    """Load a mesh directly from GLB bytes by reading accessors.
+    _load_glb_mesh_from_bytes MUST rebuild triangle faces from GLB accessor data without relying on trimesh GLB scene interpretation.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️loadglbmeshfrombytes](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_load_glb_mesh_from_bytes)
+    """
+    import struct as _struct
+    import trimesh as _trimesh
+
+    if len(raw) < 20 or raw[0:4] != b"glTF":
+        return None
+
+    offset = 12
+    json_chunk: bytes | None = None
+    bin_chunk = b""
+    while offset + 8 <= len(raw):
+        chunk_length, chunk_kind = _struct.unpack_from("<II", raw, offset)
+        offset += 8
+        chunk = raw[offset:offset + chunk_length]
+        offset += chunk_length
+        if chunk_kind == 0x4E4F534A:
+            json_chunk = chunk
+        elif chunk_kind == 0x004E4942:
+            bin_chunk = chunk
+    if json_chunk is None:
+        return None
+
+    try:
+        gltf = json.loads(json_chunk.decode("utf-8").rstrip(" \t\r\n\x00"))
+    except Exception:
+        return None
+
+    accessors = gltf.get("accessors", []) or []
+    buffer_views = gltf.get("bufferViews", []) or []
+    meshes = gltf.get("meshes", []) or []
+
+    component_formats: dict[int, tuple[str, int]] = {
+        5120: ("b", 1),
+        5121: ("B", 1),
+        5122: ("h", 2),
+        5123: ("H", 2),
+        5125: ("I", 4),
+        5126: ("f", 4),
+    }
+    type_widths = {
+        "SCALAR": 1,
+        "VEC2": 2,
+        "VEC3": 3,
+        "VEC4": 4,
+        "MAT2": 4,
+        "MAT3": 9,
+        "MAT4": 16,
+    }
+
+    def _read_accessor(accessor_index: int) -> numpy.ndarray | None:
+        if accessor_index < 0 or accessor_index >= len(accessors):
+            return None
+        accessor = accessors[accessor_index]
+        buffer_view_index = accessor.get("bufferView")
+        if not isinstance(buffer_view_index, int) or buffer_view_index < 0 or buffer_view_index >= len(buffer_views):
+            return None
+        buffer_view = buffer_views[buffer_view_index]
+        component_type = accessor.get("componentType")
+        accessor_kind = accessor.get("type")
+        count = accessor.get("count")
+        if component_type not in component_formats or accessor_kind not in type_widths or not isinstance(count, int):
+            return None
+        if buffer_view.get("buffer", 0) != 0:
+            return None
+        fmt_char, component_size = component_formats[component_type]
+        element_width = type_widths[accessor_kind]
+        stride = buffer_view.get("byteStride") or (component_size * element_width)
+        byte_offset = buffer_view.get("byteOffset", 0) + accessor.get("byteOffset", 0)
+        values: list[tuple[typing.Any, ...]] = []
+        for item_index in range(count):
+            start = byte_offset + item_index * stride
+            end = start + component_size * element_width
+            if end > len(bin_chunk):
+                return None
+            values.append(_struct.unpack_from("<" + fmt_char * element_width, bin_chunk, start))
+        return numpy.array(values)
+
+    vertex_blocks: list[numpy.ndarray] = []
+    normal_blocks: list[numpy.ndarray] = []
+    face_blocks: list[numpy.ndarray] = []
+    has_normals = True
+
+    for mesh in meshes:
+        primitives = mesh.get("primitives", []) or []
+        for primitive in primitives:
+            attributes = primitive.get("attributes", {}) or {}
+            position_accessor_index = attributes.get("POSITION")
+            if not isinstance(position_accessor_index, int):
+                continue
+            positions = _read_accessor(position_accessor_index)
+            if positions is None or positions.ndim != 2 or positions.shape[1] < 3:
+                continue
+            positions = positions[:, :3].astype(numpy.float64)
+            normals = None
+            normal_accessor_index = attributes.get("NORMAL")
+            if isinstance(normal_accessor_index, int):
+                normals = _read_accessor(normal_accessor_index)
+                if normals is not None and normals.ndim == 2 and normals.shape[1] >= 3:
+                    normals = normals[:, :3].astype(numpy.float64)
+                else:
+                    normals = None
+            if normals is None or len(normals) != len(positions):
+                has_normals = False
+            if isinstance(primitive.get("indices"), int):
+                indices = _read_accessor(primitive.get("indices"))
+                if indices is None:
+                    continue
+                index_values = indices.reshape(-1).astype(numpy.int64)
+            else:
+                index_values = numpy.arange(len(positions), dtype=numpy.int64)
+            triangle_value_count = (len(index_values) // 3) * 3
+            if triangle_value_count == 0:
+                continue
+            triangle_faces = index_values[:triangle_value_count].reshape((-1, 3))
+            vertex_offset = sum(len(block) for block in vertex_blocks)
+            vertex_blocks.append(positions)
+            if normals is not None and len(normals) == len(positions):
+                normal_blocks.append(normals)
+            face_blocks.append(triangle_faces + vertex_offset)
+
+    if len(vertex_blocks) == 0 or len(face_blocks) == 0:
+        return None
+
+    combined_vertices = numpy.vstack(vertex_blocks)
+    combined_faces = numpy.vstack(face_blocks)
+    mesh = _trimesh.Trimesh(vertices=combined_vertices, faces=combined_faces, process=False, maintain_order=True)
+    if has_normals and len(normal_blocks) == len(vertex_blocks):
+        combined_normals = numpy.vstack(normal_blocks)
+        if len(combined_normals) == len(combined_vertices):
+            mesh.vertex_normals = combined_normals
+    if mesh_name:
+        mesh.metadata["name"] = mesh_name
+    return mesh if len(getattr(mesh, "faces", [])) > 0 else None
 
 def _load_type_mesh(kit: "Kit", type_obj: "Type", tags: list[str]) -> "typing.Any | None":
     """Load the 3D mesh for a type from its best-matching model blob.
@@ -10570,7 +10721,8 @@ def _load_type_mesh(kit: "Kit", type_obj: "Type", tags: list[str]) -> "typing.An
     if model is None:
         return None
     files_list = kit.files_ or []
-    file_obj = next((f for f in files_list if f.name == model.file or f.guid == model.file), None)
+    file_id = model.file.guid if hasattr(model.file, "guid") else model.file
+    file_obj = next((f for f in files_list if f.name == file_id or f.guid == file_id), None)
     if file_obj is None or not file_obj.blob:
         return None
     blob = file_obj.blob
@@ -10578,6 +10730,9 @@ def _load_type_mesh(kit: "Kit", type_obj: "Type", tags: list[str]) -> "typing.An
         raw = _base64.b64decode(blob.split(',', 1)[1])
     else:
         raw = _base64.b64decode(blob)
+    direct_mesh = _load_glb_mesh_from_bytes(raw, file_obj.name)
+    if direct_mesh is not None:
+        return direct_mesh
     try:
         loaded = _trimesh.load(
             _trimesh.util.wrap_as_stream(raw),
@@ -10588,13 +10743,13 @@ def _load_type_mesh(kit: "Kit", type_obj: "Type", tags: list[str]) -> "typing.An
     if isinstance(loaded, _trimesh.Scene):
         if len(loaded.geometry) == 0:
             return None
-        meshes = loaded.dump()
+        meshes = [geometry.copy() for geometry in loaded.geometry.values() if isinstance(geometry, _trimesh.Trimesh) and len(getattr(geometry, "faces", [])) > 0]
         if not meshes:
             return None
         if len(meshes) == 1:
             return meshes[0]
         return _trimesh.util.concatenate(meshes)
-    if isinstance(loaded, _trimesh.Trimesh):
+    if isinstance(loaded, _trimesh.Trimesh) and len(getattr(loaded, "faces", [])) > 0:
         return loaded
     return None
 
@@ -10619,6 +10774,218 @@ def export_design_model(
     if format not in EXPORT_MODEL_FORMATS:
         raise ValueError(f"Unsupported export format '{format}'. Supported: {list(EXPORT_MODEL_FORMATS.keys())}")
 
+    if isinstance(kit, dict):
+        designs = kit.get("designs", []) or []
+        design = next((d for d in designs if d.get("name") == design_id or d.get("guid") == design_id), None)
+        if design is None:
+            raise ValueError(f"Design '{design_id}' not found in kit")
+        pieces = design.get("pieces", []) or []
+        connections = design.get("connections", []) or []
+        if len(pieces) == 0:
+            return _export_empty_scene(format)
+
+        types_by_guid = {type_obj.get("guid"): type_obj for type_obj in (kit.get("types", []) or []) if type_obj.get("guid")}
+
+        def _find_type_for_piece_dict(piece_dict: dict) -> dict | None:
+            type_ref = piece_dict.get("type")
+            if not isinstance(type_ref, dict):
+                return None
+            return types_by_guid.get(type_ref.get("guid"))
+
+        def _find_connector_dict(type_obj: dict | None, connector_guid: str | None) -> dict | None:
+            current = type_obj
+            while current is not None:
+                connectors = current.get("connectors", []) or []
+                if connector_guid is None:
+                    return connectors[0] if connectors else None
+                for connector in connectors:
+                    if connector.get("guid") == connector_guid:
+                        return connector
+                parent_ref = current.get("parent")
+                current = types_by_guid.get(parent_ref.get("guid")) if isinstance(parent_ref, dict) else None
+            return None
+
+        piece_by_guid = {piece.get("guid"): piece for piece in pieces if piece.get("guid")}
+        adjacency: dict[str, list[tuple[dict, str]]] = {piece_guid: [] for piece_guid in piece_by_guid}
+        for connection in connections:
+            connected_guid = connection.get("connected", {}).get("piece", {}).get("guid")
+            connecting_guid = connection.get("connecting", {}).get("piece", {}).get("guid")
+            if connected_guid in adjacency:
+                adjacency[connected_guid].append((connection, connecting_guid))
+            if connecting_guid in adjacency:
+                adjacency[connecting_guid].append((connection, connected_guid))
+
+        def _identity_plane_dict() -> dict:
+            return {
+                "origin": {"x": 0.0, "y": 0.0, "z": 0.0},
+                "xAxis": {"x": 1.0, "y": 0.0, "z": 0.0},
+                "yAxis": {"x": 0.0, "y": 1.0, "z": 0.0},
+            }
+
+        def _plane_dict_to_matrix(plane_dict: dict) -> numpy.ndarray:
+            origin = numpy.array([plane_dict["origin"]["x"], plane_dict["origin"]["y"], plane_dict["origin"]["z"]], dtype=numpy.float64)
+            x_axis = numpy.array([plane_dict["xAxis"]["x"], plane_dict["xAxis"]["y"], plane_dict["xAxis"]["z"]], dtype=numpy.float64)
+            y_axis = numpy.array([plane_dict["yAxis"]["x"], plane_dict["yAxis"]["y"], plane_dict["yAxis"]["z"]], dtype=numpy.float64)
+            z_axis = numpy.cross(x_axis, y_axis)
+            if numpy.linalg.norm(z_axis) > 1e-10:
+                z_axis = z_axis / numpy.linalg.norm(z_axis)
+            if numpy.linalg.norm(x_axis) > 1e-10:
+                x_axis = x_axis / numpy.linalg.norm(x_axis)
+            y_axis = numpy.cross(z_axis, x_axis)
+            if numpy.linalg.norm(y_axis) > 1e-10:
+                y_axis = y_axis / numpy.linalg.norm(y_axis)
+            matrix = numpy.eye(4)
+            matrix[:3, 0] = x_axis
+            matrix[:3, 1] = y_axis
+            matrix[:3, 2] = z_axis
+            matrix[:3, 3] = origin
+            return matrix
+
+        piece_planes: dict[str, dict] = {}
+        parent_of: dict[str, str] = {}
+        children_of: dict[str, list[str]] = {piece_guid: [] for piece_guid in piece_by_guid}
+        visited: set[str] = set()
+        roots: list[str] = []
+        queue: list[str] = []
+
+        for piece in pieces:
+            piece_guid = piece.get("guid")
+            if piece_guid is None:
+                continue
+            if piece.get("plane") is not None:
+                piece_planes[piece_guid] = piece.get("plane")
+                visited.add(piece_guid)
+                queue.append(piece_guid)
+                roots.append(piece_guid)
+        if len(queue) == 0 and len(pieces) > 0 and pieces[0].get("guid") is not None:
+            first_guid = pieces[0].get("guid")
+            piece_planes[first_guid] = _identity_plane_dict()
+            visited.add(first_guid)
+            queue.append(first_guid)
+            roots.append(first_guid)
+
+        while queue:
+            current_guid = queue.pop(0)
+            current_plane = piece_planes[current_guid]
+            for connection, neighbor_guid in adjacency.get(current_guid, []):
+                if neighbor_guid in visited:
+                    continue
+                if connection.get("connected", {}).get("piece", {}).get("guid") != current_guid:
+                    continue
+                parent_piece = piece_by_guid[current_guid]
+                child_piece = piece_by_guid[neighbor_guid]
+                parent_type = _find_type_for_piece_dict(parent_piece)
+                child_type = _find_type_for_piece_dict(child_piece)
+                parent_connector = _find_connector_dict(parent_type, connection.get("connected", {}).get("connector", {}).get("guid"))
+                child_connector = _find_connector_dict(child_type, connection.get("connecting", {}).get("connector", {}).get("guid"))
+                if parent_connector is not None and child_connector is not None:
+                    piece_planes[neighbor_guid] = computeChildPlaneDict(current_plane, parent_connector, child_connector, connection)
+                else:
+                    piece_planes[neighbor_guid] = current_plane
+                parent_of[neighbor_guid] = current_guid
+                children_of[current_guid].append(neighbor_guid)
+                visited.add(neighbor_guid)
+                queue.append(neighbor_guid)
+
+        for piece in pieces:
+            piece_guid = piece.get("guid")
+            if piece_guid is None:
+                continue
+            if piece_guid not in visited:
+                piece_planes[piece_guid] = _identity_plane_dict()
+                roots.append(piece_guid)
+
+        def _select_model_dict(type_obj: dict) -> dict | None:
+            models = type_obj.get("models", []) or []
+            if len(models) == 0:
+                return None
+            tag_lookup = {tag.get("guid"): tag for tag in (kit.get("tags", []) or []) if tag.get("guid")}
+            if len(tags) == 0:
+                default_model = next((model for model in models if len(model.get("tags", []) or []) == 0), None)
+                return default_model if default_model is not None else models[0]
+            selected_tag_guids: set[str] = set()
+            for tag_value in tags:
+                if tag_value in tag_lookup:
+                    selected_tag_guids.add(tag_value)
+                    continue
+                for tag in tag_lookup.values():
+                    if tag.get("name") == tag_value:
+                        selected_tag_guids.add(tag.get("guid"))
+            best_model = None
+            best_score = -1.0
+            for model in models:
+                model_tag_guids = {tag.get("guid") for tag in (model.get("tags", []) or []) if tag.get("guid")}
+                if not selected_tag_guids.issubset(model_tag_guids):
+                    continue
+                union = len(model_tag_guids.union(selected_tag_guids))
+                intersection = len(model_tag_guids.intersection(selected_tag_guids))
+                score = float(intersection) / float(union) if union > 0 else 0.0
+                if score > best_score:
+                    best_score = score
+                    best_model = model
+            return best_model if best_model is not None else models[0]
+
+        scene = _trimesh.Scene()
+        type_meshes: dict[str, str] = {}
+        files_by_guid = {file_entry.get("guid"): file_entry for file_entry in (kit.get("files", []) or []) if file_entry.get("guid")}
+        for piece in pieces:
+            type_guid = piece.get("type", {}).get("guid") if isinstance(piece.get("type"), dict) else None
+            if type_guid is None or type_guid in type_meshes:
+                continue
+            type_obj = types_by_guid.get(type_guid)
+            if type_obj is None:
+                continue
+            selected_model = _select_model_dict(type_obj)
+            selected_file = files_by_guid.get(selected_model.get("file", {}).get("guid")) if selected_model is not None else None
+            mesh = None
+            if selected_file is not None and selected_file.get("blob"):
+                try:
+                    blob = selected_file.get("blob")
+                    raw = base64.b64decode(blob.split(",", 1)[1] if isinstance(blob, str) and blob.startswith("data:") else blob)
+                    mesh = _load_glb_mesh_from_bytes(raw, selected_file.get("name"))
+                    if mesh is None:
+                        loaded = _trimesh.load(_trimesh.util.wrap_as_stream(raw), file_type="glb")
+                        if isinstance(loaded, _trimesh.Scene):
+                            dumped = [geometry.copy() for geometry in loaded.geometry.values() if isinstance(geometry, _trimesh.Trimesh) and len(getattr(geometry, "faces", [])) > 0]
+                            mesh = dumped[0] if len(dumped) == 1 else _trimesh.util.concatenate(dumped) if len(dumped) > 1 else None
+                        elif isinstance(loaded, _trimesh.Trimesh) and len(getattr(loaded, "faces", [])) > 0:
+                            mesh = loaded
+                    if mesh is not None and selected_file.get("name"):
+                        mesh.metadata["name"] = selected_file.get("name")
+                except Exception:
+                    mesh = None
+            if mesh is None:
+                continue
+            geometry_name = selected_file.get("name") if selected_file is not None and selected_file.get("name") else type_guid
+            type_meshes[type_guid] = geometry_name
+            scene.geometry[geometry_name] = mesh
+
+        for piece in pieces:
+            piece_guid = piece.get("guid")
+            world_plane = piece_planes[piece_guid]
+            parent_guid = parent_of.get(piece_guid)
+            piece_frame = piece.get("name") or piece_guid
+            if parent_guid and parent_guid in piece_planes:
+                parent_world = _plane_dict_to_matrix(piece_planes[parent_guid])
+                child_world = _plane_dict_to_matrix(world_plane)
+                relative = numpy.linalg.inv(parent_world) @ child_world
+                frame_from = piece_by_guid[parent_guid].get("name") or parent_guid
+            else:
+                relative = _plane_dict_to_matrix(world_plane)
+                frame_from = scene.graph.base_frame
+            relative = _semio_matrix_to_gltf_matrix(relative)
+            geom_name = None
+            type_guid = piece.get("type", {}).get("guid") if isinstance(piece.get("type"), dict) else None
+            if type_guid in type_meshes:
+                geom_name = type_meshes[type_guid]
+            scene.graph.update(
+                frame_from=frame_from,
+                frame_to=piece_frame,
+                matrix=relative,
+                geometry=geom_name,
+            )
+        return _export_trimesh_scene(scene, format)
+
     design: Design | None = None
     for d in kit.designs:
         if d.name == design_id or d.id() == design_id:
@@ -10633,8 +11000,6 @@ def export_design_model(
 
     if len(pieces) == 0:
         return _export_empty_scene(format)
-
-    scene = _trimesh.Scene()
 
     types_dict: dict[str, Type] = {}
     for t in types_list:
@@ -10726,8 +11091,10 @@ def export_design_model(
             piece_planes[p.id_] = _identity_plane()
             roots.append(p.id_)
 
+    scene = _trimesh.Scene()
+
     # region Load or create meshes per type
-    type_meshes: dict[str, typing.Any] = {}
+    type_meshes: dict[str, str] = {}
     for piece in pieces:
         if piece.type is None:
             continue
@@ -10739,14 +11106,16 @@ def export_design_model(
             continue
         mesh = _load_type_mesh(kit, type_obj, tags)
         if mesh is None:
-            mesh = _trimesh.creation.box(extents=[1.0, 1.0, 1.0])
-        type_meshes[tk] = mesh
+            continue
+        geometry_name = None
+        model = _find_matching_model(kit, type_obj, tags)
+        if model is not None:
+            geometry_name = model.file if isinstance(model.file, str) else None
+        if not geometry_name:
+            geometry_name = tk
+        type_meshes[tk] = geometry_name
+        scene.geometry[geometry_name] = mesh
     # endregion Load or create meshes per type
-
-    # region Register type geometries in scene
-    for tk, mesh in type_meshes.items():
-        scene.geometry[tk] = mesh
-    # endregion Register type geometries in scene
 
     # region Build scene graph with connection hierarchy
     def _build_node(piece_id: str) -> None:
@@ -10754,25 +11123,27 @@ def export_design_model(
         world_plane = piece_planes[piece_id]
         p_parent = parent_of.get(piece_id)
         children = children_of.get(piece_id, [])
+        piece_frame = piece.name or piece.id_
 
         if p_parent and p_parent in piece_planes:
             parent_world = _plane_to_matrix_4x4(piece_planes[p_parent])
             child_world = _plane_to_matrix_4x4(world_plane)
-            relative = numpy.linalg.inv(parent_world) @ child_world
-            frame_from = p_parent
+            relative = _semio_matrix_to_gltf_matrix(numpy.linalg.inv(parent_world) @ child_world)
+            parent_piece = pieces_dict[p_parent]
+            frame_from = parent_piece.name or p_parent
         else:
-            relative = _plane_to_matrix_4x4(world_plane)
+            relative = _semio_matrix_to_gltf_matrix(_plane_to_matrix_4x4(world_plane))
             frame_from = scene.graph.base_frame
 
         geom_name = None
         if piece.type is not None:
             tk = _type_key_from_id(piece.type)
             if tk in type_meshes:
-                geom_name = tk
+                geom_name = type_meshes[tk]
 
         scene.graph.update(
             frame_from=frame_from,
-            frame_to=piece.id_,
+            frame_to=piece_frame,
             matrix=relative,
             geometry=geom_name,
         )
@@ -10822,6 +11193,7 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
     _export_trimesh_scene MUST return bytes for all supported formats.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exporttrimeshscene](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_export_trimesh_scene)
     """
+    import base64
     import trimesh as _trimesh
 
     fmt = format.lstrip('.')
@@ -10829,6 +11201,22 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
     if fmt == 'gltf':
         exported = scene.export(file_type='gltf')
         if isinstance(exported, dict):
+            gltf_key = next((key for key in exported.keys() if key.endswith('.gltf')), None)
+            if gltf_key is not None:
+                gltf_value = exported[gltf_key]
+                gltf_json = json.loads(gltf_value.decode('utf-8') if isinstance(gltf_value, bytes) else json.dumps(gltf_value) if isinstance(gltf_value, dict) else str(gltf_value))
+                for buffer in gltf_json.get('buffers', []) or []:
+                    uri = buffer.get('uri')
+                    if not uri or uri.startswith('data:') or uri not in exported:
+                        continue
+                    buffer['uri'] = 'data:application/octet-stream;base64,' + base64.b64encode(exported[uri]).decode('ascii')
+                for image in gltf_json.get('images', []) or []:
+                    uri = image.get('uri')
+                    if not uri or uri.startswith('data:') or uri not in exported:
+                        continue
+                    mime = image.get('mimeType', 'application/octet-stream')
+                    image['uri'] = f'data:{mime};base64,' + base64.b64encode(exported[uri]).decode('ascii')
+                return json.dumps(gltf_json).encode('utf-8')
             for key, value in exported.items():
                 if key.endswith('.gltf'):
                     if isinstance(value, bytes):
@@ -10858,6 +11246,183 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
     return bytes(result)
 
 # endregion Kit Model Export
+
+# region Geometric Insights
+# [👤semio📚py💻semio🔖domain🔖geometricinsights](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Geometric%20Insights)
+# Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+
+
+@dataclasses.dataclass
+class GeometricInsights:
+    """Aggregated geometric KPIs for a single mesh or merged scene.
+    All length/area/volume units follow the model's coordinate system.
+    [👤semio📚py💻semio🔖domain🔖geometricinsights🪨geometricinsights](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Geometric%20Insights/d/i/GeometricInsights)
+    """
+    # Overall size
+    bounding_box_min: tuple[float, float, float] | None = None
+    bounding_box_max: tuple[float, float, float] | None = None
+    dimension_x: float | None = None
+    dimension_y: float | None = None
+    dimension_z: float | None = None
+    characteristic_length: float | None = None
+    footprint_area: float | None = None
+    # Surface area
+    total_surface_area: float | None = None
+    # Volume
+    enclosed_volume: float | None = None
+    # Compactness
+    surface_to_volume_ratio: float | None = None
+    sphericity: float | None = None
+    hull_fill_ratio: float | None = None
+    # Proportion
+    aspect_ratio_xy: float | None = None
+    aspect_ratio_xz: float | None = None
+    aspect_ratio_yz: float | None = None
+    slenderness: float | None = None
+    # Mass distribution
+    centroid: tuple[float, float, float] | None = None
+    principal_axes: list[tuple[float, float, float]] | None = None
+    moments_of_inertia: tuple[float, float, float] | None = None
+    # Topology
+    vertex_count: int | None = None
+    face_count: int | None = None
+    euler_characteristic: int | None = None
+    genus: int | None = None
+    is_watertight: bool | None = None
+    # Concavity
+    convex_hull_volume: float | None = None
+    concavity_index: float | None = None
+
+
+def get_geometric_insights_for_model(model: str | bytes) -> GeometricInsights:
+    """Compute key performance indicators for the geometry of a GLB/GLTF model.
+    Model MUST be glb or gltf (path or raw bytes). Uses trimesh for mesh analysis.
+    [👤semio📚py💻semio🔖domain🔖geometricinsights🛠️getgeometricinsightsformodel](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Geometric%20Insights/d/i/get_geometric_insights_for_model)
+    """
+    import trimesh as _trimesh
+
+    if isinstance(model, bytes):
+        file_type = "glb"
+        if len(model) >= 4 and model[:4] == b"glTF":
+            file_type = "glb"
+        elif len(model) > 0 and model.lstrip().startswith(b"{"):
+            file_type = "gltf"
+        stream = _trimesh.util.wrap_as_stream(model)
+        loaded = _trimesh.load(stream, file_type=file_type)
+    else:
+        path = pathlib.Path(model)
+        if not path.exists():
+            raise FileNotFoundError(f"Model file not found: {model}")
+        ext = path.suffix.lower()
+        if ext not in (".glb", ".gltf"):
+            raise ValueError(f"Model MUST be .glb or .gltf, got {ext}")
+        file_type = "glb" if ext == ".glb" else "gltf"
+        loaded = _trimesh.load(str(path), file_type=file_type)
+
+    if isinstance(loaded, _trimesh.Scene):
+        meshes = [
+            g.copy()
+            for g in loaded.geometry.values()
+            if isinstance(g, _trimesh.Trimesh) and len(getattr(g, "faces", [])) > 0
+        ]
+        if not meshes:
+            return GeometricInsights()
+        mesh = _trimesh.util.concatenate(meshes)
+    elif isinstance(loaded, _trimesh.Trimesh) and len(getattr(loaded, "faces", [])) > 0:
+        mesh = loaded
+    else:
+        return GeometricInsights()
+
+    out = GeometricInsights()
+
+    # Overall size
+    bounds = mesh.bounds
+    out.bounding_box_min = (float(bounds[0][0]), float(bounds[0][1]), float(bounds[0][2]))
+    out.bounding_box_max = (float(bounds[1][0]), float(bounds[1][1]), float(bounds[1][2]))
+    extents = mesh.extents
+    out.dimension_x = float(extents[0])
+    out.dimension_y = float(extents[1])
+    out.dimension_z = float(extents[2])
+    out.characteristic_length = float(numpy.cbrt(mesh.extents.prod()) if mesh.extents.prod() > 0 else 0.0)
+    try:
+        out.footprint_area = float(mesh.bounding_box_oriented.primitive.extents[0] * mesh.bounding_box_oriented.primitive.extents[1])
+    except Exception:
+        out.footprint_area = float(extents[0] * extents[1])
+
+    # Surface area
+    out.total_surface_area = float(mesh.area)
+
+    # Volume
+    if mesh.is_watertight:
+        out.enclosed_volume = float(mesh.volume)
+    else:
+        out.enclosed_volume = None
+
+    # Compactness
+    if out.enclosed_volume is not None and out.enclosed_volume > 1e-20:
+        out.surface_to_volume_ratio = out.total_surface_area / out.enclosed_volume
+    vol = out.enclosed_volume or 0.0
+    if vol > 1e-20 and out.total_surface_area:
+        out.sphericity = float((numpy.pi ** (1/3)) * (6 * vol) ** (2/3) / out.total_surface_area)
+        out.sphericity = min(1.0, max(0.0, out.sphericity))
+
+    try:
+        hull = mesh.convex_hull
+        if hull is not None and hull.volume > 1e-20 and vol > 0:
+            out.convex_hull_volume = float(hull.volume)
+            out.hull_fill_ratio = float(vol / hull.volume)
+            out.hull_fill_ratio = min(1.0, max(0.0, out.hull_fill_ratio))
+        elif hull is not None:
+            out.convex_hull_volume = float(hull.volume)
+    except Exception:
+        pass
+
+    # Proportion
+    if extents[0] > 1e-10 and extents[1] > 1e-10:
+        out.aspect_ratio_xy = float(extents[0] / extents[1])
+    if extents[0] > 1e-10 and extents[2] > 1e-10:
+        out.aspect_ratio_xz = float(extents[0] / extents[2])
+    if extents[1] > 1e-10 and extents[2] > 1e-10:
+        out.aspect_ratio_yz = float(extents[1] / extents[2])
+    max_ext = float(max(extents))
+    if max_ext > 1e-10:
+        out.slenderness = max_ext / float(numpy.cbrt(mesh.area * max_ext)) if mesh.area > 0 else None
+
+    # Mass distribution (trimesh uses density=1)
+    out.centroid = (float(mesh.centroid[0]), float(mesh.centroid[1]), float(mesh.centroid[2]))
+    try:
+        components = mesh.principal_inertia_components
+        vectors = mesh.principal_inertia_vectors
+        if components is not None and vectors is not None:
+            out.moments_of_inertia = (float(components[0]), float(components[1]), float(components[2]))
+            out.principal_axes = [
+                (float(vectors[0][0]), float(vectors[0][1]), float(vectors[0][2])),
+                (float(vectors[1][0]), float(vectors[1][1]), float(vectors[1][2])),
+                (float(vectors[2][0]), float(vectors[2][1]), float(vectors[2][2])),
+            ]
+    except Exception:
+        pass
+
+    # Topology
+    out.vertex_count = int(len(mesh.vertices))
+    out.face_count = int(len(mesh.faces))
+    try:
+        out.euler_characteristic = int(mesh.euler_number)
+        if mesh.is_watertight:
+            out.genus = (2 - out.euler_characteristic) // 2 if out.euler_characteristic is not None else None
+    except Exception:
+        pass
+    out.is_watertight = bool(mesh.is_watertight)
+
+    # Concavity
+    if out.convex_hull_volume is not None and out.convex_hull_volume > 1e-20 and out.enclosed_volume is not None:
+        out.concavity_index = 1.0 - (out.enclosed_volume / out.convex_hull_volume)
+        out.concavity_index = min(1.0, max(0.0, out.concavity_index))
+
+    return out
+
+
+# endregion Geometric Insights
 
 # region Spatial Math
 # [👤semio📚py💻semio🔖domain🔖validation🔖spatialmath](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Spatial%20Math)

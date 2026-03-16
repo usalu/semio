@@ -4686,7 +4686,6 @@ const AppContent: FC = () => {
   }, [kitDesignsKey, kitTypesKey, selectedKinds, selectedName]);
 
   useEffect(() => {
-    console.log("[DEBUG] Kit details useEffect fired, appType:", appType, "selection:", JSON.stringify(selection));
     if (appType !== "kit") {
       return;
     }
@@ -6686,7 +6685,6 @@ function useKitAppYjsToXStateSync() {
     if (sketchpadStore.hasKitApp({ kit: kitGuid })) {
       const store = sketchpadStore.kitApp(kitGuid);
       const initialState = store.snapshot();
-      console.log('[DEBUG] [Kit Init] Store snapshot:', initialState);
 
       xstateInitialState = {
         ...createDefaultKitAppState(),
@@ -6701,7 +6699,6 @@ function useKitAppYjsToXStateSync() {
         },
       };
     } else {
-      console.log('[DEBUG] [Kit Init] No store, using defaults');
       xstateInitialState = {
         ...createDefaultKitAppState(),
         panelVisibility: defaultPanelVisibility,
@@ -7653,7 +7650,6 @@ const KitDiagramInner: FC = () => {
   }, [commitDiagramNodes, baseEdgeIdsKey, baseNodeIdsKey]);
 
   useEffect(() => {
-    console.log("[DEBUG] Kit diagram nodes useEffect fired, baseNodes len:", baseNodes.length);
     const previousPositions = new Map(diagramNodesRef.current.map((node) => [node.id, node.position]));
     const nextNodes = baseNodes.map((node) => {
       const previousPosition = previousPositions.get(node.id);
@@ -8023,8 +8019,6 @@ const MultiWindowApp: FC = () => {
     if (appType !== "kit") return;
     if (!kitGuid) return;
 
-    console.log("[DEBUG] Kit.tsx registering toolbar sections for kit:", kitGuid);
-
     addSection("toolbar", {
       id: "semio.sketchpad.app.kit.toolbar.selection",
       specificity: 20,
@@ -8070,7 +8064,6 @@ const MultiWindowApp: FC = () => {
         order: 30,
       },
       content: () => {
-        console.log("[DEBUG] Rendering KitCreateActions content wrapper");
         return (
           <KitScopeProvider guid={kitGuid}>
             <KitCreateActions />
@@ -8170,10 +8163,21 @@ const MultiWindowApp: FC = () => {
       order: 100,
       content: () => (
         <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <KitEditorSettingsContent />
-            <SketchpadSettingsContent />
-          </Tree>
+          <Tree
+            className="min-w-0 overflow-hidden p-double"
+            sections={[
+              {
+                id: "semio.sketchpad.app.kit.settings.content",
+                label: null,
+                content: (
+                  <>
+                    <KitEditorSettingsContent />
+                    <SketchpadSettingsContent />
+                  </>
+                ),
+              },
+            ]}
+          />
         </TreeStateProvider>
       ),
     });

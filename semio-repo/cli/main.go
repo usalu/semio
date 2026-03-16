@@ -385,6 +385,25 @@ func buildPolicyEntityKindTree(groups []Territory) []*TreeNode {
 	return result
 }
 
+func spansEntireFile(lines map[int]struct{}, content string, lineCount int) bool {
+	if len(lines) == 0 {
+		return true
+	}
+	effectiveLineCount := lineCount
+	if strings.HasSuffix(content, "\n") && effectiveLineCount > 1 {
+		effectiveLineCount--
+	}
+	if len(lines) < effectiveLineCount {
+		return false
+	}
+	for line := 1; line <= effectiveLineCount; line++ {
+		if _, ok := lines[line]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
 // [🧰semiorepo⌨️cli💻main🔖engineevents🛠️inferentitykindfromstatute](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/inferEntityKindFromStatute)
 // inferEntityKindFromStatute holds the data fields for a inferEntityKindFromStatute record.
 // inferEntityKindFromStatute MUST perform the inferEntityKindFromStatute operation.
@@ -4104,7 +4123,22 @@ func GenerateTechnologyDocs(technologyName string) error {
 	sb.WriteString("# \U0001F4DA Docs\n")
 	for _, e := range entries {
 		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
-		sb.WriteString(e.Text + "\n")
+		text := e.Text
+		if text != "" {
+			var filtered []string
+			for _, line := range strings.Split(text, "\n") {
+				trimmed := strings.TrimSpace(line)
+				if strings.HasPrefix(trimmed, "// #region") || strings.HasPrefix(trimmed, "// #endregion") || strings.HasPrefix(trimmed, "#region") || strings.HasPrefix(trimmed, "#endregion") {
+					continue
+				}
+				filtered = append(filtered, line)
+			}
+			text = strings.TrimSpace(strings.Join(filtered, "\n"))
+		}
+		if text == "" {
+			continue
+		}
+		sb.WriteString(text + "\n")
 	}
 	outputPath := filepath.Join(rootDir, technology.Root, "DOCS.md")
 	return WriteTextFile(outputPath, sb.String())
@@ -6196,13 +6230,23 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 		if c.Name != "" {
 			label = c.Name + " (" + c.Alias + ")"
 		}
+		contributorData := map[string]interface{}{
+			"alias":   c.Alias,
+			"aliases": c.Aliases,
+			"github":  c.Github,
+			"githubs": c.Githubs,
+			"name":    c.Name,
+			"names":   c.Names,
+			"email":   c.Email,
+			"emails":  c.Emails,
+		}
 		cNode := &TreeNode{
 			Kind:        TreeNodeContributor,
 			ID:          c.GetID(),
 			Label:       label,
 			URI:         c.GetURI(),
 			Contributor: c.Alias,
-			Data:        map[string]interface{}{"alias": c.Alias, "github": c.Github, "name": c.Name},
+			Data:        contributorData,
 		}
 		contributorsNode.Children = append(contributorsNode.Children, cNode)
 	}
@@ -6666,6 +6710,29 @@ func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
 		return root
 	}
 	matchedIDs := make(map[string]bool)
+	serializeNodeData := func(data map[string]interface{}) string {
+		if len(data) == 0 {
+			return ""
+		}
+		parts := make([]string, 0, len(data))
+		for _, value := range data {
+			switch typed := value.(type) {
+			case string:
+				parts = append(parts, typed)
+			case []string:
+				parts = append(parts, strings.Join(typed, " "))
+			case []interface{}:
+				var values []string
+				for _, item := range typed {
+					values = append(values, fmt.Sprint(item))
+				}
+				parts = append(parts, strings.Join(values, " "))
+			default:
+				parts = append(parts, fmt.Sprint(typed))
+			}
+		}
+		return strings.Join(parts, " ")
+	}
 	var walk func(node *TreeNode)
 	walk = func(node *TreeNode) {
 		if node.Kind != TreeNodeCategory {
@@ -6682,6 +6749,7 @@ func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
 				node.Status,
 				node.Contributor,
 				string(node.Kind),
+				serializeNodeData(node.Data),
 			}, " "))
 			allMatch := true
 			for _, term := range terms {
@@ -9889,6 +9957,18 @@ func appendTicketSessionID(ticket *Ticket, sessionID string) {
 	ticket.Sessions = append(ticket.Sessions, sessionID)
 }
 
+func isTicketInteractionKind(kind string, expected string) bool {
+	kind = strings.TrimSpace(kind)
+	expected = strings.TrimSpace(expected)
+	if kind == expected {
+		return true
+	}
+	if strings.HasSuffix(kind, ".ended") {
+		return strings.TrimSuffix(kind, ".ended") == expected
+	}
+	return false
+}
+
 // UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.
 // UnmarshalJSON performs the unmarshal j s o n operation on the Ticket.
 // [🧰semiorepo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)
@@ -9950,7 +10030,7 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	}
 	if t.Summary == "" {
 		for i := len(t.Interactions) - 1; i >= 0; i-- {
-			if t.Interactions[i].Kind == string(repopkg.EventTicketCloseEnded) && t.Interactions[i].Summary != "" {
+			if isTicketInteractionKind(t.Interactions[i].Kind, "ticket.close") && t.Interactions[i].Summary != "" {
 				t.Summary = t.Interactions[i].Summary
 				break
 			}
@@ -9958,7 +10038,7 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	}
 	if t.Status == "" && len(t.Interactions) > 0 {
 		lastKind := t.Interactions[len(t.Interactions)-1].Kind
-		if lastKind == string(repopkg.EventTicketCloseEnded) {
+		if isTicketInteractionKind(lastKind, "ticket.close") {
 			t.Status = TicketStatusClosed
 		} else {
 			t.Status = TicketStatusOpen
@@ -10131,7 +10211,7 @@ func (t *Ticket) GetSummary() string {
 		return t.Summary
 	}
 	for i := len(t.Interactions) - 1; i >= 0; i-- {
-		if t.Interactions[i].Kind == string(repopkg.EventTicketCloseEnded) && t.Interactions[i].Summary != "" {
+		if isTicketInteractionKind(t.Interactions[i].Kind, "ticket.close") && t.Interactions[i].Summary != "" {
 			return t.Interactions[i].Summary
 		}
 	}
@@ -10143,7 +10223,7 @@ func (t *Ticket) GetSummary() string {
 // [🧰semiorepo⌨️cli💻main🔖graphqltypes🛠️getdatestarted](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetDateStarted)
 func (t *Ticket) GetDateStarted() time.Time {
 	for _, interaction := range t.Interactions {
-		if interaction.Kind == string(repopkg.EventTicketOpenEnded) && interaction.Date != "" {
+		if isTicketInteractionKind(interaction.Kind, "ticket.open") && interaction.Date != "" {
 			if parsed, err := time.Parse("2006-01-02 15:04:05", interaction.Date); err == nil {
 				return parsed
 			}
@@ -10168,7 +10248,7 @@ func (t *Ticket) GetDateStarted() time.Time {
 // [🧰semiorepo⌨️cli💻main🔖graphqltypes🛠️getdatefinished](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetDateFinished)
 func (t *Ticket) GetDateFinished() *time.Time {
 	for i := len(t.Interactions) - 1; i >= 0; i-- {
-		if t.Interactions[i].Kind == string(repopkg.EventTicketCloseEnded) && t.Interactions[i].Date != "" {
+		if isTicketInteractionKind(t.Interactions[i].Kind, "ticket.close") && t.Interactions[i].Date != "" {
 			if parsed, err := time.Parse("2006-01-02 15:04:05", t.Interactions[i].Date); err == nil {
 				return &parsed
 			}
@@ -10260,6 +10340,15 @@ type StatuteMeta struct {
 	Reason      string         `json:"reason"`
 	Solution    string         `json:"solution"`
 	Autofixable bool           `json:"autofixable"`
+}
+
+func normalizeStatuteMeta(meta *StatuteMeta) {
+	if meta == nil {
+		return
+	}
+	if meta.Priority == "" {
+		meta.Priority = BreachPriorityLow
+	}
 }
 
 // IsNode MUST return true only when the condition is met.
@@ -16215,13 +16304,6 @@ func isGitIgnored(filePath string) bool {
 	if filepath.Base(filePath) == "LICENSE.md" {
 		return true
 	}
-
-	info, err := os.Stat(filePath)
-	if err == nil && !info.IsDir() {
-		if GetLanguage(filePath) == nil {
-			return true
-		}
-	}
 	return isIgnoredByGitignore(filePath)
 }
 
@@ -19901,6 +19983,9 @@ func emojiPolicy(ctx *PolicyContext) []Breach {
 // docsPolicy holds the data fields for a docsPolicy record.
 // docsPolicy MUST perform the docsPolicy operation.
 func docsPolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind == ScopeFile || ctx.Scope.Kind == ScopeSection || ctx.Scope.Kind == ScopeDefinition {
+		return nil
+	}
 	var breachs []Breach
 	checked := make(map[string]bool)
 	for _, bundle := range ctx.Bundles {
@@ -20279,6 +20364,7 @@ func loadGodfile() (*Godfile, error) {
 // godfileMatchesPath holds the data fields for a godfileMatchesPath record.
 // godfileMatchesPath MUST perform the godfileMatchesPath operation.
 func godfileMatchesPath(godfile *Godfile, relPath string) bool {
+	relPath = normalizeRepoPath(relPath)
 	if godfile.Exact[relPath] {
 		return true
 	}
@@ -20306,19 +20392,28 @@ func filePolicy(ctx *PolicyContext) []Breach {
 	if err != nil {
 		return breachs
 	}
-	files, err := ctx.Files()
-	if err != nil {
-		return breachs
-	}
-	for _, filePath := range files {
-		relPath := GetRelativePath(filePath)
+	_ = filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if d.IsDir() {
+			if isRepoExcludedPath(path) || strings.HasPrefix(d.Name(), ".git") || d.Name() == "node_modules" || d.Name() == ".venv" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if isRepoExcludedPath(path) || isGitIgnored(path) {
+			return nil
+		}
+		relPath := normalizeRepoPath(path)
 		if !godfileMatchesPath(godfile, relPath) {
 			breachs = append(breachs, ctx.CreateBreach(
 				"File \""+relPath+"\" is not listed in .semio-repo/files.json",
 				BreachFileIllegalUseGodfile,
 				relPath, 0, 0, relPath))
 		}
-	}
+		return nil
+	})
 	return breachs
 }
 
@@ -20892,6 +20987,17 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 	var result []CodebaseContributor
 	for _, c := range contributors {
+		links := c.Links
+		if links == nil {
+			links = map[string]string{}
+		}
+		if c.Github != "" {
+			links["github"] = c.Github
+		}
+		emails := append([]string{}, c.Emails...)
+		if c.Email != "" {
+			emails = append(emails, c.Email)
+		}
 		avatarPath := GetContributorAvatarPath(c.Alias)
 		avatarRoundPath := GetContributorAvatarRoundPath(c.Alias)
 
@@ -20906,7 +21012,7 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 				avatarRound := ctx.FileURI(GetRelativePath(avatarRoundPath))
 				icons.AvatarRound = &avatarRound
 			}
-			if githubLink, ok := c.Links["github"]; ok {
+			if githubLink, ok := links["github"]; ok {
 				github := githubLink + ".png"
 				icons.Github = &github
 			}
@@ -20943,8 +21049,8 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 			Path:          ".semio-repo/🧑‍💻/" + c.Alias + "/contributor.json",
 			Name:          c.Name,
 			Icons:         icons,
-			Emails:        c.Emails,
-			Links:         c.Links,
+			Emails:        emails,
+			Links:         links,
 			Contributions: contributions,
 			Metrics: &ContributorMetricsInternal{
 				Checkpoints: len(c.Contributions.Checkpoints),
@@ -21770,7 +21876,7 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 		JsonPath:      jsonPath,
 		ImportantPath: importantFilePath,
 		Interactions: []Interaction{{
-			Kind:   string(repopkg.EventTicketOpenEnded),
+			Kind:   "ticket.open",
 			Prompt: prompt,
 			LLM:    llmSlug,
 			System: GetSystem(),
@@ -22933,6 +23039,46 @@ func loadTechnologiesInternal() []Technology {
 				continue
 			}
 			bunName := sub.Name()
+			if bunName == "sites" {
+				siteEntries, _ := os.ReadDir(filepath.Join(technologyPath, bunName))
+				for _, site := range siteEntries {
+					if !site.IsDir() {
+						continue
+					}
+					if strings.HasPrefix(site.Name(), ".") || site.Name() == "node_modules" {
+						continue
+					}
+					siteName := site.Name()
+					fullBundleName := technologyName + "/" + siteName
+					bundlePath := filepath.Join(name, bunName, siteName)
+					bundle := Bundle{
+						Name:           fullBundleName,
+						Root:           bundlePath,
+						TechnologyName: technologyName,
+						Kind:           BundleKindSite,
+					}
+					bundle.Packages = loadPackages(filepath.Join(rootDir, bundlePath))
+					configPath := filepath.Join(technologyPath, bunName, siteName, "project.json")
+					if !FileExists(configPath) {
+						configPath = filepath.Join(technologyPath, bunName, siteName, "package.json")
+					}
+					if FileExists(configPath) {
+						content, err := ReadTextFile(configPath)
+						if err == nil {
+							var meta struct {
+								SourceRoot string   `json:"sourceRoot"`
+								Tags       []string `json:"tags"`
+							}
+							if json.Unmarshal([]byte(content), &meta) == nil {
+								bundle.SourceRoot = meta.SourceRoot
+								bundle.Tags = meta.Tags
+							}
+						}
+					}
+					technology.Bundles = append(technology.Bundles, bundle)
+				}
+				continue
+			}
 			fullBundleName := technologyName + "/" + bunName
 
 			bundlePath := filepath.Join(name, bunName)
@@ -24350,7 +24496,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		}
 	}
 	ticket.Interactions = append(ticket.Interactions, Interaction{
-		Kind:       string(repopkg.EventTicketCloseEnded),
+		Kind:       "ticket.close",
 		Author:     GetGitAuthorAlias(),
 		System:     GetSystem(),
 		Client:     closeClient,
@@ -24408,7 +24554,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	}
 
 	interaction := Interaction{
-		Kind:   string(repopkg.EventTicketReopenEnded),
+		Kind:   "ticket.reopen",
 		Prompt: prompt,
 		LLM:    llmSlug,
 		System: GetSystem(),
@@ -25946,8 +26092,9 @@ func ToolUpdateMetabolism() ToolResult {
 const exportSchemaSQL = `
 CREATE TABLE IF NOT EXISTS contributor (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alias TEXT NOT NULL UNIQUE CHECK (length (trim(alias)) > 0),
     github TEXT NOT NULL UNIQUE CHECK (length (trim(github)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
+    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0)
 );
 CREATE TABLE IF NOT EXISTS release (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26005,6 +26152,7 @@ CREATE TABLE IF NOT EXISTS folder (
     FOREIGN KEY (folder_kind_id) REFERENCES folder_kind (id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS file_kind (
+    id INTEGER PRIMARY KEY,
     emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
     name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
     description TEXT NOT NULL CHECK (length (trim(description)) > 0)
@@ -26036,6 +26184,7 @@ CREATE TABLE IF NOT EXISTS technology (
     summary TEXT,
     FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
     FOREIGN KEY (technology_kind_id) REFERENCES technology_kind (id) ON DELETE CASCADE
+);
 CREATE TABLE IF NOT EXISTS entity (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     technology_id INTEGER,
@@ -27737,6 +27886,7 @@ func (c *repoContext) GetPolicies() []*Policy {
 		for _, kind := range policies[i].AllKinds() {
 			meta := kind.Info()
 			meta.PolicyID = policies[i].ID
+			normalizeStatuteMeta(&meta)
 			statutes = append(statutes, &meta)
 		}
 		result[i] = &Policy{
@@ -27758,6 +27908,7 @@ func (c *repoContext) GetStatutes() []*StatuteMeta {
 	var result []*StatuteMeta
 	for _, meta := range statuteInfoTable {
 		m := meta
+		normalizeStatuteMeta(&m)
 		result = append(result, &m)
 	}
 	return result
@@ -28356,6 +28507,28 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 					defKind := inferDefinitionKindFromLine(lines[defLineNum-1])
 					defId := DefinitionHeaderId(filePart, sectionPath, defName, defKind)
 					defUri := DefinitionHeaderUri(filePart, sectionPath, defName)
+					if language.Name() == "typescript" {
+						trimmed := strings.TrimSpace(lines[v.Line-1])
+						if strings.HasPrefix(trimmed, "*") && strings.Contains(trimmed, "[") && strings.Contains(trimmed, "](") {
+							indent := ""
+							for _, ch := range lines[v.Line-1] {
+								if ch == ' ' || ch == '\t' {
+									indent += string(ch)
+								} else {
+									break
+								}
+							}
+							lines[v.Line-1] = indent + " *"
+							idLine := indent + " *  * [" + defId + "](" + defUri + ")"
+							newLines := make([]string, 0, len(lines)+1)
+							newLines = append(newLines, lines[:v.Line]...)
+							newLines = append(newLines, idLine)
+							newLines = append(newLines, lines[v.Line:]...)
+							lines = newLines
+							fixed++
+							break
+						}
+					}
 					prefix := language.CommentPrefix()
 					lines[v.Line-1] = replacementIdentificationLine(lines[v.Line-1], prefix, defId, defUri)
 					fixed++
@@ -31178,8 +31351,20 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return kind.GetID(), nil
 					},
 				},
-				"policy":      &graphql.Field{Type: graphql.NewNonNull(policyType)},
-				"priority":    &graphql.Field{Type: graphql.NewNonNull(breachPriorityEnum)},
+				"policy": &graphql.Field{Type: graphql.NewNonNull(policyType)},
+				"priority": &graphql.Field{
+					Type: graphql.NewNonNull(breachPriorityEnum),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						switch kind := p.Source.(type) {
+						case *StatuteMeta:
+							return kind.Priority, nil
+						case StatuteMeta:
+							return kind.Priority, nil
+						default:
+							return BreachPriorityLow, nil
+						}
+					},
+				},
 				"autofixable": &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
 				"reason":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"solution":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
@@ -33533,6 +33718,7 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 			for _, k := range p.AllKinds() {
 				meta := k.Info()
 				meta.PolicyID = p.ID
+				normalizeStatuteMeta(&meta)
 				vks = append(vks, &meta)
 			}
 			policies = append(policies, &Policy{
@@ -37170,7 +37356,12 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 			if !matchesFilter(c.Alias, options) && !matchesFilter(c.Name, options) {
 				continue
 			}
-			if !matchesQuery(c.Alias+" "+c.Name, options) {
+			queryTextParts := []string{c.Alias, c.Name, c.Github, c.Email}
+			queryTextParts = append(queryTextParts, c.Aliases...)
+			queryTextParts = append(queryTextParts, c.Githubs...)
+			queryTextParts = append(queryTextParts, c.Names...)
+			queryTextParts = append(queryTextParts, c.Emails...)
+			if !matchesQuery(strings.Join(queryTextParts, " "), options) {
 				continue
 			}
 			if len(options.IncludeContributors) > 0 {
@@ -37875,6 +38066,7 @@ type HookResultAgentBase struct {
 
 type HookResultVersionCheckpointStarting struct {
 	HookResultBase
+	Checkpoint  string `json:"checkpoint,omitempty"`
 	Description string `json:"description,omitempty"`
 }
 
@@ -38056,6 +38248,9 @@ func resolveFullTestFilesFromCommand(command string, cwd string) []string {
 			if jsTestRunnerBins[runner] {
 				return findJSTestFiles(cwd)
 			}
+			if runner == "phpunit" {
+				return resolvePHPTestFiles(cwd)
+			}
 		}
 		return nil
 	case "bun":
@@ -38063,9 +38258,17 @@ func resolveFullTestFilesFromCommand(command string, cwd string) []string {
 			return findJSTestFiles(cwd)
 		}
 		return nil
+	case "bundle":
+		if len(parts) > 2 && parts[1] == "exec" && filepath.Base(parts[2]) == "rspec" {
+			return resolveRspecFiles(nil, cwd)
+		}
+		return nil
 	case "rspec":
 		return resolveRspecFiles(nil, cwd)
 	default:
+		if strings.HasPrefix(bin, "phpunit") || strings.HasSuffix(bin, "/phpunit") {
+			return resolvePHPTestFiles(cwd)
+		}
 		return nil
 	}
 }
@@ -38149,14 +38352,8 @@ func resolveSelectedTestDefinitionIDs(filePaths []string, selectors []string) []
 		if err != nil {
 			continue
 		}
-		definitions := ParseDefinitions(string(content), normalized)
+		definitions := collectTestDefinitionsFromContent(string(content), normalized)
 		for i := range definitions {
-			if definitions[i].Kind == "" && isTestOrBenchmarkFile(normalized) {
-				definitions[i].Kind = DefinitionKindTest
-			}
-			if definitions[i].Kind != DefinitionKindTest {
-				continue
-			}
 			definitionID := definitions[i].GetID()
 			if definitionID == "" || seen[definitionID] {
 				continue
@@ -38171,6 +38368,61 @@ func resolveSelectedTestDefinitionIDs(filePaths []string, selectors []string) []
 		}
 	}
 	return result
+}
+
+func collectTestDefinitionsFromContent(content string, normalized string) []Definition {
+	definitions := ParseDefinitions(content, normalized)
+	var tests []Definition
+	seen := map[string]bool{}
+	for i := range definitions {
+		if definitions[i].Kind == "" && isTestOrBenchmarkFile(normalized) {
+			definitions[i].Kind = DefinitionKindTest
+		}
+		if definitions[i].Kind != DefinitionKindTest {
+			continue
+		}
+		id := definitions[i].GetID()
+		if id == "" || seen[id] {
+			continue
+		}
+		seen[id] = true
+		tests = append(tests, definitions[i])
+	}
+	if len(tests) > 0 {
+		return tests
+	}
+	return fallbackTestDefinitionsFromContent(content, normalized)
+}
+
+func fallbackTestDefinitionsFromContent(content string, normalized string) []Definition {
+	patterns := []*regexp.Regexp{
+		regexp.MustCompile(`(?m)^[\t ]*func[\t ]+(Test[A-Za-z0-9_]+)\s*\(`),
+		regexp.MustCompile(`(?m)^[\t ]*def[\t ]+(test_[A-Za-z0-9_]+)\s*\(`),
+		regexp.MustCompile(`(?m)^[\t ]*(?:it|test)\s*\(?\s*['"]([^'"]+)['"]`),
+		regexp.MustCompile(`(?m)^[\t ]*public[\t ]+function[\t ]+(test[A-Za-z0-9_]+)\s*\(`),
+	}
+	var tests []Definition
+	seen := map[string]bool{}
+	for _, pattern := range patterns {
+		matches := pattern.FindAllStringSubmatch(content, -1)
+		for _, match := range matches {
+			if len(match) < 2 {
+				continue
+			}
+			name := strings.TrimSpace(match[1])
+			if name == "" {
+				continue
+			}
+			definition := Definition{Name: name, Kind: DefinitionKindTest, FilePath: normalized}
+			id := definition.GetID()
+			if id == "" || seen[id] {
+				continue
+			}
+			seen[id] = true
+			tests = append(tests, definition)
+		}
+	}
+	return tests
 }
 
 func testSelectorMatchesDefinitionName(selector string, definitionName string) bool {
@@ -38254,6 +38506,15 @@ func extractTestStartingFromInput(input json.RawMessage, toolArgs string) (labs 
 	if cmd == "" {
 		if c, ok := toolInput["command"].(string); ok {
 			cmd = c
+		}
+	}
+	if len(tests) == 0 && cmd != "" {
+		parsedTests, parsedTimeout := parseTestInfoFromCommand(cmd)
+		if len(parsedTests) > 0 {
+			tests = parsedTests
+		}
+		if timeout == "" && parsedTimeout != "" {
+			timeout = parsedTimeout
 		}
 	}
 
@@ -39027,6 +39288,7 @@ func runCheckpointStartingHook(hctx HookContext) HookResultVersionCheckpointStar
 	SetRootDir(repoRoot)
 	return HookResultVersionCheckpointStarting{
 		HookResultBase: HookResultBase{Allowed: true, Message: "checkpoint starting hook passed"},
+		Checkpoint:     extractCheckpointSHAFromInput(hctx.Input),
 		Description:    extractCheckpointMessageFromInput(hctx.Input, repoRoot),
 	}
 }
@@ -43994,7 +44256,36 @@ func normalizeTicketSessionID(sessionID string) string {
 	if sessionID == "" {
 		return ""
 	}
-	return sessionID
+	sessionEmoji := emojiText(EmojiSession)
+	sessionStateEmojis := []string{
+		emojiText(EmojiSession),
+		emojiText(EmojiSessionRunning),
+		emojiText(EmojiSessionCompleted),
+		emojiText(EmojiSessionInterrupted),
+	}
+	prefix := ""
+	payload := sessionID
+	markerIndex := -1
+	markerLen := 0
+	for _, marker := range sessionStateEmojis {
+		if marker == "" {
+			continue
+		}
+		index := strings.Index(sessionID, marker)
+		if index >= 0 && (markerIndex == -1 || index < markerIndex) {
+			markerIndex = index
+			markerLen = len(marker)
+		}
+	}
+	if markerIndex >= 0 {
+		prefix = sessionID[:markerIndex]
+		payload = sessionID[markerIndex+markerLen:]
+	}
+	payload = Flat(payload)
+	if payload == "" {
+		return strings.TrimSpace(prefix)
+	}
+	return prefix + sessionEmoji + payload
 }
 
 // currentTicketSessionID returns the current ticket session ID.
@@ -44028,6 +44319,22 @@ func resolveCopilotEvent(nativeEvent string, kind ToolKind) (HookEvent, string, 
 		return resolvePreToolUse(kind), "", nil
 	case "PostToolUse", "PostToolUseFailure":
 		return resolvePostToolUse(kind), "", nil
+	case "beforeMCPExecution":
+		return HookAgentToolStarting, "", nil
+	case "afterMCPExecution":
+		return HookAgentToolEnded, "", nil
+	case "beforeReadFile", "beforeTabFileRead":
+		return HookAgentToolSearchStarting, "", nil
+	case "afterFileEdit", "afterTabFileEdit":
+		return HookAgentToolCodeEditEnded, "", nil
+	case "beforeShellExecution":
+		return resolveShellPreToolUse(kind), "", nil
+	case "afterShellExecution":
+		return resolveShellPostToolUse(kind), "", nil
+	case "afterAgentResponse":
+		return HookAgentEnded, "", nil
+	case "afterAgentThought":
+		return HookAgentThinkingEnded, "", nil
 	default:
 		return "", "", fmt.Errorf("unknown native event %q for copilot-chat", nativeEvent)
 	}
@@ -44048,7 +44355,7 @@ func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, e
 		return HookAgentEnded, "subagent", nil
 	case "stop":
 		return HookAgentEnded, "", nil
-	case "userPromptSubmit":
+	case "userPromptSubmit", "beforeSubmitPrompt":
 		return HookAgentPromptSubmitting, "", nil
 	case "preCompact":
 		return HookAgentCompacting, "", nil
@@ -44058,6 +44365,20 @@ func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, e
 		return resolvePostToolUse(kind), "", nil
 	case "beforeMCPExecution":
 		return HookAgentToolStarting, "", nil
+	case "afterMCPExecution":
+		return HookAgentToolEnded, "", nil
+	case "beforeReadFile", "beforeTabFileRead":
+		return HookAgentToolSearchStarting, "", nil
+	case "afterFileEdit", "afterTabFileEdit":
+		return HookAgentToolCodeEditEnded, "", nil
+	case "beforeShellExecution":
+		return resolveShellPreToolUse(kind), "", nil
+	case "afterShellExecution":
+		return resolveShellPostToolUse(kind), "", nil
+	case "afterAgentResponse":
+		return HookAgentEnded, "", nil
+	case "afterAgentThought":
+		return HookAgentThinkingEnded, "", nil
 	default:
 		return "", "", fmt.Errorf("unknown native event %q for cursor-chat", nativeEvent)
 	}
@@ -44072,6 +44393,8 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 		return HookAgentPromptSubmitting, "", nil
 	case "post_cascade_response":
 		return HookAgentEnded, "", nil
+	case "post_setup_worktree":
+		return HookAgentStarted, "", nil
 	case "subagentStart":
 		return HookAgentStarted, "subagent", nil
 	case "subagentStop":
@@ -44080,10 +44403,22 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 		return HookAgentEnded, "", nil
 	case "preCompact":
 		return HookAgentCompacting, "", nil
-	case "preToolUse":
+	case "preToolUse", "pre_mcp_tool_use":
 		return resolvePreToolUse(kind), "", nil
-	case "postToolUse", "postToolUseFailure":
+	case "postToolUse", "postToolUseFailure", "post_mcp_tool_use":
 		return resolvePostToolUse(kind), "", nil
+	case "pre_read_code":
+		return HookAgentToolSearchStarting, "", nil
+	case "post_read_code":
+		return HookAgentToolSearchEnded, "", nil
+	case "pre_write_code":
+		return HookAgentToolCodeEditStarting, "", nil
+	case "post_write_code":
+		return HookAgentToolCodeEditEnded, "", nil
+	case "pre_run_command":
+		return resolveShellPreToolUse(kind), "", nil
+	case "post_run_command":
+		return resolveShellPostToolUse(kind), "", nil
 	default:
 		return "", "", fmt.Errorf("unknown native event %q for windsurf-chat", nativeEvent)
 	}
@@ -44094,22 +44429,24 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 // resolveClaudeCompatibleEvent MUST perform the resolveClaudeCompatibleEvent operation.
 func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
-	case "start":
+	case "start", "SessionStart":
 		return HookAgentStarted, "", nil
-	case "stop":
+	case "stop", "Stop", "SessionEnd":
 		return HookAgentEnded, "", nil
-	case "subagentStart":
+	case "subagentStart", "SubagentStart":
 		return HookAgentStarted, "subagent", nil
-	case "subagentStop":
+	case "subagentStop", "SubagentStop":
 		return HookAgentEnded, "subagent", nil
-	case "userPromptSubmit":
+	case "userPromptSubmit", "UserPromptSubmit":
 		return HookAgentPromptSubmitting, "", nil
-	case "preCompact":
+	case "preCompact", "PreCompact":
 		return HookAgentCompacting, "", nil
-	case "preToolUse":
+	case "preToolUse", "PreToolUse", "PermissionRequest", "TeammateIdle", "Notification":
 		return resolvePreToolUse(kind), "", nil
-	case "postToolUse", "postToolUseFailure":
+	case "postToolUse", "postToolUseFailure", "PostToolUse", "PostToolUseFailure":
 		return resolvePostToolUse(kind), "", nil
+	case "TaskCompleted":
+		return HookAgentToolPlanUpdatingEnded, "", nil
 	default:
 		return "", "", fmt.Errorf("unknown native event %q for claude-compatible", nativeEvent)
 	}
@@ -44119,8 +44456,30 @@ func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent,
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️formatvscodehookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/formatVSCodeHookOutput)
 // formatVSCodeHookOutput MUST perform the formatVSCodeHookOutput operation.
 func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
+	payload := map[string]interface{}{}
 	out, _ := json.Marshal(result)
-	return string(out)
+	_ = json.Unmarshal(out, &payload)
+	hookSpecificOutput := map[string]interface{}{}
+	if hookEventName != "" {
+		hookSpecificOutput["hookEventName"] = hookEventName
+	}
+	if hookEventName == "PreToolUse" {
+		if result.IsAllowed() {
+			hookSpecificOutput["permissionDecision"] = "allow"
+		} else {
+			hookSpecificOutput["permissionDecision"] = "deny"
+			if reason := strings.TrimSpace(result.GetMessage()); reason != "" {
+				hookSpecificOutput["permissionDecisionReason"] = reason
+			}
+		}
+	} else if message := strings.TrimSpace(result.GetMessage()); message != "" {
+		hookSpecificOutput["additionalContext"] = message
+	}
+	if len(hookSpecificOutput) > 0 {
+		payload["hookSpecificOutput"] = hookSpecificOutput
+	}
+	finalOut, _ := json.Marshal(payload)
+	return string(finalOut)
 }
 
 // vsCodeEventFromHookEvent converts a HookEvent to a VS Code event string.
@@ -44129,16 +44488,34 @@ func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	switch event {
 	case HookAgentStarted:
+		if parentInfo == "subagent" {
+			return "SubagentStart"
+		}
 		return "SessionStart"
 	case HookAgentEnded:
+		if parentInfo == "subagent" {
+			return "SubagentStop"
+		}
 		return "Stop"
 	case HookAgentPromptSubmitting:
 		return "UserPromptSubmit"
 	case HookAgentCompacting:
 		return "PreCompact"
-	case HookAgentToolStarting:
+	case HookAgentToolStarting,
+		HookAgentToolPlanUpdatingStarting,
+		HookAgentToolSearchStarting,
+		HookAgentToolCodeEditStarting,
+		HookAgentToolTestStarting,
+		HookAgentToolBuildStarting,
+		HookAgentToolTerminalStarting:
 		return "PreToolUse"
-	case HookAgentToolEnded:
+	case HookAgentToolEnded,
+		HookAgentToolPlanUpdatingEnded,
+		HookAgentToolSearchEnded,
+		HookAgentToolCodeEditEnded,
+		HookAgentToolTestEnded,
+		HookAgentToolBuildEnded,
+		HookAgentToolTerminalEnded:
 		return "PostToolUse"
 	default:
 		return ""
@@ -44150,6 +44527,8 @@ func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 // resolvePreToolUse MUST perform the resolvePreToolUse operation.
 func resolvePreToolUse(kind ToolKind) HookEvent {
 	switch kind {
+	case ToolKindPlan:
+		return HookAgentToolPlanUpdatingStarting
 	case ToolKindCodeSearch:
 		return HookAgentToolSearchStarting
 	case ToolKindCodeEdit:
@@ -44170,6 +44549,8 @@ func resolvePreToolUse(kind ToolKind) HookEvent {
 // resolvePostToolUse MUST perform the resolvePostToolUse operation.
 func resolvePostToolUse(kind ToolKind) HookEvent {
 	switch kind {
+	case ToolKindPlan:
+		return HookAgentToolPlanUpdatingEnded
 	case ToolKindCodeSearch:
 		return HookAgentToolSearchEnded
 	case ToolKindCodeEdit:
@@ -44182,6 +44563,24 @@ func resolvePostToolUse(kind ToolKind) HookEvent {
 		return HookAgentToolTerminalEnded
 	default:
 		return HookAgentToolEnded
+	}
+}
+
+func resolveShellPreToolUse(kind ToolKind) HookEvent {
+	switch kind {
+	case ToolKindGeneric:
+		return HookAgentToolTerminalStarting
+	default:
+		return resolvePreToolUse(kind)
+	}
+}
+
+func resolveShellPostToolUse(kind ToolKind) HookEvent {
+	switch kind {
+	case ToolKindGeneric:
+		return HookAgentToolTerminalEnded
+	default:
+		return resolvePostToolUse(kind)
 	}
 }
 
@@ -44200,28 +44599,111 @@ var pyTestRunnerBins = map[string]bool{
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extracttestsegmentfromcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractTestSegmentFromCommand)
 // extractTestSegmentFromCommand MUST perform the extractTestSegmentFromCommand operation.
 func extractTestSegmentFromCommand(command string) (string, string) {
-	parts := strings.Fields(command)
-	if len(parts) < 2 {
-		return command, ""
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return "", ""
 	}
-
-	// Look for test-related patterns
-	for i, part := range parts {
-		switch part {
-		case "test", "pytest", "go", "cargo", "dotnet":
-			if i > 0 {
-				// Check if this is a test command
-				prev := parts[i-1]
-				if prev == "go" || prev == "cargo" || prev == "dotnet" ||
-					prev == "python" || prev == "python3" || prev == "uv" ||
-					(prev == "run" && i > 1 && parts[i-2] == "uv") {
-					return strings.Join(parts[i:], " "), ""
-				}
+	segments := splitCommandSegments(command)
+	if len(segments) == 0 {
+		segments = []string{command}
+	}
+	cwd := ""
+	hasComposite := len(segments) > 1
+	for _, segment := range segments {
+		segment = strings.TrimSpace(segment)
+		if segment == "" {
+			continue
+		}
+		if strings.HasPrefix(segment, "cd ") {
+			parts := strings.Fields(segment)
+			if len(parts) >= 2 {
+				cwd = parts[1]
+			}
+			continue
+		}
+		if strings.HasPrefix(segment, "export ") || strings.HasPrefix(segment, "set ") {
+			continue
+		}
+		fields := strings.Fields(segment)
+		if len(fields) == 0 {
+			continue
+		}
+		bin := filepath.Base(fields[0])
+		if isTestCommandSegment(segment, bin) {
+			return trimPipelineTail(segment), cwd
+		}
+		if bin == "npx" || bin == "pnpm" || bin == "yarn" || bin == "bun" || bin == "uv" {
+			if isTestCommandSegment(segment, "") {
+				return trimPipelineTail(segment), cwd
 			}
 		}
 	}
+	if hasComposite {
+		return "", cwd
+	}
+	return "", ""
+}
 
-	return command, ""
+func isTestCommandSegment(segment string, bin string) bool {
+	trimmed := strings.TrimSpace(segment)
+	if trimmed == "" {
+		return false
+	}
+	if bin == "" {
+		fields := strings.Fields(trimmed)
+		if len(fields) == 0 {
+			return false
+		}
+		bin = filepath.Base(fields[0])
+	}
+	if classifyCommandKind(trimmed) == ToolKindTest {
+		return true
+	}
+	fields := strings.Fields(trimmed)
+	if len(fields) < 2 {
+		return false
+	}
+	if (bin == "npx" || bin == "pnpm" || bin == "yarn" || bin == "bun") && classifyCommandKind(strings.Join(fields[1:], " ")) == ToolKindTest {
+		return true
+	}
+	if bin == "uv" {
+		if fields[1] == "run" && len(fields) > 2 && classifyCommandKind(strings.Join(fields[2:], " ")) == ToolKindTest {
+			return true
+		}
+		if classifyCommandKind(strings.Join(fields[1:], " ")) == ToolKindTest {
+			return true
+		}
+	}
+	return false
+}
+
+func trimPipelineTail(segment string) string {
+	trimmed := strings.TrimSpace(segment)
+	if trimmed == "" {
+		return ""
+	}
+	var current strings.Builder
+	quote := rune(0)
+	for i := 0; i < len(trimmed); i++ {
+		ch := rune(trimmed[i])
+		if quote != 0 {
+			current.WriteRune(ch)
+			if ch == quote {
+				quote = 0
+			}
+			continue
+		}
+		if ch == '\'' || ch == '"' {
+			quote = ch
+			current.WriteRune(ch)
+			continue
+		}
+		if ch == '|' {
+			break
+		}
+		current.WriteRune(ch)
+	}
+	return strings.TrimSpace(current.String())
 }
 
 // resolveGoTestFiles resolves test files for Go commands.
@@ -44229,16 +44711,62 @@ func extractTestSegmentFromCommand(command string) (string, string) {
 // resolveGoTestFiles MUST perform the resolveGoTestFiles operation.
 func resolveGoTestFiles(args []string, cwd string) []string {
 	var files []string
-	// Look for *_test.go files
-	_ = filepath.Walk(cwd, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
+	seen := map[string]bool{}
+	targets := make([]string, 0)
+	for i := 2; i < len(args); i++ {
+		arg := strings.TrimSpace(args[i])
+		if arg == "" || strings.HasPrefix(arg, "-") {
+			continue
 		}
-		if !info.IsDir() && strings.HasSuffix(path, "_test.go") {
+		targets = append(targets, arg)
+	}
+	addFile := func(path string) {
+		if !seen[path] {
+			seen[path] = true
 			files = append(files, path)
 		}
-		return nil
-	})
+	}
+	scanDir := func(root string, recursive bool) {
+		_ = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return nil
+			}
+			if info.IsDir() {
+				if !recursive && path != root {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			if strings.HasSuffix(path, "_test.go") {
+				addFile(path)
+			}
+			return nil
+		})
+	}
+	if len(targets) == 0 {
+		scanDir(cwd, true)
+		return files
+	}
+	for _, target := range targets {
+		recursive := strings.HasSuffix(target, "/...")
+		targetPath := strings.TrimSuffix(target, "/...")
+		if targetPath == "." || targetPath == "./" || targetPath == "" {
+			targetPath = cwd
+		} else if !filepath.IsAbs(targetPath) {
+			targetPath = filepath.Join(cwd, targetPath)
+		}
+		info, err := os.Stat(targetPath)
+		if err != nil {
+			continue
+		}
+		if info.IsDir() {
+			scanDir(targetPath, recursive)
+			continue
+		}
+		if strings.HasSuffix(targetPath, "_test.go") {
+			addFile(targetPath)
+		}
+	}
 	return files
 }
 
@@ -44316,22 +44844,63 @@ func resolvePythonTestFiles(args []string, cwd string) []string {
 // resolvePytestFiles MUST perform the resolvePytestFiles operation.
 func resolvePytestFiles(args []string, cwd string) []string {
 	var files []string
-	// Look for test files following pytest conventions
-	_ = filepath.Walk(cwd, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
+	seen := map[string]bool{}
+	addFile := func(path string) {
+		if !seen[path] {
+			seen[path] = true
+			files = append(files, path)
 		}
-		if !info.IsDir() && strings.HasSuffix(path, ".py") {
-			base := filepath.Base(path)
-			// pytest test patterns
-			if strings.HasPrefix(base, "test_") || strings.Contains(base, "_test.") {
-				files = append(files, path)
-			} else if strings.Contains(filepath.Dir(path), "tests") || strings.Contains(filepath.Dir(path), "test") {
-				files = append(files, path)
+	}
+	isPytestFile := func(path string) bool {
+		base := filepath.Base(path)
+		return strings.HasPrefix(base, "test_") || strings.Contains(base, "_test.") || strings.EqualFold(base, "conftest.py")
+	}
+	scanDir := func(root string) {
+		_ = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return nil
 			}
+			if !info.IsDir() && strings.HasSuffix(path, ".py") && isPytestFile(path) {
+				addFile(path)
+			}
+			return nil
+		})
+	}
+	targets := make([]string, 0)
+	for i := 0; i < len(args); i++ {
+		arg := strings.TrimSpace(args[i])
+		if arg == "" {
+			continue
 		}
-		return nil
-	})
+		if strings.HasPrefix(arg, "-") {
+			if (arg == "-k" || arg == "-m" || arg == "--maxfail" || arg == "-c") && i+1 < len(args) {
+				i++
+			}
+			continue
+		}
+		targets = append(targets, arg)
+	}
+	if len(targets) == 0 {
+		scanDir(cwd)
+		return files
+	}
+	for _, target := range targets {
+		targetPath := target
+		if !filepath.IsAbs(targetPath) {
+			targetPath = filepath.Join(cwd, targetPath)
+		}
+		info, err := os.Stat(targetPath)
+		if err != nil {
+			continue
+		}
+		if info.IsDir() {
+			scanDir(targetPath)
+			continue
+		}
+		if strings.HasSuffix(targetPath, ".py") && isPytestFile(targetPath) {
+			addFile(targetPath)
+		}
+	}
 	return files
 }
 
@@ -44375,26 +44944,168 @@ var testSessionIDOverride string
 
 // BlockedToolPatterns are patterns for blocked tools.
 var BlockedToolPatterns = map[string]bool{
-	"rm":    true,
-	"rmdir": true,
-	"mv":    true,
-	"cp":    true,
+	"rm":              true,
+	"rmdir":           true,
+	"mv":              true,
+	"cp":              true,
+	"git add":         true,
+	"git branch":      true,
+	"git checkout":    true,
+	"git cherry-pick": true,
+	"git clean":       true,
+	"git clone":       true,
+	"git commit":      true,
+	"git config":      true,
+	"git fetch":       true,
+	"git init":        true,
+	"git merge":       true,
+	"git mv":          true,
+	"git pull":        true,
+	"git push":        true,
+	"git rebase":      true,
+	"git remote":      true,
+	"git reset":       true,
+	"git restore":     true,
+	"git revert":      true,
+	"git rm":          true,
+	"git stash":       true,
+	"git switch":      true,
+	"git tag":         true,
 }
 
 // IsToolBlocked checks if a tool is blocked.
 func IsToolBlocked(tool string, args string) (bool, string) {
-	pattern, ok := BlockedToolPatterns[tool]
-	return ok && pattern, ""
+	for _, segment := range splitCommandSegments(args) {
+		if blocked, reason := isCommandSegmentBlocked(segment); blocked {
+			return true, reason + "; other developers and agents may be editing the same files concurrently"
+		}
+	}
+	tool = strings.ToLower(strings.TrimSpace(tool))
+	if pattern, ok := BlockedToolPatterns[tool]; ok && pattern {
+		return true, "blocked: " + tool + "; other developers and agents may be editing the same files concurrently"
+	}
+	return false, ""
 }
 
 // splitCommandSegments splits a command into segments.
 func splitCommandSegments(cmd string) []string {
-	return strings.Fields(cmd)
+	cmd = strings.TrimSpace(cmd)
+	if cmd == "" {
+		return nil
+	}
+	var segments []string
+	var current strings.Builder
+	quote := rune(0)
+	flush := func() {
+		segment := strings.TrimSpace(current.String())
+		if segment != "" {
+			segments = append(segments, segment)
+		}
+		current.Reset()
+	}
+	for i := 0; i < len(cmd); i++ {
+		ch := rune(cmd[i])
+		if quote != 0 {
+			current.WriteRune(ch)
+			if ch == quote {
+				quote = 0
+			}
+			continue
+		}
+		if ch == '\'' || ch == '"' {
+			quote = ch
+			current.WriteRune(ch)
+			continue
+		}
+		if ch == ';' {
+			flush()
+			continue
+		}
+		if ch == '&' && i+1 < len(cmd) && cmd[i+1] == '&' {
+			flush()
+			i++
+			continue
+		}
+		if ch == '|' {
+			flush()
+			if i+1 < len(cmd) && cmd[i+1] == '|' {
+				i++
+			}
+			continue
+		}
+		current.WriteRune(ch)
+	}
+	flush()
+	return segments
 }
 
 // isCommandSegmentBlocked checks if a command segment is blocked.
 func isCommandSegmentBlocked(segment string) (bool, string) {
-	return IsToolBlocked(segment, "")
+	segment = strings.TrimSpace(segment)
+	if segment == "" {
+		return false, ""
+	}
+	lower := strings.ToLower(segment)
+	allowedPrefixes := []string{"grep ", "rg ", "ripgrep ", "echo ", "printf ", "ls ", "pwd", "cat ", "sed ", "awk "}
+	for _, prefix := range allowedPrefixes {
+		if strings.HasPrefix(lower, prefix) {
+			return false, ""
+		}
+	}
+	tokens := strings.Fields(lower)
+	for len(tokens) > 0 {
+		first := tokens[0]
+		if strings.Contains(first, "=") {
+			tokens = tokens[1:]
+			continue
+		}
+		if first == "env" || first == "command" || first == "sudo" {
+			tokens = tokens[1:]
+			continue
+		}
+		if first == "bash" || first == "sh" || first == "zsh" {
+			joined := strings.Join(tokens, " ")
+			if idx := strings.Index(joined, "git "); idx >= 0 {
+				return isCommandSegmentBlocked(joined[idx:])
+			}
+			return false, ""
+		}
+		break
+	}
+	if len(tokens) == 0 {
+		return false, ""
+	}
+	if strings.HasSuffix(tokens[0], "/git") {
+		tokens[0] = "git"
+	}
+	if tokens[0] != "git" {
+		return false, ""
+	}
+	verbIndex := 1
+	for verbIndex < len(tokens) && strings.HasPrefix(tokens[verbIndex], "-") {
+		verbIndex++
+		if verbIndex < len(tokens) && !strings.HasPrefix(tokens[verbIndex], "-") && (tokens[verbIndex-1] == "-c" || tokens[verbIndex-1] == "-C") {
+			verbIndex++
+		}
+	}
+	if verbIndex >= len(tokens) {
+		return false, ""
+	}
+	verb := tokens[verbIndex]
+	blockedVerbs := map[string]bool{
+		"add": true, "branch": true, "checkout": true, "cherry-pick": true, "clone": true,
+		"commit": true, "config": true, "fetch": true, "init": true, "merge": true,
+		"mv": true, "pull": true, "push": true, "rebase": true, "remote": true,
+		"reset": true, "restore": true, "revert": true, "rm": true, "stash": true,
+		"switch": true, "tag": true, "clean": true,
+	}
+	if !blockedVerbs[verb] {
+		return false, ""
+	}
+	if verb == "clean" && !strings.Contains(lower, "-fd") && !strings.Contains(lower, "-df") {
+		return false, ""
+	}
+	return true, "blocked: git " + verb
 }
 
 // resolveEventSessionID resolves the session ID from input.
@@ -44451,17 +45162,53 @@ func resolveRspecFiles(args []string, cwd string) []string {
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvpathtofileid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolvePathToFileID)
 // resolvePathToFileID MUST perform the resolvePathToFileID operation.
 func resolvePathToFileID(path string) string {
-	// Convert path to a file ID format
-	return filepath.Base(path)
+	normalized := normalizeHookPath(path)
+	if normalized == "" {
+		return ""
+	}
+	return buildFileID(normalized, nil)
 }
 
 // resolveTestNamesToDefinitionIDs resolves test names to definition IDs.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvetestnamestodefinitionids](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveTestNamesToDefinitionIDs)
 // resolveTestNamesToDefinitionIDs MUST perform the resolveTestNamesToDefinitionIDs operation.
-func resolveTestNamesToDefinitionIDs(testNames []string, testFiles []string) map[string]string {
+
+func resolveTestNamesToDefinitionIDs(testFiles []string, testNames []string) map[string]string {
 	result := make(map[string]string)
-	for _, name := range testNames {
-		result[name] = name // Simplified implementation
+	if len(testFiles) == 0 || len(testNames) == 0 {
+		return result
+	}
+	for _, file := range testFiles {
+		normalized := normalizeHookPath(file)
+		if normalized == "" {
+			continue
+		}
+		absPath := normalized
+		if !filepath.IsAbs(absPath) {
+			absPath = filepath.Join(GetRootDir(), normalized)
+		}
+		content, err := os.ReadFile(absPath)
+		if err != nil {
+			continue
+		}
+		definitions := collectTestDefinitionsFromContent(string(content), normalized)
+		for i := range definitions {
+			definitionID := definitions[i].GetID()
+			if definitionID == "" {
+				continue
+			}
+			for _, name := range testNames {
+				if _, ok := result[name]; ok {
+					continue
+				}
+				if testSelectorMatchesDefinitionName(name, definitions[i].Name) {
+					result[name] = definitionID
+				}
+			}
+		}
+		if len(result) == len(testNames) {
+			return result
+		}
 	}
 	return result
 }
@@ -44471,9 +45218,24 @@ func resolveTestNamesToDefinitionIDs(testNames []string, testFiles []string) map
 // extractToolInputMapFromData MUST perform the extractToolInputMapFromData operation.
 func extractToolInputMapFromData(data interface{}) map[string]interface{} {
 	if m, ok := data.(map[string]interface{}); ok {
-		return m
+		if toolInput, ok := m["tool_input"].(map[string]interface{}); ok {
+			return toolInput
+		}
+		if event, ok := m["event"].(map[string]interface{}); ok {
+			if toolInput, ok := event["tool_input"].(map[string]interface{}); ok {
+				return toolInput
+			}
+		}
+		if native, ok := m["native"].(map[string]interface{}); ok {
+			if event, ok := native["event"].(map[string]interface{}); ok {
+				if toolInput, ok := event["tool_input"].(map[string]interface{}); ok {
+					return toolInput
+				}
+			}
+		}
+		return nil
 	}
-	return make(map[string]interface{})
+	return nil
 }
 
 // looksLikeFilePath checks if a string looks like a file path.
@@ -44489,53 +45251,67 @@ func looksLikeFilePath(s string) bool {
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcommandfromstdin](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCommandFromStdin)
 // extractCommandFromStdin MUST perform the extractCommandFromStdin operation.
 func extractCommandFromStdin(data json.RawMessage) string {
-	// Convert data to string if it's JSON
 	var cmd string
 	if err := json.Unmarshal(data, &cmd); err == nil {
-		return cmd
+		return strings.TrimSpace(cmd)
 	}
-
-	// Read from stdin if available
-	scanner := bufio.NewScanner(os.Stdin)
-	if scanner.Scan() {
-		return strings.TrimSpace(scanner.Text())
+	decoded := decodeHookInputMap(data)
+	if decoded == nil {
+		return ""
 	}
-	return ""
+	if toolInput := extractToolInputMapFromData(decoded); len(toolInput) > 0 {
+		if value, ok := toolInput["command"].(string); ok {
+			return strings.TrimSpace(value)
+		}
+	}
+	return strings.TrimSpace(findNestedStringValue(decoded, "command", "command_line", "commandLine"))
 }
 
 // extractCommandCwdFromInput extracts command and cwd from input.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcommandcwdfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCommandCwdFromInput)
 // extractCommandCwdFromInput MUST perform the extractCommandCwdFromInput operation.
 func extractCommandCwdFromInput(input json.RawMessage) (string, string) {
-	// Convert JSON to string
-	var inputStr string
-	if err := json.Unmarshal(input, &inputStr); err != nil {
-		inputStr = string(input)
-	}
-
-	parts := strings.Fields(inputStr)
-	if len(parts) == 0 {
-		return "", ""
-	}
-
-	// Default cwd is current directory
-	cwd, _ := os.Getwd()
-
-	// Look for directory changes
-	for i, part := range parts {
-		if part == "cd" && i+1 < len(parts) {
-			cwd = parts[i+1]
-			break
+	decoded := decodeHookInputMap(input)
+	command := extractCommandFromStdin(input)
+	cwd := ""
+	if decoded != nil {
+		if toolInput := extractToolInputMapFromData(decoded); len(toolInput) > 0 {
+			if value, ok := toolInput["cwd"].(string); ok {
+				cwd = strings.TrimSpace(value)
+			}
+		}
+		if cwd == "" {
+			cwd = strings.TrimSpace(findNestedStringValue(decoded, "cwd", "working_directory", "workingDirectory"))
 		}
 	}
-
-	return strings.Join(parts, " "), cwd
+	if cwd == "" {
+		cwd, _ = os.Getwd()
+	}
+	return command, cwd
 }
 
 // resolveTestFilesFromCommand resolves test files from a command.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvetestfilesfromcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveTestFilesFromCommand)
 // resolveTestFilesFromCommand MUST perform the resolveTestFilesFromCommand operation.
 func resolveTestFilesFromCommand(command string, cwd string) []string {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return nil
+	}
+	if cwd == "" {
+		cwd = GetRootDir()
+	}
+	testSeg, extractedCwd := extractTestSegmentFromCommand(command)
+	if testSeg != "" {
+		command = testSeg
+	}
+	if extractedCwd != "" {
+		if filepath.IsAbs(extractedCwd) {
+			cwd = extractedCwd
+		} else {
+			cwd = filepath.Join(cwd, extractedCwd)
+		}
+	}
 	parts := strings.Fields(command)
 	if len(parts) == 0 {
 		return nil
@@ -44554,11 +45330,48 @@ func resolveTestFilesFromCommand(command string, cwd string) []string {
 		return resolvePythonTestFiles(parts, cwd)
 	case "pytest", "py.test":
 		return resolvePytestFiles(nil, cwd)
+	case "uv":
+		if len(parts) > 2 && parts[1] == "run" {
+			runner := filepath.Base(parts[2])
+			if runner == "pytest" || pyTestRunnerBins[runner] {
+				return resolvePytestFiles(nil, cwd)
+			}
+		}
+		return nil
+	case "uvx":
+		if len(parts) > 1 && pyTestRunnerBins[filepath.Base(parts[1])] {
+			return resolvePytestFiles(nil, cwd)
+		}
+		return nil
 	case "rspec":
 		return resolveRspecFiles(parts, cwd)
 	case "npm", "pnpm", "yarn", "jest", "vitest", "mocha", "jasmine", "ava":
 		return findJSTestFiles(cwd)
+	case "npx", "bunx", "pnpx":
+		if len(parts) > 1 {
+			runner := filepath.Base(parts[1])
+			if jsTestRunnerBins[runner] {
+				return findJSTestFiles(cwd)
+			}
+			if runner == "phpunit" {
+				return resolvePHPTestFiles(cwd)
+			}
+		}
+		return nil
+	case "bun":
+		if len(parts) > 1 && parts[1] == "test" {
+			return findJSTestFiles(cwd)
+		}
+		return nil
+	case "bundle":
+		if len(parts) > 2 && parts[1] == "exec" && filepath.Base(parts[2]) == "rspec" {
+			return resolveRspecFiles(parts[2:], cwd)
+		}
+		return nil
 	default:
+		if strings.HasPrefix(bin, "phpunit") || strings.HasSuffix(bin, "/phpunit") {
+			return resolvePHPTestFiles(cwd)
+		}
 		return nil
 	}
 }
@@ -44577,56 +45390,56 @@ func generateHookSessionID() string {
 // resolveAllTestDefinitionIDs MUST perform the resolveAllTestDefinitionIDs operation.
 func resolveAllTestDefinitionIDs(files []string) []string {
 	var ids []string
+	seen := map[string]bool{}
 
 	for _, file := range files {
-		// Check if file exists
-		if _, err := os.Stat(file); os.IsNotExist(err) {
+		normalized := normalizeHookPath(file)
+		if normalized == "" {
 			continue
 		}
-
-		// Read file content
-		content, err := os.ReadFile(file)
+		absPath := normalized
+		if !filepath.IsAbs(absPath) {
+			absPath = filepath.Join(GetRootDir(), normalized)
+		}
+		if _, err := os.Stat(absPath); os.IsNotExist(err) {
+			continue
+		}
+		content, err := os.ReadFile(absPath)
 		if err != nil {
 			continue
 		}
-
-		// Parse test definitions based on file extension
-		if strings.HasSuffix(file, "_test.go") {
-			// Go tests
-			lines := strings.Split(string(content), "\n")
-			for _, line := range lines {
-				if strings.Contains(line, "func Test") && strings.Contains(line, "(t *testing.T)") {
-					// Extract test name
-					parts := strings.Fields(line)
-					for i, part := range parts {
-						if part == "func" && i+1 < len(parts) && strings.HasPrefix(parts[i+1], "Test") {
-							testName := strings.TrimSuffix(parts[i+1], "(")
-							ids = append(ids, fmt.Sprintf("%s:%s", file, testName))
-							break
-						}
-					}
-				}
+		definitions := collectTestDefinitionsFromContent(string(content), normalized)
+		for i := range definitions {
+			id := definitions[i].GetID()
+			if id == "" || seen[id] {
+				continue
 			}
-		} else if strings.HasSuffix(file, ".py") && strings.Contains(file, "test_") {
-			// Python tests
-			lines := strings.Split(string(content), "\n")
-			for _, line := range lines {
-				if strings.Contains(line, "def test_") {
-					// Extract test name
-					parts := strings.Fields(line)
-					for _, part := range parts {
-						if strings.HasPrefix(part, "def test_") {
-							testName := strings.TrimSuffix(strings.TrimSuffix(part, ":"), "(")
-							ids = append(ids, fmt.Sprintf("%s:%s", file, testName))
-							break
-						}
-					}
-				}
-			}
+			seen[id] = true
+			ids = append(ids, id)
 		}
 	}
 
 	return ids
+}
+
+func resolvePHPTestFiles(cwd string) []string {
+	var files []string
+	_ = filepath.Walk(cwd, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(path, ".php") {
+			base := strings.ToLower(filepath.Base(path))
+			if strings.HasSuffix(base, "test.php") || strings.HasSuffix(base, "tests.php") || strings.Contains(strings.ToLower(filepath.Dir(path)), "tests") {
+				files = append(files, path)
+			}
+		}
+		return nil
+	})
+	return files
 }
 
 // latestOpenTicket finds the latest open ticket.
@@ -44665,14 +45478,14 @@ func extractSessionIDFromInput(input json.RawMessage) string {
 	}
 	sessionID := findNestedStringValue(
 		data,
-		"agent_id",
-		"agentId",
+		"session_id",
+		"sessionId",
 		"trajectory_id",
 		"trajectoryId",
 		"conversation_id",
 		"conversationId",
-		"session_id",
-		"sessionId",
+		"agent_id",
+		"agentId",
 	)
 	if sessionID != "" {
 		return sessionID
@@ -44708,7 +45521,7 @@ func extractToolNameFromStdin(input json.RawMessage) string {
 	if data == nil {
 		return ""
 	}
-	return findNestedStringValue(data, "tool", "tool_name", "toolName")
+	return findNestedStringValue(data, "tool", "tool_name", "toolName", "mcp_tool_name", "mcpToolName")
 }
 
 // extractHookEventNameFromStdin extracts hook event name from stdin.
@@ -44719,58 +45532,191 @@ func extractHookEventNameFromStdin(input json.RawMessage) string {
 	if data == nil {
 		return ""
 	}
-	return findNestedStringValue(data, "event", "hook_event", "hookEvent")
+	return findNestedStringValue(data,
+		"hookEventName",
+		"hook_event_name",
+		"hook_event",
+		"hookEvent",
+		"event",
+	)
 }
 
 // ResolveHookEvent resolves a hook event.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvehookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/ResolveHookEvent)
 // ResolveHookEvent MUST perform the ResolveHookEvent operation.
 func ResolveHookEvent(name string, client string, toolName string, input json.RawMessage) (HookEvent, string, error) {
-	var event HookEvent
-	return event, "", nil
+	if event, err := ValidateHookEvent(name); err == nil {
+		return event, "", nil
+	}
+	kind := ToolKindGeneric
+	if strings.TrimSpace(toolName) != "" {
+		kind = classifyTool(toolName)
+	}
+	if command := extractCommandFromStdin(input); command != "" {
+		segment, _ := extractTestSegmentFromCommand(command)
+		commandKind := classifyCommandKind(firstNonEmpty(segment, command))
+		if kind == ToolKindGeneric || kind == ToolKindTerminal || commandKind == ToolKindTest || commandKind == ToolKindBuild || commandKind == ToolKindCodeSearch || commandKind == ToolKindCodeEdit {
+			kind = commandKind
+		}
+	}
+	if toolName == "Glob" && len(input) > 0 {
+		kind = ToolKindGeneric
+	}
+	provider := GetEditorProvider(client)
+	if provider != nil {
+		return provider.ResolveNativeEvent(name, kind)
+	}
+	return resolveClaudeCompatibleEvent(name, kind)
 }
 
 // RunHook runs a hook.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️runhook](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/RunHook)
 // RunHook MUST perform the RunHook operation.
 func RunHook(ctx HookContext) HookResult {
-	switch ctx.Event {
-	case HookVersionCheckpointEnded:
-		// Parse input JSON
-		var input struct {
-			SHA         string `json:"sha"`
-			Message     string `json:"message"`
-			Checkpoint  string `json:"checkpoint"`
-			Description string `json:"description"`
+	previousRoot := rootDir
+	defer func() {
+		rootDir = previousRoot
+		gitignoreMutex.Lock()
+		cachedGitignore = nil
+		gitignoreLoaded = false
+		gitignoreMutex.Unlock()
+		InvalidateTechnologyCache()
+	}()
+	result := runHookCore(ctx)
+	writeHookArtifacts(ctx, result)
+	trackHookInOpenTicket(ctx, result)
+	return result
+}
+
+func runHookCore(ctx HookContext) HookResult {
+	repoRoot := ctx.RepoRoot
+	if repoRoot == "" {
+		repoRoot = GetRootDir()
+	}
+	if repoRoot != "" {
+		SetRootDir(repoRoot)
+	}
+	result := dispatchHook(ctx)
+	hookResult, ok := result.(HookResult)
+	if !ok {
+		return HookResultBase{Allowed: false, Message: "invalid hook result"}
+	}
+	return hookResult
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value != "" {
+			return value
 		}
-		if err := json.Unmarshal(ctx.Input, &input); err != nil {
-			return &HookResultBase{
-				Allowed: false,
-				Message: fmt.Sprintf("failed to parse input: %v", err),
+	}
+	return ""
+}
+
+func writeHookArtifacts(ctx HookContext, result HookResult) {
+	repoRoot := ctx.RepoRoot
+	if repoRoot == "" {
+		repoRoot = GetRootDir()
+	}
+	if repoRoot == "" {
+		return
+	}
+	repoRoot = findRepoRoot(repoRoot)
+	SetRootDir(repoRoot)
+	now := time.Now().UTC()
+	sessionID := extractSessionIDFromInput(ctx.Input)
+	if sessionID == "" {
+		sessionID = "unknown"
+	}
+	logDir := filepath.Join(repoRoot, ".semio-repo", "⚡", "🤖",
+		fmt.Sprintf("%02d", now.Year()%100),
+		fmt.Sprintf("%02d", int(now.Month())),
+		fmt.Sprintf("%02d", now.Day()),
+		sessionID,
+	)
+	if err := os.MkdirAll(logDir, 0o755); err != nil {
+		return
+	}
+	writeSessionHookLog(ctx, result, logDir, sessionID)
+	logRepoOperationHook(ctx, result, logDir, now, sessionID)
+}
+
+func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sessionID string) {
+	metaPath := filepath.Join(logDir, "session.json")
+	var meta SessionMeta
+	if data, err := os.ReadFile(metaPath); err == nil {
+		_ = json.Unmarshal(data, &meta)
+	}
+	inputMap := decodeHookInputMap(ctx.Input)
+	second := firstNonEmpty(ctx.Second, findNestedStringValue(inputMap, "second"))
+	checkpoint := resolveEventCheckpointID(extractCheckpointSHAFromInput(ctx.Input))
+	transcript := extractTranscriptFromInput(ctx.Input)
+	if meta.ID == "" {
+		meta.ID = sessionID
+		meta.URI = "semiorepo://session/" + sessionID
+		meta.Client = ctx.Client
+		meta.Second = second
+		meta.Checkpoint = checkpoint
+		meta.Contributor = "unknown"
+		meta.Transcript = transcript
+	} else {
+		if meta.Client == "" {
+			meta.Client = ctx.Client
+		}
+		if meta.Second == "" {
+			meta.Second = second
+		}
+		if meta.Checkpoint == "" {
+			meta.Checkpoint = checkpoint
+		}
+		if meta.Transcript == "" {
+			meta.Transcript = transcript
+		}
+	}
+	eventMap := map[string]interface{}{
+		"kind":        string(ctx.Event),
+		"client":      ctx.Client,
+		"session":     resolveEventSessionID(sessionID),
+		"second":      resolveEventSecondID(second),
+		"checkpoint":  checkpoint,
+		"contributor": "unknown",
+	}
+	if transcript != "" {
+		eventMap["transcript"] = transcript
+	}
+	eventJSON, _ := json.Marshal(eventMap)
+	entry := EventEntry{Event: eventJSON}
+	if len(ctx.Input) > 0 {
+		entry.Native = &struct {
+			Event json.RawMessage `json:"event"`
+		}{Event: ctx.Input}
+	}
+	entry.Response = &struct {
+		Blocked *bool  `json:"blocked,omitempty"`
+		Message string `json:"message,omitempty"`
+		Reason  string `json:"reason,omitempty"`
+	}{}
+	if !result.IsAllowed() {
+		blocked := true
+		entry.Response.Blocked = &blocked
+		entry.Response.Message = result.GetMessage()
+		entry.Response.Reason = result.GetMessage()
+	}
+	meta.Events = append(meta.Events, entry)
+	if ctx.Event == HookAgentToolPlanUpdatingEnded {
+		steps := extractPlanStepsFromInput(ctx.Input, ctx.ToolArgs)
+		if len(steps) > 0 {
+			var existing []TicketAgentPlanStep
+			if meta.Plan != nil {
+				existing = meta.Plan.Steps
 			}
+			meta.Plan = &TicketAgentPlan{Steps: mergeTicketAgentPlanSteps(existing, steps, firstNonEmpty(second, time.Now().UTC().Format(time.RFC3339)))}
 		}
-
-		// Use checkpoint from input if provided, otherwise use SHA
-		checkpoint := input.Checkpoint
-		if checkpoint == "" {
-			checkpoint = input.SHA
-		}
-
-		// Use description from input if provided, otherwise use message
-		description := input.Description
-		if description == "" {
-			description = input.Message
-		}
-
-		return &HookResultVersionCheckpointEnded{
-			HookResultBase: HookResultBase{
-				Allowed: true,
-			},
-			Checkpoint:  checkpoint,
-			Description: description,
-		}
-	default:
-		return &HookResultBase{Allowed: true}
+	}
+	_ = WriteJSONFile(metaPath, meta)
+	if shouldWriteHookEventFiles() {
+		writeHookEventFile(logDir, ctx.Event, entry)
 	}
 }
 
@@ -44804,13 +45750,13 @@ type EventEntry struct {
 // classifyTool classifies a tool name into a ToolKind.
 func classifyTool(toolName string) ToolKind {
 	switch toolName {
-	case "manage_todo_list", "Task", "todo_tool", "TodoWrite":
+	case "manage_todo_list", "Task", "task", "todo_tool", "TodoWrite":
 		return ToolKindPlan
-	case "read_file", "grep_search", "rg", "ripgrep", "file_search", "semantic_search", "list_dir", "get_errors", "Read", "fetch_webpage", "open_simple_browser", "Glob":
+	case "read_file", "grep_search", "rg", "ripgrep", "file_search", "semantic_search", "list_dir", "list_code_usages", "get_errors", "Read", "fetch_webpage", "open_simple_browser", "Grep", "Glob":
 		return ToolKindCodeSearch
-	case "replace_string_in_file", "create_file", "multi_replace_string_in_file", "Edit", "Write":
+	case "replace_string_in_file", "create_file", "multi_replace_string_in_file", "Edit", "Write", "editfile":
 		return ToolKindCodeEdit
-	case "run_in_terminal", "get_terminal_output", "Bash":
+	case "run_in_terminal", "get_terminal_output", "Bash", "terminal":
 		return ToolKindTerminal
 	case "runTests", "run_tests":
 		return ToolKindTest
@@ -44829,67 +45775,76 @@ func classifyCommandKind(command string) ToolKind {
 	if trimmed == "" {
 		return ToolKindTerminal
 	}
+	segments := splitCommandSegments(trimmed)
+	if len(segments) > 1 {
+		best := ToolKindTerminal
+		for _, segment := range segments {
+			kind := classifyCommandKind(segment)
+			if kind == ToolKindTest || kind == ToolKindBuild || kind == ToolKindCodeEdit || kind == ToolKindPlan {
+				return kind
+			}
+			if kind == ToolKindCodeSearch {
+				best = ToolKindCodeSearch
+			}
+		}
+		if best != ToolKindTerminal {
+			return best
+		}
+	}
 
-	// Extract the first word (command name)
 	parts := strings.Fields(trimmed)
 	if len(parts) == 0 {
 		return ToolKindTerminal
 	}
 
 	cmd := parts[0]
-
-	// Check for test commands first
-	testCmds := []string{"test", "pytest", "jest", "mocha", "vitest", "rspec", "phpunit", "ctest", "bats"}
+	baseCmd := filepath.Base(cmd)
+	if baseCmd == "test" || baseCmd == "[" {
+		return ToolKindCodeSearch
+	}
+	if strings.HasPrefix(baseCmd, "phpunit") || baseCmd == "rspec" || baseCmd == "pytest" || baseCmd == "py.test" || baseCmd == "jest" || baseCmd == "vitest" || baseCmd == "mocha" || baseCmd == "gradle" || baseCmd == "mvn" || baseCmd == "bundle" {
+		return ToolKindTest
+	}
+	if strings.Contains(trimmed, "cargo nextest") || strings.HasPrefix(trimmed, "cargo nextest") {
+		return ToolKindTest
+	}
+	testCmds := []string{"pytest", "jest", "mocha", "vitest", "rspec", "phpunit", "ctest", "bats"}
 	for _, testCmd := range testCmds {
 		if strings.Contains(trimmed, testCmd) {
 			return ToolKindTest
 		}
 	}
 
-	// Check for npm/pnpm/yarn/bun test
 	if strings.HasPrefix(trimmed, "npm test") || strings.HasPrefix(trimmed, "npm run test") ||
 		strings.HasPrefix(trimmed, "pnpm test") || strings.HasPrefix(trimmed, "yarn test") ||
 		strings.HasPrefix(trimmed, "bun test") {
 		return ToolKindTest
 	}
-
-	// Check for go test
 	if strings.HasPrefix(trimmed, "go test") {
 		return ToolKindTest
 	}
-
-	// Check for cargo test
 	if strings.HasPrefix(trimmed, "cargo test") || strings.HasPrefix(trimmed, "cargo nextest") {
 		return ToolKindTest
 	}
-
-	// Check for python test
 	if strings.Contains(trimmed, "pytest") || strings.Contains(trimmed, "unittest") {
 		return ToolKindTest
 	}
-
-	// Check for make test
 	if strings.HasPrefix(trimmed, "make test") || strings.HasPrefix(trimmed, "make check") {
 		return ToolKindTest
 	}
-
-	// Check for dotnet test
 	if strings.HasPrefix(trimmed, "dotnet test") {
 		return ToolKindTest
 	}
-
-	// Check for other test frameworks
 	if strings.HasPrefix(trimmed, "swift test") || strings.HasPrefix(trimmed, "dart test") ||
 		strings.HasPrefix(trimmed, "flutter test") || strings.HasPrefix(trimmed, "mix test") ||
 		strings.HasPrefix(trimmed, "mvn test") || strings.HasPrefix(trimmed, "mvn verify") ||
-		strings.HasPrefix(trimmed, "gradle test") || strings.HasPrefix(trimmed, "./gradlew test") ||
+		strings.HasPrefix(trimmed, "gradle test") || strings.HasPrefix(trimmed, "./gradlew test") || strings.HasPrefix(trimmed, "gradlew test") ||
 		strings.HasPrefix(trimmed, "cabal test") || strings.HasPrefix(trimmed, "stack test") ||
 		strings.HasPrefix(trimmed, "lein test") || strings.HasPrefix(trimmed, "sbt test") ||
-		strings.HasPrefix(trimmed, "bundle exec rspec") || strings.HasPrefix(trimmed, "tox") {
+		strings.HasPrefix(trimmed, "bundle exec rspec") || strings.HasPrefix(trimmed, "tox") || strings.Contains(trimmed, "phpunit") || strings.HasPrefix(trimmed, "rspec ") {
 		return ToolKindTest
 	}
 
-	// Check for code search commands
 	searchCmds := []string{"grep", "rg", "ripgrep", "ag", "ack", "ack-grep", "find", "fd", "fdfind",
 		"locate", "mlocate", "ls", "exa", "eza", "tree", "dir", "cat", "bat", "batcat", "less",
 		"more", "head", "tail", "wc", "file", "stat", "du", "which", "whereis", "type", "command",
@@ -44899,53 +45854,51 @@ func classifyCommandKind(command string) ToolKind {
 		"set", "export", "pwd", "id", "whoami", "hostname", "uname", "date", "uptime", "free",
 		"df", "ps", "top", "htop", "lsof", "netstat", "ss", "test"}
 	for _, searchCmd := range searchCmds {
-		if cmd == searchCmd {
+		if baseCmd == searchCmd {
 			return ToolKindCodeSearch
 		}
 	}
-
-	// Check for sed/awk without -i (read-only)
-	if cmd == "sed" && !strings.Contains(trimmed, "-i") {
+	if baseCmd == "sed" && !strings.Contains(trimmed, "-i") {
 		return ToolKindCodeSearch
 	}
-	if (cmd == "awk" || cmd == "gawk" || cmd == "mawk" || cmd == "nawk") && !strings.Contains(trimmed, "-i") {
+	if (baseCmd == "awk" || baseCmd == "gawk" || baseCmd == "mawk" || baseCmd == "nawk") && !strings.Contains(trimmed, "-i") {
 		return ToolKindCodeSearch
 	}
 
-	// Check for code edit commands
 	editCmds := []string{"rm", "mv", "cp", "install", "mkdir", "rmdir", "touch", "chmod", "chown",
 		"chgrp", "ln", "tee", "patch", "truncate", "dd", "shred", "tar", "zip", "unzip", "gzip",
 		"gunzip", "bzip2", "bunzip2", "xz", "unxz", "zstd"}
 	for _, editCmd := range editCmds {
-		if cmd == editCmd {
+		if baseCmd == editCmd {
 			return ToolKindCodeEdit
 		}
 	}
-
-	// Check for sed/awk with -i (editing)
-	if cmd == "sed" && strings.Contains(trimmed, "-i") {
+	if baseCmd == "sed" && strings.Contains(trimmed, "-i") {
 		return ToolKindCodeEdit
 	}
-	if (cmd == "awk" || cmd == "gawk" || cmd == "mawk" || cmd == "nawk") && strings.Contains(trimmed, "-i") {
+	if (baseCmd == "awk" || baseCmd == "gawk" || baseCmd == "mawk" || baseCmd == "nawk") && strings.Contains(trimmed, "-i") {
 		return ToolKindCodeEdit
 	}
 
-	// Default to terminal
 	return ToolKindTerminal
 }
 
 // parseTestInfoFromCommand parses test information from a command string.
 // Returns a slice of test names/patterns and a timeout duration string.
 func parseTestInfoFromCommand(command string) ([]string, string) {
+	segment, _ := extractTestSegmentFromCommand(command)
+	if segment != "" {
+		command = segment
+	}
+	command = strings.TrimSpace(command)
+	fields := strings.Fields(command)
 	var tests []string
 	timeout := ""
 
-	// Parse timeout
 	if strings.Contains(command, "-timeout ") {
 		parts := strings.Split(command, "-timeout ")
 		if len(parts) > 1 {
 			timeoutPart := strings.Fields(parts[1])[0]
-			// Convert timeout to seconds (remove 's', 'm', etc.)
 			if strings.HasSuffix(timeoutPart, "s") {
 				timeout = strings.TrimSuffix(timeoutPart, "s")
 			} else if strings.HasSuffix(timeoutPart, "m") {
@@ -44963,102 +45916,214 @@ func parseTestInfoFromCommand(command string) ([]string, string) {
 			timeout = strings.Fields(parts[1])[0]
 		}
 	}
+	flagValue := func(flags ...string) string {
+		for i := 0; i < len(fields); i++ {
+			for _, flag := range flags {
+				if fields[i] == flag && i+1 < len(fields) {
+					return fields[i+1]
+				}
+				prefix := flag + "="
+				if strings.HasPrefix(fields[i], prefix) {
+					return strings.TrimPrefix(fields[i], prefix)
+				}
+			}
+		}
+		return ""
+	}
+	joinAfterMarker := func(marker string) string {
+		for i := 0; i < len(fields); i++ {
+			if fields[i] == marker && i+1 < len(fields) {
+				return fields[i+1]
+			}
+		}
+		return ""
+	}
 
-	// Parse test patterns
-	if strings.Contains(command, "go test -run ") {
-		parts := strings.Split(command, "go test -run ")
-		if len(parts) > 1 {
-			testPattern := strings.Fields(parts[1])[0]
-			tests = []string{testPattern}
+	switch {
+	case strings.HasPrefix(command, "go test"):
+		if value := flagValue("-run"); value != "" {
+			tests = []string{value}
+		} else {
+			tests = []string{""}
 		}
-	} else if strings.Contains(command, "pytest -k ") {
-		parts := strings.Split(command, "pytest -k ")
-		if len(parts) > 1 {
-			testPattern := strings.Fields(parts[1])[0]
-			tests = []string{testPattern}
+	case strings.HasPrefix(command, "pytest"), strings.HasPrefix(command, "python -m pytest"), strings.HasPrefix(command, "python3 -m pytest"), strings.HasPrefix(command, "uv run pytest"), strings.HasPrefix(command, "uvx pytest"):
+		if value := flagValue("-k"); value != "" {
+			tests = []string{value}
+		} else {
+			tests = []string{""}
 		}
-	} else if strings.Contains(command, "jest -t ") {
-		parts := strings.Split(command, "jest -t ")
-		if len(parts) > 1 {
-			testPattern := strings.Fields(parts[1])[0]
-			tests = []string{testPattern}
+	case strings.HasPrefix(command, "jest"), strings.HasPrefix(command, "npx jest"), strings.HasPrefix(command, "bunx jest"), strings.HasPrefix(command, "pnpx jest"):
+		if value := flagValue("-t", "--testNamePattern"); value != "" {
+			tests = []string{value}
+		} else {
+			tests = []string{""}
 		}
-	} else if strings.Contains(command, "jest --testNamePattern=") {
-		parts := strings.Split(command, "jest --testNamePattern=")
-		if len(parts) > 1 {
-			testPattern := strings.Fields(parts[1])[0]
-			tests = []string{testPattern}
+	case strings.HasPrefix(command, "mocha"), strings.HasPrefix(command, "npx mocha"), strings.HasPrefix(command, "bunx mocha"), strings.HasPrefix(command, "pnpx mocha"):
+		if value := flagValue("--grep"); value != "" {
+			tests = []string{value}
+		} else {
+			tests = []string{""}
 		}
-	} else if strings.Contains(command, "mocha --grep ") {
-		parts := strings.Split(command, "mocha --grep ")
-		if len(parts) > 1 {
-			testPattern := strings.Fields(parts[1])[0]
-			tests = []string{testPattern}
+	case strings.HasPrefix(command, "cargo test"):
+		if value := joinAfterMarker("--"); value != "" {
+			tests = []string{value}
+		} else {
+			tests = []string{""}
 		}
-	} else if strings.Contains(command, "cargo test -- ") {
-		parts := strings.Split(command, "cargo test -- ")
-		if len(parts) > 1 {
-			testPattern := strings.Fields(parts[1])[0]
-			tests = []string{testPattern}
+	case strings.HasPrefix(command, "cargo nextest"):
+		tests = []string{""}
+	case strings.HasPrefix(command, "dotnet test"):
+		if value := flagValue("--filter"); value != "" {
+			tests = []string{value}
+		} else {
+			tests = []string{""}
 		}
-	} else if strings.Contains(command, "dotnet test --filter ") {
-		parts := strings.Split(command, "dotnet test --filter ")
-		if len(parts) > 1 {
-			testPattern := strings.Fields(parts[1])[0]
-			tests = []string{testPattern}
+	case strings.HasPrefix(command, "rspec"), strings.HasPrefix(command, "bundle exec rspec"):
+		if value := flagValue("--example"); value != "" {
+			tests = []string{value}
+		} else {
+			tests = []string{""}
 		}
-	} else if strings.Contains(command, "rspec --example ") {
-		parts := strings.Split(command, "rspec --example ")
-		if len(parts) > 1 {
-			testPattern := strings.Fields(parts[1])[0]
-			tests = []string{testPattern}
+	case strings.Contains(command, "vitest"):
+		if value := flagValue("-t", "--testNamePattern"); value != "" {
+			tests = []string{value}
+		} else {
+			tests = []string{""}
 		}
-	} else {
-		// Default to empty test pattern (run all tests)
+	case strings.Contains(command, "phpunit"), strings.Contains(command, "npm test"), strings.Contains(command, "pnpm test"), strings.Contains(command, "yarn test"), strings.Contains(command, "bun test"):
+		tests = []string{""}
+	default:
 		tests = []string{""}
 	}
 
 	return tests, timeout
 }
 
-// HookLogEntry is an alias for EventEntry for hook log entries.
-type HookLogEntry = EventEntry
-
 // mergeTicketAgentPlanSteps merges ticket agent plan steps.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️mergeticketagentplansteps](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/mergeTicketAgentPlanSteps)
 // mergeTicketAgentPlanSteps MUST perform the mergeTicketAgentPlanSteps operation.
 func mergeTicketAgentPlanSteps(existing []TicketAgentPlanStep, newSteps []HookPlanStep, second string) []TicketAgentPlanStep {
-	result := make([]TicketAgentPlanStep, len(existing))
-	copy(result, existing)
-
-	for _, step := range newSteps {
-		result = append(result, TicketAgentPlanStep{
-			Name:    step.Name,
-			Started: second,
-		})
+	existingByName := map[string]TicketAgentPlanStep{}
+	for _, step := range existing {
+		existingByName[step.Name] = step
 	}
-
+	activeNames := map[string]struct{}{}
+	result := make([]TicketAgentPlanStep, 0, len(existing)+len(newSteps))
+	for _, incoming := range newSteps {
+		name := strings.TrimSpace(incoming.Name)
+		if name == "" {
+			continue
+		}
+		step := existingByName[name]
+		step.Name = name
+		step.Status = incoming.Status
+		if step.Ideated == "" {
+			step.Ideated = second
+		}
+		switch strings.TrimSpace(strings.ToLower(incoming.Status)) {
+		case "in-progress", "in_progress", "started":
+			if step.Started == "" {
+				step.Started = second
+			}
+		case "completed", "done":
+			if step.Started != "" && step.Completed == "" {
+				step.Completed = second
+			}
+		}
+		activeNames[name] = struct{}{}
+		result = append(result, step)
+	}
+	for _, step := range existing {
+		if _, ok := activeNames[step.Name]; ok {
+			continue
+		}
+		if step.Name == "" {
+			continue
+		}
+		if step.Abandoned != "" || step.Completed != "" || step.Started != "" {
+			result = append(result, step)
+			continue
+		}
+		if step.Ideated == "" {
+			step.Ideated = second
+		}
+		step.Abandoned = second
+		result = append(result, step)
+	}
 	return result
+}
+
+func extractHookResultToolInfo(result interface{}) (string, string) {
+	switch value := result.(type) {
+	case HookResultAgentToolStarting:
+		return value.Name, ""
+	case HookResultAgentToolEnded:
+		return value.Name, ""
+	case HookResultAgentToolTerminalStarting:
+		return value.Name, value.Command
+	case HookResultAgentToolTerminalEnded:
+		return value.Name, value.Command
+	default:
+		return "", ""
+	}
+}
+
+func writeHookEventFile(logDir string, event HookEvent, entry EventEntry) {
+	base := strings.ReplaceAll(string(event), ".", "-")
+	base = strings.ReplaceAll(base, "_", "-")
+	switch event {
+	case HookAgentToolSearchStarting:
+		base = "agent-tool-search-starting"
+	case HookAgentToolSearchEnded:
+		base = "agent-tool-search-ended"
+	case HookAgentToolCodeEditStarting:
+		base = "agent-tool-code-edit-starting"
+	case HookAgentToolCodeEditEnded:
+		base = "agent-tool-code-edit-ended"
+	case HookAgentToolTerminalStarting:
+		base = "agent-tool-terminal-starting"
+	case HookAgentToolTerminalEnded:
+		base = "agent-tool-terminal-ended"
+	}
+	filePath := filepath.Join(logDir, fmt.Sprintf("%d-%s.json", time.Now().UTC().UnixNano(), base))
+	_ = WriteJSONFile(filePath, entry)
+}
+
+func shouldWriteHookEventFiles() bool {
+	ticket, err := latestOpenTicket()
+	return err == nil && ticket != nil
 }
 
 // appendUniqueString appends a string to a slice if it's not already present.
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🔖hooks🛠️appenduniquestring](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/appendUniqueString)
 // appendUniqueString MUST perform the appendUniqueString operation.
 func appendUniqueString(slice []string, str string) []string {
-	for _, s := range slice {
-		if s == str {
+	for _, item := range slice {
+		if item == str {
 			return slice
 		}
 	}
 	return append(slice, str)
 }
 
+// HookLogEntry is an alias for EventEntry for hook log entries.
+type HookLogEntry = EventEntry
+
 // deriveRepoOpFromMCPTool derives repo operation from MCP tool.
 func deriveRepoOpFromMCPTool(tool string) string {
 	if tool == "" {
 		return ""
 	}
-	return "mcp:" + tool
+	const prefix = "mcp__semio-repo__"
+	if !strings.HasPrefix(tool, prefix) {
+		return ""
+	}
+	op := strings.TrimPrefix(tool, prefix)
+	op = strings.TrimSpace(op)
+	if op == "" {
+		return ""
+	}
+	return strings.ReplaceAll(op, "_", ".")
 }
 
 // deriveRepoOpFromCLICommand derives repo operation from CLI command.
@@ -45066,17 +46131,87 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 	if cmd == "" {
 		return ""
 	}
-	return "cli:" + cmd
+	fields := strings.Fields(cmd)
+	if len(fields) < 2 {
+		return ""
+	}
+	cliIndex := -1
+	for i, field := range fields {
+		base := filepath.Base(field)
+		if base == "cli" {
+			cliIndex = i
+			break
+		}
+	}
+	if cliIndex == -1 || cliIndex+1 >= len(fields) {
+		return ""
+	}
+	remaining := fields[cliIndex+1:]
+	if len(remaining) == 0 || strings.HasPrefix(remaining[0], "-") {
+		return ""
+	}
+	if len(remaining) >= 2 {
+		compound := remaining[0] + "." + remaining[1]
+		switch compound {
+		case "ticket.open", "ticket.close", "ticket.reopen", "ticket.read",
+			"goal.open", "goal.close", "goal.reopen",
+			"contributor.add", "contributor.remove",
+			"draft.create", "draft.delete",
+			"file.create", "file.move", "file.delete",
+			"folder.create", "folder.move", "folder.delete",
+			"section.create", "section.move", "section.delete",
+			"policy.check":
+			return compound
+		}
+	}
+	switch remaining[0] {
+	case "integrate", "extract", "export", "analyze", "fix", "tree", "graphql", "move":
+		return remaining[0]
+	default:
+		return ""
+	}
 }
 
 // logRepoOperationHook logs repo operation hook.
 func logRepoOperationHook(hctx HookContext, result interface{}, operation string, t time.Time, msg string) {
-	// This is a placeholder implementation
-	_ = hctx
-	_ = result
-	_ = operation
-	_ = t
-	_ = msg
+	logDir := strings.TrimSpace(operation)
+	sessionID := strings.TrimSpace(msg)
+	if logDir == "" || sessionID == "" {
+		return
+	}
+	resultToolName, resultCommand := extractHookResultToolInfo(result)
+	toolName := firstNonEmpty(resultToolName, hctx.ToolName, extractToolNameFromStdin(hctx.Input))
+	repoOp := deriveRepoOpFromMCPTool(toolName)
+	if repoOp == "" {
+		repoOp = deriveRepoOpFromCLICommand(firstNonEmpty(resultCommand, hctx.ToolArgs, extractCommandFromStdin(hctx.Input)))
+	}
+	if repoOp == "" {
+		return
+	}
+	phase := "starting"
+	switch hctx.Event {
+	case HookAgentToolEnded, HookAgentToolPlanUpdatingEnded, HookAgentToolSearchEnded, HookAgentToolCodeEditEnded, HookAgentToolTestEnded, HookAgentToolBuildEnded, HookAgentToolTerminalEnded:
+		phase = "ended"
+	}
+	metaPath := filepath.Join(logDir, "session.json")
+	var meta SessionMeta
+	if data, err := os.ReadFile(metaPath); err == nil {
+		_ = json.Unmarshal(data, &meta)
+	}
+	inputMap := decodeHookInputMap(hctx.Input)
+	second := firstNonEmpty(findNestedStringValue(inputMap, "second"), hctx.Second, t.UTC().Format(time.RFC3339))
+	checkpoint := resolveEventCheckpointID(extractCheckpointSHAFromInput(hctx.Input))
+	eventJSON, _ := json.Marshal(map[string]interface{}{
+		"kind":        "agent." + repoOp + "." + phase,
+		"client":      hctx.Client,
+		"session":     resolveEventSessionID(sessionID),
+		"second":      resolveEventSecondID(second),
+		"checkpoint":  checkpoint,
+		"contributor": "unknown",
+	})
+	entry := EventEntry{Event: eventJSON}
+	meta.Events = append(meta.Events, entry)
+	_ = WriteJSONFile(metaPath, meta)
 }
 
 // HookResultAgentToolTerminalStarting represents the result of an agent terminal tool starting event.
@@ -45105,10 +46240,8 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 	var data map[string]interface{}
 	var source interface{}
 
-	// Try to parse input first
 	if input != nil {
 		if err := json.Unmarshal(input, &data); err != nil {
-			// If input parsing fails, try toolArgs
 			if toolArgs != "" {
 				if err := json.Unmarshal([]byte(toolArgs), &data); err != nil {
 					return nil
@@ -45125,22 +46258,18 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 		return nil
 	}
 
-	// Look for tool_input first
 	if ti, ok := data["tool_input"]; ok {
 		source = ti
 	} else {
 		source = data
 	}
 
-	// Convert to map
 	sourceMap, ok := source.(map[string]interface{})
 	if !ok {
 		return nil
 	}
 
 	var steps []HookPlanStep
-
-	// Check for todoList format
 	if todoList, ok := sourceMap["todoList"]; ok {
 		if todoListSlice, ok := todoList.([]interface{}); ok {
 			for _, item := range todoListSlice {
@@ -45148,17 +46277,12 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 					name, _ := itemMap["title"].(string)
 					status, _ := itemMap["status"].(string)
 					if name != "" {
-						steps = append(steps, HookPlanStep{
-							Name:   name,
-							Status: status,
-						})
+						steps = append(steps, HookPlanStep{Name: name, Status: status})
 					}
 				}
 			}
 		}
 	}
-
-	// Check for steps format
 	if stepsList, ok := sourceMap["steps"]; ok {
 		if stepsSlice, ok := stepsList.([]interface{}); ok {
 			for _, item := range stepsSlice {
@@ -45166,10 +46290,7 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 					name, _ := itemMap["name"].(string)
 					status, _ := itemMap["status"].(string)
 					if name != "" {
-						steps = append(steps, HookPlanStep{
-							Name:   name,
-							Status: status,
-						})
+						steps = append(steps, HookPlanStep{Name: name, Status: status})
 					}
 				}
 			}
@@ -45180,15 +46301,12 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 }
 
 // extractSearchFromInput extracts search information from input JSON or toolArgs string.
-// Returns webpages and file ranges.
 func extractSearchFromInput(input json.RawMessage, toolArgs string) ([]string, []string) {
 	var data map[string]interface{}
 	var source interface{}
 
-	// Try to parse input first
 	if input != nil {
 		if err := json.Unmarshal(input, &data); err != nil {
-			// If input parsing fails, try toolArgs
 			if toolArgs != "" {
 				if err := json.Unmarshal([]byte(toolArgs), &data); err != nil {
 					return nil, nil
@@ -45205,14 +46323,12 @@ func extractSearchFromInput(input json.RawMessage, toolArgs string) ([]string, [
 		return nil, nil
 	}
 
-	// Look for tool_input first
 	if ti, ok := data["tool_input"]; ok {
 		source = ti
 	} else {
 		source = data
 	}
 
-	// Convert to map
 	sourceMap, ok := source.(map[string]interface{})
 	if !ok {
 		return nil, nil
@@ -45220,15 +46336,12 @@ func extractSearchFromInput(input json.RawMessage, toolArgs string) ([]string, [
 
 	var pages []string
 	var ranges []string
-
-	// Extract webpages
 	if url, ok := sourceMap["url"].(string); ok && url != "" {
 		pages = append(pages, url)
 	}
 	if pagesList, ok := sourceMap["pages"].([]interface{}); ok {
 		for _, page := range pagesList {
 			if pageStr, ok := page.(string); ok && pageStr != "" {
-				// Only add valid URLs
 				if strings.HasPrefix(pageStr, "http://") || strings.HasPrefix(pageStr, "https://") {
 					pages = append(pages, pageStr)
 				}
@@ -45236,30 +46349,45 @@ func extractSearchFromInput(input json.RawMessage, toolArgs string) ([]string, [
 		}
 	}
 
-	// Extract file ranges
 	filePath := ""
 	if fp, ok := sourceMap["file_path"].(string); ok {
 		filePath = fp
 	} else if fp, ok := sourceMap["filePath"].(string); ok {
 		filePath = fp
 	}
-
 	if filePath != "" {
+		startLine := 0
+		endLine := 0
+		if v, ok := sourceMap["startLine"].(float64); ok {
+			startLine = int(v)
+		}
+		if v, ok := sourceMap["endLine"].(float64); ok {
+			endLine = int(v)
+		}
 		limit := 0
 		offset := 1
-
 		if l, ok := sourceMap["limit"].(float64); ok {
 			limit = int(l)
 		}
 		if o, ok := sourceMap["offset"].(float64); ok {
 			offset = int(o)
 		}
-
-		// Default to showing the whole file if no limit
-		if limit == 0 {
-			// Try to read the file to get line count
+		if startLine > 0 {
+			if endLine <= 0 {
+				endLine = startLine
+			}
+			if startLine == endLine {
+				ranges = append(ranges, fmt.Sprintf("%s#L%d", filePath, startLine))
+			} else {
+				ranges = append(ranges, fmt.Sprintf("%s#L%d-L%d", filePath, startLine, endLine))
+			}
+		} else if limit == 0 {
 			if content, err := os.ReadFile(filePath); err == nil {
-				lines := strings.Count(string(content), "\n") + 1
+				trimmed := strings.TrimRight(string(content), "\n")
+				lines := 1
+				if trimmed != "" {
+					lines = len(strings.Split(trimmed, "\n"))
+				}
 				ranges = append(ranges, fmt.Sprintf("%s#L1-L%d", filePath, lines))
 			}
 		} else {
@@ -45268,17 +46396,21 @@ func extractSearchFromInput(input json.RawMessage, toolArgs string) ([]string, [
 		}
 	}
 
-	// Check for native event with Read tool
 	if native, ok := data["native"].(map[string]interface{}); ok {
 		if event, ok := native["event"].(map[string]interface{}); ok {
 			if toolName, ok := event["tool_name"].(string); ok && toolName == "Read" {
 				if toolInput, ok := event["tool_input"].(map[string]interface{}); ok {
 					if fp, ok := toolInput["file_path"].(string); ok && fp != "" {
-						limit := 100 // default
 						if l, ok := toolInput["limit"].(float64); ok {
-							limit = int(l)
+							ranges = append(ranges, fmt.Sprintf("%s#L1-L%d", fp, int(l)))
+						} else if content, err := os.ReadFile(fp); err == nil {
+							trimmed := strings.TrimRight(string(content), "\n")
+							lines := 1
+							if trimmed != "" {
+								lines = len(strings.Split(trimmed, "\n"))
+							}
+							ranges = append(ranges, fmt.Sprintf("%s#L1-L%d", fp, lines))
 						}
-						ranges = append(ranges, fmt.Sprintf("%s#L1-L%d", fp, limit))
 					}
 				}
 			}
@@ -45293,13 +46425,10 @@ func extractToolInputFromStdin(input json.RawMessage) json.RawMessage {
 	if input == nil {
 		return nil
 	}
-
 	var data map[string]interface{}
 	if err := json.Unmarshal(input, &data); err != nil {
 		return nil
 	}
-
-	// Check for native.event.tool_input format
 	if native, ok := data["native"].(map[string]interface{}); ok {
 		if event, ok := native["event"].(map[string]interface{}); ok {
 			if toolInput, ok := event["tool_input"]; ok {
@@ -45309,14 +46438,11 @@ func extractToolInputFromStdin(input json.RawMessage) json.RawMessage {
 			}
 		}
 	}
-
-	// Check for direct tool_input
 	if toolInput, ok := data["tool_input"]; ok {
 		if bytes, err := json.Marshal(toolInput); err == nil {
 			return json.RawMessage(bytes)
 		}
 	}
-
 	return nil
 }
 
@@ -45325,64 +46451,350 @@ func extractToolResponseFromStdin(input json.RawMessage) json.RawMessage {
 	if input == nil {
 		return nil
 	}
-
 	var data map[string]interface{}
 	if err := json.Unmarshal(input, &data); err != nil {
 		return nil
 	}
-
-	// Check for tool_response
 	if toolResponse, ok := data["tool_response"]; ok {
 		if bytes, err := json.Marshal(toolResponse); err == nil {
 			return json.RawMessage(bytes)
 		}
 	}
-
+	if toolOutput, ok := data["tool_output"]; ok {
+		if bytes, err := json.Marshal(toolOutput); err == nil {
+			return json.RawMessage(bytes)
+		}
+	}
 	return nil
 }
 
-// extractSearchDefinitionReadsFromInput extracts search definition reads from input.
 func extractSearchDefinitionReadsFromInput(input json.RawMessage, toolArgs string) []HookSearchDefinition {
-	// This is a placeholder implementation
-	return nil
+	pages, ranges := extractSearchFromInput(input, toolArgs)
+	_ = pages
+	filesToLines := map[string]map[int]struct{}{}
+	addLine := func(path string, line int) {
+		path = normalizeHookPath(path)
+		if path == "" {
+			return
+		}
+		if _, ok := filesToLines[path]; !ok {
+			filesToLines[path] = map[int]struct{}{}
+		}
+		if line > 0 {
+			filesToLines[path][line] = struct{}{}
+		}
+	}
+	for _, ref := range ranges {
+		parts := strings.SplitN(ref, "#L", 2)
+		path := parts[0]
+		if len(parts) == 1 {
+			addLine(path, 0)
+			continue
+		}
+		lineSpec := parts[1]
+		if strings.Contains(lineSpec, "-L") {
+			rangeParts := strings.SplitN(lineSpec, "-L", 2)
+			start, _ := strconv.Atoi(rangeParts[0])
+			end, _ := strconv.Atoi(rangeParts[1])
+			for line := start; line <= end; line++ {
+				addLine(path, line)
+			}
+		} else if line, err := strconv.Atoi(lineSpec); err == nil {
+			addLine(path, line)
+		}
+	}
+	data := decodeHookInputMap(input)
+	if toolInfo, ok := data["tool_info"].(map[string]interface{}); ok {
+		if filePath, _ := toolInfo["file_path"].(string); filePath != "" {
+			addLine(filePath, 0)
+		}
+		commandLine, _ := toolInfo["command_line"].(string)
+		cwd, _ := toolInfo["cwd"].(string)
+		if commandLine != "" && shouldExecuteSearchCommand(commandLine) {
+			commandFiles, pattern := extractSearchCommandFilesAndPattern(commandLine, cwd)
+			for _, filePath := range commandFiles {
+				matchedLines := searchLinesInFile(filePath, pattern)
+				if len(matchedLines) == 0 {
+					addLine(filePath, 0)
+					continue
+				}
+				for _, line := range matchedLines {
+					addLine(filePath, line)
+				}
+			}
+		}
+	}
+	return buildDefinitionReads(filesToLines)
 }
 
-// buildDefinitionReads builds definition reads.
 func buildDefinitionReads(filesToLines map[string]map[int]struct{}) []HookSearchDefinition {
-	// This is a placeholder implementation
 	var result []HookSearchDefinition
-	for filePath := range filesToLines {
-		// For full file reads, Loc should be 0
-		result = append(result, HookSearchDefinition{
-			ID:  filePath,
-			Loc: 0,
-		})
+	for filePath, lines := range filesToLines {
+		normalized := normalizeHookPath(filePath)
+		if normalized == "" {
+			continue
+		}
+		absPath := normalized
+		if !filepath.IsAbs(absPath) {
+			absPath = filepath.Join(GetRootDir(), normalized)
+		}
+		content, err := os.ReadFile(absPath)
+		if err != nil {
+			continue
+		}
+		if _, ok := lines[0]; ok {
+			result = append(result, HookSearchDefinition{ID: resolvePathToFileID(normalized), Loc: 0})
+			continue
+		}
+		lineCount := strings.Count(string(content), "\n") + 1
+		if len(lines) == 0 || spansEntireFile(lines, string(content), lineCount) {
+			result = append(result, HookSearchDefinition{ID: resolvePathToFileID(normalized), Loc: 0})
+			continue
+		}
+		definitions := ParseDefinitions(string(content), normalized)
+		matched := false
+		for _, definition := range definitions {
+			loc := 0
+			for line := range lines {
+				if line >= definition.StartLine && line <= definition.EndLine {
+					loc++
+				}
+			}
+			if loc > 0 {
+				matched = true
+				result = append(result, HookSearchDefinition{ID: definition.GetID(), Loc: loc})
+			}
+		}
+		if !matched {
+			result = append(result, HookSearchDefinition{ID: resolvePathToFileID(normalized), Loc: 0})
+		}
 	}
 	return result
 }
 
-// shouldExecuteSearchCommand determines if a search command should be executed.
 func shouldExecuteSearchCommand(command string) bool {
-	// This is a placeholder implementation
-	return true
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return false
+	}
+	if strings.Contains(command, ">") || strings.Contains(command, "sed -i") {
+		return false
+	}
+	segments := splitCommandSegments(command)
+	if len(segments) == 0 {
+		segments = []string{command}
+	}
+	for _, segment := range segments {
+		fields := strings.Fields(segment)
+		if len(fields) == 0 {
+			continue
+		}
+		switch filepath.Base(fields[0]) {
+		case "grep", "rg", "ripgrep", "ag", "ack", "cat", "bat", "batcat", "less", "head", "tail":
+			return true
+		}
+	}
+	return false
 }
 
-// dispatchHook dispatches a hook event.
 func dispatchHook(ctx HookContext) interface{} {
-	// This is a placeholder implementation
-	return nil
+	base := HookResultAgentBase{
+		HookResultBase: HookResultBase{Allowed: true},
+		Checkpoint:     extractCheckpointSHAFromInput(ctx.Input),
+		Session:        extractSessionIDFromInput(ctx.Input),
+		Second:         firstNonEmpty(findNestedStringValue(decodeHookInputMap(ctx.Input), "second"), ctx.Second),
+		Client:         ctx.Client,
+		LLM:            extractLLMFromInput(ctx.Input),
+		Transcript:     extractTranscriptFromInput(ctx.Input),
+		MessageID:      extractMessageIDFromInput(ctx.Input),
+		Parent:         resolveParentSessionID("", ctx.Input),
+	}
+	if ctx.ParentInfo != "" {
+		base.Parent = resolveParentSessionID(ctx.ParentInfo, ctx.Input)
+		if ctx.ParentInfo == "subagent" {
+			if agentID := findNestedStringValue(decodeHookInputMap(ctx.Input), "agent_id", "agentId"); agentID != "" {
+				parentSession := extractParentFromInput(ctx.Input)
+				if parentSession == "" {
+					parentSession = extractSessionIDFromInput(ctx.Input)
+				}
+				base.Session = agentID
+				base.Parent = normalizeParentSessionID(parentSession)
+			} else if base.Parent == "" {
+				base.Parent = base.Session
+			}
+		}
+	}
+	if len(ctx.Input) > 0 {
+		var raw map[string]interface{}
+		if err := json.Unmarshal(ctx.Input, &raw); err == nil {
+			base.Raw = raw
+		}
+	}
+	switch ctx.Event {
+	case HookAgentStarted:
+		return HookResultAgentStarted{HookResultAgentBase: base}
+	case HookAgentEnded:
+		return HookResultAgentEnded{HookResultAgentBase: base, Report: extractReportFromInput(ctx.Input)}
+	case HookAgentPromptSubmitting:
+		return HookResultAgentPromptSubmitting{HookResultAgentBase: base, Prompt: findNestedStringValue(decodeHookInputMap(ctx.Input), "prompt", "text")}
+	case HookAgentCompacting:
+		return HookResultAgentCompacting{HookResultAgentBase: base, Chat: extractChatFromInput(ctx.Input)}
+	case HookAgentToolStarting:
+		toolName := firstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input))
+		toolInput := extractToolInputFromStdin(ctx.Input)
+		blocked, reason := IsToolBlocked(toolName, firstNonEmpty(ctx.ToolArgs, extractTerminalCommandFromInput(ctx.Input, ctx.ToolArgs), extractCommandFromStdin(ctx.Input)))
+		base.Allowed = !blocked
+		base.Message = reason
+		return HookResultAgentToolStarting{HookResultAgentBase: base, Name: toolName, Input: toolInput}
+	case HookAgentToolEnded:
+		response := extractToolResponseFromStdin(ctx.Input)
+		if len(response) == 0 {
+			if output := findNestedStringValue(decodeHookInputMap(ctx.Input), "tool_output", "toolOutput", "output", "response"); output != "" {
+				response, _ = json.Marshal(output)
+			}
+		}
+		return HookResultAgentToolEnded{HookResultAgentBase: base, Name: firstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: extractToolInputFromStdin(ctx.Input), Response: response}
+	case HookAgentToolPlanUpdatingStarting, HookAgentToolPlanUpdatingEnded:
+		return HookResultAgentToolPlanUpdating{HookResultAgentBase: base, Steps: extractPlanStepsFromInput(ctx.Input, ctx.ToolArgs)}
+	case HookAgentToolSearchStarting:
+		pages, ranges := extractSearchFromInput(ctx.Input, ctx.ToolArgs)
+		return HookResultAgentToolSearchStarting{HookResultAgentBase: base, Pages: pages, Ranges: ranges, Definitions: extractSearchDefinitionReadsFromInput(ctx.Input, ctx.ToolArgs)}
+	case HookAgentToolSearchEnded:
+		pages, ranges := extractSearchFromInput(ctx.Input, ctx.ToolArgs)
+		return HookResultAgentToolSearchEnded{HookResultAgentBase: base, Pages: pages, Ranges: ranges, Definitions: extractSearchDefinitionReadsFromInput(ctx.Input, ctx.ToolArgs)}
+	case HookAgentToolCodeEditStarting:
+		path, oldText, newText, all := extractCodeEditFromInput(ctx.Input, ctx.ToolArgs)
+		return HookResultAgentToolCodeEditStarting{HookResultAgentBase: base, Path: path, Old: oldText, New: newText, All: all}
+	case HookAgentToolCodeEditEnded:
+		path, oldText, newText, _ := extractCodeEditFromInput(ctx.Input, ctx.ToolArgs)
+		return HookResultAgentToolCodeEditEnded{HookResultAgentBase: base, Path: path, Old: oldText, New: newText}
+	case HookAgentToolTestStarting:
+		labs, tests, timeout := extractTestStartingFromInput(ctx.Input, ctx.ToolArgs)
+		return HookResultAgentToolTestStarting{HookResultAgentBase: base, Labs: labs, Tests: tests, Timeout: timeout}
+	case HookAgentToolTestEnded:
+		files, succeeded, failed := extractTestEndedFromInput(ctx.Input)
+		return HookResultAgentToolTestEnded{HookResultAgentBase: base, Files: files, Succeeded: succeeded, Failed: failed}
+	case HookAgentToolBuildStarting:
+		bundles := extractBuildBundlesFromInput(ctx.Input, ctx.ToolArgs)
+		payload, _ := json.Marshal(map[string]interface{}{"bundles": bundles})
+		return HookResultAgentToolStarting{HookResultAgentBase: base, Name: firstNonEmpty(ctx.ToolName, "build"), Input: payload}
+	case HookAgentToolBuildEnded:
+		succeeded, failed := extractBuildEndedFromInput(ctx.Input)
+		payload, _ := json.Marshal(map[string]interface{}{"succeeded": succeeded, "failed": failed})
+		return HookResultAgentToolEnded{HookResultAgentBase: base, Name: firstNonEmpty(ctx.ToolName, "build"), Response: payload}
+	case HookAgentToolTerminalStarting:
+		command := extractTerminalCommandFromInput(ctx.Input, ctx.ToolArgs)
+		blocked, reason := IsToolBlocked(firstNonEmpty(ctx.ToolName, "run_in_terminal"), firstNonEmpty(command, ctx.ToolArgs))
+		base.Allowed = !blocked
+		base.Message = reason
+		return HookResultAgentToolTerminalStarting{HookResultAgentBase: base, Name: firstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: extractToolInputFromStdin(ctx.Input), Command: command}
+	case HookAgentToolTerminalEnded:
+		command, pid, terminated, stdout, stderr := extractTerminalEndedFromInput(ctx.Input)
+		pidValue, _ := strconv.Atoi(pid)
+		stdoutJSON, _ := json.Marshal(stdout)
+		stderrJSON, _ := json.Marshal(stderr)
+		return HookResultAgentToolTerminalEnded{HookResultAgentBase: base, Name: firstNonEmpty(ctx.ToolName, extractToolNameFromStdin(ctx.Input)), Input: extractToolInputFromStdin(ctx.Input), Output: stdoutJSON, Command: command, PID: pidValue, Terminated: terminated, Stdout: stdoutJSON, Stderr: stderrJSON}
+	case HookAgentThinkingStarting:
+		base.Message = findNestedStringValue(decodeHookInputMap(ctx.Input), "text")
+		return HookResultAgentThinkingStarting{HookResultAgentBase: base}
+	case HookAgentThinkingEnded:
+		base.Message = findNestedStringValue(decodeHookInputMap(ctx.Input), "text")
+		return HookResultAgentThinkingEnded{HookResultAgentBase: base}
+	case HookVersionCheckpointStarting:
+		return runCheckpointStartingHook(ctx)
+	case HookVersionCheckpointEnded:
+		return HookResultVersionCheckpointEnded{HookResultBase: HookResultBase{Allowed: true}, Checkpoint: extractCheckpointSHAFromInput(ctx.Input), Description: extractCheckpointMessageFromInput(ctx.Input, ctx.RepoRoot)}
+	case HookVersionCheckinStarting, HookVersionCheckinEnded, HookVersionCheckoutStarting, HookVersionCheckoutEnded:
+		return HookResultVersionCheckpointEnded{HookResultBase: HookResultBase{Allowed: true}, Checkpoint: extractCheckpointSHAFromInput(ctx.Input)}
+	default:
+		return HookResultBase{Allowed: false, Message: "unknown event: " + string(ctx.Event)}
+	}
 }
 
-// resolveEventCheckpointID resolves checkpoint ID from event.
 func resolveEventCheckpointID(event interface{}) string {
-	// This is a placeholder implementation
-	return ""
+	s, _ := event.(string)
+	return strings.TrimSpace(s)
 }
 
-// resolveRangeRef resolves range reference.
 func resolveRangeRef(ref string) (string, error) {
-	// This is a placeholder implementation
-	return "", nil
+	parts := strings.SplitN(strings.TrimSpace(ref), "#L", 2)
+	if len(parts) != 2 {
+		return "", fmt.Errorf("invalid range ref %q", ref)
+	}
+	fileID := resolvePathToFileID(parts[0])
+	if fileID == "" {
+		return "", fmt.Errorf("invalid file path %q", parts[0])
+	}
+	lineSpec := parts[1]
+	if strings.Contains(lineSpec, "-L") {
+		rangeParts := strings.SplitN(lineSpec, "-L", 2)
+		start, errStart := strconv.Atoi(rangeParts[0])
+		end, errEnd := strconv.Atoi(rangeParts[1])
+		if errStart != nil || errEnd != nil {
+			return "", fmt.Errorf("invalid line range %q", lineSpec)
+		}
+		return fileID + emojiText(EmojiLine) + strconv.Itoa(start) + emojiText(EmojiLine) + strconv.Itoa(end), nil
+	}
+	line, err := strconv.Atoi(lineSpec)
+	if err != nil {
+		return "", fmt.Errorf("invalid line %q", lineSpec)
+	}
+	return fileID + emojiText(EmojiLine) + strconv.Itoa(line), nil
+}
+
+func extractSearchCommandFilesAndPattern(command string, cwd string) ([]string, string) {
+	fields := strings.Fields(command)
+	if len(fields) == 0 {
+		return nil, ""
+	}
+	var pattern string
+	var files []string
+	for i := 1; i < len(fields); i++ {
+		field := strings.Trim(fields[i], `"'`)
+		if field == "" {
+			continue
+		}
+		if strings.HasPrefix(field, "-") {
+			if field == "-e" && i+1 < len(fields) {
+				pattern = strings.Trim(fields[i+1], `"'`)
+				i++
+			}
+			continue
+		}
+		if pattern == "" {
+			pattern = field
+			continue
+		}
+		if !filepath.IsAbs(field) && cwd != "" {
+			field = filepath.Join(cwd, field)
+		}
+		files = append(files, field)
+	}
+	if len(files) == 0 && cwd != "" && len(fields) > 0 {
+		for _, field := range fields[1:] {
+			trimmed := strings.Trim(field, `"'`)
+			if strings.HasPrefix(trimmed, "-") || trimmed == pattern || trimmed == "" {
+				continue
+			}
+			files = append(files, filepath.Join(cwd, trimmed))
+		}
+	}
+	return files, pattern
+}
+
+func searchLinesInFile(filePath string, pattern string) []int {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil
+	}
+	var lines []int
+	needle := strings.TrimSpace(pattern)
+	for index, line := range strings.Split(string(content), "\n") {
+		if needle == "" || strings.Contains(line, needle) {
+			lines = append(lines, index+1)
+		}
+	}
+	return lines
 }
 
 // #endregion 🔖Missing Hook Functions

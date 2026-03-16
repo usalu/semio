@@ -17,9 +17,16 @@
 // #endregion 🔖Header
 
 import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from "@semio/assets";
+import { NodeIO } from "@gltf-transform/core";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import * as ElementsBundle from "../../semio-elements/ui";
 import { Action as UiAction, buildControlTree, ControlDef } from "../../semio-elements/ui";
 import { getOntologyNodeDescriptor, getValidationNodeDescriptor, type OntologyTreeNode, type ValidationTreeNode } from "../../semio-coda/desktop/renderer";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
   applyDesignDiff,
@@ -35,6 +42,7 @@ import {
   exportKit,
   EXPORT_MODEL_FORMATS,
   flattenDesign,
+  getGeometricInsightsForModel,
   getIncludedDesigns,
   getKitChange,
   getKitDiff,
@@ -85,6 +93,147 @@ const findDesign = (kit: Kit, name: string, parentName?: string) => {
   const d = kit.designs?.find((d) => d.name === name && (parentGuid ? d.parent?.guid === parentGuid : !d.parent));
   if (!d) throw new Error(`Design ${name} not found`);
   return d;
+};
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const EXPORT_REPORTS_DIR = resolve(__dirname, "../../reports/export-design-model");
+
+const writeExportReport = (implementation: string, bytes: Uint8Array<ArrayBufferLike>) => {
+  mkdirSync(EXPORT_REPORTS_DIR, { recursive: true });
+  const reportPath = resolve(EXPORT_REPORTS_DIR, `${implementation}.gltf`);
+  writeFileSync(reportPath, bytes);
+  return reportPath;
+};
+
+const roundSceneNumber = (value: number) => {
+  const rounded = Math.round(value * 10_000) / 10_000;
+  return Object.is(rounded, -0) ? 0 : rounded;
+};
+
+const composeNodeMatrix = (node: {
+  matrix?: number[];
+  translation?: number[];
+  rotation?: number[];
+  scale?: number[];
+}) => {
+  if (node.matrix) {
+    return node.matrix.map((value) => roundSceneNumber(value));
+  }
+  const translation = node.translation ?? [0, 0, 0];
+  const rotation = node.rotation ?? [0, 0, 0, 1];
+  const scale = node.scale ?? [1, 1, 1];
+  const [x, y, z, w] = rotation;
+  const x2 = x + x;
+  const y2 = y + y;
+  const z2 = z + z;
+  const xx = x * x2;
+  const xy = x * y2;
+  const xz = x * z2;
+  const yy = y * y2;
+  const yz = y * z2;
+  const zz = z * z2;
+  const wx = w * x2;
+  const wy = w * y2;
+  const wz = w * z2;
+  const sx = scale[0];
+  const sy = scale[1];
+  const sz = scale[2];
+  return [
+    roundSceneNumber((1 - (yy + zz)) * sx),
+    roundSceneNumber((xy + wz) * sx),
+    roundSceneNumber((xz - wy) * sx),
+    0,
+    roundSceneNumber((xy - wz) * sy),
+    roundSceneNumber((1 - (xx + zz)) * sy),
+    roundSceneNumber((yz + wx) * sy),
+    0,
+    roundSceneNumber((xz + wy) * sz),
+    roundSceneNumber((yz - wx) * sz),
+    roundSceneNumber((1 - (xx + yy)) * sz),
+    0,
+    roundSceneNumber(translation[0]),
+    roundSceneNumber(translation[1]),
+    roundSceneNumber(translation[2]),
+    1,
+  ];
+};
+
+const normalizeSceneGraph = (gltfText: string) => {
+  const gltf = JSON.parse(gltfText) as {
+    scene?: number;
+    scenes?: Array<{ nodes?: number[] }>;
+    nodes?: Array<{ name?: string; children?: number[]; matrix?: number[]; mesh?: number; translation?: number[]; rotation?: number[]; scale?: number[] }>;
+  };
+  const nodes = gltf.nodes ?? [];
+  const defaultScene = gltf.scenes?.[gltf.scene ?? 0] ?? { nodes: [] };
+  const names = nodes.map((node, index) => node.name ?? `__node_${index}`);
+  const parents = new Map<string, string | null>();
+  for (const name of names) parents.set(name, null);
+  for (let index = 0; index < nodes.length; index += 1) {
+    for (const childIndex of nodes[index].children ?? []) {
+      parents.set(names[childIndex], names[index]);
+    }
+  }
+  let normalizedRoots = [...(defaultScene.nodes ?? [])].map((index) => names[index]).sort();
+  let normalizedNodes = nodes
+    .map((node, index) => ({
+      name: names[index],
+      parent: parents.get(names[index]) ?? null,
+      children: [...(node.children ?? [])].map((childIndex) => names[childIndex]).sort(),
+      hasMesh: node.mesh !== undefined,
+      matrix: composeNodeMatrix(node),
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  const syntheticWorld = normalizedNodes.find((node) => node.name === "world");
+  if (
+    syntheticWorld
+    && !syntheticWorld.hasMesh
+    && syntheticWorld.parent === null
+    && syntheticWorld.children.length === 1
+    && normalizedRoots.length === 1
+    && normalizedRoots[0] === "world"
+    && syntheticWorld.matrix.every((value, index) => value === [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1][index])
+  ) {
+    const childName = syntheticWorld.children[0];
+    normalizedRoots = [childName];
+    normalizedNodes = normalizedNodes
+      .filter((node) => node.name !== "world")
+      .map((node) => node.name === childName ? { ...node, parent: null } : node);
+  }
+  return {
+    roots: normalizedRoots,
+    nodes: normalizedNodes,
+  };
+};
+
+const runExportReportCommand = (command: string, args: string[], cwd: string) => {
+  execFileSync(command, args, {
+    cwd,
+    stdio: "pipe",
+  });
+};
+
+const parseSelfContainedGltf = async (reportText: string) => {
+  const parsed = JSON.parse(reportText) as {
+    buffers?: Array<{ uri?: string }>;
+    images?: Array<{ uri?: string }>;
+  };
+  const resources: Record<string, Uint8Array> = {};
+  const collectResource = (uri?: string) => {
+    if (!uri?.startsWith("data:")) return;
+    const base64 = uri.slice(uri.indexOf(",") + 1);
+    resources[uri] = new Uint8Array(Buffer.from(base64, "base64"));
+  };
+  for (const buffer of parsed.buffers ?? []) collectResource(buffer.uri);
+  for (const image of parsed.images ?? []) collectResource(image.uri);
+  const io = new NodeIO();
+  return io.readJSON({ json: parsed as any, resources });
+};
+
+const getMeshNames = (reportText: string) => {
+  const parsed = JSON.parse(reportText) as { meshes?: Array<{ name?: string }> };
+  return (parsed.meshes ?? []).map((mesh) => mesh.name).filter((name): name is string => Boolean(name));
 };
 
 describe("Change", () => {
@@ -320,6 +469,23 @@ describe("Elements Bundle", () => {
     expect(ElementsBundle.LevelProvider).toBeDefined();
     expect(ElementsBundle.SectionSpecificity).toBeDefined();
   });
+
+  it("renders an explicit TreeItem label even when an id is present", () => {
+    const html = renderToStaticMarkup(
+      createElement(
+        ElementsBundle.Tree,
+        null,
+        createElement(ElementsBundle.TreeItem, {
+          id: "storybook.missing.translation.key",
+          label: createElement("span", { className: "tree-explicit-label" }, "Explicit Tree Label"),
+          icon: createElement("span", null, "∧"),
+        }),
+      ),
+    );
+
+    expect(html).toContain("Explicit Tree Label");
+    expect(html).toContain("tree-explicit-label");
+  });
 });
 
 describe("Coda Tree Descriptors", () => {
@@ -441,5 +607,68 @@ describe("ExportDesignModel", () => {
   it("EXPORT_MODEL_FORMATS includes .glb and .gltf", () => {
     expect(EXPORT_MODEL_FORMATS[".glb"]).toBeDefined();
     expect(EXPORT_MODEL_FORMATS[".gltf"]).toBeDefined();
+  });
+
+  it("exports identical Nakagin scene graph across implementations and writes reports", async () => {
+    mkdirSync(EXPORT_REPORTS_DIR, { recursive: true });
+
+    const jsResult = new Uint8Array(await exportDesignModel(kit, design.guid, ".gltf"));
+    writeExportReport("js", jsResult);
+
+    runExportReportCommand("uv", ["run", "pytest", "semio.test.py", "-k", "export_scene_graph_report", "-q"], resolve(__dirname, "../py"));
+    runExportReportCommand("go", ["test", "./...", "-run", "TestExportDesignModelSceneGraphReport$", "-count=1"], resolve(__dirname, "../go"));
+    runExportReportCommand("cargo", ["test", "export_scene_graph_report", "--", "--nocapture"], resolve(__dirname, "../rs"));
+    runExportReportCommand("dotnet", ["test", "Semio.Tests.csproj", "-f", "net8.0", "--filter", "FullyQualifiedName=Semio.Tests.Tests+ExportDesignModel.Nakagin_Capsule_Tower_Export_Scene_Graph_Report"], resolve(__dirname, "../net/Semio.Tests"));
+
+    const implementations = ["js", "py", "go", "rs", "net"] as const;
+    const normalizedByImplementation = Object.fromEntries(
+      implementations.map((implementation) => {
+        const reportPath = resolve(EXPORT_REPORTS_DIR, `${implementation}.gltf`);
+        const reportText = readFileSync(reportPath, "utf8");
+        return [implementation, normalizeSceneGraph(reportText)];
+      }),
+    );
+
+    writeFileSync(resolve(EXPORT_REPORTS_DIR, "scene-graphs.json"), JSON.stringify(normalizedByImplementation, null, 2));
+
+    const baseline = normalizedByImplementation.js;
+    for (const implementation of implementations) {
+      expect(normalizedByImplementation[implementation]).toEqual(baseline);
+    }
+
+    for (const implementation of implementations) {
+      const reportPath = resolve(EXPORT_REPORTS_DIR, `${implementation}.gltf`);
+      const reportText = readFileSync(reportPath, "utf8");
+      const parsed = JSON.parse(reportText) as { buffers?: Array<{ uri?: string }>; images?: Array<{ uri?: string; bufferView?: number }> };
+      for (const buffer of parsed.buffers ?? []) {
+        expect(buffer.uri?.startsWith("data:")).toBe(true);
+      }
+      for (const image of parsed.images ?? []) {
+        expect(image.uri?.startsWith("data:") ?? image.bufferView !== undefined).toBe(true);
+      }
+      const doc = await parseSelfContainedGltf(reportText);
+      expect(doc.getRoot().listMeshes().length).toBeGreaterThan(0);
+      const meshNames = getMeshNames(reportText);
+      expect(meshNames.some((name) => name === "base.glb")).toBe(true);
+      expect(meshNames.some((name) => /^capsule_.*\.glb$/i.test(name))).toBe(true);
+    }
+  }, 300000);
+});
+
+describe("Model/KPI", () => {
+  it("getGeometricInsightsForModel(nakagin-capsule-tower.gltf) returns insights", async () => {
+    const modelPath = resolve(__dirname, "../assets/semio/nakagin-capsule-tower.gltf");
+    const insights = await getGeometricInsightsForModel(modelPath);
+    expect(insights.boundingBoxMin).toBeDefined();
+    expect(insights.boundingBoxMax).toBeDefined();
+    expect(insights.dimensionX).toBeDefined();
+    expect(insights.dimensionY).toBeDefined();
+    expect(insights.dimensionZ).toBeDefined();
+    expect(insights.characteristicLength).toBeDefined();
+    expect(insights.totalSurfaceArea).toBeDefined();
+    expect(insights.vertexCount).toBeGreaterThan(0);
+    expect(insights.faceCount).toBeGreaterThan(0);
+    expect(insights.centroid).toBeDefined();
+    expect(insights.eulerCharacteristic).toBeDefined();
   });
 });

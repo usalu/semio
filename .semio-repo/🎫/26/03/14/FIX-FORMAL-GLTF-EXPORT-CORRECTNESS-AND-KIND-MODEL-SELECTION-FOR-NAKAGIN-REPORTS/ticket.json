@@ -1,0 +1,15 @@
+{
+  "title": "Fix Formal GLTF Export Correctness And Kind Model Selection For Nakagin Reports",
+  "status": "open",
+  "description": "Export the Nakagin Capsule Tower design model from the Metabolism kit to the semio assets folder using the export functionality from semio.ts. The Nakagin Capsule Tower design data exists in the Metabolism kit JSON file and needs to be extracted and exported as a model asset to the semio/assets/models folder.",
+  "summary": "Fixed formal Nakagin design glTF export correctness across JS, Python, Go, Rust, and .NET by applying the Semio-to-glTF basis transfer, using authoritative tag-guid model selection so real kind model files appear, inlining .gltf sidecar resources as data URIs, preserving source mesh names, and strengthening parity tests to validate self-contained parser-readable reports with actual base.glb and capsule_*.glb meshes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/888"
+  },
+  "goal": "🎯assetmanagement",
+  "sessions": [
+    "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪17735168215733661434762060316443877337",
+    "14714eec-58b9-4efb-9371-021374ebc0fa",
+    "5d25bc62-a854-4d3c-84f8-2df9fde56987"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Remove General Framework Imports From Sketchpad",
+  "status": "open",
+  "description": "Make sure that sketchpad imports no general framework. Only semio-elements/ui must import all ui-related libraries. Only leave sketchpad specific dependencies. Re-export everything needed from elements/ui.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/924"
+  },
+  "goal": "🎯semioelements",
+  "sessions": [
+    "d6277f49-9c98-433e-8542-81b0f4e19c04"
+  ]
+}

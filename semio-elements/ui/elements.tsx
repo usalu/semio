@@ -687,24 +687,33 @@ export interface LayoutProps {
   bottomPanel?: BottomPanelProps;
   leftSidePanel?: SidePanelProps;
   rightSidePanel?: SidePanelProps;
+  mobilePanel?: MobilePanelProps;
   canvas: React.ReactNode;
   toolbar?: React.ReactNode;
+  mobile?: boolean;
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, canvas, toolbar, className = "" }) => (
-  <div className={`flex flex-col h-screen w-screen overflow-hidden ${className}`}>
+const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, mobilePanel, canvas, toolbar, mobile = false, className = "" }) => (
+  <div className={cn("flex flex-col overflow-hidden", mobile ? "touch h-full w-full" : "h-screen w-screen", className)}>
     {navbar && <div className="flex-shrink-0">{navbar}</div>}
-    <div className="flex flex-1 min-h-0 relative">
-      {leftSidePanel && leftSidePanel.visible && <SidePanel {...leftSidePanel} position="left" />}
-      <div className="flex flex-col flex-1 min-w-0 relative">
-        <div className="flex flex-1 min-h-0 relative">
-          <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-          {rightSidePanel && rightSidePanel.visible && <SidePanel {...rightSidePanel} position="right" />}
-        </div>
-        {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
+    {mobile ? (
+      <div className="flex flex-col flex-1 min-h-0">
+        {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
+        <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
       </div>
-    </div>
+    ) : (
+      <div className="flex flex-1 min-h-0 relative">
+        {leftSidePanel && leftSidePanel.visible && <SidePanel {...leftSidePanel} position="left" />}
+        <div className="flex flex-col flex-1 min-w-0 relative">
+          <div className="flex flex-1 min-h-0 relative">
+            <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
+            {rightSidePanel && rightSidePanel.visible && <SidePanel {...rightSidePanel} position="right" />}
+          </div>
+          {bottomPanel && bottomPanel.visible && <BottomPanel {...bottomPanel} />}
+        </div>
+      </div>
+    )}
     {(footer || toolbar) && (
       <div className="flex-shrink-0 relative">
         {toolbar && <div className="absolute bottom-[calc(100%+var(--spacing-double))] left-1/2 -translate-x-1/2 z-panel pointer-events-none">{toolbar}</div>}
@@ -967,7 +976,14 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const value = t(id as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
-  const label = typeof value === "string" ? value : typeof value === "object" && value?.label ? value.label : undefined;
+  const label = typeof value === "string" ? value : typeof value === "object" && value?.label ? (
+    typeof value.label === "string" ? value.label :
+    typeof value.label === "object" ? (
+      mode === Expertise.BEGINNER && value.label.beginner !== undefined ? String(value.label.beginner) :
+      value.label.normal !== undefined ? String(value.label.normal) :
+      value.label.beginner !== undefined ? String(value.label.beginner) : undefined
+    ) : undefined
+  ) : undefined;
 
   let hotkey: string | undefined;
   if (typeof value === "object" && value?.hotkey) {
@@ -3507,7 +3523,7 @@ const addIconSize = (element: React.ReactNode): React.ReactNode => {
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   if ("kind" in props && props.kind === "withAction") {
     const { actionIcon, onActionClick, icon, text, pressed, defaultPressed, onPressedChange, id, showLabel, className, actionId } = props as ToggleWithActionProps;
-    const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
+    const value = pressed !== undefined ? (pressed ? "on" : undefined) : undefined;
     return (
       <ToggleGroup
         showLabel={showLabel}
@@ -4526,6 +4542,20 @@ const useTreeOpenState = (itemId: string, defaultOpen: boolean) => {
   return { open, setOpen };
 };
 
+const treeSectionElementMarker = Symbol.for("semio.tree.section");
+
+type TreeComponentMarker = {
+  [treeSectionElementMarker]?: boolean;
+  displayName?: string;
+};
+
+const isTreeSectionElementType = (value: unknown): boolean => {
+  if ((typeof value !== "function" && typeof value !== "object") || value === null) {
+    return false;
+  }
+  return Boolean((value as TreeComponentMarker)[treeSectionElementMarker]);
+};
+
 const hasNonEmptyChildren = (children: React.ReactNode): boolean => {
   if (!children) return false;
   const childArray = React.Children.toArray(children);
@@ -4538,6 +4568,37 @@ const hasNonEmptyChildren = (children: React.ReactNode): boolean => {
       return false;
     })
   );
+};
+
+const isIgnorableTreeChild = (child: React.ReactNode): boolean => (
+  child === null ||
+  child === undefined ||
+  typeof child === "boolean" ||
+  (typeof child === "string" && child.trim().length === 0)
+);
+
+const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeSection" | "TreeItem") => {
+  const visitNestedChildren = (value: React.ReactNode) => {
+    React.Children.forEach(value, (child) => {
+      if (isIgnorableTreeChild(child)) {
+        return;
+      }
+      if (!React.isValidElement(child)) {
+        return;
+      }
+      const childProps = child.props as { children?: React.ReactNode };
+      if (child.type === React.Fragment) {
+        visitNestedChildren(childProps.children);
+        return;
+      }
+      if (isTreeSectionElementType(child.type)) {
+        throw new Error(`${ownerName} cannot contain a TreeSection. Only TreeItem elements can be nested.`);
+      }
+      visitNestedChildren(childProps.children);
+    });
+  };
+
+  visitNestedChildren(children);
 };
 
 const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean }>({ level: 0, isLastAtLevel: [], showLines: true, isTree: false });
@@ -4625,14 +4686,17 @@ export interface TreeDataItem {
 
 export interface TreeDataSection {
   id: string;
-  label: React.ReactNode;
+  label?: React.ReactNode;
   icon?: React.ReactNode;
+  content?: React.ReactNode;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
   actions?: TreeSectionAction[];
   className?: string;
   defaultOpen?: boolean;
   emptyState?: React.ReactNode;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
   onDoubleClick?: (event: React.MouseEvent) => void;
 }
 
@@ -4796,7 +4860,6 @@ interface SortableTreeItemsProps {
  * TreeRootProps holds the data fields for a TreeRootProps record.
  **/
 interface TreeRootProps {
-  children?: React.ReactNode;
   className?: string;
   showLines?: boolean;
   sections?: TreeDataSection[];
@@ -4891,7 +4954,9 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDrop,
 }) => {
   const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
-  const displayLabel = id ? useLabel(id) : label;
+  const localizedLabel = id ? useLabel(id) : undefined;
+  const displayLabel = label !== undefined ? label : localizedLabel;
+  assertNoNestedTreeSections(children, "TreeSection");
   const sectionStateId = getTreeSectionStateId(id ?? String(displayLabel ?? "section"));
   const treeOpenState = useTreeOpenState(sectionStateId, defaultOpen);
   const open = controlledOpen ?? treeOpenState.open;
@@ -4902,11 +4967,27 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
+  const isHeaderlessSection = displayLabel === undefined
+    && !icon
+    && actions.length === 0
+    && !loading
+    && !draggable
+    && !onDoubleClick
+    && !onSectionPointerEnter
+    && !onSectionPointerLeave
+    && !onDragStart
+    && !onDragOver
+    && !onDragLeave
+    && !onDrop;
   const rowClassName = cn(
     "relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0",
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     className,
   );
+
+  if (isHeaderlessSection) {
+    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree }}>{children}</TreeContext.Provider>;
+  }
 
   if (!isExpandable) {
     return (
@@ -5042,6 +5123,9 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   );
 };
 
+(TreeSection as TreeComponentMarker)[treeSectionElementMarker] = true;
+TreeSection.displayName = "TreeSection";
+
 /**
  * SortableTreeItem holds the data fields for a SortableTreeItem record.
  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨sortabletreeitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/SortableTreeItem)
@@ -5062,7 +5146,8 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   onDoubleClick,
 }) => {
   const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
-  const displayLabel = id ? useLabel(id) : label;
+  const localizedLabel = id ? useLabel(id) : undefined;
+  const displayLabel = label ?? localizedLabel;
   const itemKey = id ?? displayLabel ?? id;
   const itemId = `item-${id}-${itemKey}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
@@ -5252,7 +5337,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   onDragLeave,
   onDrop,
 }) => {
-  const resolvedLabel = id ? useLabel(id) : label;
+  const localizedLabel = id ? useLabel(id) : undefined;
+  const resolvedLabel = label ?? localizedLabel;
+  assertNoNestedTreeSections(children, "TreeItem");
   if (sortable && sortableId) {
     return (
       <SortableTreeItem
@@ -5459,8 +5546,12 @@ export interface FileTreeNode {
  * Hierarchical tree view component with optional file tree rendering.
  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/Tree)
  **/
+type TreeComponent = ((props: TreeRootProps) => React.ReactElement) & {
+  Files: React.FC<TreeFilesProps>;
+  Section: React.FC<TreeFilesProps>;
+};
+
 export const Tree = (({
-  children,
   className = "",
   showLines = true,
   sections,
@@ -5470,7 +5561,11 @@ export const Tree = (({
   onSelectionChange,
   dragAndDropController,
   emptyState,
-}: TreeRootProps) => {
+  children,
+}: TreeRootProps & { children?: React.ReactNode }) => {
+  if (hasNonEmptyChildren(children)) {
+    throw new Error("Tree only accepts section data through the sections prop.");
+  }
   const [sectionItemsById, setSectionItemsById] = React.useState<Record<string, TreeDataItem[]>>(() => (sections ?? []).reduce<Record<string, TreeDataItem[]>>((result, section) => {
     if (section.items) {
       result[section.id] = section.items;
@@ -5487,13 +5582,15 @@ export const Tree = (({
 
   React.useEffect(() => {
     setSectionItemsById((previousItems) => {
+      let hasChanges = false;
       const nextItems = { ...previousItems };
       resolvedSections.forEach((section) => {
-        if (section.items) {
+        if (section.items && previousItems[section.id] !== section.items) {
           nextItems[section.id] = section.items;
+          hasChanges = true;
         }
       });
-      return nextItems;
+      return hasChanges ? nextItems : previousItems;
     });
   }, [resolvedSections]);
 
@@ -5647,7 +5744,7 @@ export const Tree = (({
     const items = getTreeSectionItems(section, sectionItemsById);
     const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
     const hasDynamicChildren = Boolean(section.getItems);
-    const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState);
+    const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || hasNonEmptyChildren(section.content);
 
     React.useEffect(() => {
       if (treeOpenState.open && hasDynamicChildren) {
@@ -5667,10 +5764,13 @@ export const Tree = (({
         expandable={isExpandable}
         loading={isLoading}
         actions={section.actions}
+        onPointerEnter={section.onPointerEnter}
+        onPointerLeave={section.onPointerLeave}
         onDoubleClick={section.onDoubleClick}
         onDragOver={handleDragOver}
         onDrop={(event) => handleDrop(event, section, "section", section)}
       >
+        {section.content}
         {items.map((item, index) => (
           <DataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
         ))}
@@ -5683,18 +5783,13 @@ export const Tree = (({
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true }}>
         <div className={`w-full min-w-0 overflow-hidden ${className}`}>
-          {resolvedSections.length > 0 ? resolvedSections.map((section) => (
-            <DataSectionView key={section.id} section={section} />
-          )) : children}
-          {resolvedSections.length === 0 && !children && emptyState}
+          {resolvedSections.map((section) => <DataSectionView key={section.id} section={section} />)}
+          {resolvedSections.length === 0 && emptyState}
         </div>
       </TreeContext.Provider>
     </TreeStateProvider>
   );
-}) as React.FC<TreeRootProps> & {
-  Files: React.FC<TreeFilesProps>;
-  Section: React.FC<TreeFilesProps>;
-};
+}) as TreeComponent;
 
 // #region Basic Chat Panel
 
@@ -5771,16 +5866,23 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
     <div data-testid="basic-chat-panel" className="flex h-full min-h-0 flex-col gap-single">
       <HelperRow>{`Local chat for ${title}. Use Enter to send and Shift+Enter for a new line.`}</HelperRow>
       <div data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-[3px] border", borderClass)}>
-        <Tree className="min-w-0 p-single">
-          {messages.map((message) => (
-            <TreeRow key={message.id}>
-              <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-[2px]">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
-                <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
-              </div>
-            </TreeRow>
-          ))}
-        </Tree>
+        <Tree
+          className="min-w-0 p-single"
+          sections={[
+            {
+              id: `${id}.messages`,
+              label: null,
+              content: messages.map((message) => (
+                <TreeRow key={message.id}>
+                  <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-[2px]">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
+                    <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
+                  </div>
+                </TreeRow>
+              )),
+            },
+          ]}
+        />
       </div>
       <div className="flex shrink-0 flex-col gap-single">
         <Textarea
@@ -6214,15 +6316,21 @@ export const ControlTree: React.FC<ControlTreeProps> = ({
   const sorted = React.useMemo(() => sortControlTreeNodes(tree), [tree]);
   return (
     <div data-slot="control-tree" className={cn("w-full min-w-0", classNames?.panel, className)}>
-      <Tree>
-        {sorted.map((node) =>
-          node.kind === "folder" ? (
-            <ControlTreeFolder key={node.path} node={node} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
-          ) : (
-            <ControlTreeLeafRow key={node.path} node={node} renderControl={renderControl} classNames={classNames} />
-          ),
-        )}
-      </Tree>
+      <Tree
+        sections={[
+          {
+            id: "control-tree-root",
+            label: null,
+            content: sorted.map((node) =>
+              node.kind === "folder" ? (
+                <ControlTreeFolder key={node.path} node={node} folderSettings={folderSettings} onToggleFolder={onToggleFolder} renderControl={renderControl} classNames={classNames} />
+              ) : (
+                <ControlTreeLeafRow key={node.path} node={node} renderControl={renderControl} classNames={classNames} />
+              ),
+            ),
+          },
+        ]}
+      />
     </div>
   );
 };
@@ -6633,24 +6741,38 @@ const Panel: React.FC<PanelProps> = ({
       ? { top: "var(--spacing-double)", left: "var(--spacing-double)", right: "var(--spacing-double)", height: `${size}px`, zIndex }
       : { bottom: "var(--spacing-double)", left: "var(--spacing-double)", right: "var(--spacing-double)", height: `${size}px`, zIndex };
   const resizeHandleClass = isHorizontal ? `absolute top-0 bottom-0 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize` : `absolute left-0 right-0 ${resizeSide === "top" ? "top-0" : "bottom-0"} h-single cursor-ns-resize`;
+  const treeSections = React.useMemo<TreeDataSection[]>(() => {
+    const nextSections: TreeDataSection[] = [];
+    if (additionalContent) {
+      nextSections.push({ id: `${panelKey}-additional`, label: null, content: additionalContent });
+    }
+    sortedSections.forEach((section, index) => {
+      nextSections.push({
+        id: section.id,
+        defaultOpen: section.defaultOpen ?? index === 0,
+        actions: section.actions,
+        onPointerEnter: section.onPointerEnter,
+        onPointerLeave: section.onPointerLeave,
+        onDoubleClick: section.onDoubleClick,
+        content: typeof section.content === "function" ? section.content() : section.content,
+      });
+    });
+    if (!hasContent && emptyMessage) {
+      nextSections.push({
+        id: `${panelKey}-empty`,
+        label: null,
+        content: <div className="p-small text-center text-muted-foreground">{emptyMessage}</div>,
+      });
+    }
+    return nextSections;
+  }, [additionalContent, emptyMessage, hasContent, panelKey, sortedSections]);
   return (
     <LevelProvider level="panel">
       <div data-panel={panelKey} className={cn(containerClass, showBackground ? "bg-panel" : undefined)} style={{ ...positionStyle, opacity, transition: "opacity 150ms" }}>
         <Scrollable className="h-full">
           <div className={`${className || "p-single"} overflow-hidden min-w-0`}>
             <TreeStateProvider>
-              <Tree className="min-w-0 overflow-hidden">
-                {additionalContent}
-                {sortedSections.map((section, index) => {
-                  const content = typeof section.content === "function" ? section.content() : section.content;
-                  return (
-                    <PanelSectionWrapper key={section.id} section={section} defaultOpen={section.defaultOpen ?? index === 0}>
-                      {content}
-                    </PanelSectionWrapper>
-                  );
-                })}
-                {!hasContent && emptyMessage && <div className="p-small text-center text-muted-foreground">{emptyMessage}</div>}
-              </Tree>
+              <Tree className="min-w-0 overflow-hidden" sections={treeSections} />
             </TreeStateProvider>
           </div>
           {footer}
@@ -6658,21 +6780,6 @@ const Panel: React.FC<PanelProps> = ({
         {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
       </div>
     </LevelProvider>
-  );
-};
-
-// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🪨panelsectionwrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/PanelSectionWrapper)
-/**
- * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🪨panelsectionwrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/PanelSectionWrapper)
- *PanelSectionWrapper holds the data fields for a PanelSectionWrapper record.
- **/
-// [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panel🪨panelsectionwrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/Panel/d/i/PanelSectionWrapper)
-const PanelSectionWrapper: React.FC<{ section: PanelSection; defaultOpen: boolean; children: React.ReactNode }> = ({ section, defaultOpen, children }) => {
-  const sectionLabel = useLabel(section.id) ?? section.id;
-  return (
-    <TreeSection label={sectionLabel} id={section.id} defaultOpen={defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave} onDoubleClick={section.onDoubleClick}>
-      {children}
-    </TreeSection>
   );
 };
 
@@ -6693,6 +6800,7 @@ export { Panel };
 export interface PanelGroupProps {
   className?: string;
   position?: "left" | "right" | "middle" | "bottom";
+  children?: React.ReactNode;
 }
 
 /**
@@ -6736,6 +6844,8 @@ export { LeftPanel };
 // #region RightPanel
 
 // [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/RightPanel)
+export type RightPanelProps = Omit<PanelProps, "resizeSide">;
+
 /** RightPanel holds the data fields for a RightPanel record.
  **/
 // [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖rightpanel🪨rightpanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/RightPanel/d/i/RightPanel)
@@ -6930,7 +7040,85 @@ export { SidePanel };
 
 // #endregion SidePanel
 
+// #region MobilePanel
 
+// [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖mobilepanel](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/MOBILE-PANEL)
+// Full-width tabbed panel for mobile layouts. Not resizable. All tabs in one panel.
+
+/**
+ * Props interface for the MobilePanel component.
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖mobilepanel🛠️mobilepanelprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MobilePanel/d/i/MobilePanelProps)
+ **/
+export interface MobilePanelProps {
+  visible?: boolean;
+  tabs: SidePanelTabConfig[];
+  activeTabId?: string;
+  onActiveTabChange?: (tabId: string) => void;
+  className?: string;
+  height?: number;
+}
+
+/**
+ * MobilePanel is a full-width tabbed panel for mobile layouts.
+ * It merges all tabs into a single non-resizable panel.
+ * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖mobilepanel🪨mobilepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MobilePanel/d/i/MobilePanel)
+ **/
+const MobilePanel: React.FC<MobilePanelProps> = ({
+  visible = true,
+  tabs,
+  activeTabId,
+  onActiveTabChange,
+  className = "",
+  height = 260,
+}) => {
+  const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
+
+  if (!visible || tabs.length === 0) return null;
+
+  const currentActiveTab = activeTabId ?? internalActiveTab;
+  const sortedTabs = [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const activeTab = sortedTabs.find((tab) => tab.id === currentActiveTab) ?? sortedTabs[0];
+  const ActiveTabContent = typeof activeTab?.content === "function" ? activeTab.content : null;
+
+  const handleTabChange = (tabId: string) => {
+    if (onActiveTabChange) {
+      onActiveTabChange(tabId);
+    } else {
+      setInternalActiveTab(tabId);
+    }
+  };
+
+  return (
+    <LevelProvider level="panel">
+      <div data-panel="mobilePanel" className={cn("w-full text-foreground border-b bg-panel flex flex-col", className)} style={{ height: `${height}px` }}>
+        <div data-slot="mobile-panel-tabs" className="flex items-center h-large border-b shrink-0 overflow-x-auto">
+          {sortedTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = tab.id === activeTab?.id;
+            return (
+              <Tooltip key={tab.id}>
+                <TooltipTrigger asChild>
+                  <button data-slot="mobile-panel-tab-button" id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-medium border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
+                    <Icon size={20} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <DescriptionTooltipContent id={tab.id} />
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+        <Scrollable className="flex-1 min-h-0">
+          <div data-slot="mobile-panel-content" className="p-double">{activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}</div>
+        </Scrollable>
+      </div>
+    </LevelProvider>
+  );
+};
+export { MobilePanel };
+
+// #endregion MobilePanel
 
 // #endregion Panel Components
 
@@ -7147,6 +7335,7 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 
   React.useEffect(() => {
     if (focusedItemId && scrollAreaRef.current) {
+      const element = document.getElementById(focusedItemId);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
         if (onFocusComplete) {
@@ -7534,6 +7723,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
       draggingNodeRef.current = node.id;
       if (forceConfig.enabled && simulationRef.current) {
         const currentPositions = new Map(finalNodesRef.current.map((n) => [n.id, n.position]));
+        const simNode = simulationRef.current.nodes().find((currentNode) => currentNode.id === node.id);
         for (const simNode of simulationRef.current.nodes()) {
           const pos = currentPositions.get(simNode.id);
           if (pos) {
@@ -9051,6 +9241,24 @@ export function createDefaultLayout(windowIds: string[], direction: "row" | "col
 }
 
 /**
+ * Creates a single-stack golden-layout configuration where all windows appear as tabs.
+ * Used for mobile layouts where side-by-side windows are not practical.
+ **/
+export function createTabStackLayout(windowIds: string[], titles?: string[]): any {
+  return {
+    root: {
+      type: "stack",
+      content: windowIds.map((id, index) => ({
+        type: "component",
+        componentName: id,
+        title: titles?.[index] ?? id,
+        componentState: {},
+      })),
+    },
+  };
+}
+
+/**
  * Parses a window layout from a string, object, or undefined input.
  * MUST return undefined for null, empty, or unparseable inputs.
  **/
@@ -9626,6 +9834,7 @@ export interface UIProps {
   footerItems?: FooterItem[];
   searchItems?: UISearchItem[];
   toolbarItems?: UIToolbarItem[];
+  mobile?: boolean;
   className?: string;
 }
 
@@ -9727,12 +9936,14 @@ export const UI: React.FC<UIProps> = ({
   footerItems: globalFooterItems = [],
   searchItems = [],
   toolbarItems: globalToolbarItems = [],
+  mobile = false,
   className,
 }) => {
   const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? "");
   const [leftPanelSize, setLeftPanelSize] = React.useState(280);
   const [rightPanelSize, setRightPanelSize] = React.useState(300);
   const [panelVisibility, setPanelVisibility] = React.useState<UIPanelVisibility>({ leftSidePanel: false, rightSidePanel: true });
+  const [mobilePanelVisible, setMobilePanelVisible] = React.useState(true);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [findOpen, setFindOpen] = React.useState(false);
 
@@ -9769,7 +9980,13 @@ export const UI: React.FC<UIProps> = ({
   // Merge toolbar items: global + app-specific
   const mergedToolbarItems = [...globalToolbarItems, ...(activeApp.toolbarItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  // Fixed navbar: [breadcrumb (flex-1)] [search] [find] [left panel toggle] [right panel toggle]
+  // Merge all panel tabs for mobile mode
+  const mobilePanelTabs: SidePanelTabConfig[] = mobile
+    ? [...(activeApp.leftPanelTabs ?? []), ...(activeApp.rightPanelTabs ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    : [];
+  const hasMobilePanelTabs = mobilePanelTabs.length > 0;
+
+  // Fixed navbar: [breadcrumb (flex-1)] [search] [find] [panel toggles]
   const navbarItems: NavbarItem[] = [];
 
   // Breadcrumb (fills remaining space, always first)
@@ -9807,29 +10024,50 @@ export const UI: React.FC<UIProps> = ({
     ),
   });
 
-  // Left panel toggle
-  navbarItems.push({
-    key: "leftPanel",
-    content: (
-      <UILeftPanelToggle
-        tabs={activeApp.leftPanelTabs}
-        visible={panelVisibility.leftSidePanel}
-        onToggle={() => togglePanel("leftSidePanel")}
-      />
-    ),
-  });
+  if (mobile) {
+    // Mobile: single panel toggle for merged tabs
+    if (hasMobilePanelTabs) {
+      const FirstIcon = mobilePanelTabs[0]?.icon;
+      navbarItems.push({
+        key: "mobilePanel",
+        content: (
+          <div className="flex items-stretch border border-element overflow-hidden h-large">
+            <Toggle
+              kind="icon"
+              id="ui.panelToggle.mobile"
+              pressed={mobilePanelVisible}
+              onPressedChange={() => setMobilePanelVisible((prev) => !prev)}
+              className="border-0 px-small"
+              icon={FirstIcon ? <FirstIcon size={20} /> : <ChevronDownIcon className="size-medium" />}
+            />
+          </div>
+        ),
+      });
+    }
+  } else {
+    // Desktop: separate left and right panel toggles
+    navbarItems.push({
+      key: "leftPanel",
+      content: (
+        <UILeftPanelToggle
+          tabs={activeApp.leftPanelTabs}
+          visible={panelVisibility.leftSidePanel}
+          onToggle={() => togglePanel("leftSidePanel")}
+        />
+      ),
+    });
 
-  // Right panel toggle
-  navbarItems.push({
-    key: "rightPanel",
-    content: (
-      <UIRightPanelToggle
-        tabs={activeApp.rightPanelTabs}
-        visible={panelVisibility.rightSidePanel}
-        onToggle={() => togglePanel("rightSidePanel")}
-      />
-    ),
-  });
+    navbarItems.push({
+      key: "rightPanel",
+      content: (
+        <UIRightPanelToggle
+          tabs={activeApp.rightPanelTabs}
+          visible={panelVisibility.rightSidePanel}
+          onToggle={() => togglePanel("rightSidePanel")}
+        />
+      ),
+    });
+  }
 
   const mergedFooterItems = [...globalFooterItems, ...(activeApp.footerItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -9842,11 +10080,20 @@ export const UI: React.FC<UIProps> = ({
         <UIFindItemsSync findItems={activeApp.findItems} onFindSelect={activeApp.onFindSelect} />
         <Layout
           className={className}
+          mobile={mobile}
           navbar={<Navbar items={navbarItems} />}
           footer={mergedFooterItems.length > 0 ? <Footer items={mergedFooterItems} /> : undefined}
           toolbar={toolbarElement}
+          mobilePanel={
+            mobile && hasMobilePanelTabs
+              ? {
+                visible: mobilePanelVisible,
+                tabs: mobilePanelTabs,
+              }
+              : undefined
+          }
           leftSidePanel={
-            hasLeftPanel
+            !mobile && hasLeftPanel
               ? {
                 position: "left" as const,
                 visible: panelVisibility.leftSidePanel,
@@ -9857,7 +10104,7 @@ export const UI: React.FC<UIProps> = ({
               : undefined
           }
           rightSidePanel={
-            hasRightPanel
+            !mobile && hasRightPanel
               ? {
                 position: "right" as const,
                 visible: panelVisibility.rightSidePanel,
@@ -9867,7 +10114,13 @@ export const UI: React.FC<UIProps> = ({
               }
               : undefined
           }
-          canvas={<UICanvas windowConfig={activeApp.windowConfig} />}
+          canvas={<UICanvas windowConfig={mobile ? {
+            ...activeApp.windowConfig,
+            defaultLayout: createTabStackLayout(
+              activeApp.windowConfig.windowKinds.map((wk) => wk.id),
+              activeApp.windowConfig.windowKinds.map((wk) => wk.label ?? wk.id),
+            ),
+          } : activeApp.windowConfig} />}
         />
         {searchItems.length > 0 && <UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} />}
         <UIFind open={findOpen} onOpenChange={setFindOpen} />

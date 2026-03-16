@@ -10143,34 +10143,37 @@ export const EXPORT_MODEL_FORMATS: Record<string, string> = {
   ".usdz": "model/vnd.usdz+zip",
 };
 
+const SEMIO_TO_GLTF_BASIS = new THREE.Matrix4().set(
+  1, 0, 0, 0,
+  0, 0, 1, 0,
+  0, -1, 0, 0,
+  0, 0, 0, 1,
+);
+
+const SEMIO_TO_GLTF_BASIS_INV = SEMIO_TO_GLTF_BASIS.clone().invert();
+
+const semioMatrixToGltfMatrix = (matrix: THREE.Matrix4): number[] => {
+  const transformed = new THREE.Matrix4()
+    .multiplyMatrices(SEMIO_TO_GLTF_BASIS, matrix)
+    .multiply(SEMIO_TO_GLTF_BASIS_INV);
+  return transformed.elements.slice();
+};
+
 // [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨planetoglbtransform](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/planeToGlbTransform)
 const planeToGlbTransform = (plane: Plane): number[] => {
-  const m = planeToMatrix(plane);
-  const e = m.elements;
-  return [
-    e[0], e[1], e[2], e[3],
-    e[4], e[5], e[6], e[7],
-    e[8], e[9], e[10], e[11],
-    e[12], e[13], e[14], e[15],
-  ];
+  return semioMatrixToGltfMatrix(planeToMatrix(plane));
 };
 
 // [👤semio📚js💻semio🔖kit🔖kitmodelexport🪨findmatchingmodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Model%20Export/d/i/findMatchingModel)
 const findMatchingModel = (kit: Kit, type: Type, tags: string[]): Model | undefined => {
   if (!type.models || type.models.length === 0) return undefined;
-  if (tags.length === 0) return type.models[0];
   const kitTags = kit.tags ?? [];
-  const tagGuids = new Set(
-    tags.flatMap((tagName) =>
-      kitTags.filter((t) => t.name === tagName).map((t) => t.guid),
-    ),
-  );
-  for (const model of type.models) {
-    const modelTagGuids = (model.tags ?? []).map((t) => t.guid);
-    if (modelTagGuids.length > 0 && modelTagGuids.every((g) => tagGuids.has(g)))
-      return model;
-  }
-  return type.models[0];
+  const selectedTagGuids = tags.flatMap((tagValue) => {
+    const byGuid = kitTags.find((tag) => tag.guid === tagValue);
+    if (byGuid) return [byGuid.guid];
+    return kitTags.filter((tag) => tag.name === tagValue).map((tag) => tag.guid);
+  });
+  return selectBestModel(type.models, selectedTagGuids);
 };
 
 /**
@@ -10186,6 +10189,36 @@ const decodeBlobToBytes = (blobStr: string): Uint8Array => {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
+};
+
+const bytesToDataUri = (bytes: Uint8Array, mimeType: string): string => {
+  const base64 = Buffer.from(bytes).toString("base64");
+  return `data:${mimeType};base64,${base64}`;
+};
+
+const inlineJsonDocumentResources = (jsonDoc: {
+  json: {
+    buffers?: Array<{ uri?: string }>;
+    images?: Array<{ uri?: string; mimeType?: string }>;
+  };
+  resources?: Record<string, Uint8Array | string>;
+}) => {
+  const resources = jsonDoc.resources ?? {};
+  for (const buffer of jsonDoc.json.buffers ?? []) {
+    if (!buffer.uri) continue;
+    const resource = resources[buffer.uri];
+    if (!resource) continue;
+    const bytes = typeof resource === "string" ? new TextEncoder().encode(resource) : resource;
+    buffer.uri = bytesToDataUri(bytes, "application/octet-stream");
+  }
+  for (const image of jsonDoc.json.images ?? []) {
+    if (!image.uri) continue;
+    const resource = resources[image.uri];
+    if (!resource) continue;
+    const bytes = typeof resource === "string" ? new TextEncoder().encode(resource) : resource;
+    image.uri = bytesToDataUri(bytes, image.mimeType ?? "application/octet-stream");
+  }
+  return jsonDoc.json;
 };
 
 /**
@@ -10251,14 +10284,13 @@ const copyGltfMeshes = (
   sourceDoc: GltfDocument,
   targetDoc: GltfDocument,
   targetBuffer: GltfBuffer,
+  meshName?: string,
 ): GltfMesh[] => {
   const materialCache = new Map<GltfMaterial, GltfMaterial>();
   const textureCache = new Map<GltfTexture, GltfTexture>();
-  const copiedMeshes: GltfMesh[] = [];
+  const mesh = targetDoc.createMesh(meshName);
 
   for (const srcMesh of sourceDoc.getRoot().listMeshes()) {
-    const mesh = targetDoc.createMesh(srcMesh.getName());
-
     for (const srcPrim of srcMesh.listPrimitives()) {
       const prim = targetDoc.createPrimitive();
 
@@ -10299,11 +10331,9 @@ const copyGltfMeshes = (
 
       mesh.addPrimitive(prim);
     }
-
-    copiedMeshes.push(mesh);
   }
 
-  return copiedMeshes;
+  return mesh.listPrimitives().length > 0 ? [mesh] : [];
 };
 
 /**
@@ -10489,7 +10519,6 @@ export const exportDesignModel = async (
 
     const model = findMatchingModel(kit, type, tags);
     if (!model) {
-      typeMeshMap[typeGuid] = createBoxMesh(type.name, doc, buffer);
       continue;
     }
 
@@ -10502,13 +10531,11 @@ export const exportDesignModel = async (
     if (ext === "glb") {
       try {
         const sourceDoc = await io.readBinary(fileBytes);
-        const copiedMeshes = copyGltfMeshes(sourceDoc, doc, buffer);
+        const copiedMeshes = copyGltfMeshes(sourceDoc, doc, buffer, file.name);
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch {
-        typeMeshMap[typeGuid] = createBoxMesh(type.name, doc, buffer);
-      }
+      } catch { }
     }
   }
 
@@ -10528,7 +10555,7 @@ export const exportDesignModel = async (
       const childWorld = planeToMatrix(worldPlane);
       const invParent = parentWorld.clone().invert();
       const localMat = new THREE.Matrix4().multiplyMatrices(invParent, childWorld);
-      localMatrix = localMat.elements.slice();
+      localMatrix = semioMatrixToGltfMatrix(localMat);
     } else {
       localMatrix = planeToGlbTransform(worldPlane);
     }
@@ -10556,7 +10583,7 @@ export const exportDesignModel = async (
   if (format === ".gltf") {
     const jsonDoc = await io.writeJSON(doc);
     const encoder = new TextEncoder();
-    return encoder.encode(JSON.stringify(jsonDoc.json)).buffer as ArrayBuffer;
+    return encoder.encode(JSON.stringify(inlineJsonDocumentResources(jsonDoc))).buffer as ArrayBuffer;
   }
 
   const glb = await io.writeBinary(doc);
@@ -10564,6 +10591,222 @@ export const exportDesignModel = async (
 };
 
 // #endregion 🔖Kit Model Export
+// #region 🔖Geometric Insights
+// [👤semio📚js💻semio🔖geometricinsights](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Geometric%20Insights)
+// Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+
+/**
+ * Geometric KPIs for a GLB/GLTF model. All length/area/volume units follow the model coordinate system.
+ * [👤semio📚js💻semio🔖geometricinsights🪨geometricinsights](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Geometric%20Insights/d/i/GeometricInsights)
+ */
+export interface GeometricInsights {
+  boundingBoxMin?: [number, number, number];
+  boundingBoxMax?: [number, number, number];
+  dimensionX?: number;
+  dimensionY?: number;
+  dimensionZ?: number;
+  characteristicLength?: number;
+  footprintArea?: number;
+  totalSurfaceArea?: number;
+  enclosedVolume?: number;
+  surfaceToVolumeRatio?: number;
+  sphericity?: number;
+  hullFillRatio?: number;
+  aspectRatioXy?: number;
+  aspectRatioXz?: number;
+  aspectRatioYz?: number;
+  slenderness?: number;
+  centroid?: [number, number, number];
+  principalAxes?: [[number, number, number], [number, number, number], [number, number, number]];
+  momentsOfInertia?: [number, number, number];
+  vertexCount?: number;
+  faceCount?: number;
+  eulerCharacteristic?: number;
+  genus?: number;
+  isWatertight?: boolean;
+  convexHullVolume?: number;
+  concavityIndex?: number;
+}
+
+function triangleArea(a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3): number {
+  return 0.5 * new THREE.Vector3().crossVectors(
+    new THREE.Vector3(b.x - a.x, b.y - a.y, b.z - a.z),
+    new THREE.Vector3(c.x - a.x, c.y - a.y, c.z - a.z),
+  ).length();
+}
+
+function signedTetrahedronVolume(o: THREE.Vector3, a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3): number {
+  return (1 / 6) * new THREE.Vector3()
+    .crossVectors(
+      new THREE.Vector3(a.x - o.x, a.y - o.y, a.z - o.z),
+      new THREE.Vector3(b.x - o.x, b.y - o.y, b.z - o.z),
+    )
+    .dot(new THREE.Vector3(c.x - o.x, c.y - o.y, c.z - o.z));
+}
+
+/**
+ * Computes key performance indicators for the geometry of a GLB/GLTF model.
+ * Model MUST be glb or gltf (path, URL, or raw bytes). Uses @gltf-transform and THREE for mesh analysis.
+ * [👤semio📚js💻semio🔖geometricinsights🛠️getgeometricinsightsformodel](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Geometric%20Insights/d/i/getGeometricInsightsForModel)
+ */
+export const getGeometricInsightsForModel = async (model: string | ArrayBuffer | Uint8Array): Promise<GeometricInsights> => {
+  const io = new NodeIO();
+  let doc: GltfDocument;
+
+  if (typeof model === "string") {
+    if (model.startsWith("data:")) {
+      const base64 = model.slice(model.indexOf(",") + 1);
+      const binary = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      doc = await io.readBinary(binary.buffer as ArrayBuffer);
+    } else {
+      let arrBuf: ArrayBuffer;
+      const isPath = !model.startsWith("http://") && !model.startsWith("https://") && (model.endsWith(".glb") || model.endsWith(".gltf") || model.includes("/") || model.includes("\\"));
+      if (typeof globalThis !== "undefined" && "process" in globalThis && typeof (globalThis as any).process?.versions?.node === "string" && isPath) {
+        const { readFileSync } = await import("node:fs");
+        const { dirname, join } = await import("node:path");
+        const dir = dirname(model);
+        if (model.endsWith(".gltf")) {
+          const raw = readFileSync(model, "utf8");
+          const json = JSON.parse(raw) as { buffers?: Array<{ uri?: string }>; images?: Array<{ uri?: string }> };
+          const resources: Record<string, Uint8Array> = {};
+          const addResource = (uri: string | undefined) => {
+            if (!uri) return;
+            if (uri.startsWith("data:")) {
+              const base64 = uri.slice(uri.indexOf(",") + 1);
+              resources[uri] = new Uint8Array(Buffer.from(base64, "base64"));
+              return;
+            }
+            try {
+              const binPath = join(dir, uri);
+              resources[uri] = new Uint8Array(readFileSync(binPath));
+            } catch {
+              // skip missing external buffer
+            }
+          };
+          for (const b of json.buffers ?? []) addResource(b.uri);
+          for (const img of json.images ?? []) addResource(img.uri);
+          doc = await io.readJSON({ json: json as any, resources });
+        } else {
+          const buf = readFileSync(model);
+          arrBuf = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+          doc = await io.readBinary(arrBuf);
+        }
+      } else {
+        const res = await fetch(model);
+        if (!res.ok) throw new Error(`Failed to load model: ${res.statusText}`);
+        arrBuf = await res.arrayBuffer();
+        const bytes = new Uint8Array(arrBuf);
+        const isGlb = model.endsWith(".glb") || (bytes.length >= 4 && new TextDecoder().decode(bytes.slice(0, 4)) === "glTF");
+        const base = model.replace(/\/[^/]*$/, "") || ".";
+        doc = isGlb ? await io.readBinary(arrBuf) : await io.readJSON(arrBuf, base);
+      }
+    }
+  } else {
+    const buf = model instanceof Uint8Array ? model.buffer : model;
+    const bytes = new Uint8Array(buf);
+    const magic = bytes.length >= 4 ? new TextDecoder().decode(bytes.slice(0, 4)) : "";
+    doc = magic === "glTF" ? await io.readBinary(buf as ArrayBuffer) : await io.readJSON(buf as ArrayBuffer, ".");
+  }
+
+  const out: GeometricInsights = {};
+  const box = new THREE.Box3();
+  let totalArea = 0;
+  let totalVolume = 0;
+  let vertexCount = 0;
+  let faceCount = 0;
+  const centroidSum = new THREE.Vector3(0, 0, 0);
+  const origin = new THREE.Vector3(0, 0, 0);
+
+  for (const mesh of doc.getRoot().listMeshes()) {
+    for (const prim of mesh.listPrimitives()) {
+      const posAcc = prim.getAttribute("POSITION");
+      if (!posAcc) continue;
+      const posArray = posAcc.getArray();
+      if (!posArray || posArray.length < 3) continue;
+      const min = posAcc.getMin([]) as number[];
+      const max = posAcc.getMax([]) as number[];
+      if (min && max && min.length >= 3 && max.length >= 3) {
+        box.expandByPoint(new THREE.Vector3(min[0], min[1], min[2]));
+        box.expandByPoint(new THREE.Vector3(max[0], max[1], max[2]));
+      }
+      const count = posArray.length / 3;
+      vertexCount += count;
+      for (let i = 0; i < count; i++) {
+        centroidSum.x += posArray[i * 3];
+        centroidSum.y += posArray[i * 3 + 1];
+        centroidSum.z += posArray[i * 3 + 2];
+      }
+      const indices = prim.getIndices()?.getArray();
+      const getVertex = (idx: number) => new THREE.Vector3(
+        posArray[idx * 3],
+        posArray[idx * 3 + 1],
+        posArray[idx * 3 + 2],
+      );
+      if (indices) {
+        for (let i = 0; i + 2 < indices.length; i += 3) {
+          const a = getVertex(indices[i]);
+          const b = getVertex(indices[i + 1]);
+          const c = getVertex(indices[i + 2]);
+          totalArea += triangleArea(a, b, c);
+          totalVolume += signedTetrahedronVolume(origin, a, b, c);
+          faceCount += 1;
+        }
+      } else {
+        for (let i = 0; i + 2 < count; i += 3) {
+          const a = getVertex(i);
+          const b = getVertex(i + 1);
+          const c = getVertex(i + 2);
+          totalArea += triangleArea(a, b, c);
+          totalVolume += signedTetrahedronVolume(origin, a, b, c);
+          faceCount += 1;
+        }
+      }
+    }
+  }
+
+  if (vertexCount === 0) return out;
+
+  const min = box.min;
+  const max = box.max;
+  out.boundingBoxMin = [min.x, min.y, min.z];
+  out.boundingBoxMax = [max.x, max.y, max.z];
+  out.dimensionX = max.x - min.x;
+  out.dimensionY = max.y - min.y;
+  out.dimensionZ = max.z - min.z;
+  const dimX = out.dimensionX ?? 0;
+  const dimY = out.dimensionY ?? 0;
+  const dimZ = out.dimensionZ ?? 0;
+  out.characteristicLength = Math.cbrt(dimX * dimY * dimZ) || 0;
+  out.footprintArea = dimX * dimY;
+  out.totalSurfaceArea = totalArea;
+  out.vertexCount = vertexCount;
+  out.faceCount = faceCount;
+  out.centroid = [
+    centroidSum.x / vertexCount,
+    centroidSum.y / vertexCount,
+    centroidSum.z / vertexCount,
+  ];
+  totalVolume = Math.abs(totalVolume);
+  if (totalVolume > 1e-20) {
+    out.enclosedVolume = totalVolume;
+    if (totalArea > 0) out.surfaceToVolumeRatio = totalArea / totalVolume;
+    if (totalArea > 0) {
+      const sph = (Math.PI ** (1 / 3)) * ((6 * totalVolume) ** (2 / 3)) / totalArea;
+      out.sphericity = Math.min(1, Math.max(0, sph));
+    }
+  }
+  if (dimY > 1e-10 && dimX > 1e-10) out.aspectRatioXy = dimX / dimY;
+  if (dimZ > 1e-10 && dimX > 1e-10) out.aspectRatioXz = dimX / dimZ;
+  if (dimZ > 1e-10 && dimY > 1e-10) out.aspectRatioYz = dimY / dimZ;
+  const maxExtent = Math.max(dimX, dimY, dimZ);
+  if (maxExtent > 1e-10 && totalArea > 0) {
+    out.slenderness = maxExtent / Math.cbrt(totalArea * maxExtent);
+  }
+  out.eulerCharacteristic = Math.round(vertexCount - (3 * faceCount) / 2 + faceCount);
+  return out;
+};
+
+// #endregion 🔖Geometric Insights
 // #region 🔖Validation
 
 // [🔖semio/js/semio.ts#Validation](semiorepo://section/semio/js/semio.ts/VALIDATION)

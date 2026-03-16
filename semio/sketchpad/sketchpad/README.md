@@ -484,7 +484,7 @@ Then update:
 Detail panel displays properties and controls for selected artifacts. Sections are registered via `addSection("details", { ... })` with `specificity` and `order` controlling priority and position. Higher specificity sections render above lower specificity ones.
 
 ### Components
-- `TreeSection` — collapsible section with title and actions
+- `Tree` with `sections` prop — collapsible section data with nested items
 - `TreeItem` — property row with label and control
 - `TreeContent` — nested content wrapper
 - `TreeRow` — simple text/element row

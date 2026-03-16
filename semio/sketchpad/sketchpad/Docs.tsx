@@ -953,6 +953,7 @@ export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsA
   }
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
     let origin: string | undefined;
+    let rest: any[];
 
     if (typeof args[0] === "string" && args[0].startsWith("semio.sketchpad.")) {
       origin = args[0];
@@ -1368,8 +1369,10 @@ const Workbench: FC = () => {
  * Overview holds the data fields for a Overview record.
  **/
 const Overview: FC = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const pathParts = location.pathname.replace(/^\//, "").split("/").filter(Boolean);
+  const section = pathParts[1] ?? "index";
   const pages = section === "index" ? docsRegistry.getAllPages() : docsRegistry.getPagesBySection(section);
   return (
     <TreeStateProvider>
@@ -1462,9 +1465,10 @@ const App: FC = () => {
       order: 100,
       content: () => (
         <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <Settings />
-          </Tree>
+          <Tree
+            className="min-w-0 overflow-hidden p-double"
+            sections={[{ id: "semio.sketchpad.app.docs.settings.content", label: null, content: <Settings /> }]}
+          />
         </TreeStateProvider>
       ),
     });
@@ -1600,7 +1604,7 @@ const App: FC = () => {
         {
           id: DocsAppWindowKind.Page,
           label: "page",
-          render: () => {
+          component: () => {
             if (loading) return <PageCanvas frontmatter={{ title: "Loading...", description: "" }} />;
             if (error || !mdxModule) return <PageCanvas frontmatter={{ title: "Error", description: error || "Content not found" }} />;
             return <PageCanvas MDXContent={mdxModule.default} frontmatter={mdxModule.frontmatter} />;

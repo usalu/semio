@@ -862,7 +862,9 @@ export function useTypeAppSelectedModelTags(): HookResult<string[]> {
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
+  const selector = useMemo(() => createTypeSelectedModelTagsSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const value = useSelector(actor, selector) ?? EMPTY_MODEL_TAG_ARRAY;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_MODEL_TAGS" as const, kitGuid, typeGuid, tags: [] as string[] }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
@@ -1957,6 +1959,8 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
   const [setCamera] = useTypeAppSetCamera();
   const [camera] = useTypeAppCamera();
   const [focusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
+  const [deselectAll] = useTypeAppDeselectAll();
+  const [clearFocus] = useTypeAppClearFocus();
 
   const onCameraChange = useCallback(
     (newCamera: Camera) => {
@@ -2403,7 +2407,7 @@ const ConnectorsListSectionForm: FC = () => {
                   <TreeItem
                     key={`connector-${index}`}
                     id="semio.sketchpad.app.type.connector"
-                    label={connector.port}
+                    label={typeof connector.port === "string" ? connector.port : connector.port?.guid || ""}
                     sortable={true}
                     sortableId={`connector-${index}`}
                     isDragHandle={true}
@@ -2427,7 +2431,7 @@ const ConnectorsListSectionForm: FC = () => {
                       <Input
                         lazy
                         id="semio.sketchpad.app.type.panel.details.section.connectors.port"
-                        value={connector.port || ""}
+                        value={typeof connector.port === "string" ? connector.port : connector.port?.guid || ""}
                         placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label"
                         onLazyChange={(value: string) => {
                           updatePort(connector.guid, { port: value });
@@ -2559,13 +2563,13 @@ const AuthorsSectionForm: FC = () => {
   const tooltip = useTooltip();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
-  const kit = useKit() as Kit;
+  const kit = useKit() as Kit | null;
 
   const updateAuthors = (authors: string[]) => {
     kitCommands?.updateType(type.guid, { authors: authors.map((a) => ({ guid: a })) });
   };
 
-  const hasAuthors = type.authors && type.authors.length > 0;
+  const hasAuthors = type?.authors && type.authors.length > 0;
 
   return (
     <>
@@ -2589,8 +2593,8 @@ const AuthorsSectionForm: FC = () => {
       >
         {hasAuthors && (
           <SortableTreeItems
-            items={(type.authors || []).map((authorId: AuthorId, index: number) => {
-              const author = kit.authors?.find((a: Author) => a.guid === authorId.guid);
+            items={(type.authors || []).filter((authorId): authorId is AuthorId => !!authorId?.guid).map((authorId: AuthorId, index: number) => {
+              const author = kit?.authors?.find((a: Author) => a?.guid === authorId.guid);
               return {
                 id: `author-${index}`,
                 index,
@@ -3363,7 +3367,7 @@ export const TypeConnectorSettings: FC = () => {
       <Toggle
         id="semio.sketchpad.app.type.tools.connector"
         pressed={activeTool === ToolKind.CONNECTOR}
-        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.CONNECTOR : ToolKind.SELECTION_NORMAL)}
+        onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)}
         icon={<ConnectorIcon className="size-tiny" />}
         text={connectorLabel}
       />
@@ -3595,9 +3599,10 @@ const App: FC = () => {
       order: 100,
       content: () => (
         <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <TypeSettingsContent />
-          </Tree>
+          <Tree
+            className="min-w-0 overflow-hidden p-double"
+            sections={[{ id: "semio.sketchpad.app.type.settings.content", label: null, content: <TypeSettingsContent /> }]}
+          />
         </TreeStateProvider>
       ),
     });
@@ -3784,6 +3789,9 @@ const TypeApp: FC = () => {
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
+  const commands = useTypeAppCommands();
+  const commandsRef = useRef(commands);
+  commandsRef.current = commands;
 
   useEffect(() => {
     if (appType !== "type") return;
@@ -3838,6 +3846,7 @@ const TypeApp: FC = () => {
         subToolId: ToolKind.CONNECTOR,
         subToolLabelId: "semio.sketchpad.toolbar.subtool.connector",
         subToolIcon: <ConnectorIcon className="size-tiny" />,
+        onActivate: () => commandsRef.current.setActiveTool(ToolKind.CONNECTOR),
       },
       content: <TypeConnectorSettings />,
     });
@@ -3923,6 +3932,8 @@ export const TypeAppFooter: FC = () => {
   const type = useType() as Type | undefined;
   const tags = useKitTags();
   const [selectedModelTags] = useTypeAppSelectedModelTags();
+  const [addModelTag] = useTypeAppAddModelTag();
+  const [removeModelTag] = useTypeAppRemoveModelTag();
 
   const addModelTagRef = useRef(addModelTag);
   const removeModelTagRef = useRef(removeModelTag);

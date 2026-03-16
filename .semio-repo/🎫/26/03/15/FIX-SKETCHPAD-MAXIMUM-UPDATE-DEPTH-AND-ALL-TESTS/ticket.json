@@ -1,0 +1,12 @@
+{
+  "title": "Fix Sketchpad Maximum Update Depth And All Tests",
+  "status": "open",
+  "description": "Fix the Maximum update depth exceeded infinite loop in Sketchpad shell components and get all 12 Playwright e2e tests passing without removing functionality",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/910"
+  },
+  "goal": "🎯sketchpad🎯tests",
+  "sessions": [
+    "⚪af8d111bce2a40c792a0d090f04d677b"
+  ]
+}

@@ -1,115 +1,5 @@
 # 💯 Requirements
 
-## [🧰semiorepo⌨️cli](semiorepo://p/i/semio-repo/b/b/cli)
-
-## hooks
-
-### git
-
-#### commit
-
-##### starting
-
-##### ended
-
-### agent
-
-#### started
-
-##### vscode-chat
-
-```mermaid
-sequenceDiagram
-    vscode->>+cli: SessionStart | SubagentStart
-
-```
-
-##### windsurf-chat
-
-##### cursor-chat
-
-##### claude-code
-
-##### droid
-
-#### ended
-
-##### vscode-chat
-
-##### windsurf-chat
-
-##### cursor-chat
-
-##### claude-code
-
-##### droid
-
-#### prompt
-
-##### submit
-
-###### vscode-chat
-
-###### windsurf-chat
-
-###### cursor-chat
-
-###### claude-code
-
-###### droid
-
-#### compacting
-
-##### vscode-chat
-
-##### windsurf-chat
-
-##### cursor-chat
-
-##### claude-code
-
-##### droid
-
-#### tool
-
-##### starting
-
-###### vscode-chat
-
-###### windsurf-chat
-
-###### cursor-chat
-
-###### claude-code
-
-###### droid
-
-##### ended
-
-###### vscode-chat
-
-###### windsurf-chat
-
-###### cursor-chat
-
-###### claude-code
-
-###### droid
-
-##### plan
-
-###### updating
-
-####### vscode-chat
-
-####### windsurf-chat
-
-####### cursor-chat
-
-####### claude-code
-
-####### droid
-
 ## [🧰semiorepo📚go](semiorepo://p/i/semio-repo/b/l/go)
 
 - Event kinds and payloads are the single source of truth for CLI→server communication.
@@ -247,17 +137,17 @@ Extension engine compatibility targets the lowest supported editor version so Cu
 
 Sidebar view registration keeps a single filter view and monorepo view instance wired to the shared filter state.
 
-## [🧰semiorepo⌨️cli💻main🔖summarizecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Summarize%20Command)
+## [🧰semiorepo⌨️cli💻main🔖utilities](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Utilities)
 
-summarizeCommand MUST return a summary for the given entity ID.
+parseFlexibleTime MUST perform the parseFlexibleTime operation.
 
-## [🧰semiorepo⌨️cli💻main🔖entityemojiscommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Entity%20Emojis%20Command)
+## [🧰semiorepo⌨️cli💻main🔖treelogic](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Tree%20Logic)
 
-AllEntityEmojis MUST return the complete set of entity-identifying emojis.
+buildGoalTree MUST perform the buildGoalTree operation.
 
-## [🧰semiorepo⌨️cli💻main🔖mermaid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Mermaid)
+## [🧰semiorepo⌨️cli💻main🔖treecache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Tree%20Cache)
 
-mermaidEscapeLabel MUST escape double quotes in mermaid labels.
+getTreeCachePath MUST perform the getTreeCachePath operation.
 
 ## [🧰semiorepo⌨️cli💻main🔖providerregistry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Provider%20Registry)
 
@@ -271,6 +161,18 @@ ParseCodeSections MUST return an error when the input is malformed.
 
 GetTicketsDir MUST return the stored value without modification.
 
+## [🧰semiorepo⌨️cli💻main🔖ticketfileresolution](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Ticket%20File%20Resolution)
+
+normalizeTicketFileInput MUST perform the normalizeTicketFileInput operation.
+
+## [🧰semiorepo⌨️cli💻main🔖graphqlexecutor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL%20Executor)
+
+parseFileListInput MUST perform the parseFileListInput operation.
+
+## [🧰semiorepo⌨️cli💻main🔖schemabuilder](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Schema%20Builder)
+
+buildSchema MUST perform the buildSchema operation.
+
 ## [🧰semiorepo⌨️cli💻main🔖queryresolvers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Query%20Resolvers)
 
 Query MUST execute the query and return matching results.
@@ -278,6 +180,30 @@ Query MUST execute the query and return matching results.
 ## [🧰semiorepo⌨️cli💻main🔖mutationresolvers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Mutation%20Resolvers)
 
 Mutation MUST complete the operation successfully.
+
+## [🧰semiorepo⌨️cli💻main🔖mcp](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Mcp)
+
+createMcpServer MUST perform the createMcpServer operation.
+
+## [🧰semiorepo⌨️cli💻main🔖args](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Args)
+
+getArgs MUST perform the getArgs operation.
+
+## [🧰semiorepo⌨️cli💻main🔖paths](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Paths)
+
+requireFilePath MUST perform the requireFilePath operation.
+
+## [🧰semiorepo⌨️cli💻main🔖graphql](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/GraphQL)
+
+jsonToYaml MUST perform the jsonToYaml operation.
+
+## [🧰semiorepo⌨️cli💻main🔖handlers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Handlers)
+
+renderPromptTemplate MUST perform the renderPromptTemplate operation.
+
+## [🧰semiorepo⌨️cli💻main🔖mcpresourceshandlers](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Mcp%20Resources%20Handlers)
+
+handleRepoResource MUST perform the handleRepoResource operation.
 
 ## [🧰semiorepo⌨️cli💻main🔖missingutilities](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Missing%20Utilities)
 
@@ -303,6 +229,14 @@ GetRepoGoalsDir MUST retrieve the requested value or return an error.
 
 GetTodos MUST retrieve the requested value or return an error.
 
+## [🧰semiorepo⌨️cli💻main🔖entityrendering](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Entity%20Rendering)
+
+extractCreatedStr MUST perform the extractCreatedStr operation.
+
+## [🧰semiorepo⌨️cli💻main🔖missinghookfunctions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Missing%20Hook%20Functions)
+
+normalizeTicketSessionID MUST perform the normalizeTicketSessionID operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️templatefuncmap](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/templateFuncMap)
 
 templateFuncMap MUST perform the templateFuncMap operation.
@@ -319,6 +253,30 @@ initTemplates MUST perform the initTemplates operation.
 
 renderTemplate MUST perform the renderTemplate operation.
 
+## [🧰semiorepo⌨️cli💻main🛠️init](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/init)
+
+init MUST perform the init operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildfolderroots](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildFolderRoots)
+
+buildFolderRoots MUST perform the buildFolderRoots operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️attachfilestofolders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/attachFilesToFolders)
+
+attachFilesToFolders MUST perform the attachFilesToFolders operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️clonetreenode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/cloneTreeNode)
+
+cloneTreeNode MUST perform the cloneTreeNode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildpolicyentitykindtree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildPolicyEntityKindTree)
+
+buildPolicyEntityKindTree MUST perform the buildPolicyEntityKindTree operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️inferentitykindfromstatute](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/inferEntityKindFromStatute)
+
+inferEntityKindFromStatute MUST perform the inferEntityKindFromStatute operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️newengine](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/NewEngine)
 
 NewEngine MUST initialize all required fields and return a valid Engine.
@@ -326,6 +284,22 @@ NewEngine MUST initialize all required fields and return a valid Engine.
 ## [🧰semiorepo⌨️cli💻main🛠️run](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Run)
 
 Run MUST emit start, result or error, and done events in order.
+
+## [🧰semiorepo⌨️cli💻main🛠️rungraphql](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runGraphQL)
+
+runGraphQL MUST perform the runGraphQL operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️emitstart](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/emitStart)
+
+emitStart MUST perform the emitStart operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️emiterror](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/emitError)
+
+emitError MUST perform the emitError operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️emitdone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/emitDone)
+
+emitDone MUST perform the emitDone operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️isjson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/IsJSON)
 
@@ -355,21 +329,225 @@ NewRootWithConfig MUST initialize all required fields and return a valid RootWit
 
 Execute MUST delegate to the root command and propagate errors.
 
-## [🧰semiorepo⌨️cli💻main🛠️summarizecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/summarizeCommand)
+## [🧰semiorepo⌨️cli💻main🛠️defaultenginefactory](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/defaultEngineFactory)
 
-summarizeCommand MUST return a summary for the given entity ID.
+defaultEngineFactory MUST perform the defaultEngineFactory operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️allentityemojis](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/AllEntityEmojis)
+## [🧰semiorepo⌨️cli💻main🛠️main](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/main)
 
-AllEntityEmojis MUST return the complete set of entity-identifying emojis.
+main MUST perform the main operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️entityemojiscommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/entityEmojisCommand)
+## [🧰semiorepo⌨️cli💻main🛠️synccommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/syncCommand)
 
-entityEmojisCommand MUST output all entity-identifying emojis.
+syncCommand MUST perform the syncCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️syncmanagementcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/syncManagementCommand)
+
+syncManagementCommand MUST perform the syncManagementCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️mcpcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mcpCommand)
+
+mcpCommand MUST perform the mcpCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️servemcp](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/serveMcp)
+
+serveMcp MUST perform the serveMcp operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️graphqlcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/graphqlCommand)
+
+graphqlCommand MUST perform the graphqlCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️auditcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/auditCommand)
+
+auditCommand MUST perform the auditCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️autofixcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/autofixCommand)
+
+autofixCommand MUST perform the autofixCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️searchcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/searchCommand)
+
+searchCommand MUST perform the searchCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️flattentreenodes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/flattenTreeNodes)
+
+flattenTreeNodes MUST perform the flattenTreeNodes operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️listcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/listCommand)
+
+listCommand MUST perform the listCommand operation.
+
+## [🧰semiorepo⌨️cli💻main✂️boolflagspec](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/f/boolFlagSpec)
+
+bindTreeFlags MUST perform the bindTreeFlags operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️bindboolflags](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bindBoolFlags)
+
+bindBoolFlags MUST register all boolean flags from the input specs.
+
+## [🧰semiorepo⌨️cli💻main🛠️bindonlynoflagpairs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bindOnlyNoFlagPairs)
+
+bindOnlyNoFlagPairs MUST register only/no boolean flag pairs from the input specs.
+
+## [🧰semiorepo⌨️cli💻main🛠️querycommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/queryCommand)
+
+queryCommand MUST perform the queryCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildtreefilterfromflags](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildTreeFilterFromFlags)
+
+buildTreeFilterFromFlags MUST perform the buildTreeFilterFromFlags operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️exportcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/exportCommand)
+
+exportCommand MUST perform the exportCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️detectbundlelanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/detectBundleLanguage)
+
+detectBundleLanguage MUST perform the detectBundleLanguage operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvetestscopes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveTestScopes)
+
+resolveTestScopes MUST perform the resolveTestScopes operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvetestscope](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveTestScope)
+
+resolveTestScope MUST perform the resolveTestScope operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️findbundlebyname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findBundleByName)
+
+findBundleByName MUST perform the findBundleByName operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvetestscopefrombundlesubpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveTestScopeFromBundleSubPath)
+
+resolveTestScopeFromBundleSubPath MUST perform the resolveTestScopeFromBundleSubPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvetestscopefromfilesubpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveTestScopeFromFileSubPath)
+
+resolveTestScopeFromFileSubPath MUST perform the resolveTestScopeFromFileSubPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runtestscope](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runTestScope)
+
+runTestScope MUST perform the runTestScope operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runalltests](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runAllTests)
+
+runAllTests MUST perform the runAllTests operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runtechnologytests](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runTechnologyTests)
+
+runTechnologyTests MUST perform the runTechnologyTests operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runbundletests](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runBundleTests)
+
+runBundleTests MUST perform the runBundleTests operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️uvexists](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/uvExists)
+
+uvExists MUST perform the uvExists operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️detectjstestrunner](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/detectJSTestRunner)
+
+detectJSTestRunner MUST perform the detectJSTestRunner operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runfiletests](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runFileTests)
+
+runFileTests MUST perform the runFileTests operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runsectiontests](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runSectionTests)
+
+runSectionTests MUST perform the runSectionTests operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️collectgotestsinsection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/collectGoTestsInSection)
+
+collectGoTestsInSection MUST perform the collectGoTestsInSection operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️rundefinitiontest](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runDefinitionTest)
+
+runDefinitionTest MUST perform the runDefinitionTest operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvetestfunctionname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveTestFunctionName)
+
+resolveTestFunctionName MUST perform the resolveTestFunctionName operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️unflattentestname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/unflattenTestName)
+
+unflattenTestName MUST perform the unflattenTestName operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runexternalcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runExternalCommand)
+
+runExternalCommand MUST perform the runExternalCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️testcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/testCommand)
+
+testCommand MUST perform the testCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️policycommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/policyCommand)
+
+policyCommand MUST perform the policyCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractllmfromargs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractLLMFromArgs)
+
+extractLLMFromArgs MUST perform the extractLLMFromArgs operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractclientfromargs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractClientFromArgs)
+
+extractClientFromArgs MUST perform the extractClientFromArgs operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️addllmflags](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/addLLMFlags)
+
+addLLMFlags MUST perform the addLLMFlags operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️addclientflags](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/addClientFlags)
+
+addClientFlags MUST perform the addClientFlags operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️draftcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/draftCommand)
+
+draftCommand MUST perform the draftCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️todocommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/todoCommand)
+
+todoCommand MUST perform the todoCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ticketcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ticketCommand)
+
+ticketCommand MUST perform the ticketCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️goalcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/goalCommand)
+
+goalCommand MUST perform the goalCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️interactioncommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/interactionCommand)
+
+interactionCommand MUST perform the interactionCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️statutecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/statuteCommand)
+
+statuteCommand MUST perform the statuteCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️checkpointcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/checkpointCommand)
+
+checkpointCommand MUST perform the checkpointCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️contributorcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/contributorCommand)
+
+contributorCommand MUST perform the contributorCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️technologycommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/technologyCommand)
+
+technologyCommand MUST perform the technologyCommand operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️extractmarkdownsection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ExtractMarkdownSection)
 
 ExtractMarkdownSection MUST perform the ExtractMarkdownSection operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️islicensetext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isLicenseText)
+
+isLicenseText MUST perform the isLicenseText operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isheadermetaline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isHeaderMetaLine)
+
+isHeaderMetaLine MUST perform the isHeaderMetaLine operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️extractfileheadersummary](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ExtractFileHeaderSummary)
 
@@ -387,6 +565,14 @@ ExtractSectionLeadComments MUST perform the ExtractSectionLeadComments operation
 
 ExtractDefinitionDocstring MUST perform the ExtractDefinitionDocstring operation.
 
+## [🧰semiorepo⌨️cli💻main🛠️findtechnologybyname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findTechnologyByName)
+
+findTechnologyByName MUST perform the findTechnologyByName operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️walktechnologyfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/walkTechnologyFiles)
+
+walkTechnologyFiles MUST perform the walkTechnologyFiles operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️generatetechnologyrequirements](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GenerateTechnologyRequirements)
 
 GenerateTechnologyRequirements MUST perform the GenerateTechnologyRequirements operation.
@@ -398,6 +584,66 @@ GenerateTechnologyDocs MUST perform the GenerateTechnologyDocs operation.
 ## [🧰semiorepo⌨️cli💻main🛠️generatetechnologytodos](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GenerateTechnologyTodos)
 
 GenerateTechnologyTodos MUST perform the GenerateTechnologyTodos operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️findfolderreadmes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findFolderReadmes)
+
+findFolderReadmes MUST perform the findFolderReadmes operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️bundlecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bundleCommand)
+
+bundleCommand MUST perform the bundleCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️foldercommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderCommand)
+
+folderCommand MUST perform the folderCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️bindstreamflags](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bindStreamFlags)
+
+bindStreamFlags MUST perform the bindStreamFlags operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️bindstatusflags](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bindStatusFlags)
+
+bindStatusFlags MUST perform the bindStatusFlags operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getstatusfilter](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getStatusFilter)
+
+getStatusFilter MUST perform the getStatusFilter operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getbundleswithopentickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getBundlesWithOpenTickets)
+
+getBundlesWithOpenTickets MUST perform the getBundlesWithOpenTickets operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getstreamoptions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getStreamOptions)
+
+getStreamOptions MUST perform the getStreamOptions operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️filecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fileCommand)
+
+fileCommand MUST perform the fileCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sectioncommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sectionCommand)
+
+sectionCommand MUST perform the sectionCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️definitioncommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/definitionCommand)
+
+definitionCommand MUST perform the definitionCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️movecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/moveCommand)
+
+moveCommand MUST perform the moveCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️integratecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/integrateCommand)
+
+integrateCommand MUST perform the integrateCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractCommand)
+
+extractCommand MUST perform the extractCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️parseflexibletime](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseFlexibleTime)
+
+parseFlexibleTime MUST perform the parseFlexibleTime operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️hasonlykinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/HasOnlyKinds)
 
@@ -423,6 +669,42 @@ MatchesStatus MUST operate on the TreeFilter receiver and return consistent resu
 
 MatchesContributor MUST operate on the TreeFilter receiver and return consistent results.
 
+## [🧰semiorepo⌨️cli💻main🛠️buildgoaltree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildGoalTree)
+
+buildGoalTree MUST perform the buildGoalTree operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️countopensubgoals](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/countOpenSubgoals)
+
+countOpenSubgoals MUST perform the countOpenSubgoals operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️countopentickets](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/countOpenTickets)
+
+countOpenTickets MUST perform the countOpenTickets operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️rendergoaltree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderGoalTree)
+
+renderGoalTree MUST perform the renderGoalTree operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️goalnodetodata](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/goalNodeToData)
+
+goalNodeToData MUST perform the goalNodeToData operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ticketnodetodata](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ticketNodeToData)
+
+ticketNodeToData MUST perform the ticketNodeToData operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️rendergoaltreenodes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderGoalTreeNodes)
+
+renderGoalTreeNodes MUST perform the renderGoalTreeNodes operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️rendersectiontree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderSectionTree)
+
+renderSectionTree MUST perform the renderSectionTree operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️renderticketlist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderTicketList)
+
+renderTicketList MUST perform the renderTicketList operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️buildmonorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildMonorepoTree)
 
 BuildMonorepoTree MUST assemble the monorepo tree from the available context data.
@@ -431,13 +713,61 @@ BuildMonorepoTree MUST assemble the monorepo tree from the available context dat
 
 PropagateParentIDs MUST perform the PropagateParentIDs operation.
 
+## [🧰semiorepo⌨️cli💻main🛠️buildsectiontreenode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildSectionTreeNode)
+
+buildSectionTreeNode MUST perform the buildSectionTreeNode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildstatutetree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildStatuteTree)
+
+buildStatuteTree MUST perform the buildStatuteTree operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildterritorytree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildTerritoryTree)
+
+buildTerritoryTree MUST perform the buildTerritoryTree operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sorttreechildren](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sortTreeChildren)
+
+sortTreeChildren MUST perform the sortTreeChildren operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️filtermonorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FilterMonorepoTree)
 
 FilterMonorepoTree MUST preserve the tree structure while removing non-matching nodes.
 
+## [🧰semiorepo⌨️cli💻main🛠️filternode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/filterNode)
+
+filterNode MUST perform the filterNode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️collapsefilteredkinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/collapseFilteredKinds)
+
+collapseFilteredKinds MUST perform the collapseFilteredKinds operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️searchmonorepotreewithcache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/searchMonorepoTreeWithCache)
+
+searchMonorepoTreeWithCache MUST perform the searchMonorepoTreeWithCache operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️searchmonorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/SearchMonorepoTree)
 
 SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
+
+## [🧰semiorepo⌨️cli💻main🛠️levenshtein](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/levenshtein)
+
+levenshtein MUST perform the levenshtein operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️fuzzycontains](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fuzzyContains)
+
+fuzzyContains MUST perform the fuzzyContains operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️searchtreeinmemory](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/searchTreeInMemory)
+
+searchTreeInMemory MUST perform the searchTreeInMemory operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️pruneunmatched](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/pruneUnmatched)
+
+pruneUnmatched MUST perform the pruneUnmatched operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️pruneunmatchedinner](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/pruneUnmatchedInner)
+
+pruneUnmatchedInner MUST perform the pruneUnmatchedInner operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️rendermonorepotree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/RenderMonorepoTree)
 
@@ -447,41 +777,157 @@ RenderMonorepoTree MUST produce a complete monorepo tree output.
 
 RenderMonorepoTreeMarkdown MUST produce a complete monorepo tree markdown output.
 
+## [🧰semiorepo⌨️cli💻main🛠️treenodekindtoentitykind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/treeNodeKindToEntityKind)
+
+treeNodeKindToEntityKind MUST perform the treeNodeKindToEntityKind operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️rendertreenodetext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderTreeNodeText)
+
+renderTreeNodeText MUST perform the renderTreeNodeText operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️rendertreenodemarkdown](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderTreeNodeMarkdown)
+
+renderTreeNodeMarkdown MUST perform the renderTreeNodeMarkdown operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getcachedir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getCacheDir)
+
+getCacheDir MUST perform the getCacheDir operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️computecompositefingerprint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/computeCompositeFingerprint)
+
+computeCompositeFingerprint MUST perform the computeCompositeFingerprint operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️hashsemiometastate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/hashSemioMetaState)
+
+hashSemioMetaState MUST produce a stable hash for semio metadata state changes.
+
+## [🧰semiorepo⌨️cli💻main🛠️treenodescopepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/treeNodeScopePath)
+
+treeNodeScopePath MUST perform the treeNodeScopePath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️hashstring](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/hashString)
+
+hashString MUST perform the hashString operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️loadcachemeta](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/loadCacheMeta)
+
+loadCacheMeta MUST perform the loadCacheMeta operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️savecachemeta](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/saveCacheMeta)
+
+saveCacheMeta MUST perform the saveCacheMeta operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getchangedpathsfromgit](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getChangedPathsFromGit)
+
+getChangedPathsFromGit MUST perform the getChangedPathsFromGit operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️expandpathswithancestors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/expandPathsWithAncestors)
+
+expandPathsWithAncestors MUST perform the expandPathsWithAncestors operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️pathtonodesmap](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/pathToNodesMap)
+
+pathToNodesMap MUST perform the pathToNodesMap operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ensurecacheindexed](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ensureCacheIndexed)
+
+ensureCacheIndexed MUST perform the ensureCacheIndexed operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️querycacheindex](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/queryCacheIndex)
+
+queryCacheIndex MUST perform the queryCacheIndex operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️gettreecachepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getTreeCachePath)
+
+getTreeCachePath MUST perform the getTreeCachePath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️gettreecachemetapath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getTreeCacheMetaPath)
+
+getTreeCacheMetaPath MUST perform the getTreeCacheMetaPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️savetreecache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/saveTreeCache)
+
+saveTreeCache MUST perform the saveTreeCache operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️loadtreecache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/loadTreeCache)
+
+loadTreeCache MUST perform the loadTreeCache operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️buildmonorepotreecached](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildMonorepoTreeCached)
 
 BuildMonorepoTreeCached MUST perform the BuildMonorepoTreeCached operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Render)
 
-Render MUST produce a complete output.
+Render MUST produce a complete  output.
+
+## [🧰semiorepo⌨️cli💻main🛠️colorize](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/colorize)
+
+colorize MUST perform the colorize operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Render)
 
-Render MUST produce a complete output.
+Render MUST produce a complete  output.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatResult)
+
+formatResult MUST perform the formatResult operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️render](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Render)
 
-Render MUST produce a complete output.
+Render MUST produce a complete  output.
 
-## [🧰semiorepo⌨️cli💻main🛠️mermaidescapelabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mermaidEscapeLabel)
+## [🧰semiorepo⌨️cli💻main🛠️formatmarkdownresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatMarkdownResult)
 
-mermaidEscapeLabel MUST escape double quotes in mermaid labels.
+formatMarkdownResult MUST perform the formatMarkdownResult operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️mermaidtechnologyemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mermaidTechnologyEmoji)
+## [🧰semiorepo⌨️cli💻main🛠️formatmarkdownfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatMarkdownFile)
 
-mermaidTechnologyEmoji MUST return the correct emoji for the technology kind.
+formatMarkdownFile MUST perform the formatMarkdownFile operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️mermaidbundleemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mermaidBundleEmoji)
+## [🧰semiorepo⌨️cli💻main🛠️renderstream](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderStream)
 
-mermaidBundleEmoji MUST return the correct emoji for the bundle kind.
+renderStream MUST perform the renderStream operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️mermaidfileemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mermaidFileEmoji)
+## [🧰semiorepo⌨️cli💻main🛠️rendereventstomarkdown](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderEventsToMarkdown)
 
-mermaidFileEmoji MUST return the correct emoji for the file kind.
+renderEventsToMarkdown MUST perform the renderEventsToMarkdown operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️mermaidcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mermaidCommand)
+## [🧰semiorepo⌨️cli💻main🛠️toolerrorresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/toolErrorResult)
 
-mermaidCommand MUST return a cobra.Command with loc-by subcommands for mermaid diagram generation.
+toolErrorResult MUST perform the toolErrorResult operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️toolerrormsg](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/toolErrorMsg)
+
+toolErrorMsg MUST perform the toolErrorMsg operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️toolresultfromevents](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/toolResultFromEvents)
+
+toolResultFromEvents MUST perform the toolResultFromEvents operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️toolresultfromtreelist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/toolResultFromTreeList)
+
+toolResultFromTreeList MUST perform the toolResultFromTreeList operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️toolresultfromtreerender](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/toolResultFromTreeRender)
+
+toolResultFromTreeRender MUST perform the toolResultFromTreeRender operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️rungraphql](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runGraphQL)
+
+runGraphQL MUST perform the runGraphQL operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️mermaidlocbytechnologiesbundlesfoldersfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/MermaidLocByTechnologiesBundlesFoldersFiles)
+
+MermaidLocByTechnologiesBundlesFoldersFiles MUST perform the MermaidLocByTechnologiesBundlesFoldersFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️mermaidlocbycontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/MermaidLocByContributors)
+
+MermaidLocByContributors MUST perform the MermaidLocByContributors operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️mermaidlocbylanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/MermaidLocByLanguage)
+
+MermaidLocByLanguage MUST perform the MermaidLocByLanguage operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️isvalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/IsValid)
 
@@ -582,6 +1028,18 @@ GetID MUST return the stored value without modification.
 ## [🧰semiorepo⌨️cli💻main🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GetURI)
 
 GetURI MUST return the stored value without modification.
+
+## [🧰semiorepo⌨️cli💻main🛠️normalizebundlelabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeBundleLabel)
+
+normalizeBundleLabel MUST perform the normalizeBundleLabel operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️normalizebundleid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeBundleID)
+
+normalizeBundleID MUST perform the normalizeBundleID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️bundlepathprefix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bundlePathPrefix)
+
+bundlePathPrefix MUST perform the bundlePathPrefix operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️isvalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/IsValid)
 
@@ -802,6 +1260,54 @@ GetID MUST return the stored value without modification.
 ## [🧰semiorepo⌨️cli💻main🛠️geturi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GetURI)
 
 GetURI MUST return the stored value without modification.
+
+## [🧰semiorepo⌨️cli💻main🛠️newticketdiffset](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/newTicketDiffSet)
+
+newTicketDiffSet MUST perform the newTicketDiffSet operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️newticketdiffs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/newTicketDiffs)
+
+newTicketDiffs MUST perform the newTicketDiffs operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️addticketdiffentry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/addTicketDiffEntry)
+
+addTicketDiffEntry MUST perform the addTicketDiffEntry operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️mergelinemetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mergeLineMetrics)
+
+mergeLineMetrics MUST perform the mergeLineMetrics operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️computelinemetricsfordiff](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/computeLineMetricsForDiff)
+
+computeLineMetricsForDiff MUST perform the computeLineMetricsForDiff operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildcodebasepathset](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildCodebasePathSet)
+
+buildCodebasePathSet MUST perform the buildCodebasePathSet operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildfolderlinetotals](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildFolderLineTotals)
+
+buildFolderLineTotals MUST perform the buildFolderLineTotals operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildbundlelinetotals](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildBundleLineTotals)
+
+buildBundleLineTotals MUST perform the buildBundleLineTotals operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractfileprefix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractFilePrefix)
+
+extractFilePrefix MUST perform the extractFilePrefix operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️reconcilerenamepairs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/reconcileRenamePairs)
+
+reconcileRenamePairs MUST perform the reconcileRenamePairs operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildsectiondiffs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildSectionDiffs)
+
+buildSectionDiffs MUST perform the buildSectionDiffs operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️builddefinitiondiffs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildDefinitionDiffs)
+
+buildDefinitionDiffs MUST perform the buildDefinitionDiffs operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️buildsemanticdiffs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildSemanticDiffs)
 
@@ -1459,6 +1965,14 @@ ParseSections MUST return an error when the input is malformed.
 
 ParseDefinitions MUST return an error when the input is malformed.
 
+## [🧰semiorepo⌨️cli💻main🛠️refinedefinitionkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/refineDefinitionKind)
+
+refineDefinitionKind MUST perform the refineDefinitionKind operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractdefinitionkeyword](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractDefinitionKeyword)
+
+extractDefinitionKeyword MUST perform the extractDefinitionKeyword operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️extraorphandefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ExtraOrphanDefinitions)
 
 ExtraOrphanDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
@@ -1671,6 +2185,10 @@ GetLanguageByName MUST return the stored value without modification.
 
 String MUST return the canonical string value.
 
+## [🧰semiorepo⌨️cli💻main🛠️parsegitauthor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseGitAuthor)
+
+parseGitAuthor MUST perform the parseGitAuthor operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️findandupdatecontributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FindAndUpdateContributor)
 
 FindAndUpdateContributor MUST return nil when no match is found.
@@ -1682,6 +2200,10 @@ GetSystem MUST return the stored value without modification.
 ## [🧰semiorepo⌨️cli💻main🛠️unmarshaljson](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/UnmarshalJSON)
 
 UnmarshalJSON MUST handle both legacy and current JSON layouts.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolveauthortoalias](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveAuthorToAlias)
+
+resolveAuthorToAlias MUST perform the resolveAuthorToAlias operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️listinteractions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ListInteractions)
 
@@ -1727,6 +2249,10 @@ GetURI MUST return the stored value without modification.
 
 AllKinds MUST include all statutes from the group and its children.
 
+## [🧰semiorepo⌨️cli💻main🛠️init](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/init)
+
+init MUST perform the init operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️getrootdir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GetRootDir)
 
 GetRootDir MUST return the stored value without modification.
@@ -1742,6 +2268,30 @@ GetRepoMetaDir MUST return the stored value without modification.
 ## [🧰semiorepo⌨️cli💻main🛠️getrepometapath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GetRepoMetaPath)
 
 GetRepoMetaPath MUST return the stored value without modification.
+
+## [🧰semiorepo⌨️cli💻main🛠️findreporoot](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findRepoRoot)
+
+findRepoRoot MUST perform the findRepoRoot operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getgitignore](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getGitignore)
+
+getGitignore MUST perform the getGitignore operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isgitignored](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isGitIgnored)
+
+isGitIgnored MUST perform the isGitIgnored operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isignoredbygitignore](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isIgnoredByGitignore)
+
+isIgnoredByGitignore MUST perform the isIgnoredByGitignore operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️policyappliestoscope](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/policyAppliesToScope)
+
+policyAppliesToScope MUST perform the policyAppliesToScope operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️issourcefile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isSourceFile)
+
+isSourceFile MUST perform the isSourceFile operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️normalizepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/NormalizePath)
 
@@ -1763,6 +2313,26 @@ ReadTextFile MUST return the full content from the given path.
 
 WriteTextFile MUST persist the content atomically.
 
+## [🧰semiorepo⌨️cli💻main🛠️runformattercommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runFormatterCommand)
+
+runFormatterCommand MUST perform the runFormatterCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatterplansforlanguage](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatterPlansForLanguage)
+
+formatterPlansForLanguage MUST perform the formatterPlansForLanguage operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isformatterplanavailable](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isFormatterPlanAvailable)
+
+isFormatterPlanAvailable MUST perform the isFormatterPlanAvailable operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️fallbackformattext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fallbackFormatText)
+
+fallbackFormatText MUST perform the fallbackFormatText operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runformatterafterautofix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runFormatterAfterAutofix)
+
+runFormatterAfterAutofix MUST perform the runFormatterAfterAutofix operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️writejsonfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/WriteJSONFile)
 
 WriteJSONFile MUST persist the content atomically.
@@ -1783,9 +2353,17 @@ IsDir MUST return true only when the condition is met.
 
 LoadGitignore MUST read from the configured storage path.
 
+## [🧰semiorepo⌨️cli💻main🛠️matchesignorepattern](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/matchesIgnorePattern)
+
+matchesIgnorePattern MUST perform the matchesIgnorePattern operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️simpleglob](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/SimpleGlob)
 
 SimpleGlob MUST complete the operation and return consistent results.
+
+## [🧰semiorepo⌨️cli💻main🛠️globbyextension](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/globByExtension)
+
+globByExtension MUST perform the globByExtension operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️formatsecond](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FormatSecond)
 
@@ -1927,6 +2505,58 @@ HydrateSectionsWithDefinitions MUST attach all matching child elements to their 
 
 NormalizeSectionPath MUST be idempotent for already-normalized values.
 
+## [🧰semiorepo⌨️cli💻main🛠️jsonlinestart](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonLineStart)
+
+jsonLineStart MUST perform the jsonLineStart operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonlineindent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonLineIndent)
+
+jsonLineIndent MUST perform the jsonLineIndent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsoniswhitespace](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonIsWhitespace)
+
+jsonIsWhitespace MUST perform the jsonIsWhitespace operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonfindmatching](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonFindMatching)
+
+jsonFindMatching MUST perform the jsonFindMatching operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonfindrootobjectrange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonFindRootObjectRange)
+
+jsonFindRootObjectRange MUST perform the jsonFindRootObjectRange operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonfindobjectrange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonFindObjectRange)
+
+jsonFindObjectRange MUST perform the jsonFindObjectRange operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonobjecthasentries](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonObjectHasEntries)
+
+jsonObjectHasEntries MUST perform the jsonObjectHasEntries operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonfindfirstkeyindent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonFindFirstKeyIndent)
+
+jsonFindFirstKeyIndent MUST perform the jsonFindFirstKeyIndent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsoninsertentry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonInsertEntry)
+
+jsonInsertEntry MUST perform the jsonInsertEntry operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonreplacekey](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonReplaceKey)
+
+jsonReplaceKey MUST perform the jsonReplaceKey operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonextractentry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonExtractEntry)
+
+jsonExtractEntry MUST perform the jsonExtractEntry operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonrenameentrykey](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonRenameEntryKey)
+
+jsonRenameEntryKey MUST perform the jsonRenameEntryKey operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsonreindententry](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonReindentEntry)
+
+jsonReindentEntry MUST perform the jsonReindentEntry operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️findsection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FindSection)
 
 FindSection MUST return nil when no match is found.
@@ -1979,9 +2609,21 @@ IsIgnored MUST return true only when the condition is met.
 
 CreateBreach MUST persist the new entity and return a reference to it.
 
+## [🧰semiorepo⌨️cli💻main🛠️extractfilefromscope](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractFileFromScope)
+
+extractFileFromScope MUST perform the extractFileFromScope operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️filterignored](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FilterIgnored)
 
 FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
+
+## [🧰semiorepo⌨️cli💻main🛠️isspectext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isSpecText)
+
+isSpecText MUST perform the isSpecText operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️hasimplementationsyntax](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/hasImplementationSyntax)
+
+hasImplementationSyntax MUST perform the hasImplementationSyntax operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️speclines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/SpecLines)
 
@@ -2011,6 +2653,10 @@ DefinitionDocLines MUST operate on the PolicyContext receiver and return consist
 
 IsDefinitionDocLine MUST return true only when the condition is met.
 
+## [🧰semiorepo⌨️cli💻main🛠️randomstring](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/randomString)
+
+randomString MUST perform the randomString operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️checkpolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/CheckPolicies)
 
 CheckPolicies MUST run all applicable policies and aggregate breachs.
@@ -2019,9 +2665,97 @@ CheckPolicies MUST run all applicable policies and aggregate breachs.
 
 CheckPoliciesWithContext MUST run all applicable policies and aggregate breachs.
 
+## [🧰semiorepo⌨️cli💻main🛠️matchesscope](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/matchesScope)
+
+matchesScope MUST perform the matchesScope operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️headerpolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/headerPolicy)
+
+headerPolicy MUST perform the headerPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️istestorbenchmarkfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isTestOrBenchmarkFile)
+
+isTestOrBenchmarkFile MUST perform the isTestOrBenchmarkFile operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isexporteddefinition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isExportedDefinition)
+
+isExportedDefinition MUST perform the isExportedDefinition operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️requiresdefinitionrequirements](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/requiresDefinitionRequirements)
+
+requiresDefinitionRequirements MUST perform the requiresDefinitionRequirements operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️parsesemioidentificationlink](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseSemioIdentificationLink)
+
+parseSemioIdentificationLink MUST perform the parseSemioIdentificationLink operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sectionpolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sectionPolicy)
+
+sectionPolicy MUST perform the sectionPolicy operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️intemplateraw](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/InTemplateRaw)
 
 InTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
+
+## [🧰semiorepo⌨️cli💻main🛠️commentpolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/commentPolicy)
+
+commentPolicy MUST perform the commentPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️truncate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/truncate)
+
+truncate MUST perform the truncate operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️requirementspolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/requirementsPolicy)
+
+requirementsPolicy MUST perform the requirementsPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️codepolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/codePolicy)
+
+codePolicy MUST perform the codePolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️emojipolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/emojiPolicy)
+
+emojiPolicy MUST perform the emojiPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️docspolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/docsPolicy)
+
+docsPolicy MUST perform the docsPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️devdocspolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/devDocsPolicy)
+
+devDocsPolicy MUST perform the devDocsPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sketchpadpolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sketchpadPolicy)
+
+sketchpadPolicy MUST perform the sketchpadPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️repopolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/repoPolicy)
+
+repoPolicy MUST perform the repoPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️systempolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/systemPolicy)
+
+systemPolicy MUST perform the systemPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️folderpolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderPolicy)
+
+folderPolicy MUST perform the folderPolicy operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isglobpattern](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isGlobPattern)
+
+isGlobPattern MUST perform the isGlobPattern operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️loadgodfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/loadGodfile)
+
+loadGodfile MUST perform the loadGodfile operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️godfilematchespath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/godfileMatchesPath)
+
+godfileMatchesPath MUST perform the godfileMatchesPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️filepolicy](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/filePolicy)
+
+filePolicy MUST perform the filePolicy operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️newcodebasecontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/NewCodebaseContext)
 
@@ -2075,9 +2809,17 @@ FolderURI MUST operate on the CodebaseContext receiver and return consistent res
 
 BuildCodebaseBundles MUST assemble the codebase bundles from the available context data.
 
+## [🧰semiorepo⌨️cli💻main🛠️countsections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/countSections)
+
+countSections MUST perform the countSections operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️buildcodebasefolders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildCodebaseFolders)
 
 BuildCodebaseFolders MUST assemble the codebase folders from the available context data.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractfilepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractFilePath)
+
+extractFilePath MUST perform the extractFilePath operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️buildcodebasefiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildCodebaseFiles)
 
@@ -2086,6 +2828,10 @@ BuildCodebaseFiles MUST assemble the codebase files from the available context d
 ## [🧰semiorepo⌨️cli💻main🛠️buildcodebasesections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildCodebaseSections)
 
 BuildCodebaseSections MUST assemble the codebase sections from the available context data.
+
+## [🧰semiorepo⌨️cli💻main🛠️addsections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/addSections)
+
+addSections MUST perform the addSections operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️buildcodebasedefinitions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildCodebaseDefinitions)
 
@@ -2135,6 +2881,10 @@ BuildCodebaseFilesForFiles MUST assemble the codebase files for files from the a
 
 BuildCodebaseSectionsForFiles MUST assemble the codebase sections for files from the available context data.
 
+## [🧰semiorepo⌨️cli💻main🛠️addsectionsforcontent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/addSectionsForContent)
+
+addSectionsForContent MUST perform the addSectionsForContent operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️buildcodebasedefinitionsforfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildCodebaseDefinitionsForFiles)
 
 BuildCodebaseDefinitionsForFiles MUST assemble the codebase definitions for files from the available context data.
@@ -2159,6 +2909,14 @@ GetImportantFilePath MUST return the stored value without modification.
 
 GetTicketJsonPath MUST return the stored value without modification.
 
+## [🧰semiorepo⌨️cli💻main🛠️normalizeticketkeyword](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeTicketKeyword)
+
+normalizeTicketKeyword MUST perform the normalizeTicketKeyword operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️hasticketkeyword](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/hasTicketKeyword)
+
+hasTicketKeyword MUST perform the hasTicketKeyword operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️findticketbyslug](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FindTicketBySlug)
 
 FindTicketBySlug MUST return nil when no match is found.
@@ -2166,6 +2924,14 @@ FindTicketBySlug MUST return nil when no match is found.
 ## [🧰semiorepo⌨️cli💻main🛠️latestticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/LatestTicket)
 
 LatestTicket MUST complete the operation and return consistent results.
+
+## [🧰semiorepo⌨️cli💻main🛠️shouldcontinueticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/shouldContinueTicket)
+
+shouldContinueTicket MUST perform the shouldContinueTicket operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️shouldskipticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/shouldSkipTicket)
+
+shouldSkipTicket MUST perform the shouldSkipTicket operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️openticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/OpenTicket)
 
@@ -2182,6 +2948,30 @@ UpdateTicketTitle MUST complete the operation and return consistent results.
 ## [🧰semiorepo⌨️cli💻main🛠️createticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/CreateTicket)
 
 CreateTicket MUST persist the new entity and return a reference to it.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghgetmilestonetitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghGetMilestoneTitle)
+
+ghGetMilestoneTitle MUST perform the ghGetMilestoneTitle operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghcreateissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghCreateIssue)
+
+ghCreateIssue MUST perform the ghCreateIssue operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildtechnologylinkargs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildTechnologyLinkArgs)
+
+buildTechnologyLinkArgs MUST perform the buildTechnologyLinkArgs operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghaddissuetoproject](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghAddIssueToProject)
+
+ghAddIssueToProject MUST perform the ghAddIssueToProject operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghgetcurrentuser](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghGetCurrentUser)
+
+ghGetCurrentUser MUST perform the ghGetCurrentUser operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghassignissuetocurrentuser](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghAssignIssueToCurrentUser)
+
+ghAssignIssueToCurrentUser MUST perform the ghAssignIssueToCurrentUser operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️countlines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/CountLines)
 
@@ -2203,9 +2993,105 @@ ReadTextFileAtCheckpoint MUST return the text file at checkpoint content or an e
 
 ListFilesAtCheckpoint MUST return all available files at checkpoint entries.
 
+## [🧰semiorepo⌨️cli💻main🛠️formatpromptheading](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatPromptHeading)
+
+formatPromptHeading MUST perform the formatPromptHeading operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatsummaryheading](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatSummaryHeading)
+
+formatSummaryHeading MUST perform the formatSummaryHeading operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️replacesectioncontent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/replaceSectionContent)
+
+replaceSectionContent MUST perform the replaceSectionContent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️normalizeticketfileinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeTicketFileInput)
+
+normalizeTicketFileInput MUST perform the normalizeTicketFileInput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️normalizeticketfileinputs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeTicketFileInputs)
+
+normalizeTicketFileInputs MUST perform the normalizeTicketFileInputs operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️filterticketworkspacefiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FilterTicketWorkspaceFiles)
 
 FilterTicketWorkspaceFiles MUST return only entries that match the filter criteria.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghaddcomment](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghAddComment)
+
+ghAddComment MUST perform the ghAddComment operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghaddlabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghAddLabels)
+
+ghAddLabels MUST perform the ghAddLabels operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghcloseissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghCloseIssue)
+
+ghCloseIssue MUST perform the ghCloseIssue operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghreopenissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghReopenIssue)
+
+ghReopenIssue MUST perform the ghReopenIssue operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghupdateissuetitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghUpdateIssueTitle)
+
+ghUpdateIssueTitle MUST perform the ghUpdateIssueTitle operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghupdateissuebody](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghUpdateIssueBody)
+
+ghUpdateIssueBody MUST perform the ghUpdateIssueBody operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghgetissuedetails](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghGetIssueDetails)
+
+ghGetIssueDetails MUST perform the ghGetIssueDetails operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghgetmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghGetMilestone)
+
+ghGetMilestone MUST perform the ghGetMilestone operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghfindmilestonebytitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghFindMilestoneByTitle)
+
+ghFindMilestoneByTitle MUST perform the ghFindMilestoneByTitle operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghupdateissuemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghUpdateIssueMilestone)
+
+ghUpdateIssueMilestone MUST perform the ghUpdateIssueMilestone operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghclearissuemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghClearIssueMilestone)
+
+ghClearIssueMilestone MUST perform the ghClearIssueMilestone operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghremovelabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghRemoveLabels)
+
+ghRemoveLabels MUST perform the ghRemoveLabels operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghlistissuesforlabelsync](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghListIssuesForLabelSync)
+
+ghListIssuesForLabelSync MUST perform the ghListIssuesForLabelSync operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghlistrepolabels](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghListRepoLabels)
+
+ghListRepoLabels MUST perform the ghListRepoLabels operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghcreaterepolabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghCreateRepoLabel)
+
+ghCreateRepoLabel MUST perform the ghCreateRepoLabel operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghdeleterepolabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghDeleteRepoLabel)
+
+ghDeleteRepoLabel MUST perform the ghDeleteRepoLabel operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghsyncrepolabelcatalog](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghSyncRepoLabelCatalog)
+
+ghSyncRepoLabelCatalog MUST perform the ghSyncRepoLabelCatalog operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractmilestonenumber](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractMilestoneNumber)
+
+extractMilestoneNumber MUST perform the extractMilestoneNumber operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghlistopenissueswithlabel](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghListOpenIssuesWithLabel)
+
+ghListOpenIssuesWithLabel MUST perform the ghListOpenIssuesWithLabel operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️saveticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/SaveTicket)
 
@@ -2223,6 +3109,10 @@ ListTickets MUST return all available tickets entries.
 
 StreamTickets MUST invoke the callback for each matching tickets entry.
 
+## [🧰semiorepo⌨️cli💻main🛠️ticketmatcheskinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ticketMatchesKinds)
+
+ticketMatchesKinds MUST perform the ticketMatchesKinds operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️invalidatetechnologycache](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/InvalidateTechnologyCache)
 
 InvalidateTechnologyCache MUST clear the cached state to force a reload.
@@ -2230,6 +3120,14 @@ InvalidateTechnologyCache MUST clear the cached state to force a reload.
 ## [🧰semiorepo⌨️cli💻main🛠️loadtechnologies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/LoadTechnologies)
 
 LoadTechnologies MUST return all matching technologies from the data source.
+
+## [🧰semiorepo⌨️cli💻main🛠️istechnologydir](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isTechnologyDir)
+
+isTechnologyDir MUST perform the isTechnologyDir operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️loadtechnologiesinternal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/loadTechnologiesInternal)
+
+loadTechnologiesInternal MUST perform the loadTechnologiesInternal operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️loadcheckpoints](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/LoadCheckpoints)
 
@@ -2247,9 +3145,53 @@ GetTechnologies MUST retrieve the requested value or return an error.
 
 StreamBundles MUST invoke the callback for each matching bundles entry.
 
+## [🧰semiorepo⌨️cli💻main🛠️bundlematcheskinds](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bundleMatchesKinds)
+
+bundleMatchesKinds MUST perform the bundleMatchesKinds operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️loadpackages](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/loadPackages)
+
+loadPackages MUST perform the loadPackages operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️streamtechnologies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/StreamTechnologies)
 
 StreamTechnologies MUST invoke the callback for each matching technologies entry.
+
+## [🧰semiorepo⌨️cli💻main🛠️runtechnologylist](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runTechnologyList)
+
+runTechnologyList MUST perform the runTechnologyList operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runtechnologytree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runTechnologyTree)
+
+runTechnologyTree MUST perform the runTechnologyTree operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️matchesfilter](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/matchesFilter)
+
+matchesFilter MUST perform the matchesFilter operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️matchesquery](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/matchesQuery)
+
+matchesQuery MUST perform the matchesQuery operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️blevefilteritems](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bleveFilterItems)
+
+bleveFilterItems MUST perform the bleveFilterItems operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️shouldincludekind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/shouldIncludeKind)
+
+shouldIncludeKind MUST perform the shouldIncludeKind operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️shouldincludebundlekind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/shouldIncludeBundleKind)
+
+shouldIncludeBundleKind MUST perform the shouldIncludeBundleKind operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️shouldincludefolderkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/shouldIncludeFolderKind)
+
+shouldIncludeFolderKind MUST perform the shouldIncludeFolderKind operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️shouldincludedefinitionkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/shouldIncludeDefinitionKind)
+
+shouldIncludeDefinitionKind MUST perform the shouldIncludeDefinitionKind operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️streamfolders](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/StreamFolders)
 
@@ -2258,6 +3200,18 @@ StreamFolders MUST invoke the callback for each matching folders entry.
 ## [🧰semiorepo⌨️cli💻main🛠️streamfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/StreamFiles)
 
 StreamFiles MUST invoke the callback for each matching files entry.
+
+## [🧰semiorepo⌨️cli💻main🛠️flattensections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/flattenSections)
+
+flattenSections MUST perform the flattenSections operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️flattensectionswithprefix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/flattenSectionsWithPrefix)
+
+flattenSectionsWithPrefix MUST perform the flattenSectionsWithPrefix operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️hydratesectionmetadata](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/hydrateSectionMetadata)
+
+hydrateSectionMetadata MUST perform the hydrateSectionMetadata operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️streamsections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/StreamSections)
 
@@ -2270,6 +3224,46 @@ StreamDefinitions MUST invoke the callback for each matching definitions entry.
 ## [🧰semiorepo⌨️cli💻main🛠️resolvebundleforpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ResolveBundleForPath)
 
 ResolveBundleForPath MUST return the resolved value or an error if unresolvable.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatlinemetrics](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatLineMetrics)
+
+formatLineMetrics MUST perform the formatLineMetrics operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatpathwithbundle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatPathWithBundle)
+
+formatPathWithBundle MUST perform the formatPathWithBundle operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatsemanticpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatSemanticPath)
+
+formatSemanticPath MUST perform the formatSemanticPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatdeletedpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatDeletedPath)
+
+formatDeletedPath MUST perform the formatDeletedPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️commonprefixlength](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/commonPrefixLength)
+
+commonPrefixLength MUST perform the commonPrefixLength operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️commonsuffixlength](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/commonSuffixLength)
+
+commonSuffixLength MUST perform the commonSuffixLength operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatrenamedelta](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatRenameDelta)
+
+formatRenameDelta MUST perform the formatRenameDelta operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatrenamepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatRenamePath)
+
+formatRenamePath MUST perform the formatRenamePath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️appenddifflines](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/appendDiffLines)
+
+appendDiffLines MUST perform the appendDiffLines operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️generatemetricscomment](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/generateMetricsComment)
+
+generateMetricsComment MUST perform the generateMetricsComment operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️finishticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FinishTicket)
 
@@ -2371,6 +3365,10 @@ ToolFolderList MUST complete the operation successfully.
 
 ToolFolderTree MUST complete the operation successfully.
 
+## [🧰semiorepo⌨️cli💻main🛠️printtree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/printTree)
+
+printTree MUST perform the printTree operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️toolfilecreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ToolFileCreate)
 
 ToolFileCreate MUST complete the operation successfully.
@@ -2402,6 +3400,10 @@ DefinitionHeaderId MUST return the definition artifact ID for a file path, secti
 ## [🧰semiorepo⌨️cli💻main🛠️definitionheaderuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/DefinitionHeaderUri)
 
 DefinitionHeaderUri MUST return the semiorepo URI for a definition.
+
+## [🧰semiorepo⌨️cli💻main🛠️generatefileheader](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/generateFileHeader)
+
+generateFileHeader MUST perform the generateFileHeader operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️toolfilemove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ToolFileMove)
 
@@ -2479,65 +3481,9 @@ ToolDefinitionTree MUST complete the operation successfully.
 
 ToolUpdateMetabolism MUST complete the operation successfully.
 
-## [🧰semiorepo⌨️cli💻main🛠️folderkindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderKindToInt)
-
-folderKindToInt MUST map FolderKind to the integer enum value for folder_kind table (id 0=organizational, 1=required).
-
-## [🧰semiorepo⌨️cli💻main🛠️technologykindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/technologyKindToInt)
-
-technologyKindToInt MUST map TechnologyKind to the integer enum value for technology_kind table (id 0=user, 1=infrastructure, 2=research).
-
-## [🧰semiorepo⌨️cli💻main🛠️bundlekindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bundleKindToInt)
-
-bundleKindToInt MUST map BundleKind to the integer enum value for bundle_kind table (id 0=library, 1=schema, 2=binary, 3=ui, 4=examples, 5=site, 6=assets).
-
-## [🧰semiorepo⌨️cli💻main🛠️filekindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fileKindToInt)
-
-fileKindToInt MUST map file kind string to the integer enum value for file_kind table (id 0=code, 1=lab, 2=script, 3=docs, 4=config, 5=binary, 6=template, 7=license).
-
-## [🧰semiorepo⌨️cli💻main🛠️definitionkindtoint](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/definitionKindToInt)
-
-definitionKindToInt MUST map DefinitionKind to the integer enum value for definition_kind table (id 0=implementation, 1=interface, 2=constant, 3=test).
-
-## [🧰semiorepo⌨️cli💻main🛠️seedkindtables](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/seedKindTables)
-
-seedKindTables MUST insert all enum rows into kind tables before any FK-referencing inserts.
-
 ## [🧰semiorepo⌨️cli💻main🛠️exporttosqlite](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ExportToSQLite)
 
 ExportToSQLite MUST write the complete output to the target using exactly the schema defined in semio-repo/sqlite/schema.sql.
-
-## [🧰semiorepo⌨️cli💻main🛠️exportfoldersnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/exportFoldersNew)
-
-exportFoldersNew MUST insert all folders with checkpoint_id, folder_kind_id, and a non-empty summary.
-
-## [🧰semiorepo⌨️cli💻main🛠️extractreadmesummary](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractReadmeSummary)
-
-extractReadmeSummary MUST extract the summary from a README.md file.
-
-## [🧰semiorepo⌨️cli💻main🛠️exporttechnologiesnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/exportTechnologiesNew)
-
-exportTechnologiesNew MUST insert all technologies using technology_kind_id FK reference.
-
-## [🧰semiorepo⌨️cli💻main🛠️exportbundlesnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/exportBundlesNew)
-
-exportBundlesNew MUST insert all bundles using bundle_kind_id FK reference.
-
-## [🧰semiorepo⌨️cli💻main🛠️exportfilesnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/exportFilesNew)
-
-exportFilesNew MUST insert all files with checkpoint_id, file_kind_id, extension, and a non-empty summary.
-
-## [🧰semiorepo⌨️cli💻main🛠️exportsectionsnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/exportSectionsNew)
-
-exportSectionsNew MUST insert all sections with integer IDs.
-
-## [🧰semiorepo⌨️cli💻main🛠️exportsectionsrecursivenew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/exportSectionsRecursiveNew)
-
-exportSectionsRecursiveNew MUST insert sections recursively with flat names.
-
-## [🧰semiorepo⌨️cli💻main🛠️exportdefinitionsnew](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/exportDefinitionsNew)
-
-exportDefinitionsNew MUST insert all definitions with integer IDs and code.
 
 ## [🧰semiorepo⌨️cli💻main🛠️toolexport](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ToolExport)
 
@@ -2550,6 +3496,10 @@ NewResolver MUST initialize all required fields and return a valid resolver.
 ## [🧰semiorepo⌨️cli💻main🛠️newresolverwithcontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/NewResolverWithContext)
 
 NewResolverWithContext MUST initialize all required fields and return a valid resolver with context.
+
+## [🧰semiorepo⌨️cli💻main🛠️context](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/context)
+
+context MUST perform the context operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️newdefaultcontext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/NewDefaultContext)
 
@@ -2619,6 +3569,14 @@ GetGoals MUST retrieve the requested value or return an error.
 
 GoalCreate MUST return a non-nil error when the operation fails.
 
+## [🧰semiorepo⌨️cli💻main🛠️getghrepourl](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getGhRepoUrl)
+
+getGhRepoUrl MUST perform the getGhRepoUrl operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️parsemilestonenumber](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseMilestoneNumber)
+
+parseMilestoneNumber MUST perform the parseMilestoneNumber operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️updategoaltitle](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/UpdateGoalTitle)
 
 UpdateGoalTitle MUST apply the update and return an error if the target is missing.
@@ -2674,6 +3632,26 @@ Analyze MUST return a non-nil error when the operation fails.
 ## [🧰semiorepo⌨️cli💻main🛠️fix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Fix)
 
 Fix MUST return a non-nil error when the operation fails.
+
+## [🧰semiorepo⌨️cli💻main🛠️replacementidentificationline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/replacementIdentificationLine)
+
+replacementIdentificationLine MUST perform the replacementIdentificationLine operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️inferdefinitionkindfromline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/inferDefinitionKindFromLine)
+
+inferDefinitionKindFromLine MUST perform the inferDefinitionKindFromLine operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️applyautofixes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/applyAutofixes)
+
+applyAutofixes MUST perform the applyAutofixes operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️applysystemautofixes](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/applySystemAutofixes)
+
+applySystemAutofixes MUST perform the applySystemAutofixes operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️findmatchingsectionstartname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findMatchingSectionStartName)
+
+findMatchingSectionStartName MUST perform the findMatchingSectionStartName operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️ticketopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/TicketOpen)
 
@@ -2738,6 +3716,14 @@ ContributorAdd MUST return a non-nil error when the operation fails.
 ## [🧰semiorepo⌨️cli💻main🛠️contributorremove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ContributorRemove)
 
 ContributorRemove MUST return a non-nil error when the operation fails.
+
+## [🧰semiorepo⌨️cli💻main🛠️updategoalmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/updateGoalMilestone)
+
+updateGoalMilestone MUST perform the updateGoalMilestone operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ensuregoalmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ensureGoalMilestone)
+
+ensureGoalMilestone MUST perform the ensureGoalMilestone operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️syncmanagement](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/SyncManagement)
 
@@ -2927,6 +3913,10 @@ TodoChange MUST return a non-nil error when the operation fails.
 
 TodoDelete MUST return a non-nil error when the operation fails.
 
+## [🧰semiorepo⌨️cli💻main🛠️parsefilelistinput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseFileListInput)
+
+parseFileListInput MUST perform the parseFileListInput operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️newexecutor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/NewExecutor)
 
 NewExecutor MUST initialize all required fields and return a valid executor.
@@ -2950,6 +3940,10 @@ ValidateQuery MUST return nil when valid and a descriptive error otherwise.
 ## [🧰semiorepo⌨️cli💻main🛠️getoperationtype](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GetOperationType)
 
 GetOperationType MUST retrieve the requested value or return an error.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildschema](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildSchema)
+
+buildSchema MUST perform the buildSchema operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️query](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Query)
 
@@ -3043,10 +4037,6 @@ Section MUST return a non-nil error when the operation fails.
 
 Definition MUST return a non-nil error when the operation fails.
 
-## [🧰semiorepo⌨️cli💻main🛠️contributor](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Contributor)
-
-Contributor MUST return a non-nil error when the operation fails.
-
 ## [🧰semiorepo⌨️cli💻main🛠️ticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Ticket)
 
 Ticket MUST return a non-nil error when the operation fails.
@@ -3086,10 +4076,6 @@ DraftDelete MUST return a non-nil error when the operation fails.
 ## [🧰semiorepo⌨️cli💻main🛠️ticketopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/TicketOpen)
 
 TicketOpen MUST return a non-nil error when the operation fails.
-
-## [🧰semiorepo⌨️cli💻main🛠️ticketclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/TicketClose)
-
-TicketClose MUST return a non-nil error when the operation fails.
 
 ## [🧰semiorepo⌨️cli💻main🛠️ticketreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/TicketReopen)
 
@@ -3189,7 +4175,7 @@ Extract MUST return the extracted component from the input.
 
 ## [🧰semiorepo⌨️cli💻main🛠️repo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Repo_)
 
-Repo\_ MUST complete the operation successfully.
+Repo_ MUST complete the operation successfully.
 
 ## [🧰semiorepo⌨️cli💻main🛠️bundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Bundles)
 
@@ -3235,9 +4221,325 @@ Statutes MUST return a non-nil error when the operation fails.
 
 Breachs MUST return a non-nil error when the operation fails.
 
+## [🧰semiorepo⌨️cli💻main🛠️createmcpserver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/createMcpServer)
+
+createMcpServer MUST perform the createMcpServer operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runmcpserver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runMcpServer)
+
+runMcpServer MUST perform the runMcpServer operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️textresult](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/textResult)
+
+textResult MUST perform the textResult operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️toolresulttomcp](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/toolResultToMCP)
+
+toolResultToMCP MUST perform the toolResultToMCP operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getargs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getArgs)
+
+getArgs MUST perform the getArgs operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getstringarg](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getStringArg)
+
+getStringArg MUST perform the getStringArg operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️requirestringarg](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/requireStringArg)
+
+requireStringArg MUST perform the requireStringArg operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getintarg](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getIntArg)
+
+getIntArg MUST perform the getIntArg operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️requireintarg](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/requireIntArg)
+
+requireIntArg MUST perform the requireIntArg operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getstringslicearg](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getStringSliceArg)
+
+getStringSliceArg MUST perform the getStringSliceArg operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getboolarg](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getBoolArg)
+
+getBoolArg MUST perform the getBoolArg operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️requirefilepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/requireFilePath)
+
+requireFilePath MUST perform the requireFilePath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️requirefolderpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/requireFolderPath)
+
+requireFolderPath MUST perform the requireFolderPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️requirefiletargetpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/requireFileTargetPath)
+
+requireFileTargetPath MUST perform the requireFileTargetPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️requirefoldertargetpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/requireFolderTargetPath)
+
+requireFolderTargetPath MUST perform the requireFolderTargetPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️jsontoyaml](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/jsonToYaml)
+
+jsonToYaml MUST perform the jsonToYaml operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️gql](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/gql)
+
+gql MUST perform the gql operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️renderprompttemplate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderPromptTemplate)
+
+renderPromptTemplate MUST perform the renderPromptTemplate operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handleenhanceprompt](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleEnhancePrompt)
+
+handleEnhancePrompt MUST perform the handleEnhancePrompt operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlerefactorprompt](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleRefactorPrompt)
+
+handleRefactorPrompt MUST perform the handleRefactorPrompt operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handletestprompt](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleTestPrompt)
+
+handleTestPrompt MUST perform the handleTestPrompt operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlecomplyprompt](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleComplyPrompt)
+
+handleComplyPrompt MUST perform the handleComplyPrompt operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️analyze](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/analyze)
+
+analyze MUST perform the analyze operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️fix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fix)
+
+fix MUST perform the fix operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️policycheck](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/policyCheck)
+
+policyCheck MUST perform the policyCheck operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ticketopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ticketOpen)
+
+ticketOpen MUST perform the ticketOpen operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ticketread](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ticketRead)
+
+ticketRead MUST perform the ticketRead operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ticketclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ticketClose)
+
+ticketClose MUST perform the ticketClose operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ticketreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ticketReopen)
+
+ticketReopen MUST perform the ticketReopen operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️draftdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/draftDelete)
+
+draftDelete MUST perform the draftDelete operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️todocreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/todoCreate)
+
+todoCreate MUST perform the todoCreate operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️tododelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/todoDelete)
+
+todoDelete MUST perform the todoDelete operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️goalopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/goalOpen)
+
+goalOpen MUST perform the goalOpen operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️goalclose](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/goalClose)
+
+goalClose MUST perform the goalClose operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️goalreopen](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/goalReopen)
+
+goalReopen MUST perform the goalReopen operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️export](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/export)
+
+export MUST perform the export operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️contributoradd](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/contributorAdd)
+
+contributorAdd MUST perform the contributorAdd operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️contributorremove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/contributorRemove)
+
+contributorRemove MUST perform the contributorRemove operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️foldercreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderCreate)
+
+folderCreate MUST perform the folderCreate operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️foldermove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderMove)
+
+folderMove MUST perform the folderMove operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️folderdelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderDelete)
+
+folderDelete MUST perform the folderDelete operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️filecreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fileCreate)
+
+fileCreate MUST perform the fileCreate operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️filemove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fileMove)
+
+fileMove MUST perform the fileMove operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️filedelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fileDelete)
+
+fileDelete MUST perform the fileDelete operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sectioncreate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sectionCreate)
+
+sectionCreate MUST perform the sectionCreate operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sectionmove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sectionMove)
+
+sectionMove MUST perform the sectionMove operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sectiondelete](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sectionDelete)
+
+sectionDelete MUST perform the sectionDelete operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sectionintegrate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sectionIntegrate)
+
+sectionIntegrate MUST perform the sectionIntegrate operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sectionextract](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sectionExtract)
+
+sectionExtract MUST perform the sectionExtract operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️artifactmove](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/artifactMove)
+
+artifactMove MUST perform the artifactMove operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️mcptree](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mcpTree)
+
+mcpTree MUST perform the mcpTree operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️graphqlquery](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/graphqlQuery)
+
+graphqlQuery MUST perform the graphqlQuery operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️navigatetool](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/navigateTool)
+
+navigateTool MUST perform the navigateTool operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlereporesource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleRepoResource)
+
+handleRepoResource MUST perform the handleRepoResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlebundlesresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleBundlesResource)
+
+handleBundlesResource MUST perform the handleBundlesResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlebundleresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleBundleResource)
+
+handleBundleResource MUST perform the handleBundleResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlefoldersresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleFoldersResource)
+
+handleFoldersResource MUST perform the handleFoldersResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlefolderresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleFolderResource)
+
+handleFolderResource MUST perform the handleFolderResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlefilesresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleFilesResource)
+
+handleFilesResource MUST perform the handleFilesResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlefileresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleFileResource)
+
+handleFileResource MUST perform the handleFileResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlesectionsresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleSectionsResource)
+
+handleSectionsResource MUST perform the handleSectionsResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlesectionresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleSectionResource)
+
+handleSectionResource MUST perform the handleSectionResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handledefinitionsresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleDefinitionsResource)
+
+handleDefinitionsResource MUST perform the handleDefinitionsResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handledefinitionresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleDefinitionResource)
+
+handleDefinitionResource MUST perform the handleDefinitionResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handleticketsresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleTicketsResource)
+
+handleTicketsResource MUST perform the handleTicketsResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handleticketresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleTicketResource)
+
+handleTicketResource MUST perform the handleTicketResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlegoalsresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleGoalsResource)
+
+handleGoalsResource MUST perform the handleGoalsResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlegoalresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleGoalResource)
+
+handleGoalResource MUST perform the handleGoalResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlepoliciesresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handlePoliciesResource)
+
+handlePoliciesResource MUST perform the handlePoliciesResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlepolicyresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handlePolicyResource)
+
+handlePolicyResource MUST perform the handlePolicyResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlestatutesresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleStatutesResource)
+
+handleStatutesResource MUST perform the handleStatutesResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlestatuteresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleStatuteResource)
+
+handleStatuteResource MUST perform the handleStatuteResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlecontributorsresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleContributorsResource)
+
+handleContributorsResource MUST perform the handleContributorsResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlecontributorresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleContributorResource)
+
+handleContributorResource MUST perform the handleContributorResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlecheckpointsresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleCheckpointsResource)
+
+handleCheckpointsResource MUST perform the handleCheckpointsResource operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️handlecheckpointresource](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/handleCheckpointResource)
+
+handleCheckpointResource MUST perform the handleCheckpointResource operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️scopetofiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ScopeToFiles)
 
 ScopeToFiles MUST return a non-nil error when the operation fails.
+
+## [🧰semiorepo⌨️cli💻main🛠️normalizerepopath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeRepoPath)
+
+normalizeRepoPath MUST perform the normalizeRepoPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isrepoexcludedpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isRepoExcludedPath)
+
+isRepoExcludedPath MUST perform the isRepoExcludedPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️filterconsideredfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/filterConsideredFiles)
+
+filterConsideredFiles MUST perform the filterConsideredFiles operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️computeticketfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ComputeTicketFiles)
 
@@ -3247,6 +4549,10 @@ ComputeTicketFiles MUST return the computed result deterministically.
 
 GetGitDiffLines MUST retrieve the requested value or return an error.
 
+## [🧰semiorepo⌨️cli💻main🛠️buildbreachid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildBreachID)
+
+buildBreachID MUST perform the buildBreachID operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️cancloseticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/CanCloseTicket)
 
 CanCloseTicket MUST return a deterministic boolean result.
@@ -3254,6 +4560,34 @@ CanCloseTicket MUST return a deterministic boolean result.
 ## [🧰semiorepo⌨️cli💻main🛠️getbundlebypath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GetBundleByPath)
 
 GetBundleByPath MUST retrieve the requested value or return an error.
+
+## [🧰semiorepo⌨️cli💻main🛠️findbundleinfo](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findBundleInfo)
+
+findBundleInfo MUST perform the findBundleInfo operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolveparentidfrompath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveParentIDFromPath)
+
+resolveParentIDFromPath MUST perform the resolveParentIDFromPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildfolderid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildFolderID)
+
+buildFolderID MUST perform the buildFolderID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildfileid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildFileID)
+
+buildFileID MUST perform the buildFileID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildsectionid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildSectionID)
+
+buildSectionID MUST perform the buildSectionID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️istestfunctionname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isTestFunctionName)
+
+isTestFunctionName MUST perform the isTestFunctionName operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️builddefinitionid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildDefinitionID)
+
+buildDefinitionID MUST perform the buildDefinitionID operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️guesssectionname](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GuessSectionName)
 
@@ -3266,6 +4600,34 @@ GetGitDiffSectionLineMetrics MUST retrieve the requested value or return an erro
 ## [🧰semiorepo⌨️cli💻main🛠️flattensections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FlattenSections)
 
 FlattenSections MUST return a single-level collection with all nested items.
+
+## [🧰semiorepo⌨️cli💻main🛠️computesectionlinemap](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/computeSectionLineMap)
+
+computeSectionLineMap MUST perform the computeSectionLineMap operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️computeaffectedsections](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/computeAffectedSections)
+
+computeAffectedSections MUST perform the computeAffectedSections operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️setdifference](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/setDifference)
+
+setDifference MUST perform the setDifference operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️setintersection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/setIntersection)
+
+setIntersection MUST perform the setIntersection operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️uniquestrings](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/uniqueStrings)
+
+uniqueStrings MUST perform the uniqueStrings operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️computelinesinrange](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/computeLinesInRange)
+
+computeLinesInRange MUST perform the computeLinesInRange operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️findsectionforline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findSectionForLine)
+
+findSectionForLine MUST perform the findSectionForLine operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️buildgitdiffargs](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BuildGitDiffArgs)
 
@@ -3290,6 +4652,10 @@ AnalyzeFile MUST return a non-nil error when the operation fails.
 ## [🧰semiorepo⌨️cli💻main🛠️parsecontributoridentity](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ParseContributorIdentity)
 
 ParseContributorIdentity MUST return the parsed result or an error for invalid input.
+
+## [🧰semiorepo⌨️cli💻main🛠️findsectionfordefinition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findSectionForDefinition)
+
+findSectionForDefinition MUST perform the findSectionForDefinition operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️listcontributors](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ListContributors)
 
@@ -3330,6 +4696,14 @@ RemoveContributor MUST remove the target and return an error on failure.
 ## [🧰semiorepo⌨️cli💻main🛠️getregisteredpolicies](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/GetRegisteredPolicies)
 
 GetRegisteredPolicies MUST retrieve the requested value or return an error.
+
+## [🧰semiorepo⌨️cli💻main🛠️filtergitignored](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/filterGitIgnored)
+
+filterGitIgnored MUST perform the filterGitIgnored operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️init](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/init)
+
+init MUST perform the init operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️bundles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/Bundles)
 
@@ -3391,6 +4765,18 @@ ToolPolicyCheck MUST complete the operation successfully.
 
 ToolPolicyBreachList MUST complete the operation successfully.
 
+## [🧰semiorepo⌨️cli💻main🛠️runbenchmark](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runBenchmark)
+
+runBenchmark MUST perform the runBenchmark operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️parsebenchmarkoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseBenchmarkOutput)
+
+parseBenchmarkOutput MUST perform the parseBenchmarkOutput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️writebenchmarkreport](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/writeBenchmarkReport)
+
+writeBenchmarkReport MUST perform the writeBenchmarkReport operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️hookeventkind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/HookEventKind)
 
 HookEventKind MUST perform the HookEventKind operation.
@@ -3403,53 +4789,189 @@ IsAllowed MUST perform the IsAllowed operation.
 
 GetMessage MUST perform the GetMessage operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️istoolblocked](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/IsToolBlocked)
+## [🧰semiorepo⌨️cli💻main🛠️extracttestendedfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractTestEndedFromInput)
 
-IsToolBlocked MUST perform the IsToolBlocked operation.
+extractTestEndedFromInput MUST perform the extractTestEndedFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️resolvehookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ResolveHookEvent)
+## [🧰semiorepo⌨️cli💻main🛠️extractbuildbundlesfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractBuildBundlesFromInput)
 
-ResolveHookEvent MUST perform the ResolveHookEvent operation.
+extractBuildBundlesFromInput MUST perform the extractBuildBundlesFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main✂️sessionmeta](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/f/SessionMeta)
+## [🧰semiorepo⌨️cli💻main🛠️extractbuildendedfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractBuildEndedFromInput)
 
-SessionMeta MUST persist id, uri, contributor, client, second, transcript, and plan for the session.
+extractBuildEndedFromInput MUST perform the extractBuildEndedFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️writesessionmeta](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/writeSessionMeta)
+## [🧰semiorepo⌨️cli💻main🛠️extractcodeeditfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractCodeEditFromInput)
 
-writeSessionMeta MUST persist session metadata without overwriting existing data.
+extractCodeEditFromInput MUST perform the extractCodeEditFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️appendsessionevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/appendSessionEvent)
+## [🧰semiorepo⌨️cli💻main🛠️extractterminalcommandfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractTerminalCommandFromInput)
 
-appendSessionEvent MUST append an event entry into session.json events for the session.
+extractTerminalCommandFromInput MUST perform the extractTerminalCommandFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️mergeticketagentplansteps](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mergeTicketAgentPlanSteps)
+## [🧰semiorepo⌨️cli💻main🛠️extractterminalendedfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractTerminalEndedFromInput)
 
-mergeTicketAgentPlanSteps MUST merge incoming plan steps with existing ones, preserving timestamps, marking removed non-completed steps as abandoned, and never abandoning completed steps.
+extractTerminalEndedFromInput MUST perform the extractTerminalEndedFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️updatesessionmetaplan](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/updateSessionMetaPlan)
+## [🧰semiorepo⌨️cli💻main🛠️extractchatfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractChatFromInput)
 
-updateSessionMetaPlan MUST read existing session.json, merge plan steps, and write back.
+extractChatFromInput MUST perform the extractChatFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️deriverepoopfrommcptool](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/deriveRepoOpFromMCPTool)
+## [🧰semiorepo⌨️cli💻main🛠️extractreportfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractReportFromInput)
 
-deriveRepoOpFromMCPTool MUST perform the deriveRepoOpFromMCPTool operation.
+extractReportFromInput MUST perform the extractReportFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️deriverepoopfromclicommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/deriveRepoOpFromCLICommand)
+## [🧰semiorepo⌨️cli💻main🛠️extractcheckpointmessagefrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractCheckpointMessageFromInput)
 
-deriveRepoOpFromCLICommand MUST perform the deriveRepoOpFromCLICommand operation.
+extractCheckpointMessageFromInput MUST perform the extractCheckpointMessageFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️logrepooperationhook](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/logRepoOperationHook)
+## [🧰semiorepo⌨️cli💻main🛠️extractcheckpointshafrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractCheckpointSHAFromInput)
 
-logRepoOperationHook MUST perform the logRepoOperationHook operation.
+extractCheckpointSHAFromInput MUST perform the extractCheckpointSHAFromInput operation.
 
-## [🧰semiorepo⌨️cli💻main🛠️runhook](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/RunHook)
+## [🧰semiorepo⌨️cli💻main🛠️normalizeparentsessionid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeParentSessionID)
 
-RunHook MUST perform the RunHook operation.
+normalizeParentSessionID MUST perform the normalizeParentSessionID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractparentfrommap](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractParentFromMap)
+
+extractParentFromMap MUST perform the extractParentFromMap operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractparentfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractParentFromInput)
+
+extractParentFromInput MUST perform the extractParentFromInput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolveparentsessionid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveParentSessionID)
+
+resolveParentSessionID MUST perform the resolveParentSessionID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extracttranscriptfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractTranscriptFromInput)
+
+extractTranscriptFromInput MUST perform the extractTranscriptFromInput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractmessageidfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractMessageIDFromInput)
+
+extractMessageIDFromInput MUST perform the extractMessageIDFromInput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractparentmessageidfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractParentMessageIDFromInput)
+
+extractParentMessageIDFromInput MUST perform the extractParentMessageIDFromInput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️normalizehookpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeHookPath)
+
+normalizeHookPath MUST perform the normalizeHookPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ensureticketagent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ensureTicketAgent)
+
+ensureTicketAgent MUST perform the ensureTicketAgent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️trackhookinopenticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/trackHookInOpenTicket)
+
+trackHookInOpenTicket MUST perform the trackHookInOpenTicket operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️computecheckpointdiff](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/computeCheckpointDiff)
+
+computeCheckpointDiff MUST perform the computeCheckpointDiff operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️storecheckpointdiff](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/storeCheckpointDiff)
+
+storeCheckpointDiff MUST perform the storeCheckpointDiff operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runcheckpointstartinghook](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runCheckpointStartingHook)
+
+runCheckpointStartingHook MUST perform the runCheckpointStartingHook operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️validatehookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ValidateHookEvent)
 
 ValidateHookEvent MUST perform the ValidateHookEvent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️hookeventstrings](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/hookEventStrings)
+
+hookEventStrings MUST perform the hookEventStrings operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️hookcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/hookCommand)
+
+hookCommand MUST perform the hookCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️configurecommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/configureCommand)
+
+configureCommand MUST perform the configureCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️configuregithooks](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/configureGitHooks)
+
+configureGitHooks MUST perform the configureGitHooks operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️unsetlocalcorehookspath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/unsetLocalCoreHooksPath)
+
+unsetLocalCoreHooksPath MUST perform the unsetLocalCoreHooksPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getclienthookmappings](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getClientHookMappings)
+
+getClientHookMappings MUST perform the getClientHookMappings operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️generatecopilotconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/generateCopilotConfig)
+
+generateCopilotConfig MUST perform the generateCopilotConfig operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️generatecursorconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/generateCursorConfig)
+
+generateCursorConfig MUST perform the generateCursorConfig operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️generatewindsurfconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/generateWindsurfConfig)
+
+generateWindsurfConfig MUST perform the generateWindsurfConfig operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️generateclaudecodeconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/generateClaudeCodeConfig)
+
+generateClaudeCodeConfig MUST perform the generateClaudeCodeConfig operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️generatedroidconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/generateDroidConfig)
+
+generateDroidConfig MUST perform the generateDroidConfig operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️init](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/init)
+
+init MUST perform the init operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runupdate](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runUpdate)
+
+runUpdate MUST perform the runUpdate operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️loadupdateconfig](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/loadUpdateConfig)
+
+loadUpdateConfig MUST perform the loadUpdateConfig operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️findcsprojfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findCsprojFiles)
+
+findCsprojFiles MUST perform the findCsprojFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runCommand)
+
+runCommand MUST perform the runCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runcommandquiet](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/runCommandQuiet)
+
+runCommandQuiet MUST perform the runCommandQuiet operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️updatenpm](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/updateNpm)
+
+updateNpm MUST perform the updateNpm operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️updatepython](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/updatePython)
+
+updatePython MUST perform the updatePython operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️updaterust](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/updateRust)
+
+updateRust MUST perform the updateRust operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️updatego](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/updateGo)
+
+updateGo MUST perform the updateGo operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️updatedotnet](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/updateDotNet)
+
+updateDotNet MUST perform the updateDotNet operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️movefile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/MoveFile)
 
@@ -3519,6 +5041,78 @@ StreamSessions MUST perform the StreamSessions operation.
 
 SaveGoal MUST persist the goal atomically to the data store.
 
+## [🧰semiorepo⌨️cli💻main🛠️ghcreatemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghCreateMilestone)
+
+ghCreateMilestone MUST perform the ghCreateMilestone operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghupdatemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghUpdateMilestone)
+
+ghUpdateMilestone MUST perform the ghUpdateMilestone operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghdeletemilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghDeleteMilestone)
+
+ghDeleteMilestone MUST perform the ghDeleteMilestone operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghcreategoalissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghCreateGoalIssue)
+
+ghCreateGoalIssue MUST perform the ghCreateGoalIssue operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghupdategoalissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghUpdateGoalIssue)
+
+ghUpdateGoalIssue MUST perform the ghUpdateGoalIssue operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️goaldepth](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/goalDepth)
+
+goalDepth MUST perform the goalDepth operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isrootgoal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isRootGoal)
+
+isRootGoal MUST perform the isRootGoal operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isfirstgengoal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isFirstGenGoal)
+
+isFirstGenGoal MUST perform the isFirstGenGoal operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️isdeepergoal](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/isDeeperGoal)
+
+isDeeperGoal MUST perform the isDeeperGoal operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getrootgoalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getRootGoalID)
+
+getRootGoalID MUST perform the getRootGoalID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getparentgoalid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getParentGoalID)
+
+getParentGoalID MUST perform the getParentGoalID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getrootgoalmilestone](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getRootGoalMilestone)
+
+getRootGoalMilestone MUST perform the getRootGoalMilestone operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getparentgoalissuenodeid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getParentGoalIssueNodeID)
+
+getParentGoalIssueNodeID MUST perform the getParentGoalIssueNodeID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghgetissuenodeid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghGetIssueNodeID)
+
+ghGetIssueNodeID MUST perform the ghGetIssueNodeID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghgetissueparenturl](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghGetIssueParentURL)
+
+ghGetIssueParentURL MUST perform the ghGetIssueParentURL operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghaddsubissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghAddSubIssue)
+
+ghAddSubIssue MUST perform the ghAddSubIssue operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️parseissuenumber](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseIssueNumber)
+
+parseIssueNumber MUST perform the parseIssueNumber operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️ghdeleteissue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ghDeleteIssue)
+
+ghDeleteIssue MUST perform the ghDeleteIssue operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️resolvecontributorcontributions](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ResolveContributorContributions)
 
 ResolveContributorContributions MUST return the resolved value or an error if unresolvable.
@@ -3555,21 +5149,133 @@ TodoDelete MUST return a non-nil error when the operation fails.
 
 TodoToTicket MUST return a non-nil error when the operation fails.
 
+## [🧰semiorepo⌨️cli💻main🛠️removelinefrommarkdown](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/removeLineFromMarkdown)
+
+removeLineFromMarkdown MUST perform the removeLineFromMarkdown operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️removelinefromfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/removeLineFromFile)
+
+removeLineFromFile MUST perform the removeLineFromFile operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️emojitext](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/emojiText)
+
+emojiText MUST perform the emojiText operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️string](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/String)
 
 String MUST return a non-empty string representation.
+
+## [🧰semiorepo⌨️cli💻main🛠️technologykindemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/technologyKindEmoji)
+
+technologyKindEmoji MUST perform the technologyKindEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️bundlekindemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bundleKindEmoji)
+
+bundleKindEmoji MUST perform the bundleKindEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️filekindemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/fileKindEmoji)
+
+fileKindEmoji MUST perform the fileKindEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️folderkindemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderKindEmoji)
+
+folderKindEmoji MUST perform the folderKindEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️definitionkindemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/definitionKindEmoji)
+
+definitionKindEmoji MUST perform the definitionKindEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️goalartifactid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/goalArtifactID)
+
+goalArtifactID MUST perform the goalArtifactID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️goalpathtosemioid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/goalPathToSemioID)
+
+goalPathToSemioID MUST perform the goalPathToSemioID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️semioidtogoalpath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/semioIDToGoalPath)
+
+semioIDToGoalPath MUST perform the semioIDToGoalPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️contributorgithubtosemioid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/contributorGithubToSemioID)
+
+contributorGithubToSemioID MUST perform the contributorGithubToSemioID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️semioidtocontributorgithub](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/semioIDToContributorGithub)
+
+semioIDToContributorGithub MUST perform the semioIDToContributorGithub operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️interactionkindemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/interactionKindEmoji)
+
+interactionKindEmoji MUST perform the interactionKindEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️interactionkindfromemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/interactionKindFromEmoji)
+
+interactionKindFromEmoji MUST perform the interactionKindFromEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️technologykindcodefromemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/technologyKindCodeFromEmoji)
+
+technologyKindCodeFromEmoji MUST perform the technologyKindCodeFromEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️bundlekindcodefromemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bundleKindCodeFromEmoji)
+
+bundleKindCodeFromEmoji MUST perform the bundleKindCodeFromEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️folderkindcodefromemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderKindCodeFromEmoji)
+
+folderKindCodeFromEmoji MUST perform the folderKindCodeFromEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️definitionkindcodefromemoji](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/definitionKindCodeFromEmoji)
+
+definitionKindCodeFromEmoji MUST perform the definitionKindCodeFromEmoji operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️technologykindcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/technologyKindCode)
+
+technologyKindCode MUST perform the technologyKindCode operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️technologykindtocode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/TechnologyKindToCode)
 
 TechnologyKindToCode MUST perform the TechnologyKindToCode operation.
 
+## [🧰semiorepo⌨️cli💻main🛠️bundlekindcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bundleKindCode)
+
+bundleKindCode MUST perform the bundleKindCode operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️bundlekindtocode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/BundleKindToCode)
 
 BundleKindToCode MUST perform the BundleKindToCode operation.
 
+## [🧰semiorepo⌨️cli💻main🛠️folderkindcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderKindCode)
+
+folderKindCode MUST perform the folderKindCode operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️folderkindtocode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/FolderKindToCode)
 
 FolderKindToCode MUST perform the FolderKindToCode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️definitionkindcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/definitionKindCode)
+
+definitionKindCode MUST perform the definitionKindCode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️interactionkindcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/interactionKindCode)
+
+interactionKindCode MUST perform the interactionKindCode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️containsurisection](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/containsUriSection)
+
+containsUriSection MUST perform the containsUriSection operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️containsuridefinition](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/containsUriDefinition)
+
+containsUriDefinition MUST perform the containsUriDefinition operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractfileandsectionsfromuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractFileAndSectionsFromUri)
+
+extractFileAndSectionsFromUri MUST perform the extractFileAndSectionsFromUri operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractfileanddefinitionfromuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractFileAndDefinitionFromUri)
+
+extractFileAndDefinitionFromUri MUST perform the extractFileAndDefinitionFromUri operation.
 
 ## [🧰semiorepo⌨️cli💻main🛠️parseartifactref](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ParseArtifactRef)
 
@@ -3615,6 +5321,30 @@ GetArtifactID MUST retrieve the requested value or return an error.
 
 GetArtifactURI MUST retrieve the requested value or return an error.
 
+## [🧰semiorepo⌨️cli💻main🛠️buildfolderurifrompath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildFolderUriFromPath)
+
+buildFolderUriFromPath MUST perform the buildFolderUriFromPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractpathfromfolderuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractPathFromFolderUri)
+
+extractPathFromFolderUri MUST perform the extractPathFromFolderUri operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractpathfromfileuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractPathFromFileUri)
+
+extractPathFromFileUri MUST perform the extractPathFromFileUri operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildfileurifrompath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildFileUriFromPath)
+
+buildFileUriFromPath MUST perform the buildFileUriFromPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️buildsectionurifrompath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildSectionUriFromPath)
+
+buildSectionUriFromPath MUST perform the buildSectionUriFromPath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️builddefinitionurifromidvalue](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/buildDefinitionUriFromIdValue)
+
+buildDefinitionUriFromIdValue MUST perform the buildDefinitionUriFromIdValue operation.
+
 ## [🧰semiorepo⌨️cli💻main🛠️idtouri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/IdToUri)
 
 IdToUri MUST complete the operation successfully.
@@ -3622,6 +5352,226 @@ IdToUri MUST complete the operation successfully.
 ## [🧰semiorepo⌨️cli💻main🛠️uritoid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/UriToId)
 
 UriToId MUST complete the operation successfully.
+
+## [🧰semiorepo⌨️cli💻main🛠️technologyemojifromcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/technologyEmojiFromCode)
+
+technologyEmojiFromCode MUST perform the technologyEmojiFromCode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️bundleemojifromcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/bundleEmojiFromCode)
+
+bundleEmojiFromCode MUST perform the bundleEmojiFromCode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️folderemojifromcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/folderEmojiFromCode)
+
+folderEmojiFromCode MUST perform the folderEmojiFromCode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️definitionemojifromcode](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/definitionEmojiFromCode)
+
+definitionEmojiFromCode MUST perform the definitionEmojiFromCode operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️urisubpathtoid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/uriSubPathToId)
+
+uriSubPathToId MUST perform the uriSubPathToId operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️urisubpathtoidfromfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/uriSubPathToIdFromFile)
+
+uriSubPathToIdFromFile MUST perform the uriSubPathToIdFromFile operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️parsesectionandrest](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseSectionAndRest)
+
+parseSectionAndRest MUST perform the parseSectionAndRest operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️splitsectionuri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/splitSectionUri)
+
+splitSectionUri MUST perform the splitSectionUri operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️parsegoaluri](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/parseGoalUri)
+
+parseGoalUri MUST perform the parseGoalUri operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractcreatedstr](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractCreatedStr)
+
+extractCreatedStr MUST perform the extractCreatedStr operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractfinishedstr](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractFinishedStr)
+
+extractFinishedStr MUST perform the extractFinishedStr operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sanitizeprop](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sanitizeProp)
+
+sanitizeProp MUST perform the sanitizeProp operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️sanitizesingleline](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/sanitizeSingleLine)
+
+sanitizeSingleLine MUST perform the sanitizeSingleLine operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️collectentityprops](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/collectEntityProps)
+
+collectEntityProps MUST perform the collectEntityProps operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️renderentityhuman](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderEntityHuman)
+
+renderEntityHuman MUST perform the renderEntityHuman operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️inferentitykind](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/inferEntityKind)
+
+inferEntityKind MUST perform the inferEntityKind operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️renderentitymarkdownlink](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderEntityMarkdownLink)
+
+renderEntityMarkdownLink MUST perform the renderEntityMarkdownLink operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️renderentitymarkdown](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/renderEntityMarkdown)
+
+renderEntityMarkdown MUST perform the renderEntityMarkdown operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️getterminalwidth](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/getTerminalWidth)
+
+getTerminalWidth MUST perform the getTerminalWidth operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️truncateansi](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/truncateANSI)
+
+truncateANSI MUST perform the truncateANSI operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️normalizeticketsessionid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/normalizeTicketSessionID)
+
+normalizeTicketSessionID MUST perform the normalizeTicketSessionID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️currentticketsessionid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/currentTicketSessionID)
+
+currentTicketSessionID MUST perform the currentTicketSessionID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvecopilotevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveCopilotEvent)
+
+resolveCopilotEvent MUST perform the resolveCopilotEvent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvecursorevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveCursorEvent)
+
+resolveCursorEvent MUST perform the resolveCursorEvent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvewindsurfevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveWindsurfEvent)
+
+resolveWindsurfEvent MUST perform the resolveWindsurfEvent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolveclaudecompatibleevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveClaudeCompatibleEvent)
+
+resolveClaudeCompatibleEvent MUST perform the resolveClaudeCompatibleEvent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️formatvscodehookoutput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/formatVSCodeHookOutput)
+
+formatVSCodeHookOutput MUST perform the formatVSCodeHookOutput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️vscodeeventfromhookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/vsCodeEventFromHookEvent)
+
+vsCodeEventFromHookEvent MUST perform the vsCodeEventFromHookEvent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvepretooluse](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolvePreToolUse)
+
+resolvePreToolUse MUST perform the resolvePreToolUse operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolveposttooluse](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolvePostToolUse)
+
+resolvePostToolUse MUST perform the resolvePostToolUse operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extracttestsegmentfromcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractTestSegmentFromCommand)
+
+extractTestSegmentFromCommand MUST perform the extractTestSegmentFromCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvegotestfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveGoTestFiles)
+
+resolveGoTestFiles MUST perform the resolveGoTestFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvecargotestfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveCargoTestFiles)
+
+resolveCargoTestFiles MUST perform the resolveCargoTestFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvedotnettestfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveDotnetTestFiles)
+
+resolveDotnetTestFiles MUST perform the resolveDotnetTestFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvepythontestfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolvePythonTestFiles)
+
+resolvePythonTestFiles MUST perform the resolvePythonTestFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvepytestfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolvePytestFiles)
+
+resolvePytestFiles MUST perform the resolvePytestFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️findjstestfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/findJSTestFiles)
+
+findJSTestFiles MUST perform the findJSTestFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolverspecfiles](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveRspecFiles)
+
+resolveRspecFiles MUST perform the resolveRspecFiles operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvepathtofileid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolvePathToFileID)
+
+resolvePathToFileID MUST perform the resolvePathToFileID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extracttoolinputmapfromdata](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractToolInputMapFromData)
+
+extractToolInputMapFromData MUST perform the extractToolInputMapFromData operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️lookslikefilepath](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/looksLikeFilePath)
+
+looksLikeFilePath MUST perform the looksLikeFilePath operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractcommandfromstdin](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractCommandFromStdin)
+
+extractCommandFromStdin MUST perform the extractCommandFromStdin operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractcommandcwdfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractCommandCwdFromInput)
+
+extractCommandCwdFromInput MUST perform the extractCommandCwdFromInput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvetestfilesfromcommand](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveTestFilesFromCommand)
+
+resolveTestFilesFromCommand MUST perform the resolveTestFilesFromCommand operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️generatehooksessionid](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/generateHookSessionID)
+
+generateHookSessionID MUST perform the generateHookSessionID operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvealltestdefinitionids](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/resolveAllTestDefinitionIDs)
+
+resolveAllTestDefinitionIDs MUST perform the resolveAllTestDefinitionIDs operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️latestopenticket](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/latestOpenTicket)
+
+latestOpenTicket MUST perform the latestOpenTicket operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractsessionidfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractSessionIDFromInput)
+
+extractSessionIDFromInput MUST perform the extractSessionIDFromInput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extractllmfrominput](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractLLMFromInput)
+
+extractLLMFromInput MUST perform the extractLLMFromInput operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extracttoolnamefromstdin](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractToolNameFromStdin)
+
+extractToolNameFromStdin MUST perform the extractToolNameFromStdin operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️extracthookeventnamefromstdin](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/extractHookEventNameFromStdin)
+
+extractHookEventNameFromStdin MUST perform the extractHookEventNameFromStdin operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️resolvehookevent](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/ResolveHookEvent)
+
+ResolveHookEvent MUST perform the ResolveHookEvent operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️runhook](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/RunHook)
+
+RunHook MUST perform the RunHook operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️mergeticketagentplansteps](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/mergeTicketAgentPlanSteps)
+
+mergeTicketAgentPlanSteps MUST perform the mergeTicketAgentPlanSteps operation.
+
+## [🧰semiorepo⌨️cli💻main🛠️appenduniquestring](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/d/i/appendUniqueString)
+
+appendUniqueString MUST perform the appendUniqueString operation.
 
 ## [🧰semiorepo📚go💻emit🛠️emit](semiorepo://p/i/semio-repo/b/l/go/f/emit.go/d/i/Emit)
 
@@ -4030,6 +5980,14 @@ getAuthorFromPayload MUST perform the getAuthorFromPayload operation.
 
 filterOut MUST perform the filterOut operation.
 
+## [🧰semiorepo⌨️server💻main🛠️newid](semiorepo://p/i/semio-repo/b/b/server/f/main.go/d/i/newID)
+
+newID MUST perform the newID operation.
+
+## [🧰semiorepo⌨️server💻main🛠️main](semiorepo://p/i/semio-repo/b/b/server/f/main.go/d/i/main)
+
+main MUST perform the main operation.
+
 ## [🧰semiorepo🖱️vscode💻codegen🔖configuration](semiorepo://p/i/semio-repo/b/u/vscode/f/codegen.ts/s/Configuration)
 
 Configuration MUST generate typed client code from the GraphQL schema.
@@ -4078,6 +6036,10 @@ Providers MUST implement VS Code tree data providers for filter, monorepo, and s
 ## [🧰semiorepo🖱️vscode💻extension🔖activation](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Activation)
 
 Activation MUST handle extension activation, command registration, and lifecycle management.
+
+## [🧰semiorepo🖱️vscode💻extension🪨outputchannel](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/d/c/outputChannel)
+
+Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
 
 ## [🧰semiorepo🖱️vscode💻queries🔖queries](semiorepo://p/i/semio-repo/b/u/vscode/f/queries.ts/s/Queries)
 

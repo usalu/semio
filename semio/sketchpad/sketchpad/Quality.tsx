@@ -2283,9 +2283,10 @@ const App: FC<AppProps> = () => {
       order: 100,
       content: () => (
         <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double">
-            <QualitySettingsContent />
-          </Tree>
+          <Tree
+            className="min-w-0 overflow-hidden p-double"
+            sections={[{ id: "semio.sketchpad.app.quality.settings.content", label: null, content: <QualitySettingsContent /> }]}
+          />
         </TreeStateProvider>
       ),
     });

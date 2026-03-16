@@ -425,6 +425,22 @@ public class Tests
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             Assert.Throws<ArgumentException>(() => Kit.ExportDesignModel(kit, design.Guid, ".invalid"));
         }
+
+        [Fact]
+        public void Nakagin_Capsule_Tower_Export_Scene_Graph_Report()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
+            Assert.NotNull(result);
+            Assert.True(result.Length > 0, "Result must not be empty");
+            var json = System.Text.Encoding.UTF8.GetString(result);
+            var parsed = JsonConvert.DeserializeObject(json);
+            Assert.NotNull(parsed);
+            var reportsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../reports/export-design-model"));
+            Directory.CreateDirectory(reportsDir);
+            System.IO.File.WriteAllBytes(Path.Combine(reportsDir, "net.gltf"), result);
+        }
     }
 
 }

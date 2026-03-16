@@ -11,6 +11,7 @@ old
 *.old
 *.exe
 generated
+reports
 #--------------------------------------SEMIOREPO--------------------------------------
 .semio-repo/cache
 SPECS.md
