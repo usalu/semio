@@ -9926,25 +9926,26 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 // [👤semio📚go💻semio🔖geometricinsights](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Geometric%20Insights)
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
-// GeometricInsights holds computed geometric KPIs for a GLB/GLTF model.
+// GeometricInsights holds computed geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
 // [👤semio📚go💻semio🔖geometricinsights🪨geometricinsights](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Geometric%20Insights/d/i/GeometricInsights)
 type GeometricInsights struct {
-	BoundingBoxMin     [3]float64
-	BoundingBoxMax     [3]float64
-	DimensionX         float64
-	DimensionY         float64
-	DimensionZ         float64
-	CharacteristicLen  float64
-	FootprintArea      float64
-	TotalSurfaceArea   float64
-	EnclosedVolume     float64
-	SurfaceToVolume    float64
-	AspectRatioXY      float64
-	AspectRatioXZ      float64
-	AspectRatioYZ      float64
-	Centroid           [3]float64
-	VertexCount        int
-	FaceCount          int
+	BoundingBoxMin      Point
+	BoundingBoxMax      Point
+	DimensionX          float64
+	DimensionY          float64
+	DimensionZ          float64
+	CharacteristicLen   float64
+	FootprintArea       float64
+	TotalSurfaceArea    float64
+	EnclosedVolume      float64
+	SurfaceToVolume     float64
+	AspectRatioXY       float64
+	AspectRatioXZ       float64
+	AspectRatioYZ       float64
+	Slenderness         float64
+	Centroid            Point
+	VertexCount         int
+	FaceCount           int
 	EulerCharacteristic int
 }
 
@@ -9955,34 +9956,51 @@ func geometricInsightsFromMeshData(md *exportMeshData) GeometricInsights {
 	}
 	pos := md.positionBytes
 	idx := md.indexBytes
-	out.BoundingBoxMin[0] = float64(md.posMin[0])
-	out.BoundingBoxMin[1] = float64(md.posMin[1])
-	out.BoundingBoxMin[2] = float64(md.posMin[2])
-	out.BoundingBoxMax[0] = float64(md.posMax[0])
-	out.BoundingBoxMax[1] = float64(md.posMax[1])
-	out.BoundingBoxMax[2] = float64(md.posMax[2])
-	out.DimensionX = float64(md.posMax[0] - md.posMin[0])
-	out.DimensionY = float64(md.posMax[1] - md.posMin[1])
-	out.DimensionZ = float64(md.posMax[2] - md.posMin[2])
-	vol := out.DimensionX * out.DimensionY * out.DimensionZ
-	if vol > 0 {
-		out.CharacteristicLen = math.Cbrt(vol)
+	// Semio coords: x = glb.x, y = -glb.x, z = glb.y
+	sxMin, syMin, szMin := math.MaxFloat64, math.MaxFloat64, math.MaxFloat64
+	sxMax, syMax, szMax := -math.MaxFloat64, -math.MaxFloat64, -math.MaxFloat64
+	var sumSx, sumSy, sumSz float64
+	for i := 0; i < md.vertexCount; i++ {
+		xg := math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12 : i*12+4]))
+		yg := math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12+4 : i*12+8]))
+		_ = math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12+8 : i*12+12]))
+		sx, sy, sz := float64(xg), float64(-xg), float64(yg)
+		if sx < sxMin {
+			sxMin = sx
+		}
+		if sx > sxMax {
+			sxMax = sx
+		}
+		if sy < syMin {
+			syMin = sy
+		}
+		if sy > syMax {
+			syMax = sy
+		}
+		if sz < szMin {
+			szMin = sz
+		}
+		if sz > szMax {
+			szMax = sz
+		}
+		sumSx += sx
+		sumSy += sy
+		sumSz += sz
 	}
-	out.FootprintArea = out.DimensionX * out.DimensionY
+	out.BoundingBoxMin = Point{X: sxMin, Y: syMin, Z: szMin}
+	out.BoundingBoxMax = Point{X: sxMax, Y: syMax, Z: szMax}
+	out.DimensionX = sxMax - sxMin
+	out.DimensionY = syMax - syMin
+	out.DimensionZ = szMax - szMin
+	volBox := out.DimensionX * out.DimensionY * out.DimensionZ
+	if volBox > 0 {
+		out.CharacteristicLen = math.Cbrt(volBox)
+	}
+	out.FootprintArea = out.DimensionX * out.DimensionZ
 	out.VertexCount = md.vertexCount
 	out.FaceCount = md.indexCount / 3
-	var sumX, sumY, sumZ float64
-	for i := 0; i < md.vertexCount; i++ {
-		x := math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12 : i*12+4]))
-		y := math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12+4 : i*12+8]))
-		z := math.Float32frombits(binary.LittleEndian.Uint32(pos[i*12+8 : i*12+12]))
-		sumX += float64(x)
-		sumY += float64(y)
-		sumZ += float64(z)
-	}
-	out.Centroid[0] = sumX / float64(md.vertexCount)
-	out.Centroid[1] = sumY / float64(md.vertexCount)
-	out.Centroid[2] = sumZ / float64(md.vertexCount)
+	n := float64(md.vertexCount)
+	out.Centroid = Point{X: sumSx / n, Y: sumSy / n, Z: sumSz / n}
 	var area float64
 	var volume float64
 	for i := 0; i+2 < md.indexCount; i += 3 {
@@ -10030,6 +10048,16 @@ func geometricInsightsFromMeshData(md *exportMeshData) GeometricInsights {
 	if out.DimensionZ > 1e-10 && out.DimensionY > 1e-10 {
 		out.AspectRatioYZ = out.DimensionY / out.DimensionZ
 	}
+	maxExt := out.DimensionX
+	if out.DimensionY > maxExt {
+		maxExt = out.DimensionY
+	}
+	if out.DimensionZ > maxExt {
+		maxExt = out.DimensionZ
+	}
+	if maxExt > 1e-10 && area > 0 {
+		out.Slenderness = maxExt / math.Cbrt(area*maxExt)
+	}
 	out.EulerCharacteristic = out.VertexCount - (3*out.FaceCount)/2 + out.FaceCount
 	return out
 }
@@ -10062,7 +10090,13 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 						if strings.HasPrefix(uri, "data:") {
 							idx := strings.Index(uri, ",")
 							if idx >= 0 {
-								binData, _ = base64.StdEncoding.DecodeString(uri[idx+1:])
+								b64 := strings.Map(func(r rune) rune {
+									if r == ' ' || r == '\n' || r == '\r' || r == '\t' {
+										return -1
+									}
+									return r
+								}, uri[idx+1:])
+								binData, _ = base64.StdEncoding.DecodeString(b64)
 							}
 						} else {
 							dir := filepath.Dir(v)
@@ -10091,7 +10125,13 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 					if uri, _ := buf["uri"].(string); uri != "" && strings.HasPrefix(uri, "data:") {
 						idx := strings.Index(uri, ",")
 						if idx >= 0 {
-							binData, _ = base64.StdEncoding.DecodeString(uri[idx+1:])
+							b64 := strings.Map(func(r rune) rune {
+								if r == ' ' || r == '\n' || r == '\r' || r == '\t' {
+									return -1
+								}
+								return r
+							}, uri[idx+1:])
+							binData, _ = base64.StdEncoding.DecodeString(b64)
 						}
 					}
 				}

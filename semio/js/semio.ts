@@ -10596,12 +10596,12 @@ export const exportDesignModel = async (
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
 /**
- * Geometric KPIs for a GLB/GLTF model. All length/area/volume units follow the model coordinate system.
+ * Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
  * [👤semio📚js💻semio🔖geometricinsights🪨geometricinsights](semiorepo://p/u/semio/b/l/js/f/semio.ts/s/Geometric%20Insights/d/i/GeometricInsights)
  */
 export interface GeometricInsights {
-  boundingBoxMin?: [number, number, number];
-  boundingBoxMax?: [number, number, number];
+  boundingBoxMin?: Point;
+  boundingBoxMax?: Point;
   dimensionX?: number;
   dimensionY?: number;
   dimensionZ?: number;
@@ -10616,8 +10616,8 @@ export interface GeometricInsights {
   aspectRatioXz?: number;
   aspectRatioYz?: number;
   slenderness?: number;
-  centroid?: [number, number, number];
-  principalAxes?: [[number, number, number], [number, number, number], [number, number, number]];
+  centroid?: Point;
+  principalAxes?: [Point, Point, Point];
   momentsOfInertia?: [number, number, number];
   vertexCount?: number;
   faceCount?: number;
@@ -10626,6 +10626,10 @@ export interface GeometricInsights {
   isWatertight?: boolean;
   convexHullVolume?: number;
   concavityIndex?: number;
+}
+
+function glbToSemioPoint(xg: number, yg: number, _zg: number): Point {
+  return { x: xg, y: -xg, z: yg };
 }
 
 function triangleArea(a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3): number {
@@ -10714,7 +10718,7 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
   let totalVolume = 0;
   let vertexCount = 0;
   let faceCount = 0;
-  const centroidSum = new THREE.Vector3(0, 0, 0);
+  const centroidSum = { x: 0, y: 0, z: 0 };
   const origin = new THREE.Vector3(0, 0, 0);
 
   for (const mesh of doc.getRoot().listMeshes()) {
@@ -10723,19 +10727,18 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
       if (!posAcc) continue;
       const posArray = posAcc.getArray();
       if (!posArray || posArray.length < 3) continue;
-      const min = posAcc.getMin([]) as number[];
-      const max = posAcc.getMax([]) as number[];
-      if (min && max && min.length >= 3 && max.length >= 3) {
-        box.expandByPoint(new THREE.Vector3(min[0], min[1], min[2]));
-        box.expandByPoint(new THREE.Vector3(max[0], max[1], max[2]));
-      }
       const count = posArray.length / 3;
-      vertexCount += count;
       for (let i = 0; i < count; i++) {
-        centroidSum.x += posArray[i * 3];
-        centroidSum.y += posArray[i * 3 + 1];
-        centroidSum.z += posArray[i * 3 + 2];
+        const xg = posArray[i * 3];
+        const yg = posArray[i * 3 + 1];
+        const zg = posArray[i * 3 + 2];
+        const p = glbToSemioPoint(xg, yg, zg);
+        box.expandByPoint(new THREE.Vector3(p.x, p.y, p.z));
+        centroidSum.x += p.x;
+        centroidSum.y += p.y;
+        centroidSum.z += p.z;
       }
+      vertexCount += count;
       const indices = prim.getIndices()?.getArray();
       const getVertex = (idx: number) => new THREE.Vector3(
         posArray[idx * 3],
@@ -10768,8 +10771,8 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
 
   const min = box.min;
   const max = box.max;
-  out.boundingBoxMin = [min.x, min.y, min.z];
-  out.boundingBoxMax = [max.x, max.y, max.z];
+  out.boundingBoxMin = { x: min.x, y: min.y, z: min.z };
+  out.boundingBoxMax = { x: max.x, y: max.y, z: max.z };
   out.dimensionX = max.x - min.x;
   out.dimensionY = max.y - min.y;
   out.dimensionZ = max.z - min.z;
@@ -10777,15 +10780,15 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
   const dimY = out.dimensionY ?? 0;
   const dimZ = out.dimensionZ ?? 0;
   out.characteristicLength = Math.cbrt(dimX * dimY * dimZ) || 0;
-  out.footprintArea = dimX * dimY;
+  out.footprintArea = dimX * dimZ;
   out.totalSurfaceArea = totalArea;
   out.vertexCount = vertexCount;
   out.faceCount = faceCount;
-  out.centroid = [
-    centroidSum.x / vertexCount,
-    centroidSum.y / vertexCount,
-    centroidSum.z / vertexCount,
-  ];
+  out.centroid = {
+    x: centroidSum.x / vertexCount,
+    y: centroidSum.y / vertexCount,
+    z: centroidSum.z / vertexCount,
+  };
   totalVolume = Math.abs(totalVolume);
   if (totalVolume > 1e-20) {
     out.enclosedVolume = totalVolume;

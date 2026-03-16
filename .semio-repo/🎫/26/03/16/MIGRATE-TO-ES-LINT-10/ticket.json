@@ -1,0 +1,13 @@
+{
+  "title": "Migrate To ESLint 10",
+  "status": "closed",
+  "description": "Migrate the repository to ESLint 10, update flat configuration and package metadata, and persist zero-touch developer configuration in existing repo settings so linting works without manual local setup.",
+  "summary": "Migrated the workspace to ESLint 10 by removing Nx ESLint inference, adding explicit lint targets for semio-elements/ui and semio-repo/vscode, installing the ESLint 10 flat-config toolchain at the root, persisting VS Code zero-touch flat-config settings, excluding generated codegen artifacts from authored-source linting, and validating the root lint flow successfully.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/933"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪e8866e2f0d134c03a9f044a696ecad9f"
+  ]
+}

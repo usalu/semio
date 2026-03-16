@@ -1,0 +1,23 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.starting",
+    "second": "2026-03-16T13:02:33Z",
+    "session": "aed3474a-69f8-41a5-945b-1a4460d05e4e"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "pre_write_code",
+      "trajectory_id": "aed3474a-69f8-41a5-945b-1a4460d05e4e",
+      "timestamp": "2026-03-16T13:02:33.588101174Z",
+      "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
+      "tool_info": {
+        "edits": null,
+        "file_path": "/workspaces/semio/semio-elements/ui/eslint.config.ts"
+      }
+    }
+  },
+  "response": {}
+}

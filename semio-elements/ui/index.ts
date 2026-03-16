@@ -24,8 +24,5 @@
 // Re-export all shared element primitives from the bundle root.
 
 export * from "./elements";
-export { default as eslintConfig } from "./eslint.config";
-export { default as postcssConfig } from "./postcss.config";
-export { default as tailwindConfig } from "./tailwind.config";
 
 // #endregion 🔖Exports

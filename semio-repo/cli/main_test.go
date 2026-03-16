@@ -41,6 +41,12 @@ import (
 )
 
 // #region 🔖Helpers
+
+func TestMain(m *testing.M) {
+	ensureExecutor()
+	os.Exit(m.Run())
+}
+
 func findTestRepoRoot(start string) string {
 	for _, candidate := range []string{start, func() string {
 		_, file, _, ok := runtime.Caller(0)
@@ -17949,8 +17955,41 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 
 	logFiles := getLogFiles(t, tmpDir)
 
-	if len(logFiles) < 16 {
-		t.Fatalf("expected at least 16 log files, got %d", len(logFiles))
+	// After removing redundant files, only session.json should exist
+	// All events use the same session_id, so they should be in one session.json file
+	sessionCount := 0
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			sessionCount++
+		}
+	}
+	if sessionCount != 1 {
+		t.Fatalf("expected exactly 1 session.json file for all events, got %d", sessionCount)
+	}
+
+	// Verify that all 16 events are in the session.json file
+	var sessionFile string
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			sessionFile = f
+			break
+		}
+	}
+
+	data, err := os.ReadFile(sessionFile)
+	if err != nil {
+		t.Fatalf("cannot read session.json: %v", err)
+	}
+
+	var meta SessionMeta
+	if err := json.Unmarshal(data, &meta); err != nil {
+		t.Fatalf("cannot unmarshal session.json: %v", err)
+	}
+
+	// Should have 18 events (1 prompt + 15 agent events + 2 derived events from search operations)
+	expectedEventCount := 18
+	if len(meta.Events) != expectedEventCount {
+		t.Fatalf("expected %d events in session.json, got %d", expectedEventCount, len(meta.Events))
 	}
 
 	ticket = readTicketJSON(t, ticketJSON)
@@ -17983,26 +18022,34 @@ func TestTrackHookSearchingPattern(t *testing.T) {
 	})
 
 	logFiles := getLogFiles(t, tmpDir)
-	if len(logFiles) < 2 {
-		t.Fatal("expected at least 2 log files (prompt + searching)")
+	// After removing redundant files, only session.json should exist
+	// Both events use the same session_id, so they should be in one session.json file
+	sessionCount := 0
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			sessionCount++
+		}
+	}
+	if sessionCount != 1 {
+		t.Fatalf("expected exactly 1 session.json file for search-session, got %d", sessionCount)
 	}
 
+	// Check that session.json contains the search event
 	found := false
-	for _, lf := range logFiles {
-		if strings.Contains(filepath.Base(lf), "agent-tool-search-starting") {
-			data, err := os.ReadFile(lf)
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			data, err := os.ReadFile(f)
 			if err != nil {
-				t.Fatalf("cannot read log file: %v", err)
+				t.Fatalf("cannot read session.json: %v", err)
 			}
-			if !strings.Contains(string(data), "findMe") {
-				t.Errorf("expected search query in log file, got: %s", string(data))
+			if strings.Contains(string(data), "findMe") {
+				found = true
+				break
 			}
-			found = true
-			break
 		}
 	}
 	if !found {
-		t.Error("expected agent-tool-search-starting log file")
+		t.Error("expected search query in session.json")
 	}
 }
 
@@ -18029,29 +18076,38 @@ func TestTrackHookBlockedEvent(t *testing.T) {
 	})
 
 	logFiles := getLogFiles(t, tmpDir)
-	if len(logFiles) < 2 {
-		t.Fatal("expected at least 2 log files (prompt + blocked tool)")
+	// After removing redundant files, only session.json should exist
+	// Both events use the same session_id, so they should be in one session.json file
+	sessionCount := 0
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			sessionCount++
+		}
 	}
+	if sessionCount != 1 {
+		t.Fatalf("expected exactly 1 session.json file for blocked-session, got %d", sessionCount)
+	}
+	// Check that session.json contains the blocked event
 	found := false
-	for _, lf := range logFiles {
-		if strings.Contains(filepath.Base(lf), "agent-tool-starting") {
-			data, err := os.ReadFile(lf)
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			data, err := os.ReadFile(f)
 			if err != nil {
-				t.Fatalf("cannot read log file: %v", err)
+				t.Fatalf("cannot read session.json: %v", err)
 			}
-			var entry HookLogEntry
-			if err := json.Unmarshal(data, &entry); err != nil {
-				t.Fatalf("invalid log JSON: %v", err)
+			var meta SessionMeta
+			if err := json.Unmarshal(data, &meta); err == nil {
+				for _, entry := range meta.Events {
+					if entry.Response != nil && entry.Response.Blocked != nil && *entry.Response.Blocked {
+						found = true
+						break
+					}
+				}
 			}
-			if entry.Response.Blocked == nil || !*entry.Response.Blocked {
-				t.Error("expected response.blocked=true for blocked tool")
-			}
-			found = true
-			break
 		}
 	}
 	if !found {
-		t.Error("expected agent-tool-starting log file for blocked event")
+		t.Error("expected blocked event in session.json")
 	}
 }
 
@@ -18083,25 +18139,48 @@ func TestTrackHookTerminalEvents(t *testing.T) {
 	})
 
 	logFiles := getLogFiles(t, tmpDir)
-	if len(logFiles) < 3 {
-		t.Fatalf("expected at least 3 log files (prompt + 2 terminal), got %d", len(logFiles))
+	// After removing redundant files, only session.json should exist
+	// All events use the same session_id, so they should be in one session.json file
+	sessionCount := 0
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			sessionCount++
+		}
 	}
+	if sessionCount != 1 {
+		t.Fatalf("expected exactly 1 session.json file for terminal-session, got %d", sessionCount)
+	}
+	// Check that session.json contains terminal events
 	startFound := false
 	endFound := false
-	for _, lf := range logFiles {
-		base := filepath.Base(lf)
-		if strings.Contains(base, "agent-tool-terminal-starting") {
-			startFound = true
-		}
-		if strings.Contains(base, "agent-tool-terminal-ended") {
-			endFound = true
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			data, err := os.ReadFile(f)
+			if err != nil {
+				t.Fatalf("cannot read session.json: %v", err)
+			}
+			var meta SessionMeta
+			if err := json.Unmarshal(data, &meta); err == nil {
+				for _, entry := range meta.Events {
+					var evt map[string]interface{}
+					if err := json.Unmarshal(entry.Event, &evt); err == nil {
+						if kind, ok := evt["kind"].(string); ok {
+							if kind == "agent.tool.terminal.starting" {
+								startFound = true
+							} else if kind == "agent.tool.terminal.ended" {
+								endFound = true
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	if !startFound {
-		t.Error("expected agent-tool-terminal-starting log file")
+		t.Error("expected agent-tool-terminal-starting event in session.json")
 	}
 	if !endFound {
-		t.Error("expected agent-tool-terminal-ended log file")
+		t.Error("expected agent-tool-terminal-ended event in session.json")
 	}
 }
 
@@ -18154,30 +18233,41 @@ func TestTrackHookCodeEditedLogsToFile(t *testing.T) {
 	})
 
 	logFiles := getLogFiles(t, tmpDir)
+	// After removing redundant files, only session.json should exist
+	// Both events use the same session_id, so they should be in one session.json file
+	sessionCount := 0
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			sessionCount++
+		}
+	}
+	if sessionCount != 1 {
+		t.Fatalf("expected exactly 1 session.json file for def-id-session, got %d", sessionCount)
+	}
+
 	found := false
-	for _, lf := range logFiles {
-		if strings.Contains(filepath.Base(lf), "agent-tool-code-edit-ended") {
-			data, err := os.ReadFile(lf)
+	for _, f := range logFiles {
+		if strings.HasSuffix(f, "session.json") {
+			data, err := os.ReadFile(f)
 			if err != nil {
-				t.Fatalf("cannot read log file: %v", err)
+				t.Fatalf("cannot read session.json: %v", err)
 			}
-			var entry HookLogEntry
-			if err := json.Unmarshal(data, &entry); err != nil {
-				t.Fatalf("invalid log JSON: %v", err)
+			var meta SessionMeta
+			if err := json.Unmarshal(data, &meta); err == nil {
+				for _, entry := range meta.Events {
+					var evt map[string]interface{}
+					if err := json.Unmarshal(entry.Event, &evt); err == nil {
+						if evt["kind"] == "agent.tool.code.edit.ended" {
+							found = true
+							break
+						}
+					}
+				}
 			}
-			var evt map[string]interface{}
-			if err := json.Unmarshal(entry.Event, &evt); err != nil {
-				t.Fatalf("cannot unmarshal event: %v", err)
-			}
-			if evt["kind"] != "agent.tool.code.edit.ended" {
-				t.Errorf("expected kind agent.tool.code.edit.ended, got: %v", evt["kind"])
-			}
-			found = true
-			break
 		}
 	}
 	if !found {
-		t.Error("expected agent-tool-code-edit-ended log file")
+		t.Error("expected agent-tool-code-edit-ended event in session.json")
 	}
 }
 
@@ -19880,6 +19970,59 @@ func TestPopulateEventDataCodeEdited(t *testing.T) {
 	}
 	if res.New != "after" {
 		t.Errorf("expected new=after, got %s", res.New)
+	}
+}
+
+func TestCodeEditEndedRunsFormatter(t *testing.T) {
+	// Track whether the formatter was invoked.
+	var formatterCalled bool
+	var formatterBinary string
+	origRun := formatterCommandRun
+	formatterCommandRun = func(binary string, args []string, workDir string) error {
+		formatterCalled = true
+		formatterBinary = binary
+		return nil
+	}
+	defer func() { formatterCommandRun = origRun }()
+
+	// Stub binary lookup so the formatter plan is considered available.
+	origLookup := formatterBinaryLookup
+	formatterBinaryLookup = func(file string) (string, error) { return "/usr/bin/" + file, nil }
+	defer func() { formatterBinaryLookup = origLookup }()
+
+	tmpDir := t.TempDir()
+	// Create requirement files so the plan is available (prettier needs .prettierrc.json and node_modules/.bin/prettier).
+	prettierBin := filepath.Join(tmpDir, "node_modules", ".bin")
+	_ = os.MkdirAll(prettierBin, 0o755)
+	_ = os.WriteFile(filepath.Join(prettierBin, "prettier"), []byte("#!/bin/sh\n"), 0o755)
+	_ = os.WriteFile(filepath.Join(tmpDir, ".prettierrc.json"), []byte("{}"), 0o644)
+
+	origRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = origRoot }()
+
+	relPath := "src/example.ts"
+	payload := json.RawMessage(`{"sessionId":"sess-fmt","tool_input":{"filePath":"` + relPath + `","oldString":"old","newString":"new"}}`)
+	hctx := HookContext{
+		Event:    HookAgentToolCodeEditEnded,
+		Client:   "claude-code",
+		Second:   "2026-03-16T12:00:00Z",
+		RepoRoot: tmpDir,
+		Input:    payload,
+	}
+	result := dispatchHook(hctx)
+	res, ok := result.(HookResultAgentToolCodeEditEnded)
+	if !ok {
+		t.Fatalf("expected HookResultAgentToolCodeEditEnded, got %T", result)
+	}
+	if res.Path != relPath {
+		t.Errorf("expected path=%s, got %s", relPath, res.Path)
+	}
+	if !formatterCalled {
+		t.Error("expected formatter to be called on code edit ended, but it was not")
+	}
+	if !strings.Contains(formatterBinary, "prettier") {
+		t.Errorf("expected prettier formatter for .ts file, got %s", formatterBinary)
 	}
 }
 

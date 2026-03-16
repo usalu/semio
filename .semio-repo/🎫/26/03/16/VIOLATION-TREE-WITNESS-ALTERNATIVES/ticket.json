@@ -1,0 +1,12 @@
+{
+  "title": "Violation Tree Witness Alternatives",
+  "status": "open",
+  "description": "The violation tree should use tree alternatives (branch navigation \u003c 1/N \u003e) when having multiple witnesses under a parent node, instead of showing all witnesses as flat children.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/950"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪0e0dcde5320342f096330fa33c9d8f79"
+  ]
+}

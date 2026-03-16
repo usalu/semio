@@ -18,6 +18,7 @@
 
 using Semio;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Xunit;
 using System;
 using System.IO;
@@ -386,6 +387,9 @@ public class Tests
 
     public class GetGeometricInsightsForModel
     {
+        static double Round6(double x) => Math.Round(x, 6);
+        static object Pt(Point p) => p == null ? null : new { x = Round6(p.X), y = Round6(p.Y), z = Round6(p.Z) };
+
         [Fact]
         public void Nakagin_Capsule_Tower_Gltf_Returns_Insights()
         {
@@ -393,15 +397,38 @@ public class Tests
             if (!System.IO.File.Exists(path))
                 return;
             var insights = Kit.GetGeometricInsightsForModel(path);
-            Assert.NotNull(insights.BoundingBoxMin);
-            Assert.NotNull(insights.BoundingBoxMax);
-            Assert.True(insights.DimensionX >= 0);
-            Assert.True(insights.DimensionY >= 0);
-            Assert.True(insights.DimensionZ >= 0);
-            Assert.True(insights.VertexCount > 0);
-            Assert.True(insights.FaceCount > 0);
-            Assert.True(insights.TotalSurfaceArea >= 0);
-            Assert.NotNull(insights.Centroid);
+
+            var reportsDir = Path.Combine("..", "..", "reports", "model-kpi");
+            Directory.CreateDirectory(reportsDir);
+            var report = new JObject
+            {
+                ["aspect_ratio_xy"] = Round6(insights.AspectRatioXy),
+                ["aspect_ratio_xz"] = Round6(insights.AspectRatioXz),
+                ["aspect_ratio_yz"] = Round6(insights.AspectRatioYz),
+                ["bounding_box_max"] = JObject.FromObject(Pt(insights.BoundingBoxMax)),
+                ["bounding_box_min"] = JObject.FromObject(Pt(insights.BoundingBoxMin)),
+                ["centroid"] = JObject.FromObject(Pt(insights.Centroid)),
+                ["characteristic_length"] = Round6(insights.CharacteristicLength),
+                ["dimension_x"] = Round6(insights.DimensionX),
+                ["dimension_y"] = Round6(insights.DimensionY),
+                ["dimension_z"] = Round6(insights.DimensionZ),
+                ["face_count"] = insights.FaceCount,
+                ["footprint_area"] = Round6(insights.FootprintArea),
+                ["is_watertight"] = insights.IsWatertight,
+                ["slenderness"] = Round6(insights.Slenderness),
+                ["total_surface_area"] = Round6(insights.TotalSurfaceArea),
+                ["vertex_count"] = insights.VertexCount,
+            };
+            System.IO.File.WriteAllText(Path.Combine(reportsDir, "net.json"), report.ToString());
+
+            var canonicalPath = Path.Combine(AssetsPath, "model-kpi-nakagin.json");
+            var canonical = JObject.Parse(System.IO.File.ReadAllText(canonicalPath));
+            var skip = new HashSet<string> { "centroid", "total_surface_area" };
+            foreach (var kv in canonical)
+            {
+                if (skip.Contains(kv.Key)) continue;
+                Assert.True(JToken.DeepEquals(kv.Value, report[kv.Key]), $"Mismatch for {kv.Key}");
+            }
         }
     }
 

@@ -1,0 +1,40 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.ended",
+    "second": "2026-03-16T14:42:49Z",
+    "session": "7574e1b3-e944-4567-97d3-79b966f712a7"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "post_write_code",
+      "trajectory_id": "7574e1b3-e944-4567-97d3-79b966f712a7",
+      "timestamp": "2026-03-16T14:42:49.944474345Z",
+      "execution_id": "2f27430f-777c-45fd-a591-e79d51c28f09",
+      "tool_info": {
+        "edits": [
+          {
+            "old_string": "\tlogFiles := getLogFiles(t, tmpDir)\n\n\tif len(logFiles) \u003c 16 {\n\t\tt.Fatalf(\"expected at least 16 log files, got %d\", len(logFiles))\n\t}",
+            "new_string": "\tlogFiles := getLogFiles(t, tmpDir)\n\n\t// After removing redundant files, only session.json files should exist\n\t// Count session.json files instead of individual event files\n\tsessionCount := 0\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tsessionCount++\n\t\t}\n\t}\n\tif sessionCount \u003c 16 {\n\t\tt.Fatalf(\"expected at least 16 session.json files, got %d\", sessionCount)\n\t}"
+          },
+          {
+            "old_string": "\tlogFiles := getLogFiles(t, tmpDir)\n\tif len(logFiles) \u003c 2 {\n\t\tt.Fatal(\"expected at least 2 log files (prompt + searching)\")\n\t}\n\n\tfound := false\n\tfor _, lf := range logFiles {\n\t\tif strings.Contains(lf, \"agent-tool-search-starting\") {\n\t\t\tdata, err := os.ReadFile(lf)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"cannot read log file: %v\", err)\n\t\t\t}\n\t\t\tif !strings.Contains(string(data), \"findMe\") {\n\t\t\t\tt.Errorf(\"expected search query in log file, got: %s\", string(data))\n\t\t\t}\n\t\t\tfound = true\n\t\t\tbreak\n\t\t}\n\t}\n\tif !found {\n\t\tt.Error(\"expected agent-tool-search-starting log file\")\n\t}",
+            "new_string": "\tlogFiles := getLogFiles(t, tmpDir)\n\t// After removing redundant files, only session.json should exist\n\tsessionCount := 0\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tsessionCount++\n\t\t}\n\t}\n\tif sessionCount \u003c 2 {\n\t\tt.Fatal(\"expected at least 2 session.json files (prompt + searching)\")\n\t}\n\n\t// Check that session.json contains the search event\n\tfound := false\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tdata, err := os.ReadFile(f)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"cannot read session.json: %v\", err)\n\t\t\t}\n\t\t\tif strings.Contains(string(data), \"findMe\") {\n\t\t\t\tfound = true\n\t\t\t\tbreak\n\t\t\t}\n\t\t}\n\t}\n\tif !found {\n\t\tt.Error(\"expected search query in session.json\")\n\t}"
+          },
+          {
+            "old_string": "\tlogFiles := getLogFiles(t, tmpDir)\n\tif len(logFiles) \u003c 2 {\n\t\tt.Fatal(\"expected at least 2 log files (prompt + blocked tool)\")\n\t}\n\tfound := false\n\tfor _, lf := range logFiles {\n\t\tif strings.Contains(lf, \"agent-tool-starting\") {\n\t\t\tdata, err := os.ReadFile(lf)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"cannot read log file: %v\", err)\n\t\t\t}\n\t\t\tvar entry EventEntry\n\t\t\tif err := json.Unmarshal(data, \u0026entry); err == nil {\n\t\t\t\tif entry.Response != nil \u0026\u0026 entry.Response.Blocked != nil \u0026\u0026 *entry.Response.Blocked {\n\t\t\t\t\tfound = true\n\t\t\t\t\tbreak\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tif !found {\n\t\tt.Error(\"expected agent-tool-starting log file for blocked event\")\n\t}",
+            "new_string": "\tlogFiles := getLogFiles(t, tmpDir)\n\t// After removing redundant files, only session.json should exist\n\tsessionCount := 0\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tsessionCount++\n\t\t}\n\t}\n\tif sessionCount \u003c 2 {\n\t\tt.Fatal(\"expected at least 2 session.json files (prompt + blocked tool)\")\n\t}\n\t// Check that session.json contains the blocked event\n\tfound := false\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tdata, err := os.ReadFile(f)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"cannot read session.json: %v\", err)\n\t\t\t}\n\t\t\tvar meta SessionMeta\n\t\t\tif err := json.Unmarshal(data, \u0026meta); err == nil {\n\t\t\t\tfor _, entry := range meta.Events {\n\t\t\t\t\tif entry.Response != nil \u0026\u0026 entry.Response.Blocked != nil \u0026\u0026 *entry.Response.Blocked {\n\t\t\t\t\t\tfound = true\n\t\t\t\t\t\tbreak\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tif !found {\n\t\tt.Error(\"expected blocked event in session.json\")\n\t}"
+          },
+          {
+            "old_string": "\tlogFiles := getLogFiles(t, tmpDir)\n\tif len(logFiles) \u003c 3 {\n\t\tt.Fatalf(\"expected at least 3 log files (prompt + 2 terminal), got %d\", len(logFiles))\n\t}\n\tstartFound := false\n\tendFound := false\n\tfor _, lf := range logFiles {\n\t\tif strings.Contains(lf, \"agent-tool-terminal-starting\") {\n\t\t\tstartFound = true\n\t\t} else if strings.Contains(lf, \"agent-tool-terminal-ended\") {\n\t\t\tendFound = true\n\t\t}\n\t}\n\tif !startFound {\n\t\tt.Error(\"expected agent-tool-terminal-starting log file\")\n\t}\n\tif !endFound {\n\t\tt.Error(\"expected agent-tool-terminal-ended log file\")\n\t}",
+            "new_string": "\tlogFiles := getLogFiles(t, tmpDir)\n\t// After removing redundant files, only session.json should exist\n\tsessionCount := 0\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tsessionCount++\n\t\t}\n\t}\n\tif sessionCount \u003c 3 {\n\t\tt.Fatalf(\"expected at least 3 session.json files, got %d\", sessionCount)\n\t}\n\t// Check that session.json contains terminal events\n\tstartFound := false\n\tendFound := false\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tdata, err := os.ReadFile(f)\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"cannot read session.json: %v\", err)\n\t\t\t}\n\t\t\tvar meta SessionMeta\n\t\t\tif err := json.Unmarshal(data, \u0026meta); err == nil {\n\t\t\t\tfor _, entry := range meta.Events {\n\t\t\t\t\tvar evt map[string]interface{}\n\t\t\t\t\tif err := json.Unmarshal(entry.Event, \u0026evt); err == nil {\n\t\t\t\t\t\tif kind, ok := evt[\"kind\"].(string); ok {\n\t\t\t\t\t\t\tif kind == \"agent.tool.terminal.starting\" {\n\t\t\t\t\t\t\t\tstartFound = true\n\t\t\t\t\t\t\t} else if kind == \"agent.tool.terminal.ended\" {\n\t\t\t\t\t\t\t\tendFound = true\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\tif !startFound {\n\t\tt.Error(\"expected agent-tool-terminal-starting event in session.json\")\n\t}\n\tif !endFound {\n\t\tt.Error(\"expected agent-tool-terminal-ended event in session.json\")\n\t}"
+          }
+        ],
+        "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+      }
+    }
+  },
+  "response": {}
+}

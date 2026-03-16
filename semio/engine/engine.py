@@ -20,10 +20,11 @@
 # [👤semio📚engine💻engine🔖imports](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Imports)
 # Imports MUST include all dependencies for store, assistant, GraphQL, REST, MCP, and engine modules.
 from __future__ import annotations
+
 import abc
 import argparse
-import copy
 import contextlib
+import copy
 import datetime
 import difflib
 import enum
@@ -71,9 +72,9 @@ from semio import (
     VERSION,
     Attribute,
     AttributeNode,
+    AuthenticationError,
     Author,
     AuthorNode,
-    AuthenticationError,
     AuthTokenNotFound,
     ClientError,
     CodeUnreachable,
@@ -114,8 +115,8 @@ from semio import (
     Point,
     PointNode,
     RelayNode,
-    RemoteKitUriNotValid,
     RemoteKitsNotYetSupported,
+    RemoteKitUriNotValid,
     ServerError,
     ServerUnreachable,
     Side,
@@ -130,28 +131,32 @@ from semio import (
     Vector,
     VectorNode,
     applyKitDiffDict,
+    areDesignsInSameFamilyDict,
     areKitDiffsDictEqual,
     areKitsDictEqual,
+    areTypesInSameFamilyDict,
     areValidationResultsEqual,
+    canUseDesignAsPieceDict,
     changeKeys,
     changeToDict,
-    getDesignChange,
-    getKitChange,
     changeValues,
     createClusteredDesignDict,
     decode,
     encode,
     expandDesignPiecesDict,
     findAttributeValueDict,
+    findPieceTypeInDesignDict,
     findReplaceableTypesForPieceInDesignDict,
     findReplaceableTypesForPiecesInDesignDict,
     findSameFamilyDesignPiecesDict,
     findUsedConnectorsByPieceInDesignDict,
     flattenDesignDict,
     getClusterableGroupsDict,
+    getDesignChange,
     getDesignChildrenDict,
     getDesignFamilyDict,
     getDesignSiblingsDict,
+    getKitChange,
     getKitDiffDict,
     getPrimitiveDesignDict,
     getPrimitiveTypeDict,
@@ -165,12 +170,8 @@ from semio import (
     piecesMetadataDict,
     planeFromYAxis,
     replaceClusterWithDesignDict,
-    validateKitDict,
-    areDesignsInSameFamilyDict,
-    areTypesInSameFamilyDict,
-    canUseDesignAsPieceDict,
-    findPieceTypeInDesignDict,
     sumQualityInDesignDict,
+    validateKitDict,
 )
 
 # endregion Imports
@@ -448,10 +449,7 @@ class DatabaseStore(Store, abc.ABC):
                 case OperationKind.DESIGN:
                     design_dump = input.model_dump()
                     designs = kit_data.get("designs", [])
-                    designs = [
-                        d for d in designs
-                        if not (d.get("name") == input.name and d.get("variant") == input.variant and d.get("view") == input.view)
-                    ]
+                    designs = [d for d in designs if not (d.get("name") == input.name and d.get("variant") == input.variant and d.get("view") == input.view)]
                     designs.append(design_dump)
                     kit_data["designs"] = designs
                     conn.execute(
@@ -461,10 +459,7 @@ class DatabaseStore(Store, abc.ABC):
                 case OperationKind.TYPE:
                     type_dump = input.model_dump()
                     types = kit_data.get("types", [])
-                    types = [
-                        t for t in types
-                        if not (t.get("name") == input.name and t.get("variant") == input.variant)
-                    ]
+                    types = [t for t in types if not (t.get("name") == input.name and t.get("variant") == input.variant)]
                     types.append(type_dump)
                     kit_data["types"] = types
                     conn.execute(
@@ -495,14 +490,7 @@ class DatabaseStore(Store, abc.ABC):
                 case OperationKind.DESIGN:
                     kit_data = json.loads(row[0])
                     designs = kit_data.get("designs", [])
-                    kit_data["designs"] = [
-                        d for d in designs
-                        if not (
-                            d.get("name") == operation["designName"]
-                            and d.get("variant") == operation["designVariant"]
-                            and d.get("view") == operation["designView"]
-                        )
-                    ]
+                    kit_data["designs"] = [d for d in designs if not (d.get("name") == operation["designName"] and d.get("variant") == operation["designVariant"] and d.get("view") == operation["designView"])]
                     conn.execute(
                         "UPDATE kit SET data = ? WHERE uri = ?",
                         (json.dumps(kit_data), kitUri),
@@ -510,13 +498,7 @@ class DatabaseStore(Store, abc.ABC):
                 case OperationKind.TYPE:
                     kit_data = json.loads(row[0])
                     types = kit_data.get("types", [])
-                    kit_data["types"] = [
-                        t for t in types
-                        if not (
-                            t.get("name") == operation["typeName"]
-                            and t.get("variant") == operation["typeVariant"]
-                        )
-                    ]
+                    kit_data["types"] = [t for t in types if not (t.get("name") == operation["typeName"] and t.get("variant") == operation["typeVariant"])]
                     conn.execute(
                         "UPDATE kit SET data = ? WHERE uri = ?",
                         (json.dumps(kit_data), kitUri),
@@ -787,7 +769,7 @@ class RemoteStore(Store):
             raise RemoteKitUriNotValid(uri)
         idx = uri.index("/api/kits/")
         serverUrl = uri[:idx]
-        encodedKitUri = uri[idx + len("/api/kits/"):]
+        encodedKitUri = uri[idx + len("/api/kits/") :]
         kitUri = decode(encodedKitUri)
         return cls(uri, serverUrl, kitUri)
 
@@ -1761,6 +1743,7 @@ class LoginRequest(pydantic.BaseModel):
     """Login request body.
     [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️loginrequest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LoginRequest)
     """
+
     serverUrl: str
     email: str
     password: str
@@ -1770,6 +1753,7 @@ class LoginResponse(pydantic.BaseModel):
     """Login response body.
     [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️loginresponse](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LoginResponse)
     """
+
     ok: bool
     serverUrl: str
     email: str
@@ -1780,6 +1764,7 @@ class LogoutRequest(pydantic.BaseModel):
     """Logout request body.
     [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️logoutrequest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LogoutRequest)
     """
+
     serverUrl: str
 
 
@@ -1787,6 +1772,7 @@ class AuthStatusResponse(pydantic.BaseModel):
     """Auth status response body.
     [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️authstatusresponse](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/AuthStatusResponse)
     """
+
     authenticated: bool
     serverUrl: str
     email: str
@@ -2148,6 +2134,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> di
 # [👤semio📚engine💻engine🔖mcp🔖mcpauthtools](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools)
 # MCP Auth Tools MUST expose login, logout and status for remote server authentication.
 
+
 def mcp_login(serverUrl: str, email: str, password: str) -> dict:
     """🔐 Login to a remote semio server. Stores the auth token for subsequent remote kit operations.
     [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogin](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_login)
@@ -2176,6 +2163,7 @@ def mcp_auth_status(serverUrl: str) -> dict:
         return getAuthStatus(serverUrl)
     except Exception as e:
         return {"error": str(e)}
+
 
 # endregion MCP Auth Tools
 
@@ -2560,6 +2548,7 @@ def add_current_design_author(guid: str, ctx: Context) -> dict:
 def add_current_design_prop(guid: str, quality_guid: str, value: str, unit: str, ctx: Context) -> dict:
     """Append a flat prop entry to the current design."""
     try:
+
         def mutate(current_design: dict):
             current_design.setdefault("props", []).append(
                 {
@@ -2588,6 +2577,7 @@ def add_current_design_piece(
 ) -> dict:
     """Append a flat piece entry to the current design without placement fields."""
     try:
+
         def mutate(current_design: dict):
             current_design.setdefault("pieces", []).append(
                 {
@@ -2629,6 +2619,7 @@ def add_current_design_piece_with_plane(
 ) -> dict:
     """Append a flat piece entry to the current design with explicit placement fields."""
     try:
+
         def mutate(current_design: dict):
             current_design.setdefault("pieces", []).append(
                 {
@@ -2673,6 +2664,7 @@ def add_current_design_connection(
 ) -> dict:
     """Append a flat connection entry to the current design without nested arguments."""
     try:
+
         def mutate(current_design: dict):
             current_design.setdefault("connections", []).append(
                 {

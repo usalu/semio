@@ -1,0 +1,28 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.tool.test.starting",
+    "second": "2026-03-16T12:38:00Z",
+    "session": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PreToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go build -o /dev/null ./... 2\u003e\u00261 \u0026\u0026 go test -run \"TestCodeEditEndedRunsFormatter|TestHook|TestPopulateEventDataCodeEdited\" -v -timeout 30s 2\u003e\u00261 | tail -20",
+        "timeout": 60000,
+        "description": "Build and run relevant tests"
+      },
+      "tool_use_id": "toolu_01VuBqtGnCbmaL5DB6JnpuoM"
+    }
+  },
+  "response": {}
+}

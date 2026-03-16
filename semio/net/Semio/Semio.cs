@@ -7609,46 +7609,46 @@ public class Kit : Entity<Kit>
         switch (format)
         {
             case ".glb":
-            {
-                using var ms = new MemoryStream();
-                modelRoot.WriteGLB(ms);
-                return ms.ToArray();
-            }
+                {
+                    using var ms = new MemoryStream();
+                    modelRoot.WriteGLB(ms);
+                    return ms.ToArray();
+                }
             case ".gltf":
-            {
-                var tmpDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid());
-                System.IO.Directory.CreateDirectory(tmpDir);
-                try
                 {
-                    var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
-                    modelRoot.SaveGLTF(gltfPath);
-                    var gltfJson = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(gltfPath));
-                    foreach (var buffer in gltfJson["buffers"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                    var tmpDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid());
+                    System.IO.Directory.CreateDirectory(tmpDir);
+                    try
                     {
-                        var uri = buffer["uri"]?.Value<string>();
-                        if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
-                        var path = System.IO.Path.Combine(tmpDir, uri);
-                        if (!System.IO.File.Exists(path)) continue;
-                        var bytes = System.IO.File.ReadAllBytes(path);
-                        buffer["uri"] = "data:application/octet-stream;base64," + Convert.ToBase64String(bytes);
+                        var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
+                        modelRoot.SaveGLTF(gltfPath);
+                        var gltfJson = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(gltfPath));
+                        foreach (var buffer in gltfJson["buffers"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                        {
+                            var uri = buffer["uri"]?.Value<string>();
+                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
+                            var path = System.IO.Path.Combine(tmpDir, uri);
+                            if (!System.IO.File.Exists(path)) continue;
+                            var bytes = System.IO.File.ReadAllBytes(path);
+                            buffer["uri"] = "data:application/octet-stream;base64," + Convert.ToBase64String(bytes);
+                        }
+                        foreach (var image in gltfJson["images"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                        {
+                            var uri = image["uri"]?.Value<string>();
+                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
+                            var path = System.IO.Path.Combine(tmpDir, uri);
+                            if (!System.IO.File.Exists(path)) continue;
+                            var mime = image["mimeType"]?.Value<string>() ?? "application/octet-stream";
+                            var bytes = System.IO.File.ReadAllBytes(path);
+                            image["uri"] = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                        }
+                        return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
                     }
-                    foreach (var image in gltfJson["images"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                    finally
                     {
-                        var uri = image["uri"]?.Value<string>();
-                        if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
-                        var path = System.IO.Path.Combine(tmpDir, uri);
-                        if (!System.IO.File.Exists(path)) continue;
-                        var mime = image["mimeType"]?.Value<string>() ?? "application/octet-stream";
-                        var bytes = System.IO.File.ReadAllBytes(path);
-                        image["uri"] = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                        System.IO.Directory.Delete(tmpDir, true);
                     }
-                    return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
                 }
-                finally
-                {
-                    System.IO.Directory.Delete(tmpDir, true);
-                }
-            }
             case ".obj":
                 return ExportModelRootToObj(modelRoot);
             case ".stl":
@@ -7662,11 +7662,11 @@ public class Kit : Entity<Kit>
     // [👤semio📚net🛅semio💻semio🔖geometricinsights](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Geometric%20Insights)
     // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
-    /// <summary>Geometric KPIs for a GLB/GLTF model. All units follow the model coordinate system.</summary>
+    /// <summary>Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
     public class GeometricInsights
     {
-        public Vector3? BoundingBoxMin { get; set; }
-        public Vector3? BoundingBoxMax { get; set; }
+        public Point? BoundingBoxMin { get; set; }
+        public Point? BoundingBoxMax { get; set; }
         public double DimensionX { get; set; }
         public double DimensionY { get; set; }
         public double DimensionZ { get; set; }
@@ -7678,7 +7678,9 @@ public class Kit : Entity<Kit>
         public double AspectRatioXy { get; set; }
         public double AspectRatioXz { get; set; }
         public double AspectRatioYz { get; set; }
-        public Vector3? Centroid { get; set; }
+        public bool IsWatertight { get; set; }
+        public Point? Centroid { get; set; }
+        public double Slenderness { get; set; }
         public int VertexCount { get; set; }
         public int FaceCount { get; set; }
         public int EulerCharacteristic { get; set; }
@@ -7717,10 +7719,10 @@ public class Kit : Entity<Kit>
             throw new ArgumentException("Model must be string path or byte[]", nameof(model));
 
         var out_ = new GeometricInsights();
-        var min = new Vector3(float.MaxValue);
-        var max = new Vector3(float.MinValue);
+        double sxMin = double.MaxValue, syMin = double.MaxValue, szMin = double.MaxValue;
+        double sxMax = double.MinValue, syMax = double.MinValue, szMax = double.MinValue;
+        double sumSx = 0, sumSy = 0, sumSz = 0;
         double totalArea = 0, totalVolume = 0;
-        var sumPos = Vector3.Zero;
         int vertexCount = 0, faceCount = 0;
 
         foreach (var mesh in root.LogicalMeshes)
@@ -7732,14 +7734,17 @@ public class Kit : Entity<Kit>
                 var positions = posAcc.AsVector3Array();
                 var idxAcc = prim.IndexAccessor;
                 int n = positions.Count;
-                vertexCount += n;
                 for (int i = 0; i < n; i++)
                 {
                     var p = positions[i];
-                    sumPos += p;
-                    min = Vector3.Min(min, p);
-                    max = Vector3.Max(max, p);
+                    double xg = p.X, yg = p.Y, _zg = p.Z;
+                    double sx = xg, sy = -xg, sz = yg;
+                    if (sx < sxMin) sxMin = sx; if (sx > sxMax) sxMax = sx;
+                    if (sy < syMin) syMin = sy; if (sy > syMax) syMax = sy;
+                    if (sz < szMin) szMin = sz; if (sz > szMax) szMax = sz;
+                    sumSx += sx; sumSy += sy; sumSz += sz;
                 }
+                vertexCount += n;
                 if (idxAcc != null)
                 {
                     var indices = idxAcc.AsIndicesArray();
@@ -7770,17 +7775,18 @@ public class Kit : Entity<Kit>
 
         if (vertexCount == 0) return out_;
 
-        out_.BoundingBoxMin = min;
-        out_.BoundingBoxMax = max;
-        out_.DimensionX = max.X - min.X;
-        out_.DimensionY = max.Y - min.Y;
-        out_.DimensionZ = max.Z - min.Z;
-        out_.CharacteristicLength = Math.Cbrt(out_.DimensionX * out_.DimensionY * out_.DimensionZ);
-        out_.FootprintArea = out_.DimensionX * out_.DimensionY;
+        out_.BoundingBoxMin = new Point { X = (float)sxMin, Y = (float)syMin, Z = (float)szMin };
+        out_.BoundingBoxMax = new Point { X = (float)sxMax, Y = (float)syMax, Z = (float)szMax };
+        out_.DimensionX = sxMax - sxMin;
+        out_.DimensionY = syMax - syMin;
+        out_.DimensionZ = szMax - szMin;
+        out_.CharacteristicLength = Math.Pow(out_.DimensionX * out_.DimensionY * out_.DimensionZ, 1.0 / 3.0);
+        out_.FootprintArea = out_.DimensionX * out_.DimensionZ;
         out_.TotalSurfaceArea = totalArea;
         out_.VertexCount = vertexCount;
         out_.FaceCount = faceCount;
-        out_.Centroid = sumPos / vertexCount;
+        double nV = vertexCount;
+        out_.Centroid = new Point { X = (float)(sumSx / nV), Y = (float)(sumSy / nV), Z = (float)(sumSz / nV) };
         totalVolume = Math.Abs(totalVolume);
         out_.EnclosedVolume = totalVolume;
         if (totalVolume > 1e-20 && totalArea > 0)
@@ -7788,6 +7794,9 @@ public class Kit : Entity<Kit>
         if (out_.DimensionY > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXy = out_.DimensionX / out_.DimensionY;
         if (out_.DimensionZ > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXz = out_.DimensionX / out_.DimensionZ;
         if (out_.DimensionZ > 1e-10 && out_.DimensionY > 1e-10) out_.AspectRatioYz = out_.DimensionY / out_.DimensionZ;
+        double maxExt = Math.Max(out_.DimensionX, Math.Max(out_.DimensionY, out_.DimensionZ));
+        if (maxExt > 1e-10 && totalArea > 0)
+            out_.Slenderness = maxExt / Math.Pow(totalArea * maxExt, 1.0 / 3.0);
         out_.EulerCharacteristic = vertexCount - (3 * faceCount) / 2 + faceCount;
         return out_;
     }

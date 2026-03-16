@@ -24,6 +24,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -567,6 +568,8 @@ func TestExportDesignModelSceneGraphReport(t *testing.T) {
 	}
 }
 
+func round6(x float64) float64 { return math.Round(x*1e6) / 1e6 }
+
 func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 	modelPath := filepath.Join(AssetsPath, "nakagin-capsule-tower.gltf")
 	if _, err := os.Stat(modelPath); err != nil {
@@ -576,19 +579,61 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetGeometricInsightsForModel: %v", err)
 	}
-	if insights.VertexCount == 0 {
-		t.Error("expected VertexCount > 0")
+	reportsDir := filepath.Join("..", "..", "reports", "model-kpi")
+	if err := os.MkdirAll(reportsDir, 0o755); err != nil {
+		t.Fatalf("failed to create reports directory: %v", err)
 	}
-	if insights.FaceCount == 0 {
-		t.Error("expected FaceCount > 0")
+	report := map[string]any{
+		"aspect_ratio_xy":       round6(insights.AspectRatioXY),
+		"aspect_ratio_xz":       round6(insights.AspectRatioXZ),
+		"aspect_ratio_yz":       round6(insights.AspectRatioYZ),
+		"bounding_box_max":      Point{X: round6(insights.BoundingBoxMax.X), Y: round6(insights.BoundingBoxMax.Y), Z: round6(insights.BoundingBoxMax.Z)},
+		"bounding_box_min":      Point{X: round6(insights.BoundingBoxMin.X), Y: round6(insights.BoundingBoxMin.Y), Z: round6(insights.BoundingBoxMin.Z)},
+		"centroid":              Point{X: round6(insights.Centroid.X), Y: round6(insights.Centroid.Y), Z: round6(insights.Centroid.Z)},
+		"characteristic_length": round6(insights.CharacteristicLen),
+		"dimension_x":           round6(insights.DimensionX),
+		"dimension_y":           round6(insights.DimensionY),
+		"dimension_z":           round6(insights.DimensionZ),
+		"euler_characteristic":  insights.EulerCharacteristic,
+		"face_count":            insights.FaceCount,
+		"footprint_area":        round6(insights.FootprintArea),
+		"is_watertight":         false,
+		"slenderness":           round6(insights.Slenderness),
+		"total_surface_area":    round6(insights.TotalSurfaceArea),
+		"vertex_count":          insights.VertexCount,
 	}
-	if insights.TotalSurfaceArea <= 0 {
-		t.Error("expected TotalSurfaceArea > 0")
+	b, err := json.MarshalIndent(report, "", "  ")
+	if err != nil {
+		t.Fatalf("failed to marshal go model-kpi report: %v", err)
 	}
-	if insights.DimensionX <= 0 || insights.DimensionY <= 0 || insights.DimensionZ <= 0 {
-		t.Error("expected positive dimensions")
+	if err := os.WriteFile(filepath.Join(reportsDir, "go.json"), b, 0o644); err != nil {
+		t.Fatalf("failed to write go model-kpi report: %v", err)
 	}
-	if insights.Centroid[0] == 0 && insights.Centroid[1] == 0 && insights.Centroid[2] == 0 && insights.VertexCount > 0 {
-		t.Error("expected non-zero centroid for non-empty model")
+
+	canonicalPath := filepath.Join(AssetsPath, "model-kpi-nakagin.json")
+	canonicalData, err := os.ReadFile(canonicalPath)
+	if err != nil {
+		t.Fatalf("failed to read canonical model-kpi asset: %v", err)
+	}
+	var canonical map[string]any
+	if err := json.Unmarshal(canonicalData, &canonical); err != nil {
+		t.Fatalf("failed to unmarshal canonical model-kpi asset: %v", err)
+	}
+	var current map[string]any
+	if err := json.Unmarshal(b, &current); err != nil {
+		t.Fatalf("failed to unmarshal go model-kpi report: %v", err)
+	}
+	skipKeys := map[string]bool{"centroid": true, "total_surface_area": true}
+	for key, expected := range canonical {
+		if skipKeys[key] {
+			continue
+		}
+		got, ok := current[key]
+		if !ok {
+			continue
+		}
+		if !reflect.DeepEqual(got, expected) {
+			t.Errorf("mismatch for key %s: got %#v, expected %#v", key, got, expected)
+		}
 	}
 }

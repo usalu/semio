@@ -1,0 +1,21 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.started",
+    "second": "2026-03-16T13:42:56Z",
+    "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T13:42:56.012Z",
+      "hook_event_name": "SubagentStart",
+      "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+      "agent_id": "d2b719cb-37cf-425a-82f5-29f140c554f2",
+      "agent_type": "default",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

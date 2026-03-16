@@ -27,7 +27,8 @@
 /// FixedClass MUST have a Value property.
 /// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖classes🛠️fixedclass](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/s/Classes/d/i/FixedClass)
 /// </remarks>
-public class FixedClass {
+public class FixedClass
+{
     public int Value { get; set; }
 }
 

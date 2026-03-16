@@ -1,0 +1,34 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.tool.ended",
+    "second": "2026-03-16T12:37:10Z",
+    "session": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "ToolSearch",
+      "tool_input": {
+        "query": "select:mcp__semio-repo__ticket_reopen",
+        "max_results": 1
+      },
+      "tool_response": {
+        "matches": [
+          "mcp__semio-repo__ticket_reopen"
+        ],
+        "query": "select:mcp__semio-repo__ticket_reopen",
+        "total_deferred_tools": 96
+      },
+      "tool_use_id": "toolu_01Wi7q1RknuBfem4qkhbSaDc"
+    }
+  },
+  "response": {}
+}

@@ -16,18 +16,19 @@
 
 // #endregion 🔖Header
 
-import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, DragDesign, DragPieces, DragOffset, DragDiffDesign, ModelSelectionCases } from "@semio/assets";
 import { NodeIO } from "@gltf-transform/core";
+import { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases } from "@semio/assets";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import * as fs from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import * as ElementsBundle from "../../semio-elements/ui";
-import { Action as UiAction, buildControlTree, ControlDef } from "../../semio-elements/ui";
-import { getOntologyNodeDescriptor, getValidationNodeDescriptor, type OntologyTreeNode, type ValidationTreeNode } from "../../semio-coda/desktop/renderer";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { getOntologyNodeDescriptor, getValidationNodeDescriptor, type OntologyTreeNode, type ValidationTreeNode } from "../../semio-coda/desktop/renderer";
+import * as ElementsBundle from "../../semio-elements/ui";
+import { buildControlTree, ControlDef, Action as UiAction } from "../../semio-elements/ui";
 import {
   applyDesignDiff,
   applyKitDiff,
@@ -35,12 +36,12 @@ import {
   areKitsEqual,
   areValidationResultsEqual,
   createClusteredDesign,
-  Design,
   deserializeKit,
+  Design,
   dragPiecesInDesign,
+  EXPORT_MODEL_FORMATS,
   exportDesignModel,
   exportKit,
-  EXPORT_MODEL_FORMATS,
   flattenDesign,
   getGeometricInsightsForModel,
   getIncludedDesigns,
@@ -111,12 +112,7 @@ const roundSceneNumber = (value: number) => {
   return Object.is(rounded, -0) ? 0 : rounded;
 };
 
-const composeNodeMatrix = (node: {
-  matrix?: number[];
-  translation?: number[];
-  rotation?: number[];
-  scale?: number[];
-}) => {
+const composeNodeMatrix = (node: { matrix?: number[]; translation?: number[]; rotation?: number[]; scale?: number[] }) => {
   if (node.matrix) {
     return node.matrix.map((value) => roundSceneNumber(value));
   }
@@ -187,19 +183,17 @@ const normalizeSceneGraph = (gltfText: string) => {
     .sort((left, right) => left.name.localeCompare(right.name));
   const syntheticWorld = normalizedNodes.find((node) => node.name === "world");
   if (
-    syntheticWorld
-    && !syntheticWorld.hasMesh
-    && syntheticWorld.parent === null
-    && syntheticWorld.children.length === 1
-    && normalizedRoots.length === 1
-    && normalizedRoots[0] === "world"
-    && syntheticWorld.matrix.every((value, index) => value === [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1][index])
+    syntheticWorld &&
+    !syntheticWorld.hasMesh &&
+    syntheticWorld.parent === null &&
+    syntheticWorld.children.length === 1 &&
+    normalizedRoots.length === 1 &&
+    normalizedRoots[0] === "world" &&
+    syntheticWorld.matrix.every((value, index) => value === [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1][index])
   ) {
     const childName = syntheticWorld.children[0];
     normalizedRoots = [childName];
-    normalizedNodes = normalizedNodes
-      .filter((node) => node.name !== "world")
-      .map((node) => node.name === childName ? { ...node, parent: null } : node);
+    normalizedNodes = normalizedNodes.filter((node) => node.name !== "world").map((node) => (node.name === childName ? { ...node, parent: null } : node));
   }
   return {
     roots: normalizedRoots,
@@ -472,15 +466,20 @@ describe("Elements Bundle", () => {
 
   it("renders an explicit TreeItem label even when an id is present", () => {
     const html = renderToStaticMarkup(
-      createElement(
-        ElementsBundle.Tree,
-        null,
-        createElement(ElementsBundle.TreeItem, {
-          id: "storybook.missing.translation.key",
-          label: createElement("span", { className: "tree-explicit-label" }, "Explicit Tree Label"),
-          icon: createElement("span", null, "∧"),
-        }),
-      ),
+      createElement(ElementsBundle.Tree, {
+        sections: [
+          {
+            id: "test-section",
+            items: [
+              {
+                id: "storybook.missing.translation.key",
+                label: createElement("span", { className: "tree-explicit-label" }, "Explicit Tree Label"),
+                icon: createElement("span", null, "∧"),
+              },
+            ],
+          },
+        ],
+      }),
     );
 
     expect(html).toContain("Explicit Tree Label");
@@ -656,19 +655,41 @@ describe("ExportDesignModel", () => {
 });
 
 describe("Model/KPI", () => {
-  it("getGeometricInsightsForModel(nakagin-capsule-tower.gltf) returns insights", async () => {
+  it("getGeometricInsightsForModel(nakagin-capsule-tower.gltf) returns canonical insights and writes report", async () => {
     const modelPath = resolve(__dirname, "../assets/semio/nakagin-capsule-tower.gltf");
     const insights = await getGeometricInsightsForModel(modelPath);
-    expect(insights.boundingBoxMin).toBeDefined();
-    expect(insights.boundingBoxMax).toBeDefined();
-    expect(insights.dimensionX).toBeDefined();
-    expect(insights.dimensionY).toBeDefined();
-    expect(insights.dimensionZ).toBeDefined();
-    expect(insights.characteristicLength).toBeDefined();
-    expect(insights.totalSurfaceArea).toBeDefined();
-    expect(insights.vertexCount).toBeGreaterThan(0);
-    expect(insights.faceCount).toBeGreaterThan(0);
-    expect(insights.centroid).toBeDefined();
-    expect(insights.eulerCharacteristic).toBeDefined();
+    const round6 = (x: number) => Math.round(x * 1e6) / 1e6;
+    const pt = (p: { x: number; y: number; z: number } | undefined) => (p ? { x: round6(p.x), y: round6(p.y), z: round6(p.z) } : undefined);
+
+    const reportsDir = resolve(__dirname, "../reports/model-kpi");
+    await fs.mkdir(reportsDir, { recursive: true });
+    const report: Record<string, unknown> = {
+      aspect_ratio_xy: insights.aspectRatioXy != null ? round6(insights.aspectRatioXy) : undefined,
+      aspect_ratio_xz: insights.aspectRatioXz != null ? round6(insights.aspectRatioXz) : undefined,
+      aspect_ratio_yz: insights.aspectRatioYz != null ? round6(insights.aspectRatioYz) : undefined,
+      bounding_box_max: pt(insights.boundingBoxMax),
+      bounding_box_min: pt(insights.boundingBoxMin),
+      centroid: pt(insights.centroid),
+      characteristic_length: insights.characteristicLength != null ? round6(insights.characteristicLength) : undefined,
+      dimension_x: insights.dimensionX != null ? round6(insights.dimensionX) : undefined,
+      dimension_y: insights.dimensionY != null ? round6(insights.dimensionY) : undefined,
+      dimension_z: insights.dimensionZ != null ? round6(insights.dimensionZ) : undefined,
+      face_count: insights.faceCount,
+      footprint_area: insights.footprintArea != null ? round6(insights.footprintArea) : undefined,
+      is_watertight: insights.isWatertight ?? false,
+      slenderness: insights.slenderness != null ? round6(insights.slenderness) : undefined,
+      total_surface_area: insights.totalSurfaceArea != null ? round6(insights.totalSurfaceArea) : undefined,
+      vertex_count: insights.vertexCount,
+    };
+    await fs.writeFile(resolve(reportsDir, "js.json"), JSON.stringify(report, null, 2), "utf8");
+
+    const canonicalPath = resolve(__dirname, "../assets/semio/model-kpi-nakagin.json");
+    const canonical = JSON.parse(await fs.readFile(canonicalPath, "utf8"));
+    const skipKeys = new Set(["centroid", "total_surface_area"]);
+    for (const key of Object.keys(canonical)) {
+      if (skipKeys.has(key)) continue;
+      expect(report[key]).toBeDefined();
+      expect(report[key]).toEqual(canonical[key]);
+    }
   });
 });

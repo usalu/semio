@@ -1,0 +1,41 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "cursor-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.ended",
+    "second": "2026-03-16T13:44:36Z",
+    "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+  },
+  "native": {
+    "event": {
+      "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+      "generation_id": "c421f306-6a0e-4fcd-b949-f3f75020b8ab",
+      "model": "default",
+      "file_path": "/workspaces/semio/semio/py/semio.test.py",
+      "edits": [
+        {
+          "old_string": "REPORTS_DIR = Path(__file__).resolve().parents[2] / \"reports\" / \"export-design-model\"",
+          "new_string": "REPORTS_EXPORT_DIR = Path(__file__).resolve().parents[2] / \"reports\" / \"export-design-model\"\nREPORTS_MODEL_KPI_DIR = Path(__file__).resolve().parents[2] / \"reports\" / \"model-kpi\""
+        },
+        {
+          "old_string": "        REPORTS_DIR.mkdir(parents=True, exist_ok=True)\n        (REPORTS_DIR / \"py.gltf\").write_bytes(result)",
+          "new_string": "        REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)\n        (REPORTS_EXPORT_DIR / \"py.gltf\").write_bytes(result)"
+        },
+        {
+          "old_string": "",
+          "new_string": "        # Save per-language report mirroring ExportDesignModel behavior.\n        REPORTS_MODEL_KPI_DIR.mkdir(parents=True, exist_ok=True)\n        from dataclasses import asdict\n\n        raw = asdict(insights)\n        data: dict[str, Any] = {}\n        for k, v in raw.items():\n            if v is None:\n                continue\n            if isinstance(v, tuple):\n                v = list(v)\n            data[k] = v\n        (REPORTS_MODEL_KPI_DIR / \"py.json\").write_text(json.dumps(data, indent=2, sort_keys=True), encoding=\"utf-8\")\n\n        # Load canonical asset and require exact numeric match for shared fields.\n        canonical_path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, \"model-kpi-nakagin.json\")\n        with open(canonical_path, \"r\", encoding=\"utf-8\") as f:\n            canonical = json.load(f)\n        for key, expected in canonical.items():\n            assert key in data, f\"missing key {key} in insights\"\n            assert data[key] == expected, f\"mismatch for {key}: {data[key]} != {expected}\""
+        }
+      ],
+      "hook_event_name": "afterFileEdit",
+      "cursor_version": "2.6.19",
+      "workspace_roots": [
+        "/workspaces/semio"
+      ],
+      "user_email": "ueli.saluz@posteo.de",
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    }
+  },
+  "response": {}
+}

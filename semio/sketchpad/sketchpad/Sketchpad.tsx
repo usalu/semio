@@ -51,7 +51,23 @@ import {
 import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Fuse, IndexeddbPersistence, MemoryRouter, Outlet, Route, Routes, useHotkeys as useReactHotkeys, useLocation, useNavigate as useReactNavigate, useParams, useSearchParams, useTranslation as useI18nTranslation, useXStateSelector as useSelector, Y } from "../../../semio-elements/ui";
+import {
+  BrowserRouter,
+  Fuse,
+  IndexeddbPersistence,
+  MemoryRouter,
+  Outlet,
+  Route,
+  Routes,
+  useHotkeys as useReactHotkeys,
+  useLocation,
+  useNavigate as useReactNavigate,
+  useParams,
+  useSearchParams,
+  useTranslation as useI18nTranslation,
+  useXStateSelector as useSelector,
+  Y,
+} from "../../../semio-elements/ui";
 import type { FuseResult } from "../../../semio-elements/ui";
 import i18n, { useHotkey, useLabel } from "../i18n";
 import {
@@ -161,7 +177,7 @@ import {
   Transaction,
   Tree,
   TreeStateProvider,
-  Window
+  Window,
 } from "../../../semio-elements/ui";
 import {
   ActionField,
@@ -392,7 +408,7 @@ export abstract class Store<TState> {
 
   onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubscribe {
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
 
     if (!this.fieldSubscribers.has(key)) {
@@ -407,7 +423,7 @@ export abstract class Store<TState> {
             subscribers.forEach((cb) => cb());
           }
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -445,14 +461,14 @@ export abstract class Store<TState> {
   onPathChanged(path: YPath, subscribe: Subscribe): Unsubscribe {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yMap, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -908,7 +924,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 
   onFieldChanged(key: string, subscribe: Subscribe, _deep?: boolean): Disposable {
     const wrappedCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     this.listeners.add(wrappedCallback);
     const dispose = () => this.listeners.delete(wrappedCallback);
@@ -3174,8 +3190,7 @@ export class ModelStore {
     this.yModel.set("file", typeof file === "string" ? file : file.guid);
   }
 
-  get description(): string | undefined {
-  }
+  get description(): string | undefined {}
   set description(description: string | undefined) {
     this.yModel.set("description", description || "");
   }
@@ -3774,8 +3789,7 @@ export class TypeStore {
           });
         }
         if (diff.attributes.added) {
-          diff.attributes.added.forEach((attribute) => {
-          });
+          diff.attributes.added.forEach((attribute) => {});
         }
         if (diff.attributes.updated) {
           diff.attributes.updated.forEach(({ attribute, diff: attributeDiff }) => {
@@ -4423,7 +4437,6 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boo
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖piece🛠️usecurrentpieceplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/useCurrentPiecePlane)
  **/
 export function useCurrentPiecePlane(): Plane {
-
   if (!plane) {
     return {
       origin: { x: 0, y: 0, z: 0 },
@@ -4550,11 +4563,11 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onConnectionsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -5074,7 +5087,9 @@ class ConnectionStore {
     if (diff.rise !== undefined) this.rise = diff.rise;
     if (diff.rotation !== undefined) this.rotation = diff.rotation;
     if (diff.turn !== undefined) this.turn = diff.turn;
+    if (diff.tilt !== undefined) this.tilt = diff.tilt;
     if (diff.u !== undefined) this.u = diff.u;
+    if (diff.v !== undefined) this.v = diff.v;
     if (diff.description !== undefined) this.description = diff.description;
   };
 
@@ -5082,8 +5097,7 @@ class ConnectionStore {
     return createObserver(this.yConnection, subscribe);
   };
 
-  onChangedDeep = (subscribe: Subscribe) => {
-  };
+  onChangedDeep = (subscribe: Subscribe) => {};
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️connectionscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/ConnectionScope)
@@ -5216,8 +5230,7 @@ class StatStore {
     }
   }
 
-  get max(): number | undefined {
-  }
+  get max(): number | undefined {}
   set max(max: number | undefined) {
     if (max !== undefined) {
       this.yStat.set("max", max);
@@ -6000,7 +6013,7 @@ export class DesignStore {
   onPiecesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._piecesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yPieces.observeDeep(notifySubscriber);
@@ -6012,7 +6025,7 @@ export class DesignStore {
   onConnectionsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._connectionsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yConnections.observeDeep(notifySubscriber);
@@ -6037,14 +6050,14 @@ export class DesignStore {
   onPathChanged = (path: YPath, subscribe: Subscribe): Unsubscribe => {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yDesign, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -6136,11 +6149,11 @@ export function usePieces(): Piece[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onPiecesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -6163,11 +6176,11 @@ export function useConnections(): Connection[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onConnectionsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -6205,14 +6218,14 @@ export function useDesignId() {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       const unsubName = designStore.onScalarFieldChanged("name", () => {
         callback();
-        return () => { };
+        return () => {};
       });
       const unsubParent = designStore.onScalarFieldChanged("parent", () => {
         callback();
-        return () => { };
+        return () => {};
       });
       return () => {
         unsubName();
@@ -7367,14 +7380,14 @@ export class KitStore {
   onPathChanged = (path: YPath, subscribe: Subscribe): Unsubscribe => {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yKit, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -7472,7 +7485,7 @@ export class KitStore {
   onConceptsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._conceptsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yConcepts.observeDeep(notifySubscriber);
@@ -7485,7 +7498,7 @@ export class KitStore {
   onTypesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._typesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yTypes.observeDeep(notifySubscriber);
@@ -7498,7 +7511,7 @@ export class KitStore {
   onFilesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._filesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yFiles.observeDeep(notifySubscriber);
@@ -7511,7 +7524,7 @@ export class KitStore {
   onDesignsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._designsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yDesigns.observeDeep(notifySubscriber);
@@ -7524,7 +7537,7 @@ export class KitStore {
   onQualitiesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._qualitiesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yQualities.observeDeep(notifySubscriber);
@@ -7537,7 +7550,7 @@ export class KitStore {
   onAuthorsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._authorsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yAuthors.observeDeep(notifySubscriber);
@@ -7550,7 +7563,7 @@ export class KitStore {
   onFoldersChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._foldersCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yFolders.observeDeep(notifySubscriber);
@@ -7870,11 +7883,11 @@ export function useKitTypes(guid?: Guid): Type[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onTypesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -7899,10 +7912,10 @@ export function useKitName(guid?: Guid): string {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onScalarFieldChanged("name", () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [kitStore],
@@ -7927,10 +7940,10 @@ export function useKitDescription(guid?: Guid): string | undefined {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onScalarFieldChanged("description", () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [kitStore],
@@ -7955,11 +7968,11 @@ export function useKitAuthors(guid?: Guid): Author[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onAuthorsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -7984,11 +7997,11 @@ export function useKitFiles(guid?: Guid): SemioFile[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onFilesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -8013,11 +8026,11 @@ export function useKitQualities(guid?: Guid): Quality[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onQualitiesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -8042,11 +8055,11 @@ export function useKitDesigns(guid?: Guid): Design[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onDesignsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -8079,11 +8092,11 @@ export function useKitFolders(guid?: Guid): Folder[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onFoldersChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -8179,10 +8192,10 @@ export function useKitTransaction(): Transaction {
   const kitStore = store.kit(kitGuid);
   return {
     start: () => {
-      kitStore.yDoc.transact(() => { }, getOrigin());
+      kitStore.yDoc.transact(() => {}, getOrigin());
     },
-    finalize: () => { },
-    abort: () => { },
+    finalize: () => {},
+    abort: () => {},
   };
 }
 
@@ -8473,7 +8486,7 @@ export const kitCommands = {
               const fileBlob = await fileResponse.blob();
               const fileName = file.path.split("/").pop() || file.path;
               files.push(new File([fileBlob], fileName));
-            } catch (error) { }
+            } catch (error) {}
           }
           return {
             diff: {
@@ -8551,13 +8564,13 @@ export const kitCommands = {
                     piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece.guid === piece.guid || connection.connecting.piece.guid === piece.guid)
                       ? piece
                       : {
-                        ...piece,
-                        plane: {
-                          origin: { x: 0, y: 0, z: 0 },
-                          xAxis: { x: 1, y: 0, z: 0 },
-                          yAxis: { x: 0, y: 1, z: 0 },
+                          ...piece,
+                          plane: {
+                            origin: { x: 0, y: 0, z: 0 },
+                            xAxis: { x: 1, y: 0, z: 0 },
+                            yAxis: { x: 0, y: 1, z: 0 },
+                          },
                         },
-                      },
                   ],
                 },
               },
@@ -8581,13 +8594,13 @@ export const kitCommands = {
                     candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece.guid === candidate.guid || connection.connecting.piece.guid === candidate.guid)
                       ? candidate
                       : {
-                        ...candidate,
-                        plane: {
-                          origin: { x: 0, y: 0, z: 0 },
-                          xAxis: { x: 1, y: 0, z: 0 },
-                          yAxis: { x: 0, y: 1, z: 0 },
+                          ...candidate,
+                          plane: {
+                            origin: { x: 0, y: 0, z: 0 },
+                            xAxis: { x: 1, y: 0, z: 0 },
+                            yAxis: { x: 0, y: 1, z: 0 },
+                          },
                         },
-                      },
                   ),
                 },
               },
@@ -9189,25 +9202,25 @@ function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
   const settings = settingsStr
     ? JSON.parse(settingsStr)
     : {
-      apps: {
-        design: {
-          diagram: { proximityConnectDistance: 10 },
-          scene: { gridSize: 24 },
+        apps: {
+          design: {
+            diagram: { proximityConnectDistance: 10 },
+            scene: { gridSize: 24 },
+          },
         },
-      },
-    };
+      };
 
   const panelSizesStr = ySketchpad.get("panelSizes") as string;
   const panelSizes = panelSizesStr
     ? JSON.parse(panelSizesStr)
     : {
-      toolbarHeight: 52,
-      toolsWidth: 230,
-      hudWidth: 230,
-      statsWidth: 230,
-      detailsWidth: 230,
-      consoleHeight: 200,
-    };
+        toolbarHeight: 52,
+        toolsWidth: 230,
+        hudWidth: 230,
+        statsWidth: 230,
+        detailsWidth: 230,
+        consoleHeight: 200,
+      };
 
   const navigationHistoryStr = ySketchpad.get("navigationHistory") as string;
   const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
@@ -9473,8 +9486,7 @@ function readSketchpadStateFromLocalStorage(id: string): Partial<SketchpadState>
     const raw = window.localStorage.getItem(`semio.sketchpad.state.${id}`);
     if (!raw) return undefined;
     return JSON.parse(raw) as Partial<SketchpadState>;
-  } catch {
-  }
+  } catch {}
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖helpers🛠️writesketchpadstatetolocalstorage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Helpers/d/i/writeSketchpadStateToLocalStorage)
@@ -9486,7 +9498,7 @@ function writeSketchpadStateToLocalStorage(id: string, state: SketchpadState): v
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(`semio.sketchpad.state.${id}`, JSON.stringify(state));
-  } catch { }
+  } catch {}
 }
 
 /** toSketchpadInitialState holds the data fields for a toSketchpadInitialState record.
@@ -9622,7 +9634,7 @@ export const sketchpadMachine = setup({
     },
   },
   actions: {
-    navigate: () => { },
+    navigate: () => {},
     navigateImpl: assign(({ context, event }) => {
       if (event.type !== "NAVIGATE") return {};
       const currentNav = context.sketchpad.navigation;
@@ -9676,7 +9688,7 @@ export const sketchpadMachine = setup({
       if (event.type !== "CHANGE") return {};
       return { sketchpad: applySketchpadDiffToState(context.sketchpad, event.diff) };
     }),
-    markDirty: () => { },
+    markDirty: () => {},
 
     dispatchAppEvent: assign(({ context, event }) => executeEventHandler(context, event)),
 
@@ -11472,7 +11484,7 @@ export function useDiffedDesign(): Design {
  **/
 export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscribe, deep: boolean = false): Disposable {
   const callback = () => {
-    subscribe(() => { });
+    subscribe(() => {});
   };
   if (deep) {
     yMap.observeDeep(callback);
@@ -11490,7 +11502,7 @@ export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscr
 export function createFieldObserver<T>(yMap: Y.Map<T>, key: string, subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
   let currentValue = yMap.get(key);
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
   const setupNestedObserver = (value: any) => {
     if (deep && value instanceof Y.Map) {
       const nestedCallback = () => notifySubscriber();
@@ -11527,7 +11539,7 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
   const disposables: Disposable[] = [];
   const keySet = new Set(keys);
   const nestedDisposables = new Map<string, Disposable[]>();
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
   const setupNestedObserver = (key: string, value: any) => {
     const keyDisposables: Disposable[] = [];
     if (deep && value instanceof Y.Map) {
@@ -11578,7 +11590,7 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
  **/
 export function createArrayItemMembershipObserver(getYArray: () => Y.Array<string> | undefined, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
 
   const checkMembership = () => {
     const yArray = getYArray();
@@ -11624,7 +11636,7 @@ export function createNestedArrayItemMembershipObserver(yMap: Y.Map<any>, mapKey
   let currentArray: Y.Array<string> | undefined;
   let nestedMapDisposer: Disposable | null = null;
   let arrayDisposer: Disposable | null = null;
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
 
   const checkMembership = (): boolean => {
     const nestedMap = yMap.get(mapKey) as Y.Map<any> | undefined;
@@ -11782,7 +11794,7 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
       return store.onChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -11801,11 +11813,11 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
 export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -11825,11 +11837,11 @@ export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe
 export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onChangedDeep((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -11860,7 +11872,7 @@ export function useSyncField<T, TSelected = T>(
         (cb: () => void) => {
           cb();
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -11928,7 +11940,7 @@ export function useSyncFields<T, TSelected = T>(
         (cb: () => void) => {
           cb();
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -11976,11 +11988,11 @@ export function useSyncFields<T, TSelected = T>(
 export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return createNestedArrayItemMembershipObserver(store.yMap, mapKey, arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, mapKey, arrayKey, itemId],
@@ -12005,12 +12017,12 @@ export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | n
 export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | null, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
 
       return createNestedArrayItemMembershipObserver(store.yMap, "selection", arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, arrayKey, itemId],
@@ -12040,10 +12052,10 @@ export function usePath<T, TSelected = T>(
   const pathKey = useMemo(() => JSON.stringify(path), [path]);
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onPathChanged(path, () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, pathKey],
@@ -12089,7 +12101,7 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
   }, [derivedStore, key, depsKey]);
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!nodeRef.current) return () => { };
+      if (!nodeRef.current) return () => {};
       return nodeRef.current.subscribe(callback);
     },
     [derivedStore, key, depsKey],
@@ -12196,8 +12208,8 @@ function updateDocsPanelVisibilityState(update: DocsPanelVisibilityUpdate) {
  * nullStore holds the data fields for a nullStore record.
  **/
 const nullStore: Synchronizable<null> = {
-  onChanged: () => () => { },
-  onChangedDeep: () => () => { },
+  onChanged: () => () => {},
+  onChangedDeep: () => () => {},
   snapshot: () => null,
 };
 
@@ -12209,23 +12221,23 @@ export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchro
   const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl> & Store<TAccessl>);
   const state = deep
     ? useSyncExternalStore(
-      (onStoreChange: () => void) =>
-        actualStore.onChangedDeep((cb: () => void) => {
-          cb();
-          onStoreChange();
-          return () => { };
-        }),
-      actualStore.snapshot.bind(actualStore),
-    )
+        (onStoreChange: () => void) =>
+          actualStore.onChangedDeep((cb: () => void) => {
+            cb();
+            onStoreChange();
+            return () => {};
+          }),
+        actualStore.snapshot.bind(actualStore),
+      )
     : useSyncExternalStore(
-      (onStoreChange: () => void) =>
-        actualStore.onChanged((cb: () => void) => {
-          cb();
-          onStoreChange();
-          return () => { };
-        }),
-      actualStore.snapshot.bind(actualStore),
-    );
+        (onStoreChange: () => void) =>
+          actualStore.onChanged((cb: () => void) => {
+            cb();
+            onStoreChange();
+            return () => {};
+          }),
+        actualStore.snapshot.bind(actualStore),
+      );
   if (!store) {
     return { status: StoreStatus.IDLE, data: null as any };
   }
@@ -12507,7 +12519,7 @@ export class SketchpadStore {
       import("./Quality").then((m) => {
         qualityAppModuleCache = m;
       }),
-    ]).catch((err) => { });
+    ]).catch((err) => {});
   }
   private readonly id: string | undefined;
   private readonly remote: RemoteProviders | undefined;
@@ -12715,24 +12727,24 @@ export class SketchpadStore {
     const settings = settingsStr
       ? JSON.parse(settingsStr)
       : {
-        apps: {
-          design: {
-            diagram: { proximityConnectDistance: 10 },
-            scene: { gridSize: 24 },
+          apps: {
+            design: {
+              diagram: { proximityConnectDistance: 10 },
+              scene: { gridSize: 24 },
+            },
           },
-        },
-      };
+        };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-        toolbarHeight: 52,
-        toolsWidth: 230,
-        hudWidth: 230,
-        statsWidth: 230,
-        detailsWidth: 230,
-        consoleHeight: 200,
-      };
+          toolbarHeight: 52,
+          toolsWidth: 230,
+          hudWidth: 230,
+          statsWidth: 230,
+          detailsWidth: 230,
+          consoleHeight: 200,
+        };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
     const recentSearchesStr = this.ySketchpad.get("recentSearches") as string;
@@ -12773,7 +12785,11 @@ export class SketchpadStore {
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
     const kitStore = new KitStore(this, kit, local, remote, this.remote);
     this.kits.set(kit.guid, kitStore);
-    kitStore.onChanged((cb: () => void) => { cb(); this.kitShallowsVersion++; return () => { }; });
+    kitStore.onChanged((cb: () => void) => {
+      cb();
+      this.kitShallowsVersion++;
+      return () => {};
+    });
 
     this.yDoc.transact(() => {
       const kitMetadata = new Y.Map<string | boolean>();
@@ -12821,7 +12837,7 @@ export class SketchpadStore {
       });
 
       await Promise.all(filePromises);
-    } catch (error) { }
+    } catch (error) {}
   };
 
   createKitApp = (kit: Guid) => {
@@ -12983,7 +12999,7 @@ export class SketchpadStore {
   onChanged = (subscribe: Subscribe): Unsubscribe => {
     if (this.actor) {
       const subscription = this.actor.subscribe(() => {
-        subscribe(() => { });
+        subscribe(() => {});
       });
       return () => subscription.unsubscribe();
     }
@@ -12993,7 +13009,7 @@ export class SketchpadStore {
   onChangedDeep = (subscribe: Subscribe): Unsubscribe => {
     if (this.actor) {
       const subscription = this.actor.subscribe(() => {
-        subscribe(() => { });
+        subscribe(() => {});
       });
       return () => subscription.unsubscribe();
     }
@@ -13503,30 +13519,30 @@ export class SketchpadStore {
           const concepts =
             yConcepts.length > 0
               ? Array.from(yConcepts).map((yConcept: any) => {
-                const yMap = yConcept[0] as Y.Map<any>;
-                const concept: Concept = {
-                  guid: yMap.get("guid") as string,
-                  name: yMap.get("name") as string,
-                };
-                const description = yMap.get("description") as string | undefined;
-                if (description) concept.description = description;
-                const icon = yMap.get("icon") as string | undefined;
-                if (icon) concept.icon = icon;
-                const yAttrs = yMap.get("attributes") as Y.Array<any> | undefined;
-                if (yAttrs && yAttrs.length > 0) {
-                  const attributes = Array.from(yAttrs).map((yAttr: any) => {
-                    const attrMap = yAttr[0] as Y.Map<any>;
-                    const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
-                    const value = attrMap.get("value") as string | undefined;
-                    if (value) attribute.value = value;
-                    const definition = attrMap.get("definition") as string | undefined;
-                    if (definition) attribute.definition = definition;
-                    return attribute;
-                  });
-                  if (attributes.length > 0) concept.attributes = attributes;
-                }
-                return concept;
-              })
+                  const yMap = yConcept[0] as Y.Map<any>;
+                  const concept: Concept = {
+                    guid: yMap.get("guid") as string,
+                    name: yMap.get("name") as string,
+                  };
+                  const description = yMap.get("description") as string | undefined;
+                  if (description) concept.description = description;
+                  const icon = yMap.get("icon") as string | undefined;
+                  if (icon) concept.icon = icon;
+                  const yAttrs = yMap.get("attributes") as Y.Array<any> | undefined;
+                  if (yAttrs && yAttrs.length > 0) {
+                    const attributes = Array.from(yAttrs).map((yAttr: any) => {
+                      const attrMap = yAttr[0] as Y.Map<any>;
+                      const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
+                      const value = attrMap.get("value") as string | undefined;
+                      if (value) attribute.value = value;
+                      const definition = attrMap.get("definition") as string | undefined;
+                      if (definition) attribute.definition = definition;
+                      return attribute;
+                    });
+                    if (attributes.length > 0) concept.attributes = attributes;
+                  }
+                  return concept;
+                })
               : conceptGuids?.map((g) => ({ guid: g, name: g }));
           const kit: Partial<Kit> = {
             guid: yKit.get("guid") as string,
@@ -13554,10 +13570,14 @@ export class SketchpadStore {
 
           const kitStore = new KitStore(this, kit, local, remote, this.remote);
           this.kits.set(kit.guid, kitStore);
-          kitStore.onChanged((cb: () => void) => { cb(); this.kitShallowsVersion++; return () => { }; });
+          kitStore.onChanged((cb: () => void) => {
+            cb();
+            this.kitShallowsVersion++;
+            return () => {};
+          });
           this.kitShallowsVersion++;
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
-        } catch (error) { }
+        } catch (error) {}
       } else {
         this.yDoc.transact(() => {
           const index = kitMetadataArray.findIndex((meta) => meta.get("guid") === kitGuid);
@@ -14244,7 +14264,7 @@ export function useKitShallows(): KitShallow[] {
         return kitStore.onChanged((cb: () => void) => {
           cb();
           onStoreChange();
-          return () => { };
+          return () => {};
         });
       });
       return () => {
@@ -14285,12 +14305,12 @@ export function useKitKind(kitGuid: string): "temporary" | "local" | "remote" | 
   const hasKit = useHasKit(kitGuid);
   return useSyncExternalStore(
     (onStoreChange) => {
-      if (!hasKit) return () => { };
+      if (!hasKit) return () => {};
       const kitStore = store.kit(kitGuid);
       return kitStore.onChanged((cb: () => void) => {
         cb();
         onStoreChange();
-        return () => { };
+        return () => {};
       });
     },
     () => {
@@ -14423,7 +14443,7 @@ export function useAppCommands() {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
             actor.send({ type: "HOME.TOGGLE_PANEL", panel: panelKey } as any);
           },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
       case "kit":
         return {
@@ -14437,7 +14457,7 @@ export function useAppCommands() {
             try {
               const app = store.kitApp(kitGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "design":
@@ -14452,7 +14472,7 @@ export function useAppCommands() {
             try {
               const app = store.designApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "type":
@@ -14467,7 +14487,7 @@ export function useAppCommands() {
             try {
               const app = store.typeApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "quality":
@@ -14482,7 +14502,7 @@ export function useAppCommands() {
             try {
               const app = store.qualityApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "docs":
@@ -14493,12 +14513,12 @@ export function useAppCommands() {
               [panelKey]: !prev[panelKey],
             }));
           },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
       default:
         return {
-          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => { },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => {},
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
     }
   }, [store, appType, kitGuid, itemGuid, actor]);
@@ -14674,7 +14694,7 @@ export function useKits(): KitShallow[] {
         return kitStore.onChanged((cb: () => void) => {
           cb();
           onStoreChange();
-          return () => { };
+          return () => {};
         });
       });
       return () => {
@@ -14941,7 +14961,7 @@ export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
     if (module && module.panels) {
       return module.panels;
     }
-  } catch (e) { }
+  } catch (e) {}
   return [];
 }
 
@@ -15064,15 +15084,7 @@ let appConfigsLoadPromise: Promise<void> | null = null;
 async function loadAppConfigs() {
   if (appConfigsLoadPromise) return appConfigsLoadPromise;
   appConfigsLoadPromise = (async () => {
-    const modules = await Promise.all([
-      import("./Home"),
-      import("./Kit"),
-      import("./Type"),
-      import("./Quality"),
-      import("./Design"),
-      import("./Docs"),
-      import("./Feedback"),
-    ]);
+    const modules = await Promise.all([import("./Home"), import("./Kit"), import("./Type"), import("./Quality"), import("./Design"), import("./Docs"), import("./Feedback")]);
     for (const mod of modules) {
       if (!mod?.config) continue;
       appRegistry.register(mod.config as AppConfig);
@@ -15182,24 +15194,22 @@ const PanelSectionContext = createContext<PanelSectionContextValue | null>(null)
 const areToolbarGroupsEquivalent = (left?: PanelSection["toolbarGroup"], right?: PanelSection["toolbarGroup"]): boolean => {
   if (left === right) return true;
   if (!left || !right) return !left && !right;
-  return left.id === right.id
-    && left.labelId === right.labelId
-    && left.order === right.order
-    && left.subToolId === right.subToolId
-    && left.subToolLabelId === right.subToolLabelId;
+  return left.id === right.id && left.labelId === right.labelId && left.order === right.order && left.subToolId === right.subToolId && left.subToolLabelId === right.subToolLabelId;
 };
 
 const arePanelSectionsEquivalent = (left: PanelSection, right: PanelSection): boolean => {
   const leftActionIds = left.actions?.map((action) => action.id) ?? [];
   const rightActionIds = right.actions?.map((action) => action.id) ?? [];
-  return left.id === right.id
-    && left.specificity === right.specificity
-    && left.defaultOpen === right.defaultOpen
-    && left.order === right.order
-    && left.toolbarPlaceholder === right.toolbarPlaceholder
-    && leftActionIds.length === rightActionIds.length
-    && leftActionIds.every((actionId, index) => actionId === rightActionIds[index])
-    && areToolbarGroupsEquivalent(left.toolbarGroup, right.toolbarGroup);
+  return (
+    left.id === right.id &&
+    left.specificity === right.specificity &&
+    left.defaultOpen === right.defaultOpen &&
+    left.order === right.order &&
+    left.toolbarPlaceholder === right.toolbarPlaceholder &&
+    leftActionIds.length === rightActionIds.length &&
+    leftActionIds.every((actionId, index) => actionId === rightActionIds[index]) &&
+    areToolbarGroupsEquivalent(left.toolbarGroup, right.toolbarGroup)
+  );
 };
 
 const areSidePanelTabsEquivalent = (left: SidePanelTab, right: SidePanelTab): boolean => {
@@ -15207,11 +15217,7 @@ const areSidePanelTabsEquivalent = (left: SidePanelTab, right: SidePanelTab): bo
 };
 
 const areFooterItemsEquivalent = (left: FooterItem, right: FooterItem): boolean => {
-  return left.id === right.id
-    && left.text === right.text
-    && left.order === right.order
-    && left.className === right.className
-    && left.disabled === right.disabled;
+  return left.id === right.id && left.text === right.text && left.order === right.order && left.className === right.className && left.disabled === right.disabled;
 };
 
 /**
@@ -15254,10 +15260,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
     });
   }, []);
 
-  const contextValue = useMemo(
-    () => ({ sections, addSection, removeSection }),
-    [sections, addSection, removeSection],
-  );
+  const contextValue = useMemo(() => ({ sections, addSection, removeSection }), [sections, addSection, removeSection]);
 
   return <PanelSectionContext.Provider value={contextValue}>{children}</PanelSectionContext.Provider>;
 };
@@ -15526,7 +15529,7 @@ export function useOrigin(): () => string {
 export function useOriginValue(): string {
   const store = useContext(OriginContext);
   return useSyncExternalStore(
-    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => { }), [store]),
+    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => {}), [store]),
     useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]),
   );
 }
@@ -15639,8 +15642,7 @@ const GlobalFooterItems: FC = () => {
       onClick: () => navigate("/feedback"),
     });
 
-    return () => {
-    };
+    return () => {};
   }, [addFooterItem, removeFooterItem, navigate]);
 
   return null;
@@ -16800,7 +16802,7 @@ const buildSearchResultPath = (result: SearchResult): string => {
   return "";
 };
 
-const Search: FC = ({ }) => {
+const Search: FC = ({}) => {
   const navigate = useNavigate();
   const recentSearches = (useSketchpad((s) => s.recentSearches) as string[]) || [];
   const updateRecentSearches = useUpdateRecentSearches();
@@ -17018,7 +17020,7 @@ const Search: FC = ({ }) => {
   );
 };
 
-const Focus: FC = ({ }) => {
+const Focus: FC = ({}) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const focusContext = useFocusSafe();
@@ -17125,7 +17127,7 @@ const Focus: FC = ({ }) => {
   );
 };
 
-const PanelToggles: FC = ({ }) => {
+const PanelToggles: FC = ({}) => {
   const visiblePanels = useAppPanelVisibility();
   const appCommands = useAppCommands();
   const leftTabs = useSidePanelTabs("left");
@@ -17137,19 +17139,13 @@ const PanelToggles: FC = ({ }) => {
   const isLeftOpen = visiblePanels.leftSidePanel ?? false;
   const isRightOpen = visiblePanels.rightSidePanel ?? false;
 
-  const handleLeftToggle = useCallback(
-    () => {
-      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel");
-    },
-    [appCommands],
-  );
+  const handleLeftToggle = useCallback(() => {
+    appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel");
+  }, [appCommands]);
 
-  const handleRightToggle = useCallback(
-    () => {
-      appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
-    },
-    [appCommands],
-  );
+  const handleRightToggle = useCallback(() => {
+    appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
+  }, [appCommands]);
 
   const LeftIcon = leftTabs[0]?.icon;
   const RightIcon = rightTabs[0]?.icon;
@@ -18163,12 +18159,7 @@ const LayoutWrapper: FC = () => {
         else if (config.position === PanelPosition.RIGHT) removeSidePanelTab("right", id);
       });
     };
-  }, [
-    appType,
-    panelConfigs,
-    addSidePanelTab,
-    removeSidePanelTab,
-  ]);
+  }, [appType, panelConfigs, addSidePanelTab, removeSidePanelTab]);
 
   useEffect(() => {
     const isRightSidePanelVisible = !!panelVisibility.rightSidePanel;
@@ -18250,7 +18241,7 @@ const LayoutWrapper: FC = () => {
       if (i18n.language !== language) {
         i18n
           .changeLanguage(language)
-          .then(() => { })
+          .then(() => {})
           .catch((err) => {
             console.error("[Language Sync] Failed to change language:", err);
           });
@@ -18522,7 +18513,7 @@ const LayoutWrapper: FC = () => {
       }
     });
 
-    Object.keys(groups).forEach(key => {
+    Object.keys(groups).forEach((key) => {
       groups[key].sort((a, b) => (a.toolbarGroup?.order ?? 0) - (b.toolbarGroup?.order ?? 0));
     });
     return groups;
@@ -18531,13 +18522,13 @@ const LayoutWrapper: FC = () => {
   useEffect(() => {
     const groupOrder = ["hand", "selection", "filter", "create", "view", "actions"];
     const firstGroup = groupOrder.find((g) => g !== "hand" && toolbarGroups[g]);
-    setActiveToolbarGroup((prev) => (prev === null || (prev !== null && !toolbarGroups[prev]) ? firstGroup ?? null : prev));
+    setActiveToolbarGroup((prev) => (prev === null || (prev !== null && !toolbarGroups[prev]) ? (firstGroup ?? null) : prev));
   }, [toolbarGroups]);
 
   const toolbarGroupsRef = useRef(toolbarGroups);
   toolbarGroupsRef.current = toolbarGroups;
   const toggleToolbarGroup = useCallback((id: string) => {
-    setActiveToolbarGroup(prev => {
+    setActiveToolbarGroup((prev) => {
       const next = prev === id ? null : id;
       if (next) {
         queueMicrotask(() => {
@@ -18666,41 +18657,41 @@ const LayoutWrapper: FC = () => {
               bottomPanel={
                 consoleSections.length > 0
                   ? {
-                    visible: true,
-                    size: panelSizes.consoleHeight,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
-                    sections: consoleSections,
-                    panelKey: "console",
-                  }
+                      visible: true,
+                      size: panelSizes.consoleHeight,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
+                      sections: consoleSections,
+                      panelKey: "console",
+                    }
                   : undefined
               }
               leftSidePanel={
                 leftSidePanelTabs.length > 0 && panelVisibility.leftSidePanel
                   ? {
-                    position: "left" as const,
-                    visible: true,
-                    size: panelSizes.leftSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
-                    tabs: leftSidePanelTabs,
-                    activeTabId: activeLeftTabId,
-                    onActiveTabChange: setActiveLeftTabId,
-                  }
+                      position: "left" as const,
+                      visible: true,
+                      size: panelSizes.leftSidePanelWidth,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
+                      tabs: leftSidePanelTabs,
+                      activeTabId: activeLeftTabId,
+                      onActiveTabChange: setActiveLeftTabId,
+                    }
                   : undefined
               }
               rightSidePanel={
                 rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
                   ? {
-                    position: "right" as const,
-                    visible: true,
-                    size: panelSizes.rightSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
-                    tabs: rightSidePanelTabs,
-                    activeTabId: activeRightTabId,
-                    onActiveTabChange: setActiveRightTabId,
-                    minSize: 150,
-                    maxSize: 500,
-                    className: rightSidePanelElementSizingClassName,
-                  }
+                      position: "right" as const,
+                      visible: true,
+                      size: panelSizes.rightSidePanelWidth,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                      tabs: rightSidePanelTabs,
+                      activeTabId: activeRightTabId,
+                      onActiveTabChange: setActiveRightTabId,
+                      minSize: 150,
+                      maxSize: 500,
+                      className: rightSidePanelElementSizingClassName,
+                    }
                   : undefined
               }
               toolbar={
@@ -18789,11 +18780,7 @@ const LayoutWrapper: FC = () => {
                                       const hasSelectionSubTools = toolbarGroups["selection"]?.some((s) => Boolean(s.toolbarGroup?.subToolId));
                                       if (hasSelectionSubTools && section.toolbarGroup?.subToolId !== activeSubToolId) return null;
                                     }
-                                    return (
-                                      <ToolbarItem key={section.id}>
-                                        {typeof section.content === "function" ? section.content() : section.content}
-                                      </ToolbarItem>
-                                    );
+                                    return <ToolbarItem key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</ToolbarItem>;
                                   })}
                                 </ToolbarScopeWrapper>
                               </ToolbarZone>
@@ -18936,7 +18923,11 @@ const Sketchpad = ({
   );
 
   if (embedded) {
-    return <MemoryRouter initialEntries={initialEntries} unstable_useTransitions={false}>{routerContent}</MemoryRouter>;
+    return (
+      <MemoryRouter initialEntries={initialEntries} unstable_useTransitions={false}>
+        {routerContent}
+      </MemoryRouter>
+    );
   }
 
   return <BrowserRouter unstable_useTransitions={false}>{routerContent}</BrowserRouter>;

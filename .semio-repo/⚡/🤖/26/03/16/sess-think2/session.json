@@ -1,0 +1,54 @@
+{
+  "id": "sess-think2",
+  "uri": "semiorepo://session/sess-think2",
+  "client": "cursor-chat",
+  "second": "2026-03-16T14:52:04Z",
+  "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-03-16T14:52:04Z",
+        "session": "sess-think2"
+      },
+      "native": {
+        "event": {
+          "native": {
+            "event": {
+              "text": "Thinking deeply",
+              "hook_event_name": "afterAgentThought"
+            }
+          },
+          "session_id": "sess-think2"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-03-16T22:46:51Z",
+        "session": "sess-think2"
+      },
+      "native": {
+        "event": {
+          "native": {
+            "event": {
+              "text": "Thinking deeply",
+              "hook_event_name": "afterAgentThought"
+            }
+          },
+          "session_id": "sess-think2"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

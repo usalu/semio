@@ -1,0 +1,28 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.starting",
+    "second": "2026-03-16T13:16:54Z",
+    "session": "2d7f15b6-4829-42d4-ae84-ad73be6629f5",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2d7f15b6-4829-42d4-ae84-ad73be6629f5.jsonl"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T13:16:54.165Z",
+      "hook_event_name": "PreToolUse",
+      "session_id": "2d7f15b6-4829-42d4-ae84-ad73be6629f5",
+      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2d7f15b6-4829-42d4-ae84-ad73be6629f5.jsonl",
+      "tool_name": "replace_string_in_file",
+      "tool_input": {
+        "filePath": "/workspaces/semio/semio/sketchpad/sketchpad.test.ts",
+        "newString": "    const zipPath = path.resolve(__dirname, \"../assets/semio/metabolism.zip\");\n    const metabolismAlreadyLoaded = await page.getByText(\"Metabolism\", { exact: true }).first().isVisible().catch(() =\u003e false);\n    if (!metabolismAlreadyLoaded) {\n      const fileInput = page.locator('[id=\"semio.sketchpad.app.home.importKit\"]');\n      await expect(fileInput).toBeAttached({ timeout: 10000 });\n      await fileInput.setInputFiles(zipPath);\n      await fileInput.evaluate((el) =\u003e el.dispatchEvent(new Event(\"change\", { bubbles: true })));\n      await page.waitForTimeout(15000);\n    } else {\n      console.log(\"[Panels] Metabolism already loaded, skipping import\");\n    }\n    const metabolismText = page.getByText(\"Metabolism\", { exact: true }).first();",
+        "oldString": "    const zipPath = path.resolve(__dirname, \"../assets/semio/metabolism.zip\");\n    const fileInput = page.locator('[id=\"semio.sketchpad.app.home.importKit\"]');\n    await expect(fileInput).toBeAttached({ timeout: 10000 });\n    await fileInput.setInputFiles(zipPath);\n    await fileInput.evaluate((el) =\u003e el.dispatchEvent(new Event(\"change\", { bubbles: true })));\n    await page.waitForTimeout(15000);\n    const metabolismText = page.getByText(\"Metabolism\", { exact: true }).first();"
+      },
+      "tool_use_id": "toolu_bdrk_015jcCTuFhx7anpy8YiYEc5U__vscode-1773658270505",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

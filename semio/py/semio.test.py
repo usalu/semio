@@ -18,10 +18,10 @@
 
 import json
 import os
-from pathlib import Path
 import struct
 import sys
 import tempfile
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -29,6 +29,10 @@ import pytest
 sys.path.insert(0, os.path.dirname(__file__))
 
 from semio import (
+    geometric_insights_to_report_dict,
+    GeometricInsights,
+    Kit,
+    KitData,
     _applyDesignDiff,
     _build_file_path,
     applyKitDiffDict,
@@ -38,14 +42,11 @@ from semio import (
     export_design_model,
     export_kit,
     flattenDesignDict,
-    GeometricInsights,
     get_geometric_insights_for_model,
     getKitChange,
     getKitDiffDict,
     import_kit,
     inverseKitDiffDict,
-    Kit,
-    KitData,
     parseValidationResult,
     sumQualityInDesignDict,
     validateKitDict,
@@ -53,7 +54,8 @@ from semio import (
 
 TOLERANCE = 0.001
 ASSETS_DIR = "../assets/semio"
-REPORTS_DIR = Path(__file__).resolve().parents[2] / "reports" / "export-design-model"
+REPORTS_EXPORT_DIR = Path(__file__).resolve().parents[2] / "reports" / "export-design-model"
+REPORTS_MODEL_KPI_DIR = Path(__file__).resolve().parents[2] / "reports" / "model-kpi"
 
 
 def load_json(filename: str) -> dict:
@@ -197,10 +199,7 @@ def _select_best_model_like_semio_ts(models: list[dict[str, Any]], selected_tag_
     filtered_models = [model for model in models if _contains_all_tags(model, selected_tag_guids)]
     if len(filtered_models) == 0:
         return None
-    indexed_scores = [
-        _jaccard_tag_guids([t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])], selected_tag_guids)
-        for model in filtered_models
-    ]
+    indexed_scores = [_jaccard_tag_guids([t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])], selected_tag_guids) for model in filtered_models]
     max_score = max(indexed_scores)
     max_score_index = indexed_scores.index(max_score)
     return filtered_models[max_score_index]
@@ -351,8 +350,8 @@ class TestExportDesignModel:
         parsed = json.loads(result.decode("utf-8"))
         assert "nodes" in parsed
         assert "scenes" in parsed
-        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-        (REPORTS_DIR / "py.gltf").write_bytes(result)
+        REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+        (REPORTS_EXPORT_DIR / "py.gltf").write_bytes(result)
 
 
 class TestGetGeometricInsightsForModel:
@@ -363,6 +362,16 @@ class TestGetGeometricInsightsForModel:
         if not os.path.exists(model_path):
             pytest.skip("nakagin-capsule-tower.gltf not found")
         insights = get_geometric_insights_for_model(model_path)
+        REPORTS_MODEL_KPI_DIR.mkdir(parents=True, exist_ok=True)
+        data = geometric_insights_to_report_dict(insights)
+        (REPORTS_MODEL_KPI_DIR / "py.json").write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
+
+        canonical_path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, "model-kpi-nakagin.json")
+        with open(canonical_path, "r", encoding="utf-8") as f:
+            canonical = json.load(f)
+        for key, expected in canonical.items():
+            assert key in data, f"missing key {key}"
+            assert data[key] == expected, f"mismatch for {key}: {data[key]!r} != {expected!r}"
         assert isinstance(insights, GeometricInsights)
         assert insights.bounding_box_min is not None
         assert insights.bounding_box_max is not None

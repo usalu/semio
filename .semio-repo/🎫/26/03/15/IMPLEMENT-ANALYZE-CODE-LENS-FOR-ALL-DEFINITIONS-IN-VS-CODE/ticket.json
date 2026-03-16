@@ -1,6 +1,6 @@
 {
-  "title": "Implement Analyze CodeLens For All Definitions In VS Code",
-  "status": "closed",
+  "title": "Implement Analyze Code Lens For All Definitions In VS Code",
+  "status": "open",
   "description": "Ensure every definition in the semio-repo VS Code extension shows an Analyze code lens across all programming languages and native definition kinds, including TypeScript const, function, class, interface and equivalent symbolized definitions. Remove the symbol-matching gaps and extend existing extension tests accordingly.",
   "summary": "Implemented Analyze CodeLens emission for nested definition entity IDs in the semio-repo VS Code extension and extended the existing extension tests to verify Analyze lenses across representative TypeScript and Go definition sources.",
   "github": {
@@ -8,6 +8,7 @@
   },
   "goal": "🎯sketchpadimprovements",
   "sessions": [
-    "⚪cd57f40c602c45b4b43a2795c74264b8"
+    "⚪cd57f40c602c45b4b43a2795c74264b8",
+    "⚪1818b997fdca415f9c2adb2c35018455"
   ]
 }

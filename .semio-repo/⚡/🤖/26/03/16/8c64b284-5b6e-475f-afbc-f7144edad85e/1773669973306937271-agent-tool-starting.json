@@ -1,0 +1,26 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.starting",
+    "second": "2026-03-16T14:06:13Z",
+    "session": "8c64b284-5b6e-475f-afbc-f7144edad85e"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "pre_mcp_tool_use",
+      "trajectory_id": "8c64b284-5b6e-475f-afbc-f7144edad85e",
+      "timestamp": "2026-03-16T14:06:13.188369426Z",
+      "execution_id": "dbbf90c6-c965-4826-a644-66ba4c5ec4c8",
+      "tool_info": {
+        "mcp_server_name": "semio-repo",
+        "mcp_tool_arguments": {
+          "query": "cli agent events logging session.json"
+        },
+        "mcp_tool_name": "search"
+      }
+    }
+  },
+  "response": {}
+}

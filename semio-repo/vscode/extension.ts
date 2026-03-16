@@ -2019,7 +2019,7 @@ function isDefinitionEntityId(id: string): boolean {
 
 /**
  * [🧰semiorepo🖱️vscode💻extension🔖providers🛠️semiocodelensprovider](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Providers/d/i/SemioCodeLensProvider)
- * SemioCodeLensProvider provides Summarize and Navigate to CodeLenses for all entity IDs.
+ * SemioCodeLensProvider provides Analyze and Navigate to CodeLenses for all entity IDs.
  * It uses the ENTITY_ID_REGEX built dynamically from the ENTITY_EMOJIS registry.
  **/
 class SemioCodeLensProvider implements vscode.CodeLensProvider {
@@ -2039,8 +2039,8 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
       const range = new vscode.Range(startPos, endPos);
 
       lenses.push(new vscode.CodeLens(range, {
-        title: "Summarize",
-        command: "semio.summarize",
+        title: "Analyze",
+        command: "semio.analyze",
         arguments: [id]
       }));
 
@@ -2050,13 +2050,6 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
         arguments: [uri || id]
       }));
 
-      if (isDefinitionEntityId(id)) {
-        lenses.push(new vscode.CodeLens(range, {
-          title: "Analyze",
-          command: "semio.analyze",
-          arguments: [id]
-        }));
-      }
     }
 
     return lenses;
@@ -2375,27 +2368,6 @@ function registerCommands(context: vscode.ExtensionContext): void {
   register("semio.open", (target: string) => {
     if (target) {
       vscode.commands.executeCommand("semio.navigate", target);
-    }
-  });
-
-  register("semio.summarize", async (id: string) => {
-    if (!id) return;
-    const binaryPath = getRepoBinaryPath();
-    if (!binaryPath) return;
-    const cp = require("child_process");
-    try {
-      const output = await new Promise<string>((resolve, reject) => {
-        cp.exec(`"${binaryPath}" summarize "${id}"`, { cwd: getWorkspaceRoot(), encoding: "utf-8" }, (error: any, stdout: string, stderr: string) => {
-          if (error) reject(error);
-          else resolve(stdout || stderr);
-        });
-      });
-      if (outputChannel) {
-        outputChannel.appendLine(`[Summarize] ${id}:\n${output}`);
-        outputChannel.show();
-      }
-    } catch (e: any) {
-      vscode.window.showErrorMessage(`Failed to summarize ${id}: ${e.message}`);
     }
   });
 

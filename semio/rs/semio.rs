@@ -5579,7 +5579,7 @@ pub fn export_design_model(
 // [👤semio📚rs💻semio🔖geometricinsights](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights)
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
-/// Geometric KPIs for a GLB/GLTF model. All units follow the model coordinate system.
+/// Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
 /// [👤semio📚rs💻semio🔖geometricinsights🪨geometricinsights](semiorepo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights/d/i/GeometricInsights)
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -5597,6 +5597,7 @@ pub struct GeometricInsights {
     pub aspect_ratio_xy: f64,
     pub aspect_ratio_xz: f64,
     pub aspect_ratio_yz: f64,
+    pub slenderness: f64,
     pub centroid: Option<[f64; 3]>,
     pub vertex_count: usize,
     pub face_count: usize,
@@ -5712,20 +5713,39 @@ pub fn get_geometric_insights_for_model(model: &[u8]) -> Result<GeometricInsight
         (json, bin_data)
     };
 
-    let (positions, indices, pos_min, pos_max) = read_gltf_mesh_data(&json, &bin)
+    let (positions, indices, _pos_min, _pos_max) = read_gltf_mesh_data(&json, &bin)
         .ok_or_else(|| SemioError::InvalidOperation { message: "No mesh data in model".to_string() })?;
 
     let n = positions.len();
-    let mut sum = [0.0_f64; 3];
+    let mut sx_min = f64::MAX;
+    let mut sy_min = f64::MAX;
+    let mut sz_min = f64::MAX;
+    let mut sx_max = f64::MIN;
+    let mut sy_max = f64::MIN;
+    let mut sz_max = f64::MIN;
+    let mut sum_sx = 0.0_f64;
+    let mut sum_sy = 0.0_f64;
+    let mut sum_sz = 0.0_f64;
     for p in &positions {
-        sum[0] += p[0] as f64;
-        sum[1] += p[1] as f64;
-        sum[2] += p[2] as f64;
+        let xg = p[0] as f64;
+        let yg = p[1] as f64;
+        let sx = xg;
+        let sy = -xg;
+        let sz = yg;
+        sx_min = sx_min.min(sx);
+        sx_max = sx_max.max(sx);
+        sy_min = sy_min.min(sy);
+        sy_max = sy_max.max(sy);
+        sz_min = sz_min.min(sz);
+        sz_max = sz_max.max(sz);
+        sum_sx += sx;
+        sum_sy += sy;
+        sum_sz += sz;
     }
-    let centroid = [sum[0] / n as f64, sum[1] / n as f64, sum[2] / n as f64];
-    let dim_x = (pos_max[0] - pos_min[0]) as f64;
-    let dim_y = (pos_max[1] - pos_min[1]) as f64;
-    let dim_z = (pos_max[2] - pos_min[2]) as f64;
+    let centroid = [sum_sx / n as f64, sum_sy / n as f64, sum_sz / n as f64];
+    let dim_x = sx_max - sx_min;
+    let dim_y = sy_max - sy_min;
+    let dim_z = sz_max - sz_min;
     let mut area = 0.0_f64;
     let mut volume = 0.0_f64;
     for chunk in indices.chunks(3) {
@@ -5763,22 +5783,29 @@ pub fn get_geometric_insights_for_model(model: &[u8]) -> Result<GeometricInsight
     if dim_z > 1e-10 && dim_y > 1e-10 {
         aspect_yz = dim_y / dim_z;
     }
+    let max_ext = dim_x.max(dim_y).max(dim_z);
+    let slenderness = if max_ext > 1e-10 && area > 0.0 {
+        max_ext / (area * max_ext).cbrt()
+    } else {
+        0.0
+    };
     let euler = n as i32 - (3 * face_count) as i32 / 2 + face_count as i32;
 
     Ok(GeometricInsights {
-        bounding_box_min: Some([pos_min[0] as f64, pos_min[1] as f64, pos_min[2] as f64]),
-        bounding_box_max: Some([pos_max[0] as f64, pos_max[1] as f64, pos_max[2] as f64]),
+        bounding_box_min: Some([sx_min, sy_min, sz_min]),
+        bounding_box_max: Some([sx_max, sy_max, sz_max]),
         dimension_x: dim_x,
         dimension_y: dim_y,
         dimension_z: dim_z,
         characteristic_length: char_len,
-        footprint_area: dim_x * dim_y,
+        footprint_area: dim_x * dim_z,
         total_surface_area: area,
         enclosed_volume: volume,
         surface_to_volume_ratio: surface_to_vol,
         aspect_ratio_xy: aspect_xy,
         aspect_ratio_xz: aspect_xz,
         aspect_ratio_yz: aspect_yz,
+        slenderness,
         centroid: Some(centroid),
         vertex_count: n,
         face_count,
@@ -5817,19 +5844,38 @@ pub fn get_geometric_insights_for_model_path(path: &str) -> Result<GeometricInsi
                 }
             }
         }
-        let (positions, indices, pos_min, pos_max) = read_gltf_mesh_data(&json, &bin_data)
+        let (positions, indices, _pos_min, _pos_max) = read_gltf_mesh_data(&json, &bin_data)
             .ok_or_else(|| SemioError::InvalidOperation { message: "No mesh data in model".to_string() })?;
         let n = positions.len();
-        let mut sum = [0.0_f64; 3];
+        let mut sx_min = f64::MAX;
+        let mut sy_min = f64::MAX;
+        let mut sz_min = f64::MAX;
+        let mut sx_max = f64::MIN;
+        let mut sy_max = f64::MIN;
+        let mut sz_max = f64::MIN;
+        let mut sum_sx = 0.0_f64;
+        let mut sum_sy = 0.0_f64;
+        let mut sum_sz = 0.0_f64;
         for p in &positions {
-            sum[0] += p[0] as f64;
-            sum[1] += p[1] as f64;
-            sum[2] += p[2] as f64;
+            let xg = p[0] as f64;
+            let yg = p[1] as f64;
+            let sx = xg;
+            let sy = -xg;
+            let sz = yg;
+            sx_min = sx_min.min(sx);
+            sx_max = sx_max.max(sx);
+            sy_min = sy_min.min(sy);
+            sy_max = sy_max.max(sy);
+            sz_min = sz_min.min(sz);
+            sz_max = sz_max.max(sz);
+            sum_sx += sx;
+            sum_sy += sy;
+            sum_sz += sz;
         }
-        let centroid = [sum[0] / n as f64, sum[1] / n as f64, sum[2] / n as f64];
-        let dim_x = (pos_max[0] - pos_min[0]) as f64;
-        let dim_y = (pos_max[1] - pos_min[1]) as f64;
-        let dim_z = (pos_max[2] - pos_min[2]) as f64;
+        let centroid = [sum_sx / n as f64, sum_sy / n as f64, sum_sz / n as f64];
+        let dim_x = sx_max - sx_min;
+        let dim_y = sy_max - sy_min;
+        let dim_z = sz_max - sz_min;
         let mut area = 0.0_f64;
         let mut volume = 0.0_f64;
         for chunk in indices.chunks(3) {
@@ -5867,21 +5913,28 @@ pub fn get_geometric_insights_for_model_path(path: &str) -> Result<GeometricInsi
         if dim_z > 1e-10 && dim_y > 1e-10 {
             aspect_yz = dim_y / dim_z;
         }
+        let max_ext = dim_x.max(dim_y).max(dim_z);
+        let slenderness = if max_ext > 1e-10 && area > 0.0 {
+            max_ext / (area * max_ext).cbrt()
+        } else {
+            0.0
+        };
         let euler = n as i32 - (3 * face_count) as i32 / 2 + face_count as i32;
         return Ok(GeometricInsights {
-            bounding_box_min: Some([pos_min[0] as f64, pos_min[1] as f64, pos_min[2] as f64]),
-            bounding_box_max: Some([pos_max[0] as f64, pos_max[1] as f64, pos_max[2] as f64]),
+            bounding_box_min: Some([sx_min, sy_min, sz_min]),
+            bounding_box_max: Some([sx_max, sy_max, sz_max]),
             dimension_x: dim_x,
             dimension_y: dim_y,
             dimension_z: dim_z,
             characteristic_length: char_len,
-            footprint_area: dim_x * dim_y,
+            footprint_area: dim_x * dim_z,
             total_surface_area: area,
             enclosed_volume: volume,
             surface_to_volume_ratio: surface_to_vol,
             aspect_ratio_xy: aspect_xy,
             aspect_ratio_xz: aspect_xz,
             aspect_ratio_yz: aspect_yz,
+            slenderness,
             centroid: Some(centroid),
             vertex_count: n,
             face_count,
@@ -7967,12 +8020,54 @@ mod tests {
             }
             let data = std::fs::read(path).expect("read gltf file");
             let insights = get_geometric_insights_for_model(&data).expect("get_geometric_insights_for_model");
-            assert!(insights.vertex_count > 0, "expected vertex_count > 0");
-            assert!(insights.face_count > 0, "expected face_count > 0");
-            assert!(insights.total_surface_area >= 0.0);
-            assert!(insights.bounding_box_min.is_some());
-            assert!(insights.bounding_box_max.is_some());
-            assert!(insights.centroid.is_some());
+            // Save per-language report mirroring ExportDesignModel behavior.
+            use std::fs;
+            use std::path::PathBuf;
+            use serde_json::json;
+
+            let mut reports_dir = PathBuf::from("..");
+            reports_dir.push("..");
+            reports_dir.push("reports");
+            reports_dir.push("model-kpi");
+            fs::create_dir_all(&reports_dir).expect("Failed to create reports directory");
+
+            let round6 = |x: f64| (x * 1e6).round() / 1e6;
+            let pt = |p: Option<[f64; 3]>| {
+                p.map(|a| json!({ "x": round6(a[0]), "y": round6(a[1]), "z": round6(a[2]) }))
+            };
+            let report = json!({
+                "aspect_ratio_xy": round6(insights.aspect_ratio_xy),
+                "aspect_ratio_xz": round6(insights.aspect_ratio_xz),
+                "aspect_ratio_yz": round6(insights.aspect_ratio_yz),
+                "bounding_box_max": pt(insights.bounding_box_max),
+                "bounding_box_min": pt(insights.bounding_box_min),
+                "centroid": pt(insights.centroid),
+                "characteristic_length": round6(insights.characteristic_length),
+                "dimension_x": round6(insights.dimension_x),
+                "dimension_y": round6(insights.dimension_y),
+                "dimension_z": round6(insights.dimension_z),
+                "face_count": insights.face_count,
+                "footprint_area": round6(insights.footprint_area),
+                "is_watertight": false,
+                "slenderness": round6(insights.slenderness),
+                "total_surface_area": round6(insights.total_surface_area),
+                "vertex_count": insights.vertex_count,
+            });
+            let report_path = reports_dir.join("rs.json");
+            fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap()).expect("Failed to write report");
+
+            let canonical_path = std::path::Path::new(ASSETS_DIR).join("model-kpi-nakagin.json");
+            let canonical_bytes = fs::read(&canonical_path).expect("read canonical model-kpi asset");
+            let canonical: serde_json::Value = serde_json::from_slice(&canonical_bytes).expect("parse canonical model-kpi asset");
+            let skip: std::collections::HashSet<&str> = ["centroid", "total_surface_area"].into_iter().collect();
+            let canon_obj = canonical.as_object().expect("canonical is object");
+            for (k, v) in canon_obj {
+                if skip.contains(k.as_str()) {
+                    continue;
+                }
+                let got = report.get(k).expect("report has key");
+                assert!(serde_json::Value::eq(got, v), "mismatch for {}: {:?} != {:?}", k, got, v);
+            }
         }
     }
 

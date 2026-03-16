@@ -184,13 +184,17 @@ function collectDefinitionEntityIds(text: string): string[] {
 }
 
 async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[]> {
-  await vscode.window.showTextDocument(document, { preview: true, preserveFocus: false });
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>("vscode.executeCodeLensProvider", document.uri);
-  return (lenses ?? [])
+  const lenses = await getCodeLenses(document);
+  return lenses
     .filter((lens) => lens.command?.command === "semio.analyze")
     .map((lens) => String(lens.command?.arguments?.[0] ?? ""))
     .filter((id) => id.length > 0);
+}
+
+async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
+  await vscode.window.showTextDocument(document, { preview: true, preserveFocus: false });
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  return await vscode.commands.executeCommand<vscode.CodeLens[]>("vscode.executeCodeLensProvider", document.uri) ?? [];
 }
 
 // #endregion 🔖Utilities
@@ -1789,10 +1793,12 @@ suite("Entity ID Regex Matching Test Suite", () => {
 // #endregion 🔖Entity ID Regex Matching Tests
 
 // #region 🔖CodeLens Behavior Tests
-suite("CodeLens Behavior Test Suite", () => {
-  test("semio.summarize command is registered", async function () {
+suite("CodeLens Behavior Test Suite", function () {
+  this.timeout(15000);
+
+  test("semio.summarize command is not registered", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.summarize"), "summarize command should be registered");
+    assert.ok(!commands.includes("semio.summarize"), "summarize command should not be registered");
   });
 
   test("semio.navigate command is registered", async function () {
@@ -1800,8 +1806,8 @@ suite("CodeLens Behavior Test Suite", () => {
     assert.ok(commands.includes("semio.navigate"), "navigate command should be registered");
   });
 
-  test("semio.summarize does not throw on unknown ID", async function () {
-    await vscode.commands.executeCommand("semio.summarize", "🧰unknownentity");
+  test("semio.analyze does not throw on unknown ID", async function () {
+    await vscode.commands.executeCommand("semio.analyze", "🧰unknownentity");
     assert.ok(true, "should not throw on unknown entity");
   });
 
@@ -1832,6 +1838,12 @@ suite("CodeLens Behavior Test Suite", () => {
 
       assert.deepStrictEqual(missingIds, [], `missing Analyze CodeLens IDs in ${testCase.label} source ${document.uri.fsPath}: ${missingIds.join(", ")}`);
     }
+  });
+
+  test("Entity CodeLenses do not expose summarize commands", async function () {
+    const document = await openWorkspaceDocument("semio-repo/vscode/extension.ts");
+    const summarizeLenses = (await getCodeLenses(document)).filter((lens) => lens.command?.command === "semio.summarize");
+    assert.deepStrictEqual(summarizeLenses, [], "summarize CodeLenses should be fully replaced by analyze");
   });
 });
 

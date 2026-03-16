@@ -560,11 +560,7 @@ function Button({
     danger: "bg-destructive-bg text-destructive-foreground border border-destructive-border hover:bg-hover-window disabled:opacity-50",
   };
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer disabled:cursor-not-allowed ${variants[variant]} ${className}`}
-    >
+    <button onClick={onClick} disabled={disabled || loading} className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer disabled:cursor-not-allowed ${variants[variant]} ${className}`}>
       {loading && (
         <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -659,11 +655,7 @@ function JsonViewer({ data }: { data: unknown }) {
       return String(data);
     }
   }, [data]);
-  return (
-    <pre className="overflow-auto max-h-96 rounded-md bg-panel border border-border-window p-3 text-xs font-mono text-muted-foreground whitespace-pre-wrap break-all">
-      {formatted}
-    </pre>
-  );
+  return <pre className="overflow-auto max-h-96 rounded-md bg-panel border border-border-window p-3 text-xs font-mono text-muted-foreground whitespace-pre-wrap break-all">{formatted}</pre>;
 }
 
 // #endregion 🔖JsonViewer
@@ -678,20 +670,7 @@ function JsonViewer({ data }: { data: unknown }) {
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree✂️ontologynodekind](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/f/OntologyNodeKind)
  *Enumerates all OWL class expression constructs.
  **/
-type OntologyNodeKind =
-  | "Class"
-  | "And"
-  | "Or"
-  | "Not"
-  | "SomeValuesFrom"
-  | "AllValuesFrom"
-  | "ExactCardinality"
-  | "MinCardinality"
-  | "MaxCardinality"
-  | "DataSomeValuesFrom"
-  | "DataAllValuesFrom"
-  | "DataHasValue"
-  | "DatatypeRestriction";
+type OntologyNodeKind = "Class" | "And" | "Or" | "Not" | "SomeValuesFrom" | "AllValuesFrom" | "ExactCardinality" | "MinCardinality" | "MaxCardinality" | "DataSomeValuesFrom" | "DataAllValuesFrom" | "DataHasValue" | "DatatypeRestriction";
 
 /**
  * A node in the ontology class expression tree (schema only, no instances).
@@ -716,20 +695,34 @@ interface OntologyTreeNode {
  **/
 function ontologyNodeIcon(kind: OntologyNodeKind): string {
   switch (kind) {
-    case "Class": return "C";
-    case "And": return "∧";
-    case "Or": return "∨";
-    case "Not": return "¬";
-    case "SomeValuesFrom": return "∃";
-    case "AllValuesFrom": return "∀";
-    case "ExactCardinality": return "=n";
-    case "MinCardinality": return "≥n";
-    case "MaxCardinality": return "≤n";
-    case "DataSomeValuesFrom": return "∃d";
-    case "DataAllValuesFrom": return "∀d";
-    case "DataHasValue": return "v";
-    case "DatatypeRestriction": return "D";
-    default: return "?";
+    case "Class":
+      return "C";
+    case "And":
+      return "∧";
+    case "Or":
+      return "∨";
+    case "Not":
+      return "¬";
+    case "SomeValuesFrom":
+      return "∃";
+    case "AllValuesFrom":
+      return "∀";
+    case "ExactCardinality":
+      return "=n";
+    case "MinCardinality":
+      return "≥n";
+    case "MaxCardinality":
+      return "≤n";
+    case "DataSomeValuesFrom":
+      return "∃d";
+    case "DataAllValuesFrom":
+      return "∀d";
+    case "DataHasValue":
+      return "v";
+    case "DatatypeRestriction":
+      return "D";
+    default:
+      return "?";
   }
 }
 
@@ -746,20 +739,14 @@ function getOntologyNodeDescriptor(node: OntologyTreeNode): { icon: string; prim
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree🛠️ontologytreenodeview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/i/OntologyTreeNodeView)
  *MUST display the node kind icon, label, and expandable children.
  **/
-function OntologyTreeNodeView({
-  node,
-  defaultExpanded = true,
-}: {
-  node: OntologyTreeNode;
-  defaultExpanded?: boolean;
-}) {
+function OntologyTreeNodeView({ node, defaultExpanded = true }: { node: OntologyTreeNode; defaultExpanded?: boolean }) {
   const descriptor = getOntologyNodeDescriptor(node);
 
   return (
     <TreeItem
       id={node.id}
       defaultOpen={defaultExpanded}
-      label={(
+      label={
         <span className="flex min-w-0 flex-col gap-0.5 py-0.5">
           <span className="flex min-w-0 items-center gap-2">
             <span className="inline-flex items-center justify-center h-5 min-w-5 rounded bg-info-bg px-1 text-[10px] font-bold text-info-foreground shrink-0" title={node.kind}>
@@ -767,11 +754,9 @@ function OntologyTreeNodeView({
             </span>
             <span className="min-w-0 truncate text-sm font-medium text-foreground">{descriptor.primaryText}</span>
           </span>
-          {descriptor.secondaryText && (
-            <span className="pl-7 text-[11px] text-muted-foreground">{descriptor.secondaryText}</span>
-          )}
+          {descriptor.secondaryText && <span className="pl-7 text-[11px] text-muted-foreground">{descriptor.secondaryText}</span>}
         </span>
-      )}
+      }
     >
       {node.children.map((child) => (
         <OntologyTreeNodeView key={child.id} node={child} defaultExpanded={defaultExpanded} />
@@ -785,15 +770,7 @@ function OntologyTreeNodeView({
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree🛠️ontologytree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/i/OntologyTree)
  *MUST render the full ontology tree structure from root.
  **/
-function OntologyTree({
-  root,
-  title,
-  defaultExpanded = true,
-}: {
-  root: OntologyTreeNode;
-  title?: string;
-  defaultExpanded?: boolean;
-}) {
+function OntologyTree({ root, title, defaultExpanded = true }: { root: OntologyTreeNode; title?: string; defaultExpanded?: boolean }) {
   return (
     <div className="rounded-lg border border-border-window bg-window overflow-hidden">
       {title && (
@@ -879,9 +856,12 @@ const truthColors: Record<TruthValue, { dot: string; text: string; bg: string }>
  **/
 function truthEmoji(truth: TruthValue): string {
   switch (truth) {
-    case "true": return "🟢";
-    case "false": return "🔴";
-    case "unknown": return "⚪";
+    case "true":
+      return "🟢";
+    case "false":
+      return "🔴";
+    case "unknown":
+      return "⚪";
   }
 }
 
@@ -927,21 +907,25 @@ function getValidationNodeDescriptor(node: ValidationTreeNode): {
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree🛠️validationtreenodeview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/i/ValidationTreeNodeView)
  *MUST display truth indicator, node label, witness/value info, and expandable children.
  **/
-function ValidationTreeNodeView({
-  node,
-  defaultExpanded = true,
-}: {
-  node: ValidationTreeNode;
-  defaultExpanded?: boolean;
-}) {
+function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: ValidationTreeNode; defaultExpanded?: boolean }) {
   const colors = truthColors[node.truth];
   const descriptor = getValidationNodeDescriptor(node);
+
+  // Separate witness children from non-witness children for alternative branches.
+  const witnessChildren = node.children.filter((c) => c.kind === "Witness");
+  const nonWitnessChildren = node.children.filter((c) => c.kind !== "Witness");
+  const useAlternatives = witnessChildren.length > 1;
+  const [activeWitnessIndex, setActiveWitnessIndex] = React.useState(0);
+  const clampedIndex = useAlternatives ? Math.min(activeWitnessIndex, witnessChildren.length - 1) : 0;
 
   return (
     <TreeItem
       id={node.id}
       defaultOpen={defaultExpanded}
-      label={(
+      branchCount={useAlternatives ? witnessChildren.length : undefined}
+      activeBranchIndex={useAlternatives ? clampedIndex : undefined}
+      onBranchChange={useAlternatives ? setActiveWitnessIndex : undefined}
+      label={
         <span className="flex min-w-0 flex-col gap-0.5 py-0.5" title={node.summary}>
           <span className="flex min-w-0 items-center gap-2">
             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0 ${colors.bg} ${colors.text}`}>
@@ -953,34 +937,30 @@ function ValidationTreeNodeView({
                 {descriptor.icon}
               </span>
             )}
-            <span className={`min-w-0 truncate text-sm font-medium ${descriptor.dimmed ? "text-muted-foreground" : node.kind === "DataValue" ? "font-mono text-foreground" : "text-foreground"}`}>
-              {descriptor.primaryText}
-            </span>
+            <span className={`min-w-0 truncate text-sm font-medium ${descriptor.dimmed ? "text-muted-foreground" : node.kind === "DataValue" ? "font-mono text-foreground" : "text-foreground"}`}>{descriptor.primaryText}</span>
             {descriptor.chips.map((chip) => (
               <span
                 key={`${node.id}-${chip}`}
-                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${chip === "counted"
-                  ? "bg-success-bg text-success-foreground"
-                  : chip === "not matching"
-                    ? "bg-info-bg text-info-foreground"
-                    : "bg-panel text-muted-foreground border border-border-window"
-                  }`}
+                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${
+                  chip === "counted" ? "bg-success-bg text-success-foreground" : chip === "not matching" ? "bg-info-bg text-info-foreground" : "bg-panel text-muted-foreground border border-border-window"
+                }`}
               >
                 {chip}
               </span>
             ))}
           </span>
-          {(descriptor.secondaryText || node.summary) && (
-            <span className="pl-10 text-[11px] text-muted-foreground">
-              {[descriptor.secondaryText, node.summary].filter(Boolean).join(" • ")}
-            </span>
-          )}
+          {(descriptor.secondaryText || node.summary) && <span className="pl-10 text-[11px] text-muted-foreground">{[descriptor.secondaryText, node.summary].filter(Boolean).join(" • ")}</span>}
         </span>
-      )}
+      }
     >
-      {node.children.map((child) => (
+      {nonWitnessChildren.map((child) => (
         <ValidationTreeNodeView key={child.id} node={child} defaultExpanded={defaultExpanded} />
       ))}
+      {useAlternatives ? (
+        <ValidationTreeNodeView key={witnessChildren[clampedIndex].id} node={witnessChildren[clampedIndex]} defaultExpanded={defaultExpanded} />
+      ) : (
+        witnessChildren.map((child) => <ValidationTreeNodeView key={child.id} node={child} defaultExpanded={defaultExpanded} />)
+      )}
     </TreeItem>
   );
 }
@@ -990,24 +970,21 @@ function ValidationTreeNodeView({
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree🛠️validationtree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/i/ValidationTree)
  *MUST render instance header, expression, overall truth, and the expanded result tree.
  **/
-function ValidationTree({
-  report,
-  defaultExpanded = true,
-}: {
-  report: ValidationReport;
-  defaultExpanded?: boolean;
-}) {
+function ValidationTree({ report, defaultExpanded = true }: { report: ValidationReport; defaultExpanded?: boolean }) {
   return (
     <div className="rounded-lg border border-border-window bg-window overflow-hidden">
       <div className="border-b border-border-window px-3 py-2 space-y-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-foreground">Instance: {report.instance}</span>
-          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${report.truth === "true"
-            ? "bg-success-bg text-success-foreground border-success-border"
-            : report.truth === "false"
-              ? "bg-destructive-bg text-destructive-foreground border-destructive-border"
-              : "bg-info-bg text-info-foreground border-info-border"
-            }`}>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
+              report.truth === "true"
+                ? "bg-success-bg text-success-foreground border-success-border"
+                : report.truth === "false"
+                  ? "bg-destructive-bg text-destructive-foreground border-destructive-border"
+                  : "bg-info-bg text-info-foreground border-info-border"
+            }`}
+          >
             {truthEmoji(report.truth)} {report.truth}
           </span>
         </div>
@@ -1237,7 +1214,15 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
         {frameworks && frameworks.length > 0 ? (
           <div className="space-y-3">
             {frameworks.map((fw) => (
-              <Collapsible key={fw.id} title={formatId(fw.id)} badge={<span className="text-xs text-muted-foreground">{fw.properties?.length ?? 0} properties, {fw.rules?.length ?? 0} rules</span>}>
+              <Collapsible
+                key={fw.id}
+                title={formatId(fw.id)}
+                badge={
+                  <span className="text-xs text-muted-foreground">
+                    {fw.properties?.length ?? 0} properties, {fw.rules?.length ?? 0} rules
+                  </span>
+                }
+              >
                 <div className="space-y-3">
                   {fw.properties && fw.properties.length > 0 && (
                     <div>
@@ -1386,11 +1371,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
         {platforms && platforms.length > 0 ? (
           <div className="space-y-3">
             {platforms.map((platform) => (
-              <Collapsible
-                key={platform.id}
-                title={formatId(platform.id)}
-                badge={<span className="text-xs text-muted-foreground">{platform.measures?.length ?? 0} measures</span>}
-              >
+              <Collapsible key={platform.id} title={formatId(platform.id)} badge={<span className="text-xs text-muted-foreground">{platform.measures?.length ?? 0} measures</span>}>
                 {platform.measures && platform.measures.length > 0 ? (
                   <div className="space-y-2">
                     {platform.measures.map((pm) => (
@@ -1477,11 +1458,7 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
         {iterations && iterations.length > 0 ? (
           <div className="space-y-1">
             {iterations.map((iter) => (
-              <div
-                key={iter.index}
-                className={`flex items-center gap-3 rounded-md border px-3 py-2 text-sm ${String(iteration?.index) === iter.index ? "border-active-base bg-info-bg" : "border-border-window hover:bg-hover-window"
-                  }`}
-              >
+              <div key={iter.index} className={`flex items-center gap-3 rounded-md border px-3 py-2 text-sm ${String(iteration?.index) === iter.index ? "border-active-base bg-info-bg" : "border-border-window hover:bg-hover-window"}`}>
                 <span className="font-mono font-bold text-active-base">#{iter.index}</span>
                 {String(iteration?.index) === iter.index && <span className="text-xs bg-active-base text-active-foreground px-1.5 py-0.5 rounded">current</span>}
               </div>
@@ -1669,17 +1646,7 @@ function TranslationCard({ targetId, refreshKey }: { targetId: string; refreshKe
   const { data, loading, error } = useCodaResource<Record<string, unknown>>(`coda://translation/${targetId}`, refreshKey);
 
   return (
-    <Card title={formatId(targetId)}>
-      {loading ? (
-        <Spinner label={`Loading ${targetId} translation...`} />
-      ) : error ? (
-        <EmptyState message={error} />
-      ) : data ? (
-        <JsonViewer data={data} />
-      ) : (
-        <EmptyState message="No translation data available." />
-      )}
-    </Card>
+    <Card title={formatId(targetId)}>{loading ? <Spinner label={`Loading ${targetId} translation...`} /> : error ? <EmptyState message={error} /> : data ? <JsonViewer data={data} /> : <EmptyState message="No translation data available." />}</Card>
   );
 }
 
@@ -1700,41 +1667,41 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
   const [actionLog, setActionLog] = useState<Array<{ id: number; action: string; result: unknown; timestamp: string; success: boolean }>>([]);
   const [loading, setLoading] = useState<string | null>(null);
 
-  const runTool = useCallback(async (name: string, args: Record<string, unknown>, label: string) => {
-    setLoading(label);
-    try {
-      const response = await window.coda.tool(name, args);
-      const result = parseMcpTool(response);
-      setActionLog((prev) => [
-        { id: Date.now(), action: label, result: result ?? response.error ?? "No response", timestamp: new Date().toLocaleTimeString(), success: !response.error },
-        ...prev,
-      ]);
-      onRefresh();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setActionLog((prev) => [{ id: Date.now(), action: label, result: { error: message }, timestamp: new Date().toLocaleTimeString(), success: false }, ...prev]);
-    } finally {
-      setLoading(null);
-    }
-  }, [onRefresh]);
+  const runTool = useCallback(
+    async (name: string, args: Record<string, unknown>, label: string) => {
+      setLoading(label);
+      try {
+        const response = await window.coda.tool(name, args);
+        const result = parseMcpTool(response);
+        setActionLog((prev) => [{ id: Date.now(), action: label, result: result ?? response.error ?? "No response", timestamp: new Date().toLocaleTimeString(), success: !response.error }, ...prev]);
+        onRefresh();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setActionLog((prev) => [{ id: Date.now(), action: label, result: { error: message }, timestamp: new Date().toLocaleTimeString(), success: false }, ...prev]);
+      } finally {
+        setLoading(null);
+      }
+    },
+    [onRefresh],
+  );
 
-  const runCall = useCallback(async (method: string, params: Record<string, unknown>, label: string) => {
-    setLoading(label);
-    try {
-      const response = await window.coda.call(method, params);
-      const result = response.result ?? response.error ?? "No response";
-      setActionLog((prev) => [
-        { id: Date.now(), action: label, result, timestamp: new Date().toLocaleTimeString(), success: !response.error },
-        ...prev,
-      ]);
-      onRefresh();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setActionLog((prev) => [{ id: Date.now(), action: label, result: { error: message }, timestamp: new Date().toLocaleTimeString(), success: false }, ...prev]);
-    } finally {
-      setLoading(null);
-    }
-  }, [onRefresh]);
+  const runCall = useCallback(
+    async (method: string, params: Record<string, unknown>, label: string) => {
+      setLoading(label);
+      try {
+        const response = await window.coda.call(method, params);
+        const result = response.result ?? response.error ?? "No response";
+        setActionLog((prev) => [{ id: Date.now(), action: label, result, timestamp: new Date().toLocaleTimeString(), success: !response.error }, ...prev]);
+        onRefresh();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setActionLog((prev) => [{ id: Date.now(), action: label, result: { error: message }, timestamp: new Date().toLocaleTimeString(), success: false }, ...prev]);
+      } finally {
+        setLoading(null);
+      }
+    },
+    [onRefresh],
+  );
 
   return (
     <div className="space-y-6">
@@ -1764,15 +1731,7 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
         </Card>
 
         <Card title="Translation & Validation">
-          <div className="space-y-3">
-            {targetIds.length === 0 ? (
-              <EmptyState message="No project targets found." />
-            ) : (
-              targetIds.map((tid) => (
-                <TargetActionCard key={tid} targetId={tid} loading={loading} runTool={runTool} runCall={runCall} />
-              ))
-            )}
-          </div>
+          <div className="space-y-3">{targetIds.length === 0 ? <EmptyState message="No project targets found." /> : targetIds.map((tid) => <TargetActionCard key={tid} targetId={tid} loading={loading} runTool={runTool} runCall={runCall} />)}</div>
         </Card>
       </div>
 
@@ -1785,7 +1744,14 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
       </Card>
 
       {actionLog.length > 0 && (
-        <Card title="Action Log" action={<Button onClick={() => setActionLog([])} className="text-xs">Clear</Button>}>
+        <Card
+          title="Action Log"
+          action={
+            <Button onClick={() => setActionLog([])} className="text-xs">
+              Clear
+            </Button>
+          }
+        >
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {actionLog.map((entry) => (
               <Collapsible
@@ -1854,27 +1820,15 @@ function TargetActionCard({
     <div className="rounded border border-border-window p-3 space-y-2">
       <div className="text-sm font-medium text-foreground font-mono">{targetId}</div>
       <div className="flex gap-2">
-        <Button
-          onClick={() => runTool("translate", { target_id: targetId }, `Translate ${targetId}`)}
-          loading={loading === `Translate ${targetId}`}
-          disabled={loading !== null}
-        >
+        <Button onClick={() => runTool("translate", { target_id: targetId }, `Translate ${targetId}`)} loading={loading === `Translate ${targetId}`} disabled={loading !== null}>
           <IconTranslations className="w-3.5 h-3.5" />
           Translate
         </Button>
-        <Button
-          onClick={() => runTool("validate", { target_id: targetId }, `Validate ${targetId}`)}
-          loading={loading === `Validate ${targetId}`}
-          disabled={loading !== null}
-        >
+        <Button onClick={() => runTool("validate", { target_id: targetId }, `Validate ${targetId}`)} loading={loading === `Validate ${targetId}`} disabled={loading !== null}>
           <IconCheck className="w-3.5 h-3.5" />
           Validate
         </Button>
-        <Button
-          onClick={() => setManualMode(manualMode ? null : "translate")}
-          variant={manualMode ? "primary" : "secondary"}
-          className="ml-auto text-xs"
-        >
+        <Button onClick={() => setManualMode(manualMode ? null : "translate")} variant={manualMode ? "primary" : "secondary"} className="ml-auto text-xs">
           Manual
         </Button>
       </div>
@@ -1882,16 +1836,24 @@ function TargetActionCard({
         <div className="space-y-2 pt-1">
           <div className="flex gap-2">
             <button
-              onClick={() => { setManualMode("translate"); setManualInput(""); }}
-              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${manualMode === "translate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
-                }`}
+              onClick={() => {
+                setManualMode("translate");
+                setManualInput("");
+              }}
+              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
+                manualMode === "translate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+              }`}
             >
               Translation
             </button>
             <button
-              onClick={() => { setManualMode("validate"); setManualInput(""); }}
-              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${manualMode === "validate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
-                }`}
+              onClick={() => {
+                setManualMode("validate");
+                setManualInput("");
+              }}
+              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
+                manualMode === "validate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+              }`}
             >
               Validation
             </button>
@@ -1904,7 +1866,14 @@ function TargetActionCard({
             className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base resize-y"
           />
           <div className="flex gap-2 justify-end">
-            <Button onClick={() => { setManualMode(null); setManualInput(""); }} variant="secondary" className="text-xs">
+            <Button
+              onClick={() => {
+                setManualMode(null);
+                setManualInput("");
+              }}
+              variant="secondary"
+              className="text-xs"
+            >
               Cancel
             </Button>
             <Button onClick={handleManualSubmit} variant="primary" disabled={!manualInput.trim() || loading !== null} className="text-xs">
@@ -2020,9 +1989,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-foreground">Events</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Real-time event stream from the coda sidecar ({events.length} total).
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Real-time event stream from the coda sidecar ({events.length} total).</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={onClear} variant="secondary" disabled={events.length === 0}>
@@ -2045,8 +2012,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
               <button
                 key={kind}
                 onClick={() => setFilter(filter === kind ? "" : kind)}
-                className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${filter === kind ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
-                  }`}
+                className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${filter === kind ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"}`}
               >
                 {kind}
               </button>
@@ -2065,11 +2031,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
             const ts = new Date(evt.timestamp * 1000);
             const timeStr = ts.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 3 });
             return (
-              <Collapsible
-                key={`${evt.timestamp}-${idx}`}
-                title={evt.event}
-                badge={<span className="text-xs text-muted-foreground font-mono">{timeStr}</span>}
-              >
+              <Collapsible key={`${evt.timestamp}-${idx}`} title={evt.event} badge={<span className="text-xs text-muted-foreground font-mono">{timeStr}</span>}>
                 <JsonViewer data={evt.data} />
               </Collapsible>
             );
@@ -2095,17 +2057,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
  *MUST show create-new-project form and open-existing-project button.
  * MUST call onProjectReady with the resolved project path on success.
  **/
-function WelcomePage({
-  onProjectReady,
-  onMinimize,
-  onMaximize,
-  onClose,
-}: {
-  onProjectReady: (projectPath: string) => void;
-  onMinimize: () => void;
-  onMaximize: () => void;
-  onClose: () => void;
-}) {
+function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onProjectReady: (projectPath: string) => void; onMinimize: () => void; onMaximize: () => void; onClose: () => void }) {
   const [mode, setMode] = useState<"choose" | "create" | "open">("choose");
   const [projectName, setProjectName] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
@@ -2194,7 +2146,10 @@ function WelcomePage({
             <div className="grid grid-cols-2 gap-6">
               {/* #region Create New Project Card */}
               <button
-                onClick={() => { setMode("create"); setError(null); }}
+                onClick={() => {
+                  setMode("create");
+                  setError(null);
+                }}
                 className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border-window bg-window p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer"
               >
                 <div className="rounded-full bg-info-bg p-4 transition-colors group-hover:bg-hover-window">
@@ -2235,14 +2190,18 @@ function WelcomePage({
           {(mode === "create" || mode === "open") && (
             <div className="rounded-xl border border-border-window bg-window p-6 space-y-5">
               <div className="flex items-center gap-2">
-                <button onClick={() => { setMode("choose"); setError(null); }} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                <button
+                  onClick={() => {
+                    setMode("choose");
+                    setError(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
                 </button>
-                <h2 className="text-base font-semibold text-foreground">
-                  {mode === "create" ? "Create New Project" : "Open Existing Project"}
-                </h2>
+                <h2 className="text-base font-semibold text-foreground">{mode === "create" ? "Create New Project" : "Open Existing Project"}</h2>
               </div>
 
               {mode === "create" && (
@@ -2263,14 +2222,14 @@ function WelcomePage({
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-foreground">Project Folder</label>
                     <div className="flex gap-2">
-                      <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">
-                        {selectedFolder ?? "No folder selected"}
-                      </div>
+                      <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">{selectedFolder ?? "No folder selected"}</div>
                       <Button onClick={handlePickFolder} variant="secondary">
                         Browse…
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">A <code className="font-mono">.coda/project.json</code> will be created in this folder.</p>
+                    <p className="text-xs text-muted-foreground">
+                      A <code className="font-mono">.coda/project.json</code> will be created in this folder.
+                    </p>
                   </div>
                 </div>
               )}
@@ -2278,25 +2237,27 @@ function WelcomePage({
               {mode === "open" && (
                 <div className="space-y-4">
                   <div className="flex gap-2">
-                    <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">
-                      {selectedFolder ?? "No folder selected"}
-                    </div>
+                    <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">{selectedFolder ?? "No folder selected"}</div>
                     <Button onClick={handlePickFolder} variant="secondary">
                       Browse…
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Select a folder that contains a <code className="font-mono">.coda/project.json</code> file.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Select a folder that contains a <code className="font-mono">.coda/project.json</code> file.
+                  </p>
                 </div>
               )}
 
-              {error && (
-                <div className="rounded-md border border-destructive-border bg-destructive-bg px-3 py-2 text-sm text-destructive-foreground">
-                  {error}
-                </div>
-              )}
+              {error && <div className="rounded-md border border-destructive-border bg-destructive-bg px-3 py-2 text-sm text-destructive-foreground">{error}</div>}
 
               <div className="flex justify-end gap-2 pt-1">
-                <Button onClick={() => { setMode("choose"); setError(null); }} variant="secondary">
+                <Button
+                  onClick={() => {
+                    setMode("choose");
+                    setError(null);
+                  }}
+                  variant="secondary"
+                >
                   Cancel
                 </Button>
                 {mode === "create" ? (
@@ -2312,11 +2273,7 @@ function WelcomePage({
             </div>
           )}
 
-          {error && mode === "choose" && (
-            <div className="rounded-md border border-destructive-border bg-destructive-bg px-3 py-2 text-sm text-destructive-foreground text-center">
-              {error}
-            </div>
-          )}
+          {error && mode === "choose" && <div className="rounded-md border border-destructive-border bg-destructive-bg px-3 py-2 text-sm text-destructive-foreground text-center">{error}</div>}
         </div>
       </div>
     </div>
@@ -2364,11 +2321,7 @@ function App() {
   useEffect(() => {
     async function init() {
       try {
-        const [id, path, connected] = await Promise.all([
-          window.os.getUserId(),
-          window.project.getPath(),
-          window.coda.getConnectionStatus(),
-        ]);
+        const [id, path, connected] = await Promise.all([window.os.getUserId(), window.project.getPath(), window.coda.getConnectionStatus()]);
         setUserId(id);
         setProjectPath(path);
         setSidecarConnected(connected);
@@ -2419,14 +2372,7 @@ function App() {
   }
 
   if (!projectPath) {
-    return (
-      <WelcomePage
-        onProjectReady={(p) => setProjectPath(p)}
-        onMinimize={handleMinimize}
-        onMaximize={handleMaximize}
-        onClose={handleClose}
-      />
-    );
+    return <WelcomePage onProjectReady={(p) => setProjectPath(p)} onMinimize={handleMinimize} onMaximize={handleMaximize} onClose={handleClose} />;
   }
 
   const projectName = projectPath.split("/").pop() ?? projectPath;
@@ -2439,8 +2385,15 @@ function App() {
           <span className="text-sm font-bold text-active-base">coda</span>
           <span className="text-xs text-muted-foreground">ACC Design Assistant</span>
           <span className="text-xs text-muted-foreground ml-1">|</span>
-          <span className="text-xs text-muted-foreground ml-1 font-mono" title={projectPath}>{projectName}</span>
-          {userId && <><span className="text-xs text-muted-foreground ml-1">·</span><span className="text-xs text-muted-foreground ml-1">{userId}</span></>}
+          <span className="text-xs text-muted-foreground ml-1 font-mono" title={projectPath}>
+            {projectName}
+          </span>
+          {userId && (
+            <>
+              <span className="text-xs text-muted-foreground ml-1">·</span>
+              <span className="text-xs text-muted-foreground ml-1">{userId}</span>
+            </>
+          )}
           <span className="text-xs text-muted-foreground ml-1">·</span>
           <span className={`ml-1 inline-flex items-center gap-1 text-xs ${sidecarConnected ? "text-success-foreground" : "text-destructive-foreground"}`} title={sidecarConnected ? "Sidecar connected" : "Sidecar disconnected (offline mode)"}>
             <span className={`w-1.5 h-1.5 rounded-full ${sidecarConnected ? "bg-success-border" : "bg-destructive-border"}`} />
@@ -2475,8 +2428,9 @@ function App() {
                 <button
                   key={item.id}
                   onClick={() => setCurrentPage(item.id)}
-                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer ${active ? "bg-info-bg text-active-base border-r-2 border-active-base" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"
-                    }`}
+                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer ${
+                    active ? "bg-info-bg text-active-base border-r-2 border-active-base" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"
+                  }`}
                   title={item.label}
                 >
                   <Icon className="w-4 h-4 shrink-0" />

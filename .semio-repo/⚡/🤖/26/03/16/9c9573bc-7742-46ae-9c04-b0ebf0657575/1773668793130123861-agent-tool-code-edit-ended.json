@@ -1,0 +1,33 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "cursor-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.ended",
+    "second": "2026-03-16T13:46:32Z",
+    "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+  },
+  "native": {
+    "event": {
+      "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+      "generation_id": "c421f306-6a0e-4fcd-b949-f3f75020b8ab",
+      "model": "default",
+      "file_path": "/workspaces/semio/semio/net/Semio.Tests/Tests.cs",
+      "edits": [
+        {
+          "old_string": "            Assert.NotNull(insights.BoundingBoxMin);\n            Assert.NotNull(insights.BoundingBoxMax);\n            Assert.True(insights.DimensionX \u003e= 0);\n            Assert.True(insights.DimensionY \u003e= 0);\n            Assert.True(insights.DimensionZ \u003e= 0);\n            Assert.True(insights.VertexCount \u003e 0);\n            Assert.True(insights.FaceCount \u003e 0);\n            Assert.True(insights.TotalSurfaceArea \u003e= 0);\n            Assert.NotNull(insights.Centroid);",
+          "new_string": "\n            // Save per-language report mirroring ExportDesignModel behavior.\n            var reportsDir = Path.Combine(\"..\", \"..\", \"reports\", \"model-kpi\");\n            Directory.CreateDirectory(reportsDir);\n            var reportPath = Path.Combine(reportsDir, \"net.json\");\n            var report = new\n            {\n                aspect_ratio_xy = insights.AspectRatioXY,\n                aspect_ratio_xz = insights.AspectRatioXZ,\n                aspect_ratio_yz = insights.AspectRatioYZ,\n                bounding_box_max = insights.BoundingBoxMax,\n                bounding_box_min = insights.BoundingBoxMin,\n                centroid = insights.Centroid,\n                characteristic_length = insights.CharacteristicLength,\n                convex_hull_volume = insights.ConvexHullVolume,\n                dimension_x = insights.DimensionX,\n                dimension_y = insights.DimensionY,\n                dimension_z = insights.DimensionZ,\n                euler_characteristic = insights.EulerCharacteristic,\n                face_count = insights.FaceCount,\n                footprint_area = insights.FootprintArea,\n                is_watertight = insights.IsWatertight,\n                moments_of_inertia = insights.MomentsOfInertia,\n                principal_axes = insights.PrincipalAxes,\n                slenderness = insights.Slenderness,\n                total_surface_area = insights.TotalSurfaceArea,\n                vertex_count = insights.VertexCount,\n            };\n            var json = JsonConvert.SerializeObject(report, Formatting.Indented);\n            File.WriteAllText(reportPath, json);\n\n            // Load canonical asset and require exact match.\n            var canonicalPath = Path.Combine(AssetsPath, \"model-kpi-nakagin.json\");\n            var canonicalJson = File.ReadAllText(canonicalPath);\n            var canonical = JsonConvert.DeserializeObject\u003cJObject\u003e(canonicalJson);\n            var current = JObject.Parse(json);\n            Assert.True(JToken.DeepEquals(canonical, current), \"net Model/KPI report must match canonical asset\");"
+        }
+      ],
+      "hook_event_name": "afterFileEdit",
+      "cursor_version": "2.6.19",
+      "workspace_roots": [
+        "/workspaces/semio"
+      ],
+      "user_email": "ueli.saluz@posteo.de",
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    }
+  },
+  "response": {}
+}

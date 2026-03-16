@@ -7046,6 +7046,8 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 
 // hashSemioMetaState MUST produce a stable hash for semio metadata state changes.
 // hashSemioMetaState computes and returns a hash for semio metadata content relevant to tree cache invalidation.
+// Only structural changes (new goals, tickets, policies, drafts) invalidate the cache.
+// Ephemeral data (agent session logs, ticket agent tracking updates) is excluded.
 func hashSemioMetaState(repoRoot string) string {
 	metaRoot := filepath.Join(repoRoot, ".semio-repo")
 	if !FileExists(metaRoot) {
@@ -7065,7 +7067,15 @@ func hashSemioMetaState(repoRoot string) string {
 		if rel == "." {
 			return nil
 		}
-		if rel == "cache" || strings.HasPrefix(rel, "cache/") {
+		// Skip directories that are either caches or ephemeral hook artifacts.
+		// These change frequently and must not invalidate the tree cache.
+		switch {
+		case rel == "cache" || strings.HasPrefix(rel, "cache/"):
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		case rel == "⚡" || strings.HasPrefix(rel, "⚡/"):
 			if d.IsDir() {
 				return filepath.SkipDir
 			}
@@ -7073,6 +7083,13 @@ func hashSemioMetaState(repoRoot string) string {
 		}
 		if d.IsDir() {
 			entries = append(entries, "d:"+rel)
+			return nil
+		}
+		// For ticket files, hooks constantly update agent tracking metadata
+		// (via trackHookInOpenTicket) without changing tree-relevant structure.
+		// Only track ticket directory existence (not file contents/modtimes)
+		// so the cache invalidates on ticket open/close but not on every hook.
+		if strings.Contains(rel, "🎫") && !d.IsDir() {
 			return nil
 		}
 		info, statErr := d.Info()
@@ -16159,9 +16176,24 @@ type Codebase struct {
 var (
 	rootDir               string
 	executor              *Executor
+	executorOnce          sync.Once
 	formatterBinaryLookup = exec.LookPath
 	formatterCommandRun   = runFormatterCommand
 )
+
+// ensureExecutor lazily initializes the GraphQL executor on first use.
+// This avoids the expensive initialization (LoadBundles, buildSchema) for
+// commands that don't need GraphQL (e.g. hook calls).
+func ensureExecutor() {
+	executorOnce.Do(func() {
+		var e error
+		executor, e = NewExecutorWithContext(rootDir, NewRepoContext(rootDir))
+		if e != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to initialize GraphQL executor: %v\n", e)
+			executor = nil
+		}
+	})
+}
 
 // init holds the data fields for a init record.
 // [🧰semiorepo⌨️cli💻main🔖types🔖utils🛠️init](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/init)
@@ -16174,12 +16206,6 @@ func init() {
 		rootDir = findRepoRoot(wd)
 	}
 	SetRootDir(rootDir)
-	var e error
-	executor, e = NewExecutorWithContext(rootDir, NewRepoContext(rootDir))
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize GraphQL executor: %v\n", e)
-		executor = nil
-	}
 }
 
 // GetRootDir MUST return the stored value without modification.
@@ -16526,6 +16552,26 @@ func runFormatterAfterAutofix(relPath string, language LanguagePlugin) error {
 		return nil
 	}
 	return WriteTextFile(absPath, formatted)
+}
+
+// runFormatterForFile runs the language-appropriate formatter on the given file.
+// Unlike runFormatterAfterAutofix, this only runs the formatter with no fallback.
+// [🧰semiorepo⌨️cli💻main🔖types🔖utils🛠️runformatterforfile](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterForFile)
+func runFormatterForFile(relPath string) {
+	lang := GetLanguage(relPath)
+	langName := ""
+	if lang != nil {
+		langName = lang.Name()
+	}
+	plans := formatterPlansForLanguage(langName, relPath)
+	for _, plan := range plans {
+		if !isFormatterPlanAvailable(plan, rootDir) {
+			continue
+		}
+		if err := formatterCommandRun(plan.binary, plan.args, rootDir); err == nil {
+			return
+		}
+	}
 }
 
 // WriteJSONFile MUST persist the content atomically.
@@ -34985,6 +35031,7 @@ func jsonToYaml(jsonStr string) (string, error) {
 // gql holds the data fields for a gql record.
 // gql MUST perform the gql operation.
 func gql(query string, variables map[string]interface{}) (string, error) {
+	ensureExecutor()
 	if executor == nil {
 		return "", fmt.Errorf("GraphQL executor not initialized")
 	}
@@ -37518,11 +37565,12 @@ func filterGitIgnored(files []string) []string {
 // [🧰semiorepo⌨️cli💻main🔖types🔖cli🪨reporesolverinstance](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/repoResolverInstance)
 var repoResolverInstance *Resolver
 
-// init holds the data fields for a init record.
-// [🧰semiorepo⌨️cli💻main🔖types🔖cli🛠️init](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/init)
-// init MUST perform the init operation.
-func init() {
-	repoResolverInstance = NewResolver(rootDir)
+// ensureRepoResolver lazily initializes the repoResolverInstance on first use.
+// [🧰semiorepo⌨️cli💻main🔖types🔖cli🛠️ensurereporesolver](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ensureRepoResolver)
+func ensureRepoResolver() {
+	if repoResolverInstance == nil {
+		repoResolverInstance = NewResolver(rootDir)
+	}
 }
 
 // #region 🔖Resolver Methods
@@ -45715,9 +45763,6 @@ func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sess
 		}
 	}
 	_ = WriteJSONFile(metaPath, meta)
-	if shouldWriteHookEventFiles() {
-		writeHookEventFile(logDir, ctx.Event, entry)
-	}
 }
 
 // SessionMeta holds session metadata.
@@ -46066,32 +46111,6 @@ func extractHookResultToolInfo(result interface{}) (string, string) {
 	default:
 		return "", ""
 	}
-}
-
-func writeHookEventFile(logDir string, event HookEvent, entry EventEntry) {
-	base := strings.ReplaceAll(string(event), ".", "-")
-	base = strings.ReplaceAll(base, "_", "-")
-	switch event {
-	case HookAgentToolSearchStarting:
-		base = "agent-tool-search-starting"
-	case HookAgentToolSearchEnded:
-		base = "agent-tool-search-ended"
-	case HookAgentToolCodeEditStarting:
-		base = "agent-tool-code-edit-starting"
-	case HookAgentToolCodeEditEnded:
-		base = "agent-tool-code-edit-ended"
-	case HookAgentToolTerminalStarting:
-		base = "agent-tool-terminal-starting"
-	case HookAgentToolTerminalEnded:
-		base = "agent-tool-terminal-ended"
-	}
-	filePath := filepath.Join(logDir, fmt.Sprintf("%d-%s.json", time.Now().UTC().UnixNano(), base))
-	_ = WriteJSONFile(filePath, entry)
-}
-
-func shouldWriteHookEventFiles() bool {
-	ticket, err := latestOpenTicket()
-	return err == nil && ticket != nil
 }
 
 // appendUniqueString appends a string to a slice if it's not already present.
@@ -46667,6 +46686,10 @@ func dispatchHook(ctx HookContext) interface{} {
 		return HookResultAgentToolCodeEditStarting{HookResultAgentBase: base, Path: path, Old: oldText, New: newText, All: all}
 	case HookAgentToolCodeEditEnded:
 		path, oldText, newText, _ := extractCodeEditFromInput(ctx.Input, ctx.ToolArgs)
+		// Auto-format the edited file.
+		if path != "" {
+			runFormatterForFile(path)
+		}
 		return HookResultAgentToolCodeEditEnded{HookResultAgentBase: base, Path: path, Old: oldText, New: newText}
 	case HookAgentToolTestStarting:
 		labs, tests, timeout := extractTestStartingFromInput(ctx.Input, ctx.ToolArgs)

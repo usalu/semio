@@ -1,0 +1,52 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.tool.plan.updating.starting",
+    "second": "2026-03-16T14:40:10Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PreToolUse",
+      "tool_name": "TodoWrite",
+      "tool_input": {
+        "todos": [
+          {
+            "content": "Open ticket for tree item alternatives",
+            "status": "completed",
+            "activeForm": "Opening ticket"
+          },
+          {
+            "content": "Add alternatives to TreeDataItem and TreeItemProps",
+            "status": "in_progress",
+            "activeForm": "Adding alternatives to TreeDataItem and TreeItemProps"
+          },
+          {
+            "content": "Implement branch navigation UI (\u003c \u003e) in TreeItem and DataItemView",
+            "status": "pending",
+            "activeForm": "Implementing branch navigation UI"
+          },
+          {
+            "content": "Extend Tree.stories.tsx with alternatives storybook",
+            "status": "pending",
+            "activeForm": "Extending Tree storybook with alternatives"
+          },
+          {
+            "content": "Build and verify",
+            "status": "pending",
+            "activeForm": "Building and verifying"
+          }
+        ]
+      },
+      "tool_use_id": "toolu_01WCQzvdMpZWj7uxE3TyrxK5"
+    }
+  },
+  "response": {}
+}

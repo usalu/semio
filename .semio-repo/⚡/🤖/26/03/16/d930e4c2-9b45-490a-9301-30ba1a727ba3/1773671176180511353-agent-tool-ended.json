@@ -1,0 +1,83 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.tool.ended",
+    "second": "2026-03-16T14:26:15Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Glob",
+      "tool_input": {
+        "pattern": "**/semio-elements/**/*.tsx"
+      },
+      "tool_response": {
+        "filenames": [
+          "/workspaces/semio/semio-elements/ui/.storybook/withLevel.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/withTheme.tsx",
+          "/workspaces/semio/semio-elements/ui/stories/elements/Button.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/elements.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/OntologyTree.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/ValidationTree.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/UI.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Popover.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Tree.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Layout.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Dialog.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Accordion.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Avatar.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Scrollable.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Command.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Band.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Footer.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Resizable.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Collapsible.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Navbar.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Panel.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Toolbar.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Strip.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Tabs.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Canvas.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Tooltip.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/ActionGroup.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/DiagramNode.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Icons.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Card.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/HoverCard.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/ButtonGroup.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Steps.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/ToggleGroup.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Select.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Input.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Textarea.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Toggle.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Slider.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Stepper.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Orb.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Ring.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Combobox.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/PageNavigation.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Breadcrumb.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Table.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Page.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Window.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Diagram.stories.tsx",
+          "/workspaces/semio/semio-elements/ui/.storybook/stories/Button.stories.tsx"
+        ],
+        "durationMs": 2049,
+        "numFiles": 50,
+        "truncated": false
+      },
+      "tool_use_id": "toolu_01Lys7ZTGhWKqbRTAS947u8v"
+    }
+  },
+  "response": {}
+}

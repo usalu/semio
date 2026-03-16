@@ -1,0 +1,28 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.starting",
+    "second": "2026-03-16T14:07:24Z",
+    "session": "8c64b284-5b6e-475f-afbc-f7144edad85e"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "pre_write_code",
+      "trajectory_id": "8c64b284-5b6e-475f-afbc-f7144edad85e",
+      "timestamp": "2026-03-16T14:07:24.364999935Z",
+      "execution_id": "dbbf90c6-c965-4826-a644-66ba4c5ec4c8",
+      "tool_info": {
+        "edits": [
+          {
+            "old_string": "func writeHookEventFile(logDir string, event HookEvent, entry EventEntry) {\n\tbase := strings.ReplaceAll(string(event), \".\", \"-\")\n\tbase = strings.ReplaceAll(base, \"_\", \"-\")\n\tswitch event {\n\tcase HookAgentToolSearchStarting:\n\t\tbase = \"agent-tool-search-starting\"\n\tcase HookAgentToolSearchEnded:\n\t\tbase = \"agent-tool-search-ended\"\n\tcase HookAgentToolCodeEditStarting:\n\t\tbase = \"agent-tool-code-edit-starting\"\n\tcase HookAgentToolCodeEditEnded:\n\t\tbase = \"agent-tool-code-edit-ended\"\n\tcase HookAgentToolTerminalStarting:\n\t\tbase = \"agent-tool-terminal-starting\"\n\tcase HookAgentToolTerminalEnded:\n\t\tbase = \"agent-tool-terminal-ended\"\n\t}\n\tfilePath := filepath.Join(logDir, fmt.Sprintf(\"%d-%s.json\", time.Now().UTC().UnixNano(), base))\n\t_ = WriteJSONFile(filePath, entry)\n}\n\nfunc shouldWriteHookEventFiles() bool {\n\tticket, err := latestOpenTicket()\n\treturn err == nil \u0026\u0026 ticket != nil\n}",
+            "new_string": ""
+          }
+        ],
+        "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+      }
+    }
+  },
+  "response": {}
+}

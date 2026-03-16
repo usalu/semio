@@ -42,11 +42,10 @@
       "name": "🛠️dev👤semio-elements📚ui📖storybook",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "dev",
-        "@semio-elements/ui"
+        "run",
+        "dev:elements:ui:storybook"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
@@ -60,11 +59,10 @@
       "name": "🛠️dev👤semio📚js✏️sketchpad",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "dev:sketchpad",
-        "@semio/js"
+        "run",
+        "dev:js:sketchpad"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
@@ -79,10 +77,10 @@
       "preLaunchTask": "semio/3dm ui dev",
       "type": "chrome",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "dev",
-        "@semio/3dm-ui"
+        "run",
+        "dev:3dm:ui"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
@@ -96,11 +94,10 @@
       "name": "🛠️dev👤semio🌐sitesplay",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "dev",
-        "semio/sites/play"
+        "run",
+        "dev:sites:play"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
@@ -115,11 +112,10 @@
       "preLaunchTask": "semio/sites/docs dev",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "dev",
-        "semio/sites/docs"
+        "run",
+        "dev:sites:docs"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
@@ -133,11 +129,10 @@
       "name": "🛠️dev👤semio🖱️desktop",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "dev",
-        "semio/desktop"
+        "run",
+        "dev:desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -147,11 +142,10 @@
       "preLaunchTask": "semio/sketchpad dev",
       "type": "chrome",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "dev",
-        "semio/sketchpad"
+        "run",
+        "dev:sketchpad"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
@@ -198,11 +192,10 @@
       "name": "🛠️dev🔬coda🖱️desktop",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "dev",
-        "@semio/coda-desktop"
+        "run",
+        "dev:coda-desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -236,11 +229,10 @@
       "name": "📦build👤semio📚engine",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/engine"
+        "run",
+        "build:engine"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -249,11 +241,10 @@
       "name": "📦build👤semio🌐sites",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/sites"
+        "run",
+        "build:sites"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -262,11 +253,10 @@
       "name": "📦build👤semio🖱️desktop",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/desktop"
+        "run",
+        "build:desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -275,11 +265,10 @@
       "name": "📦build👤semio🖱️3dm",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "@semio/3dm"
+        "run",
+        "build:3dm"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -288,11 +277,10 @@
       "name": "📦build👤semio🏪assets",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "semio/assets"
+        "run",
+        "build:assets"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -301,11 +289,10 @@
       "name": "📦build🧰semiorepo⌨️cli",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "semio-repo/cli"
+        "run",
+        "build:semiorepo-cli"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -314,11 +301,10 @@
       "name": "📦build🧰semiorepo⌨️server",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "semio-repo/server"
+        "run",
+        "build:semiorepo-server"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -327,11 +313,10 @@
       "name": "📦build🧰semiorepo🖱️vscode",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "semio-repo/vscode"
+        "run",
+        "build:semiorepo-vscode"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -340,11 +325,10 @@
       "name": "📦build🔬coda🖱️desktop",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "build",
-        "@semio/coda-desktop"
+        "run",
+        "build:coda-desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -353,11 +337,10 @@
       "name": "⬆️publish👤semio🌐docs",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "publish",
-        "semio/sites/docs"
+        "run",
+        "publish:docs"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -368,9 +351,8 @@
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "publish",
-        "semio/sites/play"
+        "run",
+        "publish:play"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -381,9 +363,8 @@
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "publish",
-        "semio/sketchpad"
+        "run",
+        "publish:sketchpad"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -392,11 +373,10 @@
       "name": "⬆️publish👤semio🖱️desktop",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "publish",
-        "semio/desktop"
+        "run",
+        "publish:desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -405,11 +385,10 @@
       "name": "⬆️publish🔬coda🖱️desktop",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "runtimeExecutable": "npm",
       "runtimeArgs": [
-        "nx",
-        "publish",
-        "@semio/coda-desktop"
+        "run",
+        "publish:coda-desktop"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"

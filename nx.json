@@ -2,46 +2,70 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "lint": {
-      "dependsOn": ["^lint"],
-      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "dependsOn": [
+        "^lint"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
       "cache": true
     },
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
       "cache": true
     },
     "dev": {
       "cache": false
     },
     "test": {
-      "dependsOn": ["^test"],
-      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "dependsOn": [
+        "^test"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
       "cache": true
     },
     "publish:test": {
-      "dependsOn": ["^publish:test"],
-      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "dependsOn": [
+        "^publish:test"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
       "cache": true
     },
     "publish": {
-      "dependsOn": ["^publish"],
-      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "dependsOn": [
+        "^publish"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
       "cache": true
     },
     "update": {
-      "dependsOn": ["^update"],
-      "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
+      "dependsOn": [
+        "^update"
+      ],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/.env*"
+      ],
       "cache": true
     }
   },
   "plugins": [
-    {
-      "plugin": "@nx/eslint-plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
     {
       "plugin": "@nxlv/python",
       "options": {}

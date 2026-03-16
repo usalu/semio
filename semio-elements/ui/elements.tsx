@@ -369,7 +369,7 @@ export interface ElementBaseProps {
   id: string;
 }
 
-export interface ElementProps extends ElementBaseProps { }
+export interface ElementProps extends ElementBaseProps {}
 
 /**
  * Returns the Tailwind background class for a given level.
@@ -976,14 +976,22 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const value = t(id as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
-  const label = typeof value === "string" ? value : typeof value === "object" && value?.label ? (
-    typeof value.label === "string" ? value.label :
-    typeof value.label === "object" ? (
-      mode === Expertise.BEGINNER && value.label.beginner !== undefined ? String(value.label.beginner) :
-      value.label.normal !== undefined ? String(value.label.normal) :
-      value.label.beginner !== undefined ? String(value.label.beginner) : undefined
-    ) : undefined
-  ) : undefined;
+  const label =
+    typeof value === "string"
+      ? value
+      : typeof value === "object" && value?.label
+        ? typeof value.label === "string"
+          ? value.label
+          : typeof value.label === "object"
+            ? mode === Expertise.BEGINNER && value.label.beginner !== undefined
+              ? String(value.label.beginner)
+              : value.label.normal !== undefined
+                ? String(value.label.normal)
+                : value.label.beginner !== undefined
+                  ? String(value.label.beginner)
+                  : undefined
+            : undefined
+        : undefined;
 
   let hotkey: string | undefined;
   if (typeof value === "object" && value?.hotkey) {
@@ -1357,12 +1365,12 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, classN
   const normalizedName = (name ?? "").trim();
   const initials = normalizedName
     ? normalizedName
-      .split(" ")
-      .slice(0, 2)
-      .map((word: string) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .substring(0, 2)
+        .split(" ")
+        .slice(0, 2)
+        .map((word: string) => word.charAt(0))
+        .join("")
+        .toUpperCase()
+        .substring(0, 2)
     : "";
   const isImageIcon = typeof icon === "string";
   const isReactIcon = icon && !isImageIcon;
@@ -1868,9 +1876,7 @@ function ActionGroupItem({
   if (id) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          {actionGroupItemElement}
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{actionGroupItemElement}</TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
         </TooltipContent>
@@ -2009,9 +2015,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
   if (id) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          {actionElement}
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{actionElement}</TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
         </TooltipContent>
@@ -2144,9 +2148,7 @@ function ButtonGroupItem({
   if (id) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          {buttonGroupItemElement}
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{buttonGroupItemElement}</TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
         </TooltipContent>
@@ -2891,9 +2893,22 @@ function Slider({
   const sliderContent = (
     <div data-slot="slider-content" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
       <div data-slot="slider-row" className="grid h-[22px] grid-cols-[minmax(0,1fr)_28px] items-center gap-x-[8px]">
-        <div data-slot="slider-track-cell" className="min-w-0">{wrappedSlider}</div>
+        <div data-slot="slider-track-cell" className="min-w-0">
+          {wrappedSlider}
+        </div>
         {isEditing ? (
-          <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-[28px] min-w-[28px] border-0 px-0 text-right text-xs" min={min} max={max} autoFocus id={id} />
+          <Input
+            type="number"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleEditKeyDown}
+            onBlur={handleEditBlur}
+            className="w-[28px] min-w-[28px] border-0 px-0 text-right text-xs"
+            min={min}
+            max={max}
+            autoFocus
+            id={id}
+          />
         ) : (
           <span data-slot="slider-value" className="w-[28px] text-right text-xs leading-none select-none" role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
             {displayValue}
@@ -3423,7 +3438,14 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
   const rootDataState = kind === "single" && controlledValue !== undefined ? (controlledValue ? "on" : "off") : undefined;
 
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-state={rootDataState} id={id} type={kind} className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)} {...(restProps as any)}>
+    <ToggleGroupPrimitive.Root
+      data-slot="toggle-group"
+      data-state={rootDataState}
+      id={id}
+      type={kind}
+      className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)}
+      {...(restProps as any)}
+    >
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -3489,9 +3511,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
   if (id) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
-          {toggleGroupItemElement}
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{toggleGroupItemElement}</TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
         </TooltipContent>
@@ -3943,13 +3963,7 @@ function AccordionItem({ className, ...props }: React.ComponentProps<typeof Acco
 function AccordionTrigger({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
   return (
     <AccordionPrimitive.Header className="flex">
-      <AccordionPrimitive.Trigger
-        data-slot="accordion-trigger"
-        className={cn(
-          className,
-        )}
-        {...props}
-      >
+      <AccordionPrimitive.Trigger data-slot="accordion-trigger" className={cn(className)} {...props}>
         {children as React.ReactNode}
         <ChevronDownIconAlt className="text-muted-foreground pointer-events-none size-small shrink-0 translate-y-0.5 transition-transform duration-200" />
       </AccordionPrimitive.Trigger>
@@ -4143,7 +4157,13 @@ function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimi
   return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />;
 }
 
-function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseEnter: externalOnMouseEnter, onMouseLeave: externalOnMouseLeave, ...props }: React.ComponentProps<typeof ResizablePrimitive.Separator> & { onMouseDown?: React.MouseEventHandler<HTMLDivElement>; onMouseEnter?: React.MouseEventHandler<HTMLDivElement>; onMouseLeave?: React.MouseEventHandler<HTMLDivElement> }) {
+function ResizableHandle({
+  className,
+  onMouseDown: externalOnMouseDown,
+  onMouseEnter: externalOnMouseEnter,
+  onMouseLeave: externalOnMouseLeave,
+  ...props
+}: React.ComponentProps<typeof ResizablePrimitive.Separator> & { onMouseDown?: React.MouseEventHandler<HTMLDivElement>; onMouseEnter?: React.MouseEventHandler<HTMLDivElement>; onMouseLeave?: React.MouseEventHandler<HTMLDivElement> }) {
   const [isHovered, setIsHovered] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
 
@@ -4202,28 +4222,27 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 // Consumers MUST wrap content in Scrollable.
 
 // [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖scrollable🪨scrollable](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Scrollable/d/i/Scrollable)
-const Scrollable = React.forwardRef<
-  React.ElementRef<typeof ScrollAreaPrimitive.Viewport>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }
->(({ className, children, orientation = "vertical", ...props }, ref) => {
-  return (
-    <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
-      <ScrollAreaPrimitive.Viewport
-        ref={ref}
-        data-slot="scroll-area-viewport"
-        className={cn(
-          "focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0",
-          orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
-        )}
-      >
-        {children}
-      </ScrollAreaPrimitive.Viewport>
-      {(orientation === "vertical" || orientation === "both") && <ScrollBar />}
-      {(orientation === "horizontal" || orientation === "both") && <ScrollBar orientation="horizontal" />}
-      <ScrollAreaPrimitive.Corner />
-    </ScrollAreaPrimitive.Root>
-  );
-});
+const Scrollable = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Viewport>, React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(
+  ({ className, children, orientation = "vertical", ...props }, ref) => {
+    return (
+      <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn("relative", className)} {...props}>
+        <ScrollAreaPrimitive.Viewport
+          ref={ref}
+          data-slot="scroll-area-viewport"
+          className={cn(
+            "focus-visible:ring-ring/50 size-full transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1 min-w-0",
+            orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
+          )}
+        >
+          {children}
+        </ScrollAreaPrimitive.Viewport>
+        {(orientation === "vertical" || orientation === "both") && <ScrollBar />}
+        {(orientation === "horizontal" || orientation === "both") && <ScrollBar orientation="horizontal" />}
+        <ScrollAreaPrimitive.Corner />
+      </ScrollAreaPrimitive.Root>
+    );
+  },
+);
 Scrollable.displayName = "Scrollable";
 
 /**
@@ -4532,13 +4551,16 @@ const useTreeOpenState = (itemId: string, defaultOpen: boolean) => {
   const treeState = React.useContext(TreeStateContext);
   const [fallbackOpen, setFallbackOpen] = React.useState(defaultOpen);
   const open = treeState ? treeState.getOpenState(itemId, defaultOpen) : fallbackOpen;
-  const setOpen = React.useCallback((value: boolean) => {
-    if (treeState) {
-      treeState.setOpenState(itemId, value);
-      return;
-    }
-    setFallbackOpen(value);
-  }, [itemId, treeState]);
+  const setOpen = React.useCallback(
+    (value: boolean) => {
+      if (treeState) {
+        treeState.setOpenState(itemId, value);
+        return;
+      }
+      setFallbackOpen(value);
+    },
+    [itemId, treeState],
+  );
   return { open, setOpen };
 };
 
@@ -4570,12 +4592,7 @@ const hasNonEmptyChildren = (children: React.ReactNode): boolean => {
   );
 };
 
-const isIgnorableTreeChild = (child: React.ReactNode): boolean => (
-  child === null ||
-  child === undefined ||
-  typeof child === "boolean" ||
-  (typeof child === "string" && child.trim().length === 0)
-);
+const isIgnorableTreeChild = (child: React.ReactNode): boolean => child === null || child === undefined || typeof child === "boolean" || (typeof child === "string" && child.trim().length === 0);
 
 const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeSection" | "TreeItem") => {
   const visitNestedChildren = (value: React.ReactNode) => {
@@ -4671,6 +4688,8 @@ export interface TreeDataItem {
   description?: React.ReactNode;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
+  /** Alternative branches for this item. Each branch is an array of child items. Navigation < > switches between branches. */
+  alternatives?: TreeDataItem[][];
   actions?: TreeSectionAction[];
   className?: string;
   isHighlighted?: boolean;
@@ -4843,6 +4862,12 @@ interface TreeItemProps {
   onDragOver?: React.DragEventHandler<HTMLDivElement>;
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
+  /** Total number of alternative branches. When > 0, shows branch navigation. */
+  branchCount?: number;
+  /** Currently active branch index (0-based). */
+  activeBranchIndex?: number;
+  /** Callback when the user navigates to a different branch. */
+  onBranchChange?: (index: number) => void;
 }
 
 /**
@@ -4850,7 +4875,7 @@ interface TreeItemProps {
  * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.
  **/
 interface SortableTreeItemsProps {
-  items: { id: string;[key: string]: any }[];
+  items: { id: string; [key: string]: any }[];
   onReorder: (oldIndex: number, newIndex: number) => void;
   children: (item: any, index: number) => React.ReactNode;
 }
@@ -4960,30 +4985,18 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const sectionStateId = getTreeSectionStateId(id ?? String(displayLabel ?? "section"));
   const treeOpenState = useTreeOpenState(sectionStateId, defaultOpen);
   const open = controlledOpen ?? treeOpenState.open;
-  const setOpen = React.useCallback((value: boolean) => {
-    treeOpenState.setOpen(value);
-    onOpenChange?.(value);
-  }, [onOpenChange, treeOpenState]);
+  const setOpen = React.useCallback(
+    (value: boolean) => {
+      treeOpenState.setOpen(value);
+      onOpenChange?.(value);
+    },
+    [onOpenChange, treeOpenState],
+  );
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const isHeaderlessSection = displayLabel === undefined
-    && !icon
-    && actions.length === 0
-    && !loading
-    && !draggable
-    && !onDoubleClick
-    && !onSectionPointerEnter
-    && !onSectionPointerLeave
-    && !onDragStart
-    && !onDragOver
-    && !onDragLeave
-    && !onDrop;
-  const rowClassName = cn(
-    "relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0",
-    isExpandable ? "cursor-foldable" : "cursor-selectable",
-    className,
-  );
+  const isHeaderlessSection = displayLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
+  const rowClassName = cn("relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden group min-w-0", isExpandable ? "cursor-foldable" : "cursor-selectable", className);
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree }}>{children}</TreeContext.Provider>;
@@ -5023,14 +5036,18 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         {id ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">{displayLabel}</span>
+              <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">
+                {displayLabel}
+              </span>
             </TooltipTrigger>
             <TooltipContent>
               <DescriptionTooltipContent id={id} />
             </TooltipContent>
           </Tooltip>
         ) : (
-          <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">{displayLabel}</span>
+          <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">
+            {displayLabel}
+          </span>
         )}
         {actions.length > 0 && (
           <div className="flex items-center gap-single">
@@ -5087,14 +5104,18 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           {id ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">{displayLabel}</span>
+                <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">
+                  {displayLabel}
+                </span>
               </TooltipTrigger>
               <TooltipContent>
                 <DescriptionTooltipContent id={id} />
               </TooltipContent>
             </Tooltip>
           ) : (
-            <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">{displayLabel}</span>
+            <span data-slot="tree-label" className="flex-1 text-xs text-muted-foreground font-semibold uppercase tracking-wide truncate">
+              {displayLabel}
+            </span>
           )}
           {actions.length > 0 && (
             <div className="flex items-center gap-single">
@@ -5227,7 +5248,11 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </div>
           )}
         </div>
-        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}><div className="flex flex-col gap-y-[2px]">{children}</div></TreeContext.Provider>}
+        {open && (
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}>
+            <div className="flex flex-col gap-y-[2px]">{children}</div>
+          </TreeContext.Provider>
+        )}
       </>
     );
   }
@@ -5261,7 +5286,9 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       <div className="w-[14px] flex-shrink-0" />
       {isDragHandle && <Action className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} icon={<GripVerticalIcon size={12} className="text-muted-foreground" />} />}
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">{displayLabel as React.ReactNode}</span>
+      <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">
+        {displayLabel as React.ReactNode}
+      </span>
       {actions.length > 0 && (
         <div className="flex items-center gap-single">
           {actions.map((action, index) => (
@@ -5336,6 +5363,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   onDragOver,
   onDragLeave,
   onDrop,
+  branchCount = 0,
+  activeBranchIndex = 0,
+  onBranchChange,
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
   const resolvedLabel = label ?? localizedLabel;
@@ -5365,10 +5395,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const itemId = getTreeItemStateId(String(itemKey));
   const treeOpenState = useTreeOpenState(itemId, defaultOpen);
   const open = controlledOpen ?? treeOpenState.open;
-  const setOpen = React.useCallback((value: boolean) => {
-    treeOpenState.setOpen(value);
-    onOpenChange?.(value);
-  }, [onOpenChange, treeOpenState]);
+  const setOpen = React.useCallback(
+    (value: boolean) => {
+      treeOpenState.setOpen(value);
+      onOpenChange?.(value);
+    },
+    [onOpenChange, treeOpenState],
+  );
   const [isHovered, setIsHovered] = React.useState(false);
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
@@ -5439,8 +5472,43 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               ))}
             </div>
           )}
+          {branchCount > 0 && (
+            <div data-slot="tree-branch-nav" className="flex items-center gap-[2px] flex-shrink-0 ml-auto">
+              <button
+                data-slot="tree-branch-prev"
+                className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
+                disabled={activeBranchIndex <= 0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onBranchChange?.(activeBranchIndex - 1);
+                }}
+              >
+                <ChevronLeftIcon className="size-[12px] text-muted-foreground" />
+              </button>
+              <span data-slot="tree-branch-indicator" className="text-[10px] text-muted-foreground tabular-nums select-none">
+                {activeBranchIndex + 1}/{branchCount}
+              </span>
+              <button
+                data-slot="tree-branch-next"
+                className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
+                disabled={activeBranchIndex >= branchCount - 1}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onBranchChange?.(activeBranchIndex + 1);
+                }}
+              >
+                <ChevronRightIcon className="size-[12px] text-muted-foreground" />
+              </button>
+            </div>
+          )}
         </div>
-        {open && <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}><div className="flex flex-col gap-y-[2px]">{children}</div></TreeContext.Provider>}
+        {open && (
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}>
+            <div className="flex flex-col gap-y-[2px]">{children}</div>
+          </TreeContext.Provider>
+        )}
       </>
     );
   }
@@ -5450,12 +5518,28 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   return (
-    <div data-slot="tree-item-row" role="treeitem" id={id} className={itemClasses} style={{ paddingLeft: `${detailPanelIndentPx(level)}px` }} draggable={draggable} onDragStart={onDragStart} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop} onClick={onClick} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div
+      data-slot="tree-item-row"
+      role="treeitem"
+      id={id}
+      className={itemClasses}
+      style={{ paddingLeft: `${detailPanelIndentPx(level)}px` }}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
       <div className="w-[14px] flex-shrink-0" />
       {loading && <Spinner size="small" className="text-muted-foreground" />}
       {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">{resolvedLabel as React.ReactNode}</span>
+      <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground">
+        {resolvedLabel as React.ReactNode}
+      </span>
       {actions.length > 0 && (
         <div className="flex items-center gap-single">
           {actions.map((action, index) => (
@@ -5470,6 +5554,37 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               icon={action.icon}
             />
           ))}
+        </div>
+      )}
+      {branchCount > 0 && (
+        <div data-slot="tree-branch-nav" className="flex items-center gap-[2px] flex-shrink-0 ml-auto">
+          <button
+            data-slot="tree-branch-prev"
+            className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
+            disabled={activeBranchIndex <= 0}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onBranchChange?.(activeBranchIndex - 1);
+            }}
+          >
+            <ChevronLeftIcon className="size-[12px] text-muted-foreground" />
+          </button>
+          <span data-slot="tree-branch-indicator" className="text-[10px] text-muted-foreground tabular-nums select-none">
+            {activeBranchIndex + 1}/{branchCount}
+          </span>
+          <button
+            data-slot="tree-branch-next"
+            className="p-0 border-0 bg-transparent cursor-selectable disabled:opacity-30 disabled:cursor-default"
+            disabled={activeBranchIndex >= branchCount - 1}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onBranchChange?.(activeBranchIndex + 1);
+            }}
+          >
+            <ChevronRightIcon className="size-[12px] text-muted-foreground" />
+          </button>
         </div>
       )}
     </div>
@@ -5488,7 +5603,14 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
  * Leaf form row combining TreeItem and TreeContent into [Indent][Label][Control].
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treerow](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-ROW)
  **/
-export const TreeRow: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: (event: React.MouseEvent) => void; onDoubleClick?: (event: React.MouseEvent) => void; actions?: TreeSectionAction[] }> = ({ children, className, id, onClick, onDoubleClick, actions }) => (
+export const TreeRow: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: (event: React.MouseEvent) => void; onDoubleClick?: (event: React.MouseEvent) => void; actions?: TreeSectionAction[] }> = ({
+  children,
+  className,
+  id,
+  onClick,
+  onDoubleClick,
+  actions,
+}) => (
   <TreeItem className={className} id={id} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
     {children}
   </TreeItem>
@@ -5501,7 +5623,9 @@ export const TreeRow: React.FC<{ children: React.ReactNode; className?: string; 
 export const HelperRow: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
   <TreeItem className={className}>
     <TreeContent>
-      <div data-slot="helper-row" className="text-xs text-muted-foreground leading-tight py-[2px]">{children}</div>
+      <div data-slot="helper-row" className="text-xs text-muted-foreground leading-tight py-[2px]">
+        {children}
+      </div>
     </TreeContent>
   </TreeItem>
 );
@@ -5566,12 +5690,14 @@ export const Tree = (({
   if (hasNonEmptyChildren(children)) {
     throw new Error("Tree only accepts section data through the sections prop.");
   }
-  const [sectionItemsById, setSectionItemsById] = React.useState<Record<string, TreeDataItem[]>>(() => (sections ?? []).reduce<Record<string, TreeDataItem[]>>((result, section) => {
-    if (section.items) {
-      result[section.id] = section.items;
-    }
-    return result;
-  }, {}));
+  const [sectionItemsById, setSectionItemsById] = React.useState<Record<string, TreeDataItem[]>>(() =>
+    (sections ?? []).reduce<Record<string, TreeDataItem[]>>((result, section) => {
+      if (section.items) {
+        result[section.id] = section.items;
+      }
+      return result;
+    }, {}),
+  );
   const [itemItemsById, setItemItemsById] = React.useState<Record<string, TreeDataItem[]>>({});
   const [loadingById, setLoadingById] = React.useState<Record<string, boolean>>({});
   const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = React.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
@@ -5605,97 +5731,123 @@ export const Tree = (({
     return map;
   }, [itemItemsById, resolvedSections, sectionItemsById]);
 
-  const updateSelection = React.useCallback((nextSelectedIds: string[]) => {
-    const normalizedIds = normalizeTreeSelectedIds(nextSelectedIds, selectionMode);
-    if (controlledSelectedIds === undefined) {
-      setUncontrolledSelectedIds(normalizedIds);
-    }
-    onSelectionChange?.(normalizedIds, normalizedIds.map((id) => itemMap[id]).filter(Boolean));
-  }, [controlledSelectedIds, itemMap, onSelectionChange, selectionMode]);
+  const updateSelection = React.useCallback(
+    (nextSelectedIds: string[]) => {
+      const normalizedIds = normalizeTreeSelectedIds(nextSelectedIds, selectionMode);
+      if (controlledSelectedIds === undefined) {
+        setUncontrolledSelectedIds(normalizedIds);
+      }
+      onSelectionChange?.(normalizedIds, normalizedIds.map((id) => itemMap[id]).filter(Boolean));
+    },
+    [controlledSelectedIds, itemMap, onSelectionChange, selectionMode],
+  );
 
-  const loadSectionItems = React.useCallback(async (section: TreeDataSection) => {
-    if (!section.getItems || sectionItemsById[section.id] !== undefined || loadingById[getTreeSectionLoadingId(section.id)]) {
-      return;
-    }
-    setLoadingById((previousItems) => ({ ...previousItems, [getTreeSectionLoadingId(section.id)]: true }));
-    try {
-      const nextItems = await section.getItems();
-      setSectionItemsById((previousItems) => ({ ...previousItems, [section.id]: nextItems }));
-    } finally {
-      setLoadingById((previousItems) => ({ ...previousItems, [getTreeSectionLoadingId(section.id)]: false }));
-    }
-  }, [loadingById, sectionItemsById]);
+  const loadSectionItems = React.useCallback(
+    async (section: TreeDataSection) => {
+      if (!section.getItems || sectionItemsById[section.id] !== undefined || loadingById[getTreeSectionLoadingId(section.id)]) {
+        return;
+      }
+      setLoadingById((previousItems) => ({ ...previousItems, [getTreeSectionLoadingId(section.id)]: true }));
+      try {
+        const nextItems = await section.getItems();
+        setSectionItemsById((previousItems) => ({ ...previousItems, [section.id]: nextItems }));
+      } finally {
+        setLoadingById((previousItems) => ({ ...previousItems, [getTreeSectionLoadingId(section.id)]: false }));
+      }
+    },
+    [loadingById, sectionItemsById],
+  );
 
-  const loadItemItems = React.useCallback(async (item: TreeDataItem) => {
-    if (!item.getItems || itemItemsById[item.id] !== undefined || loadingById[getTreeItemLoadingId(item.id)]) {
-      return;
-    }
-    setLoadingById((previousItems) => ({ ...previousItems, [getTreeItemLoadingId(item.id)]: true }));
-    try {
-      const nextItems = await item.getItems();
-      setItemItemsById((previousItems) => ({ ...previousItems, [item.id]: nextItems }));
-    } finally {
-      setLoadingById((previousItems) => ({ ...previousItems, [getTreeItemLoadingId(item.id)]: false }));
-    }
-  }, [itemItemsById, loadingById]);
+  const loadItemItems = React.useCallback(
+    async (item: TreeDataItem) => {
+      if (!item.getItems || itemItemsById[item.id] !== undefined || loadingById[getTreeItemLoadingId(item.id)]) {
+        return;
+      }
+      setLoadingById((previousItems) => ({ ...previousItems, [getTreeItemLoadingId(item.id)]: true }));
+      try {
+        const nextItems = await item.getItems();
+        setItemItemsById((previousItems) => ({ ...previousItems, [item.id]: nextItems }));
+      } finally {
+        setLoadingById((previousItems) => ({ ...previousItems, [getTreeItemLoadingId(item.id)]: false }));
+      }
+    },
+    [itemItemsById, loadingById],
+  );
 
   const handleDragOver = React.useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  const handleSelectItem = React.useCallback((event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
-    const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
-    const nextSelection = getTreeNextSelectionState({
-      selectionMode,
-      selectedIds: resolvedSelectedIds,
-      orderedIds,
-      targetId: item.id,
-      anchorId: anchorIdRef.current,
-      additiveKey: event.metaKey || event.ctrlKey,
-      rangeKey: event.shiftKey,
-    });
-    anchorIdRef.current = nextSelection.anchorId;
-    updateSelection(nextSelection.selectedIds);
-    item.onClick?.(event, { path, selectedIds: nextSelection.selectedIds, sectionId: section.id });
-  }, [itemItemsById, resolvedSections, resolvedSelectedIds, sectionItemsById, selectionMode, updateSelection]);
+  const handleSelectItem = React.useCallback(
+    (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
+      const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
+      const nextSelection = getTreeNextSelectionState({
+        selectionMode,
+        selectedIds: resolvedSelectedIds,
+        orderedIds,
+        targetId: item.id,
+        anchorId: anchorIdRef.current,
+        additiveKey: event.metaKey || event.ctrlKey,
+        rangeKey: event.shiftKey,
+      });
+      anchorIdRef.current = nextSelection.anchorId;
+      updateSelection(nextSelection.selectedIds);
+      item.onClick?.(event, { path, selectedIds: nextSelection.selectedIds, sectionId: section.id });
+    },
+    [itemItemsById, resolvedSections, resolvedSelectedIds, sectionItemsById, selectionMode, updateSelection],
+  );
 
-  const handleDoubleClickItem = React.useCallback((event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
-    item.onDoubleClick?.(event, { path, selectedIds: resolvedSelectedIds, sectionId: section.id });
-  }, [resolvedSelectedIds]);
+  const handleDoubleClickItem = React.useCallback(
+    (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) => {
+      item.onDoubleClick?.(event, { path, selectedIds: resolvedSelectedIds, sectionId: section.id });
+    },
+    [resolvedSelectedIds],
+  );
 
-  const handleDragStart = React.useCallback((event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
-    const nextDraggedIds = resolvedSelectedIds.includes(item.id) ? resolvedSelectedIds : [item.id];
-    const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
-    setDraggedIds(nextDraggedIds);
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData(treeDefaultDragMimeKind, JSON.stringify(nextDraggedIds));
-    const customData = dragAndDropController?.getDragData?.({ items: sourceItems, sourceItem: item, section });
-    Object.entries(customData ?? {}).forEach(([kind, value]) => {
-      event.dataTransfer.setData(kind, value);
-    });
-    dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
-  }, [dragAndDropController, itemMap, resolvedSelectedIds]);
+  const handleDragStart = React.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
+      const nextDraggedIds = resolvedSelectedIds.includes(item.id) ? resolvedSelectedIds : [item.id];
+      const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
+      setDraggedIds(nextDraggedIds);
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData(treeDefaultDragMimeKind, JSON.stringify(nextDraggedIds));
+      const customData = dragAndDropController?.getDragData?.({ items: sourceItems, sourceItem: item, section });
+      Object.entries(customData ?? {}).forEach(([kind, value]) => {
+        event.dataTransfer.setData(kind, value);
+      });
+      dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });
+    },
+    [dragAndDropController, itemMap, resolvedSelectedIds],
+  );
 
-  const handleDrop = React.useCallback((event: React.DragEvent<HTMLDivElement>, target: TreeDataItem | TreeDataSection, targetKind: "item" | "section", section: TreeDataSection) => {
-    event.preventDefault();
-    const sourceIds = draggedIds.length > 0 ? draggedIds : JSON.parse(event.dataTransfer.getData(treeDefaultDragMimeKind) || "[]");
-    dragAndDropController?.handleDrop?.({
-      target,
-      targetKind,
-      data: getTreeDropData(event),
-      sourceItems: sourceIds.map((id: string) => itemMap[id]).filter(Boolean),
-      section,
-    });
-    setDraggedIds([]);
-  }, [dragAndDropController, draggedIds, itemMap]);
+  const handleDrop = React.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, target: TreeDataItem | TreeDataSection, targetKind: "item" | "section", section: TreeDataSection) => {
+      event.preventDefault();
+      const sourceIds = draggedIds.length > 0 ? draggedIds : JSON.parse(event.dataTransfer.getData(treeDefaultDragMimeKind) || "[]");
+      dragAndDropController?.handleDrop?.({
+        target,
+        targetKind,
+        data: getTreeDropData(event),
+        sourceItems: sourceIds.map((id: string) => itemMap[id]).filter(Boolean),
+        section,
+      });
+      setDraggedIds([]);
+    },
+    [dragAndDropController, draggedIds, itemMap],
+  );
 
   const DataItemView: React.FC<{ item: TreeDataItem; section: TreeDataSection; path: string[]; isLastItem: boolean }> = ({ item, section, path, isLastItem }) => {
-    const childItems = getTreeItemItems(item, itemItemsById);
+    const baseChildItems = getTreeItemItems(item, itemItemsById);
+    const alternatives = item.alternatives ?? [];
+    const branchCount = alternatives.length;
+    const [activeBranchIndex, setActiveBranchIndex] = React.useState(0);
+    const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
+    const childItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
     const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), getTreeItemDefaultOpen(item));
     const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
     const hasDynamicChildren = Boolean(item.getItems);
-    const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState);
+    const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
     const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
 
     React.useEffect(() => {
@@ -5726,6 +5878,9 @@ export const Tree = (({
         onDragStart={(event) => handleDragStart(event, item, section)}
         onDragOver={handleDragOver}
         onDrop={(event) => handleDrop(event, item, "item", section)}
+        branchCount={branchCount}
+        activeBranchIndex={clampedBranchIndex}
+        onBranchChange={setActiveBranchIndex}
       >
         {childItems.map((childItem, index) => (
           <DataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
@@ -5783,7 +5938,9 @@ export const Tree = (({
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true }}>
         <div className={`w-full min-w-0 overflow-hidden ${className}`}>
-          {resolvedSections.map((section) => <DataSectionView key={section.id} section={section} />)}
+          {resolvedSections.map((section) => (
+            <DataSectionView key={section.id} section={section} />
+          ))}
           {resolvedSections.length === 0 && emptyState}
         </div>
       </TreeContext.Provider>
@@ -6085,11 +6242,7 @@ interface ControlTreeNode {
  * Pure function converting flat ControlDef[] paths into a nested tree. Filtering matches leaf keys case-insensitively.
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🪨buildcontroltree](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/BUILD-CONTROL-TREE)
  **/
-export function buildControlTree(
-  controls: ControlDef[],
-  filterText: string,
-  folderSettings?: Record<string, ControlTreeFolderSettings>,
-): Record<string, ControlTreeNode> {
+export function buildControlTree(controls: ControlDef[], filterText: string, folderSettings?: Record<string, ControlTreeFolderSettings>): Record<string, ControlTreeNode> {
   const root: Record<string, ControlTreeNode> = {};
   const lowerFilter = filterText.toLowerCase();
   for (const control of controls) {
@@ -6158,7 +6311,11 @@ export const defaultControlRenderer = (def: ControlDef): React.ReactNode => {
             {(def.meta?.options ?? []).map((opt: string | { value: string; label: string }) => {
               const v = typeof opt === "string" ? opt : opt.value;
               const l = typeof opt === "string" ? opt : opt.label;
-              return <SelectItem key={v} value={v}>{l}</SelectItem>;
+              return (
+                <SelectItem key={v} value={v}>
+                  {l}
+                </SelectItem>
+              );
             })}
           </SelectContent>
         </Select>
@@ -6185,8 +6342,12 @@ interface ControlTreeRowProps {
 }
 const ControlTreeRow: React.FC<ControlTreeRowProps> = ({ className, left, right }) => (
   <div data-slot="control-tree-row" className={cn("grid min-w-0 w-full items-center gap-x-[8px] min-h-[20px]", className)} style={{ gridTemplateColumns: `minmax(0, 1fr) ${controlTreeValueColumnWidthPx}px` }}>
-    <div data-slot="control-tree-row-left" className="relative min-w-0">{left}</div>
-    <div data-slot="control-tree-row-right" className="min-w-0">{right}</div>
+    <div data-slot="control-tree-row-left" className="relative min-w-0">
+      {left}
+    </div>
+    <div data-slot="control-tree-row-right" className="min-w-0">
+      {right}
+    </div>
   </div>
 );
 interface ControlTreeFolderRowProps {
@@ -6206,10 +6367,7 @@ const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, class
       <ControlTreeRow
         className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.folderRow)}
         left={
-          <div
-            className="flex min-w-0 items-center gap-[6px]"
-            style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${detailPanelIndentPx(level) + 2}px` }}
-          >
+          <div className="flex min-w-0 items-center gap-[6px]" style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${detailPanelIndentPx(level) + 2}px` }}>
             <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
             {hasChildren ? (
               <button
@@ -6252,10 +6410,7 @@ const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderCon
     <ControlTreeRow
       className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.controlRow)}
       left={
-        <div
-          className="flex min-w-0 items-center gap-[6px]"
-          style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${detailPanelIndentPx(level) + 2}px` }}
-        >
+        <div className="flex min-w-0 items-center gap-[6px]" style={{ paddingTop: "3px", paddingBottom: "3px", paddingLeft: `${detailPanelIndentPx(level) + 2}px` }}>
           <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
           <div className="w-[14px] flex-shrink-0" />
           <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-foreground", classNames?.controlLabel)}>
@@ -6263,7 +6418,11 @@ const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderCon
           </span>
         </div>
       }
-      right={<div data-slot="control-tree-control-body" className={cn("min-w-0", classNames?.controlBody)}>{renderControl(node.control!)}</div>}
+      right={
+        <div data-slot="control-tree-control-body" className={cn("min-w-0", classNames?.controlBody)}>
+          {renderControl(node.control!)}
+        </div>
+      }
     />
   );
 };
@@ -6303,15 +6462,7 @@ export interface ControlTreeProps {
  * Leva-like nested folder+controls tree panel using existing design system components.
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree🪨controltree](semiorepo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE/CONTROL-TREE)
  **/
-export const ControlTree: React.FC<ControlTreeProps> = ({
-  controls,
-  filterText = "",
-  folderSettings,
-  onToggleFolder,
-  renderControl = defaultControlRenderer,
-  classNames,
-  className,
-}) => {
+export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText = "", folderSettings, onToggleFolder, renderControl = defaultControlRenderer, classNames, className }) => {
   const tree = React.useMemo(() => buildControlTree(controls, filterText, folderSettings), [controls, filterText, folderSettings]);
   const sorted = React.useMemo(() => sortControlTreeNodes(tree), [tree]);
   return (
@@ -6426,7 +6577,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
           </span>
         );
       }
-      const elementProps = itemContent.props as { className?: string;["data-slot"]?: string };
+      const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
       return React.cloneElement(itemContent as React.ReactElement<any>, {
         className: cn("cursor-selectable", elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
@@ -6869,7 +7020,7 @@ export { RightPanel };
  **/
 export interface MiddlePanelProps extends Omit<PanelProps, "resizeSide"> {
   resizeSide?: "left" | "right";
-};
+}
 
 // [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖middlepanel🪨middlepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MiddlePanel/d/i/MiddlePanel)
 /**
@@ -6941,19 +7092,7 @@ export interface SidePanelProps {
   className?: string;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({
-  position,
-  visible = true,
-  size = 300,
-  onSizeChange,
-  tabs,
-  activeTabId,
-  onActiveTabChange,
-  minSize = 200,
-  maxSize = 600,
-  zIndex = 20,
-  className = "",
-}) => {
+const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 300, onSizeChange, tabs, activeTabId, onActiveTabChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = React.useState(false);
   const [isResizing, setIsResizing] = React.useState(false);
   const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
@@ -7017,7 +7156,12 @@ const SidePanel: React.FC<SidePanelProps> = ({
             return (
               <Tooltip key={tab.id}>
                 <TooltipTrigger asChild>
-                  <button data-slot="side-panel-tab-button" id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
+                  <button
+                    data-slot="side-panel-tab-button"
+                    id={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn("flex items-center justify-center h-full px-small border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                  >
                     <Icon size={16} />
                   </button>
                 </TooltipTrigger>
@@ -7029,7 +7173,9 @@ const SidePanel: React.FC<SidePanelProps> = ({
           })}
         </div>
         <Scrollable className="flex-1 min-h-0">
-          <div data-slot="side-panel-content" className="p-[10px]">{activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}</div>
+          <div data-slot="side-panel-content" className="p-[10px]">
+            {activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}
+          </div>
         </Scrollable>
         {onSizeChange && <div className={resizeHandleClass} onMouseDown={handleMouseDown} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} />}
       </div>
@@ -7063,14 +7209,7 @@ export interface MobilePanelProps {
  * It merges all tabs into a single non-resizable panel.
  * [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖mobilepanel🪨mobilepanel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MobilePanel/d/i/MobilePanel)
  **/
-const MobilePanel: React.FC<MobilePanelProps> = ({
-  visible = true,
-  tabs,
-  activeTabId,
-  onActiveTabChange,
-  className = "",
-  height = 260,
-}) => {
+const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabId, onActiveTabChange, className = "", height = 260 }) => {
   const [internalActiveTab, setInternalActiveTab] = React.useState<string | undefined>(tabs[0]?.id);
 
   if (!visible || tabs.length === 0) return null;
@@ -7098,7 +7237,12 @@ const MobilePanel: React.FC<MobilePanelProps> = ({
             return (
               <Tooltip key={tab.id}>
                 <TooltipTrigger asChild>
-                  <button data-slot="mobile-panel-tab-button" id={tab.id} onClick={() => handleTabChange(tab.id)} className={cn("flex items-center justify-center h-full px-medium border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}>
+                  <button
+                    data-slot="mobile-panel-tab-button"
+                    id={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn("flex items-center justify-center h-full px-medium border-r cursor-pointer transition-colors", isActive ? "bg-hover-panel" : "hover:bg-hover-panel")}
+                  >
                     <Icon size={20} />
                   </button>
                 </TooltipTrigger>
@@ -7110,7 +7254,9 @@ const MobilePanel: React.FC<MobilePanelProps> = ({
           })}
         </div>
         <Scrollable className="flex-1 min-h-0">
-          <div data-slot="mobile-panel-content" className="p-double">{activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}</div>
+          <div data-slot="mobile-panel-content" className="p-double">
+            {activeTab && (ActiveTabContent ? <ActiveTabContent /> : (activeTab.content as React.ReactNode))}
+          </div>
         </Scrollable>
       </div>
     </LevelProvider>
@@ -7134,11 +7280,7 @@ function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
   return (
     <div
       data-slot="toolbar-zone"
-      className={cn(
-        "bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-center gap-[var(--toolbar-gap)] border rounded-md px-[var(--toolbar-padding-inline)] shadow-sm overflow-hidden",
-        borderClass,
-        className,
-      )}
+      className={cn("bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-center gap-[var(--toolbar-gap)] border rounded-md px-[var(--toolbar-padding-inline)] shadow-sm overflow-hidden", borderClass, className)}
       {...props}
     >
       {children}
@@ -7383,7 +7525,7 @@ export {
   useInternalNode,
   useReactFlow,
   useStoreApi,
-  ViewportPortal
+  ViewportPortal,
 };
 export type { Connection, Connection as RFConnection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
@@ -7636,13 +7778,13 @@ const DiagramInner: React.FC<DiagramProps> = ({
     api.__pendingTransform = null;
     api.__original = original;
     rfStoreApi.setState = ((partial: any, replace: any) => {
-      if (typeof partial === 'object' && partial !== null && !replace) {
+      if (typeof partial === "object" && partial !== null && !replace) {
         const state = rfStoreApi.getState();
         const keys = Object.keys(partial);
         if (keys.length > 0 && keys.every((k) => Object.is((state as any)[k], partial[k]))) return;
-        if (api.__suppressTransform && keys.length === 1 && keys[0] === 'transform') {
+        if (api.__suppressTransform && keys.length === 1 && keys[0] === "transform") {
           const t = partial.transform;
-          const el = document.querySelector('.react-flow__viewport') as HTMLElement;
+          const el = document.querySelector(".react-flow__viewport") as HTMLElement;
           if (el) el.style.transform = `translate(${t[0]}px, ${t[1]}px) scale(${t[2]})`;
           api.__pendingTransform = t;
           return;
@@ -7650,7 +7792,9 @@ const DiagramInner: React.FC<DiagramProps> = ({
       }
       return original(partial, replace);
     }) as typeof original;
-    return () => { rfStoreApi.setState = original; };
+    return () => {
+      rfStoreApi.setState = original;
+    };
   }, [rfStoreApi]);
 
   const [internalNodes, setInternalNodes] = React.useState<Node[]>(initialNodes);
@@ -7783,10 +7927,18 @@ const DiagramInner: React.FC<DiagramProps> = ({
     [forceConfig.enabled],
   );
 
-  const stableOnConnect = React.useCallback((connection: any) => { onConnectRef.current?.(connection); }, []);
-  const stableOnMoveStart = React.useCallback(() => { onMoveStartRef.current?.(); }, []);
-  const stableOnMoveEnd = React.useCallback(() => { onMoveEndRef.current?.(); }, []);
-  const stableOnSelectionChange = React.useCallback((selection: OnSelectionChangeParams) => { onSelectionChangeRef.current?.(selection); }, []);
+  const stableOnConnect = React.useCallback((connection: any) => {
+    onConnectRef.current?.(connection);
+  }, []);
+  const stableOnMoveStart = React.useCallback(() => {
+    onMoveStartRef.current?.();
+  }, []);
+  const stableOnMoveEnd = React.useCallback(() => {
+    onMoveEndRef.current?.();
+  }, []);
+  const stableOnSelectionChange = React.useCallback((selection: OnSelectionChangeParams) => {
+    onSelectionChangeRef.current?.(selection);
+  }, []);
 
   React.useEffect(() => {
     if (!forceConfig.enabled || finalNodes.length === 0) {
@@ -8083,9 +8235,14 @@ const SceneFrameControl: React.FC = () => {
   React.useEffect(() => {
     sceneFrameControlRef.current = {
       pause: () => setFrameloop("never"),
-      resume: () => { setFrameloop("demand"); invalidate(); },
+      resume: () => {
+        setFrameloop("demand");
+        invalidate();
+      },
     };
-    return () => { sceneFrameControlRef.current = null; };
+    return () => {
+      sceneFrameControlRef.current = null;
+    };
   }, [gl, setFrameloop, invalidate]);
   return null;
 };
@@ -8691,7 +8848,14 @@ export const Scene: React.FC<SceneProps> = ({
           <ActionDropdown id="scene-projection" options={projectionOptions} value={projection} onValueChange={(value) => onProjectionChange(value as "camera" | "orthographic")} />
         </div>
       )}
-      <ThreeCanvas onPointerMissed={onPointerMissed} orthographic={orthographic} shadows={shadows} frameloop="demand" camera={orthographic ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : undefined} style={{ width: "100%", height: "100%" }}>
+      <ThreeCanvas
+        onPointerMissed={onPointerMissed}
+        orthographic={orthographic}
+        shadows={shadows}
+        frameloop="demand"
+        camera={orthographic ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : undefined}
+        style={{ width: "100%", height: "100%" }}
+      >
         <SceneFrameControl />
         <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
           {children}
@@ -9481,7 +9645,7 @@ const UICanvas: React.FC<{
           window.removeEventListener("resize", handleResize);
           try {
             layout.destroy();
-          } catch { }
+          } catch {}
           layoutRef.current = null;
         };
       } catch (error) {
@@ -9635,10 +9799,7 @@ export const UIFindProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  const contextValue = React.useMemo(
-    () => ({ findItems, setFindItems: setFindItemsStable, setOnFindItem, triggerFindItem }),
-    [findItems, setFindItemsStable, setOnFindItem, triggerFindItem],
-  );
+  const contextValue = React.useMemo(() => ({ findItems, setFindItems: setFindItemsStable, setOnFindItem, triggerFindItem }), [findItems, setFindItemsStable, setOnFindItem, triggerFindItem]);
   return <UIFindContext.Provider value={contextValue}>{children}</UIFindContext.Provider>;
 };
 
@@ -9775,22 +9936,13 @@ const UIToolbar: React.FC<{
           if (item.kind === "toggle") {
             return (
               <ToolbarItem key={item.id}>
-                <Toggle
-                  kind="icon"
-                  id={item.id}
-                  pressed={item.pressed ?? false}
-                  onPressedChange={(p) => item.onPressedChange?.(p)}
-                  icon={item.icon}
-                />
+                <Toggle kind="icon" id={item.id} pressed={item.pressed ?? false} onPressedChange={(p) => item.onPressedChange?.(p)} icon={item.icon} />
               </ToolbarItem>
             );
           }
           return (
             <ToolbarItem key={item.id}>
-              <button
-                onClick={item.onClick}
-                className="flex items-center gap-single px-single py-tiny hover:bg-hover-panel rounded text-sm cursor-pointer"
-              >
+              <button onClick={item.onClick} className="flex items-center gap-single px-single py-tiny hover:bg-hover-panel rounded text-sm cursor-pointer">
                 {item.icon}
                 {item.label && <span>{item.label}</span>}
               </button>
@@ -9882,14 +10034,7 @@ const UILeftPanelToggle: React.FC<{
   const Icon = tabs[0]?.icon;
   return (
     <div className="flex items-stretch border border-element overflow-hidden h-medium">
-      <Toggle
-        kind="icon"
-        id="ui.panelToggle.left"
-        pressed={visible}
-        onPressedChange={onToggle}
-        className="border-0"
-        icon={Icon ? <Icon size={16} /> : <ChevronLeftIcon className="size-small" />}
-      />
+      <Toggle kind="icon" id="ui.panelToggle.left" pressed={visible} onPressedChange={onToggle} className="border-0" icon={Icon ? <Icon size={16} /> : <ChevronLeftIcon className="size-small" />} />
     </div>
   );
 };
@@ -9908,14 +10053,7 @@ const UIRightPanelToggle: React.FC<{
   const Icon = tabs[0]?.icon;
   return (
     <div className="flex items-stretch border border-element overflow-hidden h-medium">
-      <Toggle
-        kind="icon"
-        id="ui.panelToggle.right"
-        pressed={visible}
-        onPressedChange={onToggle}
-        className="border-0"
-        icon={Icon ? <Icon size={16} /> : <ChevronRightIcon className="size-small" />}
-      />
+      <Toggle kind="icon" id="ui.panelToggle.right" pressed={visible} onPressedChange={onToggle} className="border-0" icon={Icon ? <Icon size={16} /> : <ChevronRightIcon className="size-small" />} />
     </div>
   );
 };
@@ -9929,16 +10067,7 @@ const UIRightPanelToggle: React.FC<{
  * Every panel has: tree.
  * Fixed navbar layout: [breadcrumb (flex-1)] [search] [find] [left panel toggle] [right panel toggle].
  **/
-export const UI: React.FC<UIProps> = ({
-  apps,
-  defaultAppId,
-  breadcrumbItems = [],
-  footerItems: globalFooterItems = [],
-  searchItems = [],
-  toolbarItems: globalToolbarItems = [],
-  mobile = false,
-  className,
-}) => {
+export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = [], footerItems: globalFooterItems = [], searchItems = [], toolbarItems: globalToolbarItems = [], mobile = false, className }) => {
   const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? "");
   const [leftPanelSize, setLeftPanelSize] = React.useState(280);
   const [rightPanelSize, setRightPanelSize] = React.useState(300);
@@ -9981,9 +10110,7 @@ export const UI: React.FC<UIProps> = ({
   const mergedToolbarItems = [...globalToolbarItems, ...(activeApp.toolbarItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   // Merge all panel tabs for mobile mode
-  const mobilePanelTabs: SidePanelTabConfig[] = mobile
-    ? [...(activeApp.leftPanelTabs ?? []), ...(activeApp.rightPanelTabs ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-    : [];
+  const mobilePanelTabs: SidePanelTabConfig[] = mobile ? [...(activeApp.leftPanelTabs ?? []), ...(activeApp.rightPanelTabs ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : [];
   const hasMobilePanelTabs = mobilePanelTabs.length > 0;
 
   // Fixed navbar: [breadcrumb (flex-1)] [search] [find] [panel toggles]
@@ -9999,29 +10126,13 @@ export const UI: React.FC<UIProps> = ({
   // Search toggle
   navbarItems.push({
     key: "search",
-    content: (
-      <Toggle
-        kind="icon"
-        id="ui.search.toggle"
-        pressed={searchOpen}
-        onPressedChange={setSearchOpen}
-        icon={<SearchIcon size={16} />}
-      />
-    ),
+    content: <Toggle kind="icon" id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<SearchIcon size={16} />} />,
   });
 
   // Find toggle
   navbarItems.push({
     key: "find",
-    content: (
-      <Toggle
-        kind="icon"
-        id="ui.find.toggle"
-        pressed={findOpen}
-        onPressedChange={setFindOpen}
-        icon={<SearchIcon size={16} />}
-      />
-    ),
+    content: <Toggle kind="icon" id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<SearchIcon size={16} />} />,
   });
 
   if (mobile) {
@@ -10048,24 +10159,12 @@ export const UI: React.FC<UIProps> = ({
     // Desktop: separate left and right panel toggles
     navbarItems.push({
       key: "leftPanel",
-      content: (
-        <UILeftPanelToggle
-          tabs={activeApp.leftPanelTabs}
-          visible={panelVisibility.leftSidePanel}
-          onToggle={() => togglePanel("leftSidePanel")}
-        />
-      ),
+      content: <UILeftPanelToggle tabs={activeApp.leftPanelTabs} visible={panelVisibility.leftSidePanel} onToggle={() => togglePanel("leftSidePanel")} />,
     });
 
     navbarItems.push({
       key: "rightPanel",
-      content: (
-        <UIRightPanelToggle
-          tabs={activeApp.rightPanelTabs}
-          visible={panelVisibility.rightSidePanel}
-          onToggle={() => togglePanel("rightSidePanel")}
-        />
-      ),
+      content: <UIRightPanelToggle tabs={activeApp.rightPanelTabs} visible={panelVisibility.rightSidePanel} onToggle={() => togglePanel("rightSidePanel")} />,
     });
   }
 
@@ -10087,40 +10186,48 @@ export const UI: React.FC<UIProps> = ({
           mobilePanel={
             mobile && hasMobilePanelTabs
               ? {
-                visible: mobilePanelVisible,
-                tabs: mobilePanelTabs,
-              }
+                  visible: mobilePanelVisible,
+                  tabs: mobilePanelTabs,
+                }
               : undefined
           }
           leftSidePanel={
             !mobile && hasLeftPanel
               ? {
-                position: "left" as const,
-                visible: panelVisibility.leftSidePanel,
-                size: leftPanelSize,
-                onSizeChange: setLeftPanelSize,
-                tabs: activeApp.leftPanelTabs!,
-              }
+                  position: "left" as const,
+                  visible: panelVisibility.leftSidePanel,
+                  size: leftPanelSize,
+                  onSizeChange: setLeftPanelSize,
+                  tabs: activeApp.leftPanelTabs!,
+                }
               : undefined
           }
           rightSidePanel={
             !mobile && hasRightPanel
               ? {
-                position: "right" as const,
-                visible: panelVisibility.rightSidePanel,
-                size: rightPanelSize,
-                onSizeChange: setRightPanelSize,
-                tabs: activeApp.rightPanelTabs!,
-              }
+                  position: "right" as const,
+                  visible: panelVisibility.rightSidePanel,
+                  size: rightPanelSize,
+                  onSizeChange: setRightPanelSize,
+                  tabs: activeApp.rightPanelTabs!,
+                }
               : undefined
           }
-          canvas={<UICanvas windowConfig={mobile ? {
-            ...activeApp.windowConfig,
-            defaultLayout: createTabStackLayout(
-              activeApp.windowConfig.windowKinds.map((wk) => wk.id),
-              activeApp.windowConfig.windowKinds.map((wk) => wk.label ?? wk.id),
-            ),
-          } : activeApp.windowConfig} />}
+          canvas={
+            <UICanvas
+              windowConfig={
+                mobile
+                  ? {
+                      ...activeApp.windowConfig,
+                      defaultLayout: createTabStackLayout(
+                        activeApp.windowConfig.windowKinds.map((wk) => wk.id),
+                        activeApp.windowConfig.windowKinds.map((wk) => wk.label ?? wk.id),
+                      ),
+                    }
+                  : activeApp.windowConfig
+              }
+            />
+          }
         />
         {searchItems.length > 0 && <UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} />}
         <UIFind open={findOpen} onOpenChange={setFindOpen} />
@@ -10231,13 +10338,15 @@ export * as ResizablePrimitive from "react-resizable-panels";
 
 // #endregion Framework Re-exports
 
-const treeVitest = (import.meta as ImportMeta & {
-  vitest?: {
-    describe: typeof import("vitest").describe;
-    expect: typeof import("vitest").expect;
-    it: typeof import("vitest").it;
-  };
-}).vitest;
+const treeVitest = (
+  import.meta as ImportMeta & {
+    vitest?: {
+      describe: typeof import("vitest").describe;
+      expect: typeof import("vitest").expect;
+      it: typeof import("vitest").it;
+    };
+  }
+).vitest;
 
 if (treeVitest) {
   const { describe, expect, it } = treeVitest;
@@ -10249,25 +10358,29 @@ if (treeVitest) {
     });
 
     it("computes additive and range multi selection", () => {
-      expect(getTreeNextSelectionState({
-        selectionMode: "multiple",
-        selectedIds: ["a"],
-        orderedIds: ["a", "b", "c", "d"],
-        targetId: "c",
-        anchorId: "a",
-        additiveKey: false,
-        rangeKey: true,
-      })).toEqual({ selectedIds: ["a", "b", "c"], anchorId: "a" });
+      expect(
+        getTreeNextSelectionState({
+          selectionMode: "multiple",
+          selectedIds: ["a"],
+          orderedIds: ["a", "b", "c", "d"],
+          targetId: "c",
+          anchorId: "a",
+          additiveKey: false,
+          rangeKey: true,
+        }),
+      ).toEqual({ selectedIds: ["a", "b", "c"], anchorId: "a" });
 
-      expect(getTreeNextSelectionState({
-        selectionMode: "multiple",
-        selectedIds: ["a"],
-        orderedIds: ["a", "b", "c", "d"],
-        targetId: "c",
-        anchorId: "a",
-        additiveKey: true,
-        rangeKey: false,
-      })).toEqual({ selectedIds: ["a", "c"], anchorId: "c" });
+      expect(
+        getTreeNextSelectionState({
+          selectionMode: "multiple",
+          selectedIds: ["a"],
+          orderedIds: ["a", "b", "c", "d"],
+          targetId: "c",
+          anchorId: "a",
+          additiveKey: true,
+          rangeKey: false,
+        }),
+      ).toEqual({ selectedIds: ["a", "c"], anchorId: "c" });
     });
 
     it("orders nested tree items across sections", () => {

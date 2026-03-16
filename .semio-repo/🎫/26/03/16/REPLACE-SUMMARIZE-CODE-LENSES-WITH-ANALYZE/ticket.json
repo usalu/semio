@@ -1,0 +1,12 @@
+{
+  "title": "Replace Summarize CodeLenses With Analyze",
+  "status": "open",
+  "description": "Update semio-repo/vscode so all summarize code lenses are replaced with analyze, align the extension command wiring and tests, and verify the extension still works.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/949"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension",
+  "sessions": [
+    "⚪d3c59140f40b441ab34d4026051cb4c7"
+  ]
+}

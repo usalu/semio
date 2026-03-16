@@ -1,0 +1,36 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T14:35:42Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/workspaces/semio/semio-elements/ui/.storybook/vitest.setup.ts"
+      },
+      "tool_response": {
+        "type": "text",
+        "file": {
+          "filePath": "/workspaces/semio/semio-elements/ui/.storybook/vitest.setup.ts",
+          "content": "// #region 🔖Header\n\n// 💻 semio/js/.storybook/vitest.setup.ts\n\n// 2025 Ueli Saluz \u003cueli@semio-tech.com\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Lesser General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Lesser General Public License for more details.\n// You should have received a copy of the GNU Lesser General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\nimport { setProjectAnnotations } from \"@storybook/react-vite\";\nimport { beforeAll } from \"vitest\";\nimport * as projectAnnotations from \"./preview\";\n\nconst project = setProjectAnnotations([projectAnnotations]);\n\nbeforeAll(project.beforeAll);\n",
+          "numLines": 27,
+          "startLine": 1,
+          "totalLines": 27
+        }
+      },
+      "tool_use_id": "toolu_016c281iuCJHBkAdKp7pVDbG"
+    }
+  },
+  "response": {}
+}

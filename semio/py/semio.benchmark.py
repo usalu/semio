@@ -16,10 +16,11 @@
 
 # endregion Header
 
-import time
 import json
 import os
-from semio import Kit, validateKit, validateKitDict, flattenDesignDict, _applyDesignDiff, applyKitDiffDict, Type, Design
+import time
+
+from semio import Design, Kit, Type, _applyDesignDiff, applyKitDiffDict, flattenDesignDict, validateKit, validateKitDict
 
 ASSETS_DIR = "../assets/semio"
 ITERATIONS = 3
@@ -117,7 +118,7 @@ def main():
     kit_invalid_obj = Kit.parse(kit_invalid)
 
     def test_roundtrip():
-        from semio import import_kit, export_kit
+        from semio import export_kit, import_kit
 
         kit, files = import_kit(os.path.join(ASSETS_DIR, "metabolism.zip"))
 

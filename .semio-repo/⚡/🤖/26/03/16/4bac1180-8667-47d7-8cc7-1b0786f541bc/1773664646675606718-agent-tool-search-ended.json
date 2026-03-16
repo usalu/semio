@@ -1,0 +1,38 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T12:37:26Z",
+    "session": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/workspaces/semio/semio-repo/cli/main.go",
+        "offset": 46668,
+        "limit": 10
+      },
+      "tool_response": {
+        "type": "text",
+        "file": {
+          "filePath": "/workspaces/semio/semio-repo/cli/main.go",
+          "content": "\tcase HookAgentToolCodeEditEnded:\n\t\tpath, oldText, newText, _ := extractCodeEditFromInput(ctx.Input, ctx.ToolArgs)\n\t\t// Auto-format the edited file using the existing formatter infrastructure.\n\t\tif path != \"\" {\n\t\t\tlang := GetLanguage(path)\n\t\t\t_ = runFormatterAfterAutofix(path, lang)\n\t\t}\n\t\treturn HookResultAgentToolCodeEditEnded{HookResultAgentBase: base, Path: path, Old: oldText, New: newText}\n\tcase HookAgentToolTestStarting:\n\t\tlabs, tests, timeout := extractTestStartingFromInput(ctx.Input, ctx.ToolArgs)",
+          "numLines": 10,
+          "startLine": 46668,
+          "totalLines": 46806
+        }
+      },
+      "tool_use_id": "toolu_01MVLBsrSDBpww4hWXprU8fk"
+    }
+  },
+  "response": {}
+}

@@ -8,6 +8,27 @@
   "playwright.env": {
     "PWDEBUG": "console"
   },
+  "eslint.useFlatConfig": true,
+  "eslint.packageManager": "npm",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.workingDirectories": [
+    {
+      "directory": "semio-elements/ui",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "semio-repo/vscode",
+      "changeProcessCWD": true
+    }
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
   "workbench.externalBrowser": "chrome",
   "workbench.trustedDomains": [
     "*"
