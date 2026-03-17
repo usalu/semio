@@ -232,8 +232,8 @@ interface Iteration {
  *MUST contain rules array.
  **/
 interface Report {
-  rules?: Rule[];
-  breachs?: Rule[];
+  valid?: boolean;
+  validations?: ValidationReport[];
   error?: string;
 }
 
@@ -1080,17 +1080,16 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
 
   const loading = projectLoading || runLoading || iterLoading || reportLoading;
 
-  const breachCount = useMemo(() => {
-    if (!report?.rules) return 0;
-    return report.rules.filter((r) => r.status === "violated").length;
+  const totalValidations = report?.validations?.length ?? 0;
+  const violatedCount = useMemo(() => {
+    if (!report?.validations) return 0;
+    return report.validations.filter((v) => v.truth === "false").length;
   }, [report]);
 
   const compliantCount = useMemo(() => {
-    if (!report?.rules) return 0;
-    return report.rules.filter((r) => r.status === "compliant").length;
+    if (!report?.validations) return 0;
+    return report.validations.filter((v) => v.truth === "true").length;
   }, [report]);
-
-  const totalRules = report?.rules?.length ?? 0;
 
   if (loading) return <Spinner label="Loading dashboard..." />;
 
@@ -1105,20 +1104,18 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
         <StatCard label="Design" value={project?.design?.id ?? "—"} sublabel={project ? `${project.targets?.length ?? 0} targets` : undefined} />
         <StatCard label="Current Run" value={run?.id ?? run?.run_id ?? "—"} sublabel={run?.started ? `Started ${run.started}` : undefined} />
         <StatCard label="Iteration" value={iteration?.index ?? "—"} sublabel={iteration?.targets ? `${iteration.targets.length} targets` : undefined} />
-        <StatCard label="Compliance" value={totalRules > 0 ? `${compliantCount}/${totalRules}` : "—"} sublabel={breachCount > 0 ? `${breachCount} violated` : totalRules > 0 ? "All compliant" : undefined} />
+        <StatCard
+          label="Compliance"
+          value={totalValidations > 0 ? `${compliantCount}/${totalValidations}` : "—"}
+          sublabel={violatedCount > 0 ? `${violatedCount} violated` : totalValidations > 0 ? "All compliant" : undefined}
+        />
       </div>
 
-      {report?.rules && report.rules.length > 0 && (
-        <Card title="Compliance Report">
-          <div className="space-y-2">
-            {report.rules.map((rule) => (
-              <div key={rule.id} className="flex items-center justify-between rounded-md border border-border-window px-3 py-2">
-                <div>
-                  <span className="text-sm font-medium text-foreground">{formatId(rule.id)}</span>
-                  {rule.description && <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>}
-                </div>
-                <StatusBadge status={rule.status} />
-              </div>
+      {report?.validations && report.validations.length > 0 && (
+        <Card title="Latest Validation">
+          <div className="space-y-4">
+            {report.validations.map((validation) => (
+              <ValidationTree key={validation.instance} report={validation} defaultExpanded={false} />
             ))}
           </div>
         </Card>

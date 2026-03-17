@@ -54,7 +54,6 @@ import { createRoot } from "react-dom/client";
 import {
   BrowserRouter,
   Fuse,
-  IndexeddbPersistence,
   MemoryRouter,
   Outlet,
   Route,
@@ -235,6 +234,8 @@ import {
   PanelSizes,
   PanelVisibility,
   parseWindowLayout,
+  PersistenceFactory,
+  PersistenceProvider,
   QualityAppId,
   RemoteFileProviderConfig,
   RemoteProviders,
@@ -6582,7 +6583,7 @@ export class KitStore {
   private readonly authors: Map<string, AuthorStore>;
   private readonly yAttributes: YAttributes;
   private readonly attributes: Map<string, AttributeStore>;
-  private readonly persistence?: IndexeddbPersistence;
+  private readonly persistence?: PersistenceProvider;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult>;
   private readonly regularFiles: Map<Guid, string>;
   private cache?: Kit;
@@ -6603,7 +6604,7 @@ export class KitStore {
   private _conceptsCache?: Concept[];
   private _conceptsVersion = 0;
 
-  constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, remoteProviders?: RemoteProviders) {
+  constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, remoteProviders?: RemoteProviders, persistenceFactory?: PersistenceFactory) {
     this.parent = parent;
     this.remoteProviders = remote ? remoteProviders : undefined;
     this.yDoc = new Y.Doc();
@@ -6656,8 +6657,8 @@ export class KitStore {
       this.updated();
     });
 
-    if (local) {
-      this.persistence = new IndexeddbPersistence(`semio-kit-${kit.guid}`, this.yDoc);
+    if (local && persistenceFactory) {
+      this.persistence = persistenceFactory(this.yDoc, `semio-kit-${kit.guid}`);
     }
 
     if (remote && this.remoteProviders) {
@@ -12533,7 +12534,8 @@ export class SketchpadStore {
   private readonly typeApps: Map<string, TypeAppStoreInstance>;
   private readonly qualityApps: Map<string, QualityAppStoreInstance>;
   private readonly designApps: Map<string, Map<string, DesignAppStoreInstance>>;
-  private readonly persistence?: IndexeddbPersistence;
+  private readonly persistence?: PersistenceProvider;
+  private readonly persistenceFactory?: PersistenceFactory;
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
   private readonly commandMetadata: Map<string, { user?: boolean }>;
   private cache?: SketchpadState;
@@ -12555,9 +12557,10 @@ export class SketchpadStore {
   actor?: SketchpadActorRef;
   private actorUnsubscribe?: () => void;
 
-  constructor(id?: string, remote?: RemoteProviders, initialState?: ExtendedInitialState) {
+  constructor(id?: string, remote?: RemoteProviders, initialState?: ExtendedInitialState, persistenceFactory?: PersistenceFactory) {
     this.id = id;
     this.remote = remote;
+    this.persistenceFactory = persistenceFactory;
     this.yDoc = new Y.Doc();
     this.kits = new Map();
     this.kitApps = new Map();
@@ -12577,8 +12580,8 @@ export class SketchpadStore {
     this.designAppCreatedSubscribers = new Set();
     this.designAppDeletedSubscribers = new Set();
 
-    if (id) {
-      this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
+    if (id && this.persistenceFactory) {
+      this.persistence = this.persistenceFactory(this.yDoc, `semio-sketchpad-${id}`);
       this.persistence.once("synced", () => {
         const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
         this.ySketchpad.set("isMobile", isMobile);
@@ -12783,7 +12786,7 @@ export class SketchpadStore {
   };
 
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
-    const kitStore = new KitStore(this, kit, local, remote, this.remote);
+    const kitStore = new KitStore(this, kit, local, remote, this.remote, this.persistenceFactory);
     this.kits.set(kit.guid, kitStore);
     kitStore.onChanged((cb: () => void) => {
       cb();
@@ -13504,10 +13507,10 @@ export class SketchpadStore {
 
       if (this.kits.has(kitGuid)) continue;
 
-      if (local && typeof indexedDB !== "undefined") {
+      if (local && this.persistenceFactory) {
         try {
           const yDoc = new Y.Doc();
-          const persistence = new IndexeddbPersistence(`semio-kit-${kitGuid}`, yDoc);
+          const persistence = this.persistenceFactory(yDoc, `semio-kit-${kitGuid}`);
 
           await new Promise<void>((resolve) => {
             persistence.on("synced", () => resolve());
@@ -13568,7 +13571,7 @@ export class SketchpadStore {
 
           persistence.destroy();
 
-          const kitStore = new KitStore(this, kit, local, remote, this.remote);
+          const kitStore = new KitStore(this, kit, local, remote, this.remote, this.persistenceFactory);
           this.kits.set(kit.guid, kitStore);
           kitStore.onChanged((cb: () => void) => {
             cb();
@@ -13634,7 +13637,7 @@ export const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
  * React context provider initializing and scoping the sketchpad store and actor.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨sketchpadscopeprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/SketchpadScopeProvider)
  **/
-export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: { id?: string; store?: SketchpadStore; remote?: RemoteProviders; persistenceFactory?: PersistenceFactory; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; children: React.ReactNode }) => {
   const id = useMemo(() => props.id || guid(), [props.id]);
   const [configsReady, setConfigsReady] = useState(false);
 
@@ -13643,7 +13646,7 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
   }, []);
 
   if (!stores.has(id)) {
-    const store = new SketchpadStore(id, props?.remote, props?.initialState);
+    const store = props.store ?? new SketchpadStore(id, props?.remote, props?.initialState, props?.persistenceFactory);
     stores.set(id, store);
 
     const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(props?.initialState)) });
@@ -18879,14 +18882,18 @@ const SketchpadContent: FC = () => {
  **/
 const Sketchpad = ({
   id,
+  store,
   remote,
+  persistenceFactory,
   onWindowEvents,
   initialState,
   importKitUrls,
   embedded,
 }: {
   id?: string;
+  store?: SketchpadStore;
   remote?: RemoteProviders;
+  persistenceFactory?: PersistenceFactory;
   onWindowEvents?: WindowEvents;
   initialState?: ExtendedInitialState;
   importKitUrls?: string[];
@@ -18902,7 +18909,7 @@ const Sketchpad = ({
 
   const routerContent = (
     <GlobalNavigationBridge>
-      <SketchpadScopeProvider id={id} remote={remote} onWindowEvents={onWindowEvents} initialState={initialState} importKitUrls={importKitUrls}>
+      <SketchpadScopeProvider id={id} store={store} remote={remote} persistenceFactory={persistenceFactory} onWindowEvents={onWindowEvents} initialState={initialState} importKitUrls={importKitUrls}>
         <SketchpadInteractionBridge>
           <OriginProvider>
             <FocusProvider>

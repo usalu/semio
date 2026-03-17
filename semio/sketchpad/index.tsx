@@ -24,7 +24,9 @@
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
 import { createRoot } from "react-dom/client";
+import { IndexeddbPersistence } from "../../semio-elements/ui";
 import { Sketchpad, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "./index";
+import type { PersistenceFactory } from "./sketchpad/shared";
 import "./globals.css";
 
 import { appRegistry } from "./sketchpad/Sketchpad";
@@ -37,9 +39,11 @@ appRegistry.register(kitConfig);
 appRegistry.register(qualityConfig);
 appRegistry.register(typeConfig);
 
+const indexeddbPersistenceFactory: PersistenceFactory = (doc, key) => new IndexeddbPersistence(key, doc);
+
 createRoot(document.getElementById("root")!).render(
   <div className="h-screen w-screen">
-    <Sketchpad />
+    <Sketchpad persistenceFactory={indexeddbPersistenceFactory} />
   </div>,
 );
 // #endregion 🔖Entrypoint

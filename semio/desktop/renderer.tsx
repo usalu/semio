@@ -25,10 +25,14 @@
 
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { IndexeddbPersistence } from "@semio-elements/ui";
+import type { PersistenceFactory } from "@semio/sketchpad";
 
 import "./globals.css";
 
 import { Sketchpad } from "@semio/sketchpad";
+
+const indexeddbPersistenceFactory: PersistenceFactory = (doc, key) => new IndexeddbPersistence(key, doc);
 
 declare global {
   interface Window {
@@ -98,7 +102,11 @@ function App() {
     fetchUserId();
   }, []);
 
-  return <div className="h-screen w-screen">{userId ? <Sketchpad onWindowEvents={windowEvents} id={userId} /> : <div className="flex h-full w-full items-center justify-center">Loading user data...</div>}</div>;
+  return (
+    <div className="h-screen w-screen">
+      {userId ? <Sketchpad onWindowEvents={windowEvents} id={userId} persistenceFactory={indexeddbPersistenceFactory} /> : <div className="flex h-full w-full items-center justify-center">Loading user data...</div>}
+    </div>
+  );
 }
 
 export default App;

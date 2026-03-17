@@ -33,7 +33,9 @@ import sys
 import time
 from pathlib import Path
 
+import rdflib
 from mcp.server.fastmcp import Context, FastMCP
+from owlready2 import get_ontology, sync_reasoner_pellet
 
 mcp = FastMCP("coda", json_response=True)
 
@@ -110,9 +112,7 @@ def _normalize_property_definition(property_definition: dict) -> dict:
     [🔬coda📚py💻coda🔖helpers🛠️normalizepropertydefinition](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_normalize_property_definition)
     """
     normalized = dict(property_definition)
-    kind = _canonicalize_property_kind(
-        normalized.get("kind") or normalized.get("type")
-    )
+    kind = _canonicalize_property_kind(normalized.get("kind") or normalized.get("type"))
     normalized["kind"] = kind
     normalized["measure_kinds"] = normalized.get("measure_kinds") or list(
         _PROPERTY_KIND_MEASURE_KINDS[kind]
@@ -181,6 +181,88 @@ def _get_project_config() -> dict | None:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
 
+def _run_ontology_validator(
+    target_id: str, translation_path: Path, validator_cfg: dict
+) -> dict:
+    """Run the default ontology-based validator for a target translation.
+    _run_ontology_validator MUST return an envelope with valid and validations fields.
+    """
+    root = _get_project_root()
+    if not root:
+        raise RuntimeError("No project root for ontology validator")
+
+    # Resolve ontology path: validator-specific override or default ontology in engine folder.
+    ontology_path_str = validator_cfg.get("ontology_path")
+    if ontology_path_str:
+        ontology_path = Path(ontology_path_str)
+        if not ontology_path.is_absolute():
+            ontology_path = (
+                Path(__file__).resolve().parent / ontology_path_str
+            ).resolve()
+    else:
+        ontology_path = Path(__file__).resolve().parent / "ontology.owl"
+
+    if not ontology_path.exists():
+        raise FileNotFoundError(f"Ontology file not found: {ontology_path}")
+
+    # Merge data (translation) and ontology into a temporary ontology file.
+    engine_root = Path(__file__).resolve().parent
+    temp_dir = engine_root / "temp"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    temp_merged = temp_dir / f"{target_id}-merged.owl"
+
+    data_graph = rdflib.Graph().parse(str(translation_path))
+    rule_graph = rdflib.Graph().parse(str(ontology_path))
+    merged_graph = data_graph + rule_graph
+    merged_graph.serialize(str(temp_merged), format="xml")
+
+    onto = get_ontology(temp_merged.as_uri()).load()
+
+    try:
+        with onto:
+            sync_reasoner_pellet(
+                infer_property_values=True, infer_data_property_values=True, debug=0
+            )
+
+        # Find NotCompliant class and its instances as failing validations.
+        not_compliant_cls = None
+        for cl in onto.classes():
+            if cl.name == "NotCompliant":
+                not_compliant_cls = cl
+                break
+
+        validations: list[dict] = []
+        if not_compliant_cls is not None:
+            for ind in not_compliant_cls.instances():
+                instance_name = ind.name
+                validations.append(
+                    {
+                        "instance": instance_name,
+                        "expression": validator_cfg.get("expression") or "NotCompliant",
+                        "truth": "false",
+                        "tree": {
+                            "id": f"{instance_name}-root",
+                            "kind": "ClassAssertion",
+                            "label": "NotCompliant",
+                            "fragment": None,
+                            "truth": "false",
+                            "summary": "Instance is classified as NotCompliant by the ontology.",
+                            "className": "NotCompliant",
+                            "subject": instance_name,
+                            "children": [],
+                        },
+                    }
+                )
+
+        valid_overall = len(validations) == 0
+        return {"valid": valid_overall, "validations": validations}
+    finally:
+        try:
+            onto.destroy(update_relation=True, update_is_a=True)
+        except Exception:
+            pass
+
+
 def _get_latest_run(root: Path) -> Path | None:
     """_get_latest_run performs the _get_latest_run operation.
     [🔬coda📚py💻coda🔖helpers🛠️getlatestrun](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_latest_run)
@@ -240,9 +322,7 @@ class Session:
         )
         self.target_id = None
         os.environ[_PROJECT_ENV] = str(p)
-        proj = json.loads(
-            (p / ".coda" / "project.json").read_text(encoding="utf-8")
-        )
+        proj = json.loads((p / ".coda" / "project.json").read_text(encoding="utf-8"))
         return {
             "ok": True,
             "project_root": str(p),
@@ -687,6 +767,26 @@ def get_translation(target_id: str) -> str:
     return translation_json.read_text(encoding="utf-8")
 
 
+@mcp.resource("coda://validation/{target_id}")
+def get_validation(target_id: str) -> str:
+    """Get the validation report for a target in the current iteration (ontology or binary).
+    get_validation MUST return the per-target validation envelope written by validate/save_validation.
+    """
+    root = _get_project_root()
+    if not root:
+        return json.dumps({"error": "No project root"})
+    run_dir = _get_latest_run(root)
+    if not run_dir:
+        return json.dumps({"error": "No runs found"})
+    iter_dir = _get_latest_iteration(run_dir)
+    if not iter_dir:
+        return json.dumps({"error": "No iterations found"})
+    report_json = iter_dir / "targets" / target_id / "report.json"
+    if not report_json.exists():
+        return json.dumps({"error": f"No validation found for target: {target_id}"})
+    return report_json.read_text(encoding="utf-8")
+
+
 # endregion Resources
 # region Tools
 # [🔬coda📚py💻coda🔖tools](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Tools)
@@ -819,7 +919,8 @@ def validate(target_id: str) -> dict:
     if not proj:
         return {"error": "No project"}
     targets = proj.get("targets", [])
-    if not any(t.get("id") == target_id for t in targets):
+    target_cfg = next((t for t in targets if t.get("id") == target_id), None)
+    if not target_cfg:
         return {"error": f"Target not in project: {target_id}"}
     run_dir = _get_latest_run(root)
     if not run_dir:
@@ -831,6 +932,25 @@ def validate(target_id: str) -> dict:
     if not translation_path.exists():
         return {
             "error": f"No translation found for target: {target_id}. Call translate first."
+        }
+
+    validator_cfg = (target_cfg or {}).get("validator", {}) or {}
+    validator_kind = str(validator_cfg.get("kind") or "binary").lower()
+
+    if validator_kind == "ontology":
+        try:
+            report = _run_ontology_validator(target_id, translation_path, validator_cfg)
+        except Exception as e:
+            return {
+                "error": f"Ontology validator failed for target: {target_id}: {e!s}"
+            }
+        report_path = iter_dir / "targets" / target_id / "report.json"
+        report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return {
+            "validated": True,
+            "target_id": target_id,
+            "report_path": str(report_path),
+            "report": report,
         }
     validators_dir = root / ".coda" / "validators"
     validator_bin = None
@@ -1184,7 +1304,10 @@ def _sidecar_translate(params: dict) -> dict:
         "output_path": str(target_dir / "translation.json"),
         "instruction": f"Invoke the @{agent_name} subagent to translate the {design_id} design into the {target_id} target format.",
     }
-    _emit_event("translate_started", {"target_id": target_id, "agent_name": agent_name, "design_id": design_id})
+    _emit_event(
+        "translate_started",
+        {"target_id": target_id, "agent_name": agent_name, "design_id": design_id},
+    )
     return result
 
 
@@ -1205,7 +1328,9 @@ def _sidecar_save_validation(params: dict) -> dict:
         return {"error": "No iterations found"}
     report_path = iter_dir / "targets" / target_id / "report.json"
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(data if isinstance(data, str) else json.dumps(data), encoding="utf-8")
+    report_path.write_text(
+        data if isinstance(data, str) else json.dumps(data), encoding="utf-8"
+    )
     result = {"saved": True, "path": str(report_path)}
     _emit_event("validation_saved", {"target_id": target_id, "path": str(report_path)})
     return result
@@ -1262,7 +1387,8 @@ def _sidecar_validate(params: dict) -> dict:
     if not proj:
         return {"error": "No project"}
     targets = proj.get("targets", [])
-    if not any(t.get("id") == target_id for t in targets):
+    target_cfg = next((t for t in targets if t.get("id") == target_id), None)
+    if not target_cfg:
         return {"error": f"Target not in project: {target_id}"}
     run_dir = _sidecar_session.run_dir or _get_latest_run(root)
     if not run_dir:
@@ -1273,6 +1399,26 @@ def _sidecar_validate(params: dict) -> dict:
     translation_path = iter_dir / "targets" / target_id / "translation.json"
     if not translation_path.exists():
         return {"error": f"No translation for target: {target_id}"}
+
+    validator_cfg = (target_cfg or {}).get("validator", {}) or {}
+    validator_kind = str(validator_cfg.get("kind") or "binary").lower()
+
+    if validator_kind == "ontology":
+        try:
+            report = _run_ontology_validator(target_id, translation_path, validator_cfg)
+        except Exception as e:
+            return {
+                "error": f"Ontology validator failed for target: {target_id}: {e!s}"
+            }
+        report_path = iter_dir / "targets" / target_id / "report.json"
+        report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return {
+            "validated": True,
+            "target_id": target_id,
+            "report_path": str(report_path),
+            "report": report,
+        }
+
     validators_dir = root / ".coda" / "validators"
     validator_bin = None
     if validators_dir.exists():
@@ -1358,13 +1504,14 @@ def _handle_sidecar_request(request: dict) -> dict:
 
     handler = _SIDECAR_METHODS.get(method)
     if not handler:
-        return {"id": req_id, "error": {"code": -32601, "message": f"Unknown method: {method}"}}
+        return {
+            "id": req_id,
+            "error": {"code": -32601, "message": f"Unknown method: {method}"},
+        }
 
     try:
         result = handler(params)
-        if "error" in result and not any(
-            k for k in result if k != "error"
-        ):
+        if "error" in result and not any(k for k in result if k != "error"):
             return {"id": req_id, "error": result}
         return {"id": req_id, "result": result}
     except Exception as e:
@@ -1385,7 +1532,9 @@ def _run_sidecar() -> None:
         try:
             request = json.loads(line)
         except json.JSONDecodeError as e:
-            _write_stdout({"id": None, "error": {"code": -32700, "message": f"Parse error: {e}"}})
+            _write_stdout(
+                {"id": None, "error": {"code": -32700, "message": f"Parse error: {e}"}}
+            )
             continue
 
         response = _handle_sidecar_request(request)

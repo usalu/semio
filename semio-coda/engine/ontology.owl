@@ -1,0 +1,131 @@
+@prefix : <http://test/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix test: <http://test#> .
+@base <http://test/> .
+
+<http://test> rdf:type owl:Ontology .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://test#in
+test:in rdf:type owl:ObjectProperty .
+
+
+###  http://test#verbindet
+test:verbindet rdf:type owl:ObjectProperty .
+
+
+###  http://test#verbundenZu
+test:verbundenZu rdf:type owl:ObjectProperty .
+
+
+#################################################################
+#    Data properties
+#################################################################
+
+###  http://test#bruttoGrundfläche
+test:bruttoGrundfläche rdf:type owl:DatatypeProperty ,
+                                owl:FunctionalProperty .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://test#Außentreppe
+test:Außentreppe rdf:type owl:Class .
+
+
+###  http://test#EigenerTreppenraum
+test:EigenerTreppenraum rdf:type owl:Class .
+
+
+###  http://test#Gebäudeklasse1
+test:Gebäudeklasse1 rdf:type owl:Class .
+
+
+###  http://test#Gebäudeklasse2
+test:Gebäudeklasse2 rdf:type owl:Class .
+
+
+###  http://test#Geschoss
+test:Geschoss rdf:type owl:Class .
+
+
+###  http://test#MussInEigenemTreppenraumLiegen
+test:MussInEigenemTreppenraumLiegen rdf:type owl:Class ;
+                                    owl:equivalentClass [ rdf:type owl:Restriction ;
+                                                          owl:onProperty test:in ;
+                                                          owl:someValuesFrom test:EigenerTreppenraum
+                                                        ] .
+
+
+###  http://test#NotwendigeTreppe
+test:NotwendigeTreppe rdf:type owl:Class .
+
+
+###  http://test#NotwendigeTreppeInEigenemTreppenraum
+test:NotwendigeTreppeInEigenemTreppenraum rdf:type owl:Class ;
+                                          owl:equivalentClass [ rdf:type owl:Class ;
+                                                                owl:complementOf test:Außentreppe
+                                                              ] ,
+                                                              [ rdf:type owl:Class ;
+                                                                owl:complementOf [ rdf:type owl:Restriction ;
+                                                                                   owl:onProperty test:in ;
+                                                                                   owl:someValuesFrom [ rdf:type owl:Class ;
+                                                                                                        owl:unionOf ( test:Gebäudeklasse1
+                                                                                                                      test:Gebäudeklasse2
+                                                                                                                    )
+                                                                                                      ]
+                                                                                 ]
+                                                              ] ,
+                                                              [ rdf:type owl:Class ;
+                                                                owl:complementOf [ rdf:type owl:Restriction ;
+                                                                                   owl:onProperty test:verbindet ;
+                                                                                   owl:qualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                                                                                   owl:onClass [ owl:intersectionOf ( test:Geschoss
+                                                                                                                      [ rdf:type owl:Restriction ;
+                                                                                                                        owl:onProperty test:verbundenZu ;
+                                                                                                                        owl:someValuesFrom test:Rettungsweg
+                                                                                                                      ]
+                                                                                                                      [ rdf:type owl:Restriction ;
+                                                                                                                        owl:onProperty test:in ;
+                                                                                                                        owl:qualifiedCardinality "1"^^xsd:nonNegativeInteger ;
+                                                                                                                        owl:onClass [ owl:intersectionOf ( test:Nutzungseinheit
+                                                                                                                                                           [ rdf:type owl:Restriction ;
+                                                                                                                                                             owl:onProperty test:bruttoGrundfläche ;
+                                                                                                                                                             owl:someValuesFrom [ rdf:type rdfs:Datatype ;
+                                                                                                                                                                                  owl:onDatatype xsd:float ;
+                                                                                                                                                                                  owl:withRestrictions ( [ xsd:maxInclusive "200.0"^^xsd:float
+                                                                                                                                                                                                         ]
+                                                                                                                                                                                                       )
+                                                                                                                                                                                ]
+                                                                                                                                                           ]
+                                                                                                                                                         ) ;
+                                                                                                                                      rdf:type owl:Class
+                                                                                                                                    ]
+                                                                                                                      ]
+                                                                                                                    ) ;
+                                                                                                 rdf:type owl:Class
+                                                                                               ]
+                                                                                 ]
+                                                              ] ;
+                                          rdfs:subClassOf test:MussInEigenemTreppenraumLiegen ,
+                                                          test:NotwendigeTreppe .
+
+
+###  http://test#Nutzungseinheit
+test:Nutzungseinheit rdf:type owl:Class .
+
+
+###  http://test#Rettungsweg
+test:Rettungsweg rdf:type owl:Class .
+
+
+###  Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi

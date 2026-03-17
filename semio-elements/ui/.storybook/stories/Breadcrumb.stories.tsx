@@ -17,10 +17,10 @@
 
 // #endregion 🔖Header
 
+import { Breadcrumb, BreadcrumbItemData, Level, LevelProvider, NotFound, PageNavigation, getLevelBgClass } from "@semio-elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AlertCircle, Home } from "lucide-react";
 import { MemoryRouter } from "react-router";
-import { Breadcrumb, BreadcrumbItemData, Level, LevelProvider, NotFound, PageNavigation, getLevelBgClass } from "@semio-elements/ui";
 
 // #region 🔖Breadcrumb
 const meta = {
@@ -68,6 +68,7 @@ export const Default: Story = {
       { id: "breadcrumb-page", content: "Capsule J" },
     ] satisfies BreadcrumbItemData[],
   },
+  tags: ["some tag"],
   render: (args) => <Breadcrumb {...args} />,
 };
 
@@ -166,10 +167,7 @@ export const PageNavigationDefault: Story = {
   render: () => (
     <MemoryRouter>
       <div className="w-[600px]">
-        <PageNavigation
-          prev={{ path: "getting-started", title: "Getting Started", section: "Basics" }}
-          next={{ path: "tutorials/hello-semio", title: "Hello Semio", section: "Tutorials" }}
-        />
+        <PageNavigation prev={{ path: "getting-started", title: "Getting Started", section: "Basics" }} next={{ path: "tutorials/hello-semio", title: "Hello Semio", section: "Tutorials" }} />
       </div>
     </MemoryRouter>
   ),
@@ -186,4 +184,3 @@ export const PageNavigationNextOnly: Story = {
   ),
 };
 // #endregion 🔖PageNavigation
-

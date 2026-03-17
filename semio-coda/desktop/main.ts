@@ -23,7 +23,7 @@
 // Manages the Python sidecar child process over JSON-over-stdio.
 // MUST handle spawning, request/response correlation, heartbeats, timeouts, auto-restart, and event forwarding.
 
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, net } from "electron";
 import started from "electron-squirrel-startup";
 import { ChildProcess, spawn } from "node:child_process";
 import path from "node:path";
@@ -32,6 +32,12 @@ import os from "os";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 
+// Disable Chromium sandbox in containerized environments (devcontainers, Docker)
+// where PID/network namespace creation is not permitted.
+if (process.env.ELECTRON_DISABLE_SANDBOX === "1") {
+  app.commandLine.appendSwitch("no-sandbox");
+}
+
 if (started) {
   app.quit();
 }
@@ -39,9 +45,7 @@ if (started) {
 // Sidecar configuration
 // In dev, __dirname is desktop/.vite/build. The py dir is a sibling of desktop/.
 // app.getAppPath() returns the desktop/ dir in dev.
-const SIDECAR_PY_DIR = path.resolve(app.isPackaged
-  ? path.join(process.resourcesPath, "py")
-  : path.join(app.getAppPath(), "..", "py"));
+const SIDECAR_PY_DIR = path.resolve(app.isPackaged ? path.join(process.resourcesPath, "py") : path.join(app.getAppPath(), "..", "py"));
 const SIDECAR_CMD = process.env.CODA_SIDECAR_CMD ?? "uv";
 const SIDECAR_BASE_ARGS = process.env.CODA_SIDECAR_CMD ? ["--sidecar"] : ["run", "--active", "coda.py", "--sidecar"];
 const HEARTBEAT_INTERVAL_MS = 10_000;
@@ -226,9 +230,7 @@ function startHeartbeat(): void {
   heartbeatTimer = setInterval(async () => {
     try {
       const hbPromise = sendRequest("heartbeat");
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("heartbeat timeout")), HEARTBEAT_TIMEOUT_MS)
-      );
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("heartbeat timeout")), HEARTBEAT_TIMEOUT_MS));
       await Promise.race([hbPromise, timeout]);
       restartCount = 0;
       setSidecarConnected(true);
@@ -282,7 +284,7 @@ function switchProject(newPath: string): void {
  *
  * MUST load the vite dev server URL in development and the built file in production.
  **/
-const createWindow = () => {
+const createWindow = async () => {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -297,7 +299,58 @@ const createWindow = () => {
   });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    // Pre-warm the Vite module graph by fetching the renderer entry point
+    // using Electron's net.fetch (Chromium network stack). This ensures the
+    // same DNS resolution as the renderer, avoiding IPv4/IPv6 mismatches.
+    // Without warmup, the 80+ ESM module waterfall from elements.tsx stalls
+    // under Chromium's 6-connection-per-origin HTTP/1.1 limit.
+    const warmupUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL.replace(/\/$/, "") + "/renderer.tsx";
+    console.log(`[coda desktop] Pre-warming Vite module graph: ${warmupUrl}`);
+    try {
+      const response = await net.fetch(warmupUrl, { signal: AbortSignal.timeout(60000) });
+      await response.text();
+      console.log("[coda desktop] Vite module graph warm.");
+    } catch (e) {
+      console.log(`[coda desktop] Vite warmup failed: ${e}, proceeding anyway.`);
+    }
+
+    // Retry loading with backoff to handle Vite dev server startup race
+    const loadWithRetry = async (retries = 5, delay = 1000) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          await mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+          return;
+        } catch {
+          if (i < retries - 1) {
+            console.log(`[coda desktop] Vite not ready, retrying in ${delay}ms... (${i + 1}/${retries})`);
+            await new Promise((r) => setTimeout(r, delay));
+            delay *= 2;
+          }
+        }
+      }
+    };
+    await loadWithRetry();
+
+    // [DEBUG] Log network errors and console messages
+    mainWindow.webContents.session.webRequest.onErrorOccurred((details: { url: string; error: string }) => {
+      console.log(`[DEBUG] network error: ${details.error} url=${details.url.substring(0, 200)}`);
+    });
+    mainWindow.webContents.on("console-message", (_event: unknown, level: number, message: string) => {
+      console.log(`[DEBUG] renderer [${level}]: ${message.substring(0, 500)}`);
+    });
+    // [DEBUG] Check state after 30s
+    setTimeout(async () => {
+      try {
+        const resourceCount = await mainWindow.webContents.executeJavaScript(`performance.getEntriesByType('resource').length`);
+        const rootChildren = await mainWindow.webContents.executeJavaScript(`document.getElementById('root')?.children.length ?? -1`);
+        console.log(`[DEBUG] state: resources=${resourceCount} rootChildren=${rootChildren}`);
+        const image = await mainWindow.webContents.capturePage();
+        fs.writeFileSync("/tmp/coda-desktop-screenshot.png", image.toPNG());
+        console.log("[DEBUG] Screenshot saved");
+      } catch (e) {
+        console.error("[DEBUG] Diagnostic failed:", e);
+      }
+    }, 30000);
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
@@ -364,7 +417,7 @@ app.whenReady().then(() => {
     const result = await dialog.showOpenDialog({
       properties: ["openDirectory", "createDirectory"],
     });
-    return result.canceled ? null : result.filePaths[0] ?? null;
+    return result.canceled ? null : (result.filePaths[0] ?? null);
   });
 
   // Project management
@@ -386,11 +439,7 @@ app.whenReady().then(() => {
     const projectJsonPath = path.join(codaDir, "project.json");
     try {
       fs.mkdirSync(codaDir, { recursive: true });
-      fs.writeFileSync(
-        projectJsonPath,
-        JSON.stringify({ design: { id: name }, targets: [] }, null, 2),
-        "utf-8"
-      );
+      fs.writeFileSync(projectJsonPath, JSON.stringify({ design: { id: name }, targets: [] }, null, 2), "utf-8");
       switchProject(folder);
       return { success: true };
     } catch (err: unknown) {

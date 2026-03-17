@@ -597,7 +597,7 @@ function writeLog(level: string, args: any[]): void {
   try {
     const logPath = path.join(getWorkspaceRoot() || "", "activation.log");
     fs.appendFileSync(logPath, `[${level}] ${message}\n`);
-  } catch (e) { }
+  } catch (e) {}
 }
 
 /**
@@ -1896,7 +1896,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(public filterProvider?: FilterTreeDataProvider) { }
+  constructor(public filterProvider?: FilterTreeDataProvider) {}
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -2003,7 +2003,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
             if (parsed.section) {
               sections.push(parsed.section);
             }
-          } catch (e) { }
+          } catch (e) {}
         }
         return this.createSectionItems(sections, filePath);
       } catch (e) {
@@ -2084,22 +2084,9 @@ function collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): A
       /^\s*(?:export\s+)?enum\s+([A-Za-z_$][\w$]*)\b/,
       /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
     ],
-    javascript: [
-      /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
-      /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/,
-      /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
-    ],
-    javascriptreact: [
-      /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
-      /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/,
-      /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
-    ],
-    go: [
-      /^\s*func\s+(?:\([^)]+\)\s*)?([A-Za-z_][\w]*)\b/,
-      /^\s*type\s+([A-Za-z_][\w]*)\b/,
-      /^\s*const\s+([A-Za-z_][\w]*)\b/,
-      /^\s*var\s+([A-Za-z_][\w]*)\b/,
-    ],
+    javascript: [/^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/, /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/, /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/],
+    javascriptreact: [/^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/, /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/, /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/],
+    go: [/^\s*func\s+(?:\([^)]+\)\s*)?([A-Za-z_][\w]*)\b/, /^\s*type\s+([A-Za-z_][\w]*)\b/, /^\s*const\s+([A-Za-z_][\w]*)\b/, /^\s*var\s+([A-Za-z_][\w]*)\b/],
   };
   const patterns = patternsByLanguage[document.languageId] ?? [];
   if (patterns.length === 0) return [];
@@ -2130,21 +2117,21 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
   const relativePath = getDocumentRelativePath(document);
   if (!relativePath) return [];
   const shouldDebug = document.uri.fsPath.endsWith("/semio-repo/vscode/extension.ts") || document.uri.fsPath.endsWith("/semio-repo/go/events.go");
-  const symbols = await vscode.commands.executeCommand<Array<vscode.DocumentSymbol | vscode.SymbolInformation>>(
-    "vscode.executeDocumentSymbolProvider",
-    document.uri,
-  ) ?? [];
+  const symbols = (await vscode.commands.executeCommand<Array<vscode.DocumentSymbol | vscode.SymbolInformation>>("vscode.executeDocumentSymbolProvider", document.uri)) ?? [];
   const scopes = new Map<string, vscode.CodeLens>();
 
   const addLens = (name: string, range: vscode.Range): void => {
     if (!name) return;
     const scope = buildNativeDefinitionScope(relativePath, name);
     if (scopes.has(scope)) return;
-    scopes.set(scope, new vscode.CodeLens(range, {
-      title: "Analyze",
-      command: "semio.analyze",
-      arguments: [scope],
-    }));
+    scopes.set(
+      scope,
+      new vscode.CodeLens(range, {
+        title: "Analyze",
+        command: "semio.analyze",
+        arguments: [scope],
+      }),
+    );
   };
 
   const visitDocumentSymbol = (symbol: vscode.DocumentSymbol): void => {
@@ -2246,6 +2233,97 @@ function updateSemioDecorations(editor: vscode.TextEditor) {
 }
 
 // #endregion 🔖Providers
+
+// #region 🔖Kit Editor
+// [🧰semiorepo🖱️vscode💻extension🔖kiteditor](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Kit%20Editor)
+// Kit editor MUST provide a custom editor for kit JSON files using the sketchpad webview.
+// Specs: Opens kit.json files in a webview panel that loads the built sketchpad app.
+// File changes are bridged between the VS Code filesystem and the webview via messaging.
+
+/**
+ * Custom editor provider that renders kit JSON files using the sketchpad webview.
+ * [🧰semiorepo🖱️vscode💻extension🔖kiteditor🪨kiteditorprovider](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Kit%20Editor/d/i/KitEditorProvider)
+ *
+ * Specs: Implements VS Code CustomTextEditorProvider. Loads the sketchpad app in a webview
+ * and bridges file reads/writes via postMessage. The webview uses createJsonFilePersistenceFactory
+ * with an adapter that communicates with the extension host.
+ **/
+class KitEditorProvider implements vscode.CustomTextEditorProvider {
+  public static readonly viewType = "semio.kitEditor";
+
+  constructor(private readonly context: vscode.ExtensionContext) {}
+
+  public async resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
+    webviewPanel.webview.options = {
+      enableScripts: true,
+    };
+
+    const sketchpadDistPath = path.join(this.context.extensionPath, "sketchpad-dist");
+    const indexHtmlPath = path.join(sketchpadDistPath, "index.html");
+
+    if (!fs.existsSync(indexHtmlPath)) {
+      webviewPanel.webview.html = this.getFallbackHtml(document);
+      return;
+    }
+
+    let html = fs.readFileSync(indexHtmlPath, "utf-8");
+    const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(sketchpadDistPath));
+    html = html.replace(/<head>/, `<head><base href="${baseUri.toString()}/">`);
+    html = html.replace(/src="\//g, `src="${baseUri.toString()}/`);
+    html = html.replace(/href="\//g, `href="${baseUri.toString()}/`);
+    webviewPanel.webview.html = html;
+
+    const updateWebview = () => {
+      webviewPanel.webview.postMessage({
+        kind: "kit.update",
+        content: document.getText(),
+      });
+    };
+
+    const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((e) => {
+      if (e.document.uri.toString() === document.uri.toString()) {
+        updateWebview();
+      }
+    });
+
+    webviewPanel.onDidDispose(() => {
+      changeDocumentSubscription.dispose();
+    });
+
+    webviewPanel.webview.onDidReceiveMessage((message) => {
+      if (message.kind === "kit.save") {
+        const edit = new vscode.WorkspaceEdit();
+        edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), message.content);
+        vscode.workspace.applyEdit(edit);
+      }
+    });
+
+    updateWebview();
+  }
+
+  private getFallbackHtml(document: vscode.TextDocument): string {
+    const content = document.getText();
+    let kitName = "Kit";
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed?.name) kitName = parsed.name;
+    } catch {
+      /* ignore parse errors */
+    }
+    return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>${kitName}</title>
+<style>body{font-family:system-ui;padding:2em;color:#333}pre{background:#f5f5f5;padding:1em;border-radius:4px;overflow:auto}</style>
+</head>
+<body>
+<h1>Kit: ${kitName}</h1>
+<p>The sketchpad app is not bundled with this extension. Build it with <code>npx nx build @semio/sketchpad</code> and copy the dist to <code>sketchpad-dist/</code>.</p>
+<pre>${content.slice(0, 5000)}</pre>
+</body></html>`;
+  }
+}
+
+// #endregion 🔖Kit Editor
 
 // #region 🔖Activation
 
@@ -2671,6 +2749,8 @@ export function activate(context: vscode.ExtensionContext) {
     kitDiagnosticCollection = vscode.languages.createDiagnosticCollection("semio-kit");
     context.subscriptions.push(repoDiagnosticCollection, kitDiagnosticCollection);
 
+    context.subscriptions.push(vscode.window.registerCustomEditorProvider(KitEditorProvider.viewType, new KitEditorProvider(context), { webviewOptions: { retainContextWhenHidden: true } }));
+
     semioGutterIcon = vscode.window.createTextEditorDecorationType({
       gutterIconPath: vscode.Uri.file(context.asAbsolutePath("semio_codeicon.svg")),
       gutterIconSize: "contain",
@@ -2767,6 +2847,6 @@ export function activate(context: vscode.ExtensionContext) {
  *Implementations MUST clean up any active subscriptions.
  * [🧰semiorepo🖱️vscode💻extension🔖activation🛠️deactivate](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Activation/d/i/deactivate)
  **/
-export function deactivate() { }
+export function deactivate() {}
 
 // #endregion 🔖Activation

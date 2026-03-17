@@ -25,8 +25,24 @@
 
 import "./i18n";
 
-export type { AppConfig, CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/shared";
+export type {
+  AppConfig,
+  CompositeFileProviderConfig,
+  FileProvider,
+  FileProviderFactory,
+  JsonFileAdapter,
+  LocalFileProviderConfig,
+  MemoryFileProviderConfig,
+  PersistenceFactory,
+  PersistenceProvider,
+  RemoteFileProviderConfig,
+  RemoteProviders,
+  SqliteAdapter,
+  YProviderFactory,
+} from "./sketchpad/shared";
+export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, YDocBinaryPersistenceProvider } from "./sketchpad/shared";
 export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";
+export type { SketchpadStore } from "./sketchpad/Sketchpad";
 export { Canvas, HorizontalWindows, VerticalWindows } from "../../semio-elements/ui";
 
 export { config as designConfig } from "./sketchpad/Design";

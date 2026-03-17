@@ -66,7 +66,7 @@ import {
   SearchIcon,
   TriangleAlertIcon,
   TutorialIcon,
-} from "@semio/assets";
+} from "@semio/assets/icons";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import {
   applyNodeChanges,

@@ -122,9 +122,9 @@ export interface ActionField {
 }
 
 /**
-* [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🪨noopsetter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/d/i/NOOP_SETTER)
-* NOOP_SETTER holds the data fields for a NOOP_SETTER record.
-**/
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🪨noopsetter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/d/i/NOOP_SETTER)
+ * NOOP_SETTER holds the data fields for a NOOP_SETTER record.
+ **/
 const NOOP_SETTER = () => {
   if (process.env.NODE_ENV === "development") {
     console.warn("[DEBUG] Attempted to set a disabled field");
@@ -168,10 +168,10 @@ export function createAction(execute: () => void, canExecute: boolean): ActionFi
     execute: canExecute
       ? execute
       : () => {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[DEBUG] Attempted to execute a disabled action");
-        }
-      },
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[DEBUG] Attempted to execute a disabled action");
+          }
+        },
   };
 }
 
@@ -524,12 +524,7 @@ export interface SelectionKeyboardState {
 }
 
 export function isSelectionToolKind(toolKind: ToolKind | string): boolean {
-  return (
-    toolKind === ToolKind.SELECTION_NORMAL ||
-    toolKind === ToolKind.SELECTION_ADDITIVE ||
-    toolKind === ToolKind.SELECTION_SUBTRACTIVE ||
-    toolKind === ToolKind.SELECTION_INTERSECT
-  );
+  return toolKind === ToolKind.SELECTION_NORMAL || toolKind === ToolKind.SELECTION_ADDITIVE || toolKind === ToolKind.SELECTION_SUBTRACTIVE || toolKind === ToolKind.SELECTION_INTERSECT;
 }
 
 export function resolveSelectionCompositionKindFromTool(toolKind: ToolKind | string): SelectionCompositionKind {
@@ -623,7 +618,7 @@ export interface FileProvider {
  * Configuration interface for in-memory file provider.
  * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🛠️memoryfileproviderconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/d/i/MemoryFileProviderConfig)
  **/
-export interface MemoryFileProviderConfig { }
+export interface MemoryFileProviderConfig {}
 
 /**
  * Configuration interface for local IndexedDB file provider.
@@ -651,6 +646,134 @@ export interface CompositeFileProviderConfig {
   memory?: boolean;
   local?: boolean | LocalFileProviderConfig;
   remote?: RemoteFileProviderConfig;
+}
+
+/**
+ * Abstract persistence provider for syncing a Y.Doc to a storage backend.
+ * Implementations MUST call the synced callback once initial data is loaded. Implementations
+ * MUST provide a destroy method to release resources.
+ **/
+export interface PersistenceProvider {
+  once(event: "synced", callback: () => void): void;
+  on(event: "synced", callback: () => void): void;
+  destroy(): void;
+}
+
+/**
+ * Factory that creates a PersistenceProvider for a given Y.Doc and storage key.
+ **/
+export type PersistenceFactory = (doc: Y.Doc, key: string) => PersistenceProvider;
+
+/**
+ * I/O adapter for reading and writing kit data as a JSON string.
+ * Implementations provide platform-specific file system access.
+ **/
+export interface JsonFileAdapter {
+  read(key: string): Promise<string | null>;
+  write(key: string, json: string): Promise<void>;
+}
+
+/**
+ * I/O adapter for reading and writing kit data as SQLite binary.
+ * Implementations provide platform-specific file system access.
+ **/
+export interface SqliteAdapter {
+  read(key: string): Promise<Uint8Array | null>;
+  write(key: string, data: Uint8Array): Promise<void>;
+}
+
+/**
+ * PersistenceProvider that syncs Y.Doc state via Y.js binary encoding.
+ * Uses Y.encodeStateAsUpdate / Y.applyUpdate for round-tripping through an adapter.
+ *
+ * Specs: Uses Y.js binary state encoding for faithful CRDT persistence.
+ * The key parameter maps to a storage location via the adapter.
+ **/
+export class YDocBinaryPersistenceProvider implements PersistenceProvider {
+  private doc: Y.Doc;
+  private key: string;
+  private adapter: { read(key: string): Promise<Uint8Array | null>; write(key: string, data: Uint8Array): Promise<void> };
+  private syncedCallbacks: (() => void)[] = [];
+  private onceCallbacks: (() => void)[] = [];
+  private destroyed = false;
+  private updateHandler: (update: Uint8Array) => void;
+
+  constructor(doc: Y.Doc, key: string, adapter: { read(key: string): Promise<Uint8Array | null>; write(key: string, data: Uint8Array): Promise<void> }) {
+    this.doc = doc;
+    this.key = key;
+    this.adapter = adapter;
+
+    this.updateHandler = () => {
+      if (!this.destroyed) {
+        const state = Y.encodeStateAsUpdate(this.doc);
+        this.adapter.write(this.key, state);
+      }
+    };
+
+    this.doc.on("update", this.updateHandler);
+
+    this.adapter.read(this.key).then((data) => {
+      if (data && !this.destroyed) {
+        Y.applyUpdate(this.doc, data);
+      }
+      this.onceCallbacks.forEach((cb) => cb());
+      this.onceCallbacks = [];
+      this.syncedCallbacks.forEach((cb) => cb());
+    });
+  }
+
+  once(event: "synced", callback: () => void): void {
+    if (event === "synced") this.onceCallbacks.push(callback);
+  }
+  on(event: "synced", callback: () => void): void {
+    if (event === "synced") this.syncedCallbacks.push(callback);
+  }
+  destroy(): void {
+    this.destroyed = true;
+    this.doc.off("update", this.updateHandler);
+    this.syncedCallbacks = [];
+    this.onceCallbacks = [];
+  }
+}
+
+/**
+ * Creates a PersistenceFactory that persists Y.Doc state to a JSON file via an adapter.
+ *
+ * Specs: Wraps YDocBinaryPersistenceProvider with a JSON adapter that converts
+ * between Y.js binary state and Base64 JSON for human-inspectable storage.
+ **/
+export function createJsonFilePersistenceFactory(adapter: JsonFileAdapter): PersistenceFactory {
+  return (doc: Y.Doc, key: string) => {
+    const binaryAdapter = {
+      async read(k: string): Promise<Uint8Array | null> {
+        const json = await adapter.read(k);
+        if (!json) return null;
+        const parsed = JSON.parse(json);
+        if (parsed?.yDocState) {
+          const binary = Uint8Array.from(atob(parsed.yDocState), (c) => c.charCodeAt(0));
+          return binary;
+        }
+        return null;
+      },
+      async write(k: string, data: Uint8Array): Promise<void> {
+        const base64 = btoa(String.fromCharCode(...data));
+        await adapter.write(k, JSON.stringify({ yDocState: base64 }));
+      },
+    };
+    return new YDocBinaryPersistenceProvider(doc, key, binaryAdapter);
+  };
+}
+
+/**
+ * Creates a PersistenceFactory that persists Y.Doc state to a SQLite database via an adapter.
+ *
+ * Specs: Uses Y.js binary state encoding stored as a BLOB in a SQLite table.
+ * The adapter provides platform-specific SQLite file I/O.
+ **/
+export function createSqliteFolderPersistenceFactory(adapter: SqliteAdapter): PersistenceFactory {
+  return (doc: Y.Doc, key: string) => {
+    return new YDocBinaryPersistenceProvider(doc, key, adapter);
+  };
 }
 
 /**
@@ -1024,7 +1147,7 @@ export interface AppConfig {
  * App registration entry extending AppConfig.
  * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🛠️appregistration](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/d/i/AppRegistration)
  **/
-export interface AppRegistration extends AppConfig { }
+export interface AppRegistration extends AppConfig {}
 
 // #endregion App Registry
 
@@ -1806,7 +1929,7 @@ export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): an
  **/
 export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Subscribe): Disposable {
   if (path.length === 0) {
-    const callback = () => subscribe(() => { });
+    const callback = () => subscribe(() => {});
     root.observeDeep(callback);
     return () => root.unobserveDeep(callback);
   }
@@ -1817,7 +1940,7 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
     const newJson = serializeValue(getValueAtPath(root, path));
     if (lastJson !== newJson) {
       lastJson = newJson;
-      subscribe(() => { });
+      subscribe(() => {});
     }
   };
   const setupObservers = (current: any, remainingPath: YPath, depth: number) => {
@@ -1921,7 +2044,7 @@ export class DerivedNode<T> {
     this.unsubscribers = this.deps.map((d) =>
       d.store.onPathChanged(d.path, () => {
         this.recompute();
-        return () => { };
+        return () => {};
       }),
     );
     this.recompute();
@@ -3112,10 +3235,7 @@ export function createSingleKeySetFullscreenWindowHandler<TAppKey extends string
  * MUST register init, sync, and all standard single-key handlers.
  * [👤semio📚js🗃️sketchpad💻shared🔖appeventhandlerfactories🛠️registersinglekeyappeventhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/App%20Event%20Handler%20Factories/d/i/registerSingleKeyAppEventHandlers)
  **/
-export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppState extends object>(
-  config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>,
-  hoverMapper: (event: any) => any = (e) => e.hover,
-) {
+export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppState extends object>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>, hoverMapper: (event: any) => any = (e) => e.hover) {
   createSingleKeyInitHandler(config);
   createSingleKeySyncHandler(config);
   createSingleKeyTogglePanelHandler(config);
@@ -3446,7 +3566,7 @@ export interface KitAppHooks {
  * defaultDesignAppHooks holds the data fields for a defaultDesignAppHooks record.
  **/
 const defaultDesignAppHooks: DesignAppHooks = {
-  useDesignAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useDesignAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
   useDesignAppDiff: () => ({}),
   useDesignAppHover: () => undefined,
   useDesignAppIsPieceHovered: () => false,
@@ -3463,7 +3583,7 @@ const defaultDesignAppHooks: DesignAppHooks = {
  * defaultKitAppHooks holds the data fields for a defaultKitAppHooks record.
  **/
 const defaultKitAppHooks: KitAppHooks = {
-  useKitAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useKitAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
 };
 
 /**

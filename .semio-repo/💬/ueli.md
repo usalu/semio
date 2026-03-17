@@ -154,6 +154,11 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ## 👤semio📚js🗃️sketchpad
 
+semio sketchpad:
+Abstract the Kit Store completly. Create a new semio bundle called studio that has the yjs kit provider. Pass it as a root prop to <Sketchpad>. Remove the yjs dependency completly from sketchpad.
+Create two more store: File store that synchronizes a kit to a json file and Folder store that synchronizes a kit to a folder with a .semio folder with sqlite database (same as python engine).
+Create a semio vscode bundle that is sketchpad and opens when a json kit file is opened and edits the file.
+
 ## 👤semio📚js🗃️sketchpad💻designtsx
 
 ## 👤semio🖱️3dm
