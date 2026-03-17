@@ -116,7 +116,6 @@ const UI_STRINGS = {
  * [🧰semiorepo🖱️vscode💻extension🔖constants🔖entityemojiregistry🪨entityemojis](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/i/ENTITY_EMOJIS)
  **/
 export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
-
   ["👤", "technology-user"],
   ["🧰", "technology-infrastructure"],
   ["🔬", "technology-research"],
@@ -221,11 +220,7 @@ export function buildEntityIdRegex(): RegExp {
 
   //  Group 1+2: Markdown link [<id>](semiorepo://uri) — group(1)=id, group(2)=uri
   //  Group 3: Bare emoji-prefixed ID (emoji followed by non-delimiter text)
-  return new RegExp(
-    `(?:\\[((?:${emojiAlt})[^\\]]+)\\]\\((semiorepo:\\/\\/[^)]+)\\)|` +
-    `((?:${emojiAlt})[^\\s/"'\\[\\]()]+))`,
-    "gu"
-  );
+  return new RegExp("(?:\\[((?:" + emojiAlt + ")[^\\]]+)\\]\\((semiorepo:\\/\\/[^)]+)\\)|((?:" + emojiAlt + ")[^\\s/\"'\\[\\]()]+))", "gu");
 }
 
 /**
@@ -528,7 +523,10 @@ const fileBreachsMap = new Map<string, Breach[]>();
  * [🧰semiorepo🖱️vscode💻extension🔖globals✂️bundleinfo](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals/d/i/BundleInfo)
  * BundleInfo holds the data fields for a BundleInfo record.
  **/
-interface BundleInfo { id: string; root: string; }
+interface BundleInfo {
+  id: string;
+  root: string;
+}
 /**
  * [🧰semiorepo🖱️vscode💻extension🔖globals🪨bundlecache](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals/d/i/bundleCache)
  * bundleCache holds the data fields for a bundleCache record.
@@ -544,6 +542,31 @@ let cachedRepoBaseUrl: string | undefined = undefined;
  * runningProcesses holds the data fields for a runningProcesses record.
  **/
 const runningProcesses = new Map<string, AbortController>();
+
+// [🧰semiorepo🖱️vscode💻extension🔖globals🪨cliconcurrencylimit](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals/d/i/cliConcurrencyLimit)
+// Maximum number of concurrent CLI subprocess spawns to prevent system overload.
+const CLI_CONCURRENCY_LIMIT = 2;
+let cliActiveCount = 0;
+const cliWaitQueue: (() => void)[] = [];
+
+function acquireCliSlot(): Promise<void> {
+  if (cliActiveCount < CLI_CONCURRENCY_LIMIT) {
+    cliActiveCount++;
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    cliWaitQueue.push(() => {
+      cliActiveCount++;
+      resolve();
+    });
+  });
+}
+
+function releaseCliSlot(): void {
+  cliActiveCount--;
+  const next = cliWaitQueue.shift();
+  if (next) next();
+}
 
 /**
  * [🧰semiorepo🖱️vscode💻extension🔖globals🪨filterprovider](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Globals/d/i/filterProvider)
@@ -568,8 +591,8 @@ let monorepoProvider: MonorepoTreeDataProvider | undefined;
  * writeLog holds the data fields for a writeLog record.
  **/
 function writeLog(level: string, args: any[]): void {
-  const message = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-  const prefix = level === 'ERROR' ? '[ERROR] ' : '';
+  const message = args.map((a) => (typeof a === "object" ? JSON.stringify(a, null, 2) : String(a))).join(" ");
+  const prefix = level === "ERROR" ? "[ERROR] " : "";
   outputChannel?.appendLine(prefix + message);
   try {
     const logPath = path.join(getWorkspaceRoot() || "", "activation.log");
@@ -582,7 +605,7 @@ function writeLog(level: string, args: any[]): void {
  * log holds the data fields for a log record.
  **/
 function log(...args: any[]): void {
-  writeLog('LOG', args);
+  writeLog("LOG", args);
 }
 
 /**
@@ -590,7 +613,7 @@ function log(...args: any[]): void {
  * [🧰semiorepo🖱️vscode💻extension🔖utilities🛠️logerror](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/logError)
  **/
 function logError(...args: any[]): void {
-  writeLog('ERROR', args);
+  writeLog("ERROR", args);
 }
 
 /**
@@ -721,6 +744,7 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   const command = getRepoCommand();
   if (!command) return null;
   const fullCommand = `"${command}" --json ${args}`;
+  await acquireCliSlot();
   try {
     const { stdout } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
     if (!stdout.trim()) return null;
@@ -733,6 +757,8 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   } catch (error) {
     logError("[runRepoCommandJson] error:", error);
     return null;
+  } finally {
+    releaseCliSlot();
   }
 }
 
@@ -742,7 +768,10 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
  * [🧰semiorepo🖱️vscode💻extension🔖utilities🛠️parserepoevents](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/parseRepoEvents)
  **/
 export function parseRepoEvents(output: string): RepoEvent[] {
-  const lines = output.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+  const lines = output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
   return lines.map((line) => JSON.parse(line) as RepoEvent);
 }
 
@@ -766,8 +795,8 @@ export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> 
     }
   }
 
-  if (results.length > 0 && results.some(r => r && typeof r === 'object' && 'section' in r)) {
-    const sections = results.map(r => (r as any).section).filter(s => s);
+  if (results.length > 0 && results.some((r) => r && typeof r === "object" && "section" in r)) {
+    const sections = results.map((r) => (r as any).section).filter((s) => s);
     if (sections.length > 0) {
       return { data: { sections } };
     }
@@ -854,7 +883,10 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
   if (node.Status === "open") statusIcon = "🔵";
   else if (node.Status === "closed") statusIcon = "🟢";
   const fallbackEmojis: Record<string, string> = {
-    contributor: "🧑‍💻", checkpoint: "🔀", policy: "👮", statute: "⚠",
+    contributor: "🧑‍💻",
+    checkpoint: "🔀",
+    policy: "👮",
+    statute: "⚠",
   };
   const prefix = emoji || fallbackEmojis[node.Kind] || "";
   let label = node.Label;
@@ -932,7 +964,7 @@ export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
   for (const year of fp.excludedYears) args.push("--no-year", String(year));
   for (const month of fp.excludedMonths) args.push("--no-month", String(month));
   for (const day of fp.excludedDays) args.push("--no-day", String(day));
-  if (Object.values(ff).every(v => !v)) args.push("--no-file");
+  if (Object.values(ff).every((v) => !v)) args.push("--no-file");
   if (!fp.filters.policy.all) args.push("--no-policy");
   if (!fp.filters.contributor.all) args.push("--no-contributor");
   if (!fp.filters.checkpoint.all) args.push("--no-checkpoint");
@@ -947,7 +979,10 @@ export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
  * [🧰semiorepo🖱️vscode💻extension🔖uriresolution🛠️slugify](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/slugify)
  **/
 export function slugify(text: string): string {
-  return text.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return text
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
@@ -972,12 +1007,13 @@ function flattenTree(node: TreeNodeData, result: Map<string, TreeNodeData>): voi
  **/
 async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
   const now = Date.now();
-  if (treeNodeCache && (now - treeNodeCacheTime) < TREE_CACHE_TTL) {
+  if (treeNodeCache && now - treeNodeCacheTime < TREE_CACHE_TTL) {
     return treeNodeCache;
   }
   const root = getWorkspaceRoot();
   const command = getRepoCommand();
   if (!root || !command) return new Map();
+  await acquireCliSlot();
   try {
     const { stdout } = await execAsync(`"${command}" --json search`, { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
     if (!stdout.trim()) return treeNodeCache ?? new Map();
@@ -994,6 +1030,8 @@ async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
     }
   } catch (error) {
     logError("[getTreeNodeCache] error:", error);
+  } finally {
+    releaseCliSlot();
   }
   return treeNodeCache ?? new Map();
 }
@@ -1089,20 +1127,16 @@ async function navigateToUri(uri: string): Promise<void> {
     case "ticket": {
       let ticketPath = "";
       if (node && node.Year && node.Month && node.Day && node.ID) {
-
         const slug = node.ID.replace(/^[^\w]+/, "");
         const year = String(node.Year).padStart(2, "0");
         const month = String(node.Month).padStart(2, "0");
         const day = String(node.Day).padStart(2, "0");
         ticketPath = path.join(wsRoot, ".semio-repo", "🎫", year, month, day, slug);
       } else {
-
         if (parsed.path.match(/^\d+\/\d+\/\d+\/.+/)) {
           ticketPath = path.join(wsRoot, ".semio-repo", "🎫", parsed.path);
         } else {
-
           const slug = path.basename(parsed.path);
-
         }
       }
 
@@ -1112,7 +1146,6 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "goal": {
-
       const goalJsonPath = path.join(wsRoot, ".semio-repo", "🎯", parsed.path, "goal.json");
       if (fs.existsSync(goalJsonPath)) {
         return vscode.commands.executeCommand("semio.navigateToFile", goalJsonPath) as any;
@@ -1120,7 +1153,6 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "draft": {
-
       const slug = path.basename(parsed.path);
       const draftPath = path.join(wsRoot, ".semio-repo", "✍️", slug);
       if (fs.existsSync(draftPath)) {
@@ -1129,7 +1161,6 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "todo": {
-
       const slug = path.basename(parsed.path);
       const todoPath = path.join(wsRoot, ".semio-repo", "todos", slug);
       if (fs.existsSync(todoPath)) {
@@ -1166,7 +1197,6 @@ async function navigateToUri(uri: string): Promise<void> {
 
       const parts = parsed.path.split("/");
       if (parts.length >= 2) {
-
       }
       break;
     }
@@ -1205,6 +1235,8 @@ async function navigateToUri(uri: string): Promise<void> {
       const sectionPath = sectionParts.join("/");
       const binaryPath = getRepoBinaryPath();
       if (binaryPath) {
+        await acquireCliSlot();
+        let sectionResult: { filePath: string; startLine: number; endLine?: number } | undefined;
         try {
           const { stdout } = await execAsync(`"${binaryPath}" --json section list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
           const events = parseRepoEvents(stdout);
@@ -1213,11 +1245,16 @@ async function navigateToUri(uri: string): Promise<void> {
             if (section) {
               const found = findSectionByPath(section, sectionPath);
               if (found) {
-                return openFileAtLine(filePath, found.startLine, found.endLine);
+                sectionResult = { filePath, startLine: found.startLine, endLine: found.endLine };
+                break;
               }
             }
           }
-        } catch { }
+        } catch {
+        } finally {
+          releaseCliSlot();
+        }
+        if (sectionResult) return openFileAtLine(sectionResult.filePath, sectionResult.startLine, sectionResult.endLine);
       }
       return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
     }
@@ -1242,16 +1279,23 @@ async function navigateToUri(uri: string): Promise<void> {
       if (defName) {
         const binaryPath = getRepoBinaryPath();
         if (binaryPath) {
+          await acquireCliSlot();
+          let defResult: { filePath: string; startLine: number; endLine?: number } | undefined;
           try {
             const { stdout } = await execAsync(`"${binaryPath}" --json definition list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
             const events = parseRepoEvents(stdout);
             for (const event of events) {
               const def = (event as any).definition;
               if (def && slugify(def.name) === slugify(defName) && def.startLine) {
-                return openFileAtLine(filePath, def.startLine, def.endLine);
+                defResult = { filePath, startLine: def.startLine, endLine: def.endLine };
+                break;
               }
             }
-          } catch { }
+          } catch {
+          } finally {
+            releaseCliSlot();
+          }
+          if (defResult) return openFileAtLine(defResult.filePath, defResult.startLine, defResult.endLine);
         }
       }
       return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
@@ -1327,7 +1371,7 @@ function extractFilePathFromScope(scope: string): string | undefined {
     const relPath = cleanScope === bestBundle.id ? "" : cleanScope.substring(bestBundle.id.length + 1);
     const parts = relPath.split(/[#§:]/);
     const fileName = parts[0];
-    const root = bestBundle.root === "." ? "" : (bestBundle.root.endsWith("/") ? bestBundle.root : bestBundle.root + "/");
+    const root = bestBundle.root === "." ? "" : bestBundle.root.endsWith("/") ? bestBundle.root : bestBundle.root + "/";
     const filePath = root + fileName;
     return filePath.endsWith("/") ? filePath.slice(0, -1) : filePath;
   }
@@ -1406,9 +1450,7 @@ async function updateBundleCache() {
  * [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨ignoreddirectories](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/ignoredDirectories)
  * ignoredDirectories holds the data fields for a ignoredDirectories record.
  **/
-const ignoredDirectories = new Set([
-  "node_modules", "venv", "dist", "build", "out", "__pycache__", "coverage", "site-packages", "eggs", "wheels", "htmlcov", "target", "artifacts", "vendor"
-]);
+const ignoredDirectories = new Set(["node_modules", "venv", "dist", "build", "out", "__pycache__", "coverage", "site-packages", "eggs", "wheels", "htmlcov", "target", "artifacts", "vendor"]);
 /**
  * [🧰semiorepo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨alloweddotdirectories](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/allowedDotDirectories)
  * allowedDotDirectories holds the data fields for a allowedDotDirectories record.
@@ -1610,7 +1652,7 @@ export class FilterTreeItem extends vscode.TreeItem {
     public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None,
     public readonly contextValue?: string,
     public readonly filterKey?: string,
-    public readonly filterValue?: any
+    public readonly filterValue?: any,
   ) {
     super(label, collapsibleState);
     this.contextValue = contextValue;
@@ -1697,11 +1739,9 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     }
 
     if (element.contextValue === "filter_time") {
-      return this.availableYears.map(y => {
+      return this.availableYears.map((y) => {
         const excluded = this.excludedYears.includes(y);
-        const item = new FilterTreeItem(
-          String(y), "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_year", "year", y
-        );
+        const item = new FilterTreeItem(String(y), "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_year", "year", y);
         item.tooltip = excluded ? `Excluded year ${y}` : `Included year ${y}`;
         item.command = { command: "semio.filter.toggleYear", title: "Toggle Year", arguments: [y] };
         return item;
@@ -1710,12 +1750,10 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
 
     if (element.contextValue === "filter_time_year") {
       const year = element.filterValue;
-      return this.availableMonths.map(m => {
+      return this.availableMonths.map((m) => {
         const excluded = this.excludedMonths.includes(m);
         const label = new Date(2000, m - 1, 1).toLocaleString("default", { month: "long" });
-        const item = new FilterTreeItem(
-          label, "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_month", "month", m
-        );
+        const item = new FilterTreeItem(label, "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_month", "month", m);
         item.tooltip = excluded ? `Excluded month ${label}` : `Included month ${label}`;
         item.command = { command: "semio.filter.toggleMonth", title: "Toggle Month", arguments: [m] };
         return item;
@@ -1723,11 +1761,9 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     }
 
     if (element.contextValue === "filter_time_month") {
-      return this.availableDays.map(d => {
+      return this.availableDays.map((d) => {
         const excluded = this.excludedDays.includes(d);
-        const item = new FilterTreeItem(
-          String(d).padStart(2, "0"), "timeValue", vscode.TreeItemCollapsibleState.None, "filter_time_day", "day", d
-        );
+        const item = new FilterTreeItem(String(d).padStart(2, "0"), "timeValue", vscode.TreeItemCollapsibleState.None, "filter_time_day", "day", d);
         item.tooltip = excluded ? `Excluded day ${d}` : `Included day ${d}`;
         item.command = { command: "semio.filter.toggleDay", title: "Toggle Day", arguments: [d] };
         return item;
@@ -1739,23 +1775,13 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
 
   private createSearchItem(): FilterTreeItem {
     const item = new FilterTreeItem("🔍Search", "search", vscode.TreeItemCollapsibleState.None, "filter_search");
-    const details = [
-      this.searchQuery ? `Query: ${this.searchQuery}` : "No query set",
-      this.matchCase ? "Match case on" : "Match case off",
-      this.matchWholeWord ? "Whole word on" : "Whole word off",
-      this.useRegex ? "Regex on" : "Regex off",
-    ];
+    const details = [this.searchQuery ? `Query: ${this.searchQuery}` : "No query set", this.matchCase ? "Match case on" : "Match case off", this.matchWholeWord ? "Whole word on" : "Whole word off", this.useRegex ? "Regex on" : "Regex off"];
     item.tooltip = `Search filter\n${details.join("\n")}`;
     item.command = { command: "semio.filter.search", title: "Search" };
     return item;
   }
 
-  private createFilterItem(
-    label: string,
-    contextValue: string,
-    tooltip: string,
-    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
-  ): FilterTreeItem {
+  private createFilterItem(label: string, contextValue: string, tooltip: string, collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None): FilterTreeItem {
     const item = new FilterTreeItem(label, "filter", collapsibleState, contextValue);
     item.tooltip = tooltip;
     return item;
@@ -1763,7 +1789,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
 
   toggle(kind: string, key: string) {
     const filterKeys = this.filters[kind] ? Object.keys(this.filters[kind]) : [];
-    const hasRealKeys = filterKeys.some(k => k !== "none" && k !== "all");
+    const hasRealKeys = filterKeys.some((k) => k !== "none" && k !== "all");
     if ((key === "none" || key === "all") && this.filters[kind] && hasRealKeys) {
       for (const k of Object.keys(this.filters[kind])) this.filters[kind][k] = key === "all";
       this.refresh();
@@ -1777,8 +1803,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         this.excludedDays = [];
         this.timeFilter.all = true;
         this.timeFilter.none = false;
-      }
-      else if (key === "none") {
+      } else if (key === "none") {
         this.excludedYears = [...this.availableYears];
         this.excludedMonths = [...this.availableMonths];
         this.excludedDays = [...this.availableDays];
@@ -1801,21 +1826,21 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
   }
 
   toggleYear(year: number) {
-    if (this.excludedYears.includes(year)) this.excludedYears = this.excludedYears.filter(y => y !== year);
+    if (this.excludedYears.includes(year)) this.excludedYears = this.excludedYears.filter((y) => y !== year);
     else this.excludedYears.push(year);
     this.refresh();
     monorepoProvider?.refresh();
   }
 
   toggleMonth(month: number) {
-    if (this.excludedMonths.includes(month)) this.excludedMonths = this.excludedMonths.filter(m => m !== month);
+    if (this.excludedMonths.includes(month)) this.excludedMonths = this.excludedMonths.filter((m) => m !== month);
     else this.excludedMonths.push(month);
     this.refresh();
     monorepoProvider?.refresh();
   }
 
   toggleDay(day: number) {
-    if (this.excludedDays.includes(day)) this.excludedDays = this.excludedDays.filter(d => d !== day);
+    if (this.excludedDays.includes(day)) this.excludedDays = this.excludedDays.filter((d) => d !== day);
     else this.excludedDays.push(day);
     this.refresh();
     monorepoProvider?.refresh();
@@ -1833,7 +1858,7 @@ export class MonorepoTreeItem extends vscode.TreeItem {
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly contextValue?: string,
     public readonly data?: any,
-    public readonly nodeId?: string
+    public readonly nodeId?: string,
   ) {
     super(label, collapsibleState);
     this.contextValue = contextValue;
@@ -1848,7 +1873,7 @@ export class MonorepoTreeItem extends vscode.TreeItem {
  **/
 export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
   const label = treeNodeDisplayLabel(node);
-  const hasChildren = (node.Children && node.Children.length > 0);
+  const hasChildren = node.Children && node.Children.length > 0;
   const collapsible = hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
   const ctx = treeNodeContextValue(node);
   const item = new MonorepoTreeItem(label, collapsible, ctx, node, node.ID || undefined);
@@ -1896,7 +1921,6 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
     if (!node?.Children) return [];
     return node.Children.map(treeNodeToItem);
   }
-
 }
 
 /**
@@ -1906,14 +1930,9 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
 class SectionTreeItem extends vscode.TreeItem {
   constructor(
     public section: SectionInfo,
-    public filePath: string
+    public filePath: string,
   ) {
-    super(
-      section.name,
-      (section.children && section.children.length > 0)
-        ? vscode.TreeItemCollapsibleState.Collapsed
-        : vscode.TreeItemCollapsibleState.None
-    );
+    super(section.name, section.children && section.children.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     this.contextValue = "section";
     this.iconPath = new vscode.ThemeIcon("bookmark");
     this.tooltip = `Section: ${section.name}`;
@@ -1921,10 +1940,7 @@ class SectionTreeItem extends vscode.TreeItem {
     this.command = {
       command: "vscode.open",
       title: "Open Section",
-      arguments: [
-        vscode.Uri.file(path.join(getWorkspaceRoot() || "", filePath)),
-        { selection: new vscode.Range(start, 0, start, 0) }
-      ]
+      arguments: [vscode.Uri.file(path.join(getWorkspaceRoot() || "", filePath)), { selection: new vscode.Range(start, 0, start, 0) }],
     };
   }
 }
@@ -1941,10 +1957,10 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
 
   constructor(private context: vscode.ExtensionContext) {
     this.activeEditor = vscode.window.activeTextEditor;
-    vscode.window.onDidChangeActiveTextEditor(editor => {
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
       this.refresh();
     });
-    vscode.workspace.onDidChangeTextDocument(e => {
+    vscode.workspace.onDidChangeTextDocument((e) => {
       if (this.activeEditor && e.document.uri.toString() === this.activeEditor.document.uri.toString()) {
         this.refresh();
       }
@@ -1987,9 +2003,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
             if (parsed.section) {
               sections.push(parsed.section);
             }
-          } catch (e) {
-
-          }
+          } catch (e) { }
         }
         return this.createSectionItems(sections, filePath);
       } catch (e) {
@@ -2000,7 +2014,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
   }
 
   private createSectionItems(sections: SectionInfo[], filePath: string): SectionTreeItem[] {
-    return sections.map(s => {
+    return sections.map((s) => {
       const item = new SectionTreeItem(s, filePath);
 
       return item;
@@ -2015,6 +2029,150 @@ function isDefinitionEntityId(id: string): boolean {
     }
   }
   return false;
+}
+
+const NATIVE_DEFINITION_SYMBOL_KINDS = new Set<vscode.SymbolKind>([
+  vscode.SymbolKind.Class,
+  vscode.SymbolKind.Constant,
+  vscode.SymbolKind.Constructor,
+  vscode.SymbolKind.Enum,
+  vscode.SymbolKind.EnumMember,
+  vscode.SymbolKind.Field,
+  vscode.SymbolKind.Function,
+  vscode.SymbolKind.Interface,
+  vscode.SymbolKind.Method,
+  vscode.SymbolKind.Module,
+  vscode.SymbolKind.Namespace,
+  vscode.SymbolKind.Property,
+  vscode.SymbolKind.Struct,
+  vscode.SymbolKind.TypeParameter,
+  vscode.SymbolKind.Variable,
+]);
+
+function getDocumentRelativePath(document: vscode.TextDocument): string | null {
+  if (document.uri.scheme !== "file") return null;
+  const root = getWorkspaceRoot();
+  if (!root) return null;
+  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
+  if (!relativePath || relativePath.startsWith("..")) return null;
+  return relativePath;
+}
+
+function buildNativeDefinitionScope(relativePath: string, definitionName: string): string {
+  return `${relativePath}§${definitionName}`;
+}
+
+function isDocumentSymbol(value: vscode.DocumentSymbol | vscode.SymbolInformation): value is vscode.DocumentSymbol {
+  return "selectionRange" in value;
+}
+
+function collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): Array<{ name: string; range: vscode.Range }> {
+  const patternsByLanguage: Partial<Record<string, RegExp[]>> = {
+    typescript: [
+      /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?interface\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?type\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?enum\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
+    ],
+    typescriptreact: [
+      /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?interface\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?type\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?enum\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
+    ],
+    javascript: [
+      /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
+    ],
+    javascriptreact: [
+      /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/,
+      /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
+    ],
+    go: [
+      /^\s*func\s+(?:\([^)]+\)\s*)?([A-Za-z_][\w]*)\b/,
+      /^\s*type\s+([A-Za-z_][\w]*)\b/,
+      /^\s*const\s+([A-Za-z_][\w]*)\b/,
+      /^\s*var\s+([A-Za-z_][\w]*)\b/,
+    ],
+  };
+  const patterns = patternsByLanguage[document.languageId] ?? [];
+  if (patterns.length === 0) return [];
+  const results: Array<{ name: string; range: vscode.Range }> = [];
+  const seen = new Set<string>();
+  for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {
+    const textLine = document.lineAt(lineIndex).text;
+    for (const pattern of patterns) {
+      const match = pattern.exec(textLine);
+      if (!match?.[1]) continue;
+      const name = match[1];
+      const key = `${lineIndex}:${name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const startCharacter = textLine.indexOf(name);
+      if (startCharacter < 0) continue;
+      results.push({
+        name,
+        range: new vscode.Range(lineIndex, startCharacter, lineIndex, startCharacter + name.length),
+      });
+      break;
+    }
+  }
+  return results;
+}
+
+async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> {
+  const relativePath = getDocumentRelativePath(document);
+  if (!relativePath) return [];
+  const shouldDebug = document.uri.fsPath.endsWith("/semio-repo/vscode/extension.ts") || document.uri.fsPath.endsWith("/semio-repo/go/events.go");
+  const symbols = await vscode.commands.executeCommand<Array<vscode.DocumentSymbol | vscode.SymbolInformation>>(
+    "vscode.executeDocumentSymbolProvider",
+    document.uri,
+  ) ?? [];
+  const scopes = new Map<string, vscode.CodeLens>();
+
+  const addLens = (name: string, range: vscode.Range): void => {
+    if (!name) return;
+    const scope = buildNativeDefinitionScope(relativePath, name);
+    if (scopes.has(scope)) return;
+    scopes.set(scope, new vscode.CodeLens(range, {
+      title: "Analyze",
+      command: "semio.analyze",
+      arguments: [scope],
+    }));
+  };
+
+  const visitDocumentSymbol = (symbol: vscode.DocumentSymbol): void => {
+    if (token.isCancellationRequested) return;
+    if (NATIVE_DEFINITION_SYMBOL_KINDS.has(symbol.kind)) {
+      addLens(symbol.name, symbol.selectionRange);
+    }
+    for (const child of symbol.children) {
+      visitDocumentSymbol(child);
+    }
+  };
+
+  for (const symbol of symbols) {
+    if (token.isCancellationRequested) break;
+    if (isDocumentSymbol(symbol)) {
+      visitDocumentSymbol(symbol);
+    } else if (NATIVE_DEFINITION_SYMBOL_KINDS.has(symbol.kind)) {
+      addLens(symbol.name, symbol.location.range);
+    }
+  }
+
+  if (scopes.size == 0) {
+    for (const fallback of collectNativeDefinitionFallbackRanges(document)) {
+      addLens(fallback.name, fallback.range);
+    }
+  }
+
+  return Array.from(scopes.values());
 }
 
 /**
@@ -2038,19 +2196,24 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
       const endPos = document.positionAt(match.index + match[0].length);
       const range = new vscode.Range(startPos, endPos);
 
-      lenses.push(new vscode.CodeLens(range, {
-        title: "Analyze",
-        command: "semio.analyze",
-        arguments: [id]
-      }));
+      lenses.push(
+        new vscode.CodeLens(range, {
+          title: "Analyze",
+          command: "semio.analyze",
+          arguments: [id],
+        }),
+      );
 
-      lenses.push(new vscode.CodeLens(range, {
-        title: "Navigate to",
-        command: "semio.navigate",
-        arguments: [uri || id]
-      }));
-
+      lenses.push(
+        new vscode.CodeLens(range, {
+          title: "Navigate to",
+          command: "semio.navigate",
+          arguments: [uri || id],
+        }),
+      );
     }
+
+    lenses.push(...(await collectNativeDefinitionCodeLenses(document, token)));
 
     return lenses;
   }
@@ -2079,6 +2242,7 @@ function updateSemioDecorations(editor: vscode.TextEditor) {
     decorations.push({ range: new vscode.Range(startPos, endPos) });
   }
 
+  editor.setDecorations(semioGutterIcon, decorations);
 }
 
 // #endregion 🔖Providers
@@ -2179,7 +2343,12 @@ function registerCommands(context: vscode.ExtensionContext): void {
   }
 
   const timeModes: Array<["year" | "month" | "day", "none" | "all"]> = [
-    ["year", "none"], ["year", "all"], ["month", "none"], ["month", "all"], ["day", "none"], ["day", "all"],
+    ["year", "none"],
+    ["year", "all"],
+    ["month", "none"],
+    ["month", "all"],
+    ["day", "none"],
+    ["day", "all"],
   ];
   for (const [unit, mode] of timeModes) {
     register(`semio.filter.time.${unit}.${mode}`, () => filterProvider?.setTimeMode(unit, mode));
@@ -2285,7 +2454,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     const slug = node.Data?.slug ?? node.Label;
     if (!year || !month || !day || !slug) return;
     const ticketId = `${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${slug}`;
-    return vscode.window.showInformationMessage(`Close ticket: ${ticketId}?`, "Yes", "No").then(answer => {
+    return vscode.window.showInformationMessage(`Close ticket: ${ticketId}?`, "Yes", "No").then((answer) => {
       if (answer === "Yes") {
         const binaryPath = getRepoBinaryPath();
         if (!binaryPath) return;
@@ -2305,7 +2474,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     const slug = node.Data?.slug ?? node.Label;
     if (!year || !month || !day || !slug) return;
     const ticketId = `${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${slug}`;
-    return vscode.window.showInputBox({ prompt: "Reopen prompt" }).then(prompt => {
+    return vscode.window.showInputBox({ prompt: "Reopen prompt" }).then((prompt) => {
       if (!prompt) return;
       const binaryPath = getRepoBinaryPath();
       if (!binaryPath) return;
@@ -2329,7 +2498,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     const node = item?.data as TreeNodeData | undefined;
     const slug = node?.Data?.slug ?? node?.Label;
     if (!slug) return;
-    return vscode.window.showInformationMessage(`Delete draft: ${slug}?`, "Yes", "No").then(answer => {
+    return vscode.window.showInformationMessage(`Delete draft: ${slug}?`, "Yes", "No").then((answer) => {
       if (answer === "Yes") {
         const binaryPath = getRepoBinaryPath();
         if (!binaryPath) return;
@@ -2391,18 +2560,48 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   const contributedCommands: string[] = [
-    "semio.analyze", "semio.analyzeFile", "semio.autofix", "semio.autofixFile",
-    "semio.policyList", "semio.policyTree", "semio.ticketList", "semio.ticketRead", "semio.ticketTree",
-    "semio.technologyList", "semio.technologyTree",
-    "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove",
-    "semio.sectionTree", "semio.sectionList", "semio.sectionCreate", "semio.sectionMove",
-    "semio.sectionDelete", "semio.sectionOpen", "semio.sectionRename",
-    "semio.sectionCreateChild", "semio.sectionRemove", "semio.sectionIntegrate",
-    "semio.definitionList", "semio.definitionTree",
-    "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList",
-    "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree",
-    "semio.refreshDiagnostics", "semio.autofixBreach",
-    "semio.navigateToRepo", "semio.navigateTo", "semio.goalOpen", "semio.goalList",
+    "semio.analyze",
+    "semio.analyzeFile",
+    "semio.autofix",
+    "semio.autofixFile",
+    "semio.policyList",
+    "semio.policyTree",
+    "semio.ticketList",
+    "semio.ticketRead",
+    "semio.ticketTree",
+    "semio.technologyList",
+    "semio.technologyTree",
+    "semio.contributorAdd",
+    "semio.contributorList",
+    "semio.contributorRemove",
+    "semio.sectionTree",
+    "semio.sectionList",
+    "semio.sectionCreate",
+    "semio.sectionMove",
+    "semio.sectionDelete",
+    "semio.sectionOpen",
+    "semio.sectionRename",
+    "semio.sectionCreateChild",
+    "semio.sectionRemove",
+    "semio.sectionIntegrate",
+    "semio.definitionList",
+    "semio.definitionTree",
+    "semio.folderTree",
+    "semio.folderCreate",
+    "semio.folderMove",
+    "semio.folderDelete",
+    "semio.folderList",
+    "semio.fileCreate",
+    "semio.fileMove",
+    "semio.fileDelete",
+    "semio.fileList",
+    "semio.fileTree",
+    "semio.refreshDiagnostics",
+    "semio.autofixBreach",
+    "semio.navigateToRepo",
+    "semio.navigateTo",
+    "semio.goalOpen",
+    "semio.goalList",
   ];
 
   for (const command of contributedCommands) {
@@ -2474,62 +2673,77 @@ export function activate(context: vscode.ExtensionContext) {
 
     semioGutterIcon = vscode.window.createTextEditorDecorationType({
       gutterIconPath: vscode.Uri.file(context.asAbsolutePath("semio_codeicon.svg")),
-      gutterIconSize: "contain"
+      gutterIconSize: "contain",
     });
 
     context.subscriptions.push(vscode.languages.registerCodeLensProvider({ pattern: "**/*" }, new SemioCodeLensProvider()));
 
-    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
-      if (editor) updateSemioDecorations(editor);
-    }));
+    context.subscriptions.push(
+      vscode.window.onDidChangeActiveTextEditor((editor) => {
+        if (editor) updateSemioDecorations(editor);
+      }),
+    );
 
     if (vscode.window.activeTextEditor) {
       updateSemioDecorations(vscode.window.activeTextEditor);
     }
 
-    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((document) => {
-      invalidateTreeNodeCache();
-      monorepoProvider?.refresh();
-      if (shouldAnalyzeFile(document)) analyzeFile(document);
-      if (isKitDocument(document)) validateKitDocument(document);
-    }));
-
-    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument((document) => {
-      if (shouldAnalyzeFile(document)) analyzeFile(document);
-      if (isKitDocument(document)) validateKitDocument(document);
-    }));
-
-    const analyzeDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
-      if (vscode.window.activeTextEditor && event.document === vscode.window.activeTextEditor.document) {
-        updateSemioDecorations(vscode.window.activeTextEditor);
-      }
-      const document = event.document;
-      if (!shouldAnalyzeFile(document) && !isKitDocument(document)) return;
-      const key = document.uri.toString();
-      const existing = analyzeDebounceTimers.get(key);
-      if (existing) clearTimeout(existing);
-      analyzeDebounceTimers.set(key, setTimeout(() => {
-        analyzeDebounceTimers.delete(key);
+    context.subscriptions.push(
+      vscode.workspace.onDidSaveTextDocument((document) => {
+        invalidateTreeNodeCache();
+        monorepoProvider?.refresh();
         if (shouldAnalyzeFile(document)) analyzeFile(document);
         if (isKitDocument(document)) validateKitDocument(document);
-      }, 1500));
-    }));
+      }),
+    );
 
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("semiorepo", {
-      provideTextDocumentContent(uri: vscode.Uri): string {
-        const semiorepoUri = `semiorepo://${uri.authority.toLowerCase()}${uri.path.toLowerCase()}`;
-        vscode.commands.executeCommand("semio.navigate", semiorepoUri);
-        return "";
-      }
-    }));
+    context.subscriptions.push(
+      vscode.workspace.onDidOpenTextDocument((document) => {
+        if (shouldAnalyzeFile(document)) analyzeFile(document);
+        if (isKitDocument(document)) validateKitDocument(document);
+      }),
+    );
 
-    context.subscriptions.push(vscode.window.registerUriHandler({
-      handleUri(uri: vscode.Uri) {
-        const semiorepoUri = `semiorepo://${uri.authority.toLowerCase()}${uri.path.toLowerCase()}`;
-        vscode.commands.executeCommand("semio.navigate", semiorepoUri);
-      }
-    }));
+    const analyzeDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeTextDocument((event) => {
+        if (vscode.window.activeTextEditor && event.document === vscode.window.activeTextEditor.document) {
+          updateSemioDecorations(vscode.window.activeTextEditor);
+        }
+        const document = event.document;
+        if (!shouldAnalyzeFile(document) && !isKitDocument(document)) return;
+        const key = document.uri.toString();
+        const existing = analyzeDebounceTimers.get(key);
+        if (existing) clearTimeout(existing);
+        analyzeDebounceTimers.set(
+          key,
+          setTimeout(() => {
+            analyzeDebounceTimers.delete(key);
+            if (shouldAnalyzeFile(document)) analyzeFile(document);
+            if (isKitDocument(document)) validateKitDocument(document);
+          }, 1500),
+        );
+      }),
+    );
+
+    context.subscriptions.push(
+      vscode.workspace.registerTextDocumentContentProvider("semiorepo", {
+        provideTextDocumentContent(uri: vscode.Uri): string {
+          const semiorepoUri = `semiorepo://${uri.authority.toLowerCase()}${uri.path.toLowerCase()}`;
+          vscode.commands.executeCommand("semio.navigate", semiorepoUri);
+          return "";
+        },
+      }),
+    );
+
+    context.subscriptions.push(
+      vscode.window.registerUriHandler({
+        handleUri(uri: vscode.Uri) {
+          const semiorepoUri = `semiorepo://${uri.authority.toLowerCase()}${uri.path.toLowerCase()}`;
+          vscode.commands.executeCommand("semio.navigate", semiorepoUri);
+        },
+      }),
+    );
 
     setTimeout(() => {
       vscode.workspace.textDocuments.forEach((document) => {

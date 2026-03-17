@@ -180,6 +180,17 @@ if npm install; then
 else
   echo "⚠️  npm install failed, but continuing..."
 fi
+#region 🔖ElectronSandbox
+echo "Fixing Electron chrome-sandbox permissions for devcontainer..."
+CHROME_SANDBOX="$WORKSPACE/node_modules/electron/dist/chrome-sandbox"
+if [ -f "$CHROME_SANDBOX" ]; then
+  sudo chown root:root "$CHROME_SANDBOX"
+  sudo chmod 4755 "$CHROME_SANDBOX"
+  echo "✅ Electron chrome-sandbox permissions fixed."
+else
+  echo "⚠️  chrome-sandbox not found (electron not yet installed), skipping..."
+fi
+#endregion 🔖ElectronSandbox
 #region 🔖GeminiCli
 echo "Installing Gemini CLI..."
 if npm install -g @google/gemini-cli; then

@@ -43,15 +43,7 @@
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/post-start.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
-  "forwardPorts": [
-    2507,
-    3000,
-    4000,
-    4321,
-    5678,
-    6006,
-    6274
-  ],
+  "forwardPorts": [2507, 3000, 4000, 4321, 5678, 6006, 6274],
   "portsAttributes": {
     "2507": {
       "label": "Engine API",
@@ -108,7 +100,8 @@
     "LANG": "en_US.UTF-8",
     "LC_ALL": "en_US.UTF-8",
     "LC_CTYPE": "en_US.UTF-8",
-    "DISPLAY": ":99"
+    "DISPLAY": ":99",
+    "ELECTRON_DISABLE_SANDBOX": "1"
   },
   "remoteEnv": {
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright"
@@ -203,9 +196,7 @@
         "python.analysis.typeCheckingMode": "off",
         "python.testing.pytestEnabled": true,
         "python.testing.unittestEnabled": false,
-        "python.testing.pytestArgs": [
-          "."
-        ],
+        "python.testing.pytestArgs": ["."],
         "python.testing.cwd": "${containerWorkspaceFolder}",
         "python.analysis.languageServerMode": "full",
         "sqltools.useNodeRuntime": true,
@@ -223,9 +214,7 @@
         "[svg]": {
           "editor.defaultFormatter": "jock.svg"
         },
-        "rust-analyzer.linkedProjects": [
-          "semio/rs/Cargo.toml"
-        ],
+        "rust-analyzer.linkedProjects": ["semio/rs/Cargo.toml"],
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }

@@ -52,6 +52,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"text/template"
 	"time"
 	"unicode/utf8"
@@ -7538,6 +7539,20 @@ func loadTreeCache() (*TreeNode, *cacheMeta, error) {
 // BuildMonorepoTreeCached MUST perform the BuildMonorepoTreeCached operation.
 func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
 	repoRoot := GetRootDir()
+
+	// Acquire a file lock so only one CLI process builds the tree at a time.
+	// Other concurrent processes will block here and then use the cache.
+	lockPath := filepath.Join(getCacheDir(), "tree.lock")
+	os.MkdirAll(filepath.Dir(lockPath), 0755)
+	lockFile, lockErr := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0644)
+	if lockErr == nil {
+		syscall.Flock(int(lockFile.Fd()), syscall.LOCK_EX)
+		defer func() {
+			syscall.Flock(int(lockFile.Fd()), syscall.LOCK_UN)
+			lockFile.Close()
+		}()
+	}
+
 	fp, newMeta := computeCompositeFingerprint(repoRoot)
 	cached, cachedMeta, err := loadTreeCache()
 	if err == nil && cachedMeta.Fingerprint == fp {

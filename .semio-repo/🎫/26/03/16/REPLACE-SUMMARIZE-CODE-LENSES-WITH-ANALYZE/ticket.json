@@ -1,7 +1,8 @@
 {
   "title": "Replace Summarize CodeLenses With Analyze",
-  "status": "open",
+  "status": "closed",
   "description": "Update semio-repo/vscode so all summarize code lenses are replaced with analyze, align the extension command wiring and tests, and verify the extension still works.",
+  "summary": "Replaced summarize CodeLenses in semio-repo/vscode with analyze, removed the summarize command contribution and handler, rebuilt the extension output, and extended the existing VS Code tests to assert summarize lenses are gone and analyze lenses cover entity IDs.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/949"
   },

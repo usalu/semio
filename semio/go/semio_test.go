@@ -623,6 +623,7 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 	if err := json.Unmarshal(b, &current); err != nil {
 		t.Fatalf("failed to unmarshal go model-kpi report: %v", err)
 	}
+	// Skip centroid and total_surface_area until GLTF merge/float pipeline matches Python exactly.
 	skipKeys := map[string]bool{"centroid": true, "total_surface_area": true}
 	for key, expected := range canonical {
 		if skipKeys[key] {
@@ -630,6 +631,7 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 		}
 		got, ok := current[key]
 		if !ok {
+			t.Errorf("missing key %s in report", key)
 			continue
 		}
 		if !reflect.DeepEqual(got, expected) {
