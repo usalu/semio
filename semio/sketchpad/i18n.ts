@@ -23,12 +23,12 @@
 // Initializes i18next with language detection, React bindings and expertise-aware label hooks.
 // MUST fall back to English when the detected language is unavailable.
 
-import { i18next as i18n, LanguageDetector, initReactI18next, useTranslation as useI18nTranslation } from "../../semio-elements/ui";
+import { i18next as i18n, LanguageDetector, initReactI18next } from "../../semio-elements/ui";
 import de from "./sketchpad/locales/de.json?raw";
 import en from "./sketchpad/locales/en.json?raw";
 
 // Re-export generic i18n primitives from @semio-elements/ui
-export { Expertise, setExpertiseProvider, useLabel } from "../../semio-elements/ui";
+export { Expertise, setExpertiseProvider, useLabel, useTranslatedHotkey as useHotkey } from "../../semio-elements/ui";
 
 i18n
   .use(LanguageDetector)
@@ -49,35 +49,6 @@ i18n
       bindI18nStore: "added removed",
     },
   });
-
-/**
- * React hook that resolves a hotkey string by i18n key.
- * MUST return undefined when no hotkey is configured.
- * [👤semio📚js💻i18n🔖i18n🛠️usehotkey](semiorepo://p/u/semio/b/l/js/f/i18n.ts/s/I18n/d/i/useHotkey)
- **/
-export function useHotkey(id: string): string | undefined {
-  const { t } = useI18nTranslation();
-  const value = t(id as any) as any;
-
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (value && typeof value === "object" && value.hotkey) {
-    return typeof value.hotkey === "string" ? value.hotkey : undefined;
-  }
-
-  const hotkeyKey = `${id}.hotkey`;
-  const hotkeyValue = t(hotkeyKey as any) as any;
-  if (typeof hotkeyValue === "string") {
-    return hotkeyValue;
-  }
-  if (hotkeyValue && typeof hotkeyValue === "object" && hotkeyValue.hotkey) {
-    return typeof hotkeyValue.hotkey === "string" ? hotkeyValue.hotkey : undefined;
-  }
-
-  return undefined;
-}
 
 export default i18n;
 

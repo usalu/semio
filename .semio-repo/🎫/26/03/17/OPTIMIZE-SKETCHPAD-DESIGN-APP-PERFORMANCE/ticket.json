@@ -1,0 +1,13 @@
+{
+  "title": "Optimize Sketchpad Design App Performance",
+  "status": "closed",
+  "description": "The sketchpad design app UI is extremely slow. Investigate and optimize sketchpad rendering, state updates, and interaction performance without removing any functionality. Keep behavior compliant with the existing tests and extend/refactor existing tests only if needed. Validate with the relevant sketchpad test flow and close the ticket with the touched files.",
+  "summary": "Optimized design-app state propagation by reducing redundant hover and render-data churn, scoped heavy design components to design-local panel visibility, repaired sketchpad and kit Yjs container allocation paths that blocked startup and import flows, and verified the full sketchpad Playwright suite passes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/958"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪64776dc66053493dbe418ae20cb86937"
+  ]
+}

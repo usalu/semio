@@ -116,7 +116,7 @@ import {
   useSyncDeep,
   useTheme,
   useTypeScope,
-  Window
+  Window,
 } from "./Sketchpad";
 import type { ConnectionLineComponentProps, DragEndEvent, DragOverEvent, DragStartEvent, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "../../../semio-elements/ui";
 import {
@@ -173,8 +173,8 @@ import {
   useSearchParams,
   useTranslation,
   useXStateSelector as useSelector,
-  Y,
 } from "../../../semio-elements/ui";
+import type { RMap, RArray } from "../../studio/studio";
 import {
   addToSelection,
   clearSelectionDimension,
@@ -195,7 +195,7 @@ import {
   type KitDiagramShapeRenderPayload,
   type SelectionValue,
 } from "./kitSelectionHelper";
-import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, RxAttributes, RxLeafMapNumber, RxLeafMapString, RxStringArray } from "./shared";
 import {
   AppConfig,
   applySelectionComposition,
@@ -275,20 +275,20 @@ const artifactKinds = ["designs", "types", "qualities", "ports", "tags", "concep
 // Internal state management MUST define all Kit app types, interfaces, store, and Y.js synchronization.
 
 /**
- * YKitAppVal holds the data fields for a YKitAppVal record.
- * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/YKitAppVal)
+ * RxKitAppVal holds the data fields for a RxKitAppVal record.
+ * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/RxKitAppVal)
  **/
-type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type RxKitAppVal = string | number | boolean | RxLeafMapString | RxLeafMapNumber | RxAttributes | RxStringArray;
 /**
- * YKitApp holds the data fields for a YKitApp record.
- * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/YKitApp)
+ * RxKitApp holds the data fields for a RxKitApp record.
+ * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/RxKitApp)
  **/
-type YKitApp = Y.Map<YKitAppVal>;
+type RxKitApp = RMap<RxKitAppVal>;
 /**
- * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitapps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/YKitApps)
- * YKitApps holds the data fields for a YKitApps record.
+ * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitapps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/RxKitApps)
+ * RxKitApps holds the data fields for a RxKitApps record.
  **/
-type YKitApps = Y.Map<YKitApp>;
+type RxKitApps = RMap<RxKitApp>;
 
 /**
  * Tracks the current entity selection state across all artifact kinds for the Kit app.
@@ -490,7 +490,7 @@ export interface KitAppDiff {
  * Edit record extending KitDiffAppEdit with Kit app selection diff.
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement🛠️kitappedit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/KitAppEdit)
  **/
-export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> { }
+export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> {}
 /**
  * Complete runtime state for a Kit app instance.
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement🛠️kitappstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/KitAppState)
@@ -613,17 +613,17 @@ export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => 
  * KitStore holds the data fields for a KitStore record.
  **/
 class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
-  constructor(parent: SketchpadOrchestrator, yMap: YKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
-    super(parent, yMap, transact);
+  constructor(parent: SketchpadOrchestrator, rMap: RxKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
+    super(parent, rMap, transact);
 
     const kit = this.parent.kit(id.kit);
-    yMap.set("kit", kit.guid);
+    rMap.set("kit", kit.guid);
 
-    yMap.set("fullscreenWindow", state?.fullscreenWindow || KitAppFullscreenWindow.None);
-    yMap.set("activeTool", state?.activeTool ?? ToolKind.SELECTION_NORMAL);
+    rMap.set("fullscreenWindow", state?.fullscreenWindow || KitAppFullscreenWindow.None);
+    rMap.set("activeTool", state?.activeTool ?? ToolKind.SELECTION_NORMAL);
 
     if (state?.hover) {
-      const hoverMap = new Y.Map<any>();
+      const hoverMap = this.rDoc.createMap<any>();
       if (state.hover.type) hoverMap.set("type", state.hover.type);
       if (state.hover.design) hoverMap.set("design", state.hover.design);
       if (state.hover.quality) hoverMap.set("quality", state.hover.quality);
@@ -633,39 +633,39 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       if (state.hover.file) hoverMap.set("file", state.hover.file);
       if (state.hover.folder) hoverMap.set("folder", state.hover.folder);
       if (state.hover.author) hoverMap.set("author", state.hover.author);
-      yMap.set("hover", hoverMap);
+      rMap.set("hover", hoverMap);
     }
 
     if (state?.diagramForce) {
-      const forceMap = new Y.Map<any>();
+      const forceMap = this.rDoc.createMap<any>();
       forceMap.set("chargeStrength", state.diagramForce.chargeStrength ?? -200);
       forceMap.set("linkDistance", state.diagramForce.linkDistance ?? 100);
       forceMap.set("collideRadius", state.diagramForce.collideRadius ?? 0);
-      yMap.set("diagramForce", forceMap);
+      rMap.set("diagramForce", forceMap);
     }
 
-    const selection = new Y.Map<any>();
-    const selectedTypes = new Y.Array<string>();
+    const selection = this.rDoc.createMap<any>();
+    const selectedTypes = this.rDoc.createArray<string>();
     if (state?.selection?.types?.length) {
       selectedTypes.push(state.selection.types);
     }
-    const selectedDesigns = new Y.Array<string>();
+    const selectedDesigns = this.rDoc.createArray<string>();
     if (state?.selection?.designs?.length) {
       selectedDesigns.push(state.selection.designs);
     }
-    const selectedQualities = new Y.Array<string>();
+    const selectedQualities = this.rDoc.createArray<string>();
     if (state?.selection?.qualities?.length) {
       selectedQualities.push(state.selection.qualities);
     }
-    const selectedFiles = new Y.Array<string>();
+    const selectedFiles = this.rDoc.createArray<string>();
     if (state?.selection?.files?.length) {
       selectedFiles.push(state.selection.files);
     }
-    const selectedFolders = new Y.Array<string>();
+    const selectedFolders = this.rDoc.createArray<string>();
     if (state?.selection?.folders?.length) {
       selectedFolders.push(state.selection.folders);
     }
-    const selectedAuthors = new Y.Array<string>();
+    const selectedAuthors = this.rDoc.createArray<string>();
     if (state?.selection?.authors?.length) {
       selectedAuthors.push(state.selection.authors);
     }
@@ -675,22 +675,22 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     selection.set("files", selectedFiles);
     selection.set("folders", selectedFolders);
     selection.set("authors", selectedAuthors);
-    yMap.set("selection", selection);
+    rMap.set("selection", selection);
 
-    yMap.set("isTransactionActive", false);
-    yMap.set("presence", new Y.Map<any>());
-    yMap.set("others", new Y.Array<any>());
-    yMap.set("diff", new Y.Map<any>());
-    yMap.set("currentTransactionStack", new Y.Array<any>());
-    yMap.set("pastTransactionsStack", new Y.Array<any>());
+    rMap.set("isTransactionActive", false);
+    rMap.set("presence", this.rDoc.createMap<any>());
+    rMap.set("others", this.rDoc.createArray<any>());
+    rMap.set("diff", this.rDoc.createMap<any>());
+    rMap.set("currentTransactionStack", this.rDoc.createArray<any>());
+    rMap.set("pastTransactionsStack", this.rDoc.createArray<any>());
 
-    yMap.set("filterSearch", state?.filterSearch || "");
+    rMap.set("filterSearch", state?.filterSearch || "");
 
-    const expandedRows = new Y.Array<string>();
+    const expandedRows = this.rDoc.createArray<string>();
     if (state?.expandedRows) {
       expandedRows.push(state.expandedRows);
     }
-    yMap.set("expandedRows", expandedRows);
+    rMap.set("expandedRows", expandedRows);
 
     Object.entries(commands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -698,15 +698,15 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get fullscreenWindow(): KitAppFullscreenWindow {
-    return this.yMap.get("fullscreenWindow") as KitAppFullscreenWindow;
+    return this.rMap.get("fullscreenWindow") as KitAppFullscreenWindow;
   }
 
   get activeTool(): ToolKind {
-    return (this.yMap.get("activeTool") as ToolKind) ?? ToolKind.SELECTION_NORMAL;
+    return (this.rMap.get("activeTool") as ToolKind) ?? ToolKind.SELECTION_NORMAL;
   }
 
   get hover(): KitAppHover | undefined {
-    const hoverMap = this.yMap.get("hover") as Y.Map<any>;
+    const hoverMap = this.rMap.get("hover") as RMap<any>;
     if (!hoverMap) return undefined;
     return {
       type: hoverMap.get("type"),
@@ -722,7 +722,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get diagramForce(): DiagramForceSettings {
-    const forceMap = this.yMap.get("diagramForce") as Y.Map<any>;
+    const forceMap = this.rMap.get("diagramForce") as RMap<any>;
     if (!forceMap) {
       return { chargeStrength: -200, linkDistance: 100, collideRadius: 0, centerStrength: 0.1 };
     }
@@ -735,8 +735,8 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get panelVisibility(): PanelVisibility {
-    const yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-    if (!yPanelVisibility) {
+    const rPanelVisibility = this.rMap.get("panelVisibility") as RMap<boolean>;
+    if (!rPanelVisibility) {
       return {
         toolbar: true,
         rightSidePanel: true,
@@ -744,47 +744,47 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       };
     }
     return {
-      toolbar: yPanelVisibility.get("toolbar") ?? true,
-      leftSidePanel: yPanelVisibility.get("leftSidePanel") ?? false,
-      rightSidePanel: yPanelVisibility.get("rightSidePanel") ?? true,
-      details: yPanelVisibility.get("details") ?? true,
-      chat: yPanelVisibility.get("chat") ?? false,
-      settings: yPanelVisibility.get("settings") ?? false,
+      toolbar: rPanelVisibility.get("toolbar") ?? true,
+      leftSidePanel: rPanelVisibility.get("leftSidePanel") ?? false,
+      rightSidePanel: rPanelVisibility.get("rightSidePanel") ?? true,
+      details: rPanelVisibility.get("details") ?? true,
+      chat: rPanelVisibility.get("chat") ?? false,
+      settings: rPanelVisibility.get("settings") ?? false,
     };
   }
 
   get selection(): KitAppSelection {
-    const selection = this.yMap.get("selection") as Y.Map<any>;
+    const selection = this.rMap.get("selection") as RMap<any>;
     if (!selection) return {};
 
     const result: KitAppSelection = {};
 
-    const types = selection.get("types") as Y.Array<string>;
+    const types = selection.get("types") as RArray<string>;
     if (types && types.length > 0) {
       result.types = types.toArray();
     }
 
-    const designs = selection.get("designs") as Y.Array<string>;
+    const designs = selection.get("designs") as RArray<string>;
     if (designs && designs.length > 0) {
       result.designs = designs.toArray();
     }
 
-    const qualities = selection.get("qualities") as Y.Array<string>;
+    const qualities = selection.get("qualities") as RArray<string>;
     if (qualities && qualities.length > 0) {
       result.qualities = qualities.toArray();
     }
 
-    const files = selection.get("files") as Y.Array<string>;
+    const files = selection.get("files") as RArray<string>;
     if (files && files.length > 0) {
       result.files = files.toArray();
     }
 
-    const folders = selection.get("folders") as Y.Array<string>;
+    const folders = selection.get("folders") as RArray<string>;
     if (folders && folders.length > 0) {
       result.folders = folders.toArray();
     }
 
-    const authors = selection.get("authors") as Y.Array<string>;
+    const authors = selection.get("authors") as RArray<string>;
     if (authors && authors.length > 0) {
       result.authors = authors.toArray();
     }
@@ -795,8 +795,8 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   get presence(): KitAppPresence {
     return {
       cursor: {
-        u: (this.yMap.get("presenceCursorX") as number) || 0,
-        v: (this.yMap.get("presenceCursorY") as number) || 0,
+        u: (this.rMap.get("presenceCursorX") as number) || 0,
+        v: (this.rMap.get("presenceCursorY") as number) || 0,
       },
     };
   }
@@ -806,37 +806,37 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get filterSearch(): string {
-    return (this.yMap.get("filterSearch") as string) || "";
+    return (this.rMap.get("filterSearch") as string) || "";
   }
 
   get expandedRows(): string[] {
-    const yExpandedRows = this.yMap.get("expandedRows") as Y.Array<string>;
+    const yExpandedRows = this.rMap.get("expandedRows") as RArray<string>;
     return yExpandedRows ? yExpandedRows.toArray() : [];
   }
 
   get sortColumn(): KitAppSortColumn | undefined {
-    return this.yMap.get("sortColumn") as KitAppSortColumn | undefined;
+    return this.rMap.get("sortColumn") as KitAppSortColumn | undefined;
   }
 
   get sortDirection(): KitAppSortDirection | undefined {
-    return this.yMap.get("sortDirection") as KitAppSortDirection | undefined;
+    return this.rMap.get("sortDirection") as KitAppSortDirection | undefined;
   }
 
   get windowLayout(): any {
-    return parseWindowLayout(this.yMap.get("windowLayout"));
+    return parseWindowLayout(this.rMap.get("windowLayout"));
   }
 
   set windowLayout(layout: any) {
     const value = stringifyWindowLayout(layout);
     if (value) {
-      this.yMap.set("windowLayout", value);
+      this.rMap.set("windowLayout", value);
     } else {
-      this.yMap.delete("windowLayout");
+      this.rMap.delete("windowLayout");
     }
   }
 
   kit(): KitDataSource {
-    return this.parent.kit(this.yMap.get("kit") as string);
+    return this.parent.kit(this.rMap.get("kit") as string);
   }
 
   protected getSelection(): KitAppSelection {
@@ -879,16 +879,16 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   change = (diff: KitAppDiff) => {
     this.transact(() => {
       if (diff.fullscreenWindow !== undefined) {
-        this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
+        this.rMap.set("fullscreenWindow", diff.fullscreenWindow);
       }
       if (diff.activeTool !== undefined) {
-        this.yMap.set("activeTool", diff.activeTool);
+        this.rMap.set("activeTool", diff.activeTool);
       }
       if (diff.hover !== undefined) {
         if (diff.hover === null) {
-          this.yMap.delete("hover");
+          this.rMap.delete("hover");
         } else {
-          const hoverMap = this.yMap.get("hover") as Y.Map<any> || new Y.Map<any>();
+          const hoverMap = (this.rMap.get("hover") as RMap<any>) || this.rDoc.createMap<any>();
           if (diff.hover.type !== undefined) hoverMap.set("type", diff.hover.type);
           if (diff.hover.design !== undefined) hoverMap.set("design", diff.hover.design);
           if (diff.hover.quality !== undefined) hoverMap.set("quality", diff.hover.quality);
@@ -898,25 +898,25 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
           if (diff.hover.file !== undefined) hoverMap.set("file", diff.hover.file);
           if (diff.hover.folder !== undefined) hoverMap.set("folder", diff.hover.folder);
           if (diff.hover.author !== undefined) hoverMap.set("author", diff.hover.author);
-          this.yMap.set("hover", hoverMap);
+          this.rMap.set("hover", hoverMap);
         }
       }
       if (diff.diagramForce !== undefined) {
-        const forceMap = this.yMap.get("diagramForce") as Y.Map<any> || new Y.Map<any>();
+        const forceMap = (this.rMap.get("diagramForce") as RMap<any>) || this.rDoc.createMap<any>();
         if (diff.diagramForce.chargeStrength !== undefined) forceMap.set("chargeStrength", diff.diagramForce.chargeStrength);
         if (diff.diagramForce.linkDistance !== undefined) forceMap.set("linkDistance", diff.diagramForce.linkDistance);
         if (diff.diagramForce.collideRadius !== undefined) forceMap.set("collideRadius", diff.diagramForce.collideRadius);
-        this.yMap.set("diagramForce", forceMap);
+        this.rMap.set("diagramForce", forceMap);
       }
       if (diff.panelVisibility !== undefined) {
-        let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
-        if (!yPanelVisibility) {
-          yPanelVisibility = new Y.Map<boolean>();
-          this.yMap.set("panelVisibility", yPanelVisibility);
+        let rPanelVisibility = this.rMap.get("panelVisibility") as RMap<boolean>;
+        if (!rPanelVisibility) {
+          rPanelVisibility = this.rDoc.createMap<boolean>();
+          this.rMap.set("panelVisibility", rPanelVisibility);
         }
         Object.entries(diff.panelVisibility).forEach(([key, value]) => {
           if (value !== undefined) {
-            yPanelVisibility.set(key, value);
+            rPanelVisibility.set(key, value);
           }
         });
       }
@@ -924,13 +924,13 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
         this.applySelectionDiff(diff.selection);
       }
       if (diff.filterSearch !== undefined) {
-        this.yMap.set("filterSearch", diff.filterSearch);
+        this.rMap.set("filterSearch", diff.filterSearch);
       }
       if (diff.expandedRows !== undefined) {
-        let yExpandedRows = this.yMap.get("expandedRows") as Y.Array<string>;
+        let yExpandedRows = this.rMap.get("expandedRows") as RArray<string>;
         if (!yExpandedRows) {
-          yExpandedRows = new Y.Array<string>();
-          this.yMap.set("expandedRows", yExpandedRows);
+          yExpandedRows = this.rDoc.createArray<string>();
+          this.rMap.set("expandedRows", yExpandedRows);
         }
 
         const currentRows = yExpandedRows.toArray();
@@ -955,10 +955,10 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
         }
       }
       if (diff.sortColumn !== undefined) {
-        this.yMap.set("sortColumn", diff.sortColumn);
+        this.rMap.set("sortColumn", diff.sortColumn);
       }
       if (diff.sortDirection !== undefined) {
-        this.yMap.set("sortDirection", diff.sortDirection);
+        this.rMap.set("sortDirection", diff.sortDirection);
       }
       if (Object.prototype.hasOwnProperty.call(diff, "windowLayout")) {
         this.windowLayout = (diff as any).windowLayout;
@@ -971,14 +971,14 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   protected applySelectionDiff(selectionDiff: KitAppSelectionDiff): void {
-    let selection = this.yMap.get("selection") as Y.Map<any>;
+    let selection = this.rMap.get("selection") as RMap<any>;
     if (!selection) {
-      selection = new Y.Map();
-      this.yMap.set("selection", selection);
+      selection = this.rDoc.createMap();
+      this.rMap.set("selection", selection);
     }
 
     if (selectionDiff.types) {
-      let types = (selection.get("types") as Y.Array<string>) || new Y.Array<string>();
+      let types = (selection.get("types") as RArray<string>) || this.rDoc.createArray<string>();
       if (!selection.has("types")) {
         selection.set("types", types);
       }
@@ -1001,7 +1001,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.designs) {
-      let designs = (selection.get("designs") as Y.Array<string>) || new Y.Array<string>();
+      let designs = (selection.get("designs") as RArray<string>) || this.rDoc.createArray<string>();
       if (!selection.has("designs")) {
         selection.set("designs", designs);
       }
@@ -1024,7 +1024,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.qualities) {
-      let qualities = (selection.get("qualities") as Y.Array<string>) || new Y.Array<string>();
+      let qualities = (selection.get("qualities") as RArray<string>) || this.rDoc.createArray<string>();
       if (!selection.has("qualities")) {
         selection.set("qualities", qualities);
       }
@@ -1047,7 +1047,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.files) {
-      let files = (selection.get("files") as Y.Array<string>) || new Y.Array<string>();
+      let files = (selection.get("files") as RArray<string>) || this.rDoc.createArray<string>();
       if (!selection.has("files")) {
         selection.set("files", files);
       }
@@ -1070,7 +1070,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.folders) {
-      let folders = (selection.get("folders") as Y.Array<string>) || new Y.Array<string>();
+      let folders = (selection.get("folders") as RArray<string>) || this.rDoc.createArray<string>();
       if (!selection.has("folders")) {
         selection.set("folders", folders);
       }
@@ -1093,7 +1093,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.authors) {
-      let authors = (selection.get("authors") as Y.Array<string>) || new Y.Array<string>();
+      let authors = (selection.get("authors") as RArray<string>) || this.rDoc.createArray<string>();
       if (!selection.has("authors")) {
         selection.set("authors", authors);
       }
@@ -1178,7 +1178,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
 }
 
 if (typeof window !== "undefined") {
-  registerKitStoreFactory((parent, yMap, transact, id, state) => new KitStore(parent, yMap, transact, id, state as any));
+  registerKitStoreFactory((parent, rMap, transact, id, state) => new KitStore(parent, rMap, transact, id, state as any));
 }
 
 // #region Kit App Plugin Registration
@@ -1212,7 +1212,7 @@ const kitAppPlugin: AppPlugin = {
       diagramForce: { ...defaultDiagramForceSettings },
     }),
   },
-  registerStores: () => { },
+  registerStores: () => {},
 };
 
 if (typeof window !== "undefined") {
@@ -1530,7 +1530,7 @@ export function useKitAppActiveTool(): HookResult<ToolKind> {
  **/
 export function useKitAppActiveToolField(): Field<ToolKind> {
   const [value, setValue, canSet] = useKitAppActiveTool();
-  return createField(value, setValue ?? (() => { }), canSet);
+  return createField(value, setValue ?? (() => {}), canSet);
 }
 
 /**
@@ -1606,7 +1606,7 @@ export function useKitAppTransaction(): Transaction {
 export function useKitAppCommands(id?: KitAppId) {
   const controller = useKitAppStore(undefined, id) as KitStore | null;
   const getOrigin = useOrigin();
-  const noOp = () => { };
+  const noOp = () => {};
   if (!controller) {
     return {
       undo: noOp,
@@ -4637,15 +4637,78 @@ const AppContent: FC = () => {
     });
     return paths;
   }, [importedFilePaths]);
-  const kitDesignsKey = useMemo(() => (kitDesigns ?? []).filter(Boolean).map((d) => `${d.guid}:${d.name}:${d.parent?.guid || ""}:${d.folder || ""}:${d.updatedAt || ""}`).join("|"), [kitDesigns]);
-  const kitTypesKey = useMemo(() => (kitTypes ?? []).filter(Boolean).map((t) => `${t.guid}:${t.name}:${t.parent?.guid || ""}:${t.folder || ""}:${t.updatedAt || ""}`).join("|"), [kitTypes]);
-  const kitQualitiesKey = useMemo(() => (kitQualities ?? []).filter(Boolean).map((q) => `${q.guid}:${q.name}:${q.folder || ""}`).join("|"), [kitQualities]);
-  const kitPortsKey = useMemo(() => (kitPorts ?? []).filter(Boolean).map((i) => `${i.guid}:${i.name}`).join("|"), [kitPorts]);
-  const kitTagsKey = useMemo(() => (kitTags ?? []).filter(Boolean).map((tag) => `${tag.guid}:${tag.name}`).join("|"), [kitTags]);
-  const kitConceptsKey = useMemo(() => (kitConcepts ?? []).filter(Boolean).map((c) => `${c.guid}:${c.name}`).join("|"), [kitConcepts]);
-  const kitFilesKey = useMemo(() => (kitFiles ?? []).filter(Boolean).map((f) => `${f.guid}:${f.name}:${f.folder?.guid || ""}:${f.updatedAt || ""}`).join("|"), [kitFiles]);
-  const kitFoldersKey = useMemo(() => (kitFolders ?? []).filter(Boolean).map((f) => `${f.guid}:${f.name}:${f.parent?.guid || ""}:${f.updatedAt || ""}`).join("|"), [kitFolders]);
-  const kitAuthorsKey = useMemo(() => (kitAuthors ?? []).filter(Boolean).map((a) => `${a.guid}:${a.name}`).join("|"), [kitAuthors]);
+  const kitDesignsKey = useMemo(
+    () =>
+      (kitDesigns ?? [])
+        .filter(Boolean)
+        .map((d) => `${d.guid}:${d.name}:${d.parent?.guid || ""}:${d.folder || ""}:${d.updatedAt || ""}`)
+        .join("|"),
+    [kitDesigns],
+  );
+  const kitTypesKey = useMemo(
+    () =>
+      (kitTypes ?? [])
+        .filter(Boolean)
+        .map((t) => `${t.guid}:${t.name}:${t.parent?.guid || ""}:${t.folder || ""}:${t.updatedAt || ""}`)
+        .join("|"),
+    [kitTypes],
+  );
+  const kitQualitiesKey = useMemo(
+    () =>
+      (kitQualities ?? [])
+        .filter(Boolean)
+        .map((q) => `${q.guid}:${q.name}:${q.folder || ""}`)
+        .join("|"),
+    [kitQualities],
+  );
+  const kitPortsKey = useMemo(
+    () =>
+      (kitPorts ?? [])
+        .filter(Boolean)
+        .map((i) => `${i.guid}:${i.name}`)
+        .join("|"),
+    [kitPorts],
+  );
+  const kitTagsKey = useMemo(
+    () =>
+      (kitTags ?? [])
+        .filter(Boolean)
+        .map((tag) => `${tag.guid}:${tag.name}`)
+        .join("|"),
+    [kitTags],
+  );
+  const kitConceptsKey = useMemo(
+    () =>
+      (kitConcepts ?? [])
+        .filter(Boolean)
+        .map((c) => `${c.guid}:${c.name}`)
+        .join("|"),
+    [kitConcepts],
+  );
+  const kitFilesKey = useMemo(
+    () =>
+      (kitFiles ?? [])
+        .filter(Boolean)
+        .map((f) => `${f.guid}:${f.name}:${f.folder?.guid || ""}:${f.updatedAt || ""}`)
+        .join("|"),
+    [kitFiles],
+  );
+  const kitFoldersKey = useMemo(
+    () =>
+      (kitFolders ?? [])
+        .filter(Boolean)
+        .map((f) => `${f.guid}:${f.name}:${f.parent?.guid || ""}:${f.updatedAt || ""}`)
+        .join("|"),
+    [kitFolders],
+  );
+  const kitAuthorsKey = useMemo(
+    () =>
+      (kitAuthors ?? [])
+        .filter(Boolean)
+        .map((a) => `${a.guid}:${a.name}`)
+        .join("|"),
+    [kitAuthors],
+  );
 
   const allConcepts = useMemo(() => {
     const conceptSet = new Set<string>();
@@ -5021,10 +5084,14 @@ const AppContent: FC = () => {
 
         childDesigns.forEach((design) => {
           if (!designs.includes(design)) return;
-          if (selectedConcepts.length > 0 && !design.concepts?.some((c) => {
-            const conceptGuid = resolveGuid(c);
-            return conceptGuid ? selectedConcepts.includes(conceptGuid) : false;
-          })) return;
+          if (
+            selectedConcepts.length > 0 &&
+            !design.concepts?.some((c) => {
+              const conceptGuid = resolveGuid(c);
+              return conceptGuid ? selectedConcepts.includes(conceptGuid) : false;
+            })
+          )
+            return;
           if (searchQuery && !design.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
           if (selectedKinds.size === 0 && parentGuid === undefined && design.folder) return;
@@ -5033,13 +5100,14 @@ const AppContent: FC = () => {
           const children = designsByParent.get(design.guid) || [];
           const hasChildren = children.length > 0;
 
-          const designConceptNames = design.concepts
-            ?.map((c) => {
-              const conceptGuid = resolveGuid(c);
-              if (!conceptGuid) return undefined;
-              return kitConcepts?.find((kc) => kc.guid === conceptGuid)?.name;
-            })
-            .filter((name): name is string => name !== undefined) || [];
+          const designConceptNames =
+            design.concepts
+              ?.map((c) => {
+                const conceptGuid = resolveGuid(c);
+                if (!conceptGuid) return undefined;
+                return kitConcepts?.find((kc) => kc.guid === conceptGuid)?.name;
+              })
+              .filter((name): name is string => name !== undefined) || [];
 
           result.push({
             id: rowId,
@@ -6349,7 +6417,9 @@ const AppContent: FC = () => {
                       <span id="semio.sketchpad.app.kit.mobileTable.row.expandSpacer" className="size-small shrink-0" />
                     )}
                     <TableAvatar id="semio.sketchpad.app.kit.mobileTable.row.avatar" className="size-small" name={row.artifact} icon={getRowIcon(row)} />
-                    <span id="semio.sketchpad.app.kit.mobileTable.row.name" className="text-left min-w-0 truncate">{row.artifact}</span>
+                    <span id="semio.sketchpad.app.kit.mobileTable.row.name" className="text-left min-w-0 truncate">
+                      {row.artifact}
+                    </span>
                   </div>
                   {row.concepts && row.concepts.length > 0 && (
                     <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
@@ -6442,44 +6512,44 @@ const AppContent: FC = () => {
           columns={[
             ...(selectedKinds.size !== 1
               ? [
-                {
-                  id: "kind",
-                  header: (
-                    <div className="inline-flex items-center gap-single">
-                      <span>{labelKind}</span>
-                      <Toggle
-                        kind="dropdown"
-                        pressed={sortColumn === "kind"}
-                        value={sortColumn === "kind" ? sortDirection : "asc"}
-                        onValueChange={(value) => {
-                          kitAppCommands.setSortColumn("kind");
-                          kitAppCommands.setSortDirection(value as "asc" | "desc");
-                        }}
-                        items={[
-                          { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
-                          { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
-                        ]}
-                        id="semio.sketchpad.app.kit.sortByKind"
-                      />
-                    </div>
-                  ),
-                  accessor: (row: TableRow) => (
-                    <>
-                      {row.kind === "designs" && <LayoutIcon />}
-                      {row.kind === "types" && <TypeIcon />}
-                      {row.kind === "qualities" && <AwardIcon />}
-                      {row.kind === "ports" && <PortIcon />}
-                      {row.kind === "tags" && <HashIcon />}
-                      {row.kind === "concepts" && <LightbulbIcon />}
-                      {row.kind === "files" && <DocumentIcon />}
-                      {row.kind === "folders" && <FolderIcon />}
-                      {row.kind === "authors" && <UserIcon />}
-                    </>
-                  ),
-                  width: "w-small",
-                  headerClassName: "relative group w-0 whitespace-nowrap",
-                },
-              ]
+                  {
+                    id: "kind",
+                    header: (
+                      <div className="inline-flex items-center gap-single">
+                        <span>{labelKind}</span>
+                        <Toggle
+                          kind="dropdown"
+                          pressed={sortColumn === "kind"}
+                          value={sortColumn === "kind" ? sortDirection : "asc"}
+                          onValueChange={(value) => {
+                            kitAppCommands.setSortColumn("kind");
+                            kitAppCommands.setSortDirection(value as "asc" | "desc");
+                          }}
+                          items={[
+                            { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
+                            { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
+                          ]}
+                          id="semio.sketchpad.app.kit.sortByKind"
+                        />
+                      </div>
+                    ),
+                    accessor: (row: TableRow) => (
+                      <>
+                        {row.kind === "designs" && <LayoutIcon />}
+                        {row.kind === "types" && <TypeIcon />}
+                        {row.kind === "qualities" && <AwardIcon />}
+                        {row.kind === "ports" && <PortIcon />}
+                        {row.kind === "tags" && <HashIcon />}
+                        {row.kind === "concepts" && <LightbulbIcon />}
+                        {row.kind === "files" && <DocumentIcon />}
+                        {row.kind === "folders" && <FolderIcon />}
+                        {row.kind === "authors" && <UserIcon />}
+                      </>
+                    ),
+                    width: "w-small",
+                    headerClassName: "relative group w-0 whitespace-nowrap",
+                  },
+                ]
               : []),
             {
               id: "artifact",
@@ -6517,7 +6587,9 @@ const AppContent: FC = () => {
                       <span id="semio.sketchpad.app.kit.desktopTable.row.expandSpacer" className="size-small shrink-0" />
                     )}
                     <TableAvatar id="semio.sketchpad.app.kit.desktopTable.row.avatar" className="size-small" name={row.artifact} icon={getRowIcon(row)} />
-                    <span id="semio.sketchpad.app.kit.desktopTable.row.name" className="text-left min-w-0 truncate">{row.artifact}</span>
+                    <span id="semio.sketchpad.app.kit.desktopTable.row.name" className="text-left min-w-0 truncate">
+                      {row.artifact}
+                    </span>
                   </div>
                   {row.concepts && row.concepts.length > 0 && (
                     <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
@@ -6640,7 +6712,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {}
 
   componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
     if (prevProps.children !== this.props.children && this.state.hasError) {
@@ -6881,7 +6953,7 @@ const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data }) => {
         boxShadow: "none",
         pointerEvents: "auto",
         padding: 0,
-        margin: 0
+        margin: 0,
       }}
       title={data.name || data.guid.substring(0, 8)}
     >
@@ -7005,10 +7077,7 @@ const resolveDiagramEdgeAnchors = (sourceNode: any, targetNode: any) => {
   const targetPosition = resolveDiagramNodePosition(targetNode);
   const sourceFrame = resolveDiagramNodeFrame(sourceNode, sourceKind);
   const targetFrame = resolveDiagramNodeFrame(targetNode, targetKind);
-  const anchors = resolveKitDiagramAnchorPair(
-    { kind: sourceKind, position: sourcePosition, frame: sourceFrame },
-    { kind: targetKind, position: targetPosition, frame: targetFrame },
-  );
+  const anchors = resolveKitDiagramAnchorPair({ kind: sourceKind, position: sourcePosition, frame: sourceFrame }, { kind: targetKind, position: targetPosition, frame: targetFrame });
   return {
     sx: anchors.source.absolutePoint.x,
     sy: anchors.source.absolutePoint.y,
@@ -7058,8 +7127,6 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style, sel
     opacity = 1;
   }
 
-
-
   return (
     <g>
       <BaseEdge
@@ -7091,10 +7158,7 @@ const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY
   const fromPosition = resolveDiagramNodePosition(fromNode);
   const fromFrame = resolveDiagramNodeFrame(fromNode, fromKind);
   const targetPoint = pointer ?? { x: toX, y: toY };
-  const sourceDirection = kitDiagramVector(
-    kitDiagramToAbsolutePoint(fromPosition, { x: fromFrame.width / 2, y: fromFrame.height / 2 }),
-    targetPoint,
-  );
+  const sourceDirection = kitDiagramVector(kitDiagramToAbsolutePoint(fromPosition, { x: fromFrame.width / 2, y: fromFrame.height / 2 }), targetPoint);
   const sourceAnchor = getKitDiagramShapeStrategy(fromKind).resolveNearestPoint(sourceDirection, fromFrame);
   let sourceX = kitDiagramToAbsolutePoint(fromPosition, sourceAnchor).x;
   let sourceY = kitDiagramToAbsolutePoint(fromPosition, sourceAnchor).y;
@@ -7163,9 +7227,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           name: t.name,
           icon: t.icon,
           parentGuid: t.parent?.guid,
-          concepts: (t.concepts ?? [])
-            .map((c: any) => (typeof c === "string" ? c : c?.guid))
-            .filter((guid): guid is string => Boolean(guid)),
+          concepts: (t.concepts ?? []).map((c: any) => (typeof c === "string" ? c : c?.guid)).filter((guid): guid is string => Boolean(guid)),
         }));
         break;
       case "design":
@@ -7174,9 +7236,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           name: d.name,
           icon: d.icon,
           parentGuid: d.parent?.guid,
-          concepts: (d.concepts ?? [])
-            .map((c: any) => (typeof c === "string" ? c : c?.guid))
-            .filter((guid): guid is string => Boolean(guid)),
+          concepts: (d.concepts ?? []).map((c: any) => (typeof c === "string" ? c : c?.guid)).filter((guid): guid is string => Boolean(guid)),
         }));
         break;
       case "quality":
@@ -7350,7 +7410,7 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
   };
 };
 
-interface KitDiagramProps { }
+interface KitDiagramProps {}
 
 interface ForceNode extends SimulationNodeDatum {
   id: string;
@@ -7534,25 +7594,27 @@ const KitDiagramInner: FC = () => {
     if (!kit) return { nodes: [], edges: [] };
     const { nodes: rfNodes, edges: rfEdges } = buildKitDiagramData(kit);
 
-    const filteredNodes = rfNodes.filter((n) => visibleGuids.has(n.data.guid)).map((node) => {
-      const [kind, guid] = node.id.split(":");
-      let isSelected = false;
-      if (kind === "type") isSelected = selection?.types?.includes(guid) ?? false;
-      else if (kind === "design") isSelected = selection?.designs?.includes(guid) ?? false;
-      else if (kind === "quality") isSelected = selection?.qualities?.includes(guid) ?? false;
-      else if (kind === "port") isSelected = selection?.ports?.includes(guid) ?? false;
-      else if (kind === "tag") isSelected = selection?.tags?.includes(guid) ?? false;
-      else if (kind === "concept") isSelected = selection?.concepts?.includes(guid) ?? false;
-      else if (kind === "file") isSelected = selection?.files?.includes(guid) ?? false;
-      else if (kind === "folder") isSelected = selection?.folders?.includes(guid) ?? false;
-      else if (kind === "author") isSelected = selection?.authors?.includes(guid) ?? false;
+    const filteredNodes = rfNodes
+      .filter((n) => visibleGuids.has(n.data.guid))
+      .map((node) => {
+        const [kind, guid] = node.id.split(":");
+        let isSelected = false;
+        if (kind === "type") isSelected = selection?.types?.includes(guid) ?? false;
+        else if (kind === "design") isSelected = selection?.designs?.includes(guid) ?? false;
+        else if (kind === "quality") isSelected = selection?.qualities?.includes(guid) ?? false;
+        else if (kind === "port") isSelected = selection?.ports?.includes(guid) ?? false;
+        else if (kind === "tag") isSelected = selection?.tags?.includes(guid) ?? false;
+        else if (kind === "concept") isSelected = selection?.concepts?.includes(guid) ?? false;
+        else if (kind === "file") isSelected = selection?.files?.includes(guid) ?? false;
+        else if (kind === "folder") isSelected = selection?.folders?.includes(guid) ?? false;
+        else if (kind === "author") isSelected = selection?.authors?.includes(guid) ?? false;
 
-      return {
-        ...node,
-        selected: isSelected,
-        style: { ...node.style, width: node.width ?? getKitDiagramNodeFrameForKind(node.data.kind).width, height: node.height ?? getKitDiagramNodeFrameForKind(node.data.kind).height },
-      };
-    });
+        return {
+          ...node,
+          selected: isSelected,
+          style: { ...node.style, width: node.width ?? getKitDiagramNodeFrameForKind(node.data.kind).width, height: node.height ?? getKitDiagramNodeFrameForKind(node.data.kind).height },
+        };
+      });
 
     const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
     const filteredEdges = rfEdges.filter((e) => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
@@ -7562,13 +7624,10 @@ const KitDiagramInner: FC = () => {
   const baseNodeIdsKey = useMemo(() => baseNodes.map((node) => node.id).join("|"), [baseNodes]);
   const baseEdgeIdsKey = useMemo(() => baseEdges.map((edge) => edge.id).join("|"), [baseEdges]);
 
-  const commitDiagramNodes = useCallback(
-    (nextNodes: Node<KitDiagramNode>[]) => {
-      diagramNodesRef.current = nextNodes;
-      setDiagramNodes(nextNodes);
-    },
-    [],
-  );
+  const commitDiagramNodes = useCallback((nextNodes: Node<KitDiagramNode>[]) => {
+    diagramNodesRef.current = nextNodes;
+    setDiagramNodes(nextNodes);
+  }, []);
 
   const syncSimulationPositions = useCallback((positions: Map<string, Node["position"]>) => {
     const simulation = simulationRef.current;
@@ -7605,15 +7664,11 @@ const KitDiagramInner: FC = () => {
     }
   }, []);
 
-  const logSimulationState = useCallback(
-    (label: string, node?: Node) => {
-      if (!KIT_DIAGRAM_DEBUG) return;
-      const simulation = simulationRef.current;
-      if (!simulation) return;
-
-    },
-    [],
-  );
+  const logSimulationState = useCallback((label: string, node?: Node) => {
+    if (!KIT_DIAGRAM_DEBUG) return;
+    const simulation = simulationRef.current;
+    if (!simulation) return;
+  }, []);
 
   const startDragReheat = useCallback(() => {
     const simulation = simulationRef.current;
@@ -7649,7 +7704,6 @@ const KitDiagramInner: FC = () => {
       return { ...node, position: { x: simNode.x ?? 0, y: simNode.y ?? 0 } };
     });
     commitDiagramNodes(nextNodes);
-
   }, [commitDiagramNodes, baseEdgeIdsKey, baseNodeIdsKey]);
 
   useEffect(() => {
@@ -7714,17 +7768,7 @@ const KitDiagramInner: FC = () => {
       simulation.stop();
       simulationRef.current = null;
     };
-  }, [
-    baseEdgeIdsKey,
-    baseNodeIdsKey,
-    diagramForceConfig.centerStrength,
-    diagramForceConfig.chargeStrength,
-    diagramForceConfig.collideRadius,
-    diagramForceConfig.linkDistance,
-    stopDragReheat,
-    syncSimulationPositions,
-    updateNodesFromSimulation,
-  ]);
+  }, [baseEdgeIdsKey, baseNodeIdsKey, diagramForceConfig.centerStrength, diagramForceConfig.chargeStrength, diagramForceConfig.collideRadius, diagramForceConfig.linkDistance, stopDragReheat, syncSimulationPositions, updateNodesFromSimulation]);
 
   const handleNodesChange = useCallback(
     (changes: any[]) => {
@@ -8071,7 +8115,7 @@ const MultiWindowApp: FC = () => {
           <KitScopeProvider guid={kitGuid}>
             <KitCreateActions />
           </KitScopeProvider>
-        )
+        );
       },
     });
 
@@ -8132,10 +8176,7 @@ const MultiWindowApp: FC = () => {
     if (!storedWindowLayout) return defaultLayout;
     const removeLegacySideTabsFromWindowLayout = (layoutNode: any): any => {
       if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
-      if (
-        layoutNode.type === "component" &&
-        (layoutNode.componentName === "settings" || layoutNode.componentName === "chat")
-      ) {
+      if (layoutNode.type === "component" && (layoutNode.componentName === "settings" || layoutNode.componentName === "chat")) {
         return null;
       }
       if (layoutNode.root && typeof layoutNode.root === "object") {
@@ -8250,11 +8291,7 @@ const MultiWindowApp: FC = () => {
       <TransactionProvider transaction={transaction}>
         <KitDropZone>
           <Canvas id="semio.sketchpad.app.kit.canvas">
-            <LayoutCanvas
-              windowConfig={windowConfig}
-              layoutState={windowLayout}
-              onLayoutChange={handleLayoutChange}
-            />
+            <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
           </Canvas>
         </KitDropZone>
       </TransactionProvider>
@@ -9092,15 +9129,7 @@ const KitEditorSettingsContent: FC = () => {
         />
       </TreeRow>
       <TreeRow>
-        <Slider
-          id="semio.sketchpad.app.kit.settings.diagram.collideRadius"
-          showLabel
-          min={10}
-          max={100}
-          step={5}
-          value={[diagramForce.collideRadius]}
-          disabled={!canSetDiagramForce}
-        />
+        <Slider id="semio.sketchpad.app.kit.settings.diagram.collideRadius" showLabel min={10} max={100} step={5} value={[diagramForce.collideRadius]} disabled={!canSetDiagramForce} />
       </TreeRow>
       <TreeRow>
         <Slider
@@ -9262,10 +9291,7 @@ export const config: AppConfig = {
       scopeProvider: KitScopeProvider,
     },
   ],
-  getPanels: (): PanelDefinition[] => [
-    createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-    createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
-  ],
+  getPanels: (): PanelDefinition[] => [createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"), createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show")],
   matchesPath: (pathParts) => {
     const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
     return pathParts.length === 2 && pathParts[0] === "kits" && isUuidPattern(pathParts[1]);

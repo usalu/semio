@@ -1,0 +1,52 @@
+{
+  "$schema": "../../node_modules/nx/schemas/technology-schema.json",
+  "projectType": "application",
+  "name": "@semio/vscode",
+  "displayName": "semio",
+  "description": "semio sketchpad for VS Code ✏️",
+  "icon": "semio.png",
+  "version": "0.0.1",
+  "publisher": "usalu",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "semio/vscode"
+  },
+  "categories": ["Visualization"],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "semio.kitEditor",
+        "displayName": "Semio Kit Editor",
+        "selector": [
+          {
+            "filenamePattern": "kit.json"
+          }
+        ],
+        "priority": "option"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "echo 'no tests yet'"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.104.0",
+    "@types/node": "^25.0.8",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "AGPL-3.0-or-later",
+  "bundleKind": "ui"
+}

@@ -13,6 +13,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Info, Layers, Settings, FileText, BarChart, Undo, Redo, Save, Copy, Scissors, ClipboardPaste, FolderOpen, File, BookOpen, MessageSquare } from "lucide-react";
+import { expect, userEvent, within } from "storybook/test";
 import {
   UI,
   UIAppConfig,
@@ -452,6 +453,27 @@ export const FullFeatured: Story = {
       { id: "global-save", icon: <Save size={14} />, label: "Save All", onClick: () => {}, order: 100 },
     ],
   },
+  play: async ({ canvasElement }) => {
+    const documentBody = canvasElement.ownerDocument.body;
+    const leftPanelToggle = canvasElement.ownerDocument.getElementById("ui.panelToggle.left");
+    const searchToggle = canvasElement.ownerDocument.getElementById("ui.search.toggle");
+    const findToggle = canvasElement.ownerDocument.getElementById("ui.find.toggle");
+
+    expect(leftPanelToggle).toBeTruthy();
+    expect(searchToggle).toBeTruthy();
+    expect(findToggle).toBeTruthy();
+
+    await userEvent.click(leftPanelToggle!);
+    expect(documentBody.querySelector('[data-panel="leftSidePanel"]')).toBeTruthy();
+    expect(within(documentBody).getByText("src")).toBeTruthy();
+
+    await userEvent.click(searchToggle!);
+    expect(canvasElement.ownerDocument.getElementById("ui.search.input")).toBeTruthy();
+
+    await userEvent.click(searchToggle!);
+    await userEvent.click(findToggle!);
+    expect(canvasElement.ownerDocument.getElementById("ui.find.input")).toBeTruthy();
+  },
 };
 
 export const ThreeColumnLayout: Story = {
@@ -535,6 +557,16 @@ export const Mobile: Story = {
       </div>
     ),
   ],
+  play: async ({ canvasElement }) => {
+    const documentBody = canvasElement.ownerDocument.body;
+    const mobilePanelToggle = canvasElement.ownerDocument.getElementById("ui.panelToggle.mobile");
+
+    expect(mobilePanelToggle).toBeTruthy();
+
+    await userEvent.click(mobilePanelToggle!);
+    expect(documentBody.querySelector('[data-panel="mobilePanel"]')).toBeTruthy();
+    expect(within(documentBody).getByText("src")).toBeTruthy();
+  },
 };
 
 export const MobileSingleApp: Story = {

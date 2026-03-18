@@ -352,7 +352,7 @@ export interface DesignAppDiff {
  * Edit record extending KitDiffAppEdit with Design app selection diff.
  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖statemanagement🛠️designappedit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/State%20Management/d/i/DesignAppEdit)
  **/
-export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> {}
+export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> { }
 /**
  * Complete runtime state for a Design app instance.
  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖statemanagement🛠️designappstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/State%20Management/d/i/DesignAppState)
@@ -2010,6 +2010,7 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (hover: DesignAppHover | undefined) => {
+      if (areHoverStatesEqual(value, hover)) return;
       setTimeout(() => {
         if (hover && (hover.pieces?.length || hover.connections?.length)) {
           actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover });
@@ -2018,7 +2019,7 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
         }
       }, 0);
     };
-  }, [actor, kitGuid, designGuid, canSet]);
+  }, [actor, kitGuid, designGuid, canSet, value]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -2761,58 +2762,58 @@ export function useDesignAppExpandDesign(): ActionHookResult<[designGuid: Guid]>
  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🪨emptycommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/EMPTY_COMMANDS)
  **/
 const EMPTY_COMMANDS = {
-  togglePanel: () => {},
-  execute: () => {},
-  startTransaction: () => {},
-  finalizeTransaction: () => {},
-  abortTransaction: () => {},
-  undo: () => {},
-  redo: () => {},
-  selectAll: () => {},
-  deselectAll: () => {},
-  selectPiece: () => {},
-  selectPieces: () => {},
-  addPieceToSelection: () => {},
-  removePieceFromSelection: () => {},
-  selectConnection: () => {},
-  addConnectionToSelection: () => {},
-  removeConnectionFromSelection: () => {},
-  selectPiecePort: () => {},
-  deselectPiecePort: () => {},
-  deleteSelected: () => {},
-  toggleDiagramFullscreen: () => {},
-  toggleAccesslFullscreen: () => {},
-  setActiveTool: () => {},
-  addPiece: () => {},
-  addPieces: () => {},
-  removePiece: () => {},
-  removePieces: () => {},
-  addConnection: () => {},
-  addConnections: () => {},
-  removeConnection: () => {},
-  removeConnections: () => {},
-  updatePiece: () => {},
-  updatePieces: () => {},
-  updateConnection: () => {},
-  updateConnections: () => {},
-  setCamera: () => {},
-  focusPiece: () => {},
-  clearFocus: () => {},
-  setDiagramCenter: () => {},
-  setDiagramScale: () => {},
-  hoverPiece: () => {},
-  hoverPieces: () => {},
-  hoverConnection: () => {},
-  hoverConnections: () => {},
-  hoverPort: () => {},
-  hoverType: () => {},
-  hoverTypes: () => {},
-  hoverDesign: () => {},
-  hoverDesigns: () => {},
-  clearHover: () => {},
-  setModelTagsForType: () => {},
-  addModelTagForAllTypes: () => {},
-  removeModelTagFromAllTypes: () => {},
+  togglePanel: () => { },
+  execute: () => { },
+  startTransaction: () => { },
+  finalizeTransaction: () => { },
+  abortTransaction: () => { },
+  undo: () => { },
+  redo: () => { },
+  selectAll: () => { },
+  deselectAll: () => { },
+  selectPiece: () => { },
+  selectPieces: () => { },
+  addPieceToSelection: () => { },
+  removePieceFromSelection: () => { },
+  selectConnection: () => { },
+  addConnectionToSelection: () => { },
+  removeConnectionFromSelection: () => { },
+  selectPiecePort: () => { },
+  deselectPiecePort: () => { },
+  deleteSelected: () => { },
+  toggleDiagramFullscreen: () => { },
+  toggleAccesslFullscreen: () => { },
+  setActiveTool: () => { },
+  addPiece: () => { },
+  addPieces: () => { },
+  removePiece: () => { },
+  removePieces: () => { },
+  addConnection: () => { },
+  addConnections: () => { },
+  removeConnection: () => { },
+  removeConnections: () => { },
+  updatePiece: () => { },
+  updatePieces: () => { },
+  updateConnection: () => { },
+  updateConnections: () => { },
+  setCamera: () => { },
+  focusPiece: () => { },
+  clearFocus: () => { },
+  setDiagramCenter: () => { },
+  setDiagramScale: () => { },
+  hoverPiece: () => { },
+  hoverPieces: () => { },
+  hoverConnection: () => { },
+  hoverConnections: () => { },
+  hoverPort: () => { },
+  hoverType: () => { },
+  hoverTypes: () => { },
+  hoverDesign: () => { },
+  hoverDesigns: () => { },
+  clearHover: () => { },
+  setModelTagsForType: () => { },
+  addModelTagForAllTypes: () => { },
+  removeModelTagFromAllTypes: () => { },
 } as any;
 
 /**
@@ -2935,7 +2936,7 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const state = useSyncExternalStore(
     useCallback(
       (callback: () => void) => {
-        if (!store) return () => {};
+        if (!store) return () => { };
         return store.subscribe(callback);
       },
       [store],
@@ -2943,7 +2944,18 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
     useCallback(() => store?.snapshot() ?? null, [store]),
     useCallback(() => store?.snapshot() ?? null, [store]),
   );
-  const lastSyncedStateRef = useRef<string>("");
+  const lastSyncedStateRef = useRef<{
+    panelVisibility: PanelVisibility;
+    selection: DesignAppSelection | undefined;
+    hover: DesignAppHover | undefined;
+    focusedPieceGuid: Guid | undefined;
+    selectedModelTags: Record<Guid, string[]>;
+    diagramCenter: Coord | undefined;
+    diagramScale: number | undefined;
+    camera: Camera | undefined;
+    activeTool: ToolKind | undefined;
+    fullscreenWindow: DesignAppFullscreenWindow | undefined;
+  } | null>(null);
 
   useEffect(() => {
     if (!actor || !state || !kitGuid || !designGuid) return;
@@ -2960,9 +2972,8 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
       activeTool: state.activeTool,
       fullscreenWindow: state.fullscreenWindow,
     };
-    const nextStateHash = JSON.stringify(nextState);
-    if (lastSyncedStateRef.current === nextStateHash) return;
-    lastSyncedStateRef.current = nextStateHash;
+    if (areDesignSyncStatesEqual(lastSyncedStateRef.current, nextState)) return;
+    lastSyncedStateRef.current = nextState;
 
     actor.send({
       type: "DESIGN.SYNC",
@@ -3056,6 +3067,108 @@ function areMapsEqual<K, V>(a: Map<K, V>, b: Map<K, V>): boolean {
   if (a.size !== b.size) return false;
   for (const [key, value] of a) if (b.get(key) !== value) return false;
   return true;
+}
+
+function areArraysEqual<T>(a?: T[], b?: T[]): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  if (a.length !== b.length) return false;
+  for (let index = 0; index < a.length; index++) {
+    if (a[index] !== b[index]) return false;
+  }
+  return true;
+}
+
+function areConnectorSelectionsEqual(a?: Array<{ piece: Guid; designPiece?: Guid; connector: Guid }>, b?: Array<{ piece: Guid; designPiece?: Guid; connector: Guid }>): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  if (a.length !== b.length) return false;
+  for (let index = 0; index < a.length; index++) {
+    if (a[index]?.piece !== b[index]?.piece || a[index]?.designPiece !== b[index]?.designPiece || a[index]?.connector !== b[index]?.connector) return false;
+  }
+  return true;
+}
+
+function areSelectionsEqual(a?: DesignAppSelection, b?: DesignAppSelection): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  return areArraysEqual(a.pieces, b.pieces) && areArraysEqual(a.connections, b.connections) && areConnectorSelectionsEqual(a.connectors, b.connectors) && a.connector?.piece === b.connector?.piece && a.connector?.designPiece === b.connector?.designPiece && a.connector?.connector === b.connector?.connector;
+}
+
+function areHoverStatesEqual(a?: DesignAppHover, b?: DesignAppHover): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  return areArraysEqual(a.pieces, b.pieces) && areArraysEqual(a.connections, b.connections) && areConnectorSelectionsEqual(a.connectors, b.connectors) && areArraysEqual(a.types, b.types) && areArraysEqual(a.designs, b.designs);
+}
+
+function arePanelVisibilityEqual(a?: PanelVisibility, b?: PanelVisibility): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  return a.toolbar === b.toolbar && a.leftSidePanel === b.leftSidePanel && a.rightSidePanel === b.rightSidePanel && a.details === b.details;
+}
+
+function areCoordsEqual(a?: Coord, b?: Coord): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  return a.u === b.u && a.v === b.v;
+}
+
+function areStringArrayRecordsEqual(a?: Record<Guid, string[]>, b?: Record<Guid, string[]>): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) return false;
+  for (const key of aKeys) {
+    if (!areArraysEqual(a[key], b[key])) return false;
+  }
+  return true;
+}
+
+function areDesignSyncStatesEqual(
+  a:
+    | {
+      panelVisibility: PanelVisibility;
+      selection: DesignAppSelection | undefined;
+      hover: DesignAppHover | undefined;
+      focusedPieceGuid: Guid | undefined;
+      selectedModelTags: Record<Guid, string[]>;
+      diagramCenter: Coord | undefined;
+      diagramScale: number | undefined;
+      camera: Camera | undefined;
+      activeTool: ToolKind | undefined;
+      fullscreenWindow: DesignAppFullscreenWindow | undefined;
+    }
+    | null,
+  b:
+    | {
+      panelVisibility: PanelVisibility;
+      selection: DesignAppSelection | undefined;
+      hover: DesignAppHover | undefined;
+      focusedPieceGuid: Guid | undefined;
+      selectedModelTags: Record<Guid, string[]>;
+      diagramCenter: Coord | undefined;
+      diagramScale: number | undefined;
+      camera: Camera | undefined;
+      activeTool: ToolKind | undefined;
+      fullscreenWindow: DesignAppFullscreenWindow | undefined;
+    }
+    | null,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+  return (
+    arePanelVisibilityEqual(a.panelVisibility, b.panelVisibility) &&
+    areSelectionsEqual(a.selection, b.selection) &&
+    areHoverStatesEqual(a.hover, b.hover) &&
+    a.focusedPieceGuid === b.focusedPieceGuid &&
+    areStringArrayRecordsEqual(a.selectedModelTags, b.selectedModelTags) &&
+    areCoordsEqual(a.diagramCenter, b.diagramCenter) &&
+    a.diagramScale === b.diagramScale &&
+    JSON.stringify(a.camera ?? null) === JSON.stringify(b.camera ?? null) &&
+    a.activeTool === b.activeTool &&
+    a.fullscreenWindow === b.fullscreenWindow
+  );
 }
 
 /**
@@ -5171,13 +5284,13 @@ const PiecesSectionForm: FC = () => {
     () =>
       commonTypeName && !isDesignPiece
         ? [
-            ...new Set(
-              allReplacableTypes
-                .filter((t) => t.name === commonTypeName)
-                .map((t) => (t as any).variant)
-                .filter((v): v is string => Boolean(v)),
-            ),
-          ]
+          ...new Set(
+            allReplacableTypes
+              .filter((t) => t.name === commonTypeName)
+              .map((t) => (t as any).variant)
+              .filter((v): v is string => Boolean(v)),
+          ),
+        ]
         : [],
     [commonTypeName, isDesignPiece, allReplacableTypes],
   );
@@ -5191,24 +5304,24 @@ const PiecesSectionForm: FC = () => {
 
   const availableDesignVariants = pieceDesign
     ? [
-        ...new Set(
-          availableDesigns
-            .filter((d) => d.name === pieceDesign.name)
-            .map((d) => (d as any).variant)
-            .filter((v): v is string => Boolean(v)),
-        ),
-      ]
+      ...new Set(
+        availableDesigns
+          .filter((d) => d.name === pieceDesign.name)
+          .map((d) => (d as any).variant)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ]
     : [];
 
   const availableDesignViews = pieceDesign
     ? [
-        ...new Set(
-          availableDesigns
-            .filter((d) => d.name === pieceDesign.name && ((d as any).variant || "") === ((pieceDesign as any).variant || ""))
-            .map((d) => (d as any).view)
-            .filter((v): v is string => Boolean(v)),
-        ),
-      ]
+      ...new Set(
+        availableDesigns
+          .filter((d) => d.name === pieceDesign.name && ((d as any).variant || "") === ((pieceDesign as any).variant || ""))
+          .map((d) => (d as any).view)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ]
     : [];
 
   const hasNoValidPieces = pieces.length === 0 || pieces.every((p) => (p as any)?.type?.name === "unknown");
@@ -5411,7 +5524,7 @@ const PiecesSectionForm: FC = () => {
                   id: `piece-attribute-${attribute.guid || index}`,
                   index,
                 }))}
-                onReorder={() => {}}
+                onReorder={() => { }}
               >
                 {(attribute, index) => (
                   <TreeItem
@@ -6404,7 +6517,7 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
       onPointerEnter={() => {
         if (connector.guid && hoverPort) hoverPort(pieceId, connector.guid);
       }}
-      onPointerLeave={() => {}}
+      onPointerLeave={() => { }}
     />
   );
 };
@@ -6622,9 +6735,9 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connec
 
   const originalPixelPos = hasCenterDiff
     ? {
-        x: (piece.center?.u ?? 0) * ICON_WIDTH,
-        y: -(piece.center?.v ?? 0) * ICON_WIDTH,
-      }
+      x: (piece.center?.u ?? 0) * ICON_WIDTH,
+      y: -(piece.center?.v ?? 0) * ICON_WIDTH,
+    }
     : null;
 
   return (
@@ -7739,7 +7852,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [others] = useDesignAppOthers();
   const [savedDiagramCenter] = useDesignAppDiagramCenter();
   const [savedDiagramScale] = useDesignAppDiagramScale();
-  const panelVisibility = useAppPanelVisibility();
+  const [panelVisibility] = useDesignAppPanelVisibility();
 
   const design = useDesign(undefined, undefined, true) as Design | null;
   const metadata = usePiecesMetadataMap();
@@ -9203,6 +9316,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const kitScopeForSync = useKitScope();
   const designScopeForSync = useDesignScope();
   const syncKeyRef = useRef("");
+  const lastActorStateRef = useRef<{ hover?: DesignAppHover; selection?: DesignAppSelection }>({});
   syncKeyRef.current = `${kitScopeForSync?.guid ?? ""}:${designScopeForSync?.guid ?? ""}`;
   useEffect(() => {
     if (!designStoreForSync || !actorForSync) return;
@@ -9212,11 +9326,18 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     };
     const sync = () => {
       const { hover, selection } = getHoverAndSelection();
+      lastActorStateRef.current = { hover, selection };
+      syncPieceRenderData(pieceRenderDataStoreRef.current, designStoreForSync, hover, selection);
+    };
+    const syncFromActor = () => {
+      const { hover, selection } = getHoverAndSelection();
+      if (areHoverStatesEqual(lastActorStateRef.current.hover, hover) && areSelectionsEqual(lastActorStateRef.current.selection, selection)) return;
+      lastActorStateRef.current = { hover, selection };
       syncPieceRenderData(pieceRenderDataStoreRef.current, designStoreForSync, hover, selection);
     };
     sync();
     const unsubStore = designStoreForSync.subscribe(sync);
-    const actorSub = actorForSync.subscribe(sync);
+    const actorSub = actorForSync.subscribe(syncFromActor);
     return () => {
       unsubStore();
       actorSub.unsubscribe();
@@ -9600,7 +9721,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   );
 };
 
-interface ModelPieceProps {}
+interface ModelPieceProps { }
 
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨modelpiece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/ModelPiece)
 /**
@@ -9942,7 +10063,7 @@ const DesignAppScene: FC = () => {
   const fullscreen = fullscreenValue === DesignAppFullscreenWindow.Accessl;
   const [camera] = useDesignAppCamera();
   const [focusedPieceGuid] = useDesignAppFocusedPieceGuid();
-  const panelVisibility = useAppPanelVisibility();
+  const [panelVisibility] = useDesignAppPanelVisibility();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
   const sceneTypes = useKitTypes();
   const sceneDesigns = useKitDesigns();
@@ -10104,7 +10225,7 @@ const DesignAppScene: FC = () => {
 /** Props interface for the Design app root component.
  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖windows🛠️appprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Windows/d/i/AppProps)
  **/
-export interface AppProps {}
+export interface AppProps { }
 
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖windows🪨diagramwindow](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Windows/d/i/DiagramWindow)

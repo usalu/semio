@@ -101,6 +101,8 @@ def _canonicalize_property_kind(raw_kind: str | None) -> str:
     if not raw_kind:
         return "object"
     kind = str(raw_kind).strip().lower()
+    _ALIASES = {"collection": "array"}
+    kind = _ALIASES.get(kind, kind)
     if kind in _PROPERTY_KIND_MEASURE_KINDS:
         return kind
     return "object"
@@ -179,6 +181,73 @@ def _get_project_config() -> dict | None:
         return None
     path = root / ".coda" / "project.json"
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
+def _ensure_validation_envelope(raw: str) -> dict:
+    """Normalize arbitrary validator output into the canonical validation envelope."""
+    text = raw if isinstance(raw, str) else str(raw)
+    try:
+        obj = json.loads(text)
+    except Exception:
+        truth = "unknown"
+        return {
+            "valid": None,
+            "validations": [
+                {
+                    "instance": "validation",
+                    "expression": "",
+                    "truth": truth,
+                    "tree": {
+                        "id": "root",
+                        "kind": "DataValue",
+                        "label": "validation output",
+                        "fragment": None,
+                        "truth": truth,
+                        "summary": "Validator returned plain text output.",
+                        "value": text.strip(),
+                        "datatype": "text/plain",
+                        "children": [],
+                    },
+                }
+            ],
+        }
+
+    if (
+        isinstance(obj, dict)
+        and "validations" in obj
+        and isinstance(obj["validations"], list)
+    ):
+        return obj
+
+    breachs = []
+    if isinstance(obj, dict):
+        breachs = obj.get("breachs") or obj.get("breaches") or []
+    has_breaches = isinstance(breachs, list) and len(breachs) > 0
+
+    truth = "false" if has_breaches else "unknown"
+    valid_overall = not has_breaches
+
+    return {
+        "valid": valid_overall,
+        "validations": [
+            {
+                "instance": "validation",
+                "expression": "",
+                "truth": truth,
+                "tree": {
+                    "id": "root",
+                    "kind": "DataValue",
+                    "label": "legacy report",
+                    "fragment": None,
+                    "truth": truth,
+                    "summary": "Legacy validator report wrapped as a DataValue node.",
+                    "value": json.dumps(obj, indent=2),
+                    "datatype": "application/json",
+                    "children": [],
+                },
+            }
+        ],
+    }
 
 
 def _run_ontology_validator(
@@ -489,6 +558,33 @@ def get_measure(id: str) -> str:
         if m.get("id") == id:
             return json.dumps(m, indent=2)
     return json.dumps({"error": f"measure not found: {id}"})
+
+
+@mcp.resource("coda://properties")
+def get_properties() -> str:
+    """List all root-level property definitions with normalized kinds and measure_kinds.
+    Implementations MUST load the coda config and return the normalized properties array.
+    [🔬coda📚py💻coda🔖resources🛠️getproperties](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_properties)
+    """
+    config = _get_coda_config()
+    properties = [
+        _normalize_property_definition(p) if isinstance(p, dict) else p
+        for p in config.get("properties", [])
+    ]
+    return json.dumps(properties, indent=2)
+
+
+@mcp.resource("coda://property/{id}")
+def get_property(id: str) -> str:
+    """Get a root-level property by id with normalized kind and measure_kinds.
+    Implementations MUST return an error JSON object when the property is not found.
+    [🔬coda📚py💻coda🔖resources🛠️getproperty](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_property)
+    """
+    config = _get_coda_config()
+    for p in config.get("properties", []):
+        if isinstance(p, dict) and p.get("id") == id:
+            return json.dumps(_normalize_property_definition(p), indent=2)
+    return json.dumps({"error": f"property not found: {id}"})
 
 
 @mcp.resource("coda://targets")
@@ -973,14 +1069,15 @@ def validate(target_id: str) -> dict:
                 timeout=120,
                 cwd=str(root),
             )
-            report_data = result.stdout.strip() if result.stdout else "{}"
+            report_raw = result.stdout.strip() if result.stdout else "{}"
+            envelope = _ensure_validation_envelope(report_raw)
             report_path = iter_dir / "targets" / target_id / "report.json"
-            report_path.write_text(report_data, encoding="utf-8")
+            report_path.write_text(json.dumps(envelope, indent=2), encoding="utf-8")
             return {
                 "validated": True,
                 "target_id": target_id,
                 "report_path": str(report_path),
-                "report": json.loads(report_data) if report_data else {},
+                "report": envelope,
             }
         except subprocess.TimeoutExpired:
             return {"error": f"Validator timed out for target: {target_id}"}
@@ -1181,7 +1278,11 @@ def _sidecar_get_breachs(params: dict) -> dict:
     if not report_json.exists():
         return []
     report = json.loads(report_json.read_text(encoding="utf-8"))
-    return report.get("breachs", [])
+    if "breachs" in report:
+        return report.get("breachs", [])
+    if "validations" in report and isinstance(report["validations"], list):
+        return [v for v in report["validations"] if v.get("truth") == "false"]
+    return []
 
 
 @_register_sidecar("get_iterations")

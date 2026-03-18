@@ -7,6 +7,8 @@
       "@semio/sketchpad/*": ["./*"],
       "@semio/js": ["../js"],
       "@semio/js/*": ["../js/*"],
+      "@semio/studio": ["../studio"],
+      "@semio/studio/*": ["../studio/*"],
       "@semio-elements/ui": ["../../semio-elements/ui"],
       "@semio-elements/ui/*": ["../../semio-elements/ui/*"],
       "@semio/assets": ["../assets"],

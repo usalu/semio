@@ -25,14 +25,13 @@
 
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { IndexeddbPersistence } from "@semio-elements/ui";
-import type { PersistenceFactory } from "@semio/sketchpad";
+import { createIndexeddbPersistenceFactory } from "@semio/studio";
 
 import "./globals.css";
 
 import { Sketchpad } from "@semio/sketchpad";
 
-const indexeddbPersistenceFactory: PersistenceFactory = (doc, key) => new IndexeddbPersistence(key, doc);
+const indexeddbPersistenceFactory = createIndexeddbPersistenceFactory();
 
 declare global {
   interface Window {

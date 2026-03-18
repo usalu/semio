@@ -13,7 +13,8 @@
   "dependencies": {
     "@semio-elements/ui": "*",
     "@semio/js": "*",
-    "@semio/sketchpad": "*"
+    "@semio/sketchpad": "*",
+    "@semio/studio": "*"
   },
   "author": {
     "name": "Ueli Saluz",

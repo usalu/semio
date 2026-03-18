@@ -38,7 +38,7 @@ export type {
   RemoteFileProviderConfig,
   RemoteProviders,
   SqliteAdapter,
-  YProviderFactory,
+  RxProviderFactory,
 } from "./sketchpad/shared";
 export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, YDocBinaryPersistenceProvider } from "./sketchpad/shared";
 export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";

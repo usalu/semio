@@ -95,6 +95,7 @@ import * as dagre from "dagre";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { Link, useNavigate } from "react-router";
@@ -167,6 +168,88 @@ export function useLabel(id: string): string | undefined {
   }
 
   return undefined;
+}
+
+/**
+ * Resolves a localized hotkey string from a translation value.
+ **/
+export function resolveHotkeyValue(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value && typeof value === "object" && "hotkey" in value) {
+    const hotkey = (value as { hotkey?: unknown }).hotkey;
+    return typeof hotkey === "string" ? hotkey : undefined;
+  }
+
+  return undefined;
+}
+
+/**
+ * React hook that resolves a localized hotkey by i18n key.
+ **/
+export function useTranslatedHotkey(id: string): string | undefined {
+  const { t } = useTranslation();
+  const directHotkey = resolveHotkeyValue(t(id as any));
+
+  if (directHotkey) {
+    return directHotkey;
+  }
+
+  return resolveHotkeyValue(t(`${id}.hotkey` as any));
+}
+
+/**
+ * Hook binding a keyboard shortcut with optional translation and overrides.
+ **/
+export function useCommandHotkey(
+  hotkeyOrId: string,
+  callback: () => void,
+  options?: Parameters<typeof useHotkeys>[2],
+  deps?: React.DependencyList,
+  configuration?: {
+    overrides?: Record<string, string> | undefined;
+    translatedHotkey?: string | undefined;
+  },
+) {
+  const inferredTranslatedHotkey = useTranslatedHotkey(hotkeyOrId);
+  const translatedHotkey = configuration?.translatedHotkey ?? inferredTranslatedHotkey;
+  const finalHotkey = React.useMemo(() => configuration?.overrides?.[hotkeyOrId] ?? translatedHotkey ?? hotkeyOrId, [configuration?.overrides, hotkeyOrId, translatedHotkey]);
+
+  useHotkeys(finalHotkey, callback, options || {}, deps || []);
+}
+
+/**
+ * Hook returning whether a CSS media query currently matches.
+ **/
+export function useMediaQuery(query: string, defaultValue = false): boolean {
+  const getMatches = React.useCallback(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return defaultValue;
+    }
+
+    return window.matchMedia(query).matches;
+  }, [defaultValue, query]);
+
+  const [matches, setMatches] = React.useState<boolean>(getMatches);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return undefined;
+    }
+
+    const mediaQueryList = window.matchMedia(query);
+    const handleChange = (event: MediaQueryListEvent) => setMatches(event.matches);
+    setMatches(mediaQueryList.matches);
+    mediaQueryList.addEventListener("change", handleChange);
+
+    return () => {
+      mediaQueryList.removeEventListener("change", handleChange);
+    };
+  }, [query]);
+
+  return matches;
 }
 
 /**
@@ -9987,6 +10070,7 @@ export interface UIProps {
   searchItems?: UISearchItem[];
   toolbarItems?: UIToolbarItem[];
   mobile?: boolean;
+  mobileQuery?: string;
   className?: string;
 }
 
@@ -10067,7 +10151,7 @@ const UIRightPanelToggle: React.FC<{
  * Every panel has: tree.
  * Fixed navbar layout: [breadcrumb (flex-1)] [search] [find] [left panel toggle] [right panel toggle].
  **/
-export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = [], footerItems: globalFooterItems = [], searchItems = [], toolbarItems: globalToolbarItems = [], mobile = false, className }) => {
+export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = [], footerItems: globalFooterItems = [], searchItems = [], toolbarItems: globalToolbarItems = [], mobile, mobileQuery = "(max-width: 767px)", className }) => {
   const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? "");
   const [leftPanelSize, setLeftPanelSize] = React.useState(280);
   const [rightPanelSize, setRightPanelSize] = React.useState(300);
@@ -10075,26 +10159,29 @@ export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = []
   const [mobilePanelVisible, setMobilePanelVisible] = React.useState(true);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [findOpen, setFindOpen] = React.useState(false);
+  const detectedMobile = useMediaQuery(mobileQuery);
+  const resolvedMobile = mobile ?? detectedMobile;
 
-  // Keyboard shortcuts: Ctrl+P for search, Ctrl+F for find
-  React.useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if (event.ctrlKey || event.metaKey) {
-        if (event.key.toLowerCase() === "p") {
-          const activeEl = document.activeElement as HTMLElement | null;
-          if (!searchOpen && activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) return;
-          event.preventDefault();
-          event.stopPropagation();
-          setSearchOpen((prev) => !prev);
-        } else if (event.key === "f") {
-          event.preventDefault();
-          setFindOpen((prev) => !prev);
-        }
+  useCommandHotkey(
+    "ctrl+p,meta+p",
+    () => {
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (!searchOpen && activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) {
+        return;
       }
-    };
-    window.addEventListener("keydown", handler, true);
-    return () => window.removeEventListener("keydown", handler, true);
-  }, [searchOpen]);
+      setSearchOpen((previousValue) => !previousValue);
+    },
+    { preventDefault: true, enableOnFormTags: true },
+    [searchOpen],
+  );
+  useCommandHotkey(
+    "ctrl+f,meta+f",
+    () => {
+      setFindOpen((previousValue) => !previousValue);
+    },
+    { preventDefault: true, enableOnFormTags: true },
+    [],
+  );
 
   const togglePanel = React.useCallback((panel: keyof UIPanelVisibility) => {
     setPanelVisibility((prev) => ({ ...prev, [panel]: !prev[panel] }));
@@ -10110,7 +10197,7 @@ export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = []
   const mergedToolbarItems = [...globalToolbarItems, ...(activeApp.toolbarItems ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   // Merge all panel tabs for mobile mode
-  const mobilePanelTabs: SidePanelTabConfig[] = mobile ? [...(activeApp.leftPanelTabs ?? []), ...(activeApp.rightPanelTabs ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : [];
+  const mobilePanelTabs: SidePanelTabConfig[] = resolvedMobile ? [...(activeApp.leftPanelTabs ?? []), ...(activeApp.rightPanelTabs ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : [];
   const hasMobilePanelTabs = mobilePanelTabs.length > 0;
 
   // Fixed navbar: [breadcrumb (flex-1)] [search] [find] [panel toggles]
@@ -10135,7 +10222,7 @@ export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = []
     content: <Toggle kind="icon" id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<SearchIcon size={16} />} />,
   });
 
-  if (mobile) {
+  if (resolvedMobile) {
     // Mobile: single panel toggle for merged tabs
     if (hasMobilePanelTabs) {
       const FirstIcon = mobilePanelTabs[0]?.icon;
@@ -10179,12 +10266,12 @@ export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = []
         <UIFindItemsSync findItems={activeApp.findItems} onFindSelect={activeApp.onFindSelect} />
         <Layout
           className={className}
-          mobile={mobile}
+          mobile={resolvedMobile}
           navbar={<Navbar items={navbarItems} />}
           footer={mergedFooterItems.length > 0 ? <Footer items={mergedFooterItems} /> : undefined}
           toolbar={toolbarElement}
           mobilePanel={
-            mobile && hasMobilePanelTabs
+            resolvedMobile && hasMobilePanelTabs
               ? {
                   visible: mobilePanelVisible,
                   tabs: mobilePanelTabs,
@@ -10192,7 +10279,7 @@ export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = []
               : undefined
           }
           leftSidePanel={
-            !mobile && hasLeftPanel
+            !resolvedMobile && hasLeftPanel
               ? {
                   position: "left" as const,
                   visible: panelVisibility.leftSidePanel,
@@ -10203,7 +10290,7 @@ export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = []
               : undefined
           }
           rightSidePanel={
-            !mobile && hasRightPanel
+            !resolvedMobile && hasRightPanel
               ? {
                   position: "right" as const,
                   visible: panelVisibility.rightSidePanel,
@@ -10216,7 +10303,7 @@ export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = []
           canvas={
             <UICanvas
               windowConfig={
-                mobile
+                resolvedMobile
                   ? {
                       ...activeApp.windowConfig,
                       defaultLayout: createTabStackLayout(
@@ -10355,6 +10442,12 @@ if (treeVitest) {
     it("normalizes selected ids for single and multiple selection", () => {
       expect(normalizeTreeSelectedIds(["a", "a", "b"], "single")).toEqual(["a"]);
       expect(normalizeTreeSelectedIds(["a", "a", "b"], "multiple")).toEqual(["a", "b"]);
+    });
+
+    it("resolves hotkey values from strings and translation objects", () => {
+      expect(resolveHotkeyValue("ctrl+p")).toBe("ctrl+p");
+      expect(resolveHotkeyValue({ hotkey: "ctrl+f" })).toBe("ctrl+f");
+      expect(resolveHotkeyValue({ label: "Search" })).toBeUndefined();
     });
 
     it("computes additive and range multi selection", () => {

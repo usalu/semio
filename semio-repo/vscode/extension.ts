@@ -2234,97 +2234,6 @@ function updateSemioDecorations(editor: vscode.TextEditor) {
 
 // #endregion 🔖Providers
 
-// #region 🔖Kit Editor
-// [🧰semiorepo🖱️vscode💻extension🔖kiteditor](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Kit%20Editor)
-// Kit editor MUST provide a custom editor for kit JSON files using the sketchpad webview.
-// Specs: Opens kit.json files in a webview panel that loads the built sketchpad app.
-// File changes are bridged between the VS Code filesystem and the webview via messaging.
-
-/**
- * Custom editor provider that renders kit JSON files using the sketchpad webview.
- * [🧰semiorepo🖱️vscode💻extension🔖kiteditor🪨kiteditorprovider](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Kit%20Editor/d/i/KitEditorProvider)
- *
- * Specs: Implements VS Code CustomTextEditorProvider. Loads the sketchpad app in a webview
- * and bridges file reads/writes via postMessage. The webview uses createJsonFilePersistenceFactory
- * with an adapter that communicates with the extension host.
- **/
-class KitEditorProvider implements vscode.CustomTextEditorProvider {
-  public static readonly viewType = "semio.kitEditor";
-
-  constructor(private readonly context: vscode.ExtensionContext) {}
-
-  public async resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
-    webviewPanel.webview.options = {
-      enableScripts: true,
-    };
-
-    const sketchpadDistPath = path.join(this.context.extensionPath, "sketchpad-dist");
-    const indexHtmlPath = path.join(sketchpadDistPath, "index.html");
-
-    if (!fs.existsSync(indexHtmlPath)) {
-      webviewPanel.webview.html = this.getFallbackHtml(document);
-      return;
-    }
-
-    let html = fs.readFileSync(indexHtmlPath, "utf-8");
-    const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(sketchpadDistPath));
-    html = html.replace(/<head>/, `<head><base href="${baseUri.toString()}/">`);
-    html = html.replace(/src="\//g, `src="${baseUri.toString()}/`);
-    html = html.replace(/href="\//g, `href="${baseUri.toString()}/`);
-    webviewPanel.webview.html = html;
-
-    const updateWebview = () => {
-      webviewPanel.webview.postMessage({
-        kind: "kit.update",
-        content: document.getText(),
-      });
-    };
-
-    const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((e) => {
-      if (e.document.uri.toString() === document.uri.toString()) {
-        updateWebview();
-      }
-    });
-
-    webviewPanel.onDidDispose(() => {
-      changeDocumentSubscription.dispose();
-    });
-
-    webviewPanel.webview.onDidReceiveMessage((message) => {
-      if (message.kind === "kit.save") {
-        const edit = new vscode.WorkspaceEdit();
-        edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), message.content);
-        vscode.workspace.applyEdit(edit);
-      }
-    });
-
-    updateWebview();
-  }
-
-  private getFallbackHtml(document: vscode.TextDocument): string {
-    const content = document.getText();
-    let kitName = "Kit";
-    try {
-      const parsed = JSON.parse(content);
-      if (parsed?.name) kitName = parsed.name;
-    } catch {
-      /* ignore parse errors */
-    }
-    return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><title>${kitName}</title>
-<style>body{font-family:system-ui;padding:2em;color:#333}pre{background:#f5f5f5;padding:1em;border-radius:4px;overflow:auto}</style>
-</head>
-<body>
-<h1>Kit: ${kitName}</h1>
-<p>The sketchpad app is not bundled with this extension. Build it with <code>npx nx build @semio/sketchpad</code> and copy the dist to <code>sketchpad-dist/</code>.</p>
-<pre>${content.slice(0, 5000)}</pre>
-</body></html>`;
-  }
-}
-
-// #endregion 🔖Kit Editor
-
 // #region 🔖Activation
 
 // [🧰semiorepo🖱️vscode💻extension🔖activation](semiorepo://p/i/semio-repo/b/u/vscode/f/extension.ts/s/Activation)
@@ -2748,8 +2657,6 @@ export function activate(context: vscode.ExtensionContext) {
     repoDiagnosticCollection = vscode.languages.createDiagnosticCollection("semio");
     kitDiagnosticCollection = vscode.languages.createDiagnosticCollection("semio-kit");
     context.subscriptions.push(repoDiagnosticCollection, kitDiagnosticCollection);
-
-    context.subscriptions.push(vscode.window.registerCustomEditorProvider(KitEditorProvider.viewType, new KitEditorProvider(context), { webviewOptions: { retainContextWhenHidden: true } }));
 
     semioGutterIcon = vscode.window.createTextEditorDecorationType({
       gutterIconPath: vscode.Uri.file(context.asAbsolutePath("semio_codeicon.svg")),

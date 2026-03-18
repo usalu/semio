@@ -28,6 +28,8 @@
     "semio-coda/desktop",
     "semio-coda/desktop",
     "semio/sketchpad",
+    "semio/studio",
+    "semio/vscode",
     "semio/3dm/Semio.Rhino",
     "semio/3dm/ui"
   ],

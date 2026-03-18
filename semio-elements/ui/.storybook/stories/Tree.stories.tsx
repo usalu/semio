@@ -20,6 +20,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { File, Folder, Settings } from "lucide-react";
 import React from "react";
+import { expect, fireEvent, within } from "storybook/test";
 import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, Level, LevelProvider, Tree, TreeContent, TreeItem, getLevelBgClass } from "@semio-elements/ui";
 
 // #region 🔖Tree
@@ -272,5 +273,113 @@ export const Alternatives: Story = {
 };
 
 // #endregion 🔖Alternatives
+
+// #region 🔖DragAndDrop
+
+const createStoryDataTransfer = () => {
+  const data = new Map<string, string>();
+  const types: string[] = [];
+
+  return {
+    dropEffect: "move",
+    effectAllowed: "all",
+    files: [],
+    items: [],
+    types,
+    clearData: (kind?: string) => {
+      if (kind) {
+        data.delete(kind);
+        const index = types.indexOf(kind);
+        if (index !== -1) {
+          types.splice(index, 1);
+        }
+      } else {
+        data.clear();
+        types.splice(0, types.length);
+      }
+    },
+    getData: (kind: string) => data.get(kind) ?? "",
+    setData: (kind: string, value: string) => {
+      data.set(kind, value);
+      if (!types.includes(kind)) {
+        types.push(kind);
+      }
+    },
+  };
+};
+
+const DragAndDropTreeDemo = () => {
+  const paletteItems = React.useMemo(
+    () => [
+      { id: "palette.chair", label: "Chair", icon: <File size={12} />, draggable: true },
+      { id: "palette.table", label: "Table", icon: <File size={12} />, draggable: true },
+    ],
+    [],
+  );
+  const [selectedItems, setSelectedItems] = React.useState<Array<{ id: string; label: string; icon: React.ReactNode }>>([]);
+
+  return (
+    <div className="border p-4 w-[320px]">
+      <Tree
+        sections={[
+          {
+            id: "tree.story.palette",
+            label: "Palette",
+            icon: <Folder size={14} />,
+            defaultOpen: true,
+            items: paletteItems,
+          },
+          {
+            id: "tree.story.selection",
+            label: "Selection",
+            icon: <Folder size={14} />,
+            defaultOpen: true,
+            items: selectedItems.length > 0 ? selectedItems : [{ id: "selection.empty", label: "Drop an item here", icon: <File size={12} /> }],
+          },
+        ]}
+        dragAndDropController={{
+          getDragData: ({ sourceItem }) => ({ "application/vnd.semio.story.tree-item": sourceItem.id }),
+          handleDrop: ({ target, targetKind, data }) => {
+            if (targetKind !== "section" || target.id !== "tree.story.selection") {
+              return;
+            }
+
+            const itemId = data["application/vnd.semio.story.tree-item"];
+            const sourceItem = paletteItems.find((item) => item.id === itemId);
+
+            if (!sourceItem) {
+              return;
+            }
+
+            setSelectedItems((previousItems) => (previousItems.some((item) => item.id === sourceItem.id) ? previousItems : [...previousItems, sourceItem]));
+          },
+        }}
+      />
+    </div>
+  );
+};
+
+export const DragAndDrop: Story = {
+  args: { sections: [] },
+  render: () => <DragAndDropTreeDemo />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const sourceItemLabel = canvas.getByText("Chair");
+    const sourceItem = sourceItemLabel.closest('[role="treeitem"]') as HTMLElement | null;
+    const targetSection = canvas.getByText("Selection").closest('[data-slot="tree-section-row"]') as HTMLElement | null;
+    const dataTransfer = createStoryDataTransfer() as unknown as DataTransfer;
+
+    expect(sourceItem).toBeTruthy();
+    expect(targetSection).toBeTruthy();
+
+    fireEvent.dragStart(sourceItem!, { dataTransfer });
+    fireEvent.dragOver(targetSection!, { dataTransfer });
+    fireEvent.drop(targetSection!, { dataTransfer });
+
+    expect(canvas.getAllByText("Chair").length).toBeGreaterThan(0);
+  },
+};
+
+// #endregion 🔖DragAndDrop
 
 // #endregion 🔖Tree

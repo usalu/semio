@@ -21,31 +21,32 @@
 
 import { CodeIcon, DetailsIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { ComponentType, ReactNode } from "react";
-import { type AnyActorRef, assign, fromCallback, Y } from "../../../semio-elements/ui";
+import { type AnyActorRef, assign, fromCallback } from "../../../semio-elements/ui";
+import { type RMap, type RArray, type RDoc, type RMapEvent, isRMap, isRArray } from "../../studio/studio";
 import { Guid, Kit, KitDiff } from "@semio/js/semio";
 
 // #endregion Imports
 
 // #region Types
 
-// #region YPath Types
+// #region RxPath Types
 
 // [👤semio📚js🗃️sketchpad💻sharedts🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES)
 // MUST define path segment and path types for navigating Y.js document structures.
 
 /**
  * A single segment in a Y.js document path, either a map key, array index, or array item by ID.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖ypathtypes🛠️ypathsegment](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/YPath%20Types/d/i/YPathSegment)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖ypathtypes🛠️ypathsegment](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/RxPath%20Types/d/i/RxPathSegment)
  **/
-export type YPathSegment = { kind: "mapKey"; key: string } | { kind: "arrayIndex"; index: number } | { kind: "arrayItemById"; id: string; idKey: string };
+export type RxPathSegment = { kind: "mapKey"; key: string } | { kind: "arrayIndex"; index: number } | { kind: "arrayItemById"; id: string; idKey: string };
 
 /**
- * An ordered sequence of YPathSegment values describing a path through a Y.js document.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖ypathtypes🛠️ypath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/YPath%20Types/d/i/YPath)
+ * An ordered sequence of RxPathSegment values describing a path through a Y.js document.
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖ypathtypes🛠️ypath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/RxPath%20Types/d/i/RxPath)
  **/
-export type YPath = YPathSegment[];
+export type RxPath = RxPathSegment[];
 
-// #endregion YPath Types
+// #endregion RxPath Types
 
 // #region Granular Hook Types
 
@@ -352,9 +353,9 @@ export type Unsubscribe = () => void;
 
 /**
  * A factory function that creates a Y.js document provider for a given ID.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yproviderfactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YProviderFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yproviderfactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxProviderFactory)
  **/
-export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
+export type RxProviderFactory = (doc: RDoc, id: string) => Promise<void>;
 
 /**
  * A string alias identifying the kind of an app.
@@ -406,51 +407,51 @@ export type FileProviderFactory = (kitId: string) => Promise<FileProvider>;
 
 /**
  * A string alias for a Y.js-compatible UUID.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yuuid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YUuid)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yuuid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxUuid)
  **/
-export type YUuid = string;
+export type RxUuid = string;
 
 /**
  * A Y.js array of UUID strings.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yuuidarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YUuidArray)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yuuidarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxUuidArray)
  **/
-export type YUuidArray = Y.Array<YUuid>;
+export type RxUuidArray = RArray<RxUuid>;
 
 /**
  * A string alias for a Y.js concept name.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yconcept](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YConcept)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yconcept](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxConcept)
  **/
-export type YConcept = string;
+export type RxConcept = string;
 
 /**
  * A Y.js array of concept name strings.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YConcepts)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxConcepts)
  **/
-export type YConcepts = Y.Array<string>;
+export type RxConcepts = RArray<string>;
 
 /**
  * A Y.js array of strings.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️ystringarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YStringArray)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️ystringarray](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxStringArray)
  **/
-export type YStringArray = Y.Array<string>;
+export type RxStringArray = RArray<string>;
 
 /**
  * A Y.js map with string leaf values.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yleafmapstring](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YLeafMapString)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yleafmapstring](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxLeafMapString)
  **/
-export type YLeafMapString = Y.Map<string>;
+export type RxLeafMapString = RMap<string>;
 
 /**
  * A Y.js map with number leaf values.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yleafmapnumber](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YLeafMapNumber)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yleafmapnumber](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxLeafMapNumber)
  **/
-export type YLeafMapNumber = Y.Map<number>;
+export type RxLeafMapNumber = RMap<number>;
 
 /**
  * A Y.js array of Y.js maps representing attribute key-value pairs.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yattributes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/YAttributes)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🛠️yattributes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/d/i/RxAttributes)
  **/
-export type YAttributes = Y.Array<Y.Map<string>>;
+export type RxAttributes = RArray<RMap<string>>;
 
 // #endregion Types
 
@@ -648,140 +649,21 @@ export interface CompositeFileProviderConfig {
   remote?: RemoteFileProviderConfig;
 }
 
-/**
- * Abstract persistence provider for syncing a Y.Doc to a storage backend.
- * Implementations MUST call the synced callback once initial data is loaded. Implementations
- * MUST provide a destroy method to release resources.
- **/
-export interface PersistenceProvider {
-  once(event: "synced", callback: () => void): void;
-  on(event: "synced", callback: () => void): void;
-  destroy(): void;
-}
+// #region 🔖Persistence
+// Persistence types and factories re-exported from @semio/studio.
+// Specs: All persistence implementations live in @semio/studio. Sketchpad only re-exports the types.
 
-/**
- * Factory that creates a PersistenceProvider for a given Y.Doc and storage key.
- **/
-export type PersistenceFactory = (doc: Y.Doc, key: string) => PersistenceProvider;
+export type { PersistenceProvider, PersistenceFactory, JsonFileAdapter, SqliteAdapter } from "../../studio/studio";
+export { YDocBinaryPersistenceProvider, createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory } from "../../studio/studio";
 
-/**
- * I/O adapter for reading and writing kit data as a JSON string.
- * Implementations provide platform-specific file system access.
- **/
-export interface JsonFileAdapter {
-  read(key: string): Promise<string | null>;
-  write(key: string, json: string): Promise<void>;
-}
-
-/**
- * I/O adapter for reading and writing kit data as SQLite binary.
- * Implementations provide platform-specific file system access.
- **/
-export interface SqliteAdapter {
-  read(key: string): Promise<Uint8Array | null>;
-  write(key: string, data: Uint8Array): Promise<void>;
-}
-
-/**
- * PersistenceProvider that syncs Y.Doc state via Y.js binary encoding.
- * Uses Y.encodeStateAsUpdate / Y.applyUpdate for round-tripping through an adapter.
- *
- * Specs: Uses Y.js binary state encoding for faithful CRDT persistence.
- * The key parameter maps to a storage location via the adapter.
- **/
-export class YDocBinaryPersistenceProvider implements PersistenceProvider {
-  private doc: Y.Doc;
-  private key: string;
-  private adapter: { read(key: string): Promise<Uint8Array | null>; write(key: string, data: Uint8Array): Promise<void> };
-  private syncedCallbacks: (() => void)[] = [];
-  private onceCallbacks: (() => void)[] = [];
-  private destroyed = false;
-  private updateHandler: (update: Uint8Array) => void;
-
-  constructor(doc: Y.Doc, key: string, adapter: { read(key: string): Promise<Uint8Array | null>; write(key: string, data: Uint8Array): Promise<void> }) {
-    this.doc = doc;
-    this.key = key;
-    this.adapter = adapter;
-
-    this.updateHandler = () => {
-      if (!this.destroyed) {
-        const state = Y.encodeStateAsUpdate(this.doc);
-        this.adapter.write(this.key, state);
-      }
-    };
-
-    this.doc.on("update", this.updateHandler);
-
-    this.adapter.read(this.key).then((data) => {
-      if (data && !this.destroyed) {
-        Y.applyUpdate(this.doc, data);
-      }
-      this.onceCallbacks.forEach((cb) => cb());
-      this.onceCallbacks = [];
-      this.syncedCallbacks.forEach((cb) => cb());
-    });
-  }
-
-  once(event: "synced", callback: () => void): void {
-    if (event === "synced") this.onceCallbacks.push(callback);
-  }
-  on(event: "synced", callback: () => void): void {
-    if (event === "synced") this.syncedCallbacks.push(callback);
-  }
-  destroy(): void {
-    this.destroyed = true;
-    this.doc.off("update", this.updateHandler);
-    this.syncedCallbacks = [];
-    this.onceCallbacks = [];
-  }
-}
-
-/**
- * Creates a PersistenceFactory that persists Y.Doc state to a JSON file via an adapter.
- *
- * Specs: Wraps YDocBinaryPersistenceProvider with a JSON adapter that converts
- * between Y.js binary state and Base64 JSON for human-inspectable storage.
- **/
-export function createJsonFilePersistenceFactory(adapter: JsonFileAdapter): PersistenceFactory {
-  return (doc: Y.Doc, key: string) => {
-    const binaryAdapter = {
-      async read(k: string): Promise<Uint8Array | null> {
-        const json = await adapter.read(k);
-        if (!json) return null;
-        const parsed = JSON.parse(json);
-        if (parsed?.yDocState) {
-          const binary = Uint8Array.from(atob(parsed.yDocState), (c) => c.charCodeAt(0));
-          return binary;
-        }
-        return null;
-      },
-      async write(k: string, data: Uint8Array): Promise<void> {
-        const base64 = btoa(String.fromCharCode(...data));
-        await adapter.write(k, JSON.stringify({ yDocState: base64 }));
-      },
-    };
-    return new YDocBinaryPersistenceProvider(doc, key, binaryAdapter);
-  };
-}
-
-/**
- * Creates a PersistenceFactory that persists Y.Doc state to a SQLite database via an adapter.
- *
- * Specs: Uses Y.js binary state encoding stored as a BLOB in a SQLite table.
- * The adapter provides platform-specific SQLite file I/O.
- **/
-export function createSqliteFolderPersistenceFactory(adapter: SqliteAdapter): PersistenceFactory {
-  return (doc: Y.Doc, key: string) => {
-    return new YDocBinaryPersistenceProvider(doc, key, adapter);
-  };
-}
+// #endregion 🔖Persistence
 
 /**
  * Interface for remote Y.js document and file provider factories.
  * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🛠️remoteproviders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/d/i/RemoteProviders)
  **/
 export interface RemoteProviders {
-  yProvider: (yDoc: Y.Doc, name: string) => void;
+  yProvider: (rDoc: RDoc, name: string) => void;
   fileProvider: FileProviderFactory;
 }
 
@@ -1742,20 +1624,20 @@ export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineCo
 /**
  * Creates an XState callback actor that observes a Y.js map and sends Y_UPDATE events.
  * MUST observe the Y.js map deeply and send Y_UPDATE events on every change.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🛠️createyjssyncactor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/d/i/createYjsSyncActor)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🛠️createyjssyncactor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/d/i/createRxSyncActor)
  **/
-export function createYjsSyncActor(yMap: Y.Map<any>) {
+export function createRxSyncActor(rMap: RMap<any>) {
   return fromCallback<{ type: "Y_UPDATE"; data: any }>(({ sendBack }: { sendBack: (event: { type: "Y_UPDATE"; data: any }) => void }) => {
     const observer = () => {
-      sendBack({ type: "Y_UPDATE", data: yMap.toJSON() });
+      sendBack({ type: "Y_UPDATE", data: rMap.toJSON() });
     };
 
     observer();
 
-    yMap.observeDeep(observer);
+    rMap.observeDeep(observer);
 
     return () => {
-      yMap.unobserveDeep(observer);
+      rMap.unobserveDeep(observer);
     };
   });
 }
@@ -1763,35 +1645,35 @@ export function createYjsSyncActor(yMap: Y.Map<any>) {
 /**
  * Creates an XState callback actor that observes a single field in a Y.js map.
  * MUST observe a specific field in the Y.js map and send Y_FIELD_UPDATE events.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🛠️createyjsfieldsyncactor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/d/i/createYjsFieldSyncActor)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🛠️createyjsfieldsyncactor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/d/i/createRxFieldSyncActor)
  **/
-export function createYjsFieldSyncActor(yMap: Y.Map<any>, field: string) {
+export function createRxFieldSyncActor(rMap: RMap<any>, field: string) {
   return fromCallback<{ type: "Y_FIELD_UPDATE"; field: string; value: any }>(({ sendBack }: { sendBack: (event: { type: "Y_FIELD_UPDATE"; field: string; value: any }) => void }) => {
-    const observer = (events: Y.YMapEvent<any>[]) => {
+    const observer = (events: RMapEvent[]) => {
       for (const event of events) {
         if (event.keysChanged.has(field)) {
-          sendBack({ type: "Y_FIELD_UPDATE", field, value: yMap.get(field) });
+          sendBack({ type: "Y_FIELD_UPDATE", field, value: rMap.get(field) });
         }
       }
     };
 
-    sendBack({ type: "Y_FIELD_UPDATE", field, value: yMap.get(field) });
+    sendBack({ type: "Y_FIELD_UPDATE", field, value: rMap.get(field) });
 
-    yMap.observe(observer as any);
+    rMap.observe(observer as any);
 
     return () => {
-      yMap.unobserve(observer as any);
+      rMap.unobserve(observer as any);
     };
   });
 }
 
 /**
  * Executes a function within a Y.js document transaction.
- * MUST delegate to the Y.Doc transact method with the given origin.
+ * MUST delegate to the RDoc transact method with the given origin.
  * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🛠️ytransact](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/d/i/yTransact)
  **/
-export function yTransact(yDoc: Y.Doc, fn: () => void, origin?: string): void {
-  yDoc.transact(fn, origin);
+export function yTransact(rDoc: RDoc, fn: () => void, origin?: string): void {
+  rDoc.transact(fn, origin);
 }
 
 /**
@@ -1832,7 +1714,7 @@ export function createYjsSelector<TContext extends YjsSyncContext, TSnapshot>(bu
  * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖machinefactories🛠️appmachineinput](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/Machine%20Factories/d/i/AppMachineInput)
  **/
 export interface AppMachineInput {
-  yMap: Y.Map<any>;
+  rMap: RMap<any>;
   transact: Transact;
 }
 
@@ -1862,58 +1744,58 @@ export interface TransactionMachineConfig<TEdit = any> {
 
 // #endregion XState Integration
 
-// #region YPath Helpers
+// #region RxPath Helpers
 
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ypathhelpers](semiorepo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/Y-PATH-HELPERS)
 // MUST provide path segment constructors, value retrieval, and observation functions for Y.js paths.
 
 /**
- * Creates a YPathSegment for accessing a map key.
+ * Creates a RxPathSegment for accessing a map key.
  * MUST return a mapKey segment with the given key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️ypathmapkey](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/d/i/yPathMapKey)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️ypathmapkey](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/d/i/rxPathMapKey)
  **/
-export function yPathMapKey(key: string): YPathSegment {
+export function rxPathMapKey(key: string): RxPathSegment {
   return { kind: "mapKey", key };
 }
 
 /**
- * Creates a YPathSegment for accessing an array element by index.
+ * Creates a RxPathSegment for accessing an array element by index.
  * MUST return an arrayIndex segment with the given index.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️ypatharrayindex](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/d/i/yPathArrayIndex)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️ypatharrayindex](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/d/i/rxPathArrayIndex)
  **/
-export function yPathArrayIndex(index: number): YPathSegment {
+export function rxPathArrayIndex(index: number): RxPathSegment {
   return { kind: "arrayIndex", index };
 }
 
 /**
- * Creates a YPathSegment for accessing an array item by its ID field.
+ * Creates a RxPathSegment for accessing an array item by its ID field.
  * MUST return an arrayItemById segment with the given ID and idKey.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️ypatharrayitembyid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/d/i/yPathArrayItemById)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️ypatharrayitembyid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/d/i/yPathArrayItemById)
  **/
-export function yPathArrayItemById(id: string, idKey: string = "guid"): YPathSegment {
+export function yPathArrayItemById(id: string, idKey: string = "guid"): RxPathSegment {
   return { kind: "arrayItemById", id, idKey };
 }
 
 /**
- * Traverses a Y.js map or array along a YPath and returns the value at the end.
+ * Traverses a Y.js map or array along a RxPath and returns the value at the end.
  * MUST traverse each path segment, returning undefined when a segment cannot be resolved.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️getvalueatpath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/d/i/getValueAtPath)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️getvalueatpath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/d/i/getValueAtPath)
  **/
-export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): any {
+export function getValueAtPath(root: RMap<any> | RArray<any>, path: RxPath): any {
   let current: any = root;
   for (const segment of path) {
     if (current === undefined || current === null) return undefined;
     if (segment.kind === "mapKey") {
-      if (!(current instanceof Y.Map)) return undefined;
+      if (!isRMap(current)) return undefined;
       current = current.get(segment.key);
     } else if (segment.kind === "arrayIndex") {
-      if (!(current instanceof Y.Array)) return undefined;
+      if (!isRArray(current)) return undefined;
       current = current.get(segment.index);
     } else if (segment.kind === "arrayItemById") {
-      if (!(current instanceof Y.Array)) return undefined;
+      if (!isRArray(current)) return undefined;
       const arr = current.toArray();
       const item = arr.find((item: any) => {
-        if (item instanceof Y.Map) return item.get(segment.idKey) === segment.id;
+        if (isRMap(item)) return item.get(segment.idKey) === segment.id;
         return item?.[segment.idKey] === segment.id;
       });
       current = item;
@@ -1923,18 +1805,18 @@ export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): an
 }
 
 /**
- * Sets up deep observers along a YPath and calls subscribe when the leaf value changes.
+ * Sets up deep observers along a RxPath and calls subscribe when the leaf value changes.
  * MUST set up nested observers along the path and notify when the leaf value changes.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️createpathobserver](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/d/i/createPathObserver)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🛠️createpathobserver](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/d/i/createPathObserver)
  **/
-export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Subscribe): Disposable {
+export function createPathObserver(root: RMap<any>, path: RxPath, subscribe: Subscribe): Disposable {
   if (path.length === 0) {
     const callback = () => subscribe(() => {});
     root.observeDeep(callback);
     return () => root.unobserveDeep(callback);
   }
   const disposables: Disposable[] = [];
-  const serializeValue = (v: any) => JSON.stringify(v instanceof Y.Map || v instanceof Y.Array ? v.toJSON() : v);
+  const serializeValue = (v: any) => JSON.stringify(isRMap(v) || isRArray(v) ? v.toJSON() : v);
   let lastJson = serializeValue(getValueAtPath(root, path));
   const notifyIfChanged = () => {
     const newJson = serializeValue(getValueAtPath(root, path));
@@ -1943,12 +1825,12 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
       subscribe(() => {});
     }
   };
-  const setupObservers = (current: any, remainingPath: YPath, depth: number) => {
+  const setupObservers = (current: any, remainingPath: RxPath, depth: number) => {
     if (!current || remainingPath.length === 0) return;
     const segment = remainingPath[0];
     const rest = remainingPath.slice(1);
-    if (segment.kind === "mapKey" && current instanceof Y.Map) {
-      const mapCallback = (event: Y.YMapEvent<any>) => {
+    if (segment.kind === "mapKey" && isRMap(current)) {
+      const mapCallback = (event: RMapEvent) => {
         if (event.keysChanged.has(segment.key)) {
           disposables.slice(depth + 1).forEach((d) => d());
           disposables.length = depth + 1;
@@ -1961,28 +1843,28 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
       disposables.push(() => current.unobserve(mapCallback));
       const next = current.get(segment.key);
       if (rest.length > 0 && next) setupObservers(next, rest, depth + 1);
-      else if (rest.length === 0 && next instanceof Y.Map) {
+      else if (rest.length === 0 && isRMap(next)) {
         const deepCallback = () => notifyIfChanged();
         next.observeDeep(deepCallback);
         disposables.push(() => next.unobserveDeep(deepCallback));
-      } else if (rest.length === 0 && next instanceof Y.Array) {
+      } else if (rest.length === 0 && isRArray(next)) {
         const deepCallback = () => notifyIfChanged();
         next.observeDeep(deepCallback);
         disposables.push(() => next.unobserveDeep(deepCallback));
       }
-    } else if (segment.kind === "arrayIndex" && current instanceof Y.Array) {
+    } else if (segment.kind === "arrayIndex" && isRArray(current)) {
       const arrayCallback = () => notifyIfChanged();
       current.observe(arrayCallback);
       disposables.push(() => current.unobserve(arrayCallback));
       const next = current.get(segment.index);
       if (rest.length > 0 && next) setupObservers(next, rest, depth + 1);
-    } else if (segment.kind === "arrayItemById" && current instanceof Y.Array) {
+    } else if (segment.kind === "arrayItemById" && isRArray(current)) {
       const arrayCallback = () => {
         disposables.slice(depth + 1).forEach((d) => d());
         disposables.length = depth + 1;
         const arr = current.toArray();
         const item = arr.find((item: any) => {
-          if (item instanceof Y.Map) return item.get(segment.idKey) === segment.id;
+          if (isRMap(item)) return item.get(segment.idKey) === segment.id;
           return item?.[segment.idKey] === segment.id;
         });
         if (rest.length > 0 && item) setupObservers(item, rest, depth + 1);
@@ -1992,7 +1874,7 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
       disposables.push(() => current.unobserve(arrayCallback));
       const arr = current.toArray();
       const item = arr.find((item: any) => {
-        if (item instanceof Y.Map) return item.get(segment.idKey) === segment.id;
+        if (isRMap(item)) return item.get(segment.idKey) === segment.id;
         return item?.[segment.idKey] === segment.id;
       });
       if (rest.length > 0 && item) setupObservers(item, rest, depth + 1);
@@ -2002,7 +1884,7 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
   return () => disposables.forEach((d) => d());
 }
 
-// #endregion YPath Helpers
+// #endregion RxPath Helpers
 
 // #region Derived Store
 
@@ -2011,17 +1893,17 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
 
 /**
  * A dependency on a store path used by DerivedNode for change tracking.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🛠️basedependency](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/d/i/BaseDependency)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🛠️basedependency](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/d/i/BaseDependency)
  **/
 export interface BaseDependency {
-  store: { onPathChanged: (path: YPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: YPath) => any };
-  path: YPath;
+  store: { onPathChanged: (path: RxPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: RxPath) => any };
+  path: RxPath;
 }
 
 /**
  * A reactive computation node that recomputes when its dependencies change.
  * MUST lazily initialize observers and recompute only when dependency values change.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🛠️derivednode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/d/i/DerivedNode)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🛠️derivednode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/d/i/DerivedNode)
  **/
 export class DerivedNode<T> {
   private deps: BaseDependency[];
@@ -2103,7 +1985,7 @@ export class DerivedNode<T> {
 /**
  * A keyed collection of DerivedNode instances with lifecycle management.
  * MUST manage DerivedNode lifecycle including creation, retrieval, and disposal.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🛠️derivedstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/d/i/DerivedStore)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🛠️derivedstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/d/i/DerivedStore)
  **/
 export class DerivedStore {
   private nodes = new Map<string, DerivedNode<any>>();
@@ -2152,42 +2034,42 @@ export class DerivedStore {
 
 /**
  * Factory function type for creating a design app store.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️designappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/DesignAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️designappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/DesignAppStoreFactory)
  **/
 export type DesignAppStoreFactory = (parent: any, id: any, state?: any) => any;
 /**
  * Factory function type for creating a kit app store.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️kitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/KitAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️kitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/KitAppStoreFactory)
  **/
-export type KitAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
+export type KitAppStoreFactory = (parent: any, rMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
 /**
  * Factory function type for creating a type app store.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️typeappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/TypeAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️typeappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/TypeAppStoreFactory)
  **/
 export type TypeAppStoreFactory = (parent: any, id: any, state?: any) => any;
 /**
  * Factory function type for creating a quality app store.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️qualityappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/QualityAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️qualityappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/QualityAppStoreFactory)
  **/
 export type QualityAppStoreFactory = (parent: any, id: any, state?: any) => any;
 
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🪨designappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/designAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🪨designappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/designAppStoreFactory)
  * designAppStoreFactory holds the data fields for a designAppStoreFactory record.
  **/
 let designAppStoreFactory: DesignAppStoreFactory | undefined;
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🪨kitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/kitAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🪨kitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/kitAppStoreFactory)
  * kitAppStoreFactory holds the data fields for a kitAppStoreFactory record.
  **/
 let kitAppStoreFactory: KitAppStoreFactory | undefined;
 /**
  * typeAppStoreFactory holds the data fields for a typeAppStoreFactory record.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🪨typeappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/typeAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🪨typeappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/typeAppStoreFactory)
  **/
 let typeAppStoreFactory: TypeAppStoreFactory | undefined;
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🪨qualityappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/qualityAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🪨qualityappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/qualityAppStoreFactory)
  * qualityAppStoreFactory holds the data fields for a qualityAppStoreFactory record.
  **/
 let qualityAppStoreFactory: QualityAppStoreFactory | undefined;
@@ -2195,7 +2077,7 @@ let qualityAppStoreFactory: QualityAppStoreFactory | undefined;
 /**
  * Registers the design app store factory.
  * MUST replace any previously registered design app store factory.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️registerdesignappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/registerDesignAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️registerdesignappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/registerDesignAppStoreFactory)
  **/
 export function registerDesignAppStoreFactory(factory: DesignAppStoreFactory) {
   designAppStoreFactory = factory;
@@ -2204,7 +2086,7 @@ export function registerDesignAppStoreFactory(factory: DesignAppStoreFactory) {
 /**
  * Registers the kit app store factory.
  * MUST replace any previously registered kit app store factory.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️registerkitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/registerKitAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️registerkitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/registerKitAppStoreFactory)
  **/
 export function registerKitAppStoreFactory(factory: KitAppStoreFactory) {
   kitAppStoreFactory = factory;
@@ -2213,7 +2095,7 @@ export function registerKitAppStoreFactory(factory: KitAppStoreFactory) {
 /**
  * Registers the type app store factory.
  * MUST replace any previously registered type app store factory.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️registertypeappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/registerTypeAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️registertypeappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/registerTypeAppStoreFactory)
  **/
 export function registerTypeAppStoreFactory(factory: TypeAppStoreFactory) {
   typeAppStoreFactory = factory;
@@ -2222,7 +2104,7 @@ export function registerTypeAppStoreFactory(factory: TypeAppStoreFactory) {
 /**
  * Registers the quality app store factory.
  * MUST replace any previously registered quality app store factory.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️registerqualityappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/registerQualityAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️registerqualityappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/registerQualityAppStoreFactory)
  **/
 export function registerQualityAppStoreFactory(factory: QualityAppStoreFactory) {
   qualityAppStoreFactory = factory;
@@ -2231,7 +2113,7 @@ export function registerQualityAppStoreFactory(factory: QualityAppStoreFactory) 
 /**
  * Retrieves the registered design app store factory or throws if not registered.
  * MUST throw if no design app store factory has been registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️getdesignappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/getDesignAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️getdesignappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/getDesignAppStoreFactory)
  **/
 export function getDesignAppStoreFactory(): DesignAppStoreFactory {
   if (!designAppStoreFactory) throw new Error("Design app store factory not registered");
@@ -2241,7 +2123,7 @@ export function getDesignAppStoreFactory(): DesignAppStoreFactory {
 /**
  * Retrieves the registered kit app store factory or throws if not registered.
  * MUST throw if no kit app store factory has been registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️getkitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/getKitAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️getkitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/getKitAppStoreFactory)
  **/
 export function getKitAppStoreFactory(): KitAppStoreFactory {
   if (!kitAppStoreFactory) throw new Error("Kit app store factory not registered");
@@ -2251,7 +2133,7 @@ export function getKitAppStoreFactory(): KitAppStoreFactory {
 /**
  * Retrieves the registered type app store factory or throws if not registered.
  * MUST throw if no type app store factory has been registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️gettypeappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/getTypeAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️gettypeappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/getTypeAppStoreFactory)
  **/
 export function getTypeAppStoreFactory(): TypeAppStoreFactory {
   if (!typeAppStoreFactory) throw new Error("Type app store factory not registered");
@@ -2261,7 +2143,7 @@ export function getTypeAppStoreFactory(): TypeAppStoreFactory {
 /**
  * Retrieves the registered quality app store factory or throws if not registered.
  * MUST throw if no quality app store factory has been registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️getqualityappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/getQualityAppStoreFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖storefactoryregistry🛠️getqualityappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Store%20Factory%20Registry/d/i/getQualityAppStoreFactory)
  **/
 export function getQualityAppStoreFactory(): QualityAppStoreFactory {
   if (!qualityAppStoreFactory) throw new Error("Quality app store factory not registered");
@@ -2277,7 +2159,7 @@ export function getQualityAppStoreFactory(): QualityAppStoreFactory {
 
 /**
  * Plugin contribution of event types, actions, guards, handlers, selectors, and default state.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️appmachinecontribution](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/AppMachineContribution)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️appmachinecontribution](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/AppMachineContribution)
  **/
 export interface AppMachineContribution {
   eventTypes?: Record<string, any>;
@@ -2295,7 +2177,7 @@ export interface AppMachineContribution {
 
 /**
  * An app plugin with ID, namespace, machine contribution, and lifecycle hooks.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️appplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/AppPlugin)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️appplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/AppPlugin)
  **/
 export interface AppPlugin {
   id: string;
@@ -2310,7 +2192,7 @@ export interface AppPlugin {
 }
 
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🪨appplugins](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/appPlugins)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🪨appplugins](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/appPlugins)
  * appPlugins holds the data fields for a appPlugins record.
  **/
 const appPlugins: Map<string, AppPlugin> = new Map();
@@ -2318,7 +2200,7 @@ const appPlugins: Map<string, AppPlugin> = new Map();
 /**
  * Registers an app plugin, invoking its store registration and onRegister hooks.
  * MUST store the plugin and invoke registerStores and onRegister hooks if present.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️registerappplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/registerAppPlugin)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️registerappplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/registerAppPlugin)
  **/
 export function registerAppPlugin(plugin: AppPlugin): void {
   if (appPlugins.has(plugin.id)) {
@@ -2338,7 +2220,7 @@ export function registerAppPlugin(plugin: AppPlugin): void {
 /**
  * Returns all registered app plugins.
  * MUST return all registered plugins as an array.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️getappplugins](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/getAppPlugins)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️getappplugins](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/getAppPlugins)
  **/
 export function getAppPlugins(): AppPlugin[] {
   return Array.from(appPlugins.values());
@@ -2347,7 +2229,7 @@ export function getAppPlugins(): AppPlugin[] {
 /**
  * Returns the registered app plugin with the given ID, or undefined.
  * MUST look up the plugin by ID in the registry.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️getappplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/getAppPlugin)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️getappplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/getAppPlugin)
  **/
 export function getAppPlugin(id: string): AppPlugin | undefined {
   return appPlugins.get(id);
@@ -2356,7 +2238,7 @@ export function getAppPlugin(id: string): AppPlugin | undefined {
 /**
  * Checks whether an app plugin with the given ID is registered.
  * MUST check the registry for the given plugin ID.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️hasappplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/hasAppPlugin)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️hasappplugin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/hasAppPlugin)
  **/
 export function hasAppPlugin(id: string): boolean {
   return appPlugins.has(id);
@@ -2365,7 +2247,7 @@ export function hasAppPlugin(id: string): boolean {
 /**
  * Merges actions, guards, event handlers, and selectors from all registered plugins.
  * MUST iterate all plugins and merge their contributions into single records.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️composeplugincontributions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/composePluginContributions)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️composeplugincontributions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/composePluginContributions)
  **/
 export function composePluginContributions(): {
   actions: Record<string, (context: any, event: any) => any>;
@@ -2412,7 +2294,7 @@ export function composePluginContributions(): {
 /**
  * Collects default states from all registered plugins.
  * MUST call createDefaultState on each plugin that defines it.
- *[👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️getplugindefaultstates](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/getPluginDefaultStates)
+ *[👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apppluginregistry🛠️getplugindefaultstates](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Plugin%20Registry/d/i/getPluginDefaultStates)
  **/
 export function getPluginDefaultStates(): Record<string, any> {
   for (const plugin of appPlugins.values()) {
@@ -2432,7 +2314,7 @@ export function getPluginDefaultStates(): Record<string, any> {
 
 /**
  * Configuration for a dynamic event handler with optional guard and action.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️eventhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/EventHandlerConfig)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️eventhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/EventHandlerConfig)
  **/
 export interface EventHandlerConfig<TContext = any, TEvent = any> {
   guard?: (context: TContext, event: TEvent) => boolean;
@@ -2442,12 +2324,12 @@ export interface EventHandlerConfig<TContext = any, TEvent = any> {
 
 /**
  * eventHandlerRegistry holds the data fields for a eventHandlerRegistry record.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🪨eventhandlerregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/eventHandlerRegistry)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🪨eventhandlerregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/eventHandlerRegistry)
  **/
 const eventHandlerRegistry: Map<string, EventHandlerConfig> = new Map();
 
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🪨guardregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/guardRegistry)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🪨guardregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/guardRegistry)
  * guardRegistry holds the data fields for a guardRegistry record.
  **/
 const guardRegistry: Map<string, (context: any, event: any) => boolean> = new Map();
@@ -2455,7 +2337,7 @@ const guardRegistry: Map<string, (context: any, event: any) => boolean> = new Ma
 /**
  * Registers a dynamic event handler for a given event type.
  * MUST store the handler config in the registry keyed by event type.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️registereventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/registerEventHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️registereventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/registerEventHandler)
  **/
 export function registerEventHandler<TContext = any, TEvent = any>(eventType: string, config: EventHandlerConfig<TContext, TEvent>): void {
   eventHandlerRegistry.set(eventType, config as EventHandlerConfig);
@@ -2464,7 +2346,7 @@ export function registerEventHandler<TContext = any, TEvent = any>(eventType: st
 /**
  * Removes a registered event handler for a given event type.
  * MUST remove the handler for the given event type.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️unregistereventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/unregisterEventHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️unregistereventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/unregisterEventHandler)
  **/
 export function unregisterEventHandler(eventType: string): void {
   eventHandlerRegistry.delete(eventType);
@@ -2473,7 +2355,7 @@ export function unregisterEventHandler(eventType: string): void {
 /**
  * Checks whether an event handler is registered for a given event type.
  * MUST check the registry for the given event type.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️haseventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/hasEventHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️haseventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/hasEventHandler)
  **/
 export function hasEventHandler(eventType: string): boolean {
   return eventHandlerRegistry.has(eventType);
@@ -2482,7 +2364,7 @@ export function hasEventHandler(eventType: string): boolean {
 /**
  * Retrieves the event handler configuration for a given event type.
  * MUST return the handler config or undefined.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️geteventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getEventHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️geteventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getEventHandler)
  **/
 export function getEventHandler(eventType: string): EventHandlerConfig | undefined {
   return eventHandlerRegistry.get(eventType);
@@ -2491,7 +2373,7 @@ export function getEventHandler(eventType: string): EventHandlerConfig | undefin
 /**
  * Executes the registered event handler for the given event, applying guard and action.
  * MUST run the guard before the action, returning empty context when guard fails.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️executeeventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/executeEventHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️executeeventhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/executeEventHandler)
  **/
 export function executeEventHandler<TContext = any, TEvent extends { type: string } = any>(context: TContext, event: TEvent): Partial<TContext> {
   const handler = eventHandlerRegistry.get(event.type);
@@ -2507,7 +2389,7 @@ export function executeEventHandler<TContext = any, TEvent extends { type: strin
 /**
  * Registers a named guard function.
  * MUST store the guard function keyed by name.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️registerguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/registerGuard)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️registerguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/registerGuard)
  **/
 export function registerGuard(name: string, guard: (context: any, event: any) => boolean): void {
   guardRegistry.set(name, guard);
@@ -2516,7 +2398,7 @@ export function registerGuard(name: string, guard: (context: any, event: any) =>
 /**
  * Removes a registered guard function by name.
  * MUST remove the guard function by name.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️unregisterguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/unregisterGuard)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️unregisterguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/unregisterGuard)
  **/
 export function unregisterGuard(name: string): void {
   guardRegistry.delete(name);
@@ -2525,7 +2407,7 @@ export function unregisterGuard(name: string): void {
 /**
  * Retrieves a registered guard function by name.
  * MUST return the guard function or undefined.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️getguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getGuard)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️getguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getGuard)
  **/
 export function getGuard(name: string): ((context: any, event: any) => boolean) | undefined {
   return guardRegistry.get(name);
@@ -2534,7 +2416,7 @@ export function getGuard(name: string): ((context: any, event: any) => boolean) 
 /**
  * Checks whether a guard with the given name is registered.
  * MUST check the guard registry for the given name.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️hasguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/hasGuard)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️hasguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/hasGuard)
  **/
 export function hasGuard(name: string): boolean {
   return guardRegistry.has(name);
@@ -2543,7 +2425,7 @@ export function hasGuard(name: string): boolean {
 /**
  * Executes a registered guard and returns its boolean result.
  * MUST return false when the guard is not registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️executeguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/executeGuard)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️executeguard](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/executeGuard)
  **/
 export function executeGuard(name: string, context: any, event: any): boolean {
   const guard = guardRegistry.get(name);
@@ -2554,7 +2436,7 @@ export function executeGuard(name: string, context: any, event: any): boolean {
 /**
  * Returns all registered event types matching a given namespace prefix.
  * MUST filter event types by the namespace prefix.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️geteventtypesfornamespace](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getEventTypesForNamespace)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️geteventtypesfornamespace](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getEventTypesForNamespace)
  **/
 export function getEventTypesForNamespace(namespace: string): string[] {
   const prefix = `${namespace}.`;
@@ -2564,7 +2446,7 @@ export function getEventTypesForNamespace(namespace: string): string[] {
 /**
  * Returns all unique namespaces from registered event types.
  * MUST extract unique namespace prefixes from all registered event types.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️getregisterednamespaces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getRegisteredNamespaces)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️getregisterednamespaces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getRegisteredNamespaces)
  **/
 export function getRegisteredNamespaces(): string[] {
   const namespaces = new Set<string>();
@@ -2580,7 +2462,7 @@ export function getRegisteredNamespaces(): string[] {
 /**
  * Returns all registered event type strings.
  * MUST return all event type strings from the registry.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️getregisteredeventtypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getRegisteredEventTypes)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖dynamiceventdispatchregistry🛠️getregisteredeventtypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Dynamic%20Event%20Dispatch%20Registry/d/i/getRegisteredEventTypes)
  **/
 export function getRegisteredEventTypes(): string[] {
   return Array.from(eventHandlerRegistry.keys());
@@ -2595,7 +2477,7 @@ export function getRegisteredEventTypes(): string[] {
 
 /**
  * Configuration for an app event handler with namespace, app key, and default state factory.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️appeventhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/AppEventHandlerConfig)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️appeventhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/AppEventHandlerConfig)
  **/
 export interface AppEventHandlerConfig<TAppKey extends string, TAppState> {
   namespace: string;
@@ -2606,7 +2488,7 @@ export interface AppEventHandlerConfig<TAppKey extends string, TAppState> {
 /**
  * Registers a toggle panel event handler for the given app config.
  * MUST register a handler that toggles the specified panel in panelVisibility.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createtogglepanelhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createTogglePanelHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createtogglepanelhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createTogglePanelHandler)
  **/
 export function createTogglePanelHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.TOGGLE_PANEL`;
@@ -2629,7 +2511,7 @@ export function createTogglePanelHandler<TAppKey extends string, TAppState exten
 /**
  * Registers a set panel visibility event handler for the given app config.
  * MUST register a handler that replaces the entire panelVisibility.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsetpanelvisibilityhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSetPanelVisibilityHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsetpanelvisibilityhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSetPanelVisibilityHandler)
  **/
 export function createSetPanelVisibilityHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_PANEL_VISIBILITY`;
@@ -2646,7 +2528,7 @@ export function createSetPanelVisibilityHandler<TAppKey extends string, TAppStat
 /**
  * Registers a set hover event handler with a mapper for the given app config.
  * MUST register a handler that sets hover using the provided mapper.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsethoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSetHoverHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsethoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSetHoverHandler)
  **/
 export function createSetHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: AppEventHandlerConfig<TAppKey, TAppState>, hoverMapper: (event: any) => any): void {
   const eventType = `${config.namespace}.SET_HOVER`;
@@ -2663,7 +2545,7 @@ export function createSetHoverHandler<TAppKey extends string, TAppState extends 
 /**
  * Registers a clear hover event handler with a guard for the given app config.
  * MUST register a handler with a guard that only clears non-empty hover state.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createclearhoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createClearHoverHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createclearhoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createClearHoverHandler)
  **/
 export function createClearHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.CLEAR_HOVER`;
@@ -2685,7 +2567,7 @@ export function createClearHoverHandler<TAppKey extends string, TAppState extend
 /**
  * Registers a set window layout event handler for the given app config.
  * MUST register a handler that sets the windowLayout from the event.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsetwindowlayouthandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSetWindowLayoutHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsetwindowlayouthandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSetWindowLayoutHandler)
  **/
 export function createSetWindowLayoutHandler<TAppKey extends string, TAppState extends { windowLayout?: any }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_WINDOW_LAYOUT`;
@@ -2702,7 +2584,7 @@ export function createSetWindowLayoutHandler<TAppKey extends string, TAppState e
 /**
  * Registers a clear selection event handler for the given app config.
  * MUST register a handler that sets selection to undefined.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createclearselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createClearSelectionHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createclearselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createClearSelectionHandler)
  **/
 export function createClearSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: AppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.CLEAR_SELECTION`;
@@ -2718,7 +2600,7 @@ export function createClearSelectionHandler<TAppKey extends string, TAppState ex
 
 /**
  * Extended app event handler config with a getKey function for keyed state.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️keyedappeventhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/KeyedAppEventHandlerConfig)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️keyedappeventhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/KeyedAppEventHandlerConfig)
  **/
 export interface KeyedAppEventHandlerConfig<TAppKey extends string, TAppState> extends AppEventHandlerConfig<TAppKey, TAppState> {
   getKey: (event: any) => string;
@@ -2754,7 +2636,7 @@ export function getNextPanelVisibilityFromToggle(panelVisibility: PanelVisibilit
 /**
  * Registers a keyed toggle panel event handler for multi-instance app state.
  * MUST register a keyed handler that toggles the panel for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedtogglepanelhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedTogglePanelHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedtogglepanelhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedTogglePanelHandler)
  **/
 export function createKeyedTogglePanelHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.TOGGLE_PANEL`;
@@ -2782,7 +2664,7 @@ export function createKeyedTogglePanelHandler<TAppKey extends string, TAppState 
 /**
  * Registers a keyed set panel visibility event handler for multi-instance app state.
  * MUST register a keyed handler that replaces panelVisibility for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetpanelvisibilityhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetPanelVisibilityHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetpanelvisibilityhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetPanelVisibilityHandler)
  **/
 export function createKeyedSetPanelVisibilityHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_PANEL_VISIBILITY`;
@@ -2804,7 +2686,7 @@ export function createKeyedSetPanelVisibilityHandler<TAppKey extends string, TAp
 /**
  * Registers a keyed set hover event handler for multi-instance app state.
  * MUST register a keyed handler that sets hover for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsethoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetHoverHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsethoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetHoverHandler)
  **/
 export function createKeyedSetHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>, hoverMapper: (event: any) => any): void {
   const eventType = `${config.namespace}.SET_HOVER`;
@@ -2826,7 +2708,7 @@ export function createKeyedSetHoverHandler<TAppKey extends string, TAppState ext
 /**
  * Registers a keyed clear hover event handler for multi-instance app state.
  * MUST register a keyed handler that clears hover for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedclearhoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedClearHoverHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedclearhoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedClearHoverHandler)
  **/
 export function createKeyedClearHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.CLEAR_HOVER`;
@@ -2848,7 +2730,7 @@ export function createKeyedClearHoverHandler<TAppKey extends string, TAppState e
 /**
  * Registers a keyed set selection event handler for multi-instance app state.
  * MUST register a keyed handler that sets selection for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetSelectionHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetSelectionHandler)
  **/
 export function createKeyedSetSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_SELECTION`;
@@ -2870,7 +2752,7 @@ export function createKeyedSetSelectionHandler<TAppKey extends string, TAppState
 /**
  * Registers a keyed clear selection event handler for multi-instance app state.
  * MUST register a keyed handler that clears selection for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedclearselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedClearSelectionHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedclearselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedClearSelectionHandler)
  **/
 export function createKeyedClearSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.CLEAR_SELECTION`;
@@ -2892,7 +2774,7 @@ export function createKeyedClearSelectionHandler<TAppKey extends string, TAppSta
 /**
  * Registers a keyed set window layout event handler for multi-instance app state.
  * MUST register a keyed handler that sets windowLayout for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetwindowlayouthandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetWindowLayoutHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetwindowlayouthandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetWindowLayoutHandler)
  **/
 export function createKeyedSetWindowLayoutHandler<TAppKey extends string, TAppState extends { windowLayout?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_WINDOW_LAYOUT`;
@@ -2914,7 +2796,7 @@ export function createKeyedSetWindowLayoutHandler<TAppKey extends string, TAppSt
 /**
  * Registers a keyed set camera event handler for multi-instance app state.
  * MUST register a keyed handler that sets camera for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetcamerahandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetCameraHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetcamerahandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetCameraHandler)
  **/
 export function createKeyedSetCameraHandler<TAppKey extends string, TAppState extends { camera?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_CAMERA`;
@@ -2936,7 +2818,7 @@ export function createKeyedSetCameraHandler<TAppKey extends string, TAppState ex
 /**
  * Registers a keyed set active tool event handler for multi-instance app state.
  * MUST register a keyed handler that sets activeTool for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetactivetoolhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetActiveToolHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetactivetoolhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetActiveToolHandler)
  **/
 export function createKeyedSetActiveToolHandler<TAppKey extends string, TAppState extends { activeTool?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_ACTIVE_TOOL`;
@@ -2958,7 +2840,7 @@ export function createKeyedSetActiveToolHandler<TAppKey extends string, TAppStat
 /**
  * Registers a keyed set fullscreen window event handler for multi-instance app state.
  * MUST register a keyed handler that sets fullscreenWindow for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetfullscreenwindowhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetFullscreenWindowHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsetfullscreenwindowhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSetFullscreenWindowHandler)
  **/
 export function createKeyedSetFullscreenWindowHandler<TAppKey extends string, TAppState extends { fullscreenWindow?: any }>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SET_FULLSCREEN_WINDOW`;
@@ -2980,7 +2862,7 @@ export function createKeyedSetFullscreenWindowHandler<TAppKey extends string, TA
 /**
  * Registers a keyed init event handler that sets initial keyed app state.
  * MUST register a keyed handler that initializes state for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedinithandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedInitHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedinithandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedInitHandler)
  **/
 export function createKeyedInitHandler<TAppKey extends string, TAppState>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.INIT`;
@@ -3001,7 +2883,7 @@ export function createKeyedInitHandler<TAppKey extends string, TAppState>(config
 /**
  * Registers a keyed sync event handler that merges state for keyed app state.
  * MUST register a keyed handler that merges state for the resolved key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsynchandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSyncHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createkeyedsynchandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createKeyedSyncHandler)
  **/
 export function createKeyedSyncHandler<TAppKey extends string, TAppState>(config: KeyedAppEventHandlerConfig<TAppKey, TAppState>): void {
   const eventType = `${config.namespace}.SYNC`;
@@ -3023,7 +2905,7 @@ export function createKeyedSyncHandler<TAppKey extends string, TAppState>(config
 /**
  * Registers all standard event handlers for a non-keyed app.
  * MUST register toggle panel, set panel visibility, hover, clear hover, window layout, and clear selection handlers.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️registerstandardappeventhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/registerStandardAppEventHandlers)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️registerstandardappeventhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/registerStandardAppEventHandlers)
  **/
 export function registerStandardAppEventHandlers<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility; hover?: any; selection?: any; windowLayout?: any }>(
   config: AppEventHandlerConfig<TAppKey, TAppState>,
@@ -3040,7 +2922,7 @@ export function registerStandardAppEventHandlers<TAppKey extends string, TAppSta
 /**
  * Registers all standard event handlers for a keyed multi-instance app.
  * MUST register init, sync, and all standard keyed handlers including camera, tool, and fullscreen.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️registerkeyedappeventhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/registerKeyedAppEventHandlers)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️registerkeyedappeventhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/registerKeyedAppEventHandlers)
  **/
 export function registerKeyedAppEventHandlers<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility; hover?: any; selection?: any; windowLayout?: any; camera?: any; activeTool?: any; fullscreenWindow?: any }>(
   config: KeyedAppEventHandlerConfig<TAppKey, TAppState>,
@@ -3062,7 +2944,7 @@ export function registerKeyedAppEventHandlers<TAppKey extends string, TAppState 
 
 /**
  * Configuration for single-key event handlers with namespace, app key, key field, and default state.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️singlekeyappeventhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/SingleKeyAppEventHandlerConfig)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️singlekeyappeventhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/SingleKeyAppEventHandlerConfig)
  **/
 export interface SingleKeyAppEventHandlerConfig<TAppKey extends string, TAppState> {
   namespace: string;
@@ -3074,7 +2956,7 @@ export interface SingleKeyAppEventHandlerConfig<TAppKey extends string, TAppStat
 /**
  * Registers a single-key init event handler.
  * MUST register a handler that initializes state for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeyinithandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeyInitHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeyinithandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeyInitHandler)
  **/
 export function createSingleKeyInitHandler<TAppKey extends string, TAppState>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3089,7 +2971,7 @@ export function createSingleKeyInitHandler<TAppKey extends string, TAppState>(co
 /**
  * Registers a single-key sync event handler.
  * MUST register a handler that merges state for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysynchandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySyncHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysynchandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySyncHandler)
  **/
 export function createSingleKeySyncHandler<TAppKey extends string, TAppState>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3105,7 +2987,7 @@ export function createSingleKeySyncHandler<TAppKey extends string, TAppState>(co
 /**
  * Registers a single-key toggle panel event handler.
  * MUST register a handler that toggles the panel for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeytogglepanelhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeyTogglePanelHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeytogglepanelhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeyTogglePanelHandler)
  **/
 export function createSingleKeyTogglePanelHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3121,7 +3003,7 @@ export function createSingleKeyTogglePanelHandler<TAppKey extends string, TAppSt
 /**
  * Registers a single-key set panel visibility event handler.
  * MUST register a handler that replaces panelVisibility for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysetpanelvisibilityhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetPanelVisibilityHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysetpanelvisibilityhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetPanelVisibilityHandler)
  **/
 export function createSingleKeySetPanelVisibilityHandler<TAppKey extends string, TAppState extends { panelVisibility: PanelVisibility }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3137,7 +3019,7 @@ export function createSingleKeySetPanelVisibilityHandler<TAppKey extends string,
 /**
  * Registers a single-key set hover event handler with a mapper.
  * MUST register a handler that sets hover for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysethoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetHoverHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysethoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetHoverHandler)
  **/
 export function createSingleKeySetHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>, hoverMapper: (event: any) => any): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3153,7 +3035,7 @@ export function createSingleKeySetHoverHandler<TAppKey extends string, TAppState
 /**
  * Registers a single-key clear hover event handler.
  * MUST register a handler that clears hover for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeyclearhoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeyClearHoverHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeyclearhoverhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeyClearHoverHandler)
  **/
 export function createSingleKeyClearHoverHandler<TAppKey extends string, TAppState extends { hover?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3169,7 +3051,7 @@ export function createSingleKeyClearHoverHandler<TAppKey extends string, TAppSta
 /**
  * Registers a single-key set selection event handler.
  * MUST register a handler that sets selection for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysetselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetSelectionHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysetselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetSelectionHandler)
  **/
 export function createSingleKeySetSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3185,7 +3067,7 @@ export function createSingleKeySetSelectionHandler<TAppKey extends string, TAppS
 /**
  * Registers a single-key clear selection event handler.
  * MUST register a handler that clears selection for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeyclearselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeyClearSelectionHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeyclearselectionhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeyClearSelectionHandler)
  **/
 export function createSingleKeyClearSelectionHandler<TAppKey extends string, TAppState extends { selection?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3201,7 +3083,7 @@ export function createSingleKeyClearSelectionHandler<TAppKey extends string, TAp
 /**
  * Registers a single-key set window layout event handler.
  * MUST register a handler that sets windowLayout for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysetwindowlayouthandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetWindowLayoutHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysetwindowlayouthandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetWindowLayoutHandler)
  **/
 export function createSingleKeySetWindowLayoutHandler<TAppKey extends string, TAppState extends { windowLayout?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3217,7 +3099,7 @@ export function createSingleKeySetWindowLayoutHandler<TAppKey extends string, TA
 /**
  * Registers a single-key set fullscreen window event handler.
  * MUST register a handler that sets fullscreenWindow for the event's key field value.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysetfullscreenwindowhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetFullscreenWindowHandler)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createsinglekeysetfullscreenwindowhandler](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createSingleKeySetFullscreenWindowHandler)
  **/
 export function createSingleKeySetFullscreenWindowHandler<TAppKey extends string, TAppState extends { fullscreenWindow?: any }>(config: SingleKeyAppEventHandlerConfig<TAppKey, TAppState>): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3257,7 +3139,7 @@ export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppSt
 
 /**
  * Configuration for keyed transaction handlers with namespace, app key, key fields, and default state.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️keyedtransactionhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/KeyedTransactionHandlerConfig)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️keyedtransactionhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/KeyedTransactionHandlerConfig)
  **/
 export interface KeyedTransactionHandlerConfig {
   namespace: string;
@@ -3268,7 +3150,7 @@ export interface KeyedTransactionHandlerConfig {
 
 /**
  * Transaction state with active flag, current stack, past stack, and redo stack.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️apptransactionstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/AppTransactionState)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️apptransactionstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/AppTransactionState)
  **/
 export interface AppTransactionState<TEdit = any> {
   isTransactionActive: boolean;
@@ -3280,7 +3162,7 @@ export interface AppTransactionState<TEdit = any> {
 /**
  * Registers all transaction event handlers for keyed app state.
  * MUST register start, commit, abort, undo, redo, and record edit handlers for keyed state.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️createkeyedtransactionhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/createKeyedTransactionHandlers)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️createkeyedtransactionhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/createKeyedTransactionHandlers)
  **/
 export function createKeyedTransactionHandlers(config: KeyedTransactionHandlerConfig): void {
   const { namespace, appKey, keyFields, createDefaultState } = config;
@@ -3373,7 +3255,7 @@ export function createKeyedTransactionHandlers(config: KeyedTransactionHandlerCo
 
 /**
  * Configuration for single-key transaction handlers with namespace, app key, key field, and default state.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️singlekeytransactionhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/SingleKeyTransactionHandlerConfig)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️singlekeytransactionhandlerconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/SingleKeyTransactionHandlerConfig)
  **/
 export interface SingleKeyTransactionHandlerConfig {
   namespace: string;
@@ -3385,7 +3267,7 @@ export interface SingleKeyTransactionHandlerConfig {
 /**
  * Registers all transaction event handlers for single-key app state.
  * MUST register start, commit, abort, undo, redo, and record edit handlers for single-key state.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️createsinglekeytransactionhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/createSingleKeyTransactionHandlers)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖transactionhandlerfactory🛠️createsinglekeytransactionhandlers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Transaction%20Handler%20Factory/d/i/createSingleKeyTransactionHandlers)
  **/
 export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionHandlerConfig): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
@@ -3485,7 +3367,7 @@ export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionH
 /**
  * Creates a factory for selectors that read a property from a non-keyed app state.
  * MUST return a factory that creates selectors reading from the given app key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖selectorfactorypattern🛠️createapppropertyselectorfactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Selector%20Factory%20Pattern/d/i/createAppPropertySelectorFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖selectorfactorypattern🛠️createapppropertyselectorfactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Selector%20Factory%20Pattern/d/i/createAppPropertySelectorFactory)
  **/
 export function createAppPropertySelectorFactory<TApps extends Record<string, any>>(appKey: string) {
   return function createPropertySelector<TProperty>(propertyKey: keyof TApps[string], fallback: TProperty) {
@@ -3499,7 +3381,7 @@ export function createAppPropertySelectorFactory<TApps extends Record<string, an
 /**
  * Creates a factory for selectors that read a property from a keyed app state.
  * MUST return a factory that creates keyed selectors reading from the given app key.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖selectorfactorypattern🛠️createkeyedapppropertyselectorfactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Selector%20Factory%20Pattern/d/i/createKeyedAppPropertySelectorFactory)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖selectorfactorypattern🛠️createkeyedapppropertyselectorfactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Selector%20Factory%20Pattern/d/i/createKeyedAppPropertySelectorFactory)
  **/
 export function createKeyedAppPropertySelectorFactory<TAppState>(appKey: string) {
   return function createPropertySelector<TProperty>(propertyKey: keyof TAppState, fallback: TProperty) {
@@ -3522,7 +3404,7 @@ export function getAppKey(...scopes: string[]): string {
 /**
  * Retrieves existing app state or creates it from a default factory.
  * MUST return existing state or call the default factory to create it.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖selectorfactorypattern🛠️getorcreateappstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/Selector%20Factory%20Pattern/d/i/getOrCreateAppState)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖selectorfactorypattern🛠️getorcreateappstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/Selector%20Factory%20Pattern/d/i/getOrCreateAppState)
  **/
 export function getOrCreateAppState<TState>(context: Record<string, Record<string, TState>>, appKey: string, key: string, defaultFactory: () => TState): TState {
   const apps = context[appKey] || {};
@@ -3538,7 +3420,7 @@ export function getOrCreateAppState<TState>(context: Record<string, Record<strin
 
 /**
  * Interface for design app hook functions including commands, diff, hover, and selection.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️designapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/DesignAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️designapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/DesignAppHooks)
  **/
 export interface DesignAppHooks {
   useDesignAppCommands: (id?: { kit: string; design: string }) => any;
@@ -3555,14 +3437,14 @@ export interface DesignAppHooks {
 
 /**
  * Interface for kit app hook functions including commands.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️kitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/KitAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️kitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/KitAppHooks)
  **/
 export interface KitAppHooks {
   useKitAppCommands: (id?: { kit: string }) => any;
 }
 
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🪨defaultdesignapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/defaultDesignAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🪨defaultdesignapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/defaultDesignAppHooks)
  * defaultDesignAppHooks holds the data fields for a defaultDesignAppHooks record.
  **/
 const defaultDesignAppHooks: DesignAppHooks = {
@@ -3579,7 +3461,7 @@ const defaultDesignAppHooks: DesignAppHooks = {
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🪨defaultkitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/defaultKitAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🪨defaultkitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/defaultKitAppHooks)
  * defaultKitAppHooks holds the data fields for a defaultKitAppHooks record.
  **/
 const defaultKitAppHooks: KitAppHooks = {
@@ -3587,12 +3469,12 @@ const defaultKitAppHooks: KitAppHooks = {
 };
 
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🪨registereddesignapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/registeredDesignAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🪨registereddesignapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/registeredDesignAppHooks)
  * registeredDesignAppHooks holds the data fields for a registeredDesignAppHooks record.
  **/
 let registeredDesignAppHooks: DesignAppHooks | null = null;
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🪨registeredkitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/registeredKitAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🪨registeredkitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/registeredKitAppHooks)
  * registeredKitAppHooks holds the data fields for a registeredKitAppHooks record.
  **/
 let registeredKitAppHooks: KitAppHooks | null = null;
@@ -3600,7 +3482,7 @@ let registeredKitAppHooks: KitAppHooks | null = null;
 /**
  * Registers design app hook implementations.
  * MUST store the provided hooks, replacing any previously registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️registerdesignapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/registerDesignAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️registerdesignapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/registerDesignAppHooks)
  **/
 export function registerDesignAppHooks(hooks: DesignAppHooks): void {
   registeredDesignAppHooks = hooks;
@@ -3609,7 +3491,7 @@ export function registerDesignAppHooks(hooks: DesignAppHooks): void {
 /**
  * Registers kit app hook implementations.
  * MUST store the provided hooks, replacing any previously registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️registerkitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/registerKitAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️registerkitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/registerKitAppHooks)
  **/
 export function registerKitAppHooks(hooks: KitAppHooks): void {
   registeredKitAppHooks = hooks;
@@ -3617,7 +3499,7 @@ export function registerKitAppHooks(hooks: KitAppHooks): void {
 
 /** getDesignAppHooks holds the data fields for a getDesignAppHooks record.
  * MUST fall back to default no-op hooks when none are registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️getdesignapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/getDesignAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️getdesignapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/getDesignAppHooks)
  **/
 export function getDesignAppHooks(): DesignAppHooks {
   return registeredDesignAppHooks ?? defaultDesignAppHooks;
@@ -3626,7 +3508,7 @@ export function getDesignAppHooks(): DesignAppHooks {
 /**
  * Returns registered kit app hooks or defaults.
  * MUST fall back to default no-op hooks when none are registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️getkitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/getKitAppHooks)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖apphooksregistry🛠️getkitapphooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Hooks%20Registry/d/i/getKitAppHooks)
  **/
 export function getKitAppHooks(): KitAppHooks {
   return registeredKitAppHooks ?? defaultKitAppHooks;
@@ -3641,7 +3523,7 @@ export function getKitAppHooks(): KitAppHooks {
 
 /**
  * Port interface for retrieving documentation section trees and pages.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appregistryexports🛠️docsregistryport](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Registry%20Exports/d/i/DocsRegistryPort)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appregistryexports🛠️docsregistryport](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Registry%20Exports/d/i/DocsRegistryPort)
  **/
 export interface DocsRegistryPort {
   getSectionTree: (section: string) => any[];
@@ -3650,7 +3532,7 @@ export interface DocsRegistryPort {
 }
 
 /**
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appregistryexports🪨registereddocsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Registry%20Exports/d/i/registeredDocsRegistry)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appregistryexports🪨registereddocsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Registry%20Exports/d/i/registeredDocsRegistry)
  * registeredDocsRegistry holds the data fields for a registeredDocsRegistry record.
  **/
 let registeredDocsRegistry: DocsRegistryPort | null = null;
@@ -3658,7 +3540,7 @@ let registeredDocsRegistry: DocsRegistryPort | null = null;
 /**
  * Registers a docs registry implementation.
  * MUST store the given docs registry, replacing any previous one.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appregistryexports🛠️registerdocsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Registry%20Exports/d/i/registerDocsRegistry)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appregistryexports🛠️registerdocsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Registry%20Exports/d/i/registerDocsRegistry)
  **/
 export function registerDocsRegistry(registry: DocsRegistryPort): void {
   registeredDocsRegistry = registry;
@@ -3667,7 +3549,7 @@ export function registerDocsRegistry(registry: DocsRegistryPort): void {
 /**
  * Returns the registered docs registry or null.
  * MUST return the registered docs registry or null when none is registered.
- * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appregistryexports🛠️getdocsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/YPath%20Helpers/s/Derived%20Store/s/App%20Registry%20Exports/d/i/getDocsRegistry)
+ * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖yjsxstatebridge🔖ypathhelpers🔖derivedstore🔖appregistryexports🛠️getdocsregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/RxPath%20Helpers/s/Derived%20Store/s/App%20Registry%20Exports/d/i/getDocsRegistry)
  **/
 export function getDocsRegistry(): DocsRegistryPort | null {
   return registeredDocsRegistry;

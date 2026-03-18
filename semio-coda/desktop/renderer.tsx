@@ -27,7 +27,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-import { Tree, TreeItem } from "../../semio-elements/ui";
+import { Tree, TreeItem, useCommandHotkey, useMediaQuery } from "../../semio-elements/ui";
 
 import "./globals.css";
 
@@ -92,30 +92,36 @@ interface McpResponse {
 }
 
 /**
- * A design measure available for fixing breaches.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️measure](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Measure)
- *MUST have id and description.
+ * A platform measure instruction for a specific measure kind on a property.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️platformmeasureinstruction](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/PlatformMeasureInstruction)
+ *MUST have instructions and optional mcp tools.
  **/
-interface Measure {
-  id: string;
-  description: string;
+interface PlatformMeasureInstruction {
+  instructions?: string;
+  mcp?: {
+    resources?: Array<{ id: string; instruction: string }>;
+    tools?: Array<{ id: string; instruction: string; parameters?: Array<{ id: string; instruction: string }> }>;
+  };
 }
 
 /**
- * A platform with optional measure instructions.
+ * A platform property with measure kind keys mapping to instructions.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️platformproperty](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/PlatformProperty)
+ *MUST have id. Measure kinds (increase, decrease, etc.) are dynamic keys.
+ **/
+interface PlatformProperty {
+  id: string;
+  [measureKind: string]: string | PlatformMeasureInstruction | undefined;
+}
+
+/**
+ * A platform with properties and their measure instructions.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️platform](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Platform)
  *MUST have an id.
  **/
 interface Platform {
   id: string;
-  measures?: Array<{
-    id: string;
-    instructions?: string;
-    mcp?: {
-      resources?: Array<{ id: string; instruction: string }>;
-      tools?: Array<{ id: string; instruction: string; parameters?: Array<{ id: string; instruction: string }> }>;
-    };
-  }>;
+  properties?: PlatformProperty[];
 }
 
 /**
@@ -168,17 +174,21 @@ interface Level {
 }
 
 /**
- * A property definition on a framework.
+ * A property definition with canonical kind and associated measure_kinds.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️property](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Property)
- *MUST have id and name.
+ *MUST have id. Kind determines measure_kinds (e.g. number->increase/decrease, level->raise/lower).
  **/
 interface Property {
   id: string;
   name?: string;
-  type?: string;
+  kind?: string;
+  measure_kinds?: string[];
   description?: string;
   url?: string;
   levels?: Level[];
+  properties?: Property[];
+  items?: Property;
+  values?: string[];
 }
 
 /**
@@ -1075,7 +1085,7 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
   const { data: run, loading: runLoading } = useCodaResource<Run>("coda://current-run", refreshKey);
   const { data: iteration, loading: iterLoading } = useCodaResource<Iteration>("coda://current-iteration", refreshKey);
   const { data: report, loading: reportLoading } = useCodaResource<Report>("coda://report", refreshKey);
-  const { data: measures } = useCodaResource<Measure[]>("coda://measures", refreshKey);
+  const { data: properties } = useCodaResource<Property[]>("coda://properties", refreshKey);
   const { data: frameworks } = useCodaResource<Framework[]>("coda://frameworks", refreshKey);
 
   const loading = projectLoading || runLoading || iterLoading || reportLoading;
@@ -1091,6 +1101,8 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
     return report.validations.filter((v) => v.truth === "true").length;
   }, [report]);
 
+  const totalPropertyCount = useMemo(() => (properties ? countProperties(properties) : 0), [properties]);
+
   if (loading) return <Spinner label="Loading dashboard..." />;
 
   return (
@@ -1104,11 +1116,7 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
         <StatCard label="Design" value={project?.design?.id ?? "—"} sublabel={project ? `${project.targets?.length ?? 0} targets` : undefined} />
         <StatCard label="Current Run" value={run?.id ?? run?.run_id ?? "—"} sublabel={run?.started ? `Started ${run.started}` : undefined} />
         <StatCard label="Iteration" value={iteration?.index ?? "—"} sublabel={iteration?.targets ? `${iteration.targets.length} targets` : undefined} />
-        <StatCard
-          label="Compliance"
-          value={totalValidations > 0 ? `${compliantCount}/${totalValidations}` : "—"}
-          sublabel={violatedCount > 0 ? `${violatedCount} violated` : totalValidations > 0 ? "All compliant" : undefined}
-        />
+        <StatCard label="Compliance" value={totalValidations > 0 ? `${compliantCount}/${totalValidations}` : "—"} sublabel={violatedCount > 0 ? `${violatedCount} violated` : totalValidations > 0 ? "All compliant" : undefined} />
       </div>
 
       {report?.validations && report.validations.length > 0 && (
@@ -1127,15 +1135,27 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
           <span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">not project-scoped</span>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {measures && measures.length > 0 && (
-            <Card title={`Measures (${measures.length})`}>
+          {properties && properties.length > 0 && (
+            <Card title={`Properties (${totalPropertyCount})`}>
               <div className="space-y-1">
-                {measures.map((m) => (
-                  <div key={m.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-window">
-                    <IconWrench className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                {properties.map((prop) => (
+                  <div key={prop.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-window">
+                    <IconConfig className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
-                      <span className="font-medium text-foreground">{formatId(m.id)}</span>
-                      {m.description && <p className="text-xs text-muted-foreground">{m.description}</p>}
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">{prop.name ?? formatId(prop.id)}</span>
+                        {prop.kind && <span className="text-xs bg-info-bg text-info-foreground px-1 py-0.5 rounded">{prop.kind}</span>}
+                      </div>
+                      {prop.description && <p className="text-xs text-muted-foreground">{prop.description}</p>}
+                      {prop.measure_kinds && prop.measure_kinds.length > 0 && (
+                        <div className="mt-0.5 flex flex-wrap gap-1">
+                          {prop.measure_kinds.map((mk) => (
+                            <span key={mk} className="text-xs bg-active-base text-active-foreground px-1 py-0.5 rounded font-mono">
+                              {mk}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1172,38 +1192,172 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage)
 
 /**
- * Configuration page showing measures, frameworks (with properties and rules), and platforms.
+ * Counts all properties recursively in a property tree.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage🛠️countproperties](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage/d/i/countProperties)
+ *MUST count the property itself plus all nested properties and items.
+ **/
+function countProperties(props: Property[]): number {
+  let count = 0;
+  for (const p of props) {
+    count += 1;
+    if (p.properties) count += countProperties(p.properties);
+    if (p.items?.properties) count += countProperties(p.items.properties);
+  }
+  return count;
+}
+
+/**
+ * Renders a single property with its kind badge, measure_kinds, and nested children.
+// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage🛠️propertyview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage/d/i/PropertyView)
+ *MUST display kind, measure_kinds, description, levels, nested properties, and items recursively.
+ **/
+function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
+  return (
+    <div className={`rounded bg-panel border border-border-window p-2 ${depth > 0 ? "ml-3" : ""}`}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-medium text-foreground">{prop.name ?? formatId(prop.id)}</span>
+        {prop.kind && <span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">{prop.kind}</span>}
+        {prop.measure_kinds &&
+          prop.measure_kinds.length > 0 &&
+          prop.measure_kinds.map((mk) => (
+            <span key={mk} className="text-xs bg-active-base text-active-foreground px-1.5 py-0.5 rounded font-mono">
+              {mk}
+            </span>
+          ))}
+      </div>
+      {prop.description && <p className="text-xs text-muted-foreground mt-1">{prop.description}</p>}
+      {prop.url && (
+        <a className="text-xs text-active-base hover:underline mt-1 inline-block" href={prop.url} target="_blank" rel="noreferrer">
+          Reference
+        </a>
+      )}
+      {prop.values && prop.values.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          <span className="text-xs text-muted-foreground mr-1">Values:</span>
+          {prop.values.map((v) => (
+            <span key={v} className="text-xs bg-window border border-border-window px-1 py-0.5 rounded font-mono">
+              {v}
+            </span>
+          ))}
+        </div>
+      )}
+      {prop.levels && prop.levels.length > 0 && (
+        <div className="mt-2 space-y-2">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Levels ({prop.levels.length})</span>
+          {prop.levels.map((level) => (
+            <div key={level.value} className="rounded border border-border-window p-2 space-y-1.5">
+              <div className="flex items-start gap-2 text-xs">
+                <span className="bg-active-base text-active-foreground px-1.5 py-0.5 rounded font-mono shrink-0">{level.value}</span>
+                <div>
+                  {level.name && <span className="font-medium text-foreground">{level.name}</span>}
+                  {level.description && <p className="text-muted-foreground">{level.description}</p>}
+                </div>
+              </div>
+              {level.measures && (
+                <div className="space-y-1 pl-2 border-l-2 border-border-window">
+                  {level.measures.lower && level.measures.lower.length > 0 && (
+                    <div>
+                      <span className="text-xs font-semibold text-muted-foreground">↓ Lower measures:</span>
+                      <div className="mt-0.5 space-y-0.5">
+                        {level.measures.lower.map((lm) => (
+                          <div key={lm.id} className="text-xs flex items-start gap-1">
+                            <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{lm.id}</span>
+                            {lm.instruction && <span className="text-muted-foreground">{lm.instruction}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {level.measures.higher && level.measures.higher.length > 0 && (
+                    <div>
+                      <span className="text-xs font-semibold text-muted-foreground">↑ Higher measures:</span>
+                      <div className="mt-0.5 space-y-0.5">
+                        {level.measures.higher.map((hm) => (
+                          <div key={hm.id} className="text-xs flex items-start gap-1">
+                            <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{hm.id}</span>
+                            {hm.instruction && <span className="text-muted-foreground">{hm.instruction}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {level.instructions && level.instructions.higher && level.instructions.higher.length > 0 && (
+                <div className="space-y-1 pl-2 border-l-2 border-border-window">
+                  <span className="text-xs font-semibold text-muted-foreground">↑ Higher instructions:</span>
+                  <div className="mt-0.5 space-y-0.5">
+                    {level.instructions.higher.map((hi) => (
+                      <div key={hi.id} className="text-xs flex items-start gap-1">
+                        <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{hi.id}</span>
+                        {hi.instruction && <span className="text-muted-foreground">{hi.instruction}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {prop.items && (
+        <div className="mt-2">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Items</span>
+          {prop.items.properties && prop.items.properties.length > 0 && (
+            <div className="mt-1 space-y-1.5">
+              {prop.items.properties.map((child) => (
+                <PropertyView key={child.id} prop={child} depth={depth + 1} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {prop.properties && prop.properties.length > 0 && (
+        <div className="mt-2">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Properties ({prop.properties.length})</span>
+          <div className="mt-1 space-y-1.5">
+            {prop.properties.map((child) => (
+              <PropertyView key={child.id} prop={child} depth={depth + 1} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Configuration page showing properties, frameworks (with properties and rules), and platforms.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage🛠️configpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage/d/i/ConfigPage)
  *MUST display all coda configuration in expandable sections.
- * Measures and frameworks are general (not project-scoped).
+ * Properties and frameworks are general (not project-scoped).
  **/
 function ConfigPage({ refreshKey }: { refreshKey: number }) {
-  const { data: measures, loading: measuresLoading } = useCodaResource<Measure[]>("coda://measures", refreshKey);
+  const { data: properties, loading: propertiesLoading } = useCodaResource<Property[]>("coda://properties", refreshKey);
   const { data: frameworks, loading: frameworksLoading } = useCodaResource<Framework[]>("coda://frameworks", refreshKey);
   const { data: platforms, loading: platformsLoading } = useCodaResource<Platform[]>("coda://platforms", refreshKey);
 
-  const loading = measuresLoading || frameworksLoading || platformsLoading;
+  const loading = propertiesLoading || frameworksLoading || platformsLoading;
   if (loading) return <Spinner label="Loading configuration..." />;
+
+  const totalPropertyCount = properties ? countProperties(properties) : 0;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-foreground">Configuration</h2>
-        <p className="text-sm text-muted-foreground mt-1">Measures, frameworks, and platforms from the coda configuration. These are general and not project-scoped.</p>
+        <p className="text-sm text-muted-foreground mt-1">Properties, frameworks, and platforms from the coda configuration. These are general and not project-scoped.</p>
       </div>
 
-      <Card title={`Measures (${measures?.length ?? 0})`} action={<span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">general</span>}>
-        {measures && measures.length > 0 ? (
-          <div className="divide-y divide-border-window">
-            {measures.map((m) => (
-              <div key={m.id} className="py-2 first:pt-0 last:pb-0">
-                <div className="text-sm font-medium text-foreground font-mono">{m.id}</div>
-                {m.description && <p className="text-xs text-muted-foreground mt-0.5">{m.description}</p>}
-              </div>
+      <Card title={`Properties (${totalPropertyCount})`} action={<span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">general</span>}>
+        {properties && properties.length > 0 ? (
+          <div className="space-y-2">
+            {properties.map((prop) => (
+              <PropertyView key={prop.id} prop={prop} />
             ))}
           </div>
         ) : (
-          <EmptyState message="No measures configured." />
+          <EmptyState message="No properties configured." />
         )}
       </Card>
 
@@ -1226,77 +1380,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                       <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Properties</h4>
                       <div className="space-y-1.5">
                         {fw.properties.map((prop) => (
-                          <div key={prop.id} className="rounded bg-panel border border-border-window p-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-foreground">{prop.name ?? formatId(prop.id)}</span>
-                              {prop.type && <span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">{prop.type}</span>}
-                            </div>
-                            {prop.description && <p className="text-xs text-muted-foreground mt-1">{prop.description}</p>}
-                            {prop.url && (
-                              <a className="text-xs text-active-base hover:underline mt-1 inline-block" href={prop.url} target="_blank" rel="noreferrer">
-                                Reference
-                              </a>
-                            )}
-                            {prop.levels && prop.levels.length > 0 && (
-                              <div className="mt-2 space-y-2">
-                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Levels ({prop.levels.length})</span>
-                                {prop.levels.map((level) => (
-                                  <div key={level.value} className="rounded border border-border-window p-2 space-y-1.5">
-                                    <div className="flex items-start gap-2 text-xs">
-                                      <span className="bg-active-base text-active-foreground px-1.5 py-0.5 rounded font-mono shrink-0">{level.value}</span>
-                                      <div>
-                                        {level.name && <span className="font-medium text-foreground">{level.name}</span>}
-                                        {level.description && <p className="text-muted-foreground">{level.description}</p>}
-                                      </div>
-                                    </div>
-                                    {level.measures && (
-                                      <div className="space-y-1 pl-2 border-l-2 border-border-window">
-                                        {level.measures.lower && level.measures.lower.length > 0 && (
-                                          <div>
-                                            <span className="text-xs font-semibold text-muted-foreground">↓ Lower measures:</span>
-                                            <div className="mt-0.5 space-y-0.5">
-                                              {level.measures.lower.map((lm) => (
-                                                <div key={lm.id} className="text-xs flex items-start gap-1">
-                                                  <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{lm.id}</span>
-                                                  {lm.instruction && <span className="text-muted-foreground">{lm.instruction}</span>}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                        {level.measures.higher && level.measures.higher.length > 0 && (
-                                          <div>
-                                            <span className="text-xs font-semibold text-muted-foreground">↑ Higher measures:</span>
-                                            <div className="mt-0.5 space-y-0.5">
-                                              {level.measures.higher.map((hm) => (
-                                                <div key={hm.id} className="text-xs flex items-start gap-1">
-                                                  <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{hm.id}</span>
-                                                  {hm.instruction && <span className="text-muted-foreground">{hm.instruction}</span>}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                    {level.instructions && level.instructions.higher && level.instructions.higher.length > 0 && (
-                                      <div className="space-y-1 pl-2 border-l-2 border-border-window">
-                                        <span className="text-xs font-semibold text-muted-foreground">↑ Higher instructions:</span>
-                                        <div className="mt-0.5 space-y-0.5">
-                                          {level.instructions.higher.map((hi) => (
-                                            <div key={hi.id} className="text-xs flex items-start gap-1">
-                                              <span className="bg-info-bg text-info-foreground px-1 py-0.5 rounded font-mono shrink-0">{hi.id}</span>
-                                              {hi.instruction && <span className="text-muted-foreground">{hi.instruction}</span>}
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                          <PropertyView key={prop.id} prop={prop} />
                         ))}
                       </div>
                     </div>
@@ -1368,31 +1452,69 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
         {platforms && platforms.length > 0 ? (
           <div className="space-y-3">
             {platforms.map((platform) => (
-              <Collapsible key={platform.id} title={formatId(platform.id)} badge={<span className="text-xs text-muted-foreground">{platform.measures?.length ?? 0} measures</span>}>
-                {platform.measures && platform.measures.length > 0 ? (
+              <Collapsible key={platform.id} title={formatId(platform.id)} badge={<span className="text-xs text-muted-foreground">{platform.properties?.length ?? 0} properties</span>}>
+                {platform.properties && platform.properties.length > 0 ? (
                   <div className="space-y-2">
-                    {platform.measures.map((pm) => (
-                      <div key={pm.id} className="rounded bg-panel border border-border-window p-2">
-                        <div className="text-sm font-medium text-foreground font-mono">{pm.id}</div>
-                        {pm.instructions && <p className="text-xs text-muted-foreground mt-0.5">{pm.instructions}</p>}
-                        {pm.mcp?.tools && pm.mcp.tools.length > 0 && (
-                          <div className="mt-2">
-                            <span className="text-xs font-semibold text-muted-foreground">MCP Tools:</span>
-                            <div className="mt-1 space-y-1">
-                              {pm.mcp.tools.map((tool) => (
-                                <div key={tool.id} className="text-xs pl-2 border-l border-border-window">
-                                  <span className="font-mono text-active-base">{tool.id}</span>
-                                  {tool.instruction && <span className="text-muted-foreground"> — {tool.instruction}</span>}
-                                </div>
-                              ))}
+                    {platform.properties.map((pp) => {
+                      const measureKindKeys = Object.keys(pp).filter((k) => k !== "id" && typeof pp[k] === "object");
+                      return (
+                        <div key={pp.id} className="rounded bg-panel border border-border-window p-2">
+                          <div className="text-sm font-medium text-foreground font-mono">{pp.id}</div>
+                          {measureKindKeys.length > 0 && (
+                            <div className="mt-1.5 space-y-2">
+                              {measureKindKeys.map((mk) => {
+                                const mi = pp[mk] as PlatformMeasureInstruction;
+                                return (
+                                  <div key={mk} className="pl-2 border-l-2 border-active-base">
+                                    <span className="text-xs bg-active-base text-active-foreground px-1.5 py-0.5 rounded font-mono">{mk}</span>
+                                    {mi.instructions && <p className="text-xs text-muted-foreground mt-0.5">{mi.instructions}</p>}
+                                    {mi.mcp?.resources && mi.mcp.resources.length > 0 && (
+                                      <div className="mt-1">
+                                        <span className="text-xs font-semibold text-muted-foreground">MCP Resources:</span>
+                                        <div className="mt-0.5 space-y-0.5">
+                                          {mi.mcp.resources.map((r) => (
+                                            <div key={r.id} className="text-xs pl-2 border-l border-border-window">
+                                              <span className="font-mono text-active-base">{r.id}</span>
+                                              {r.instruction && <span className="text-muted-foreground"> — {r.instruction}</span>}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {mi.mcp?.tools && mi.mcp.tools.length > 0 && (
+                                      <div className="mt-1">
+                                        <span className="text-xs font-semibold text-muted-foreground">MCP Tools:</span>
+                                        <div className="mt-0.5 space-y-0.5">
+                                          {mi.mcp.tools.map((tool) => (
+                                            <div key={tool.id} className="text-xs pl-2 border-l border-border-window">
+                                              <span className="font-mono text-active-base">{tool.id}</span>
+                                              {tool.instruction && <span className="text-muted-foreground"> — {tool.instruction}</span>}
+                                              {tool.parameters && tool.parameters.length > 0 && (
+                                                <div className="mt-0.5 pl-2 space-y-0.5">
+                                                  {tool.parameters.map((param) => (
+                                                    <div key={param.id} className="text-xs text-muted-foreground">
+                                                      <span className="font-mono">{param.id}</span>
+                                                      {param.instruction && <span> — {param.instruction}</span>}
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">No measure instructions.</p>
+                  <p className="text-xs text-muted-foreground">No property instructions.</p>
                 )}
               </Collapsible>
             ))}
@@ -1494,20 +1616,19 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖reportpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ReportPage)
 
 /**
- * Report page showing compliance report with rules and breaches.
+ * Report page showing compliance report with validation trees.
 // [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖reportpage🛠️reportpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ReportPage/d/i/ReportPage)
- *MUST display the full report with expandable rules showing clause details.
+ *MUST display the full report with expandable validation trees showing truth values.
  **/
 function ReportPage({ refreshKey }: { refreshKey: number }) {
   const { data: report, loading: reportLoading, error: reportError } = useCodaResource<Report>("coda://report", refreshKey);
-  const { data: breachs, loading: breachsLoading } = useCodaResource<Rule[]>("coda://breachs", refreshKey);
 
-  const loading = reportLoading || breachsLoading;
-  if (loading) return <Spinner label="Loading report..." />;
+  if (reportLoading) return <Spinner label="Loading report..." />;
 
-  const totalRules = report?.rules?.length ?? 0;
-  const violatedRules = report?.rules?.filter((r) => r.status === "violated") ?? [];
-  const compliantRules = report?.rules?.filter((r) => r.status === "compliant") ?? [];
+  const totalValidations = report?.validations?.length ?? 0;
+  const violatedValidations = report?.validations?.filter((v) => v.truth === "false") ?? [];
+  const compliantValidations = report?.validations?.filter((v) => v.truth === "true") ?? [];
+  const unknownValidations = report?.validations?.filter((v) => v.truth === "unknown") ?? [];
 
   return (
     <div className="space-y-6">
@@ -1520,80 +1641,45 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
         <Card>
           <EmptyState message={reportError} />
         </Card>
-      ) : !report?.rules || report.rules.length === 0 ? (
+      ) : !report?.validations || report.validations.length === 0 ? (
         <Card>
           <EmptyState message="No report available. Run validation from the Actions page." />
         </Card>
       ) : (
         <>
           <div className="grid grid-cols-3 gap-4">
-            <StatCard label="Total Rules" value={totalRules} />
-            <StatCard label="Compliant" value={compliantRules.length} sublabel={totalRules > 0 ? `${Math.round((compliantRules.length / totalRules) * 100)}%` : undefined} />
-            <StatCard label="Violated" value={violatedRules.length} sublabel={totalRules > 0 ? `${Math.round((violatedRules.length / totalRules) * 100)}%` : undefined} />
+            <StatCard label="Total" value={totalValidations} />
+            <StatCard label="Compliant" value={compliantValidations.length} sublabel={totalValidations > 0 ? `${Math.round((compliantValidations.length / totalValidations) * 100)}%` : undefined} />
+            <StatCard label="Violated" value={violatedValidations.length} sublabel={totalValidations > 0 ? `${Math.round((violatedValidations.length / totalValidations) * 100)}%` : undefined} />
           </div>
 
-          {violatedRules.length > 0 && (
-            <Card title={`Violations (${violatedRules.length})`}>
-              <div className="space-y-2">
-                {violatedRules.map((rule) => (
-                  <Collapsible key={rule.id} title={formatId(rule.id)} defaultOpen badge={<StatusBadge status="violated" />}>
-                    <div className="space-y-2">
-                      {rule.description && <p className="text-sm text-muted-foreground">{rule.description}</p>}
-                      {rule.clauses && rule.clauses.length > 0 && (
-                        <div className="space-y-1.5">
-                          {rule.clauses.map((clause) => (
-                            <div key={clause.id} className="flex items-start gap-2 rounded bg-panel border border-border-window p-2">
-                              <StatusBadge status={clause.status} />
-                              <div>
-                                <span className="text-sm font-medium text-foreground">{formatId(clause.id)}</span>
-                                {clause.description && <p className="text-xs text-muted-foreground">{clause.description}</p>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {rule.measures && rule.measures.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          <span className="text-xs text-muted-foreground mr-1">Measures:</span>
-                          {rule.measures.map((m) => (
-                            <span key={m} className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded font-mono">
-                              {m}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {rule.data && Object.keys(rule.data).length > 0 && (
-                        <div>
-                          <span className="text-xs text-muted-foreground">Data:</span>
-                          <JsonViewer data={rule.data} />
-                        </div>
-                      )}
-                    </div>
-                  </Collapsible>
+          {violatedValidations.length > 0 && (
+            <Card title={`Violations (${violatedValidations.length})`}>
+              <div className="space-y-4">
+                {violatedValidations.map((validation) => (
+                  <ValidationTree key={validation.instance} report={validation} defaultExpanded={true} />
                 ))}
               </div>
             </Card>
           )}
 
-          {compliantRules.length > 0 && (
-            <Card title={`Compliant (${compliantRules.length})`}>
-              <div className="space-y-1">
-                {compliantRules.map((rule) => (
-                  <div key={rule.id} className="flex items-center justify-between rounded-md border border-border-window px-3 py-2">
-                    <div>
-                      <span className="text-sm font-medium text-foreground">{formatId(rule.id)}</span>
-                      {rule.description && <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>}
-                    </div>
-                    <StatusBadge status="compliant" />
-                  </div>
+          {unknownValidations.length > 0 && (
+            <Card title={`Unknown (${unknownValidations.length})`}>
+              <div className="space-y-4">
+                {unknownValidations.map((validation) => (
+                  <ValidationTree key={validation.instance} report={validation} defaultExpanded={false} />
                 ))}
               </div>
             </Card>
           )}
 
-          {breachs && breachs.length > 0 && (
-            <Card title={`Breachs (${breachs.length})`}>
-              <JsonViewer data={breachs} />
+          {compliantValidations.length > 0 && (
+            <Card title={`Compliant (${compliantValidations.length})`}>
+              <div className="space-y-4">
+                {compliantValidations.map((validation) => (
+                  <ValidationTree key={validation.instance} report={validation} defaultExpanded={false} />
+                ))}
+              </div>
             </Card>
           )}
         </>
@@ -2314,6 +2400,7 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidecarConnected, setSidecarConnected] = useState(false);
   const [events, setEvents] = useState<CodaEvent[]>([]);
+  const isCompactWindow = useMediaQuery("(max-width: 1100px)");
 
   useEffect(() => {
     async function init() {
@@ -2359,6 +2446,20 @@ function App() {
   const handleClose = useCallback(() => {
     if (window.windowControls) window.windowControls.close();
   }, []);
+
+  useEffect(() => {
+    setSidebarCollapsed(isCompactWindow);
+  }, [isCompactWindow]);
+
+  useCommandHotkey("ctrl+r,meta+r", handleRefresh, { preventDefault: true }, [handleRefresh]);
+  useCommandHotkey(
+    "ctrl+b,meta+b",
+    () => {
+      setSidebarCollapsed((previousValue) => !previousValue);
+    },
+    { preventDefault: true },
+    [],
+  );
 
   if (projectPath === undefined) {
     return (

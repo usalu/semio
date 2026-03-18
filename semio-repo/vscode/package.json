@@ -26,18 +26,6 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "customEditors": [
-      {
-        "viewType": "semio.kitEditor",
-        "displayName": "Semio Kit Editor",
-        "selector": [
-          {
-            "filenamePattern": "kit.json"
-          }
-        ],
-        "priority": "option"
-      }
-    ],
     "viewsContainers": {
       "activitybar": [
         {
