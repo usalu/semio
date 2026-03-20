@@ -1,0 +1,29 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.starting",
+    "second": "2026-03-16T14:43:35Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PreToolUse",
+      "tool_name": "Edit",
+      "tool_input": {
+        "file_path": "/workspaces/semio/elements/ui/.storybook/stories/Tree.stories.tsx",
+        "old_string": "export const ControlTreeStory: Story = {\n  args: { sections: [] },\n  render: () =\u003e \u003cControlTreeDemo /\u003e,\n};\n\n// #endregion 🔖Tree",
+        "new_string": "export const ControlTreeStory: Story = {\n  args: { sections: [] },\n  render: () =\u003e \u003cControlTreeDemo /\u003e,\n};\n\n// #region 🔖Alternatives\n\nconst alternativesSections = [\n  {\n    id: \"alt.story.design\",\n    label: \"Design\",\n    icon: \u003cFolder size={14} /\u003e,\n    items: [\n      {\n        id: \"alt.story.design.tower\",\n        label: \"Tower\",\n        icon: \u003cFolder size={12} /\u003e,\n        alternatives: [\n          [\n            { id: \"alt.story.design.tower.a.floor1\", label: \"Floor 1 (Variant A)\", icon: \u003cFile size={12} /\u003e },\n            { id: \"alt.story.design.tower.a.floor2\", label: \"Floor 2 (Variant A)\", icon: \u003cFile size={12} /\u003e },\n            { id: \"alt.story.design.tower.a.floor3\", label: \"Floor 3 (Variant A)\", icon: \u003cFile size={12} /\u003e },\n          ],\n          [\n            { id: \"alt.story.design.tower.b.floor1\", label: \"Floor 1 (Variant B)\", icon: \u003cFile size={12} /\u003e },\n            { id: \"alt.story.design.tower.b.floor2\", label: \"Floor 2 (Variant B)\", icon: \u003cFile size={12} /\u003e },\n          ],\n          [\n            { id: \"alt.story.design.tower.c.floor1\", label: \"Floor 1 (Variant C)\", icon: \u003cFile size={12} /\u003e },\n            { id: \"alt.story.design.tower.c.floor2\", label: \"Floor 2 (Variant C)\", icon: \u003cFile size={12} /\u003e },\n            { id: \"alt.story.design.tower.c.floor3\", label: \"Floor 3 (Variant C)\", icon: \u003cFile size={12} /\u003e },\n            { id: \"alt.story.design.tower.c.floor4\", label: \"Floor 4 (Variant C)\", icon: \u003cFile size={12} /\u003e },\n          ],\n        ],\n      },\n      {\n        id: \"alt.story.design.base\",\n        label: \"Base\",\n        icon: \u003cFolder size={12} /\u003e,\n        items: [\n          { id: \"alt.story.design.base.slab\", label: \"Slab\", icon: \u003cFile size={12} /\u003e },\n        ],\n        alternatives: [\n          [\n            { id: \"alt.story.design.base.x.slab\", label: \"Slab (Option X)\", icon: \u003cFile size={12} /\u003e },\n            { id: \"alt.story.design.base.x.parking\", label: \"Parking (Option X)\", icon: \u003cFile size={12} /\u003e },\n          ],\n          [\n            { id: \"alt.story.design.base.y.slab\", label: \"Slab (Option Y)\", icon: \u003cFile size={12} /\u003e },\n          ],\n        ],\n      },\n      { id: \"alt.story.design.roof\", label: \"Roof\", icon: \u003cFile size={12} /\u003e },\n    ],\n  },\n];\n\nexport const Alternatives: Story = {\n  args: { sections: alternativesSections },\n  render: (args) =\u003e (\n    \u003cdiv className=\"border p-4 w-[320px]\"\u003e\n      \u003cTree {...args} /\u003e\n    \u003c/div\u003e\n  ),\n};\n\n// #endregion 🔖Alternatives\n\n// #endregion 🔖Tree",
+        "replace_all": false
+      },
+      "tool_use_id": "toolu_012QECLzid2pS3BYLPCyHCuL"
+    }
+  },
+  "response": {}
+}

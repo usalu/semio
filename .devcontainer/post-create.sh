@@ -216,7 +216,7 @@ fi
 #endregion 🔖Python
 #region 🔖Go
 echo "Building Go binaries..."
-if cd ./semio-repo/cli && go build; then
+if cd ./repo/cli && go build; then
   echo "✅ Go CLI built successfully."
   cd ../..
 else
@@ -258,7 +258,7 @@ fi
 #endregion 🔖Playwright
 #region 🔖GitHooks
 echo "Configuring git hooks and agent hook configs..."
-if ./semio-repo/cli/cli configure; then
+if ./repo/cli/cli configure; then
   echo "✅ Git hooks configured successfully."
 else
   echo "⚠️  Git hooks configuration failed, but continuing..."
@@ -266,7 +266,7 @@ fi
 #endregion 🔖GitHooks
 #region 🔖VSCode
 echo "Building semio VSCode extension..."
-if cd semio-repo/vscode && npm run build && npm run package; then
+if cd repo/vscode && npm run build && npm run package; then
   echo "✅ VSCode extension built successfully."
   cd ../..
 else
@@ -284,8 +284,8 @@ mkdir -p /home/vscode/.gemini/antigravity
 cat << 'MCPCONFIG' > /home/vscode/.gemini/antigravity/mcp_config.json
 {
   "mcpServers": {
-    "semio-repo": {
-      "command": "/workspaces/semio/semio-repo/cli/cli",
+    "repo": {
+      "command": "/workspaces/semio/repo/cli/cli",
       "args": [
         "mcp"
       ]
@@ -304,7 +304,7 @@ cat << 'MCPCONFIG' > /home/vscode/.gemini/antigravity/mcp_config.json
       "command": "uv",
       "args": [
         "--directory",
-        "/workspaces/semio/semio-coda/py",
+        "/workspaces/semio/coda/py",
         "run",
         "coda.py",
         "--mcp-stdio"

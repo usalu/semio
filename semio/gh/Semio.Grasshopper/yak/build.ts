@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜build](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜build](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,7 +20,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Build
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build)
 // Yak package build script. MUST prepare the distribution folder and build the .yak package.
 
 import { execSync } from "child_process";
@@ -29,13 +29,13 @@ import { join } from "path";
 
 /**
  * Yak build working directory.
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/cwd)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨cwd](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/cwd)
  * MUST resolve to the yak folder.
  **/
 const cwd = __dirname;
 /**
  * Distribution directory for the Yak package output.
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨distdir](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/distDir)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨distdir](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/distDir)
  * MUST be cleaned and prepared before building.
  **/
 const distDir = join(cwd, "dist");
@@ -56,7 +56,7 @@ copyFileSync(join(cwd, "manifest.yml"), join(distDir, "manifest.yml"));
 
 /**
  * Yak CLI executable path for Rhino 8.
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/yak)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻build🔖build🪨yak](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/build.ts/s/Build/d/i/yak)
  * MUST point to the installed Yak binary.
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";

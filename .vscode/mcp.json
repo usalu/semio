@@ -1,9 +1,9 @@
 {
 	"inputs": [],
 	"servers": {
-		"semio-repo": {
+		"repo": {
 			"type": "stdio",
-			"command": "./semio-repo/cli/cli",
+			"command": "./repo/cli/cli",
 			"args": [
 				"mcp"
 			]
@@ -24,7 +24,7 @@
 			"command": "uv",
 			"args": [
 				"--directory",
-				"semio-coda/py",
+				"coda/py",
 				"run",
 				"coda.py",
 				"--mcp-stdio"

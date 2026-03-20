@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚js💻debugdiff](semiorepo://p/u/semio/b/l/js/f/_debug_diff.ts)
+// [👤semio📚js💻debugdiff](repo://p/u/semio/b/l/js/f/_debug_diff.ts)
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify

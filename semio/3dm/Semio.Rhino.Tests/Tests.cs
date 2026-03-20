@@ -1,5 +1,5 @@
 #region 🔖Header
-// [👤semio📚3dm🛅semiorhinotests💻tests](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs)
+// [👤semio📚3dm🛅semiorhinotests💻tests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs)
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -25,7 +25,7 @@ using Semio.Rhino;
 #endregion 🔖Imports
 
 #region 🔖BridgeRegistryTests
-// [👤semio📚3dm🛅semiorhinotests💻tests🔖bridgeregistrytests](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/BridgeRegistryTests)
+// [👤semio📚3dm🛅semiorhinotests💻tests🔖bridgeregistrytests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/BridgeRegistryTests)
 // Tests for BridgeRegistry routing, error handling, and method dispatch.
 
 public class BridgeRegistryTests
@@ -111,7 +111,7 @@ public class BridgeRegistryTests
 #endregion 🔖BridgeRegistryTests
 
 #region 🔖LayerServiceTests
-// [👤semio📚3dm🛅semiorhinotests💻tests🔖layerservicetests](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/LayerServiceTests)
+// [👤semio📚3dm🛅semiorhinotests💻tests🔖layerservicetests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/LayerServiceTests)
 // Tests for LayerService path construction.
 
 public class LayerServiceTests
@@ -141,7 +141,7 @@ public class LayerServiceTests
 #endregion 🔖LayerServiceTests
 
 #region 🔖BridgeProtocolTests
-// [👤semio📚3dm🛅semiorhinotests💻tests🔖bridgeprotocoltests](semiorepo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/BridgeProtocolTests)
+// [👤semio📚3dm🛅semiorhinotests💻tests🔖bridgeprotocoltests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/BridgeProtocolTests)
 // Tests for BridgeRequest/BridgeResponse serialization.
 
 public class BridgeProtocolTests

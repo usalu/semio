@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🌐docs⚙️viteconfig](semiorepo://p/u/semio/b/w/docs/f/vite.config.ts)
+// [👤semio🌐docs⚙️viteconfig](repo://p/u/semio/b/w/docs/f/vite.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🌐docs⚙️viteconfig🔖configuration](semiorepo://p/u/semio/b/w/docs/f/vite.config.ts/s/Configuration)
+// [👤semio🌐docs⚙️viteconfig🔖configuration](repo://p/u/semio/b/w/docs/f/vite.config.ts/s/Configuration)
 // Vite build configuration for the docs application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 

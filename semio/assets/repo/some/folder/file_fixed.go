@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go)
 // 2025 Test User <test@test.com>
 
 // This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Package
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖package](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Package)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖package](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Package)
 // Package declaration for fixed module.
 // Package MUST be named fixed.
 
@@ -27,13 +27,13 @@ package fixed
 // #endregion 🔖Package
 
 // #region 🔖Functions
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Functions)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Functions)
 // Utility functions for fixed values.
 // Functions MUST return valid integers.
 
 // FixedValue returns a constant integer.
 // FixedValue MUST return 2.
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions🛠️fixedvalue](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Functions/d/i/FixedValue)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions🛠️fixedvalue](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.go/s/Functions/d/i/FixedValue)
 func FixedValue() int {
 return 2
 }

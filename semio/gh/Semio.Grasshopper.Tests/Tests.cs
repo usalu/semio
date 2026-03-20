@@ -1,5 +1,5 @@
 #region 🔖Header
-// [👤semio📚gh🛅semiograsshoppertests💻tests](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper.Tests/f/Tests.cs)
+// [👤semio📚gh🛅semiograsshoppertests💻tests](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper.Tests/f/Tests.cs)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

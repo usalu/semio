@@ -1,9 +1,9 @@
 go 1.24.0
 
 use (
-	./semio-coda/blnbo/go
-	./semio-coda/programming/go
-	./semio-repo/cli
-	./semio-repo/server
+	./coda/blnbo/go
+	./coda/programming/go
+	./repo/cli
+	./repo/server
 	./semio/go
 )

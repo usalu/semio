@@ -2,56 +2,56 @@
   "hooks": {
     "PostToolUse": [
       {
-        "command": "./semio-repo/cli/cli hook PostToolUse copilot-chat",
+        "command": "./repo/cli/cli hook PostToolUse copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "PreCompact": [
       {
-        "command": "./semio-repo/cli/cli hook PreCompact copilot-chat",
+        "command": "./repo/cli/cli hook PreCompact copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "PreToolUse": [
       {
-        "command": "./semio-repo/cli/cli hook PreToolUse copilot-chat",
+        "command": "./repo/cli/cli hook PreToolUse copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "SessionStart": [
       {
-        "command": "./semio-repo/cli/cli hook SessionStart copilot-chat",
+        "command": "./repo/cli/cli hook SessionStart copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "Stop": [
       {
-        "command": "./semio-repo/cli/cli hook Stop copilot-chat",
+        "command": "./repo/cli/cli hook Stop copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "SubagentStart": [
       {
-        "command": "./semio-repo/cli/cli hook SubagentStart copilot-chat",
+        "command": "./repo/cli/cli hook SubagentStart copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "SubagentStop": [
       {
-        "command": "./semio-repo/cli/cli hook SubagentStop copilot-chat",
+        "command": "./repo/cli/cli hook SubagentStop copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "UserPromptSubmit": [
       {
-        "command": "./semio-repo/cli/cli hook UserPromptSubmit copilot-chat",
+        "command": "./repo/cli/cli hook UserPromptSubmit copilot-chat",
         "timeout": 30,
         "type": "command"
       }

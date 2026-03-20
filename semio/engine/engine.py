@@ -1,5 +1,5 @@
 # region Header
-# [👤semio📚engine💻engine](semiorepo://p/u/semio/b/l/engine/f/engine.py)
+# [👤semio📚engine💻engine](repo://p/u/semio/b/l/engine/f/engine.py)
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -17,7 +17,7 @@
 # endregion Header
 
 # region Imports
-# [👤semio📚engine💻engine🔖imports](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Imports)
+# [👤semio📚engine💻engine🔖imports](repo://p/u/semio/b/l/engine/f/engine.py/s/Imports)
 # Imports MUST include all dependencies for store, assistant, GraphQL, REST, MCP, and engine modules.
 from __future__ import annotations
 
@@ -177,7 +177,7 @@ from semio import (
 # endregion Imports
 
 # region Store
-# [👤semio📚engine💻engine🔖store](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store)
+# [👤semio📚engine💻engine🔖store](repo://p/u/semio/b/l/engine/f/engine.py/s/Store)
 # Store MUST provide the data access layer for kit operations via code-based routing.
 
 codeGrammar = (
@@ -195,7 +195,7 @@ codeParser = lark.Lark(codeGrammar, start="code")
 
 class OperationKind(enum.Enum):
     """The kind of a store operation.
-    [👤semio📚engine💻engine🔖store🛠️operationkind](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/OperationKind)
+    [👤semio📚engine💻engine🔖store🛠️operationkind](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/OperationKind)
     """
 
     KITS = "kits"
@@ -209,7 +209,7 @@ class OperationKind(enum.Enum):
 class Operation(typing.TypedDict, total=False):
     """Typed operation dict produced by OperationBuilder from parsed code grammar.
     `kind` is always present. Other fields depend on the kind.
-    [👤semio📚engine💻engine🔖store🛠️operation](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Operation)
+    [👤semio📚engine💻engine🔖store🛠️operation](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Operation)
     """
 
     kind: typing.Required[OperationKind]
@@ -223,7 +223,7 @@ class Operation(typing.TypedDict, total=False):
 
 class TransactionChange(typing.TypedDict):
     """A single recorded change within a transaction.
-    [👤semio📚engine💻engine🔖store🛠️transactionchange](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/TransactionChange)
+    [👤semio📚engine💻engine🔖store🛠️transactionchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/TransactionChange)
     """
 
     kind: str
@@ -235,7 +235,7 @@ class TransactionChange(typing.TypedDict):
 
 class Transaction(typing.TypedDict):
     """An active MCP session transaction tracking kit changes for rollback.
-    [👤semio📚engine💻engine🔖store🛠️transaction](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Transaction)
+    [👤semio📚engine💻engine🔖store🛠️transaction](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Transaction)
     """
 
     active: bool
@@ -246,7 +246,7 @@ class Transaction(typing.TypedDict):
 class OperationBuilder(lark.Transformer):
     """Lark transformer that builds operation dicts from parsed code grammar trees.
     Callers MUST pass a valid parse tree from codeParser.
-    [👤semio📚engine💻engine🔖store🛠️operationbuilder](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/OperationBuilder)
+    [👤semio📚engine💻engine🔖store🛠️operationbuilder](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/OperationBuilder)
     """
 
     def code(self, children) -> Operation:
@@ -282,7 +282,7 @@ class OperationBuilder(lark.Transformer):
 class StoreKind(enum.Enum):
     """🏪The kind of the store.
     Callers MUST use one of the defined store kinds when selecting a backend.
-    [👤semio📚engine💻engine🔖store🛠️storekind](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/StoreKind)
+    [👤semio📚engine💻engine🔖store🛠️storekind](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/StoreKind)
     """
 
     DATABASE = "database"
@@ -293,7 +293,7 @@ class StoreKind(enum.Enum):
 class CommandKind(enum.Enum):
     """🔧 The kind of the command.
     Callers MUST use a valid CommandKind when calling Store.execute.
-    [👤semio📚engine💻engine🔖store🛠️commandkind](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/CommandKind)
+    [👤semio📚engine💻engine🔖store🛠️commandkind](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/CommandKind)
     """
 
     QUERY = "query"
@@ -305,7 +305,7 @@ class CommandKind(enum.Enum):
 class Store(abc.ABC):
     """Abstract base class for all store backends.
     Subclasses MUST implement initialize, get, put, update, and delete methods.
-    [👤semio📚engine💻engine🔖store🛠️store](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Store)
+    [👤semio📚engine💻engine🔖store🛠️store](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/Store)
     """
 
     uri: str
@@ -358,7 +358,7 @@ class DatabaseStore(Store, abc.ABC):
     """Abstract database-backed store using raw SQL via sqlite3.
     Stores kit data as JSON blobs. No ORM.
     Subclasses MUST implement the fromUri classmethod to construct from a URI.
-    [👤semio📚engine💻engine🔖store🛠️databasestore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/DatabaseStore)
+    [👤semio📚engine💻engine🔖store🛠️databasestore](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/DatabaseStore)
     """
 
     db_path: str
@@ -509,7 +509,7 @@ class DatabaseStore(Store, abc.ABC):
     def apply_diff(self, kitUri: str, diff: dict) -> dict:
         """Apply a kit diff directly via SQL. Loads kit JSON, applies diff, stores back.
         Returns the updated kit dict.
-        [👤semio📚engine💻engine🔖store🛠️applydiff](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/apply_diff)
+        [👤semio📚engine💻engine🔖store🛠️applydiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/apply_diff)
         """
         with self._connect() as conn:
             cursor = conn.execute("SELECT data FROM kit WHERE uri = ?", (kitUri,))
@@ -528,7 +528,7 @@ class DatabaseStore(Store, abc.ABC):
 class SSLMode(enum.Enum):
     """🔒 The security level of the session
     Callers MUST select the appropriate SSL mode for the target database security policy.
-    [👤semio📚engine💻engine🔖store🛠️sslmode](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/SSLMode)
+    [👤semio📚engine💻engine🔖store🛠️sslmode](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/SSLMode)
     """
 
     DISABLE = "disable"
@@ -542,7 +542,7 @@ class SSLMode(enum.Enum):
 def cacheDir(remoteUri: str) -> str:
     """Returns the local cache directory path for a remote kit URI.
     Callers MUST provide a valid remote URI string.
-    [👤semio📚engine💻engine🔖store🛠️cachedir](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/cacheDir)
+    [👤semio📚engine💻engine🔖store🛠️cachedir](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/cacheDir)
     """
     cacheDir = os.path.expanduser("~/.semio/cache")
     encodedUri = encode(remoteUri)
@@ -552,7 +552,7 @@ def cacheDir(remoteUri: str) -> str:
 def cache(remoteUri: str) -> str:
     """📦Cache a remote kit and delete the existing cache if it was already cached.
     Callers MUST provide a URI starting with http and ending with .zip.
-    [👤semio📚engine💻engine🔖store🛠️cache](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/cache)
+    [👤semio📚engine💻engine🔖store🛠️cache](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/cache)
     """
     if not (remoteUri.startswith("http") and remoteUri.endswith(".zip")):
         raise OnlyRemoteKitsCanBeCached(remoteUri)
@@ -591,7 +591,7 @@ def cache(remoteUri: str) -> str:
 class SqliteStore(DatabaseStore):
     """SQLite-backed store that persists kit data as JSON in a local .semio database file.
     Callers MUST use fromUri to construct instances with a valid local path.
-    [👤semio📚engine💻engine🔖store🛠️sqlitestore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/SqliteStore)
+    [👤semio📚engine💻engine🔖store🛠️sqlitestore](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/SqliteStore)
     """
 
     kit_dir: pathlib.Path
@@ -635,7 +635,7 @@ class SqliteStore(DatabaseStore):
 class PostgresStore(DatabaseStore):
     """PostgreSQL-backed store for remote database connections.
     Callers MUST NOT use this class until PostgreSQL support is implemented.
-    [👤semio📚engine💻engine🔖store🛠️postgresstore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/PostgresStore)
+    [👤semio📚engine💻engine🔖store🛠️postgresstore](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/PostgresStore)
     """
 
     @classmethod
@@ -647,7 +647,7 @@ class PostgresStore(DatabaseStore):
 
 
 # region Auth
-# [👤semio📚engine💻engine🔖store🔖auth](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth)
+# [👤semio📚engine💻engine🔖store🔖auth](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth)
 # Auth MUST provide credential management for remote server authentication using Bearer tokens.
 
 AUTH_FILE = os.path.join(os.path.expanduser(USER_FOLDER), "auth.json")
@@ -656,7 +656,7 @@ AUTH_FILE = os.path.join(os.path.expanduser(USER_FOLDER), "auth.json")
 def _load_auth() -> dict:
     """Load auth credentials from the auth file.
     Returns dict mapping serverUrl -> {token, email}.
-    [👤semio📚engine💻engine🔖store🔖auth🛠️loadauth](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/_load_auth)
+    [👤semio📚engine💻engine🔖store🔖auth🛠️loadauth](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/_load_auth)
     """
     if os.path.exists(AUTH_FILE):
         with open(AUTH_FILE, "r", encoding="utf-8") as f:
@@ -667,7 +667,7 @@ def _load_auth() -> dict:
 def _save_auth(auth: dict) -> None:
     """Save auth credentials to the auth file.
     Callers MUST provide a dict mapping serverUrl -> {token, email}.
-    [👤semio📚engine💻engine🔖store🔖auth🛠️saveauth](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/_save_auth)
+    [👤semio📚engine💻engine🔖store🔖auth🛠️saveauth](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/_save_auth)
     """
     os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
     with open(AUTH_FILE, "w", encoding="utf-8") as f:
@@ -678,7 +678,7 @@ def login(serverUrl: str, email: str, password: str) -> dict:
     """🔐 Login to a remote server and store the auth token.
     Callers MUST provide a valid server URL, email and password.
     Returns {ok, serverUrl, email, token} on success.
-    [👤semio📚engine💻engine🔖store🔖auth🛠️login](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/login)
+    [👤semio📚engine💻engine🔖store🔖auth🛠️login](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/login)
     """
     serverUrl = serverUrl.rstrip("/")
     try:
@@ -708,7 +708,7 @@ def logout(serverUrl: str) -> dict:
     """🔓 Logout from a remote server and remove the stored token.
     Callers MUST provide a valid server URL.
     Returns {ok, serverUrl} on success.
-    [👤semio📚engine💻engine🔖store🔖auth🛠️logout](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/logout)
+    [👤semio📚engine💻engine🔖store🔖auth🛠️logout](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/logout)
     """
     serverUrl = serverUrl.rstrip("/")
     auth = _load_auth()
@@ -720,7 +720,7 @@ def logout(serverUrl: str) -> dict:
 def getAuthToken(serverUrl: str) -> str:
     """🔑 Get the stored auth token for a server.
     Raises AuthTokenNotFound if no token is stored.
-    [👤semio📚engine💻engine🔖store🔖auth🛠️getauthtoken](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/getAuthToken)
+    [👤semio📚engine💻engine🔖store🔖auth🛠️getauthtoken](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/getAuthToken)
     """
     serverUrl = serverUrl.rstrip("/")
     auth = _load_auth()
@@ -733,7 +733,7 @@ def getAuthToken(serverUrl: str) -> str:
 def getAuthStatus(serverUrl: str) -> dict:
     """📋 Get the auth status for a server.
     Returns {authenticated, serverUrl, email} without raising.
-    [👤semio📚engine💻engine🔖store🔖auth🛠️getauthstatus](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/getAuthStatus)
+    [👤semio📚engine💻engine🔖store🔖auth🛠️getauthstatus](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/s/Auth/d/i/getAuthStatus)
     """
     serverUrl = serverUrl.rstrip("/")
     auth = _load_auth()
@@ -749,7 +749,7 @@ def getAuthStatus(serverUrl: str) -> dict:
 class RemoteStore(Store):
     """REST-backed store that proxies kit operations to a remote semio server.
     Callers MUST call login() first to authenticate with the remote server.
-    [👤semio📚engine💻engine🔖store🛠️remotestore](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/RemoteStore)
+    [👤semio📚engine💻engine🔖store🛠️remotestore](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/RemoteStore)
     """
 
     serverUrl: str
@@ -897,7 +897,7 @@ def StoreFactory(uri: str) -> Store:
     """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created.
     Callers MUST provide either an absolute local path, an http URL ending in .zip (cached), or a remote server URI.
     Remote server URIs have the format: http(s)://server/api/kits/encodedKitUri
-    [👤semio📚engine💻engine🔖store🛠️storefactory](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/StoreFactory)
+    [👤semio📚engine💻engine🔖store🛠️storefactory](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/StoreFactory)
     """
     if os.path.isabs(uri):
         return SqliteStore.fromUri(uri)
@@ -916,7 +916,7 @@ def StoreFactory(uri: str) -> Store:
 def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
     """Parses a code string into a store instance and operation dict.
     Callers MUST provide a valid code string matching the code grammar.
-    [👤semio📚engine💻engine🔖store🛠️storeandoperationfromcode](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/storeAndOperationFromCode)
+    [👤semio📚engine💻engine🔖store🛠️storeandoperationfromcode](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/storeAndOperationFromCode)
     """
     codeTree = codeParser.parse(code)
     operation = OperationBuilder().transform(codeTree)
@@ -927,7 +927,7 @@ def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
 def get(code: str, cache=False) -> typing.Any:
     """🔍 Get an entity from the store.
     Callers MUST provide a valid code string with an encoded kit URI.
-    [👤semio📚engine💻engine🔖store🛠️get](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/get)
+    [👤semio📚engine💻engine🔖store🛠️get](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/get)
     """
     store, operation = storeAndOperationFromCode(code)
     return store.get(operation)
@@ -936,7 +936,7 @@ def get(code: str, cache=False) -> typing.Any:
 def put(code: str, input: str) -> typing.Any:
     """📥 Put an entity in the store.
     Callers MUST provide a valid code string and matching input data.
-    [👤semio📚engine💻engine🔖store🛠️put](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/put)
+    [👤semio📚engine💻engine🔖store🛠️put](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/put)
     """
     store, operation = storeAndOperationFromCode(code)
     return store.put(operation, input)
@@ -945,7 +945,7 @@ def put(code: str, input: str) -> typing.Any:
 def delete(code: str) -> typing.Any:
     """🗑 Delete an entity from the store.
     Callers MUST provide a valid code string referencing an existing entity.
-    [👤semio📚engine💻engine🔖store🛠️delete](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/delete)
+    [👤semio📚engine💻engine🔖store🛠️delete](repo://p/u/semio/b/l/engine/f/engine.py/s/Store/d/i/delete)
     """
     store, operation = storeAndOperationFromCode(code)
     return store.delete(operation)
@@ -954,14 +954,14 @@ def delete(code: str) -> typing.Any:
 # endregion Store
 
 # region Assistant
-# [👤semio📚engine💻engine🔖assistant](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant)
+# [👤semio📚engine💻engine🔖assistant](repo://p/u/semio/b/l/engine/f/engine.py/s/Assistant)
 # Assistant MUST provide AI-powered design prediction using OpenAI structured outputs.
 
 
 def encodeForPrompt(context: str):
     """Sanitizes a context string for use in AI prompts by replacing delimiters.
     Callers MUST pass a string that will be embedded in a prompt template.
-    [👤semio📚engine💻engine🔖assistant🛠️encodeforprompt](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/encodeForPrompt)
+    [👤semio📚engine💻engine🔖assistant🛠️encodeforprompt](repo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/encodeForPrompt)
     """
     return context.replace(";", ",").replace("\n", " ")
 
@@ -969,7 +969,7 @@ def encodeForPrompt(context: str):
 def replaceDefault(context: str, default: str):
     """Substitutes an empty context string with the provided default value.
     Callers MUST provide a non-None default string.
-    [👤semio📚engine💻engine🔖assistant🛠️replacedefault](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/replaceDefault)
+    [👤semio📚engine💻engine🔖assistant🛠️replacedefault](repo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/replaceDefault)
     """
     if context == "":
         return context.replace("", default)
@@ -979,7 +979,7 @@ def replaceDefault(context: str, default: str):
 def encodeType(type: TypeContext):
     """Encodes a TypeContext for prompt rendering by replacing empty values with defaults.
     Callers MUST provide a valid TypeContext with populated connectors.
-    [👤semio📚engine💻engine🔖assistant🛠️encodetype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/encodeType)
+    [👤semio📚engine💻engine🔖assistant🛠️encodetype](repo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/encodeType)
     """
     typeClone = type.model_copy(deep=True)
     typeClone.variant = replaceDefault(typeClone.variant, "DEFAULT")
@@ -993,7 +993,7 @@ def encodeType(type: TypeContext):
 def decodeDesign(design: dict):
     """Decodes a raw AI response dict into a DesignPrediction model.
     Callers MUST provide a dict with pieces and connections arrays.
-    [👤semio📚engine💻engine🔖assistant🛠️decodedesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/decodeDesign)
+    [👤semio📚engine💻engine🔖assistant🛠️decodedesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/decodeDesign)
     """
     decodedDesign = {
         "pieces": [
@@ -1043,7 +1043,7 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     """🩺 Heal a design by replacing missing type variants with the first variant.
     TODO: Replace prototype healing with one that makes more for every single property.
     Callers MUST provide a design with pieces referencing types available in the types list.
-    [👤semio📚engine💻engine🔖assistant🛠️healdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/healDesign)
+    [👤semio📚engine💻engine🔖assistant🛠️healdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/healDesign)
     """
     designClone = design.model_copy(deep=True)
     typeD = {}
@@ -1273,7 +1273,7 @@ designResponseFormat = json.loads(
 def predictDesign(description: str, types: list[TypeContext], design: DesignInput | None = None) -> DesignPrediction:
     """🔮 Predict a design based on a description, the types that should be used and an optional base design.
     Callers MUST ensure the openaiClient is initialized before calling.
-    [👤semio📚engine💻engine🔖assistant🛠️predictdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/predictDesign)
+    [👤semio📚engine💻engine🔖assistant🛠️predictdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Assistant/d/i/predictDesign)
     """
     if openaiClient is None:
         raise FeatureNotYetSupported("OpenAI client not available")
@@ -1368,7 +1368,7 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
 # endregion Assistant
 
 # region Graphql
-# [👤semio📚engine💻engine🔖graphql](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Graphql)
+# [👤semio📚engine💻engine🔖graphql](repo://p/u/semio/b/l/engine/f/engine.py/s/Graphql)
 # Graphql MUST map semio domain types to Graphene schema nodes for query and mutation.
 
 GRAPHQLTYPES = {
@@ -1438,7 +1438,7 @@ GRAPHQLTYPES = {
 class Query(graphene.ObjectType):
     """GraphQL root query type exposing kit retrieval by URI.
     Callers MUST provide a valid URI when resolving kit queries.
-    [👤semio📚engine💻engine🔖graphql🛠️query](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Graphql/d/i/Query)
+    [👤semio📚engine💻engine🔖graphql🛠️query](repo://p/u/semio/b/l/engine/f/engine.py/s/Graphql/d/i/Query)
     """
 
     node = RelayNode.Field()
@@ -1451,7 +1451,7 @@ class Query(graphene.ObjectType):
 class Mutation(graphene.ObjectType):
     """GraphQL root mutation type exposing kit creation.
     Callers MUST provide a valid KitInput when creating kits.
-    [👤semio📚engine💻engine🔖graphql🛠️mutation](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Graphql/d/i/Mutation)
+    [👤semio📚engine💻engine🔖graphql🛠️mutation](repo://p/u/semio/b/l/engine/f/engine.py/s/Graphql/d/i/Mutation)
     """
 
     createKit = graphene.Field(KitNode, kit=KitInputNode(required=True))
@@ -1465,7 +1465,7 @@ graphqlSchema = graphene.Schema(
 # endregion Graphql
 
 # region Rest
-# [👤semio📚engine💻engine🔖rest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest)
+# [👤semio📚engine💻engine🔖rest](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest)
 # Rest MUST expose kit, type, design, and assistant endpoints via FastAPI.
 
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
@@ -1478,7 +1478,7 @@ async def kit(
 ) -> KitOutput:
     """Retrieves a kit by its encoded URI path.
     Callers MUST provide a valid encoded kit URI in the URL path.
-    [👤semio📚engine💻engine🔖rest🛠️kit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/kit)
+    [👤semio📚engine💻engine🔖rest🛠️kit](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/kit)
     """
     try:
         return get(request.url.path.removeprefix("/api/kits/"))
@@ -1499,7 +1499,7 @@ async def create_kit(
 ) -> None:
     """Creates a new kit at the specified encoded URI.
     Callers MUST provide a valid KitInput body and encoded URI.
-    [👤semio📚engine💻engine🔖rest🛠️createkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/create_kit)
+    [👤semio📚engine💻engine🔖rest🛠️createkit](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/create_kit)
     """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
@@ -1520,7 +1520,7 @@ async def delete_kit(
 ) -> None:
     """Deletes an existing kit at the specified encoded URI.
     Callers MUST provide a valid encoded URI for an existing kit.
-    [👤semio📚engine💻engine🔖rest🛠️deletekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_kit)
+    [👤semio📚engine💻engine🔖rest🛠️deletekit](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_kit)
     """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
@@ -1543,7 +1543,7 @@ async def put_type(
 ) -> None:
     """Creates or replaces a type in a kit by encoded URI and type identifier.
     Callers MUST provide a valid TypeInput body with matching name and variant.
-    [👤semio📚engine💻engine🔖rest🛠️puttype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/put_type)
+    [👤semio📚engine💻engine🔖rest🛠️puttype](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/put_type)
     """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
@@ -1565,7 +1565,7 @@ async def delete_type(
 ) -> None:
     """Deletes a type from a kit by encoded URI and type identifier.
     Callers MUST provide a valid encoded URI and type name with variant.
-    [👤semio📚engine💻engine🔖rest🛠️deletetype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_type)
+    [👤semio📚engine💻engine🔖rest🛠️deletetype](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_type)
     """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
@@ -1588,7 +1588,7 @@ async def put_design(
 ) -> None:
     """Creates or replaces a design in a kit by encoded URI and design identifier.
     Callers MUST provide a valid DesignInput body with matching name, variant, and view.
-    [👤semio📚engine💻engine🔖rest🛠️putdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/put_design)
+    [👤semio📚engine💻engine🔖rest🛠️putdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/put_design)
     """
     try:
         put(request.url.path.removeprefix("/api/kits/"), input)
@@ -1610,7 +1610,7 @@ async def delete_design(
 ) -> None:
     """Deletes a design from a kit by encoded URI and design identifier.
     Callers MUST provide a valid encoded URI and design name with variant and view.
-    [👤semio📚engine💻engine🔖rest🛠️deletedesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_design)
+    [👤semio📚engine💻engine🔖rest🛠️deletedesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/delete_design)
     """
     try:
         delete(request.url.path.removeprefix("/api/kits/"))
@@ -1633,7 +1633,7 @@ async def predict_design(
 ) -> DesignPrediction:
     """Predicts a design via the assistant based on a description and available types.
     Callers MUST provide a description and at least one TypeContext in the request body.
-    [👤semio📚engine💻engine🔖rest🛠️predictdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/predict_design)
+    [👤semio📚engine💻engine🔖rest🛠️predictdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/predict_design)
     """
     try:
         return predictDesign(description, types, design)
@@ -1650,7 +1650,7 @@ async def predict_design(
 async def prepare_kit(request: fastapi.Request, kit: KitInput = fastapi.Body(...)) -> KitContext:
     """Validates and returns a KitContext from the provided KitInput body.
     Callers MUST provide a valid KitInput in the request body.
-    [👤semio📚engine💻engine🔖rest🛠️preparekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/prepare_kit)
+    [👤semio📚engine💻engine🔖rest🛠️preparekit](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/prepare_kit)
     """
     try:
         return kit
@@ -1666,7 +1666,7 @@ async def prepare_kit(request: fastapi.Request, kit: KitInput = fastapi.Body(...
 class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     """JSON schema generator that strips Context suffixes from type references.
     Callers MUST use this generator when exporting context model schemas.
-    [👤semio📚engine💻engine🔖rest🛠️contextgeneratejsonschema](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/ContextGenerateJsonSchema)
+    [👤semio📚engine💻engine🔖rest🛠️contextgeneratejsonschema](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/ContextGenerateJsonSchema)
     """
 
     def generate(self, schema, mode="validation"):
@@ -1680,7 +1680,7 @@ class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
 class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     """JSON schema generator that strips Output suffixes from type references.
     Callers MUST use this generator when exporting output model schemas.
-    [👤semio📚engine💻engine🔖rest🛠️outputgeneratejsonschema](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/OutputGenerateJsonSchema)
+    [👤semio📚engine💻engine🔖rest🛠️outputgeneratejsonschema](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/OutputGenerateJsonSchema)
     """
 
     def generate(self, schema, mode="validation"):
@@ -1694,7 +1694,7 @@ class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
 class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     """JSON schema generator that strips Prediction suffixes from type references.
     Callers MUST use this generator when exporting prediction model schemas.
-    [👤semio📚engine💻engine🔖rest🛠️predictiongeneratejsonschema](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/PredictionGenerateJsonSchema)
+    [👤semio📚engine💻engine🔖rest🛠️predictiongeneratejsonschema](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/PredictionGenerateJsonSchema)
     """
 
     def generate(self, schema, mode="validation"):
@@ -1708,7 +1708,7 @@ class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
 def custom_openapi():
     """Generates a custom OpenAPI schema with /api path prefix and cleaned type names.
     Callers MUST NOT call this directly; it is assigned to rest.openapi.
-    [👤semio📚engine💻engine🔖rest🛠️customopenapi](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/custom_openapi)
+    [👤semio📚engine💻engine🔖rest🛠️customopenapi](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/custom_openapi)
     """
     if rest.openapi_schema:
         return rest.openapi_schema
@@ -1735,13 +1735,13 @@ rest.openapi = custom_openapi
 
 
 # region Auth Endpoints
-# [👤semio📚engine💻engine🔖rest🔖authendpoints](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints)
+# [👤semio📚engine💻engine🔖rest🔖authendpoints](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints)
 # Auth endpoints MUST expose login, logout and status for remote server authentication.
 
 
 class LoginRequest(pydantic.BaseModel):
     """Login request body.
-    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️loginrequest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LoginRequest)
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️loginrequest](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LoginRequest)
     """
 
     serverUrl: str
@@ -1751,7 +1751,7 @@ class LoginRequest(pydantic.BaseModel):
 
 class LoginResponse(pydantic.BaseModel):
     """Login response body.
-    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️loginresponse](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LoginResponse)
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️loginresponse](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LoginResponse)
     """
 
     ok: bool
@@ -1762,7 +1762,7 @@ class LoginResponse(pydantic.BaseModel):
 
 class LogoutRequest(pydantic.BaseModel):
     """Logout request body.
-    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️logoutrequest](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LogoutRequest)
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️logoutrequest](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/LogoutRequest)
     """
 
     serverUrl: str
@@ -1770,7 +1770,7 @@ class LogoutRequest(pydantic.BaseModel):
 
 class AuthStatusResponse(pydantic.BaseModel):
     """Auth status response body.
-    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️authstatusresponse](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/AuthStatusResponse)
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️authstatusresponse](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/AuthStatusResponse)
     """
 
     authenticated: bool
@@ -1782,7 +1782,7 @@ class AuthStatusResponse(pydantic.BaseModel):
 async def rest_login(request: LoginRequest) -> LoginResponse:
     """Login to a remote server and store the auth token.
     Callers MUST provide serverUrl, email and password.
-    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restlogin](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_login)
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restlogin](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_login)
     """
     try:
         result = login(request.serverUrl, request.email, request.password)
@@ -1797,7 +1797,7 @@ async def rest_login(request: LoginRequest) -> LoginResponse:
 async def rest_logout(request: LogoutRequest) -> dict:
     """Logout from a remote server and remove the stored token.
     Callers MUST provide serverUrl.
-    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restlogout](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_logout)
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restlogout](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_logout)
     """
     try:
         return logout(request.serverUrl)
@@ -1809,7 +1809,7 @@ async def rest_logout(request: LogoutRequest) -> dict:
 async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
     """Get the auth status for a remote server.
     Callers MUST provide serverUrl as a query parameter.
-    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restauthstatus](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_auth_status)
+    [👤semio📚engine💻engine🔖rest🔖authendpoints🛠️restauthstatus](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/s/Auth%20Endpoints/d/i/rest_auth_status)
     """
     try:
         result = getAuthStatus(serverUrl)
@@ -1823,7 +1823,7 @@ async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
 # endregion Rest
 
 # region Mcp
-# [👤semio📚engine💻engine🔖mcp](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp)
+# [👤semio📚engine💻engine🔖mcp](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp)
 # Mcp MUST expose stateful kit operations via Model Context Protocol.
 # Call start_working_in_local_kit(path) first; then use start_working_in_design/start_working_in_type to scope further.
 
@@ -1842,7 +1842,7 @@ _mcp_session_transaction_rollback: set[int] = set()
 def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
     """Load kit dict from a remote server via REST API.
     Callers MUST have called login() first to authenticate with the server.
-    [👤semio📚engine💻engine🔖mcp🛠️loadkitfromremote](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_remote)
+    [👤semio📚engine💻engine🔖mcp🛠️loadkitfromremote](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_remote)
     """
     token = getAuthToken(serverUrl)
     encodedKitUri = encode(kitUri)
@@ -1866,7 +1866,7 @@ def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
 
 def _load_kit_from_path(path: str) -> dict:
     """Load kit dict from path (JSON file or folder with .semio/kit.sqlite3 or kit JSON).
-    [👤semio📚engine💻engine🔖mcp🛠️loadkitfrompath](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_path)
+    [👤semio📚engine💻engine🔖mcp🛠️loadkitfrompath](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_path)
     """
     p = pathlib.Path(path).resolve()
     if p.is_file() and p.suffix == ".json":
@@ -2073,7 +2073,7 @@ def _rollback_session_transaction(sid: int):
 def start_working_in_local_kit(path: str, ctx: Context) -> dict:
     """Start working in a local kit for this MCP session. MUST be called first.
     Path: absolute path to kit folder (with .semio/kit.sqlite3) or JSON file, or folder containing kit_metabolism.json.
-    [👤semio📚engine💻engine🔖mcp🛠️startworkinginlocalkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_local_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️startworkinginlocalkit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_local_kit)
     """
     try:
         kit = _load_kit_from_path(path)
@@ -2115,7 +2115,7 @@ def start_new_kit(name: str, version: str, ctx: Context) -> dict:
 def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> dict:
     """Start working in a remote kit for this MCP session. MUST be called first.
     Requires prior login() to the server. Fetches the kit from the remote server.
-    [👤semio📚engine💻engine🔖mcp🛠️startworkinginremotekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_remote_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️startworkinginremotekit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_remote_kit)
     """
     try:
         kit = _load_kit_from_remote(serverUrl, kitUri)
@@ -2131,13 +2131,13 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> di
 
 
 # region MCP Auth Tools
-# [👤semio📚engine💻engine🔖mcp🔖mcpauthtools](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools)
+# [👤semio📚engine💻engine🔖mcp🔖mcpauthtools](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools)
 # MCP Auth Tools MUST expose login, logout and status for remote server authentication.
 
 
 def mcp_login(serverUrl: str, email: str, password: str) -> dict:
     """🔐 Login to a remote semio server. Stores the auth token for subsequent remote kit operations.
-    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogin](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_login)
+    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogin](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_login)
     """
     try:
         return login(serverUrl, email, password)
@@ -2147,7 +2147,7 @@ def mcp_login(serverUrl: str, email: str, password: str) -> dict:
 
 def mcp_logout(serverUrl: str) -> dict:
     """🔓 Logout from a remote semio server. Removes the stored token.
-    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogout](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_logout)
+    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogout](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_logout)
     """
     try:
         return logout(serverUrl)
@@ -2157,7 +2157,7 @@ def mcp_logout(serverUrl: str) -> dict:
 
 def mcp_auth_status(serverUrl: str) -> dict:
     """📋 Get the auth status for a remote semio server.
-    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcpauthstatus](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_auth_status)
+    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcpauthstatus](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_auth_status)
     """
     try:
         return getAuthStatus(serverUrl)
@@ -2171,7 +2171,7 @@ def mcp_auth_status(serverUrl: str) -> dict:
 def validate_kit(kit: dict) -> dict:
     """Validate a kit and return any validation problems.
     Callers MUST provide a dict matching the Kit schema.
-    [👤semio📚engine💻engine🔖mcp🛠️validatekit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/validate_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️validatekit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/validate_kit)
     """
     try:
         result = validateKitDict(kit)
@@ -2183,7 +2183,7 @@ def validate_kit(kit: dict) -> dict:
 def flatten_design(kit: dict, design_guid: str) -> dict:
     """Flatten a design by computing absolute planes for all pieces.
     Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️flattendesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/flatten_design)
+    [👤semio📚engine💻engine🔖mcp🛠️flattendesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/flatten_design)
     """
     try:
         return flattenDesignDict(kit, design_guid)
@@ -2194,7 +2194,7 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
 def get_kit_diff(before: dict, after: dict) -> dict:
     """Get the diff between two kit states.
     Callers MUST provide two valid kit dicts for comparison.
-    [👤semio📚engine💻engine🔖mcp🛠️getkitdiff](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_diff)
+    [👤semio📚engine💻engine🔖mcp🛠️getkitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_diff)
     """
     try:
         return getKitDiffDict(before, after)
@@ -2205,7 +2205,7 @@ def get_kit_diff(before: dict, after: dict) -> dict:
 def apply_kit_diff(base: dict, diff: dict) -> dict:
     """Apply a diff to a kit.
     Callers MUST provide a valid base kit dict and a compatible diff dict.
-    [👤semio📚engine💻engine🔖mcp🛠️applykitdiff](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/apply_kit_diff)
+    [👤semio📚engine💻engine🔖mcp🛠️applykitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/apply_kit_diff)
     """
     try:
         return applyKitDiffDict(base, diff)
@@ -2216,7 +2216,7 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
     """Get the inverse of a diff (for undo operations).
     Callers MUST provide the original kit dict and the applied diff dict.
-    [👤semio📚engine💻engine🔖mcp🛠️inversekitdiff](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/inverse_kit_diff)
+    [👤semio📚engine💻engine🔖mcp🛠️inversekitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/inverse_kit_diff)
     """
     try:
         return inverseKitDiffDict(original, applied_diff)
@@ -2227,7 +2227,7 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
 def get_kit_change(before: dict, after: dict) -> dict:
     """Get the change (forward and backward diffs) between two kit states for undo/redo.
     Callers MUST provide two valid kit dicts for comparison.
-    [👤semio📚engine💻engine🔖mcp🛠️getkitchange](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_change)
+    [👤semio📚engine💻engine🔖mcp🛠️getkitchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_change)
     """
     try:
         return changeToDict(getKitChange(before, after))
@@ -2238,7 +2238,7 @@ def get_kit_change(before: dict, after: dict) -> dict:
 def get_design_change(before: dict, after: dict) -> dict:
     """Get the change (forward and backward diffs) between two design states for undo/redo.
     Callers MUST provide two valid design dicts for comparison.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignchange](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_change)
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_change)
     """
     try:
         return changeToDict(getDesignChange(before, after))
@@ -2249,7 +2249,7 @@ def get_design_change(before: dict, after: dict) -> dict:
 def pieces_metadata(kit: dict, design_guid: str) -> dict:
     """Get metadata for all pieces in a design (plane, center, fixedPieceId, parentPieceId, depth).
     Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️piecesmetadata](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/pieces_metadata)
+    [👤semio📚engine💻engine🔖mcp🛠️piecesmetadata](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/pieces_metadata)
     """
     try:
         return piecesMetadataDict(kit, design_guid)
@@ -2260,7 +2260,7 @@ def pieces_metadata(kit: dict, design_guid: str) -> dict:
 def get_primitive_design(kit: dict, design_guid: str) -> dict:
     """Get the root/primitive design of a design family.
     Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getprimitivedesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_design)
+    [👤semio📚engine💻engine🔖mcp🛠️getprimitivedesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_design)
     """
     try:
         return getPrimitiveDesignDict(kit, design_guid)
@@ -2271,7 +2271,7 @@ def get_primitive_design(kit: dict, design_guid: str) -> dict:
 def get_design_family(kit: dict, design_guid: str) -> list:
     """Get all designs in a design family tree.
     Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignfamily](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_family)
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignfamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_family)
     """
     try:
         return getDesignFamilyDict(kit, design_guid)
@@ -2282,7 +2282,7 @@ def get_design_family(kit: dict, design_guid: str) -> list:
 def get_design_siblings(kit: dict, design_guid: str) -> list:
     """Get all sibling designs (same parent, excluding self).
     Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignsiblings](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_siblings)
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignsiblings](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_siblings)
     """
     try:
         return getDesignSiblingsDict(kit, design_guid)
@@ -2293,7 +2293,7 @@ def get_design_siblings(kit: dict, design_guid: str) -> list:
 def get_design_children(kit: dict, design_guid: str) -> list:
     """Get all direct children of a design.
     Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignchildren](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_children)
+    [👤semio📚engine💻engine🔖mcp🛠️getdesignchildren](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_children)
     """
     try:
         return getDesignChildrenDict(kit, design_guid)
@@ -2304,7 +2304,7 @@ def get_design_children(kit: dict, design_guid: str) -> list:
 def are_designs_in_same_family(kit: dict, design_guid_a: str, design_guid_b: str) -> dict:
     """Check if two designs belong to the same family.
     Callers MUST provide a valid kit dict and two existing design GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️aredesignsinsamefamily](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/are_designs_in_same_family)
+    [👤semio📚engine💻engine🔖mcp🛠️aredesignsinsamefamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/are_designs_in_same_family)
     """
     try:
         return {"result": areDesignsInSameFamilyDict(kit, design_guid_a, design_guid_b)}
@@ -2315,7 +2315,7 @@ def are_designs_in_same_family(kit: dict, design_guid_a: str, design_guid_b: str
 def can_use_design_as_piece(kit: dict, container_design_guid: str, piece_design_guid: str) -> dict:
     """Check if a design can be used as a piece in another design.
     Callers MUST provide a valid kit dict and two existing design GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️canusedesignaspiece](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/can_use_design_as_piece)
+    [👤semio📚engine💻engine🔖mcp🛠️canusedesignaspiece](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/can_use_design_as_piece)
     """
     try:
         return {"result": canUseDesignAsPieceDict(kit, container_design_guid, piece_design_guid)}
@@ -2326,7 +2326,7 @@ def can_use_design_as_piece(kit: dict, container_design_guid: str, piece_design_
 def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
     """Find pieces in a design that reference designs from the same family.
     Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️findsamefamilydesignpieces](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_same_family_design_pieces)
+    [👤semio📚engine💻engine🔖mcp🛠️findsamefamilydesignpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_same_family_design_pieces)
     """
     try:
         return findSameFamilyDesignPiecesDict(kit, design_guid)
@@ -2337,7 +2337,7 @@ def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
 def get_primitive_type(kit: dict, type_guid: str) -> dict:
     """Get the root/primitive type of a type family.
     Callers MUST provide a valid kit dict and an existing type GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getprimitivetype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_type)
+    [👤semio📚engine💻engine🔖mcp🛠️getprimitivetype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_type)
     """
     try:
         return getPrimitiveTypeDict(kit, type_guid)
@@ -2348,7 +2348,7 @@ def get_primitive_type(kit: dict, type_guid: str) -> dict:
 def get_type_family(kit: dict, type_guid: str) -> list:
     """Get all types in a type family tree.
     Callers MUST provide a valid kit dict and an existing type GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️gettypefamily](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_family)
+    [👤semio📚engine💻engine🔖mcp🛠️gettypefamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_family)
     """
     try:
         return getTypeFamilyDict(kit, type_guid)
@@ -2359,7 +2359,7 @@ def get_type_family(kit: dict, type_guid: str) -> list:
 def get_type_siblings(kit: dict, type_guid: str) -> list:
     """Get all sibling types (same parent, excluding self).
     Callers MUST provide a valid kit dict and an existing type GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️gettypesiblings](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_siblings)
+    [👤semio📚engine💻engine🔖mcp🛠️gettypesiblings](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_siblings)
     """
     try:
         return getTypeSiblingsDict(kit, type_guid)
@@ -2370,7 +2370,7 @@ def get_type_siblings(kit: dict, type_guid: str) -> list:
 def get_type_children(kit: dict, type_guid: str) -> list:
     """Get all direct children of a type.
     Callers MUST provide a valid kit dict and an existing type GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️gettypechildren](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_children)
+    [👤semio📚engine💻engine🔖mcp🛠️gettypechildren](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_children)
     """
     try:
         return getTypeChildrenDict(kit, type_guid)
@@ -2381,7 +2381,7 @@ def get_type_children(kit: dict, type_guid: str) -> list:
 def are_types_in_same_family(kit: dict, type_guid_a: str, type_guid_b: str) -> dict:
     """Check if two types belong to the same family.
     Callers MUST provide a valid kit dict and two existing type GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️aretypesinsamefamily](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/are_types_in_same_family)
+    [👤semio📚engine💻engine🔖mcp🛠️aretypesinsamefamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/are_types_in_same_family)
     """
     try:
         return {"result": areTypesInSameFamilyDict(kit, type_guid_a, type_guid_b)}
@@ -2392,7 +2392,7 @@ def are_types_in_same_family(kit: dict, type_guid_a: str, type_guid_b: str) -> d
 def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> dict:
     """Get the type of a piece in a design.
     Callers MUST provide a valid kit dict, design GUID, and piece GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️findpiecetypeindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_piece_type_in_design)
+    [👤semio📚engine💻engine🔖mcp🛠️findpiecetypeindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_piece_type_in_design)
     """
     try:
         return findPieceTypeInDesignDict(kit, design_guid, piece_guid)
@@ -2403,7 +2403,7 @@ def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> d
 def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_guid: str) -> list:
     """Get all connectors of a piece that are used in connections.
     Callers MUST provide a valid kit dict, design GUID, and piece GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️findusedconnectorsbypieceindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_used_connectors_by_piece_in_design)
+    [👤semio📚engine💻engine🔖mcp🛠️findusedconnectorsbypieceindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_used_connectors_by_piece_in_design)
     """
     try:
         return findUsedConnectorsByPieceInDesignDict(kit, design_guid, piece_guid)
@@ -2414,7 +2414,7 @@ def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_g
 def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piece_guid: str, variants: list[str] = None) -> list:
     """Find all types that can replace a piece while maintaining connection compatibility.
     Callers MUST provide a valid kit dict, design GUID, and piece GUID. Optionally filter by variant parent GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpieceindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_piece_in_design)
+    [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpieceindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_piece_in_design)
     """
     try:
         return findReplaceableTypesForPieceInDesignDict(kit, design_guid, piece_guid, variants)
@@ -2425,7 +2425,7 @@ def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piec
 def find_replaceable_types_for_pieces_in_design(kit: dict, design_guid: str, piece_guids: list[str], variants: list[str] = None) -> list:
     """Find types that can replace multiple pieces while maintaining all external connections.
     Callers MUST provide a valid kit dict, design GUID, and list of piece GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpiecesindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_pieces_in_design)
+    [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpiecesindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_pieces_in_design)
     """
     try:
         return findReplaceableTypesForPiecesInDesignDict(kit, design_guid, piece_guids, variants)
@@ -2437,7 +2437,7 @@ def create_clustered_design(original_design: dict, cluster_piece_ids: list[str],
     """Create a new design from a subset of pieces (cluster).
     Returns clusteredDesign and externalConnections.
     Callers MUST provide a valid design dict, list of piece GUIDs, and a name for the new design.
-    [👤semio📚engine💻engine🔖mcp🛠️createclustereddesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/create_clustered_design)
+    [👤semio📚engine💻engine🔖mcp🛠️createclustereddesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/create_clustered_design)
     """
     try:
         return createClusteredDesignDict(original_design, cluster_piece_ids, design_name)
@@ -2448,7 +2448,7 @@ def create_clustered_design(original_design: dict, cluster_piece_ids: list[str],
 def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[str], clustered_design: dict, external_connections: list[dict]) -> dict:
     """Get a DesignDiff that replaces clustered pieces with a design reference.
     Callers MUST provide the original design, cluster piece IDs, the new clustered design, and external connections.
-    [👤semio📚engine💻engine🔖mcp🛠️replaceclusterwithdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/replace_cluster_with_design)
+    [👤semio📚engine💻engine🔖mcp🛠️replaceclusterwithdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/replace_cluster_with_design)
     """
     try:
         return replaceClusterWithDesignDict(original_design, cluster_piece_ids, clustered_design, external_connections)
@@ -2459,7 +2459,7 @@ def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[s
 def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
     """Get clusterable groups of selected pieces.
     Callers MUST provide a valid design dict and list of selected piece GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️getclusterablegroups](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_clusterable_groups)
+    [👤semio📚engine💻engine🔖mcp🛠️getclusterablegroups](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_clusterable_groups)
     """
     try:
         return getClusterableGroupsDict(design, selected_piece_ids)
@@ -2470,7 +2470,7 @@ def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
 def expand_design_pieces(design: dict, kit: dict) -> dict:
     """Recursively expand design references by inlining their pieces and connections.
     Callers MUST provide a valid design dict and kit dict.
-    [👤semio📚engine💻engine🔖mcp🛠️expanddesignpieces](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/expand_design_pieces)
+    [👤semio📚engine💻engine🔖mcp🛠️expanddesignpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/expand_design_pieces)
     """
     try:
         return expandDesignPiecesDict(design, kit)
@@ -2481,7 +2481,7 @@ def expand_design_pieces(design: dict, kit: dict) -> dict:
 def find_attribute_value(entity: dict, name: str, default_value: str = None) -> dict:
     """Find an attribute value on an entity by key.
     Callers MUST provide an entity dict (kit, type, design, piece, etc.) and attribute key name.
-    [👤semio📚engine💻engine🔖mcp🛠️findattributevalue](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_attribute_value)
+    [👤semio📚engine💻engine🔖mcp🛠️findattributevalue](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_attribute_value)
     """
     try:
         sentinel = ... if default_value is None else default_value
@@ -2699,7 +2699,7 @@ def add_current_design_connection(
 def start_working_in_design(guid: str, ctx: Context) -> dict:
     """Start working in a design within the current kit.
     Callers MUST have called start_working_in_local_kit first. Selects the design by GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️startworkingindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_design)
+    [👤semio📚engine💻engine🔖mcp🛠️startworkingindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_design)
     """
     try:
         kit = _get_session_kit(ctx)
@@ -2715,7 +2715,7 @@ def start_working_in_design(guid: str, ctx: Context) -> dict:
 
 def _read_current_design(ctx: Context) -> dict:
     """Read the current design that was set via start_working_in_design.
-    [👤semio📚engine💻engine🔖mcp🛠️readcurrentdesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_design)
+    [👤semio📚engine💻engine🔖mcp🛠️readcurrentdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_design)
     """
     try:
         return _get_session_design(ctx)
@@ -2732,7 +2732,7 @@ def read_current_design(ctx: Context) -> dict:
 @mcp.tool()
 def finish_working_in_design(ctx: Context) -> dict:
     """Finish working in the current design. Clears the design from session state.
-    [👤semio📚engine💻engine🔖mcp🛠️finishworkingindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_design)
+    [👤semio📚engine💻engine🔖mcp🛠️finishworkingindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_design)
     """
     try:
         sid = _session_id(ctx)
@@ -2746,7 +2746,7 @@ def finish_working_in_design(ctx: Context) -> dict:
 def start_working_in_type(guid: str, ctx: Context) -> dict:
     """Start working in a type within the current kit.
     Callers MUST have called start_working_in_local_kit first. Selects the type by GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️startworkingintype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_type)
+    [👤semio📚engine💻engine🔖mcp🛠️startworkingintype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_type)
     """
     try:
         kit = _get_session_kit(ctx)
@@ -2762,7 +2762,7 @@ def start_working_in_type(guid: str, ctx: Context) -> dict:
 
 def _read_current_type(ctx: Context) -> dict:
     """Read the current type that was set via start_working_in_type.
-    [👤semio📚engine💻engine🔖mcp🛠️readcurrenttype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_type)
+    [👤semio📚engine💻engine🔖mcp🛠️readcurrenttype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_type)
     """
     try:
         return _get_session_type(ctx)
@@ -2779,7 +2779,7 @@ def read_current_type(ctx: Context) -> dict:
 @mcp.tool()
 def finish_working_in_type(ctx: Context) -> dict:
     """Finish working in the current type. Clears the type from session state.
-    [👤semio📚engine💻engine🔖mcp🛠️finishworkingintype](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_type)
+    [👤semio📚engine💻engine🔖mcp🛠️finishworkingintype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_type)
     """
     try:
         sid = _session_id(ctx)
@@ -2792,7 +2792,7 @@ def finish_working_in_type(ctx: Context) -> dict:
 @mcp.tool()
 def finish_working_in_kit(ctx: Context) -> dict:
     """Finish working in the current kit. Clears kit, design, type, mode and source from session state.
-    [👤semio📚engine💻engine🔖mcp🛠️finishworkinginkit](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_kit)
+    [👤semio📚engine💻engine🔖mcp🛠️finishworkinginkit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_kit)
     """
     try:
         sid = _session_id(ctx)
@@ -2873,7 +2873,7 @@ def sum_quality_in_design(design_guid: str, quality_guid: str, ctx: Context) -> 
     """Sum up the values of a quality across all pieces in a design.
     For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
     Callers MUST have called start_working_in_local_kit first.
-    [👤semio📚engine💻engine🔖mcp🛠️sumqualityindesign](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/sum_quality_in_design)
+    [👤semio📚engine💻engine🔖mcp🛠️sumqualityindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/sum_quality_in_design)
     """
     try:
         kit = _get_session_kit(ctx)
@@ -2885,7 +2885,7 @@ def sum_quality_in_design(design_guid: str, quality_guid: str, ctx: Context) -> 
 # endregion Mcp
 
 # region Engine
-# [👤semio📚engine💻engine🔖engine](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine)
+# [👤semio📚engine💻engine🔖engine](repo://p/u/semio/b/l/engine/f/engine.py/s/Engine)
 # Engine MUST mount REST, GraphQL, and MCP sub-applications and manage the server lifecycle.
 
 
@@ -2893,7 +2893,7 @@ def sum_quality_in_design(design_guid: str, quality_guid: str, ctx: Context) -> 
 async def engineLifespan(app):
     """Manages the MCP session lifecycle during engine startup and shutdown.
     Callers MUST use this as the lifespan parameter for the Starlette application.
-    [👤semio📚engine💻engine🔖engine🛠️enginelifespan](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/engineLifespan)
+    [👤semio📚engine💻engine🔖engine🛠️enginelifespan](repo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/engineLifespan)
     """
     async with mcp.session_manager.run():
         yield
@@ -2912,7 +2912,7 @@ engine.mount("/mcp", mcp.streamable_http_app())
 def generateSchemas():
     """Exports OpenAPI, JSON Schema, SQLite schema, and GraphQL schema files to disk.
     Callers MUST run this from the engine directory with write access to output paths.
-    [👤semio📚engine💻engine🔖engine🛠️generateschemas](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/generateSchemas)
+    [👤semio📚engine💻engine🔖engine🛠️generateschemas](repo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/generateSchemas)
     """
     if os.path.exists("temp"):
         for root, dirs, files in os.walk("temp", topdown=False):
@@ -2979,7 +2979,7 @@ def generateSchemas():
 def start_engine():
     """Starts the uvicorn server hosting the engine application.
     Callers MUST invoke this in a separate process to avoid blocking the UI.
-    [👤semio📚engine💻engine🔖engine🛠️startengine](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/start_engine)
+    [👤semio📚engine💻engine🔖engine🛠️startengine](repo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/start_engine)
     """
     # TODO: Make loguru work on extra uvicorn engine process.
     logging.basicConfig(level=logging.INFO)
@@ -2996,7 +2996,7 @@ def start_engine():
 def restart_engine():
     """Terminates the running engine process and starts a new one.
     Callers MUST ensure a PySide6 QApplication instance is running.
-    [👤semio📚engine💻engine🔖engine🛠️restartengine](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/restart_engine)
+    [👤semio📚engine💻engine🔖engine🛠️restartengine](repo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/restart_engine)
     """
     import PySide6.QtWidgets
 
@@ -3011,7 +3011,7 @@ def restart_engine():
 def run(dev_mode: bool | None = None):
     """Main entry point that starts the engine with optional dev mode and system tray UI.
     Callers MUST invoke this from the __main__ block or dev function.
-    [👤semio📚engine💻engine🔖engine🛠️run](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/run)
+    [👤semio📚engine💻engine🔖engine🛠️run](repo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/run)
     """
     logger.debug("Starting engine")
     multiprocessing.freeze_support()
@@ -3077,14 +3077,14 @@ def run(dev_mode: bool | None = None):
 def preDev():
     """Runs before dev()
     Callers MUST NOT add blocking operations in this hook.
-    [👤semio📚engine💻engine🔖engine🛠️predev](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/preDev)
+    [👤semio📚engine💻engine🔖engine🛠️predev](repo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/preDev)
     """
 
 
 def dev():
     """Starts the engine in development mode with debugging enabled.
     Callers MUST have debugpy available when using this entry point.
-    [👤semio📚engine💻engine🔖engine🛠️dev](semiorepo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/dev)
+    [👤semio📚engine💻engine🔖engine🛠️dev](repo://p/u/semio/b/l/engine/f/engine.py/s/Engine/d/i/dev)
     """
     run(dev_mode=True)
 

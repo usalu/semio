@@ -1,0 +1,13 @@
+{
+  "title": "Refine UI Component With Window Kinds and Golden Layout",
+  "status": "closed",
+  "description": "Refine UI component to use window kinds with golden-layout, move domain-neutral types",
+  "summary": "Refined the UI composite component. Apps now use UIWindowConfig with UIWindowKindDefinition entries rendered by golden-layout. Moved WindowKind enum, createDefaultLayout, parseWindowLayout, stringifyWindowLayout, deduplicateWindowLayout, UIWindowControl, UIWindowKindDefinition from sketchpad/shared.ts to elements/ui/elements.tsx. Sketchpad shared.ts now re-exports these from elements.tsx. UICanvas component dynamically imports golden-layout and registers each window kind. Updated storybook stories to use the new UIAppConfig with windowConfig.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/904"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪9f6a52d9e26f49629877aa5d18637bd1"
+  ]
+}

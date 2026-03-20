@@ -6,8 +6,8 @@ command = "npx"
 args = ["playwright", "run-test-mcp-server"]
 enabled = true
 
-[mcp_servers.semio-repo]
-command = "./semio-repo/cli/cli"
+[mcp_servers.repo]
+command = "./repo/cli/cli"
 args = ["mcp"]
 enabled = true
 
@@ -18,5 +18,5 @@ enabled = true
 
 [mcp_servers.coda]
 command = "uv"
-args = ["--directory", "semio-coda/py", "run", "coda.py", "--mcp-stdio"]
+args = ["--directory", "coda/py", "run", "coda.py", "--mcp-stdio"]
 enabled = true

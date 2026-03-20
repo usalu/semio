@@ -59,7 +59,7 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"
-    directory: "/semio-repo/cli"
+    directory: "/repo/cli"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"

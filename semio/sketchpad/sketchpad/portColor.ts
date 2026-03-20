@@ -18,7 +18,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Port Color
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color)
+// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color)
 // Assigns deterministic HSL color tones to ports based on compatibility groups.
 // MUST use a union-find structure to group compatible ports under a single color.
 
@@ -29,7 +29,7 @@ import { arePortsCompatible } from "@semio/js/semio";
  * Compatibility state of a port relative to the selected port.
  *
  * MUST be one of none, selected, compatible, or incompatible.
- * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️portcompatibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/PortCompatibilityState)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️portcompatibilitystate](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/PortCompatibilityState)
  **/
 export type PortCompatibilityState = "none" | "selected" | "compatible" | "incompatible";
 
@@ -37,7 +37,7 @@ export type PortCompatibilityState = "none" | "selected" | "compatible" | "incom
  * HSL color tones for rendering a port in the UI.
  *
  * MUST contain base, surface, surfaceStrong, border and text values.
- * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️porttone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/PortTone)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️porttone](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/PortTone)
  **/
 export type PortTone = {
   base: string;
@@ -58,7 +58,7 @@ export type PortTone = {
 /**
  * DEFAULT_PORT_GUID holds the data fields for a DEFAULT_PORT_GUID record.
  **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨defaultportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/DEFAULT_PORT_GUID)
+// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨defaultportguid](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/DEFAULT_PORT_GUID)
 const DEFAULT_PORT_GUID = "__default__";
 
 /**
@@ -66,7 +66,7 @@ const DEFAULT_PORT_GUID = "__default__";
  *
  * MUST return undefined for null, undefined, or whitespace-only input.
  **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizeGuid)
+// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeguid](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizeGuid)
 const normalizeGuid = (value: string | undefined | null): string | undefined => {
   if (!value) return undefined;
   const normalized = value.trim();
@@ -78,7 +78,7 @@ const normalizeGuid = (value: string | undefined | null): string | undefined => 
  *
  * MUST handle both direct string GUIDs and port reference objects.
  **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeportref](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizePortRef)
+// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨normalizeportref](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/normalizePortRef)
 const normalizePortRef = (value: unknown): string | undefined => {
   if (typeof value === "string") return normalizeGuid(value);
   if (value && typeof value === "object" && "guid" in (value as Record<string, unknown>)) {
@@ -90,7 +90,7 @@ const normalizePortRef = (value: unknown): string | undefined => {
 
 /**
  * Produces a deterministic non-negative integer hash from a string.
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️hashstring](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/hashString)
+// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️hashstring](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/hashString)
  *
  * MUST return the absolute value of a 32-bit hash.
  **/
@@ -105,7 +105,7 @@ const hashString = (input: string): number => {
 
 /**
  * Generates an HSL color tone from a port group key.
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️gettoneforkey](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getToneForKey)
+// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🛠️gettoneforkey](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getToneForKey)
  *
  * MUST return a neutral grey tone for the default port GUID.
  **/
@@ -138,7 +138,7 @@ const getToneForKey = (key: string): PortTone => {
  *
  * MUST union ports linked via compatiblePorts relationships.
  **/
-// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨createportgroupmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/createPortGroupMap)
+// [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨createportgroupmap](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/createPortGroupMap)
 const createPortGroupMap = (ports: Port[]): Map<string, string> => {
   const parent = new Map<string, string>();
 
@@ -189,7 +189,7 @@ const createPortGroupMap = (ports: Port[]): Map<string, string> => {
  * Extracts a normalized port GUID from a string or port reference object.
  *
  * MUST delegate to normalizePortRef for consistent handling.
- * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortGuid)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getportguid](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortGuid)
  **/
 export const getPortGuid = (value: unknown): string | undefined => normalizePortRef(value);
 
@@ -197,7 +197,7 @@ export const getPortGuid = (value: unknown): string | undefined => normalizePort
  * Extracts the port GUID from a connector's port reference.
  *
  * MUST return undefined when the connector or its port is missing.
- * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getconnectorportguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getConnectorPortGuid)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getconnectorportguid](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getConnectorPortGuid)
  **/
 export const getConnectorPortGuid = (connector: Pick<Connector, "port"> | undefined | null): string | undefined => normalizePortRef(connector?.port);
 
@@ -205,7 +205,7 @@ export const getConnectorPortGuid = (connector: Pick<Connector, "port"> | undefi
  * Resolves the color tone for a port based on its compatibility group.
  *
  * MUST return the default tone when the port GUID is missing.
- * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getporttone](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortTone)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getporttone](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortTone)
  **/
 export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTone => {
   const normalizedGuid = normalizeGuid(portGuid);
@@ -219,7 +219,7 @@ export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTo
  * Determines the compatibility state of a candidate port relative to a selected port.
  *
  * MUST return none when no port is selected.
- * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getportcompatibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortCompatibilityState)
+ * [👤semio📚js🗃️sketchpad💻portcolor🔖portcolor🪨getportcompatibilitystate](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/portColor.ts/s/Port%20Color/d/i/getPortCompatibilityState)
  **/
 export const getPortCompatibilityState = (candidatePortGuid: string | undefined, selectedPortGuid: string | undefined, ports: Port[]): PortCompatibilityState => {
   const normalizedCandidate = normalizeGuid(candidatePortGuid);

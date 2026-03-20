@@ -9,6 +9,7 @@
         ".": "./studio.ts"
     },
     "dependencies": {
+        "@semio/js": "*",
         "yjs": "^13.6.29",
         "y-indexeddb": "^9.0.12"
     },

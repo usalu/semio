@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🖱️sketchpad⚙️viteconfig](semiorepo://p/u/semio/b/u/sketchpad/f/vite.config.ts)
+// [👤semio🖱️sketchpad⚙️viteconfig](repo://p/u/semio/b/u/sketchpad/f/vite.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🖱️sketchpad⚙️viteconfig🔖configuration](semiorepo://p/u/semio/b/u/sketchpad/f/vite.config.ts/s/Configuration)
+// [👤semio🖱️sketchpad⚙️viteconfig🔖configuration](repo://p/u/semio/b/u/sketchpad/f/vite.config.ts/s/Configuration)
 // Vite build configuration for the sketchpad application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
@@ -38,13 +38,13 @@ import wasm from "vite-plugin-wasm";
 
 /**
  * Absolute file path of the current module.
-// [👤semio🖱️sketchpad⚙️viteconfig🔖configuration🪨filename](semiorepo://p/u/semio/b/u/sketchpad/f/vite.config.ts/s/Configuration/d/i/__filename)
+// [👤semio🖱️sketchpad⚙️viteconfig🔖configuration🪨filename](repo://p/u/semio/b/u/sketchpad/f/vite.config.ts/s/Configuration/d/i/__filename)
  * Path MUST be derived from import.meta.url.
  **/
 const __filename = fileURLToPath(import.meta.url);
 /**
  * Absolute directory path of the current module.
-// [👤semio🖱️sketchpad⚙️viteconfig🔖configuration🪨dirname](semiorepo://p/u/semio/b/u/sketchpad/f/vite.config.ts/s/Configuration/d/i/__dirname)
+// [👤semio🖱️sketchpad⚙️viteconfig🔖configuration🪨dirname](repo://p/u/semio/b/u/sketchpad/f/vite.config.ts/s/Configuration/d/i/__dirname)
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);

@@ -1,0 +1,26 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.ended",
+    "second": "2026-03-16T13:18:52Z",
+    "session": "6570409c-92f1-4681-bb66-a5b214d50cef"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "post_mcp_tool_use",
+      "trajectory_id": "6570409c-92f1-4681-bb66-a5b214d50cef",
+      "timestamp": "2026-03-16T13:18:52.691345523Z",
+      "execution_id": "8120202b-2524-4f38-b2a8-18da8845dffd",
+      "tool_info": {
+        "mcp_server_name": "repo",
+        "mcp_tool_arguments": {
+          "query": "storybook stories not loading dirname typescript-eslint eslint glob-parent elements ui"
+        },
+        "mcp_tool_name": "search"
+      }
+    }
+  },
+  "response": {}
+}

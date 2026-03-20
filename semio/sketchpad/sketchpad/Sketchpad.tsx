@@ -21,11 +21,9 @@
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖imports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Imports)
 // External and internal module imports.
 
-import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "../../../semio-elements/ui";
 import {
   AddIcon,
   AwardIcon,
-  ChatIcon,
   DocumentIcon,
   MessageCircle as FeedbackIcon,
   FocusIcon,
@@ -33,8 +31,6 @@ import {
   HomeIcon,
   LayoutIcon,
   LocalKitIcon,
-  Maximize2Icon,
-  Minimize2Icon,
   MoreHorizontalIcon,
   MousePointerIcon,
   NavigateBackIcon,
@@ -42,33 +38,11 @@ import {
   NavigateUpIcon,
   RemoteKitIcon,
   SearchIcon,
-  SettingsIcon,
   TemporaryKitIcon,
   TutorialIcon,
   TypeIcon,
   UserIcon,
 } from "@semio/assets";
-import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
-import { createRoot } from "react-dom/client";
-import {
-  BrowserRouter,
-  Fuse,
-  MemoryRouter,
-  Outlet,
-  Route,
-  Routes,
-  useCommandHotkey,
-  useLocation,
-  useNavigate as useReactNavigate,
-  useParams,
-  useSearchParams,
-  useTranslation as useI18nTranslation,
-  useXStateSelector as useSelector,
-} from "../../../semio-elements/ui";
-import { type RMap, type RArray, type RDoc, type RMapEvent, isRMap, isRArray, type RDocFactory, createYjsDocFactory } from "../../studio/studio";
-import type { FuseResult } from "../../../semio-elements/ui";
-import i18n, { useHotkey, useLabel } from "../i18n";
 import {
   applyKitDiff,
   Attribute,
@@ -103,6 +77,7 @@ import {
   generateUniqueName,
   getClusterableGroups,
   getIncludedDesigns,
+  getKitDiff,
   Group,
   GroupDiff,
   guid,
@@ -112,6 +87,9 @@ import {
   Kit,
   KitDiff,
   KitShallow,
+  type KitStore,
+  type KitStoreSnapshot,
+  type KitStoreStatus,
   Layer,
   LayerDiff,
   Location,
@@ -148,27 +126,42 @@ import {
   Vector,
   VectorDiff,
 } from "@semio/js/semio";
+import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+import { createRoot } from "react-dom/client";
+import type { FuseResult } from "../../../elements/ui";
 import {
   Action,
   ActionGroup,
   ActionGroupItem,
-  BasicChatPanel,
   Breadcrumb,
+  BrowserRouter,
   ButtonGroup,
   ButtonGroupItem,
+  closestCenter,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  DndContext,
+  DragOverlay,
   Footer,
+  Fuse,
   InteractionProvider,
   Layout as LayoutComponent,
   LevelProvider,
+  MemoryRouter,
   Navbar,
   type NavbarItem,
+  Outlet,
+  PointerSensor,
+  pointerWithin,
   ReactFlowProvider,
+  rectIntersection,
+  Route,
+  Routes,
   Strip,
   Toggle,
   ToolbarItem,
@@ -176,8 +169,19 @@ import {
   Transaction,
   Tree,
   TreeStateProvider,
+  useCommandHotkey,
+  useTranslation as useI18nTranslation,
+  useLocation,
+  useParams,
+  useNavigate as useReactNavigate,
+  useSearchParams,
+  useXStateSelector as useSelector,
+  useSensor,
+  useSensors,
   Window,
-} from "../../../semio-elements/ui";
+} from "../../../elements/ui";
+import { createSyncDocFactory, isSyncArray, isSyncMap, type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent } from "../../studio/studio";
+import i18n, { useHotkey, useLabel } from "../i18n";
 import {
   ActionField,
   AppCommandResult,
@@ -226,7 +230,6 @@ import {
   PanelConfig,
   PanelDefinition,
   PanelKey,
-  PanelKind,
   panelKindConfigs,
   PanelPosition,
   PanelSection,
@@ -249,9 +252,14 @@ import {
   StoreState,
   StoreStatus,
   Subscribe,
+  SyncAttributes,
   Synchronizable,
+  SyncLeafMapNumber,
+  SyncLeafMapString,
+  SyncPath,
+  syncPathMapKey,
+  SyncStringArray,
   Theme,
-  ToolDefinition,
   ToolGroupProps,
   ToolKind,
   Transact,
@@ -260,12 +268,6 @@ import {
   Url,
   WindowControl,
   WindowEvents,
-  RxAttributes,
-  RxLeafMapNumber,
-  RxLeafMapString,
-  RxPath,
-  rxPathMapKey,
-  RxStringArray,
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
 
@@ -291,7 +293,7 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
 // #region 🔖Store
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store)
-// Reactive stores backed by Yjs for collaborative state management.
+// Reactive stores for collaborative state management.
 
 /**
  * Identity selector that returns the value unchanged.
@@ -302,13 +304,13 @@ export function identitySelector<T>(value: T): T {
 }
 
 /**
- * Abstract base class for Yjs-backed reactive stores with caching and field subscriptions.
+ * Abstract base class for Sync-backed reactive stores with caching and field subscriptions.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🛠️store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/d/i/Store)
  **/
 export abstract class Store<TState> {
   public readonly guid: Guid;
   public readonly parent: SketchpadStore;
-  public readonly rMap: RMap<any>;
+  public readonly syncMap: SyncMap<any>;
   protected readonly transact: Transact;
   protected cache?: TState;
   protected cacheHash?: string;
@@ -319,10 +321,10 @@ export abstract class Store<TState> {
   private fieldSubscribers: Map<string, Set<() => void>> = new Map();
   private fieldObservers: Map<string, Disposable> = new Map();
 
-  constructor(parent: SketchpadStore, rMap: RMap<any>, transact: Transact) {
+  constructor(parent: SketchpadStore, syncMap: SyncMap<any>, transact: Transact) {
     this.guid = guid();
     this.parent = parent;
-    this.rMap = rMap;
+    this.syncMap = syncMap;
     this.transact = transact;
     this.initialize();
   }
@@ -346,8 +348,8 @@ export abstract class Store<TState> {
     const callback = () => {
       this.dirty = true;
     };
-    this.rMap.observeDeep(callback);
-    this.internalObserverDisposer = () => this.rMap.unobserveDeep(callback);
+    this.syncMap.observeDeep(callback);
+    this.internalObserverDisposer = () => this.syncMap.unobserveDeep(callback);
   }
 
   protected abstract hash(state: TState): string;
@@ -400,23 +402,23 @@ export abstract class Store<TState> {
   }
 
   onChanged(subscribe: Subscribe): Unsubscribe {
-    return createObserver(this.rMap, subscribe);
+    return createObserver(this.syncMap, subscribe);
   }
 
   onChangedDeep(subscribe: Subscribe): Unsubscribe {
-    return createObserver(this.rMap, subscribe, true);
+    return createObserver(this.syncMap, subscribe, true);
   }
 
   onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubscribe {
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
 
     if (!this.fieldSubscribers.has(key)) {
       this.fieldSubscribers.set(key, new Set());
 
       const fieldObserver = createFieldObserver(
-        this.rMap,
+        this.syncMap,
         key,
         (callback: () => void) => {
           const subscribers = this.fieldSubscribers.get(key);
@@ -424,7 +426,7 @@ export abstract class Store<TState> {
             subscribers.forEach((cb) => cb());
           }
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -449,7 +451,7 @@ export abstract class Store<TState> {
   }
 
   onFieldsChanged(keys: string[], subscribe: Subscribe, deep: boolean = false): Unsubscribe {
-    return createFieldsObserver(this.rMap, keys, subscribe, deep);
+    return createFieldsObserver(this.syncMap, keys, subscribe, deep);
   }
 
   getFieldSnapshot(key: string): any {
@@ -459,17 +461,17 @@ export abstract class Store<TState> {
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
 
-  onPathChanged(path: RxPath, subscribe: Subscribe): Unsubscribe {
+  onPathChanged(path: SyncPath, subscribe: Subscribe): Unsubscribe {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
-      const pathObserver = createPathObserver(this.rMap, path, () => {
+      const pathObserver = createPathObserver(this.syncMap, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -488,8 +490,8 @@ export abstract class Store<TState> {
     };
   }
 
-  getPathSnapshot(path: RxPath): any {
-    return getValueAtPath(this.rMap, path);
+  getPathSnapshot(path: SyncPath): any {
+    return getValueAtPath(this.syncMap, path);
   }
 
   // #endregion Store
@@ -506,8 +508,8 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   private _cachedTransactionStack: TEdit[] | null = null;
   private _transactionStackObserverSet = false;
 
-  constructor(parent: SketchpadStore, rMap: RMap<any>, transact: Transact) {
-    super(parent, rMap, transact);
+  constructor(parent: SketchpadStore, syncMap: SyncMap<any>, transact: Transact) {
+    super(parent, syncMap, transact);
   }
 
   protected abstract applySelectionDiff(selectionDiff: TSelectionDiff): void;
@@ -515,20 +517,20 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   protected abstract getSelection(): any;
 
   get isTransactionActive(): boolean {
-    return (this.rMap.get("isTransactionActive") as boolean) || false;
+    return (this.syncMap.get("isTransactionActive") as boolean) || false;
   }
 
   set isTransactionActive(active: boolean) {
-    this.rMap.set("isTransactionActive", active);
+    this.syncMap.set("isTransactionActive", active);
   }
 
   get currentTransactionStack(): TEdit[] {
-    const rStack = this.rMap.get("currentTransactionStack") as RArray<any>;
-    if (!rStack) return [];
+    const syncStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
+    if (!syncStack) return [];
 
     if (!this._transactionStackObserverSet) {
       this._transactionStackObserverSet = true;
-      rStack.observe(() => {
+      syncStack.observe(() => {
         this._cachedTransactionStack = null;
       });
     }
@@ -537,18 +539,18 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
       return this._cachedTransactionStack;
     }
 
-    this._cachedTransactionStack = rStack.toArray();
+    this._cachedTransactionStack = syncStack.toArray();
     return this._cachedTransactionStack;
   }
 
   get pastTransactionsStack(): TEdit[] {
-    const rStack = this.rMap.get("pastTransactionsStack") as RArray<any>;
-    return rStack ? rStack.toArray() : [];
+    const syncStack = this.syncMap.get("pastTransactionsStack") as SyncArray<any>;
+    return syncStack ? syncStack.toArray() : [];
   }
 
   get redoStack(): TEdit[] {
-    const rStack = this.rMap.get("redoStack") as RArray<any>;
-    return rStack ? rStack.toArray() : [];
+    const syncStack = this.syncMap.get("redoStack") as SyncArray<any>;
+    return syncStack ? syncStack.toArray() : [];
   }
 
   canUndo(): boolean {
@@ -564,17 +566,17 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   change(diff: TDiff): void {
     this.transact(() => {
       if (diff.fullscreenWindow !== undefined) {
-        this.rMap.set("fullscreenWindow", diff.fullscreenWindow);
+        this.syncMap.set("fullscreenWindow", diff.fullscreenWindow);
       }
       if (diff.panelVisibility !== undefined) {
-        let rPanelVisibility = this.rMap.get("panelVisibility") as RMap<boolean>;
-        if (!rPanelVisibility) {
-          rPanelVisibility = createYjsDocFactory()().createMap<boolean>();
-          this.rMap.set("panelVisibility", rPanelVisibility);
+        let syncPanelVisibility = this.syncMap.get("panelVisibility") as SyncMap<boolean>;
+        if (!syncPanelVisibility) {
+          syncPanelVisibility = createSyncDocFactory()().createMap<boolean>();
+          this.syncMap.set("panelVisibility", syncPanelVisibility);
         }
         Object.entries(diff.panelVisibility).forEach(([key, value]) => {
           if (value !== undefined) {
-            rPanelVisibility.set(key, value);
+            syncPanelVisibility.set(key, value);
           }
         });
       }
@@ -594,7 +596,7 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   abortTransaction(): void {
     if (this.isTransactionActive) {
       this.transact(() => {
-        const currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
+        const currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
         if (currentStack && currentStack.length > 0) {
           for (let i = currentStack.length - 1; i >= 0; i--) {
             const edit = currentStack.get(i);
@@ -612,15 +614,15 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   finalizeTransaction(): void {
     if (this.isTransactionActive) {
       this.transact(() => {
-        let redoStack = this.rMap.get("redoStack") as RArray<any>;
+        let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
         if (redoStack && redoStack.length > 0) {
           redoStack.delete(0, redoStack.length);
         }
-        const currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
-        let pastStack = this.rMap.get("pastTransactionsStack") as RArray<any>;
+        const currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
+        let pastStack = this.syncMap.get("pastTransactionsStack") as SyncArray<any>;
         if (!pastStack) {
-          pastStack = createYjsDocFactory()().createArray<any>();
-          this.rMap.set("pastTransactionsStack", pastStack);
+          pastStack = createSyncDocFactory()().createArray<any>();
+          this.syncMap.set("pastTransactionsStack", pastStack);
         }
         if (currentStack && currentStack.length > 0) {
           const edits = currentStack.toArray();
@@ -641,7 +643,7 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
 
   undo(): void {
     if (this.isTransactionActive) {
-      const currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
+      const currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
       if (currentStack && currentStack.length > 0) {
         const edit = currentStack.get(currentStack.length - 1);
         this.lastDeletedTransactionEdit = edit;
@@ -651,11 +653,11 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
         }
       }
     } else {
-      const pastStack = this.rMap.get("pastTransactionsStack") as RArray<any>;
-      let redoStack = this.rMap.get("redoStack") as RArray<any>;
+      const pastStack = this.syncMap.get("pastTransactionsStack") as SyncArray<any>;
+      let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (!redoStack) {
-        redoStack = createYjsDocFactory()().createArray<any>();
-        this.rMap.set("redoStack", redoStack);
+        redoStack = createSyncDocFactory()().createArray<any>();
+        this.syncMap.set("redoStack", redoStack);
       }
       if (pastStack && pastStack.length > 0) {
         const edit = pastStack.get(pastStack.length - 1);
@@ -670,10 +672,10 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
 
   redo(): void {
     if (this.isTransactionActive) {
-      let currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
+      let currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
       if (!currentStack) {
-        currentStack = createYjsDocFactory()().createArray<any>();
-        this.rMap.set("currentTransactionStack", currentStack);
+        currentStack = createSyncDocFactory()().createArray<any>();
+        this.syncMap.set("currentTransactionStack", currentStack);
       }
       const lastDeletedEdit = this.lastDeletedTransactionEdit;
       if (lastDeletedEdit) {
@@ -684,8 +686,8 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
         }
       }
     } else {
-      const pastStack = this.rMap.get("pastTransactionsStack") as RArray<any>;
-      const redoStack = this.rMap.get("redoStack") as RArray<any>;
+      const pastStack = this.syncMap.get("pastTransactionsStack") as SyncArray<any>;
+      const redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (redoStack && redoStack.length > 0) {
         const edit = redoStack.get(redoStack.length - 1);
         redoStack.delete(redoStack.length - 1, 1);
@@ -701,15 +703,15 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
 
   protected recordEdit(result: TCommandResult): void {
     if (this.isTransactionActive && result.diff) {
-      let redoStack = this.rMap.get("redoStack") as RArray<any>;
+      let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (redoStack && redoStack.length > 0) {
         redoStack.delete(0, redoStack.length);
       }
       this.lastDeletedTransactionEdit = undefined;
-      let currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
+      let currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
       if (!currentStack) {
-        currentStack = createYjsDocFactory()().createArray<any>();
-        this.rMap.set("currentTransactionStack", currentStack);
+        currentStack = createSyncDocFactory()().createArray<any>();
+        this.syncMap.set("currentTransactionStack", currentStack);
       }
       const selection = this.getSelection();
       const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
@@ -742,16 +744,16 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
   TCommandContext,
   TCommandResult
 > {
-  constructor(parent: SketchpadStore, rMap: RMap<any>, transact: Transact) {
-    super(parent, rMap, transact);
+  constructor(parent: SketchpadStore, syncMap: SyncMap<any>, transact: Transact) {
+    super(parent, syncMap, transact);
   }
 
-  abstract kit(): KitStore;
+  abstract kit(): CollaborativeKitStore;
 
   abortTransaction(): void {
     if (this.isTransactionActive) {
       this.transact(() => {
-        const currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
+        const currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
         if (currentStack && currentStack.length > 0) {
           for (let i = currentStack.length - 1; i >= 0; i--) {
             const edit = currentStack.get(i);
@@ -773,7 +775,7 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
 
   undo(): void {
     if (this.isTransactionActive) {
-      const currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
+      const currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
       if (currentStack && currentStack.length > 0) {
         const edit = currentStack.get(currentStack.length - 1);
         (this as any).lastDeletedTransactionEdit = edit;
@@ -788,11 +790,11 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
         }
       }
     } else {
-      const pastStack = this.rMap.get("pastTransactionsStack") as RArray<any>;
-      let redoStack = this.rMap.get("redoStack") as RArray<any>;
+      const pastStack = this.syncMap.get("pastTransactionsStack") as SyncArray<any>;
+      let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (!redoStack) {
-        redoStack = createYjsDocFactory()().createArray<any>();
-        this.rMap.set("redoStack", redoStack);
+        redoStack = createSyncDocFactory()().createArray<any>();
+        this.syncMap.set("redoStack", redoStack);
       }
       if (pastStack && pastStack.length > 0) {
         const edit = pastStack.get(pastStack.length - 1);
@@ -812,10 +814,10 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
 
   redo(): void {
     if (this.isTransactionActive) {
-      let currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
+      let currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
       if (!currentStack) {
-        currentStack = createYjsDocFactory()().createArray<any>();
-        this.rMap.set("currentTransactionStack", currentStack);
+        currentStack = createSyncDocFactory()().createArray<any>();
+        this.syncMap.set("currentTransactionStack", currentStack);
       }
       const lastDeletedEdit = (this as any).lastDeletedTransactionEdit;
       if (lastDeletedEdit) {
@@ -831,8 +833,8 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
         }
       }
     } else {
-      const pastStack = this.rMap.get("pastTransactionsStack") as RArray<any>;
-      const redoStack = this.rMap.get("redoStack") as RArray<any>;
+      const pastStack = this.syncMap.get("pastTransactionsStack") as SyncArray<any>;
+      const redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (redoStack && redoStack.length > 0) {
         const edit = redoStack.get(redoStack.length - 1);
         redoStack.delete(redoStack.length - 1, 1);
@@ -853,15 +855,15 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
 
   protected recordEdit(result: TCommandResult): void {
     if (this.isTransactionActive && (result.diff || result.kitDiff)) {
-      let redoStack = this.rMap.get("redoStack") as RArray<any>;
+      let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (redoStack && redoStack.length > 0) {
         redoStack.delete(0, redoStack.length);
       }
       (this as any).lastDeletedTransactionEdit = undefined;
-      let currentStack = this.rMap.get("currentTransactionStack") as RArray<any>;
+      let currentStack = this.syncMap.get("currentTransactionStack") as SyncArray<any>;
       if (!currentStack) {
-        currentStack = createYjsDocFactory()().createArray<any>();
-        this.rMap.set("currentTransactionStack", currentStack);
+        currentStack = createSyncDocFactory()().createArray<any>();
+        this.syncMap.set("currentTransactionStack", currentStack);
       }
       const selection = this.getSelection();
       const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
@@ -876,13 +878,13 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
   }
 }
 
-// #region Plain App Store (No YJS)
+// #region Plain App Store (Plain)
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS))
-// Non-YJS application stores using plain in-memory state with transaction support.
+// Plain application stores using plain in-memory state with transaction support.
 
 /**
- * Abstract plain application store without Yjs backing for local-only state with undo/redo.
+ * Abstract plain application store without sync backing for local-only state with undo/redo.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plainappstorenoyjs🛠️plainappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PlainAppStore)
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plainappstorenoyjs🛠️plainappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PlainAppStore)
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🛠️plainappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PlainAppStore)
@@ -925,7 +927,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 
   onFieldChanged(key: string, subscribe: Subscribe, _deep?: boolean): Disposable {
     const wrappedCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     this.listeners.add(wrappedCallback);
     const dispose = () => this.listeners.delete(wrappedCallback);
@@ -1065,7 +1067,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 }
 
 /**
- * Abstract plain app store that integrates kit diff operations without YJS backing.
+ * Abstract plain app store that integrates kit diff operations without sync backing.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plainappstorenoyjs🛠️plainkitdiffappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PlainKitDiffAppStore)
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plainappstorenoyjs🛠️plainkitdiffappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PlainKitDiffAppStore)
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🛠️plainkitdiffappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PlainKitDiffAppStore)
@@ -1080,7 +1082,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
     this.parentStore = parent;
   }
 
-  abstract kit(): KitStore;
+  abstract kit(): CollaborativeKitStore;
 
   abortTransaction(): void {
     if (this.isTransactionActive) {
@@ -1184,7 +1186,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
   }
 }
 
-// #endregion Plain App Store (No YJS)
+// #endregion Plain App Store (Plain)
 
 // #region File Provider
 
@@ -1499,66 +1501,66 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
 // #region Kits
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits)
-// Yjs-backed attribute store for kit metadata.
+// Sync-backed attribute store for kit metadata.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattributeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/RxAttributeVal)
- * RxAttributeVal holds the data fields for a RxAttributeVal record.
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits✂️yattributeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/RxAttributeVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattributeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/SyncAttributeVal)
+ * SyncAttributeVal holds the data fields for a SyncAttributeVal record.
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits✂️yattributeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/SyncAttributeVal)
  **/
-type RxAttributeVal = string;
+type SyncAttributeVal = string;
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/RxAttribute)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/SyncAttribute)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/RxAttribute)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/RxAttribute)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/SyncAttribute)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits✂️yattribute](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/SyncAttribute)
  **/
-type RxAttribute = RMap<RxAttributeVal>;
+type SyncAttribute = SyncMap<SyncAttributeVal>;
 
 /**
  **/
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖kits🛠️attributestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/AttributeStore)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord🛠️ycoordval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/RxCoordVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord🛠️ycoordval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/SyncCoordVal)
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖kits🛠️attributestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Kits/d/i/AttributeStore)
  **/
 class AttributeStore {
-  private rAttribute: RxAttribute;
+  private syncAttribute: SyncAttribute;
   private cache?: Attribute;
   private cacheHash?: string;
 
-  constructor(rAttribute: RxAttribute, attribute: Attribute) {
-    this.rAttribute = rAttribute;
+  constructor(syncAttribute: SyncAttribute, attribute: Attribute) {
+    this.syncAttribute = syncAttribute;
   }
 
   get key(): string {
-    return this.rAttribute.get("key") as string;
+    return this.syncAttribute.get("key") as string;
   }
   set key(key: string) {
-    this.rAttribute.set("key", key);
+    this.syncAttribute.set("key", key);
   }
 
   get value(): string | undefined {
-    return this.rAttribute.get("value") as string | undefined;
+    return this.syncAttribute.get("value") as string | undefined;
   }
   set value(value: string | undefined) {
-    this.rAttribute.set("value", value || "");
+    this.syncAttribute.set("value", value || "");
   }
 
   get definition(): string | undefined {
-    return this.rAttribute.get("definition") as string | undefined;
+    return this.syncAttribute.get("definition") as string | undefined;
   }
   set definition(definition: string | undefined) {
-    this.rAttribute.set("definition", definition || "");
+    this.syncAttribute.set("definition", definition || "");
   }
 
   get guid(): string {
-    return this.rAttribute.get("guid") as string;
+    return this.syncAttribute.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rAttribute.set("guid", guid);
+    this.syncAttribute.set("guid", guid);
   }
 
   hash = (attribute: Attribute): string => {
@@ -1587,11 +1589,11 @@ class AttributeStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rAttribute, subscribe, false);
+    return createObserver(this.syncAttribute, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rAttribute, subscribe, true);
+    return createObserver(this.syncAttribute, subscribe, true);
   };
 }
 
@@ -1600,51 +1602,51 @@ class AttributeStore {
 // #region Coord
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord)
-// Yjs-backed coordinate store managing u/v values.
+// Sync-backed coordinate store managing u/v values.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord✂️ycoordval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/RxCoordVal)
- * RxCoordVal holds the data fields for a RxCoordVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord✂️ycoordval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/SyncCoordVal)
+ * SyncCoordVal holds the data fields for a SyncCoordVal record.
  **/
-type RxCoordVal = number;
+type SyncCoordVal = number;
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/RxCoord)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/SyncCoord)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/RxCoord)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/RxCoord)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/SyncCoord)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord✂️ycoord](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/SyncCoord)
  **/
-type RxCoord = RMap<RxCoordVal>;
+type SyncCoord = SyncMap<SyncCoordVal>;
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord🛠️ycoordstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/RxCoordStore)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖coord🛠️ycoordstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/SyncCoordStore)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord🛠️ycoordstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/RxCoordStore)
- * RxCoordStore holds the data fields for a RxCoordStore record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖coord🛠️ycoordstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Coord/d/i/SyncCoordStore)
+ * SyncCoordStore holds the data fields for a SyncCoordStore record.
  **/
-class RxCoordStore {
-  private yCoord: RxCoord;
+class SyncCoordStore {
+  private syncCoord: SyncCoord;
   private cache?: Coord;
   private cacheHash?: string;
 
-  constructor(yCoord: RxCoord, coord: Coord) {
-    this.yCoord = yCoord;
+  constructor(syncCoord: SyncCoord, coord: Coord) {
+    this.syncCoord = syncCoord;
     this.u = coord.u;
     this.v = coord.v;
   }
 
   get u(): number {
-    return this.yCoord.get("u") as number;
+    return this.syncCoord.get("u") as number;
   }
   set u(u: number) {
-    this.yCoord.set("u", u);
+    this.syncCoord.set("u", u);
   }
 
   get v(): number {
-    return this.yCoord.get("v") as number;
+    return this.syncCoord.get("v") as number;
   }
   set v(v: number) {
-    this.yCoord.set("v", v);
+    this.syncCoord.set("v", v);
   }
 
   hash = (coord: Coord): string => {
@@ -1670,11 +1672,11 @@ class RxCoordStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yCoord, subscribe, false);
+    return createObserver(this.syncCoord, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yCoord, subscribe, true);
+    return createObserver(this.syncCoord, subscribe, true);
   };
 }
 
@@ -1683,51 +1685,51 @@ class RxCoordStore {
 // #region Vec
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec)
-// Yjs-backed 3D vector component store managing x/y/z values.
+// Sync-backed 3D vector component store managing x/y/z values.
 
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/RxVecVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/SyncVecVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/RxVecVal)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/RxVecVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/SyncVecVal)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec✂️yvecval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/SyncVecVal)
  **/
-type RxVecVal = number;
+type SyncVecVal = number;
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/RxVec)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/SyncVec)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/RxVec)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/RxVec)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/SyncVec)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vec✂️yvec](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/SyncVec)
  **/
-type RxVec = RMap<RxVecVal>;
+type SyncVec = SyncMap<SyncVecVal>;
 
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec🛠️yvecstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/RxVecStore)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vec🛠️yvecstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vec/d/i/SyncVecStore)
  **/
-class RxVecStore {
-  private yVec: RxVec;
+class SyncVecStore {
+  private syncVec: SyncVec;
   private cache?: Vec;
   private cacheHash?: string;
 
-  constructor(yVec: RxVec, vec: Vec) {
-    this.yVec = yVec;
+  constructor(syncVec: SyncVec, vec: Vec) {
+    this.syncVec = syncVec;
     this.u = vec.u;
     this.v = vec.v;
   }
 
   get u(): number {
-    return this.yVec.get("u") as number;
+    return this.syncVec.get("u") as number;
   }
   set u(u: number) {
-    this.yVec.set("u", u);
+    this.syncVec.set("u", u);
   }
 
   get v(): number {
-    return this.yVec.get("v") as number;
+    return this.syncVec.get("v") as number;
   }
   set v(v: number) {
-    this.yVec.set("v", v);
+    this.syncVec.set("v", v);
   }
 
   hash = (vec: Vec): string => {
@@ -1754,11 +1756,11 @@ class RxVecStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yVec, subscribe, false);
+    return createObserver(this.syncVec, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yVec, subscribe, true);
+    return createObserver(this.syncVec, subscribe, true);
   };
 }
 
@@ -1767,57 +1769,57 @@ class RxVecStore {
 // #region Point
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point)
-// Yjs-backed 3D point store managing x/y/z coordinates.
+// Sync-backed 3D point store managing x/y/z coordinates.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖point](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Point)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖point✂️ypointval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/RxPointVal)
- * RxPointVal holds the data fields for a RxPointVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖point✂️ypointval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/SyncPointVal)
+ * SyncPointVal holds the data fields for a SyncPointVal record.
  **/
-type RxPointVal = number;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point✂️ypoint](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/RxPoint)
+type SyncPointVal = number;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point✂️ypoint](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/SyncPoint)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖point✂️ypoint](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Point/d/i/RxPoint)
- * RxPoint holds the data fields for a RxPoint record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖point✂️ypoint](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Point/d/i/SyncPoint)
+ * SyncPoint holds the data fields for a SyncPoint record.
  **/
-type RxPoint = RMap<RxPointVal>;
+type SyncPoint = SyncMap<SyncPointVal>;
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point🛠️ypointstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/RxPointStore)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖point🛠️ypointstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Point/d/i/SyncPointStore)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖point🛠️ypointstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Point/d/i/RxPointStore)
- * RxPointStore holds the data fields for a RxPointStore record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖point🛠️ypointstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Point/d/i/SyncPointStore)
+ * SyncPointStore holds the data fields for a SyncPointStore record.
  **/
-class RxPointStore {
-  private rPoint: RxPoint;
+class SyncPointStore {
+  private syncPoint: SyncPoint;
   private cache?: Point;
   private cacheHash?: string;
 
-  constructor(rPoint: RxPoint, point: Point) {
-    this.rPoint = rPoint;
+  constructor(syncPoint: SyncPoint, point: Point) {
+    this.syncPoint = syncPoint;
     this.x = point.x;
     this.y = point.y;
     this.z = point.z;
   }
 
   get x(): number {
-    return this.rPoint.get("x") as number;
+    return this.syncPoint.get("x") as number;
   }
   set x(x: number) {
-    this.rPoint.set("x", x);
+    this.syncPoint.set("x", x);
   }
 
   get y(): number {
-    return this.rPoint.get("y") as number;
+    return this.syncPoint.get("y") as number;
   }
   set y(y: number) {
-    this.rPoint.set("y", y);
+    this.syncPoint.set("y", y);
   }
 
   get z(): number {
-    return this.rPoint.get("z") as number;
+    return this.syncPoint.get("z") as number;
   }
   set z(z: number) {
-    this.rPoint.set("z", z);
+    this.syncPoint.set("z", z);
   }
 
   hash = (point: Point): string => {
@@ -1846,11 +1848,11 @@ class RxPointStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rPoint, subscribe, false);
+    return createObserver(this.syncPoint, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rPoint, subscribe, true);
+    return createObserver(this.syncPoint, subscribe, true);
   };
 }
 
@@ -1859,55 +1861,55 @@ class RxPointStore {
 // #region Vector
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector)
-// Yjs-backed 3D direction vector store managing x/y/z components.
+// Sync-backed 3D direction vector store managing x/y/z components.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖vector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Vector)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖vector✂️yvectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Vector/d/i/RxVectorVal)
- * RxVectorVal holds the data fields for a RxVectorVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖vector✂️yvectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Vector/d/i/SyncVectorVal)
+ * SyncVectorVal holds the data fields for a SyncVectorVal record.
  **/
-type RxVectorVal = number;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector✂️yvector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/RxVector)
+type SyncVectorVal = number;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector✂️yvector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/SyncVector)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖vector✂️yvector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Vector/d/i/RxVector)
- * RxVector holds the data fields for a RxVector record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖vector✂️yvector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Vector/d/i/SyncVector)
+ * SyncVector holds the data fields for a SyncVector record.
  **/
-type RxVector = RMap<RxVectorVal>;
+type SyncVector = SyncMap<SyncVectorVal>;
 
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector🛠️yvectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/RxVectorStore)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖vector🛠️yvectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Vector/d/i/SyncVectorStore)
  **/
-class RxVectorStore {
-  private yVector: RxVector;
+class SyncVectorStore {
+  private syncVector: SyncVector;
   private cache?: Vector;
   private cacheHash?: string;
 
-  constructor(yVector: RxVector, vector: Vector) {
-    this.yVector = yVector;
+  constructor(syncVector: SyncVector, vector: Vector) {
+    this.syncVector = syncVector;
     this.x = vector.x;
     this.y = vector.y;
     this.z = vector.z;
   }
 
   get x(): number {
-    return this.yVector.get("x") as number;
+    return this.syncVector.get("x") as number;
   }
   set x(x: number) {
-    this.yVector.set("x", x);
+    this.syncVector.set("x", x);
   }
 
   get y(): number {
-    return this.yVector.get("y") as number;
+    return this.syncVector.get("y") as number;
   }
   set y(y: number) {
-    this.yVector.set("y", y);
+    this.syncVector.set("y", y);
   }
 
   get z(): number {
-    return this.yVector.get("z") as number;
+    return this.syncVector.get("z") as number;
   }
   set z(z: number) {
-    this.yVector.set("z", z);
+    this.syncVector.set("z", z);
   }
 
   hash = (vector: Vector): string => {
@@ -1936,11 +1938,11 @@ class RxVectorStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yVector, subscribe, false);
+    return createObserver(this.syncVector, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yVector, subscribe, true);
+    return createObserver(this.syncVector, subscribe, true);
   };
 }
 
@@ -1949,48 +1951,48 @@ class RxVectorStore {
 // #region Plane
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane)
-// Yjs-backed 3D plane store managing origin point and direction vectors.
+// Sync-backed 3D plane store managing origin point and direction vectors.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖plane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Plane)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/RxPlane)
- * RxPlaneVal holds the data fields for a RxPlaneVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/SyncPlane)
+ * SyncPlaneVal holds the data fields for a SyncPlaneVal record.
  **/
-type RxPlaneVal = RxPoint | RxVector;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/RxPlane)
+type SyncPlaneVal = SyncPoint | SyncVector;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/SyncPlane)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plane/d/i/RxPlane)
- * RxPlane holds the data fields for a RxPlane record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plane✂️yplane](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plane/d/i/SyncPlane)
+ * SyncPlane holds the data fields for a SyncPlane record.
  **/
-type RxPlane = RMap<RxPlaneVal>;
+type SyncPlane = SyncMap<SyncPlaneVal>;
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane🛠️yplanestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/RxPlaneStore)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖plane🛠️yplanestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Plane/d/i/SyncPlaneStore)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plane🛠️yplanestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plane/d/i/RxPlaneStore)
- * RxPlaneStore holds the data fields for a RxPlaneStore record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖plane🛠️yplanestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Plane/d/i/SyncPlaneStore)
+ * SyncPlaneStore holds the data fields for a SyncPlaneStore record.
  **/
-class RxPlaneStore {
-  private rPlane: RxPlane;
-  private origin: RxPointStore;
-  private xAxis: RxVectorStore;
-  private yAxis: RxVectorStore;
+class SyncPlaneStore {
+  private syncPlane: SyncPlane;
+  private origin: SyncPointStore;
+  private xAxis: SyncVectorStore;
+  private yAxis: SyncVectorStore;
   private cache?: Plane;
   private cacheHash?: string;
 
-  constructor(rPlane: RxPlane, plane: Plane) {
-    this.rPlane = rPlane;
+  constructor(syncPlane: SyncPlane, plane: Plane) {
+    this.syncPlane = syncPlane;
 
-    const rOrigin = createYjsDocFactory()().createMap<RxPointVal>();
-    this.rPlane.set("origin", rOrigin);
-    this.origin = new RxPointStore(rOrigin, plane.origin);
+    const syncOrigin = createSyncDocFactory()().createMap<SyncPointVal>();
+    this.syncPlane.set("origin", syncOrigin);
+    this.origin = new SyncPointStore(syncOrigin, plane.origin);
 
-    const rXAxis = createYjsDocFactory()().createMap<RxVectorVal>();
-    this.rPlane.set("xAxis", rXAxis);
-    this.xAxis = new RxVectorStore(rXAxis, plane.xAxis);
+    const syncXAxis = createSyncDocFactory()().createMap<SyncVectorVal>();
+    this.syncPlane.set("xAxis", syncXAxis);
+    this.xAxis = new SyncVectorStore(syncXAxis, plane.xAxis);
 
-    const rYAxis = createYjsDocFactory()().createMap<RxVectorVal>();
-    this.rPlane.set("yAxis", rYAxis);
-    this.yAxis = new RxVectorStore(rYAxis, plane.yAxis);
+    const syncYAxis = createSyncDocFactory()().createMap<SyncVectorVal>();
+    this.syncPlane.set("yAxis", syncYAxis);
+    this.yAxis = new SyncVectorStore(syncYAxis, plane.yAxis);
   }
   hash = (plane: Plane): string => {
     return JSON.stringify(plane);
@@ -2019,11 +2021,11 @@ class RxPlaneStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rPlane, subscribe, false);
+    return createObserver(this.syncPlane, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rPlane, subscribe, true);
+    return createObserver(this.syncPlane, subscribe, true);
   };
 }
 
@@ -2032,50 +2034,50 @@ class RxPlaneStore {
 // #region Camera
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖camera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Camera)
-// Yjs-backed camera store managing view target and perspective planes.
+// Sync-backed camera store managing view target and perspective planes.
 
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/RxCameraVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/SyncCameraVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/RxCameraVal)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/RxCameraVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/SyncCameraVal)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖camera✂️ycameraval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/SyncCameraVal)
  **/
-type RxCameraVal = RxPoint | RxVector;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycamera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/RxCamera)
+type SyncCameraVal = SyncPoint | SyncVector;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera✂️ycamera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/SyncCamera)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖camera✂️ycamera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/RxCamera)
- * RxCamera holds the data fields for a RxCamera record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖camera✂️ycamera](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/SyncCamera)
+ * SyncCamera holds the data fields for a SyncCamera record.
  **/
-type RxCamera = RMap<RxCameraVal>;
+type SyncCamera = SyncMap<SyncCameraVal>;
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera🛠️ycamerastore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/RxCameraStore)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖camera🛠️ycamerastore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Camera/d/i/SyncCameraStore)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖camera🛠️ycamerastore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Camera/d/i/RxCameraStore)
- * RxCameraStore holds the data fields for a RxCameraStore record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖camera🛠️ycamerastore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Camera/d/i/SyncCameraStore)
+ * SyncCameraStore holds the data fields for a SyncCameraStore record.
  **/
-class RxCameraStore {
-  private yCamera: RxCamera;
-  private position: RxPointStore;
-  private forward: RxVectorStore;
-  private up: RxVectorStore;
+class SyncCameraStore {
+  private syncCamera: SyncCamera;
+  private position: SyncPointStore;
+  private forward: SyncVectorStore;
+  private up: SyncVectorStore;
   private cache?: Camera;
   private cacheHash?: string;
 
-  constructor(yCamera: RxCamera, camera: Camera) {
-    this.yCamera = yCamera;
+  constructor(syncCamera: SyncCamera, camera: Camera) {
+    this.syncCamera = syncCamera;
 
-    const rPosition = createYjsDocFactory()().createMap<RxPointVal>();
-    this.yCamera.set("position", rPosition);
-    this.position = new RxPointStore(rPosition, camera.position);
+    const syncPosition = createSyncDocFactory()().createMap<SyncPointVal>();
+    this.syncCamera.set("position", syncPosition);
+    this.position = new SyncPointStore(syncPosition, camera.position);
 
-    const rForward = createYjsDocFactory()().createMap<RxVectorVal>();
-    this.yCamera.set("forward", rForward);
-    this.forward = new RxVectorStore(rForward, camera.forward);
+    const syncForward = createSyncDocFactory()().createMap<SyncVectorVal>();
+    this.syncCamera.set("forward", syncForward);
+    this.forward = new SyncVectorStore(syncForward, camera.forward);
 
-    const rUp = createYjsDocFactory()().createMap<RxVectorVal>();
-    this.yCamera.set("up", rUp);
-    this.up = new RxVectorStore(rUp, camera.up);
+    const syncUp = createSyncDocFactory()().createMap<SyncVectorVal>();
+    this.syncCamera.set("up", syncUp);
+    this.up = new SyncVectorStore(syncUp, camera.up);
   }
 
   hash = (camera: Camera): string => {
@@ -2104,11 +2106,11 @@ class RxCameraStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yCamera, subscribe, false);
+    return createObserver(this.syncCamera, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yCamera, subscribe, true);
+    return createObserver(this.syncCamera, subscribe, true);
   };
 }
 
@@ -2117,33 +2119,33 @@ class RxCameraStore {
 // #region Location
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖location](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Location)
-// Yjs-backed location store managing geographical and licensing metadata.
+// Sync-backed location store managing geographical and licensing metadata.
 
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/RxLocationVal)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/RxLocationVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/SyncLocationVal)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖location✂️ylocationval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/SyncLocationVal)
  **/
-type RxLocationVal = number | string | RxAttributes;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/RxLocation)
+type SyncLocationVal = number | string | SyncAttributes;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location✂️ylocation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/SyncLocation)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖location✂️ylocation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/RxLocation)
- * RxLocation holds the data fields for a RxLocation record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖location✂️ylocation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/SyncLocation)
+ * SyncLocation holds the data fields for a SyncLocation record.
  **/
-type RxLocation = RMap<RxLocationVal>;
+type SyncLocation = SyncMap<SyncLocationVal>;
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location🛠️ylocationstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/RxLocationStore)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖location🛠️ylocationstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Location/d/i/SyncLocationStore)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖location🛠️ylocationstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Location/d/i/RxLocationStore)
- * RxLocationStore holds the data fields for a RxLocationStore record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖location🛠️ylocationstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Location/d/i/SyncLocationStore)
+ * SyncLocationStore holds the data fields for a SyncLocationStore record.
  **/
-class RxLocationStore {
-  private rLocation: RxLocation;
+class SyncLocationStore {
+  private syncLocation: SyncLocation;
   private attributes: Map<string, AttributeStore>;
   private cache?: Location;
   private cacheHash?: string;
 
-  constructor(rLocation: RxLocation, location: Location) {
-    this.rLocation = rLocation;
+  constructor(syncLocation: SyncLocation, location: Location) {
+    this.syncLocation = syncLocation;
     this.guid = location.guid;
     this.latitude = location.latitude;
     this.longitude = location.longitude;
@@ -2152,34 +2154,34 @@ class RxLocationStore {
   }
 
   get guid(): string {
-    return this.rLocation.get("guid") as string;
+    return this.syncLocation.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rLocation.set("guid", guid);
+    this.syncLocation.set("guid", guid);
   }
 
   get latitude(): number {
-    return this.rLocation.get("latitude") as number;
+    return this.syncLocation.get("latitude") as number;
   }
   set latitude(latitude: number) {
-    this.rLocation.set("latitude", latitude);
+    this.syncLocation.set("latitude", latitude);
   }
 
   get longitude(): number {
-    return this.rLocation.get("longitude") as number;
+    return this.syncLocation.get("longitude") as number;
   }
   set longitude(longitude: number) {
-    this.rLocation.set("longitude", longitude);
+    this.syncLocation.set("longitude", longitude);
   }
 
   get altitude(): number | undefined {
-    return this.rLocation.get("altitude") as number | undefined;
+    return this.syncLocation.get("altitude") as number | undefined;
   }
   set altitude(altitude: number | undefined) {
     if (altitude !== undefined) {
-      this.rLocation.set("altitude", altitude);
+      this.syncLocation.set("altitude", altitude);
     } else {
-      this.rLocation.delete("altitude");
+      this.syncLocation.delete("altitude");
     }
   }
 
@@ -2211,11 +2213,11 @@ class RxLocationStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rLocation, subscribe, false);
+    return createObserver(this.syncLocation, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rLocation, subscribe, true);
+    return createObserver(this.syncLocation, subscribe, true);
   };
 }
 
@@ -2224,44 +2226,44 @@ class RxLocationStore {
 // #region Author
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author)
-// Yjs-backed author store managing author identity and attributes.
+// Sync-backed author store managing author identity and attributes.
 
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthorVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthorVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthor)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthorVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthor)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthorVal)
  **/
-type RxAuthorVal = string | RxAttributes;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthor)
+type SyncAuthorVal = string | SyncAttributes;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthor)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthor)
- * RxAuthor holds the data fields for a RxAuthor record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthor)
+ * SyncAuthor holds the data fields for a SyncAuthor record.
  **/
-type RxAuthor = RMap<RxAuthorVal>;
-/**
- **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthors)
-/**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthors)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthors)
- **/
-type RxAuthors = RArray<RxAuthor>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthorUuid)
-/**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthoruuid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthorUuid)
- * RxAuthorUuid holds the data fields for a RxAuthorUuid record.
- **/
-type RxAuthorUuid = string;
+type SyncAuthor = SyncMap<SyncAuthorVal>;
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthorUuids)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthors)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthorUuids)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/RxAuthorUuids)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthors)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthors)
  **/
-type RxAuthorUuids = RArray<RxAuthorUuid>;
+type SyncAuthors = SyncArray<SyncAuthor>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthorUuid)
+/**
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthoruuid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthorUuid)
+ * SyncAuthorUuid holds the data fields for a SyncAuthorUuid record.
+ **/
+type SyncAuthorUuid = string;
+/**
+ **/
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthorUuids)
+/**
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthorUuids)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author✂️yauthoruuids](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/SyncAuthorUuids)
+ **/
+type SyncAuthorUuids = SyncArray<SyncAuthorUuid>;
 
 /**
  **/
@@ -2271,42 +2273,42 @@ type RxAuthorUuids = RArray<RxAuthorUuid>;
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖author🛠️authorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Author/d/i/AuthorStore)
  **/
 class AuthorStore {
-  private rAuthor: RxAuthor;
-  private rAttributes: RxAttributes;
+  private syncAuthor: SyncAuthor;
+  private syncAttributes: SyncAttributes;
   private attributes: Map<string, AttributeStore>;
   private cache?: Author;
   private cacheHash?: string;
 
-  constructor(rAuthor: RxAuthor, author: Author) {
-    this.rAuthor = rAuthor;
+  constructor(syncAuthor: SyncAuthor, author: Author) {
+    this.syncAuthor = syncAuthor;
     this.guid = author.guid;
     this.name = author.name;
     this.email = author.email;
-    this.rAttributes = createYjsDocFactory()().createArray<RxAttribute>();
-    this.rAuthor.set("attributes", this.rAttributes);
+    this.syncAttributes = createSyncDocFactory()().createArray<SyncAttribute>();
+    this.syncAuthor.set("attributes", this.syncAttributes);
     this.attributes = new Map();
     author.attributes?.forEach((attribute) => this.createAttribute(attribute));
   }
 
   get guid(): string {
-    return this.rAuthor.get("guid") as string;
+    return this.syncAuthor.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rAuthor.set("guid", guid);
+    this.syncAuthor.set("guid", guid);
   }
 
   get name(): string {
-    return this.rAuthor.get("name") as string;
+    return this.syncAuthor.get("name") as string;
   }
   set name(name: string) {
-    this.rAuthor.set("name", name);
+    this.syncAuthor.set("name", name);
   }
 
   get email(): string {
-    return this.rAuthor.get("email") as string;
+    return this.syncAuthor.get("email") as string;
   }
   set email(email: string) {
-    this.rAuthor.set("email", email);
+    this.syncAuthor.set("email", email);
   }
 
   hasAttribute(guid: string): boolean {
@@ -2315,15 +2317,15 @@ class AuthorStore {
 
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
-    const rAttribute = createYjsDocFactory()().createMap<RxAttributeVal>();
-    this.rAttributes.push([rAttribute]);
+    const syncAttribute = createSyncDocFactory()().createMap<SyncAttributeVal>();
+    this.syncAttributes.push([syncAttribute]);
 
-    rAttribute.set("guid", attribute.guid);
-    rAttribute.set("key", attribute.key);
-    rAttribute.set("value", attribute.value || "");
-    rAttribute.set("definition", attribute.definition || "");
-    const yAttributeStore = new AttributeStore(rAttribute, attribute);
-    this.attributes.set(attribute.guid, yAttributeStore);
+    syncAttribute.set("guid", attribute.guid);
+    syncAttribute.set("key", attribute.key);
+    syncAttribute.set("value", attribute.value || "");
+    syncAttribute.set("definition", attribute.definition || "");
+    const attributeStore = new AttributeStore(syncAttribute, attribute);
+    this.attributes.set(attribute.guid, attributeStore);
   }
 
   attribute(guid: string): AttributeStore {
@@ -2355,11 +2357,11 @@ class AuthorStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rAuthor, subscribe);
+    return createObserver(this.syncAuthor, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rAuthor, subscribe, true);
+    return createObserver(this.syncAuthor, subscribe, true);
   };
 }
 
@@ -2399,7 +2401,7 @@ const useAuthorScope = () => useContext(AuthorScopeContext);
  * useAuthorStore holds the data fields for a useAuthorStore record.
  **/
 function useAuthorStore<T>(selector?: (store: AuthorStore) => T, guid?: string): T | AuthorStore | null {
-  const kitStore = useKitStore() as KitStore | null;
+  const kitStore = useKitStore() as CollaborativeKitStore | null;
   const authorScope = useAuthorScope();
   const authorGuid = authorScope?.guid ?? guid;
   if (!kitStore) return null;
@@ -2428,112 +2430,112 @@ export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: 
 // #region File
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File)
-// Yjs-backed file store managing file metadata and content references.
+// Sync-backed file store managing file metadata and content references.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖file](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/File)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/RxFiles)
- * RxFile holds the data fields for a RxFile record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/SyncFiles)
+ * SyncFile holds the data fields for a SyncFile record.
  **/
-type RxFile = RMap<string | number | RxAttributes>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/RxFiles)
+type SyncFile = SyncMap<string | number | SyncAttributes>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/SyncFiles)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/File/d/i/RxFiles)
- * RxFiles holds the data fields for a RxFiles record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖file✂️yfiles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/File/d/i/SyncFiles)
+ * SyncFiles holds the data fields for a SyncFiles record.
  **/
-type RxFiles = RArray<RxFile>;
+type SyncFiles = SyncArray<SyncFile>;
 
 /**
  **/
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖file🛠️filestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/FileStore)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder🛠️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/RxFolders)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder🛠️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/SyncFolders)
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖file🛠️filestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/File/d/i/FileStore)
  **/
 class FileStore {
-  private rFile: RxFile;
+  private syncFile: SyncFile;
   private cache?: SemioFile;
   private cacheHash?: string;
 
-  constructor(rFile: RxFile) {
-    this.rFile = rFile;
+  constructor(syncFile: SyncFile) {
+    this.syncFile = syncFile;
   }
 
   get guid(): string {
-    return this.rFile.get("guid") as string;
+    return this.syncFile.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rFile.set("guid", guid);
+    this.syncFile.set("guid", guid);
   }
 
   get name(): string {
-    return this.rFile.get("name") as string;
+    return this.syncFile.get("name") as string;
   }
   set name(name: string) {
-    this.rFile.set("name", name);
+    this.syncFile.set("name", name);
   }
   get folder(): string | undefined {
-    return this.rFile.get("folder") as string | undefined;
+    return this.syncFile.get("folder") as string | undefined;
   }
   set folder(folder: string | undefined) {
-    if (folder) this.rFile.set("folder", folder);
-    else this.rFile.delete("folder");
+    if (folder) this.syncFile.set("folder", folder);
+    else this.syncFile.delete("folder");
   }
   get remote(): string | undefined {
-    return this.rFile.get("remote") as string | undefined;
+    return this.syncFile.get("remote") as string | undefined;
   }
   set remote(remote: string | undefined) {
-    this.rFile.set("remote", remote || "");
+    this.syncFile.set("remote", remote || "");
   }
   get size(): number | undefined {
-    return this.rFile.get("size") as number | undefined;
+    return this.syncFile.get("size") as number | undefined;
   }
   set size(size: number | undefined) {
     if (size !== undefined) {
-      this.rFile.set("size", size);
+      this.syncFile.set("size", size);
     }
   }
   get fileHash(): string | undefined {
-    return this.rFile.get("hash") as string | undefined;
+    return this.syncFile.get("hash") as string | undefined;
   }
   set fileHash(hash: string | undefined) {
-    this.rFile.set("hash", hash || "");
+    this.syncFile.set("hash", hash || "");
   }
   get createdAt(): Date | undefined {
-    const date = this.rFile.get("createdAt") as string | undefined;
+    const date = this.syncFile.get("createdAt") as string | undefined;
     return date ? new Date(date) : undefined;
   }
   set createdAt(createdAt: Date | string | undefined) {
     if (!createdAt) {
     } else if (typeof createdAt === "string") {
-      this.rFile.set("createdAt", createdAt);
-      this.rFile.set("createdAt", createdAt.toISOString());
+      this.syncFile.set("createdAt", createdAt);
+      this.syncFile.set("createdAt", createdAt.toISOString());
     }
   }
   get updatedAt(): Date | undefined {
-    const date = this.rFile.get("updatedAt") as string | undefined;
+    const date = this.syncFile.get("updatedAt") as string | undefined;
     return date ? new Date(date) : undefined;
   }
   set updatedAt(updatedAt: Date | string | undefined) {
     if (!updatedAt) {
-      this.rFile.set("updatedAt", "");
+      this.syncFile.set("updatedAt", "");
     } else if (typeof updatedAt === "string") {
-      this.rFile.set("updatedAt", updatedAt);
+      this.syncFile.set("updatedAt", updatedAt);
     } else {
-      this.rFile.set("updatedAt", updatedAt.toISOString());
+      this.syncFile.set("updatedAt", updatedAt.toISOString());
     }
   }
   get createdBy(): Guid | undefined {
-    return this.rFile.get("createdBy") as string | undefined;
+    return this.syncFile.get("createdBy") as string | undefined;
   }
   set createdBy(createdBy: Guid | undefined) {
-    this.rFile.set("createdBy", createdBy || "");
+    this.syncFile.set("createdBy", createdBy || "");
   }
   get updatedBy(): Guid | undefined {
-    return this.rFile.get("updatedBy") as string | undefined;
+    return this.syncFile.get("updatedBy") as string | undefined;
   }
   set updatedBy(updatedBy: Guid | undefined) {
-    this.rFile.set("updatedBy", updatedBy || "");
+    this.syncFile.set("updatedBy", updatedBy || "");
   }
 
   hashFile = (file: SemioFile): string => {
@@ -2576,11 +2578,11 @@ class FileStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rFile, subscribe);
+    return createObserver(this.syncFile, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rFile, subscribe, true);
+    return createObserver(this.syncFile, subscribe, true);
   };
 }
 
@@ -2589,20 +2591,20 @@ class FileStore {
 // #region Folder
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder)
-// Yjs-backed folder store managing folder hierarchy and file references.
+// Sync-backed folder store managing folder hierarchy and file references.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖folder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Folder)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖folder✂️yfolder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/RxFolder)
- * RxFolder holds the data fields for a RxFolder record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖folder✂️yfolder](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/SyncFolder)
+ * SyncFolder holds the data fields for a SyncFolder record.
  **/
-type RxFolder = RMap<string | RxAttributes>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder✂️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/RxFolders)
+type SyncFolder = SyncMap<string | SyncAttributes>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder✂️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/SyncFolders)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖folder✂️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Folder/d/i/RxFolders)
- * RxFolders holds the data fields for a RxFolders record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖folder✂️yfolders](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Folder/d/i/SyncFolders)
+ * SyncFolders holds the data fields for a SyncFolders record.
  **/
-type RxFolders = RArray<RxFolder>;
+type SyncFolders = SyncArray<SyncFolder>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖folder🛠️folderstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Folder/d/i/FolderStore)
 /**
@@ -2610,81 +2612,81 @@ type RxFolders = RArray<RxFolder>;
  * FolderStore holds the data fields for a FolderStore record.
  **/
 class FolderStore {
-  rFolder: RxFolder;
+  syncFolder: SyncFolder;
   private cache?: Folder;
   private cacheHash?: string;
 
-  constructor(rFolder: RxFolder) {
-    this.rFolder = rFolder;
+  constructor(syncFolder: SyncFolder) {
+    this.syncFolder = syncFolder;
   }
 
   get guid(): string {
-    return this.rFolder.get("guid") as string;
+    return this.syncFolder.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rFolder.set("guid", guid);
+    this.syncFolder.set("guid", guid);
   }
 
   get name(): string {
-    return this.rFolder.get("name") as string;
+    return this.syncFolder.get("name") as string;
   }
   set name(name: string) {
-    this.rFolder.set("name", name);
+    this.syncFolder.set("name", name);
   }
 
   get parent(): string | undefined {
-    return this.rFolder.get("parent") as string | undefined;
+    return this.syncFolder.get("parent") as string | undefined;
   }
   set parent(parent: string | undefined) {
-    if (parent) this.rFolder.set("parent", parent);
-    else this.rFolder.delete("parent");
+    if (parent) this.syncFolder.set("parent", parent);
+    else this.syncFolder.delete("parent");
   }
 
   get description(): string | undefined {
-    return this.rFolder.get("description") as string | undefined;
+    return this.syncFolder.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rFolder.set("description", description || "");
+    this.syncFolder.set("description", description || "");
   }
   get createdAt(): Date | undefined {
-    const date = this.rFolder.get("createdAt") as string | undefined;
+    const date = this.syncFolder.get("createdAt") as string | undefined;
   }
   set createdAt(createdAt: Date | string | undefined) {
     if (!createdAt) {
-      this.rFolder.set("createdAt", "");
+      this.syncFolder.set("createdAt", "");
     } else if (typeof createdAt === "string") {
-      this.rFolder.set("createdAt", createdAt);
+      this.syncFolder.set("createdAt", createdAt);
     } else {
-      this.rFolder.set("createdAt", createdAt.toISOString());
+      this.syncFolder.set("createdAt", createdAt.toISOString());
     }
   }
 
   get updatedAt(): Date | undefined {
-    const date = this.rFolder.get("updatedAt") as string | undefined;
+    const date = this.syncFolder.get("updatedAt") as string | undefined;
     return date ? new Date(date) : undefined;
   }
   set updatedAt(updatedAt: Date | string | undefined) {
     if (!updatedAt) {
-      this.rFolder.set("updatedAt", "");
+      this.syncFolder.set("updatedAt", "");
     } else if (typeof updatedAt === "string") {
-      this.rFolder.set("updatedAt", updatedAt);
+      this.syncFolder.set("updatedAt", updatedAt);
     } else {
-      this.rFolder.set("updatedAt", updatedAt.toISOString());
+      this.syncFolder.set("updatedAt", updatedAt.toISOString());
     }
   }
 
   get createdBy(): Guid | undefined {
-    return this.rFolder.get("createdBy") as string | undefined;
+    return this.syncFolder.get("createdBy") as string | undefined;
   }
   set createdBy(createdBy: Guid | undefined) {
-    this.rFolder.set("createdBy", createdBy || "");
+    this.syncFolder.set("createdBy", createdBy || "");
   }
 
   get updatedBy(): Guid | undefined {
-    return this.rFolder.get("updatedBy") as string | undefined;
+    return this.syncFolder.get("updatedBy") as string | undefined;
   }
   set updatedBy(updatedBy: Guid | undefined) {
-    this.rFolder.set("updatedBy", updatedBy || "");
+    this.syncFolder.set("updatedBy", updatedBy || "");
   }
   hashFolder = (folder: Folder): string => {
     return JSON.stringify(folder);
@@ -2723,11 +2725,11 @@ class FolderStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rFolder, subscribe);
+    return createObserver(this.syncFolder, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rFolder, subscribe, true);
+    return createObserver(this.syncFolder, subscribe, true);
   };
 }
 
@@ -2736,37 +2738,37 @@ class FolderStore {
 // #region Benchmark
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖benchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark)
-// Yjs-backed benchmark store managing performance measurement data.
+// Sync-backed benchmark store managing performance measurement data.
 
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/RxBenchmark)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/SyncBenchmark)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/RxBenchmark)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/RxBenchmark)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/SyncBenchmark)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖benchmark✂️ybenchmark](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/SyncBenchmark)
  **/
-type RxBenchmark = RMap<string | number | boolean | RxAttributes>;
+type SyncBenchmark = SyncMap<string | number | boolean | SyncAttributes>;
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmarks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/RxBenchmarks)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark✂️ybenchmarks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/SyncBenchmarks)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/RxQuality)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖benchmark✂️ybenchmarks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/RxBenchmarks)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/SyncQuality)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖benchmark✂️ybenchmarks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/SyncBenchmarks)
  **/
-type RxBenchmarks = RArray<RxBenchmark>;
+type SyncBenchmarks = SyncArray<SyncBenchmark>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖benchmark🛠️benchmarkstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Benchmark/d/i/BenchmarkStore)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality🛠️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/RxQuality)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality🛠️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/SyncQuality)
  * BenchmarkStore holds the data fields for a BenchmarkStore record.
  **/
 class BenchmarkStore {
-  private rBenchmark: RxBenchmark;
+  private syncBenchmark: SyncBenchmark;
   private cache?: Benchmark;
   private cacheHash?: string;
 
-  constructor(rBenchmark: RxBenchmark, benchmark: Benchmark) {
-    this.rBenchmark = rBenchmark;
+  constructor(syncBenchmark: SyncBenchmark, benchmark: Benchmark) {
+    this.syncBenchmark = syncBenchmark;
     this.guid = benchmark.guid;
     this.name = benchmark.name;
     this.icon = benchmark.icon;
@@ -2777,52 +2779,52 @@ class BenchmarkStore {
   }
 
   get guid(): string {
-    return this.rBenchmark.get("guid") as string;
+    return this.syncBenchmark.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rBenchmark.set("guid", guid);
+    this.syncBenchmark.set("guid", guid);
   }
 
   get name(): string {
-    return this.rBenchmark.get("name") as string;
+    return this.syncBenchmark.get("name") as string;
   }
   set name(name: string) {
-    this.rBenchmark.set("name", name);
+    this.syncBenchmark.set("name", name);
   }
 
   get icon(): string | undefined {
-    return this.rBenchmark.get("icon") as string | undefined;
+    return this.syncBenchmark.get("icon") as string | undefined;
   }
   set icon(icon: string | undefined) {
-    this.rBenchmark.set("icon", icon || "");
+    this.syncBenchmark.set("icon", icon || "");
   }
 
   get min(): number | undefined {
-    return this.rBenchmark.get("min") as number | undefined;
+    return this.syncBenchmark.get("min") as number | undefined;
   }
   set min(min: number | undefined) {
-    this.rBenchmark.set("min", min || 0);
+    this.syncBenchmark.set("min", min || 0);
   }
 
   get minExcluded(): boolean | undefined {
-    return this.rBenchmark.get("minExcluded") as boolean | undefined;
+    return this.syncBenchmark.get("minExcluded") as boolean | undefined;
   }
   set minExcluded(minExcluded: boolean | undefined) {
-    this.rBenchmark.set("minExcluded", minExcluded || false);
+    this.syncBenchmark.set("minExcluded", minExcluded || false);
   }
 
   get max(): number | undefined {
-    return this.rBenchmark.get("max") as number | undefined;
+    return this.syncBenchmark.get("max") as number | undefined;
   }
   set max(max: number | undefined) {
-    this.rBenchmark.set("max", max || 0);
+    this.syncBenchmark.set("max", max || 0);
   }
 
   get maxExcluded(): boolean | undefined {
-    return this.rBenchmark.get("maxExcluded") as boolean | undefined;
+    return this.syncBenchmark.get("maxExcluded") as boolean | undefined;
   }
   set maxExcluded(maxExcluded: boolean | undefined) {
-    this.rBenchmark.set("maxExcluded", maxExcluded || false);
+    this.syncBenchmark.set("maxExcluded", maxExcluded || false);
   }
 
   hash = (benchmark: Benchmark): string => {
@@ -2864,11 +2866,11 @@ class BenchmarkStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rBenchmark, subscribe);
+    return createObserver(this.syncBenchmark, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rBenchmark, subscribe, true);
+    return createObserver(this.syncBenchmark, subscribe, true);
   };
 }
 
@@ -2877,83 +2879,83 @@ class BenchmarkStore {
 // #region Quality
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality)
-// Yjs-backed quality store managing quality criteria definitions.
+// Sync-backed quality store managing quality criteria definitions.
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖quality✂️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Quality/d/i/RxQuality)
- * RxQuality holds the data fields for a RxQuality record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖quality✂️yquality](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Quality/d/i/SyncQuality)
+ * SyncQuality holds the data fields for a SyncQuality record.
  **/
-type RxQuality = RMap<string | number | RxAttributes>;
+type SyncQuality = SyncMap<string | number | SyncAttributes>;
 /**
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/RxQualities)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/SyncQualities)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/RxQualities)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/RxQualities)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/SyncQualities)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality✂️yqualities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/SyncQualities)
  **/
-type RxQualities = RArray<RxQuality>;
+type SyncQualities = SyncArray<SyncQuality>;
 
 /**
- * Yjs-backed quality store managing quality criteria data and change tracking.
+ * Sync-backed quality store managing quality criteria data and change tracking.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality🛠️qualitystore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/QualityStore)
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🔖quality🛠️qualitystore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/QualityStore)
  *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖quality🛠️qualitystore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/Quality/d/i/QualityStore)
  **/
 export class QualityStore {
-  private rQuality: RxQuality;
+  private syncQuality: SyncQuality;
   private cache?: Quality;
   private cacheHash?: string;
 
-  constructor(rQuality: RxQuality, quality: Quality) {
-    this.rQuality = rQuality;
+  constructor(syncQuality: SyncQuality, quality: Quality) {
+    this.syncQuality = syncQuality;
     this.guid = quality.guid;
     this.key = quality.key;
     this.name = quality.name;
   }
 
   get guid(): string {
-    return this.rQuality.get("guid") as string;
+    return this.syncQuality.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rQuality.set("guid", guid);
+    this.syncQuality.set("guid", guid);
   }
 
   get key(): string {
-    return this.rQuality.get("key") as string;
+    return this.syncQuality.get("key") as string;
   }
   set key(key: string) {
-    this.rQuality.set("key", key);
+    this.syncQuality.set("key", key);
   }
 
   get name(): string {
-    return this.rQuality.get("name") as string;
+    return this.syncQuality.get("name") as string;
   }
   set name(name: string) {
-    this.rQuality.set("name", name);
+    this.syncQuality.set("name", name);
   }
 
   get folder(): string | undefined {
-    return this.rQuality.get("folder") as string | undefined;
+    return this.syncQuality.get("folder") as string | undefined;
   }
   set folder(folder: string | undefined) {
-    if (folder) this.rQuality.set("folder", folder);
-    else this.rQuality.delete("folder");
+    if (folder) this.syncQuality.set("folder", folder);
+    else this.syncQuality.delete("folder");
   }
 
   get unit(): string | undefined {
-    return this.rQuality.get("unit") as string | undefined;
+    return this.syncQuality.get("unit") as string | undefined;
   }
   set unit(unit: string | undefined) {
-    this.rQuality.set("unit", unit || "");
+    this.syncQuality.set("unit", unit || "");
   }
 
   get description(): string | undefined {
-    return this.rQuality.get("description") as string | undefined;
+    return this.syncQuality.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    if (description) this.rQuality.set("description", description);
-    else this.rQuality.delete("description");
+    if (description) this.syncQuality.set("description", description);
+    else this.syncQuality.delete("description");
   }
 
   id(): Guid {
@@ -3001,11 +3003,11 @@ export class QualityStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rQuality, subscribe);
+    return createObserver(this.syncQuality, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rQuality, subscribe, true);
+    return createObserver(this.syncQuality, subscribe, true);
   };
 }
 
@@ -3014,16 +3016,16 @@ export class QualityStore {
 // #region Prop
 
 // [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖prop](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/PROP)
-// Yjs-backed prop store managing design property definitions.
+// Sync-backed prop store managing design property definitions.
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/RxProp)
- *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/d/i/RxProp)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/SyncProp)
+ *[👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs✂️yprop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/d/i/SyncProp)
  **/
-type RxProp = RMap<string | number | boolean | RxAttributes>;
+type SyncProp = SyncMap<string | number | boolean | SyncAttributes>;
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/RxProps)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs✂️yprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/SyncProps)
  **/
-type RxProps = RArray<RxProp>;
+type SyncProps = SyncArray<SyncProp>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖plainappstorenoyjs🛠️propstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Plain%20App%20Store%20(No%20YJS)/d/i/PropStore)
 /**
@@ -3031,12 +3033,12 @@ type RxProps = RArray<RxProp>;
  * PropStore holds the data fields for a PropStore record.
  **/
 class PropStore {
-  private rProp: RxProp;
+  private syncProp: SyncProp;
   private cache?: Prop;
   private cacheHash?: string;
 
-  constructor(rProp: RxProp, prop: Prop) {
-    this.rProp = rProp;
+  constructor(syncProp: SyncProp, prop: Prop) {
+    this.syncProp = syncProp;
     this.guid = prop.guid;
     this.quality = prop.quality;
     this.value = prop.value;
@@ -3044,31 +3046,31 @@ class PropStore {
   }
 
   get guid(): string {
-    return this.rProp.get("guid") as string;
+    return this.syncProp.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rProp.set("guid", guid);
+    this.syncProp.set("guid", guid);
   }
 
   get quality(): QualityId {
-    return { guid: this.rProp.get("quality") as string };
+    return { guid: this.syncProp.get("quality") as string };
   }
   set quality(quality: QualityId) {
-    this.rProp.set("quality", quality.guid);
+    this.syncProp.set("quality", quality.guid);
   }
 
   get value(): string | undefined {
-    return this.rProp.get("value") as string | undefined;
+    return this.syncProp.get("value") as string | undefined;
   }
   set value(value: string | undefined) {
-    this.rProp.set("value", value || "");
+    this.syncProp.set("value", value || "");
   }
 
   get unit(): string | undefined {
-    return this.rProp.get("unit") as string | undefined;
+    return this.syncProp.get("unit") as string | undefined;
   }
   set unit(unit: string | undefined) {
-    this.rProp.set("unit", unit || "");
+    this.syncProp.set("unit", unit || "");
   }
 
   id(): Guid {
@@ -3111,11 +3113,11 @@ class PropStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rProp, subscribe);
+    return createObserver(this.syncProp, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rProp, subscribe, true);
+    return createObserver(this.syncProp, subscribe, true);
   };
 }
 
@@ -3124,76 +3126,76 @@ class PropStore {
 // #region Model
 
 // [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖model](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/MODEL)
-// Yjs-backed model store managing 3D model representations.
+// Sync-backed model store managing 3D model representations.
 
-type RxModelVal = string | RArray<string> | RxAttributes;
+type SyncModelVal = string | SyncArray<string> | SyncAttributes;
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/RxModel)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodel](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/SyncModel)
  **/
-type RxModel = RMap<RxModelVal>;
+type SyncModel = SyncMap<SyncModelVal>;
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/RxModels)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model✂️ymodels](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/SyncModels)
  **/
-type RxModels = RArray<RxModel>;
+type SyncModels = SyncArray<SyncModel>;
 
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖model🛠️modelstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Model/d/i/ModelStore)
  **/
 export class ModelStore {
-  private rModel: RxModel;
-  private rTags: RArray<string>;
+  private syncModel: SyncModel;
+  private syncTags: SyncArray<string>;
   private attributes: Map<string, AttributeStore>;
   private cache?: Model;
   private cacheHash?: string;
 
-  constructor(rModel: RxModel, model: Model) {
-    this.rModel = rModel;
+  constructor(syncModel: SyncModel, model: Model) {
+    this.syncModel = syncModel;
     this.guid = model.guid;
 
-    this.rModel.set("file", typeof model.file === "string" ? model.file : model.file.guid);
+    this.syncModel.set("file", typeof model.file === "string" ? model.file : model.file.guid);
     this.description = model.description;
-    const rTags = createYjsDocFactory()().createArray<string>();
-    this.rModel.set("tags", rTags);
-    this.rTags = rTags;
+    const syncTags = createSyncDocFactory()().createArray<string>();
+    this.syncModel.set("tags", syncTags);
+    this.syncTags = syncTags;
 
-    if (model.tags) this.rTags.push(model.tags.map((t) => (typeof t === "string" ? t : t.guid)));
+    if (model.tags) this.syncTags.push(model.tags.map((t) => (typeof t === "string" ? t : t.guid)));
     this.attributes = new Map();
-    const rAttributes = createYjsDocFactory()().createArray<RxAttribute>();
-    this.rModel.set("attributes", rAttributes);
-    this.rAttributes = rAttributes;
+    const syncAttributes = createSyncDocFactory()().createArray<SyncAttribute>();
+    this.syncModel.set("attributes", syncAttributes);
+    this.syncAttributes = syncAttributes;
     if (model.attributes) {
       for (const attribute of model.attributes) {
-        const rAttribute = createYjsDocFactory()().createMap<RxAttributeVal>();
-        this.rAttributes.push([rAttribute]);
+        const syncAttribute = createSyncDocFactory()().createMap<SyncAttributeVal>();
+        this.syncAttributes.push([syncAttribute]);
 
-        rAttribute.set("guid", attribute.guid);
-        rAttribute.set("key", attribute.key);
-        rAttribute.set("value", attribute.value || "");
-        rAttribute.set("definition", attribute.definition || "");
-        const attributeStore = new AttributeStore(rAttribute, attribute);
+        syncAttribute.set("guid", attribute.guid);
+        syncAttribute.set("key", attribute.key);
+        syncAttribute.set("value", attribute.value || "");
+        syncAttribute.set("definition", attribute.definition || "");
+        const attributeStore = new AttributeStore(syncAttribute, attribute);
         this.attributes.set(attribute.guid, attributeStore);
       }
     }
   }
 
   get guid(): string {
-    return this.rModel.get("guid") as string;
+    return this.syncModel.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rModel.set("guid", guid);
+    this.syncModel.set("guid", guid);
   }
 
   get file(): FileId {
-    const fileGuid = this.rModel.get("file") as string;
+    const fileGuid = this.syncModel.get("file") as string;
     return { guid: fileGuid };
   }
   set file(file: FileId | string) {
-    this.rModel.set("file", typeof file === "string" ? file : file.guid);
+    this.syncModel.set("file", typeof file === "string" ? file : file.guid);
   }
 
-  get description(): string | undefined { }
+  get description(): string | undefined {}
   set description(description: string | undefined) {
-    this.rModel.set("description", description || "");
+    this.syncModel.set("description", description || "");
   }
 
   hash = (model: Model): string => {
@@ -3201,7 +3203,7 @@ export class ModelStore {
   };
 
   snapshot(): Model {
-    const tags: TagId[] = this.rTags.toArray().map((guid) => ({ guid }));
+    const tags: TagId[] = this.syncTags.toArray().map((guid) => ({ guid }));
     const currentHash = this.hash({
       guid: this.guid,
       file: this.file,
@@ -3229,7 +3231,7 @@ export class ModelStore {
     if (diff.file !== undefined) this.file = diff.file;
     if (diff.description !== undefined) this.description = diff.description;
     if (diff.tags !== undefined) {
-      this.rTags.delete(0, this.rTags.length);
+      this.syncTags.delete(0, this.syncTags.length);
       if (diff.tags.length > 0) {
       }
     }
@@ -3240,11 +3242,11 @@ export class ModelStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rModel, subscribe);
+    return createObserver(this.syncModel, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rModel, subscribe, true);
+    return createObserver(this.syncModel, subscribe, true);
   };
 }
 
@@ -3253,44 +3255,44 @@ export class ModelStore {
 // #region Connector
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖connector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector)
-// Yjs-backed connector store managing type connectors and their ports.
+// Sync-backed connector store managing type connectors and their ports.
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connector✂️yconnectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connector/d/i/RxConnectorVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connector✂️yconnectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connector/d/i/SyncConnectorVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/RxConnectorVal)
- * RxConnectorVal holds the data fields for a RxConnectorVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnectorval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/SyncConnectorVal)
+ * SyncConnectorVal holds the data fields for a SyncConnectorVal record.
  **/
-type RxConnectorVal = string | number | boolean | RxAttributes | RArray<string> | RxPoint | RxVector | RxProps;
-/** RxConnector holds the data fields for a RxConnector record.
+type SyncConnectorVal = string | number | boolean | SyncAttributes | SyncArray<string> | SyncPoint | SyncVector | SyncProps;
+/** SyncConnector holds the data fields for a SyncConnector record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖connector✂️yconnector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector/d/i/RxConnector)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖connector✂️yconnector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector/d/i/SyncConnector)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/RxConnector)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnector](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/SyncConnector)
  **/
-type RxConnector = RMap<RxConnectorVal>;
-/** RxConnectors holds the data fields for a RxConnectors record.
+type SyncConnector = SyncMap<SyncConnectorVal>;
+/** SyncConnectors holds the data fields for a SyncConnectors record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖connector✂️yconnectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector/d/i/RxConnectors)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖connector✂️yconnectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connector/d/i/SyncConnectors)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/RxConnectors)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connector✂️yconnectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connector/d/i/SyncConnectors)
  **/
-type RxConnectors = RArray<RxConnector>;
+type SyncConnectors = SyncArray<SyncConnector>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connector🛠️connectorstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connector/d/i/ConnectorStore)
 /**
  * ConnectorStore holds the data fields for a ConnectorStore record.
  **/
 class ConnectorStore {
-  private rConnector: RxConnector;
-  private rPoint: RxPoint;
-  private point: RxPointStore;
-  private rDirection: RxVector;
-  private direction: RxVectorStore;
+  private syncConnector: SyncConnector;
+  private syncPoint: SyncPoint;
+  private point: SyncPointStore;
+  private syncDirection: SyncVector;
+  private direction: SyncVectorStore;
   private cache?: Connector;
   private cacheHash?: string;
 
-  constructor(rConnector: RxConnector, connector: Connector) {
-    this.rConnector = rConnector;
+  constructor(syncConnector: SyncConnector, connector: Connector) {
+    this.syncConnector = syncConnector;
     this.guid = connector.guid;
     this.localId = connector.name;
     this.description = connector.description;
@@ -3298,55 +3300,55 @@ class ConnectorStore {
     this.mandatory = connector.mandatory;
     this.t = connector.t;
 
-    this.rPoint = createYjsDocFactory()().createMap();
-    this.rConnector.set("point", this.rPoint);
-    this.point = new RxPointStore(this.rPoint, connector.point);
+    this.syncPoint = createSyncDocFactory()().createMap();
+    this.syncConnector.set("point", this.syncPoint);
+    this.point = new SyncPointStore(this.syncPoint, connector.point);
 
-    this.rDirection = createYjsDocFactory()().createMap();
-    this.rConnector.set("direction", this.rDirection);
-    this.direction = new RxVectorStore(this.rDirection, connector.direction);
+    this.syncDirection = createSyncDocFactory()().createMap();
+    this.syncConnector.set("direction", this.syncDirection);
+    this.direction = new SyncVectorStore(this.syncDirection, connector.direction);
   }
 
   get guid(): string {
-    return this.rConnector.get("guid") as string;
+    return this.syncConnector.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rConnector.set("guid", guid);
+    this.syncConnector.set("guid", guid);
   }
 
   get localId(): string | undefined {
-    return this.rConnector.get("id_") as string | undefined;
+    return this.syncConnector.get("id_") as string | undefined;
   }
   set localId(id_: string | undefined) {
-    this.rConnector.set("id_", id_ || "");
+    this.syncConnector.set("id_", id_ || "");
   }
 
   get description(): string | undefined {
-    return this.rConnector.get("description") as string | undefined;
+    return this.syncConnector.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rConnector.set("description", description || "");
+    this.syncConnector.set("description", description || "");
   }
 
   get port(): string | undefined {
-    return this.rConnector.get("port") as string | undefined;
+    return this.syncConnector.get("port") as string | undefined;
   }
   set port(port_: string | undefined) {
-    this.rConnector.set("port", port_ || "");
+    this.syncConnector.set("port", port_ || "");
   }
 
   get mandatory(): boolean | undefined {
-    return this.rConnector.get("mandatory") as boolean | undefined;
+    return this.syncConnector.get("mandatory") as boolean | undefined;
   }
   set mandatory(mandatory: boolean | undefined) {
-    if (mandatory !== undefined) this.rConnector.set("mandatory", mandatory);
+    if (mandatory !== undefined) this.syncConnector.set("mandatory", mandatory);
   }
 
   get t(): number {
-    return this.rConnector.get("t") as number;
+    return this.syncConnector.get("t") as number;
   }
   set t(t: number) {
-    this.rConnector.set("t", t);
+    this.syncConnector.set("t", t);
   }
 
   hash = (connector: Connector): string => {
@@ -3388,11 +3390,11 @@ class ConnectorStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rConnector, subscribe);
+    return createObserver(this.syncConnector, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rConnector, subscribe, true);
+    return createObserver(this.syncConnector, subscribe, true);
   };
 }
 
@@ -3401,48 +3403,48 @@ class ConnectorStore {
 // #region Type
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖type](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type)
-// Yjs-backed type store managing architectural type definitions and connectors.
+// Sync-backed type store managing architectural type definitions and connectors.
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytypeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/RxTypeVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytypeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/SyncTypeVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytypeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/RxTypeVal)
- * RxTypeVal holds the data fields for a RxTypeVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytypeval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/SyncTypeVal)
+ * SyncTypeVal holds the data fields for a SyncTypeVal record.
  **/
-type RxTypeVal = string | number | boolean | RxAuthorUuids | RxAttributes | RxModels | RxConnectors | RxProps | RxLocation;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytype](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/RxType)
+type SyncTypeVal = string | number | boolean | SyncAuthorUuids | SyncAttributes | SyncModels | SyncConnectors | SyncProps | SyncLocation;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytype](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/SyncType)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytype](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/RxType)
- * RxType holds the data fields for a RxType record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytype](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/SyncType)
+ * SyncType holds the data fields for a SyncType record.
  **/
-type RxType = RMap<RxTypeVal>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/RxTypes)
+type SyncType = SyncMap<SyncTypeVal>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖type✂️ytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Type/d/i/SyncTypes)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/RxTypes)
- * RxTypes holds the data fields for a RxTypes record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type✂️ytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/SyncTypes)
+ * SyncTypes holds the data fields for a SyncTypes record.
  **/
-type RxTypes = RArray<RxType>;
+type SyncTypes = SyncArray<SyncType>;
 
 /**
- * Yjs-backed type store managing architectural type definitions and their connectors.
+ * Sync-backed type store managing architectural type definitions and their connectors.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖type🛠️typestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Type/d/i/TypeStore)
  **/
 export class TypeStore {
-  public readonly parent: KitStore;
-  private rType: RxType;
-  private rAttributes: RxAttributes;
+  public readonly parent: CollaborativeKitStore;
+  private syncType: SyncType;
+  private syncAttributes: SyncAttributes;
   private attributes: Map<string, AttributeStore>;
-  private rAuthors: RxAuthorUuids;
+  private syncAuthors: SyncAuthorUuids;
   private authors: Map<string, AuthorStore>;
-  private yModels: RxModels;
-  private yConnectors: RxConnectors;
+  private syncModels: SyncModels;
+  private syncConnectors: SyncConnectors;
   public models: Map<string, ModelStore>;
   public connectors: Map<string, ConnectorStore>;
   private cache?: Type;
   private cacheHash?: string;
 
-  constructor(parent: KitStore, rType: RxType, type: Type) {
+  constructor(parent: CollaborativeKitStore, syncType: SyncType, type: Type) {
     this.parent = parent;
-    this.rType = rType;
+    this.syncType = syncType;
     this.models = new Map();
     this.connectors = new Map();
 
@@ -3458,128 +3460,128 @@ export class TypeStore {
     this.description = type.description;
 
     this.attributes = new Map();
-    const yTypeAttributes = createYjsDocFactory()().createArray<RxAttribute>();
-    this.rType.set("attributes", yTypeAttributes);
-    this.rAttributes = yTypeAttributes;
+    const typeAttributes = createSyncDocFactory()().createArray<SyncAttribute>();
+    this.syncType.set("attributes", typeAttributes);
+    this.syncAttributes = typeAttributes;
 
     if (type.attributes) {
       type.attributes.forEach((attribute) => this.createAttribute(attribute));
     }
 
     this.authors = new Map();
-    const yTypeAuthors = createYjsDocFactory()().createArray<RxAuthorUuid>();
-    this.rType.set("authors", yTypeAuthors);
-    this.rAuthors = yTypeAuthors;
+    const typeAuthors = createSyncDocFactory()().createArray<SyncAuthorUuid>();
+    this.syncType.set("authors", typeAuthors);
+    this.syncAuthors = typeAuthors;
     if (type.authors) {
       for (const author of type.authors) {
         if (!author?.guid) continue;
         const authorStore = this.parent.author(author.guid);
         if (!authorStore) continue;
         this.authors.set(authorStore.guid, authorStore);
-        this.rAuthors.push([authorStore.guid]);
+        this.syncAuthors.push([authorStore.guid]);
       }
     }
 
-    const yTypeModels = createYjsDocFactory()().createArray<RxModel>();
-    this.rType.set("models", yTypeModels);
-    this.yModels = yTypeModels;
+    const typeModels = createSyncDocFactory()().createArray<SyncModel>();
+    this.syncType.set("models", typeModels);
+    this.syncModels = typeModels;
 
     if (type.models) {
       type.models.forEach((model) => this.createModel(model));
     }
 
-    const yTypePorts = createYjsDocFactory()().createArray<RxConnector>();
-    this.rType.set("connectors", yTypePorts);
-    this.yConnectors = yTypePorts;
+    const typePorts = createSyncDocFactory()().createArray<SyncConnector>();
+    this.syncType.set("connectors", typePorts);
+    this.syncConnectors = typePorts;
     if (type.connectors) {
       for (const connector of type.connectors) {
         this.createPort(connector);
       }
     }
 
-    this.rType.set("createdAt", new Date().toISOString());
+    this.syncType.set("createdAt", new Date().toISOString());
     this.updated();
   }
 
   get guid(): string {
-    return this.rType.get("guid") as string;
+    return this.syncType.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rType.set("guid", guid);
+    this.syncType.set("guid", guid);
   }
 
   get name(): string {
-    return this.rType.get("name") as string;
+    return this.syncType.get("name") as string;
   }
   set name(name: string) {
-    this.rType.set("name", name);
+    this.syncType.set("name", name);
   }
   get parentGuid(): string | undefined {
-    return this.rType.get("parent") as string | undefined;
+    return this.syncType.get("parent") as string | undefined;
   }
   set parentGuid(parent: string | undefined) {
-    if (parent) this.rType.set("parent", parent);
-    else this.rType.delete("parent");
+    if (parent) this.syncType.set("parent", parent);
+    else this.syncType.delete("parent");
   }
   get folder(): string | undefined {
-    return this.rType.get("folder") as string | undefined;
+    return this.syncType.get("folder") as string | undefined;
   }
   set folder(folder: string | undefined) {
-    if (folder) this.rType.set("folder", folder);
-    else this.rType.delete("folder");
+    if (folder) this.syncType.set("folder", folder);
+    else this.syncType.delete("folder");
   }
   get abstract(): boolean | undefined {
-    return this.rType.get("isAbstract") as boolean | undefined;
+    return this.syncType.get("isAbstract") as boolean | undefined;
   }
   set abstract(isAbstract: boolean | undefined) {
-    if (isAbstract) this.rType.set("isAbstract", isAbstract);
-    else this.rType.delete("isAbstract");
+    if (isAbstract) this.syncType.set("isAbstract", isAbstract);
+    else this.syncType.delete("isAbstract");
   }
   get stock(): number | undefined {
-    return this.rType.get("stock") as number | undefined;
+    return this.syncType.get("stock") as number | undefined;
   }
   set stock(stock: number | undefined) {
-    if (stock !== undefined) this.rType.set("stock", stock);
+    if (stock !== undefined) this.syncType.set("stock", stock);
   }
   get virtual(): boolean | undefined {
-    return this.rType.get("virtual") as boolean | undefined;
+    return this.syncType.get("virtual") as boolean | undefined;
   }
   set virtual(virtual: boolean | undefined) {
-    if (virtual !== undefined) this.rType.set("virtual", virtual);
+    if (virtual !== undefined) this.syncType.set("virtual", virtual);
   }
   get unit(): string | undefined {
-    return this.rType.get("unit") as string | undefined;
+    return this.syncType.get("unit") as string | undefined;
   }
   set unit(unit: string | undefined) {
-    this.rType.set("unit", unit || "");
+    this.syncType.set("unit", unit || "");
   }
   get icon(): string | undefined {
-    return this.rType.get("icon") as string | undefined;
+    return this.syncType.get("icon") as string | undefined;
   }
   set icon(icon: string | undefined) {
-    this.rType.set("icon", icon || "");
+    this.syncType.set("icon", icon || "");
   }
   get image(): string | undefined {
-    return this.rType.get("image") as string | undefined;
+    return this.syncType.get("image") as string | undefined;
   }
   set image(image: string | undefined) {
-    this.rType.set("image", image || "");
+    this.syncType.set("image", image || "");
   }
   get description(): string | undefined {
-    return this.rType.get("description") as string | undefined;
+    return this.syncType.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rType.set("description", description || "");
+    this.syncType.set("description", description || "");
   }
   get createdAt(): Date {
-    return new Date(this.rType.get("createdAt") as string);
+    return new Date(this.syncType.get("createdAt") as string);
   }
   get updatedAt(): Date {
-    return new Date(this.rType.get("updatedAt") as string);
+    return new Date(this.syncType.get("updatedAt") as string);
   }
 
   updated(): void {
-    this.rType.set("updatedAt", new Date().toISOString());
+    this.syncType.set("updatedAt", new Date().toISOString());
   }
 
   hasAttribute(identifier: string): boolean {
@@ -3589,15 +3591,15 @@ export class TypeStore {
   createAttribute(attribute: Attribute): void {
     if (!attribute.guid) throw new Error("Attribute guid is required.");
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
-    const rAttribute = createYjsDocFactory()().createMap<RxAttributeVal>();
-    this.rAttributes.push([rAttribute]);
+    const syncAttribute = createSyncDocFactory()().createMap<SyncAttributeVal>();
+    this.syncAttributes.push([syncAttribute]);
 
-    rAttribute.set("guid", attribute.guid);
-    rAttribute.set("key", attribute.key);
-    rAttribute.set("value", attribute.value || "");
-    rAttribute.set("definition", attribute.definition || "");
-    const yAttributeStore = new AttributeStore(rAttribute, attribute);
-    this.attributes.set(attribute.guid, yAttributeStore);
+    syncAttribute.set("guid", attribute.guid);
+    syncAttribute.set("key", attribute.key);
+    syncAttribute.set("value", attribute.value || "");
+    syncAttribute.set("definition", attribute.definition || "");
+    const attributeStore = new AttributeStore(syncAttribute, attribute);
+    this.attributes.set(attribute.guid, attributeStore);
   }
 
   private findAttributeStore(identifier: string): AttributeStore | undefined {
@@ -3612,10 +3614,10 @@ export class TypeStore {
   }
 
   private findAttributeIndexByGuid(guid: string): number {
-    for (let index = 0; index < this.rAttributes.length; index += 1) {
-      const rAttribute = this.rAttributes.get(index) as RxAttribute | undefined;
-      if (!rAttribute) continue;
-      if ((rAttribute.get("guid") as string | undefined) === guid) {
+    for (let index = 0; index < this.syncAttributes.length; index += 1) {
+      const syncAttribute = this.syncAttributes.get(index) as SyncAttribute | undefined;
+      if (!syncAttribute) continue;
+      if ((syncAttribute.get("guid") as string | undefined) === guid) {
         return index;
       }
     }
@@ -3623,10 +3625,10 @@ export class TypeStore {
   }
 
   createModel(model: Model): void {
-    const rModel = createYjsDocFactory()().createMap<RxModelVal>();
-    this.yModels.push([rModel]);
-    const yModelStore = new ModelStore(rModel, model);
-    this.models.set(model.guid, yModelStore);
+    const syncModel = createSyncDocFactory()().createMap<SyncModelVal>();
+    this.syncModels.push([syncModel]);
+    const modelStore = new ModelStore(syncModel, model);
+    this.models.set(model.guid, modelStore);
   }
 
   hasModel(guid: string): boolean {
@@ -3645,10 +3647,10 @@ export class TypeStore {
 
   createPort(connector: Connector): void {
     if (this.hasPort(connector.guid)) throw new Error(`Connector (${connector.guid}) already exists.`);
-    const rConnector = createYjsDocFactory()().createMap<RxConnectorVal>();
-    this.yConnectors.push([rConnector]);
-    const yConnectorStore = new ConnectorStore(rConnector, connector);
-    this.connectors.set(connector.guid, yConnectorStore);
+    const syncConnector = createSyncDocFactory()().createMap<SyncConnectorVal>();
+    this.syncConnectors.push([syncConnector]);
+    const connectorStore = new ConnectorStore(syncConnector, connector);
+    this.connectors.set(connector.guid, connectorStore);
   }
 
   connector(guid: string): ConnectorStore {
@@ -3695,38 +3697,38 @@ export class TypeStore {
   };
 
   change = (diff: TypeDiff) => {
-    this.parent.rDoc.transact(() => {
-      if (diff.name !== undefined) this.rType.set("name", diff.name);
+    this.parent.syncDoc.transact(() => {
+      if (diff.name !== undefined) this.syncType.set("name", diff.name);
       if (diff.parent !== undefined) {
-        if (diff.parent) this.rType.set("parent", diff.parent.guid);
-        else this.rType.delete("parent");
+        if (diff.parent) this.syncType.set("parent", diff.parent.guid);
+        else this.syncType.delete("parent");
       }
       if (diff.folder !== undefined) {
-        if (diff.folder) this.rType.set("folder", diff.folder);
-        else this.rType.delete("folder");
+        if (diff.folder) this.syncType.set("folder", diff.folder);
+        else this.syncType.delete("folder");
       }
       if (diff.isAbstract !== undefined) {
-        if (diff.isAbstract) this.rType.set("isAbstract", diff.isAbstract);
-        else this.rType.delete("isAbstract");
+        if (diff.isAbstract) this.syncType.set("isAbstract", diff.isAbstract);
+        else this.syncType.delete("isAbstract");
       }
-      if (diff.stock !== undefined) this.rType.set("stock", diff.stock);
-      if (diff.virtual !== undefined) this.rType.set("virtual", diff.virtual);
-      if (diff.unit !== undefined) this.rType.set("unit", diff.unit);
-      if (diff.icon !== undefined) this.rType.set("icon", diff.icon || "");
-      if (diff.image !== undefined) this.rType.set("image", diff.image || "");
-      if (diff.description !== undefined) this.rType.set("description", diff.description || "");
-      if (diff.createdAt !== undefined) this.rType.set("createdAt", diff.createdAt);
-      if (diff.updatedAt !== undefined) this.rType.set("updatedAt", diff.updatedAt);
+      if (diff.stock !== undefined) this.syncType.set("stock", diff.stock);
+      if (diff.virtual !== undefined) this.syncType.set("virtual", diff.virtual);
+      if (diff.unit !== undefined) this.syncType.set("unit", diff.unit);
+      if (diff.icon !== undefined) this.syncType.set("icon", diff.icon || "");
+      if (diff.image !== undefined) this.syncType.set("image", diff.image || "");
+      if (diff.description !== undefined) this.syncType.set("description", diff.description || "");
+      if (diff.createdAt !== undefined) this.syncType.set("createdAt", diff.createdAt);
+      if (diff.updatedAt !== undefined) this.syncType.set("updatedAt", diff.updatedAt);
 
       if (diff.authors !== undefined && diff.authors !== null) {
-        this.rAuthors.delete(0, this.rAuthors.length);
+        this.syncAuthors.delete(0, this.syncAuthors.length);
         this.authors = new Map(
           diff.authors.map((authorId) => {
             const author = this.parent.author(authorId.guid);
             return [author.guid, author];
           }),
         );
-        this.authors.forEach((author) => this.rAuthors.push([author.guid]));
+        this.authors.forEach((author) => this.syncAuthors.push([author.guid]));
       }
 
       if (diff.models) {
@@ -3735,7 +3737,7 @@ export class TypeStore {
             const guid = modelId.guid;
             const index = Array.from(this.models.keys()).indexOf(guid);
             if (index !== -1) {
-              this.yModels.delete(index, 1);
+              this.syncModels.delete(index, 1);
               this.models.delete(guid);
             }
           });
@@ -3759,7 +3761,7 @@ export class TypeStore {
             const guid = connectorId.guid;
             const index = Array.from(this.connectors.keys()).indexOf(guid);
             if (index !== -1) {
-              this.yConnectors.delete(index, 1);
+              this.syncConnectors.delete(index, 1);
               this.connectors.delete(guid);
             }
           });
@@ -3784,13 +3786,13 @@ export class TypeStore {
             if (!attribute) return;
             const index = this.findAttributeIndexByGuid(attribute.guid);
             if (index !== -1) {
-              this.rAttributes.delete(index, 1);
+              this.syncAttributes.delete(index, 1);
             }
             this.attributes.delete(attribute.guid);
           });
         }
         if (diff.attributes.added) {
-          diff.attributes.added.forEach((attribute) => { });
+          diff.attributes.added.forEach((attribute) => {});
         }
         if (diff.attributes.updated) {
           diff.attributes.updated.forEach(({ attribute, diff: attributeDiff }) => {
@@ -3807,11 +3809,11 @@ export class TypeStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rType, subscribe, false);
+    return createObserver(this.syncType, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rType, subscribe, true);
+    return createObserver(this.syncType, subscribe, true);
   };
 }
 
@@ -3855,7 +3857,7 @@ export const useIsInTypeScope = () => useTypeScope() !== null;
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖type🪨usetypestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Type/d/i/useTypeStore)
  **/
 function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T | TypeStore | null {
-  const kitStore = useKitStore() as KitStore | null;
+  const kitStore = useKitStore() as CollaborativeKitStore | null;
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid ?? guid;
   if (!kitStore) return null;
@@ -3941,20 +3943,20 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
 // #region Layer
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖layer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Layer)
-// Yjs-backed layer store managing visibility layers in designs.
+// Sync-backed layer store managing visibility layers in designs.
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖layer✂️ylayer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Layer/d/i/RxLayer)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖layer✂️ylayer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Layer/d/i/SyncLayer)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖layer✂️ylayer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Layer/d/i/RxLayer)
- * RxLayer holds the data fields for a RxLayer record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖layer✂️ylayer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Layer/d/i/SyncLayer)
+ * SyncLayer holds the data fields for a SyncLayer record.
  **/
-type RxLayer = RMap<string | boolean | RxAttributes>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖layer✂️ylayers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Layer/d/i/RxLayers)
+type SyncLayer = SyncMap<string | boolean | SyncAttributes>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖layer✂️ylayers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Layer/d/i/SyncLayers)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖layer✂️ylayers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Layer/d/i/RxLayers)
- * RxLayers holds the data fields for a RxLayers record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖layer✂️ylayers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Layer/d/i/SyncLayers)
+ * SyncLayers holds the data fields for a SyncLayers record.
  **/
-type RxLayers = RArray<RxLayer>;
+type SyncLayers = SyncArray<SyncLayer>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖layer🛠️layerstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Layer/d/i/LayerStore)
 /**
@@ -3962,12 +3964,12 @@ type RxLayers = RArray<RxLayer>;
  * LayerStore holds the data fields for a LayerStore record.
  **/
 class LayerStore {
-  private rLayer: RxLayer;
+  private syncLayer: SyncLayer;
   private cache?: Layer;
   private cacheHash?: string;
 
-  constructor(rLayer: RxLayer, layer: Layer) {
-    this.rLayer = rLayer;
+  constructor(syncLayer: SyncLayer, layer: Layer) {
+    this.syncLayer = syncLayer;
     this.guid = layer.guid;
     this.path = layer.path;
     this.isHidden = layer.isHidden;
@@ -3977,45 +3979,45 @@ class LayerStore {
   }
 
   get guid(): string {
-    return this.rLayer.get("guid") as string;
+    return this.syncLayer.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rLayer.set("guid", guid);
+    this.syncLayer.set("guid", guid);
   }
 
   get path(): string {
-    return this.rLayer.get("path") as string;
+    return this.syncLayer.get("path") as string;
   }
   set path(path: string) {
-    this.rLayer.set("path", path);
+    this.syncLayer.set("path", path);
   }
 
   get isHidden(): boolean | undefined {
-    return this.rLayer.get("isHidden") as boolean | undefined;
+    return this.syncLayer.get("isHidden") as boolean | undefined;
   }
   set isHidden(isHidden: boolean | undefined) {
-    if (isHidden !== undefined) this.rLayer.set("isHidden", isHidden);
+    if (isHidden !== undefined) this.syncLayer.set("isHidden", isHidden);
   }
 
   get isLocked(): boolean | undefined {
-    return this.rLayer.get("isLocked") as boolean | undefined;
+    return this.syncLayer.get("isLocked") as boolean | undefined;
   }
   set isLocked(isLocked: boolean | undefined) {
-    if (isLocked !== undefined) this.rLayer.set("isLocked", isLocked);
+    if (isLocked !== undefined) this.syncLayer.set("isLocked", isLocked);
   }
 
   get color(): string | undefined {
-    return this.rLayer.get("color") as string | undefined;
+    return this.syncLayer.get("color") as string | undefined;
   }
   set color(color: string | undefined) {
-    this.rLayer.set("color", color || "");
+    this.syncLayer.set("color", color || "");
   }
 
   get description(): string | undefined {
-    return this.rLayer.get("description") as string | undefined;
+    return this.syncLayer.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rLayer.set("description", description || "");
+    this.syncLayer.set("description", description || "");
   }
 
   id(): string {
@@ -4062,11 +4064,11 @@ class LayerStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rLayer, subscribe);
+    return createObserver(this.syncLayer, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rLayer, subscribe, true);
+    return createObserver(this.syncLayer, subscribe, true);
   };
 }
 
@@ -4075,55 +4077,55 @@ class LayerStore {
 // #region Piece
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖piece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece)
-// Yjs-backed piece store managing design piece instances and their transforms.
+// Sync-backed piece store managing design piece instances and their transforms.
 
-/** RxPieceVal holds the data fields for a RxPieceVal record.
+/** SyncPieceVal holds the data fields for a SyncPieceVal record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖piece✂️ypieceval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/RxPieceVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖piece✂️ypieceval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/SyncPieceVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypieceval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/RxPieceVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypieceval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/SyncPieceVal)
  **/
-type RxPieceVal = string | number | boolean | RxPlane | RxAttributes | RxCoord;
+type SyncPieceVal = string | number | boolean | SyncPlane | SyncAttributes | SyncCoord;
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypiece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/RxPiece)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypiece](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/SyncPiece)
  **/
-type RxPiece = RMap<RxPieceVal>;
+type SyncPiece = SyncMap<SyncPieceVal>;
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/RxPieces)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece✂️ypieces](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/SyncPieces)
  **/
-type RxPieces = RArray<RxPiece>;
+type SyncPieces = SyncArray<SyncPiece>;
 
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖piece🛠️piecestore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Piece/d/i/PieceStore)
  **/
 class PieceStore {
   public readonly parent: DesignStore;
-  private rPiece: RxPiece;
-  private rPlane: RxPlane | undefined;
-  private plane: RxPlaneStore | undefined;
-  private rCenter: RxCoord | undefined;
-  private center: RxCoordStore | undefined;
-  private rMirrorPlane: RxPlane | undefined;
-  private mirrorPlane: RxPlaneStore | undefined;
-  private rAttributes: RxAttributes;
+  private syncPiece: SyncPiece;
+  private syncPlane: SyncPlane | undefined;
+  private plane: SyncPlaneStore | undefined;
+  private syncCenter: SyncCoord | undefined;
+  private center: SyncCoordStore | undefined;
+  private syncMirrorPlane: SyncPlane | undefined;
+  private mirrorPlane: SyncPlaneStore | undefined;
+  private syncAttributes: SyncAttributes;
   private attributes: Map<string, AttributeStore>;
   private cache?: Piece;
   private cacheHash?: string;
   private dirty: boolean = true;
 
-  constructor(parent: DesignStore, rPiece: RxPiece, piece: Piece) {
+  constructor(parent: DesignStore, syncPiece: SyncPiece, piece: Piece) {
     this.parent = parent;
-    this.rPiece = rPiece;
+    this.syncPiece = syncPiece;
     this.guid = piece.guid;
     this.attributes = new Map();
 
     this.localId = piece.guid;
     if (piece.type) {
       const type = this.parent.parent.type(piece.type.guid);
-      if (type) this.rPiece.set("type", type.guid);
+      if (type) this.syncPiece.set("type", type.guid);
     } else {
       const design = this.parent.parent.design(piece.design!.guid);
-      this.rPiece.set("design", design.guid);
+      this.syncPiece.set("design", design.guid);
     }
     this.name = piece.name;
     this.scale = piece.scale;
@@ -4133,35 +4135,35 @@ class PieceStore {
     this.description = piece.description;
 
     if (piece.plane) {
-      this.rPlane = createYjsDocFactory()().createMap();
-      this.rPiece.set("plane", this.rPlane);
-      this.plane = new RxPlaneStore(this.rPlane, piece.plane);
+      this.syncPlane = createSyncDocFactory()().createMap();
+      this.syncPiece.set("plane", this.syncPlane);
+      this.plane = new SyncPlaneStore(this.syncPlane, piece.plane);
     } else {
-      this.rPlane = undefined;
+      this.syncPlane = undefined;
       this.plane = undefined;
     }
 
     if (piece.center) {
-      this.rCenter = createYjsDocFactory()().createMap();
-      this.rPiece.set("center", this.rCenter);
-      this.center = new RxCoordStore(this.rCenter, piece.center);
+      this.syncCenter = createSyncDocFactory()().createMap();
+      this.syncPiece.set("center", this.syncCenter);
+      this.center = new SyncCoordStore(this.syncCenter, piece.center);
     } else {
-      this.rCenter = undefined;
+      this.syncCenter = undefined;
       this.center = undefined;
     }
 
     if (piece.mirrorPlane) {
-      this.rMirrorPlane = createYjsDocFactory()().createMap();
-      this.rPiece.set("mirrorPlane", this.rMirrorPlane);
-      this.mirrorPlane = new RxPlaneStore(this.rMirrorPlane, piece.mirrorPlane);
+      this.syncMirrorPlane = createSyncDocFactory()().createMap();
+      this.syncPiece.set("mirrorPlane", this.syncMirrorPlane);
+      this.mirrorPlane = new SyncPlaneStore(this.syncMirrorPlane, piece.mirrorPlane);
     } else {
-      this.rMirrorPlane = undefined;
+      this.syncMirrorPlane = undefined;
       this.mirrorPlane = undefined;
     }
 
-    const yPieceAttributes = createYjsDocFactory()().createArray<RxAttribute>();
-    this.rPiece.set("attributes", yPieceAttributes);
-    this.rAttributes = yPieceAttributes;
+    const pieceAttributes = createSyncDocFactory()().createArray<SyncAttribute>();
+    this.syncPiece.set("attributes", pieceAttributes);
+    this.syncAttributes = pieceAttributes;
     if (piece.attributes) {
       for (const attribute of piece.attributes) {
         this.createAttribute(attribute);
@@ -4170,77 +4172,77 @@ class PieceStore {
   }
 
   get guid(): string {
-    return this.rPiece.get("guid") as string;
+    return this.syncPiece.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rPiece.set("guid", guid);
+    this.syncPiece.set("guid", guid);
   }
 
   get localId(): string {
-    return this.rPiece.get("id_") as string;
+    return this.syncPiece.get("id_") as string;
   }
   set localId(localId: string) {
-    this.rPiece.set("id_", localId);
+    this.syncPiece.set("id_", localId);
   }
   get type(): Guid | undefined {
-    const typeUuid = this.rPiece.get("type") as string;
+    const typeUuid = this.syncPiece.get("type") as string;
     const typeStore = typeUuid ? this.parent.parent.type(typeUuid) : undefined;
     return typeStore ? typeStore.id() : undefined;
   }
   set type(type: Guid | undefined) {
     if (type) {
       const typeStore = this.parent.parent.type(type);
-      if (typeStore) this.rPiece.set("type", typeStore.guid);
+      if (typeStore) this.syncPiece.set("type", typeStore.guid);
     } else {
-      this.rPiece.delete("type");
+      this.syncPiece.delete("type");
     }
   }
   get design(): Guid | undefined {
-    const designUuid = this.rPiece.get("design") as string;
+    const designUuid = this.syncPiece.get("design") as string;
     return designUuid ? this.parent.parent.design(designUuid).id() : undefined;
   }
   set design(design: Guid | undefined) {
     if (design) {
-      this.rPiece.set("design", this.parent.parent.design(design).guid);
+      this.syncPiece.set("design", this.parent.parent.design(design).guid);
     } else {
-      this.rPiece.delete("design");
+      this.syncPiece.delete("design");
     }
   }
   get scale(): number {
-    return (this.rPiece.get("scale") as number) ?? 1.0;
+    return (this.syncPiece.get("scale") as number) ?? 1.0;
   }
   set scale(scale: number | undefined) {
-    this.rPiece.set("scale", scale || 1.0);
+    this.syncPiece.set("scale", scale || 1.0);
   }
   get isHidden(): boolean {
-    return (this.rPiece.get("isHidden") as boolean) ?? false;
+    return (this.syncPiece.get("isHidden") as boolean) ?? false;
   }
   set isHidden(isHidden: boolean | undefined) {
-    this.rPiece.set("isHidden", isHidden || false);
+    this.syncPiece.set("isHidden", isHidden || false);
   }
   get isLocked(): boolean {
-    return (this.rPiece.get("isLocked") as boolean) ?? false;
+    return (this.syncPiece.get("isLocked") as boolean) ?? false;
   }
   set isLocked(isLocked: boolean | undefined) {
-    this.rPiece.set("isLocked", isLocked || false);
+    this.syncPiece.set("isLocked", isLocked || false);
   }
   get color(): string | undefined {
-    return this.rPiece.get("color") as string | undefined;
+    return this.syncPiece.get("color") as string | undefined;
   }
   set color(color: string | undefined) {
-    this.rPiece.set("color", color || "");
+    this.syncPiece.set("color", color || "");
   }
   get name(): string | undefined {
-    return this.rPiece.get("name") as string | undefined;
+    return this.syncPiece.get("name") as string | undefined;
   }
   set name(name: string | undefined) {
-    this.rPiece.set("name", name || "");
+    this.syncPiece.set("name", name || "");
   }
   get description(): string | undefined {
-    return this.rPiece.get("description") as string | undefined;
+    return this.syncPiece.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rPiece.set("description", description || "");
+    this.syncPiece.set("description", description || "");
   }
 
   hasAttribute(guid: string): boolean {
@@ -4249,15 +4251,15 @@ class PieceStore {
 
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
-    const rAttribute = createYjsDocFactory()().createMap<RxAttributeVal>();
-    this.rAttributes.push([rAttribute]);
+    const syncAttribute = createSyncDocFactory()().createMap<SyncAttributeVal>();
+    this.syncAttributes.push([syncAttribute]);
 
-    rAttribute.set("guid", attribute.guid);
-    rAttribute.set("key", attribute.key);
-    rAttribute.set("value", attribute.value || "");
-    rAttribute.set("definition", attribute.definition || "");
-    const yAttributeStore = new AttributeStore(rAttribute, attribute);
-    this.attributes.set(attribute.guid, yAttributeStore);
+    syncAttribute.set("guid", attribute.guid);
+    syncAttribute.set("key", attribute.key);
+    syncAttribute.set("value", attribute.value || "");
+    syncAttribute.set("definition", attribute.definition || "");
+    const attributeStore = new AttributeStore(syncAttribute, attribute);
+    this.attributes.set(attribute.guid, attributeStore);
   }
 
   attribute(guid: string): AttributeStore {
@@ -4315,57 +4317,57 @@ class PieceStore {
     if (diff.plane !== undefined) {
       if (diff.plane) {
         if (!this.plane) {
-          const rPlane = createYjsDocFactory()().createMap() as RxPlane;
-          this.rPiece.set("plane", rPlane);
-          this.rPlane = rPlane;
-          this.plane = new RxPlaneStore(this.rPlane, diff.plane as Plane);
+          const syncPlane = createSyncDocFactory()().createMap() as SyncPlane;
+          this.syncPiece.set("plane", syncPlane);
+          this.syncPlane = syncPlane;
+          this.plane = new SyncPlaneStore(this.syncPlane, diff.plane as Plane);
         } else {
           this.plane.change(diff.plane);
         }
       } else {
-        this.rPiece.delete("plane");
+        this.syncPiece.delete("plane");
         this.plane = undefined;
-        this.rPlane = undefined;
+        this.syncPlane = undefined;
       }
     }
 
     if (diff.center !== undefined) {
       if (diff.center) {
         if (!this.center) {
-          const rCenter = createYjsDocFactory()().createMap() as RxCoord;
-          this.rPiece.set("center", rCenter);
-          this.rCenter = rCenter;
-          this.center = new RxCoordStore(this.rCenter, diff.center);
+          const syncCenter = createSyncDocFactory()().createMap() as SyncCoord;
+          this.syncPiece.set("center", syncCenter);
+          this.syncCenter = syncCenter;
+          this.center = new SyncCoordStore(this.syncCenter, diff.center);
         } else {
           this.center.change(diff.center);
         }
       } else {
-        this.rPiece.delete("center");
+        this.syncPiece.delete("center");
         this.center = undefined;
-        this.rCenter = undefined;
+        this.syncCenter = undefined;
       }
     }
 
     if (diff.mirrorPlane !== undefined) {
       if (diff.mirrorPlane) {
         if (!this.mirrorPlane) {
-          const rMirrorPlane = createYjsDocFactory()().createMap() as RxPlane;
-          this.rPiece.set("mirrorPlane", rMirrorPlane);
-          this.rMirrorPlane = rMirrorPlane;
-          this.mirrorPlane = new RxPlaneStore(this.rMirrorPlane, diff.mirrorPlane);
+          const syncMirrorPlane = createSyncDocFactory()().createMap() as SyncPlane;
+          this.syncPiece.set("mirrorPlane", syncMirrorPlane);
+          this.syncMirrorPlane = syncMirrorPlane;
+          this.mirrorPlane = new SyncPlaneStore(this.syncMirrorPlane, diff.mirrorPlane);
         } else {
           this.mirrorPlane.change(diff.mirrorPlane);
         }
       } else {
-        this.rPiece.delete("mirrorPlane");
+        this.syncPiece.delete("mirrorPlane");
         this.mirrorPlane = undefined;
-        this.rMirrorPlane = undefined;
+        this.syncMirrorPlane = undefined;
       }
     }
 
     if (diff.attributes !== undefined) {
       this.attributes = new Map();
-      this.rAttributes.delete(0, this.rAttributes.length);
+      this.syncAttributes.delete(0, this.syncAttributes.length);
 
       if (diff.attributes.added) {
         for (const attribute of diff.attributes.added) {
@@ -4376,11 +4378,11 @@ class PieceStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rPiece, subscribe, false);
+    return createObserver(this.syncPiece, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rPiece, subscribe, true);
+    return createObserver(this.syncPiece, subscribe, true);
   };
 }
 
@@ -4466,7 +4468,7 @@ export type PieceMetadata = {
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖piece🛠️usepiecesmetadatamap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Piece/d/i/usePiecesMetadataMap)
  **/
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
-  const kitStore = useKitStore(identitySelector) as KitStore | null;
+  const kitStore = useKitStore(identitySelector) as CollaborativeKitStore | null;
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
   const designScope = useDesignScope();
   const emptyMap = useMemo(() => new Map<string, PieceMetadata>(), []);
@@ -4474,8 +4476,8 @@ export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
   const deps: BaseDependency[] = useMemo(() => {
     if (!designStore) return [];
     return [
-      { store: designStore, path: [rxPathMapKey("pieces")] },
-      { store: designStore, path: [rxPathMapKey("connections")] },
+      { store: designStore, path: [syncPathMapKey("pieces")] },
+      { store: designStore, path: [syncPathMapKey("connections")] },
     ];
   }, [designStore]);
   const compute = useCallback(() => {
@@ -4564,11 +4566,11 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onConnectionsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -4588,28 +4590,28 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 // #region Group
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖group](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group)
-// Yjs-backed group store managing piece grouping within designs.
+// Sync-backed group store managing piece grouping within designs.
 
-/** RxGroupVal holds the data fields for a RxGroupVal record.
+/** SyncGroupVal holds the data fields for a SyncGroupVal record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖group✂️ygroupval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group/d/i/RxGroupVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖group✂️ygroupval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group/d/i/SyncGroupVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroupval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/RxGroupVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroupval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/SyncGroupVal)
  **/
-type RxGroupVal = string | RArray<string> | RxAttributes;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖group✂️ygroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Group/d/i/RxGroup)
+type SyncGroupVal = string | SyncArray<string> | SyncAttributes;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖group✂️ygroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Group/d/i/SyncGroup)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/RxGroup)
- * RxGroup holds the data fields for a RxGroup record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/SyncGroup)
+ * SyncGroup holds the data fields for a SyncGroup record.
  **/
-type RxGroup = RMap<RxGroupVal>;
-/** RxGroups holds the data fields for a RxGroups record.
+type SyncGroup = SyncMap<SyncGroupVal>;
+/** SyncGroups holds the data fields for a SyncGroups record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖group✂️ygroups](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group/d/i/RxGroups)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖group✂️ygroups](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Group/d/i/SyncGroups)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroups](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/RxGroups)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group✂️ygroups](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/SyncGroups)
  **/
-type RxGroups = RArray<RxGroup>;
+type SyncGroups = SyncArray<SyncGroup>;
 
 /** GroupStore holds the data fields for a GroupStore record.
  **/
@@ -4618,69 +4620,69 @@ type RxGroups = RArray<RxGroup>;
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖group🛠️groupstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Group/d/i/GroupStore)
  **/
 class GroupStore {
-  private rGroup: RxGroup;
+  private syncGroup: SyncGroup;
   private cache?: Group;
   private cacheHash?: string;
 
-  constructor(rGroup: RxGroup, group: Group) {
-    this.rGroup = rGroup;
+  constructor(syncGroup: SyncGroup, group: Group) {
+    this.syncGroup = syncGroup;
     this.guid = group.guid;
     this.color = group.color;
     this.name = group.name;
     this.description = group.description;
 
     if (group.pieces) {
-      const rPieces = createYjsDocFactory()().createArray<string>();
-      rPieces.insert(
+      const syncPieces = createSyncDocFactory()().createArray<string>();
+      syncPieces.insert(
         0,
         group.pieces.map((p) => p.guid),
       );
-      this.rGroup.set("pieces", rPieces);
+      this.syncGroup.set("pieces", syncPieces);
     }
   }
 
   get guid(): string {
-    return this.rGroup.get("guid") as string;
+    return this.syncGroup.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rGroup.set("guid", guid);
+    this.syncGroup.set("guid", guid);
   }
 
   get color(): string | undefined {
-    return this.rGroup.get("color") as string | undefined;
+    return this.syncGroup.get("color") as string | undefined;
   }
   set color(color: string | undefined) {
-    this.rGroup.set("color", color || "");
+    this.syncGroup.set("color", color || "");
   }
 
   get name(): string | undefined {
-    return this.rGroup.get("name") as string | undefined;
+    return this.syncGroup.get("name") as string | undefined;
   }
   set name(name: string | undefined) {
-    this.rGroup.set("name", name || "");
+    this.syncGroup.set("name", name || "");
   }
 
   get description(): string | undefined {
-    return this.rGroup.get("description") as string | undefined;
+    return this.syncGroup.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rGroup.set("description", description || "");
+    this.syncGroup.set("description", description || "");
   }
 
   get pieces(): string[] {
-    const rPieces = this.rGroup.get("pieces") as RArray<string> | undefined;
-    if (!rPieces) return [];
-    return rPieces.toArray();
+    const syncPieces = this.syncGroup.get("pieces") as SyncArray<string> | undefined;
+    if (!syncPieces) return [];
+    return syncPieces.toArray();
   }
   set pieces(pieces: string[]) {
-    const rPieces = this.rGroup.get("pieces") as RArray<string> | undefined;
-    if (rPieces) {
-      rPieces.delete(0, rPieces.length);
-      rPieces.insert(0, pieces);
+    const syncPieces = this.syncGroup.get("pieces") as SyncArray<string> | undefined;
+    if (syncPieces) {
+      syncPieces.delete(0, syncPieces.length);
+      syncPieces.insert(0, pieces);
     } else {
-      const newYPieces = createYjsDocFactory()().createArray<string>();
+      const newYPieces = createSyncDocFactory()().createArray<string>();
       newYPieces.insert(0, pieces);
-      this.rGroup.set("pieces", newYPieces);
+      this.syncGroup.set("pieces", newYPieces);
     }
   }
 
@@ -4713,11 +4715,11 @@ class GroupStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rGroup, subscribe);
+    return createObserver(this.syncGroup, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rGroup, subscribe, true);
+    return createObserver(this.syncGroup, subscribe, true);
   };
 }
 
@@ -4735,23 +4737,23 @@ class GroupStore {
  **/
 class SideStore {
   public readonly parent: DesignStore;
-  private rSide: RxSide;
+  private syncSide: SyncSide;
   private cache?: Side;
   private cacheHash?: string;
 
-  constructor(parent: DesignStore, rSide: RxSide, side: Side) {
+  constructor(parent: DesignStore, syncSide: SyncSide, side: Side) {
     this.parent = parent;
-    this.rSide = rSide;
+    this.syncSide = syncSide;
 
     const pieceStore = this.parent.piece(side.piece.guid);
     if (pieceStore) {
-      this.rSide.set("piece", pieceStore.guid);
+      this.syncSide.set("piece", pieceStore.guid);
     }
 
     if (side.designPiece) {
       const designPieceStore = this.parent.piece(side.designPiece.guid);
       if (designPieceStore) {
-        this.rSide.set("designPiece", designPieceStore.guid);
+        this.syncSide.set("designPiece", designPieceStore.guid);
       }
     }
 
@@ -4762,7 +4764,7 @@ class SideStore {
         if (typeStore) {
           const connectorStore = typeStore.connectors.get(side.connector.guid);
           if (connectorStore) {
-            this.rSide.set("connector", connectorStore.guid);
+            this.syncSide.set("connector", connectorStore.guid);
           }
         }
       }
@@ -4770,7 +4772,7 @@ class SideStore {
   }
 
   get piece(): Guid {
-    const pieceUuid = this.rSide.get("piece") as string;
+    const pieceUuid = this.syncSide.get("piece") as string;
     if (!pieceUuid) {
       throw new Error(`[ORIGIN] SideStore.piece: pieceUuid is undefined`);
     }
@@ -4779,12 +4781,12 @@ class SideStore {
   set piece(piece: Guid) {
     const pieceStore = this.parent.piece(piece);
     if (pieceStore) {
-      this.rSide.set("piece", pieceStore.guid);
+      this.syncSide.set("piece", pieceStore.guid);
     }
   }
 
   get designPiece(): Guid | undefined {
-    const designPieceUuid = this.rSide.get("designPiece") as string | undefined;
+    const designPieceUuid = this.syncSide.get("designPiece") as string | undefined;
     if (!designPieceUuid) return undefined;
     return this.parent.piece(designPieceUuid).guid;
   }
@@ -4792,16 +4794,16 @@ class SideStore {
     if (designPiece) {
       const designPieceStore = this.parent.piece(designPiece);
       if (designPieceStore) {
-        this.rSide.set("designPiece", designPieceStore.guid);
+        this.syncSide.set("designPiece", designPieceStore.guid);
       }
     } else {
-      this.rSide.delete("designPiece");
+      this.syncSide.delete("designPiece");
     }
   }
 
   get connector(): Guid {
-    const connectorUuid = this.rSide.get("connector") as string;
-    const pieceUuid = this.rSide.get("piece") as string;
+    const connectorUuid = this.syncSide.get("connector") as string;
+    const pieceUuid = this.syncSide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
     const typeGuid = pieceStore.type;
     if (typeGuid) {
@@ -4814,7 +4816,7 @@ class SideStore {
     return connectorUuid;
   }
   set connector(connector: Guid) {
-    const pieceUuid = this.rSide.get("piece") as string;
+    const pieceUuid = this.syncSide.get("piece") as string;
     const pieceStore = this.parent.piece(pieceUuid);
     const typeGuid = pieceStore.type;
     if (typeGuid) {
@@ -4822,7 +4824,7 @@ class SideStore {
       if (resolvedTypeStore) {
         const connectorStore = resolvedTypeStore.connectors.get(connector);
         if (connectorStore) {
-          this.rSide.set("connector", connectorStore.guid);
+          this.syncSide.set("connector", connectorStore.guid);
         }
       }
     }
@@ -4859,11 +4861,11 @@ class SideStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rSide, subscribe);
+    return createObserver(this.syncSide, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rSide, subscribe, true);
+    return createObserver(this.syncSide, subscribe, true);
   };
 }
 
@@ -4872,46 +4874,46 @@ class SideStore {
 // #region Connection
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖connection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connection)
-// Yjs-backed connection store managing piece-to-piece connections.
+// Sync-backed connection store managing piece-to-piece connections.
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️ysideval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/RxSideVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️ysideval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/SyncSideVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️ysideval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/RxSideVal)
- * RxSideVal holds the data fields for a RxSideVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️ysideval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/SyncSideVal)
+ * SyncSideVal holds the data fields for a SyncSideVal record.
  **/
-type RxSideVal = string | number | RxAttributes;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/RxSide)
+type SyncSideVal = string | number | SyncAttributes;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/SyncSide)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/RxSide)
- * RxSide holds the data fields for a RxSide record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yside](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/SyncSide)
+ * SyncSide holds the data fields for a SyncSide record.
  **/
-type RxSide = RMap<RxSideVal>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️ysides](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/RxSides)
+type SyncSide = SyncMap<SyncSideVal>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️ysides](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/SyncSides)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️ysides](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/RxSides)
- * RxSides holds the data fields for a RxSides record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️ysides](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/SyncSides)
+ * SyncSides holds the data fields for a SyncSides record.
  **/
-type RxSides = RArray<RxSide>;
+type SyncSides = SyncArray<SyncSide>;
 
-/** RxConnectionVal holds the data fields for a RxConnectionVal record.
+/** SyncConnectionVal holds the data fields for a SyncConnectionVal record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖connection✂️yconnectionval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connection/d/i/RxConnectionVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖connection✂️yconnectionval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Connection/d/i/SyncConnectionVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnectionval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/RxConnectionVal)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnectionval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/SyncConnectionVal)
  **/
-type RxConnectionVal = string | number | RxAttributes | RxSide;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yconnection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/RxConnection)
+type SyncConnectionVal = string | number | SyncAttributes | SyncSide;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yconnection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/SyncConnection)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/RxConnection)
- * RxConnection holds the data fields for a RxConnection record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/SyncConnection)
+ * SyncConnection holds the data fields for a SyncConnection record.
  **/
-type RxConnection = RMap<RxConnectionVal>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yconnections](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/RxConnections)
+type SyncConnection = SyncMap<SyncConnectionVal>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️yconnections](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/SyncConnections)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnections](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/RxConnections)
- * RxConnections holds the data fields for a RxConnections record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖connection✂️yconnections](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Connection/d/i/SyncConnections)
+ * SyncConnections holds the data fields for a SyncConnections record.
  **/
-type RxConnections = RArray<RxConnection>;
+type SyncConnections = SyncArray<SyncConnection>;
 
 /** ConnectionStore holds the data fields for a ConnectionStore record.
  **/
@@ -4921,24 +4923,24 @@ type RxConnections = RArray<RxConnection>;
  **/
 class ConnectionStore {
   public readonly parent: DesignStore;
-  private rConnection: RxConnection;
+  private syncConnection: SyncConnection;
   private connected: SideStore;
   private connecting: SideStore;
-  private rAttributes: RxAttributes;
+  private syncAttributes: SyncAttributes;
   private attributes: Map<string, AttributeStore>;
   private cache?: Connection;
   private cacheHash?: string;
 
-  constructor(parent: DesignStore, rConnection: RxConnection, connection: Connection) {
+  constructor(parent: DesignStore, syncConnection: SyncConnection, connection: Connection) {
     this.parent = parent;
-    this.rConnection = rConnection;
+    this.syncConnection = syncConnection;
     this.guid = connection.guid;
-    const rConnected = createYjsDocFactory()().createMap<RxSideVal>();
-    this.rConnection.set("connected", rConnected);
-    this.connected = new SideStore(parent, rConnected, connection.connected);
-    const rConnecting = createYjsDocFactory()().createMap<RxSideVal>();
-    this.rConnection.set("connecting", rConnecting);
-    this.connecting = new SideStore(parent, rConnecting, connection.connecting);
+    const syncConnected = createSyncDocFactory()().createMap<SyncSideVal>();
+    this.syncConnection.set("connected", syncConnected);
+    this.connected = new SideStore(parent, syncConnected, connection.connected);
+    const syncConnecting = createSyncDocFactory()().createMap<SyncSideVal>();
+    this.syncConnection.set("connecting", syncConnecting);
+    this.connecting = new SideStore(parent, syncConnecting, connection.connecting);
     this.gap = connection.gap;
     this.shift = connection.shift;
     this.rise = connection.rise;
@@ -4949,9 +4951,9 @@ class ConnectionStore {
     this.v = connection.v;
     this.description = connection.description;
     this.attributes = new Map();
-    const yConnectionAttributes = createYjsDocFactory()().createArray<RxAttribute>();
-    this.rConnection.set("attributes", yConnectionAttributes);
-    this.rAttributes = yConnectionAttributes;
+    const connectionAttributes = createSyncDocFactory()().createArray<SyncAttribute>();
+    this.syncConnection.set("attributes", connectionAttributes);
+    this.syncAttributes = connectionAttributes;
     if (connection.attributes) {
       for (const attribute of connection.attributes) {
         this.createAttribute(attribute);
@@ -4960,73 +4962,73 @@ class ConnectionStore {
   }
 
   get guid(): string {
-    return this.rConnection.get("guid") as string;
+    return this.syncConnection.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rConnection.set("guid", guid);
+    this.syncConnection.set("guid", guid);
   }
 
   get description(): string | undefined {
-    return this.rConnection.get("description") as string | undefined;
+    return this.syncConnection.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rConnection.set("description", description || "");
+    this.syncConnection.set("description", description || "");
   }
 
   get gap(): number | undefined {
-    return this.rConnection.get("gap") as number | undefined;
+    return this.syncConnection.get("gap") as number | undefined;
   }
   set gap(gap: number | undefined) {
-    if (gap !== undefined) this.rConnection.set("gap", gap);
+    if (gap !== undefined) this.syncConnection.set("gap", gap);
   }
 
   get shift(): number | undefined {
-    return this.rConnection.get("shift") as number | undefined;
+    return this.syncConnection.get("shift") as number | undefined;
   }
   set shift(shift: number | undefined) {
-    if (shift !== undefined) this.rConnection.set("shift", shift);
+    if (shift !== undefined) this.syncConnection.set("shift", shift);
   }
 
   get rise(): number | undefined {
-    return this.rConnection.get("rise") as number | undefined;
+    return this.syncConnection.get("rise") as number | undefined;
   }
   set rise(rise: number | undefined) {
-    if (rise !== undefined) this.rConnection.set("rise", rise);
+    if (rise !== undefined) this.syncConnection.set("rise", rise);
   }
 
   get rotation(): number | undefined {
-    return this.rConnection.get("rotation") as number | undefined;
+    return this.syncConnection.get("rotation") as number | undefined;
   }
   set rotation(rotation: number | undefined) {
-    if (rotation !== undefined) this.rConnection.set("rotation", rotation);
+    if (rotation !== undefined) this.syncConnection.set("rotation", rotation);
   }
 
   get turn(): number | undefined {
-    return this.rConnection.get("turn") as number | undefined;
+    return this.syncConnection.get("turn") as number | undefined;
   }
   set turn(turn: number | undefined) {
-    if (turn !== undefined) this.rConnection.set("turn", turn);
+    if (turn !== undefined) this.syncConnection.set("turn", turn);
   }
 
   get tilt(): number | undefined {
-    return this.rConnection.get("tilt") as number | undefined;
+    return this.syncConnection.get("tilt") as number | undefined;
   }
   set tilt(tilt: number | undefined) {
-    if (tilt !== undefined) this.rConnection.set("tilt", tilt);
+    if (tilt !== undefined) this.syncConnection.set("tilt", tilt);
   }
 
   get u(): number | undefined {
-    return this.rConnection.get("u") as number | undefined;
+    return this.syncConnection.get("u") as number | undefined;
   }
   set u(u: number | undefined) {
-    if (u !== undefined) this.rConnection.set("u", u);
+    if (u !== undefined) this.syncConnection.set("u", u);
   }
 
   get v(): number | undefined {
-    return this.rConnection.get("v") as number | undefined;
+    return this.syncConnection.get("v") as number | undefined;
   }
   set v(v: number | undefined) {
-    if (v !== undefined) this.rConnection.set("v", v);
+    if (v !== undefined) this.syncConnection.set("v", v);
   }
 
   id(): Guid {
@@ -5069,15 +5071,15 @@ class ConnectionStore {
 
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
-    const rAttribute = createYjsDocFactory()().createMap<RxAttributeVal>();
-    this.rAttributes.push([rAttribute]);
+    const syncAttribute = createSyncDocFactory()().createMap<SyncAttributeVal>();
+    this.syncAttributes.push([syncAttribute]);
 
-    rAttribute.set("guid", attribute.guid);
-    rAttribute.set("key", attribute.key);
-    rAttribute.set("value", attribute.value || "");
-    rAttribute.set("definition", attribute.definition || "");
-    const yAttributeStore = new AttributeStore(rAttribute, attribute);
-    this.attributes.set(attribute.guid, yAttributeStore);
+    syncAttribute.set("guid", attribute.guid);
+    syncAttribute.set("key", attribute.key);
+    syncAttribute.set("value", attribute.value || "");
+    syncAttribute.set("definition", attribute.definition || "");
+    const attributeStore = new AttributeStore(syncAttribute, attribute);
+    this.attributes.set(attribute.guid, attributeStore);
   }
 
   change = (diff: ConnectionDiff): void => {
@@ -5095,10 +5097,10 @@ class ConnectionStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rConnection, subscribe);
+    return createObserver(this.syncConnection, subscribe);
   };
 
-  onChangedDeep = (subscribe: Subscribe) => { };
+  onChangedDeep = (subscribe: Subscribe) => {};
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖connection✂️connectionscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Connection/d/i/ConnectionScope)
@@ -5153,21 +5155,21 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
 // #region Stat
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖stat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Stat)
-// Yjs-backed stat store managing statistical measurement data.
+// Sync-backed stat store managing statistical measurement data.
 
-/** RxStat holds the data fields for a RxStat record.
+/** SyncStat holds the data fields for a SyncStat record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design/d/i/RxDesigns)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design/d/i/SyncDesigns)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖stat✂️ystat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Stat/d/i/RxStat)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖stat✂️ystat](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Stat/d/i/SyncStat)
  **/
-type RxStat = RMap<string | number | boolean>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖stat✂️ystats](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Stat/d/i/RxStats)
+type SyncStat = SyncMap<string | number | boolean>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖stat✂️ystats](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Stat/d/i/SyncStats)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖stat✂️ystats](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Stat/d/i/RxStats)
- * RxStats holds the data fields for a RxStats record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖stat✂️ystats](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Stat/d/i/SyncStats)
+ * SyncStats holds the data fields for a SyncStats record.
  **/
-type RxStats = RArray<RxStat>;
+type SyncStats = SyncArray<SyncStat>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖stat🛠️statstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Stat/d/i/StatStore)
 /**
@@ -5175,12 +5177,12 @@ type RxStats = RArray<RxStat>;
  * StatStore holds the data fields for a StatStore record.
  **/
 class StatStore {
-  private rStat: RxStat;
+  private syncStat: SyncStat;
   private cache?: Stat;
   private cacheHash?: string;
 
-  constructor(rStat: RxStat, stat: Stat) {
-    this.rStat = rStat;
+  constructor(syncStat: SyncStat, stat: Stat) {
+    this.syncStat = syncStat;
     this.guid = stat.guid;
     this.quality = stat.quality;
     this.unit = stat.unit;
@@ -5191,59 +5193,59 @@ class StatStore {
   }
 
   get guid(): string {
-    return this.rStat.get("guid") as string;
+    return this.syncStat.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rStat.set("guid", guid);
+    this.syncStat.set("guid", guid);
   }
 
   get quality(): QualityId {
-    return { guid: this.rStat.get("quality") as string };
+    return { guid: this.syncStat.get("quality") as string };
   }
   set quality(quality: QualityId) {
-    this.rStat.set("quality", quality.guid);
+    this.syncStat.set("quality", quality.guid);
   }
 
   get unit(): string | undefined {
-    return this.rStat.get("unit") as string | undefined;
+    return this.syncStat.get("unit") as string | undefined;
   }
   set unit(unit: string | undefined) {
     if (unit !== undefined) {
-      this.rStat.set("unit", unit);
+      this.syncStat.set("unit", unit);
     }
   }
 
   get min(): number | undefined {
-    return this.rStat.get("min") as number | undefined;
+    return this.syncStat.get("min") as number | undefined;
   }
   set min(min: number | undefined) {
     if (min !== undefined) {
-      this.rStat.set("min", min);
+      this.syncStat.set("min", min);
     }
   }
 
   get minExcluded(): boolean | undefined {
-    return this.rStat.get("minExcluded") as boolean | undefined;
+    return this.syncStat.get("minExcluded") as boolean | undefined;
   }
   set minExcluded(minExcluded: boolean | undefined) {
     if (minExcluded !== undefined) {
-      this.rStat.set("minExcluded", minExcluded);
+      this.syncStat.set("minExcluded", minExcluded);
     }
   }
 
-  get max(): number | undefined { }
+  get max(): number | undefined {}
   set max(max: number | undefined) {
     if (max !== undefined) {
-      this.rStat.set("max", max);
+      this.syncStat.set("max", max);
     }
   }
 
   get maxExcluded(): boolean | undefined {
-    return this.rStat.get("maxExcluded") as boolean | undefined;
+    return this.syncStat.get("maxExcluded") as boolean | undefined;
   }
   set maxExcluded(maxExcluded: boolean | undefined) {
     if (maxExcluded !== undefined) {
-      this.rStat.set("maxExcluded", maxExcluded);
+      this.syncStat.set("maxExcluded", maxExcluded);
     }
   }
 
@@ -5284,11 +5286,11 @@ class StatStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rStat, subscribe);
+    return createObserver(this.syncStat, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rStat, subscribe, true);
+    return createObserver(this.syncStat, subscribe, true);
   };
 }
 
@@ -5297,52 +5299,52 @@ class StatStore {
 // #region Design
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖design](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design)
-// Yjs-backed design store managing complete design layouts with pieces and connections.
+// Sync-backed design store managing complete design layouts with pieces and connections.
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesignval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/RxDesignVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesignval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/SyncDesignVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesignval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/RxDesignVal)
- * RxDesignVal holds the data fields for a RxDesignVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesignval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/SyncDesignVal)
+ * SyncDesignVal holds the data fields for a SyncDesignVal record.
  **/
-type RxDesignVal = string | boolean | number | RxAuthorUuids | RxAttributes | RxPieces | RxConnections | RxLayers | RxGroups | RxStats | RxProps | RxLocation | RArray<string>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/RxDesign)
+type SyncDesignVal = string | boolean | number | SyncAuthorUuids | SyncAttributes | SyncPieces | SyncConnections | SyncLayers | SyncGroups | SyncStats | SyncProps | SyncLocation | SyncArray<string>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/SyncDesign)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/RxDesign)
- * RxDesign holds the data fields for a RxDesign record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesign](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/SyncDesign)
+ * SyncDesign holds the data fields for a SyncDesign record.
  **/
-type RxDesign = RMap<RxDesignVal>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/RxDesigns)
+type SyncDesign = SyncMap<SyncDesignVal>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/SyncDesigns)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/RxDesigns)
- * RxDesigns holds the data fields for a RxDesigns record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖design✂️ydesigns](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Design/d/i/SyncDesigns)
+ * SyncDesigns holds the data fields for a SyncDesigns record.
  **/
-type RxDesigns = RArray<RxDesign>;
+type SyncDesigns = SyncArray<SyncDesign>;
 
 /**
- * Yjs-backed design store managing complete design layouts with pieces and connections.
+ * Sync-backed design store managing complete design layouts with pieces and connections.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖design🛠️designstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design/d/i/DesignStore)
  **/
 export class DesignStore {
-  public readonly parent: KitStore;
-  private rDesign: RxDesign;
-  private rPieces: RxPieces;
+  public readonly parent: CollaborativeKitStore;
+  private syncDesign: SyncDesign;
+  private syncPieces: SyncPieces;
   private pieces: Map<string, PieceStore>;
-  private rConnections: RxConnections;
+  private syncConnections: SyncConnections;
   private connections: Map<string, ConnectionStore>;
-  private rAttributes: RxAttributes;
+  private syncAttributes: SyncAttributes;
   private attributes: Map<string, AttributeStore>;
-  private rStats: RxStats;
+  private syncStats: SyncStats;
   private stats: Map<string, StatStore>;
   private props: Map<string, PropStore>;
-  private rProps: RxProps;
+  private syncProps: SyncProps;
   private layers: Map<string, LayerStore>;
-  private rLayers: RxLayers;
+  private syncLayers: SyncLayers;
   private groups: Map<string, GroupStore>;
-  private rGroups: RxGroups;
-  private location?: RxLocationStore;
-  private rAuthors: RxAuthorUuids;
+  private syncGroups: SyncGroups;
+  private location?: SyncLocationStore;
+  private syncAuthors: SyncAuthorUuids;
   private authors: Map<string, AuthorStore>;
-  private rConcepts: RArray<string>;
+  private syncConcepts: SyncArray<string>;
   private cache?: Design;
   private cacheHash?: string;
   private dirty: boolean = true;
@@ -5352,9 +5354,9 @@ export class DesignStore {
   private _connectionsVersion = 0;
   public readonly derived: DerivedStore = new DerivedStore();
 
-  constructor(parent: KitStore, rDesign: RxDesign, design: Design) {
+  constructor(parent: CollaborativeKitStore, syncDesign: SyncDesign, design: Design) {
     this.parent = parent;
-    this.rDesign = rDesign;
+    this.syncDesign = syncDesign;
     this.guid = design.guid;
     this.pieces = new Map();
     this.connections = new Map();
@@ -5376,9 +5378,9 @@ export class DesignStore {
     this.image = design.image;
     this.description = design.description;
 
-    const yDesignPieces = createYjsDocFactory()().createArray<RxPiece>();
-    this.rDesign.set("pieces", yDesignPieces);
-    this.rPieces = yDesignPieces;
+    const designPieces = createSyncDocFactory()().createArray<SyncPiece>();
+    this.syncDesign.set("pieces", designPieces);
+    this.syncPieces = designPieces;
     if (design.pieces) {
       for (const piece of design.pieces) {
         if (!piece?.guid) continue;
@@ -5386,9 +5388,9 @@ export class DesignStore {
       }
     }
 
-    const yDesignConnections = createYjsDocFactory()().createArray<RxConnection>();
-    this.rDesign.set("connections", yDesignConnections);
-    this.rConnections = yDesignConnections;
+    const designConnections = createSyncDocFactory()().createArray<SyncConnection>();
+    this.syncDesign.set("connections", designConnections);
+    this.syncConnections = designConnections;
     if (design.connections) {
       for (const connection of design.connections) {
         if (!connection?.guid) continue;
@@ -5396,9 +5398,9 @@ export class DesignStore {
       }
     }
 
-    const yDesignAttributes = createYjsDocFactory()().createArray<RxAttribute>();
-    this.rDesign.set("attributes", yDesignAttributes);
-    this.rAttributes = yDesignAttributes;
+    const designAttributes = createSyncDocFactory()().createArray<SyncAttribute>();
+    this.syncDesign.set("attributes", designAttributes);
+    this.syncAttributes = designAttributes;
     if (design.attributes) {
       for (const attribute of design.attributes) {
         if (!attribute?.guid) continue;
@@ -5406,9 +5408,9 @@ export class DesignStore {
       }
     }
 
-    const yDesignStats = createYjsDocFactory()().createArray<RxStat>();
-    this.rDesign.set("stats", yDesignStats);
-    this.rStats = yDesignStats;
+    const designStats = createSyncDocFactory()().createArray<SyncStat>();
+    this.syncDesign.set("stats", designStats);
+    this.syncStats = designStats;
     if (design.stats) {
       for (const stat of design.stats) {
         if (!stat?.guid) continue;
@@ -5416,9 +5418,9 @@ export class DesignStore {
       }
     }
 
-    const yDesignProps = createYjsDocFactory()().createArray<RxProp>();
-    this.rDesign.set("props", yDesignProps);
-    this.rProps = yDesignProps;
+    const designProps = createSyncDocFactory()().createArray<SyncProp>();
+    this.syncDesign.set("props", designProps);
+    this.syncProps = designProps;
     if (design.props) {
       for (const prop of design.props) {
         if (!prop?.guid) continue;
@@ -5426,9 +5428,9 @@ export class DesignStore {
       }
     }
 
-    const yDesignLayers = createYjsDocFactory()().createArray<RxLayer>();
-    this.rDesign.set("layers", yDesignLayers);
-    this.rLayers = yDesignLayers;
+    const designLayers = createSyncDocFactory()().createArray<SyncLayer>();
+    this.syncDesign.set("layers", designLayers);
+    this.syncLayers = designLayers;
     if (design.layers) {
       for (const layer of design.layers) {
         if (!layer?.guid) continue;
@@ -5437,12 +5439,12 @@ export class DesignStore {
     }
 
     if (design.activeLayer) {
-      this.rDesign.set("activeLayer", design.activeLayer.guid);
+      this.syncDesign.set("activeLayer", design.activeLayer.guid);
     }
 
-    const yDesignGroups = createYjsDocFactory()().createArray<RxGroup>();
-    this.rDesign.set("groups", yDesignGroups);
-    this.rGroups = yDesignGroups;
+    const designGroups = createSyncDocFactory()().createArray<SyncGroup>();
+    this.syncDesign.set("groups", designGroups);
+    this.syncGroups = designGroups;
     if (design.groups) {
       for (const group of design.groups) {
         if (!group?.guid) continue;
@@ -5451,16 +5453,16 @@ export class DesignStore {
     }
 
     if (design.location && "longitude" in design.location) {
-      const rLocation = createYjsDocFactory()().createMap() as RxLocation;
-      this.rDesign.set("location", rLocation);
-      this.location = new RxLocationStore(rLocation, design.location as Location);
+      const syncLocation = createSyncDocFactory()().createMap() as SyncLocation;
+      this.syncDesign.set("location", syncLocation);
+      this.location = new SyncLocationStore(syncLocation, design.location as Location);
     }
 
-    const yDesignConcepts = createYjsDocFactory()().createArray<string>();
-    this.rDesign.set("concepts", yDesignConcepts);
-    this.rConcepts = yDesignConcepts;
+    const designConcepts = createSyncDocFactory()().createArray<string>();
+    this.syncDesign.set("concepts", designConcepts);
+    this.syncConcepts = designConcepts;
     if (design.concepts) {
-      design.concepts.forEach((concept) => this.rConcepts.push([concept.guid]));
+      design.concepts.forEach((concept) => this.syncConcepts.push([concept.guid]));
     }
 
     this.authors = new Map();
@@ -5472,98 +5474,98 @@ export class DesignStore {
         this.authors.set(authorId.guid, authorStore);
       });
     }
-    const yDesignAuthors = createYjsDocFactory()().createArray<RxAuthorUuid>();
-    this.rDesign.set("authors", yDesignAuthors);
-    this.rAuthors = yDesignAuthors;
-    this.authors.forEach((author) => author?.guid && this.rAuthors.push([author.guid]));
+    const designAuthors = createSyncDocFactory()().createArray<SyncAuthorUuid>();
+    this.syncDesign.set("authors", designAuthors);
+    this.syncAuthors = designAuthors;
+    this.authors.forEach((author) => author?.guid && this.syncAuthors.push([author.guid]));
 
-    this.rDesign.set("createdAt", new Date().toISOString());
+    this.syncDesign.set("createdAt", new Date().toISOString());
     this.updated();
   }
 
   get guid(): string {
-    return this.rDesign.get("guid") as string;
+    return this.syncDesign.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rDesign.set("guid", guid);
+    this.syncDesign.set("guid", guid);
   }
 
   get name(): string {
-    return this.rDesign.get("name") as string;
+    return this.syncDesign.get("name") as string;
   }
   set name(name: string) {
-    this.rDesign.set("name", name);
+    this.syncDesign.set("name", name);
   }
   get parentGuid(): string | undefined {
-    return this.rDesign.get("parent") as string | undefined;
+    return this.syncDesign.get("parent") as string | undefined;
   }
   set parentGuid(parent: string | undefined) {
-    if (parent) this.rDesign.set("parent", parent);
-    else this.rDesign.delete("parent");
+    if (parent) this.syncDesign.set("parent", parent);
+    else this.syncDesign.delete("parent");
   }
   get folder(): string | undefined {
-    return this.rDesign.get("folder") as string | undefined;
+    return this.syncDesign.get("folder") as string | undefined;
   }
   set folder(folder: string | undefined) {
-    if (folder) this.rDesign.set("folder", folder);
-    else this.rDesign.delete("folder");
+    if (folder) this.syncDesign.set("folder", folder);
+    else this.syncDesign.delete("folder");
   }
   get abstract(): boolean | undefined {
-    return this.rDesign.get("isAbstract") as boolean | undefined;
+    return this.syncDesign.get("isAbstract") as boolean | undefined;
   }
   set abstract(isAbstract: boolean | undefined) {
-    if (isAbstract) this.rDesign.set("isAbstract", isAbstract);
-    else this.rDesign.delete("isAbstract");
+    if (isAbstract) this.syncDesign.set("isAbstract", isAbstract);
+    else this.syncDesign.delete("isAbstract");
   }
   get canScale(): boolean | undefined {
-    return this.rDesign.get("canScale") as boolean | undefined;
+    return this.syncDesign.get("canScale") as boolean | undefined;
   }
   set canScale(canScale: boolean | undefined) {
     if (canScale !== undefined) {
-      this.rDesign.set("canScale", canScale);
+      this.syncDesign.set("canScale", canScale);
     }
   }
   get canMirror(): boolean | undefined {
-    return this.rDesign.get("canMirror") as boolean | undefined;
+    return this.syncDesign.get("canMirror") as boolean | undefined;
   }
   set canMirror(canMirror: boolean | undefined) {
     if (canMirror !== undefined) {
-      this.rDesign.set("canMirror", canMirror);
+      this.syncDesign.set("canMirror", canMirror);
     }
   }
   get unit(): string | undefined {
-    return this.rDesign.get("unit") as string | undefined;
+    return this.syncDesign.get("unit") as string | undefined;
   }
   set unit(unit: string | undefined) {
-    this.rDesign.set("unit", unit || "");
+    this.syncDesign.set("unit", unit || "");
   }
   get icon(): string | undefined {
-    return this.rDesign.get("icon") as string | undefined;
+    return this.syncDesign.get("icon") as string | undefined;
   }
   set icon(icon: string | undefined) {
-    this.rDesign.set("icon", icon || "");
+    this.syncDesign.set("icon", icon || "");
   }
   get image(): string | undefined {
-    return this.rDesign.get("image") as string | undefined;
+    return this.syncDesign.get("image") as string | undefined;
   }
   set image(image: string | undefined) {
-    this.rDesign.set("image", image || "");
+    this.syncDesign.set("image", image || "");
   }
   get description(): string | undefined {
-    return this.rDesign.get("description") as string | undefined;
+    return this.syncDesign.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rDesign.set("description", description || "");
+    this.syncDesign.set("description", description || "");
   }
   get createdAt(): Date {
-    return new Date(this.rDesign.get("createdAt") as string);
+    return new Date(this.syncDesign.get("createdAt") as string);
   }
   get updatedAt(): Date {
-    return new Date(this.rDesign.get("updatedAt") as string);
+    return new Date(this.syncDesign.get("updatedAt") as string);
   }
 
   updated(): void {
-    this.rDesign.set("updatedAt", new Date().toISOString());
+    this.syncDesign.set("updatedAt", new Date().toISOString());
   }
 
   hasPiece(guid: string): boolean {
@@ -5571,58 +5573,58 @@ export class DesignStore {
   }
 
   createPiece(piece: Piece): void {
-    const rPiece = createYjsDocFactory()().createMap<RxPieceVal>();
-    this.rPieces!.push([rPiece]);
-    const yPieceStore = new PieceStore(this, rPiece, piece);
-    this.pieces.set(piece.guid, yPieceStore);
+    const syncPiece = createSyncDocFactory()().createMap<SyncPieceVal>();
+    this.syncPieces!.push([syncPiece]);
+    const pieceStore = new PieceStore(this, syncPiece, piece);
+    this.pieces.set(piece.guid, pieceStore);
   }
 
   createConnection(connection: Connection): void {
-    const rConnection = createYjsDocFactory()().createMap<RxConnectionVal>();
-    this.rConnections.push([rConnection]);
-    const yConnectionStore = new ConnectionStore(this, rConnection, connection);
-    this.connections.set(connection.guid, yConnectionStore);
+    const syncConnection = createSyncDocFactory()().createMap<SyncConnectionVal>();
+    this.syncConnections.push([syncConnection]);
+    const connectionStore = new ConnectionStore(this, syncConnection, connection);
+    this.connections.set(connection.guid, connectionStore);
   }
 
   createAttribute(attribute: Attribute): void {
-    const rAttribute = createYjsDocFactory()().createMap<RxAttributeVal>();
-    this.rAttributes.push([rAttribute]);
+    const syncAttribute = createSyncDocFactory()().createMap<SyncAttributeVal>();
+    this.syncAttributes.push([syncAttribute]);
 
-    rAttribute.set("guid", attribute.guid);
-    rAttribute.set("key", attribute.key);
-    rAttribute.set("value", attribute.value || "");
-    rAttribute.set("definition", attribute.definition || "");
-    const yAttributeStore = new AttributeStore(rAttribute, attribute);
-    this.attributes.set(attribute.guid, yAttributeStore);
+    syncAttribute.set("guid", attribute.guid);
+    syncAttribute.set("key", attribute.key);
+    syncAttribute.set("value", attribute.value || "");
+    syncAttribute.set("definition", attribute.definition || "");
+    const attributeStore = new AttributeStore(syncAttribute, attribute);
+    this.attributes.set(attribute.guid, attributeStore);
   }
 
   createStat(stat: Stat): void {
-    const rStat = createYjsDocFactory()().createMap() as RxStat;
-    this.rStats.push([rStat]);
-    const yStatStore = new StatStore(rStat, stat);
-    this.stats.set(stat.guid, yStatStore);
+    const syncStat = createSyncDocFactory()().createMap() as SyncStat;
+    this.syncStats.push([syncStat]);
+    const statStore = new StatStore(syncStat, stat);
+    this.stats.set(stat.guid, statStore);
   }
 
   createProp(prop: Prop): void {
-    const rProp = createYjsDocFactory()().createMap() as RxProp;
-    this.rProps.push([rProp]);
-    const yPropStore = new PropStore(rProp, prop);
-    this.props.set(prop.guid, yPropStore);
+    const syncProp = createSyncDocFactory()().createMap() as SyncProp;
+    this.syncProps.push([syncProp]);
+    const propStore = new PropStore(syncProp, prop);
+    this.props.set(prop.guid, propStore);
   }
 
   createLayer(layer: Layer): void {
-    const rLayer = createYjsDocFactory()().createMap() as RxLayer;
-    this.rLayers.push([rLayer]);
-    const yLayerStore = new LayerStore(rLayer, layer);
-    this.layers.set(layer.path, yLayerStore);
+    const syncLayer = createSyncDocFactory()().createMap() as SyncLayer;
+    this.syncLayers.push([syncLayer]);
+    const layerStore = new LayerStore(syncLayer, layer);
+    this.layers.set(layer.path, layerStore);
   }
 
   createGroup(group: Group): void {
-    const rGroup = createYjsDocFactory()().createMap() as RxGroup;
-    this.rGroups.push([rGroup]);
-    const yGroupStore = new GroupStore(rGroup, group);
+    const syncGroup = createSyncDocFactory()().createMap() as SyncGroup;
+    this.syncGroups.push([syncGroup]);
+    const groupStore = new GroupStore(syncGroup, group);
     const groupKey = group.pieces.join(",");
-    this.groups.set(groupKey, yGroupStore);
+    this.groups.set(groupKey, groupStore);
   }
 
   piece(guid: string): PieceStore {
@@ -5681,11 +5683,11 @@ export class DesignStore {
       stats: Array.from(this.stats.values()).map((stat) => stat.snapshot()),
       props: Array.from(this.props.values()).map((prop) => prop.snapshot()),
       layers: Array.from(this.layers.values()).map((layer) => layer.snapshot()),
-      activeLayer: this.rDesign.get("activeLayer") ? { guid: this.rDesign.get("activeLayer") as string } : undefined,
+      activeLayer: this.syncDesign.get("activeLayer") ? { guid: this.syncDesign.get("activeLayer") as string } : undefined,
       groups: Array.from(this.groups.values()).map((group) => group.snapshot()),
       location: this.location?.snapshot(),
       authors: Array.from(this.authors.values()).map((author) => ({ guid: author.guid })),
-      concepts: (this.rDesign.get("concepts") as RArray<string> | undefined)?.toArray()?.map((g) => ({ guid: g })),
+      concepts: (this.syncDesign.get("concepts") as SyncArray<string> | undefined)?.toArray()?.map((g) => ({ guid: g })),
       attributes: Array.from(this.attributes.values()).map((attribute) => attribute.snapshot()),
       createdAt: this.createdAt?.toISOString(),
       updatedAt: this.updatedAt?.toISOString(),
@@ -5735,14 +5737,14 @@ export class DesignStore {
               const pieceIndex = pieceArray.findIndex((p) => p.guid === guid);
               if (pieceIndex !== -1) {
                 this.pieces.delete(guid);
-                this.rPieces!.delete(pieceIndex, 1);
+                this.syncPieces!.delete(pieceIndex, 1);
               }
             }
           });
         }
       } else {
         this.pieces.clear();
-        this.rPieces!.delete(0, this.rPieces!.length);
+        this.syncPieces!.delete(0, this.syncPieces!.length);
 
         if (diff.pieces) {
           for (const piece of diff.pieces as Piece[]) {
@@ -5774,14 +5776,14 @@ export class DesignStore {
               const connectionIndex = connectionArray.findIndex((c) => c.guid === guid);
               if (connectionIndex !== -1) {
                 this.connections.delete(guid);
-                this.rConnections.delete(connectionIndex, 1);
+                this.syncConnections.delete(connectionIndex, 1);
               }
             }
           });
         }
       } else {
         this.connections.clear();
-        this.rConnections.delete(0, this.rConnections.length);
+        this.syncConnections.delete(0, this.syncConnections.length);
 
         if (diff.connections) {
           for (const connection of diff.connections as Connection[]) {
@@ -5796,10 +5798,10 @@ export class DesignStore {
         diff.stats.removed.forEach((statId) => {
           const guid = statId.guid;
           this.stats.delete(guid);
-          const rStats = this.rDesign.get("stats") as RArray<RxStat>;
-          if (rStats) {
-            const index = rStats.toArray().findIndex((rStat) => (rStat as RMap<unknown>).get("guid") === guid);
-            if (index >= 0) rStats.delete(index, 1);
+          const syncStats = this.syncDesign.get("stats") as SyncArray<SyncStat>;
+          if (syncStats) {
+            const index = syncStats.toArray().findIndex((syncStat) => (syncStat as SyncMap<unknown>).get("guid") === guid);
+            if (index >= 0) syncStats.delete(index, 1);
           }
         });
       }
@@ -5821,10 +5823,10 @@ export class DesignStore {
         diff.props.removed.forEach((propId) => {
           const guid = propId.guid;
           this.props.delete(guid);
-          const rProps = this.rDesign.get("props") as RArray<RxProp>;
-          if (rProps) {
-            const index = rProps.toArray().findIndex((rProp) => (rProp as RMap<unknown>).get("guid") === guid);
-            if (index >= 0) rProps.delete(index, 1);
+          const syncProps = this.syncDesign.get("props") as SyncArray<SyncProp>;
+          if (syncProps) {
+            const index = syncProps.toArray().findIndex((syncProp) => (syncProp as SyncMap<unknown>).get("guid") === guid);
+            if (index >= 0) syncProps.delete(index, 1);
           }
         });
       }
@@ -5846,9 +5848,9 @@ export class DesignStore {
         diff.layers.removed.forEach((layerId) => {
           const guid = layerId.guid;
           this.layers.delete(guid);
-          const rLayers = this.rDesign.get("layers") as RArray<RxLayer>;
-          const index = rLayers.toArray().findIndex((rLayer) => (rLayer as RMap<unknown>).get("guid") === guid);
-          if (index >= 0) rLayers.delete(index, 1);
+          const syncLayers = this.syncDesign.get("layers") as SyncArray<SyncLayer>;
+          const index = syncLayers.toArray().findIndex((syncLayer) => (syncLayer as SyncMap<unknown>).get("guid") === guid);
+          if (index >= 0) syncLayers.delete(index, 1);
         });
       }
       if (diff.layers.updated) {
@@ -5866,9 +5868,9 @@ export class DesignStore {
 
     if (diff.activeLayer !== undefined) {
       if (diff.activeLayer) {
-        this.rDesign.set("activeLayer", diff.activeLayer.guid);
+        this.syncDesign.set("activeLayer", diff.activeLayer.guid);
       } else {
-        this.rDesign.delete("activeLayer");
+        this.syncDesign.delete("activeLayer");
       }
     }
 
@@ -5877,10 +5879,10 @@ export class DesignStore {
         diff.groups.removed.forEach((groupId) => {
           const guid = groupId.guid;
           this.groups.delete(guid);
-          const rGroups = this.rDesign.get("groups") as RArray<RxGroup>;
-          if (rGroups) {
-            const index = rGroups.toArray().findIndex((rGroup) => (rGroup as RMap<unknown>).get("guid") === guid);
-            if (index >= 0) rGroups.delete(index, 1);
+          const syncGroups = this.syncDesign.get("groups") as SyncArray<SyncGroup>;
+          if (syncGroups) {
+            const index = syncGroups.toArray().findIndex((syncGroup) => (syncGroup as SyncMap<unknown>).get("guid") === guid);
+            if (index >= 0) syncGroups.delete(index, 1);
           }
         });
       }
@@ -5900,14 +5902,14 @@ export class DesignStore {
     if ("location" in diff) {
       if (diff.location) {
         if (!this.location) {
-          const rLocation = createYjsDocFactory()().createMap() as RxLocation;
-          this.rDesign.set("location", rLocation);
-          this.location = new RxLocationStore(rLocation, diff.location as Location);
+          const syncLocation = createSyncDocFactory()().createMap() as SyncLocation;
+          this.syncDesign.set("location", syncLocation);
+          this.location = new SyncLocationStore(syncLocation, diff.location as Location);
         } else {
           this.location.change(diff.location as LocationDiff);
         }
       } else {
-        this.rDesign.delete("location");
+        this.syncDesign.delete("location");
         this.location = undefined;
       }
     }
@@ -5934,11 +5936,11 @@ export class DesignStore {
 
     if (diff.concepts !== undefined) {
       if (diff.concepts) {
-        const rConcepts = createYjsDocFactory()().createArray<string>();
-        diff.concepts.forEach((concept) => rConcepts.push([concept.guid]));
-        this.rDesign.set("concepts", rConcepts);
+        const syncConcepts = createSyncDocFactory()().createArray<string>();
+        diff.concepts.forEach((concept) => syncConcepts.push([concept.guid]));
+        this.syncDesign.set("concepts", syncConcepts);
       } else {
-        this.rDesign.delete("concepts");
+        this.syncDesign.delete("concepts");
       }
     }
 
@@ -5947,11 +5949,11 @@ export class DesignStore {
         if (diff.attributes.removed) {
           diff.attributes.removed.forEach((attrId) => {
             const guid = attrId.guid;
-            const yAttrIndex = this.rAttributes.toArray().findIndex((rMap) => {
-              return (rMap as RMap<unknown>).get("guid") === guid;
+            const syncAttrIndex = this.syncAttributes.toArray().findIndex((syncMap) => {
+              return (syncMap as SyncMap<unknown>).get("guid") === guid;
             });
-            if (yAttrIndex !== -1) {
-              this.rAttributes.delete(yAttrIndex, 1);
+            if (syncAttrIndex !== -1) {
+              this.syncAttributes.delete(syncAttrIndex, 1);
             }
             this.attributes.delete(guid);
           });
@@ -5969,7 +5971,7 @@ export class DesignStore {
         }
       } else {
         this.attributes.clear();
-        this.rAttributes.delete(0, this.rAttributes.length);
+        this.syncAttributes.delete(0, this.syncAttributes.length);
 
         if (diff.attributes && Array.isArray(diff.attributes)) {
           for (const attribute of diff.attributes) {
@@ -5984,15 +5986,15 @@ export class DesignStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rDesign, subscribe);
+    return createObserver(this.syncDesign, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rDesign, subscribe, true);
+    return createObserver(this.syncDesign, subscribe, true);
   };
 
   snapshotPieces = (): Piece[] => {
-    const currentVersion = (this.rPieces as any)._clock || this.pieces.size;
+    const currentVersion = (this.syncPieces as any)._clock || this.pieces.size;
     if (this._piecesCache && this._piecesVersion === currentVersion) {
       return this._piecesCache;
     }
@@ -6002,7 +6004,7 @@ export class DesignStore {
   };
 
   snapshotConnections = (): Connection[] => {
-    const currentVersion = (this.rConnections as any)._clock || this.connections.size;
+    const currentVersion = (this.syncConnections as any)._clock || this.connections.size;
     if (this._connectionsCache && this._connectionsVersion === currentVersion) {
       return this._connectionsCache;
     }
@@ -6014,51 +6016,51 @@ export class DesignStore {
   onPiecesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._piecesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rPieces.observeDeep(notifySubscriber);
+      this.syncPieces.observeDeep(notifySubscriber);
     }
-    this.rPieces.observe(notifySubscriber);
-    return () => this.rPieces.unobserve(notifySubscriber);
+    this.syncPieces.observe(notifySubscriber);
+    return () => this.syncPieces.unobserve(notifySubscriber);
   };
 
   onConnectionsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._connectionsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rConnections.observeDeep(notifySubscriber);
-      return () => this.rConnections.unobserveDeep(notifySubscriber);
+      this.syncConnections.observeDeep(notifySubscriber);
+      return () => this.syncConnections.unobserveDeep(notifySubscriber);
     }
-    this.rConnections.observe(notifySubscriber);
-    return () => this.rConnections.unobserve(notifySubscriber);
+    this.syncConnections.observe(notifySubscriber);
+    return () => this.syncConnections.unobserve(notifySubscriber);
   };
 
   onScalarFieldChanged = (key: string, subscribe: Subscribe): Disposable => {
-    return createFieldObserver(this.rDesign, key, subscribe, false);
+    return createFieldObserver(this.syncDesign, key, subscribe, false);
   };
 
-  // #region RxPath API
+  // #region SyncPath API
 
-  // [👤semio📚js🗃️sketchpad💻sketchpad🔖design🔖ypathapi](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design/s/RxPath%20API)
-  // Path-based observation and subscription API for deep design Yjs map access.
+  // [👤semio📚js🗃️sketchpad💻sketchpad🔖design🔖syncpathapi](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Design/s/SyncPath%20API)
+  // Path-based observation and subscription API for deep design sync map access.
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
 
-  onPathChanged = (path: RxPath, subscribe: Subscribe): Unsubscribe => {
+  onPathChanged = (path: SyncPath, subscribe: Subscribe): Unsubscribe => {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
-      const pathObserver = createPathObserver(this.rDesign, path, () => {
+      const pathObserver = createPathObserver(this.syncDesign, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -6069,11 +6071,11 @@ export class DesignStore {
     };
   };
 
-  getPathSnapshot = (path: RxPath): any => {
-    return getValueAtPath(this.rDesign, path);
+  getPathSnapshot = (path: SyncPath): any => {
+    return getValueAtPath(this.syncDesign, path);
   };
 
-  // #endregion RxPath API
+  // #endregion SyncPath API
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖design✂️designscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Design/d/i/DesignScope)
@@ -6108,7 +6110,7 @@ export const useIsInDesignScope = () => useDesignScope() !== null;
  * useDesignStore holds the data fields for a useDesignStore record.
  **/
 function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string): T | DesignStore | null {
-  const kitStore = useKitStore() as KitStore | null;
+  const kitStore = useKitStore() as CollaborativeKitStore | null;
   const designScope = useDesignScope();
   const designGuid = designScope?.guid ?? guid;
   if (!kitStore || !designGuid || !kitStore.hasDesign(designGuid)) return null;
@@ -6150,11 +6152,11 @@ export function usePieces(): Piece[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onPiecesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -6177,11 +6179,11 @@ export function useConnections(): Connection[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onConnectionsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -6219,14 +6221,14 @@ export function useDesignId() {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       const unsubName = designStore.onScalarFieldChanged("name", () => {
         callback();
-        return () => { };
+        return () => {};
       });
       const unsubParent = designStore.onScalarFieldChanged("parent", () => {
         callback();
-        return () => { };
+        return () => {};
       });
       return () => {
         unsubName();
@@ -6355,26 +6357,26 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
 // #region Kit
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖kit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit)
-// Yjs-backed kit store managing the complete kit data structure.
+// Sync-backed kit store managing the complete kit data structure.
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconceptval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/RxConceptVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconceptval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/SyncConceptVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconceptval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/RxConceptVal)
- * RxConceptVal holds the data fields for a RxConceptVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconceptval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/SyncConceptVal)
+ * SyncConceptVal holds the data fields for a SyncConceptVal record.
  **/
-type RxConceptVal = string | RxAttributes;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconcept](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/RxConcept)
+type SyncConceptVal = string | SyncAttributes;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconcept](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/SyncConcept)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconcept](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/RxConcept)
- * RxConcept holds the data fields for a RxConcept record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconcept](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/SyncConcept)
+ * SyncConcept holds the data fields for a SyncConcept record.
  **/
-type RxConcept = RMap<RxConceptVal>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/RxConcepts)
+type SyncConcept = SyncMap<SyncConceptVal>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/SyncConcepts)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/RxConcepts)
- * RxConcepts holds the data fields for a RxConcepts record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yconcepts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/SyncConcepts)
+ * SyncConcepts holds the data fields for a SyncConcepts record.
  **/
-type RxConcepts = RArray<RxConcept>;
+type SyncConcepts = SyncArray<SyncConcept>;
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🛠️conceptstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/ConceptStore)
 /**
@@ -6382,16 +6384,16 @@ type RxConcepts = RArray<RxConcept>;
  * ConceptStore holds the data fields for a ConceptStore record.
  **/
 class ConceptStore {
-  private rConcept: RxConcept;
-  private rAttributes: RxAttributes;
+  private syncConcept: SyncConcept;
+  private syncAttributes: SyncAttributes;
   private attributes: Map<string, AttributeStore>;
   private cache?: Concept;
   private cacheHash?: string;
 
-  constructor(rConcept: RxConcept, concept: Concept) {
-    this.rConcept = rConcept;
-    this.rAttributes = createYjsDocFactory()().createArray<RxAttribute>();
-    this.rConcept.set("attributes", this.rAttributes);
+  constructor(syncConcept: SyncConcept, concept: Concept) {
+    this.syncConcept = syncConcept;
+    this.syncAttributes = createSyncDocFactory()().createArray<SyncAttribute>();
+    this.syncConcept.set("attributes", this.syncAttributes);
     this.attributes = new Map();
     this.guid = concept.guid;
     this.name = concept.name;
@@ -6401,33 +6403,33 @@ class ConceptStore {
   }
 
   get guid(): string {
-    return this.rConcept.get("guid") as string;
+    return this.syncConcept.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rConcept.set("guid", guid);
+    this.syncConcept.set("guid", guid);
   }
 
   get name(): string {
-    return this.rConcept.get("name") as string;
+    return this.syncConcept.get("name") as string;
   }
   set name(name: string) {
-    this.rConcept.set("name", name);
+    this.syncConcept.set("name", name);
   }
 
   get description(): string | undefined {
-    return this.rConcept.get("description") as string | undefined;
+    return this.syncConcept.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    if (description !== undefined) this.rConcept.set("description", description);
-    else this.rConcept.delete("description");
+    if (description !== undefined) this.syncConcept.set("description", description);
+    else this.syncConcept.delete("description");
   }
 
   get icon(): string | undefined {
-    return this.rConcept.get("icon") as string | undefined;
+    return this.syncConcept.get("icon") as string | undefined;
   }
   set icon(icon: string | undefined) {
-    if (icon !== undefined) this.rConcept.set("icon", icon);
-    else this.rConcept.delete("icon");
+    if (icon !== undefined) this.syncConcept.set("icon", icon);
+    else this.syncConcept.delete("icon");
   }
 
   hasAttribute(guid: string): boolean {
@@ -6436,13 +6438,13 @@ class ConceptStore {
 
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
-    const rAttribute = createYjsDocFactory()().createMap<RxAttributeVal>();
-    this.rAttributes.push([rAttribute]);
-    rAttribute.set("guid", attribute.guid);
-    rAttribute.set("key", attribute.key);
-    rAttribute.set("value", attribute.value || "");
-    rAttribute.set("definition", attribute.definition || "");
-    const attributeStore = new AttributeStore(rAttribute, attribute);
+    const syncAttribute = createSyncDocFactory()().createMap<SyncAttributeVal>();
+    this.syncAttributes.push([syncAttribute]);
+    syncAttribute.set("guid", attribute.guid);
+    syncAttribute.set("key", attribute.key);
+    syncAttribute.set("value", attribute.value || "");
+    syncAttribute.set("definition", attribute.definition || "");
+    const attributeStore = new AttributeStore(syncAttribute, attribute);
     this.attributes.set(attribute.guid, attributeStore);
   }
 
@@ -6453,9 +6455,9 @@ class ConceptStore {
   private findAttributeStore = (guid: string): AttributeStore | undefined => this.attributes.get(guid);
 
   private findAttributeIndexByGuid = (guid: string): number => {
-    return Array.from(this.rAttributes).findIndex((rAttribute: any) => {
-      const rMap = rAttribute[0] as RMap<any>;
-      return rMap.get("guid") === guid;
+    return Array.from(this.syncAttributes).findIndex((syncAttribute: any) => {
+      const syncMap = syncAttribute[0] as SyncMap<any>;
+      return syncMap.get("guid") === guid;
     });
   };
 
@@ -6487,12 +6489,12 @@ class ConceptStore {
     if (diff.description !== undefined) {
       const value = diff.description ?? undefined;
       if (value !== undefined) this.description = value;
-      else this.rConcept.delete("description");
+      else this.syncConcept.delete("description");
     }
     if (diff.icon !== undefined) {
       const value = diff.icon ?? undefined;
       if (value !== undefined) this.icon = value;
-      else this.rConcept.delete("icon");
+      else this.syncConcept.delete("icon");
     }
     if (diff.attributes) {
       if (diff.attributes.removed) {
@@ -6501,7 +6503,7 @@ class ConceptStore {
           if (!attribute) return;
           const index = this.findAttributeIndexByGuid(attribute.guid);
           if (index !== -1) {
-            this.rAttributes.delete(index, 1);
+            this.syncAttributes.delete(index, 1);
           }
           this.attributes.delete(attribute.guid);
         });
@@ -6522,66 +6524,66 @@ class ConceptStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rConcept, subscribe, false);
+    return createObserver(this.syncConcept, subscribe, false);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rConcept, subscribe, true);
+    return createObserver(this.syncConcept, subscribe, true);
   };
 }
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yidmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/RxIdMap)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️yidmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/SyncIdMap)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yidmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/RxIdMap)
- * RxIdMap holds the data fields for a RxIdMap record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️yidmap](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/SyncIdMap)
+ * SyncIdMap holds the data fields for a SyncIdMap record.
  **/
-type RxIdMap = RMap<string>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykitval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/RxKitVal)
+type SyncIdMap = SyncMap<string>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykitval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/SyncKitVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykitval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/RxKitVal)
- * RxKitVal holds the data fields for a RxKitVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykitval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/SyncKitVal)
+ * SyncKitVal holds the data fields for a SyncKitVal record.
  **/
-type RxKitVal = string | RArray<string> | RxIdMap | RxAttributes | RxAuthors | RxFiles | RxFolders | RxBenchmarks | RxQualities | RxProps | RxTypes | RxDesigns | RxConcepts;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/RxKit)
+type SyncKitVal = string | SyncArray<string> | SyncIdMap | SyncAttributes | SyncAuthors | SyncFiles | SyncFolders | SyncBenchmarks | SyncQualities | SyncProps | SyncTypes | SyncDesigns | SyncConcepts;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/SyncKit)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/RxKit)
- * RxKit holds the data fields for a RxKit record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/SyncKit)
+ * SyncKit holds the data fields for a SyncKit record.
  **/
-type RxKit = RMap<RxKitVal>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/RxKits)
+type SyncKit = SyncMap<SyncKitVal>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️ykits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/SyncKits)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/RxKits)
- * RxKits holds the data fields for a RxKits record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️ykits](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/SyncKits)
+ * SyncKits holds the data fields for a SyncKits record.
  **/
-type RxKits = RArray<RxKit>;
+type SyncKits = SyncArray<SyncKit>;
 
 /**
- * Yjs-backed kit store managing the complete kit data structure with all entities.
+ * Collaborative CRDT-backed kit store implementing KitStore interface.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🛠️kitstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/d/i/KitStore)
  **/
-export class KitStore {
+export class CollaborativeKitStore implements KitStore {
   public readonly parent: SketchpadStore;
   private readonly remoteProviders: RemoteProviders | undefined;
   private fileProvider?: FileProvider;
-  public readonly rDoc: RDoc;
-  private readonly rKit: RxKit;
-  private readonly rConcepts: RxConcepts;
-  private readonly rTypes: RxTypes;
+  public readonly syncDoc: SyncDoc;
+  private readonly syncKit: SyncKit;
+  private readonly syncConcepts: SyncConcepts;
+  private readonly syncTypes: SyncTypes;
   private readonly types: Map<string, TypeStore>;
   private readonly conceptStores: Map<string, ConceptStore>;
-  private readonly rDesigns: RxDesigns;
+  private readonly syncDesigns: SyncDesigns;
   private readonly designs: Map<string, DesignStore>;
-  private readonly rFiles: RxFiles;
+  private readonly syncFiles: SyncFiles;
   private readonly files: Map<string, FileStore>;
-  private readonly rFolders: RxFolders;
+  private readonly syncFolders: SyncFolders;
   private readonly folders: Map<string, FolderStore>;
-  private readonly rQualities: RxQualities;
+  private readonly syncQualities: SyncQualities;
   private readonly qualities: Map<string, QualityStore>;
-  private readonly rBenchmarks: RxBenchmarks;
+  private readonly syncBenchmarks: SyncBenchmarks;
   private readonly benchmarks: Map<string, BenchmarkStore>;
-  private readonly rAuthors: RxAuthors;
+  private readonly syncAuthors: SyncAuthors;
   private readonly authors: Map<string, AuthorStore>;
-  private readonly rAttributes: RxAttributes;
+  private readonly syncAttributes: SyncAttributes;
   private readonly attributes: Map<string, AttributeStore>;
   private readonly persistence?: PersistenceProvider;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult>;
@@ -6607,7 +6609,7 @@ export class KitStore {
   constructor(parent: SketchpadStore, kit: Kit, local?: boolean, remote?: boolean, remoteProviders?: RemoteProviders, persistenceFactory?: PersistenceFactory) {
     this.parent = parent;
     this.remoteProviders = remote ? remoteProviders : undefined;
-    this.rDoc = createYjsDocFactory()();
+    this.syncDoc = createSyncDocFactory()();
 
     this.commandRegistry = new Map();
     this.regularFiles = new Map();
@@ -6621,18 +6623,18 @@ export class KitStore {
     this.authors = new Map();
     this.attributes = new Map();
 
-    this.rKit = this.rDoc.getMap() as RxKit;
-    this.rConcepts = this.rDoc.getArray("concepts");
-    this.rTypes = this.rDoc.getArray("types");
-    this.rDesigns = this.rDoc.getArray("designs");
-    this.rFiles = this.rDoc.getArray("files");
-    this.rFolders = this.rDoc.getArray("folders");
-    this.rQualities = this.rDoc.getArray("qualities");
-    this.rBenchmarks = this.rDoc.getArray("benchmarks");
-    this.rAuthors = this.rDoc.getArray("authors");
-    this.rAttributes = this.rDoc.getArray("attributes");
+    this.syncKit = this.syncDoc.getMap() as SyncKit;
+    this.syncConcepts = this.syncDoc.getArray("concepts");
+    this.syncTypes = this.syncDoc.getArray("types");
+    this.syncDesigns = this.syncDoc.getArray("designs");
+    this.syncFiles = this.syncDoc.getArray("files");
+    this.syncFolders = this.syncDoc.getArray("folders");
+    this.syncQualities = this.syncDoc.getArray("qualities");
+    this.syncBenchmarks = this.syncDoc.getArray("benchmarks");
+    this.syncAuthors = this.syncDoc.getArray("authors");
+    this.syncAttributes = this.syncDoc.getArray("attributes");
 
-    this.rDoc.transact(() => {
+    this.syncDoc.transact(() => {
       this.guid = kit.guid;
       this.name = kit.name;
       this.version = kit.version;
@@ -6653,16 +6655,16 @@ export class KitStore {
       kit.designs?.forEach((design) => design?.guid && this.createDesign(design));
       kit.files?.forEach((file) => file?.guid && this.createFile(file));
 
-      this.rKit.set("createdAt", new Date().toISOString());
+      this.syncKit.set("createdAt", new Date().toISOString());
       this.updated();
     });
 
     if (local && persistenceFactory) {
-      this.persistence = persistenceFactory(this.rDoc, `semio-kit-${kit.guid}`);
+      this.persistence = persistenceFactory(this.syncDoc, `semio-kit-${kit.guid}`);
     }
 
     if (remote && this.remoteProviders) {
-      this.remoteProviders.yProvider(this.rDoc, this.name + "@" + this.version);
+      this.remoteProviders.syncProvider(this.syncDoc, this.name + "@" + this.version);
       this.initializeFileProvider();
     }
 
@@ -6697,82 +6699,82 @@ export class KitStore {
   }
 
   get guid(): string {
-    return this.rKit.get("guid") as string;
+    return this.syncKit.get("guid") as string;
   }
   set guid(guid: string) {
-    this.rKit.set("guid", guid);
+    this.syncKit.set("guid", guid);
   }
 
   get name(): string {
-    return this.rKit.get("name") as string;
+    return this.syncKit.get("name") as string;
   }
   set name(name: string) {
-    this.rKit.set("name", name);
+    this.syncKit.set("name", name);
   }
   get version(): string | undefined {
-    return this.rKit.get("version") as string | undefined;
+    return this.syncKit.get("version") as string | undefined;
   }
   set version(version: string | undefined) {
-    this.rKit.set("version", version || "");
+    this.syncKit.set("version", version || "");
   }
   get remote(): string | undefined {
-    return this.rKit.get("remote") as string | undefined;
+    return this.syncKit.get("remote") as string | undefined;
   }
   set remote(remote: string | undefined) {
-    this.rKit.set("remote", remote || "");
+    this.syncKit.set("remote", remote || "");
   }
   get homepage(): string | undefined {
-    return this.rKit.get("homepage") as string | undefined;
+    return this.syncKit.get("homepage") as string | undefined;
   }
   set homepage(homepage: string | undefined) {
-    this.rKit.set("homepage", homepage || "");
+    this.syncKit.set("homepage", homepage || "");
   }
   get license(): string | undefined {
-    return this.rKit.get("license") as string | undefined;
+    return this.syncKit.get("license") as string | undefined;
   }
   set license(license: string | undefined) {
-    this.rKit.set("license", license || "");
+    this.syncKit.set("license", license || "");
   }
   get preview(): string | undefined {
-    return this.rKit.get("preview") as string | undefined;
+    return this.syncKit.get("preview") as string | undefined;
   }
   set preview(preview: string | undefined) {
-    this.rKit.set("preview", preview || "");
+    this.syncKit.set("preview", preview || "");
   }
   get concepts(): Concept[] | undefined {
     const concepts = this.snapshotConcepts();
     return concepts.length > 0 ? concepts : undefined;
   }
   set concepts(concepts: Concept[] | undefined) {
-    this.rConcepts.delete(0, this.rConcepts.length);
+    this.syncConcepts.delete(0, this.syncConcepts.length);
     this.conceptStores.clear();
     this._conceptsCache = undefined;
     this._conceptsVersion = 0;
     if (concepts) concepts.forEach((concept) => this.createConcept(concept));
   }
   get icon(): string | undefined {
-    return this.rKit.get("icon") as string | undefined;
+    return this.syncKit.get("icon") as string | undefined;
   }
   set icon(icon: string | undefined) {
-    this.rKit.set("icon", icon || "");
+    this.syncKit.set("icon", icon || "");
   }
   get image(): string | undefined {
-    return this.rKit.get("image") as string | undefined;
+    return this.syncKit.get("image") as string | undefined;
   }
   set image(image: string | undefined) {
-    this.rKit.set("image", image || "");
+    this.syncKit.set("image", image || "");
   }
   get description(): string | undefined {
-    return this.rKit.get("description") as string | undefined;
+    return this.syncKit.get("description") as string | undefined;
   }
   set description(description: string | undefined) {
-    this.rKit.set("description", description || "");
+    this.syncKit.set("description", description || "");
   }
   get createdAt(): Date {
-    return new Date(this.rKit.get("createdAt") as string);
+    return new Date(this.syncKit.get("createdAt") as string);
   }
   get updatedAt(): Date {
-    return new Date(this.rKit.get("updatedAt") as string);
+    return new Date(this.syncKit.get("updatedAt") as string);
   }
 
   get fileUrls(): Map<Url, Url> {
@@ -6792,7 +6794,7 @@ export class KitStore {
   }
 
   updated(): void {
-    this.rKit.set("updatedAt", new Date().toISOString());
+    this.syncKit.set("updatedAt", new Date().toISOString());
   }
 
   hasType(guid: string): boolean {
@@ -6801,10 +6803,10 @@ export class KitStore {
 
   createType(type: Type): void {
     if (this.hasType(type.guid)) throw new Error(`Type (${type.name}) already exists.`);
-    const rType = createYjsDocFactory()().createMap<RxTypeVal>();
-    this.rTypes.push([rType]);
-    const yTypeStore = new TypeStore(this, rType, type);
-    this.types.set(type.guid, yTypeStore);
+    const syncType = createSyncDocFactory()().createMap<SyncTypeVal>();
+    this.syncTypes.push([syncType]);
+    const typeStore = new TypeStore(this, syncType, type);
+    this.types.set(type.guid, typeStore);
   }
 
   type(guid: string): TypeStore | undefined {
@@ -6817,10 +6819,10 @@ export class KitStore {
 
   createDesign(design: Design): void {
     if (this.hasDesign(design.guid)) throw new Error(`Design (${design.name}) already exists.`);
-    const rDesign = createYjsDocFactory()().createMap<RxDesignVal>();
-    this.rDesigns.push([rDesign]);
-    const yDesignStore = new DesignStore(this, rDesign, design);
-    this.designs.set(design.guid, yDesignStore);
+    const syncDesign = createSyncDocFactory()().createMap<SyncDesignVal>();
+    this.syncDesigns.push([syncDesign]);
+    const designStore = new DesignStore(this, syncDesign, design);
+    this.designs.set(design.guid, designStore);
   }
 
   design(guid: string): DesignStore {
@@ -6833,20 +6835,20 @@ export class KitStore {
 
   createFile(file: SemioFile): void {
     if (this.hasFile(file.guid)) throw new Error(`File (${file.name}) already exists.`);
-    const rFile = createYjsDocFactory()().createMap() as RxFile;
-    this.rFiles.push([rFile]);
-    rFile.set("guid", file.guid);
-    rFile.set("name", file.name);
-    if (file.folder?.guid) rFile.set("folder", file.folder.guid);
-    if (file.remote) rFile.set("remote", file.remote);
-    if (file.size !== undefined) rFile.set("size", file.size);
-    if (file.hash) rFile.set("hash", file.hash);
-    if (file.createdAt) rFile.set("createdAt", file.createdAt);
-    if (file.updatedAt) rFile.set("updatedAt", file.updatedAt);
-    if (file.createdBy) rFile.set("createdBy", file.createdBy);
-    if (file.updatedBy) rFile.set("updatedBy", file.updatedBy);
-    const yFileStore = new FileStore(rFile);
-    this.files.set(file.guid, yFileStore);
+    const syncFile = createSyncDocFactory()().createMap() as SyncFile;
+    this.syncFiles.push([syncFile]);
+    syncFile.set("guid", file.guid);
+    syncFile.set("name", file.name);
+    if (file.folder?.guid) syncFile.set("folder", file.folder.guid);
+    if (file.remote) syncFile.set("remote", file.remote);
+    if (file.size !== undefined) syncFile.set("size", file.size);
+    if (file.hash) syncFile.set("hash", file.hash);
+    if (file.createdAt) syncFile.set("createdAt", file.createdAt);
+    if (file.updatedAt) syncFile.set("updatedAt", file.updatedAt);
+    if (file.createdBy) syncFile.set("createdBy", file.createdBy);
+    if (file.updatedBy) syncFile.set("updatedBy", file.updatedBy);
+    const fileStore = new FileStore(syncFile);
+    this.files.set(file.guid, fileStore);
   }
 
   file(guid: string): FileStore {
@@ -6859,18 +6861,18 @@ export class KitStore {
 
   createFolder(folder: Folder): void {
     if (this.hasFolder(folder.guid)) throw new Error(`Folder (${folder.name}) already exists.`);
-    const rFolder = createYjsDocFactory()().createMap() as RxFolder;
-    this.rFolders.push([rFolder]);
-    rFolder.set("guid", folder.guid);
-    rFolder.set("name", folder.name);
-    if (folder.parent?.guid) rFolder.set("parent", folder.parent.guid);
-    if (folder.description) rFolder.set("description", folder.description);
-    if (folder.createdAt) rFolder.set("createdAt", folder.createdAt);
-    if (folder.updatedAt) rFolder.set("updatedAt", folder.updatedAt);
-    if (folder.createdBy) rFolder.set("createdBy", folder.createdBy);
-    if (folder.updatedBy) rFolder.set("updatedBy", folder.updatedBy);
-    const yFolderStore = new FolderStore(rFolder);
-    this.folders.set(folder.guid, yFolderStore);
+    const syncFolder = createSyncDocFactory()().createMap() as SyncFolder;
+    this.syncFolders.push([syncFolder]);
+    syncFolder.set("guid", folder.guid);
+    syncFolder.set("name", folder.name);
+    if (folder.parent?.guid) syncFolder.set("parent", folder.parent.guid);
+    if (folder.description) syncFolder.set("description", folder.description);
+    if (folder.createdAt) syncFolder.set("createdAt", folder.createdAt);
+    if (folder.updatedAt) syncFolder.set("updatedAt", folder.updatedAt);
+    if (folder.createdBy) syncFolder.set("createdBy", folder.createdBy);
+    if (folder.updatedBy) syncFolder.set("updatedBy", folder.updatedBy);
+    const folderStore = new FolderStore(syncFolder);
+    this.folders.set(folder.guid, folderStore);
   }
 
   updateFolder(guid: string, folderDiff: FolderDiff): void {
@@ -6882,9 +6884,9 @@ export class KitStore {
   deleteFolder(guid: string): void {
     const folderStore = this.folders.get(guid);
     if (!folderStore) throw new Error(`Folder with guid ${guid} not found.`);
-    const index = this.rFolders.toArray().indexOf(folderStore.rFolder);
+    const index = this.syncFolders.toArray().indexOf(folderStore.syncFolder);
     if (index !== -1) {
-      this.rFolders.delete(index, 1);
+      this.syncFolders.delete(index, 1);
     }
     this.folders.delete(guid);
   }
@@ -6995,10 +6997,10 @@ export class KitStore {
 
   createQuality(quality: Quality): void {
     if (this.hasQuality(quality.guid)) throw new Error(`Quality (${quality.key}) already exists.`);
-    const rQuality = createYjsDocFactory()().createMap() as RxQuality;
-    this.rQualities.push([rQuality]);
-    const yQualityStore = new QualityStore(rQuality, quality);
-    this.qualities.set(quality.guid, yQualityStore);
+    const syncQuality = createSyncDocFactory()().createMap() as SyncQuality;
+    this.syncQualities.push([syncQuality]);
+    const qualityStore = new QualityStore(syncQuality, quality);
+    this.qualities.set(quality.guid, qualityStore);
   }
 
   quality(guid: string): QualityStore {
@@ -7011,10 +7013,10 @@ export class KitStore {
 
   createBenchmark(benchmark: Benchmark): void {
     if (this.hasBenchmark(benchmark.guid)) throw new Error(`Benchmark (${benchmark.name}) already exists.`);
-    const rBenchmark = createYjsDocFactory()().createMap() as RxBenchmark;
-    this.rBenchmarks.push([rBenchmark]);
-    const yBenchmarkStore = new BenchmarkStore(rBenchmark, benchmark);
-    this.benchmarks.set(benchmark.guid, yBenchmarkStore);
+    const syncBenchmark = createSyncDocFactory()().createMap() as SyncBenchmark;
+    this.syncBenchmarks.push([syncBenchmark]);
+    const benchmarkStore = new BenchmarkStore(syncBenchmark, benchmark);
+    this.benchmarks.set(benchmark.guid, benchmarkStore);
   }
 
   benchmark(guid: string): BenchmarkStore {
@@ -7027,10 +7029,10 @@ export class KitStore {
 
   createAuthor(author: Author): void {
     if (this.hasAuthor(author.guid)) throw new Error(`Author (${author.email}) already exists.`);
-    const rAuthor = createYjsDocFactory()().createMap<RxAuthorVal>();
-    this.rAuthors.push([rAuthor]);
-    const yAuthorStore = new AuthorStore(rAuthor, author);
-    this.authors.set(author.guid, yAuthorStore);
+    const syncAuthor = createSyncDocFactory()().createMap<SyncAuthorVal>();
+    this.syncAuthors.push([syncAuthor]);
+    const authorStore = new AuthorStore(syncAuthor, author);
+    this.authors.set(author.guid, authorStore);
   }
 
   author(guid: string): AuthorStore {
@@ -7043,15 +7045,15 @@ export class KitStore {
 
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute.guid)) throw new Error(`Attribute (${attribute.key}) already exists.`);
-    const rAttribute = createYjsDocFactory()().createMap() as RxAttribute;
-    this.rAttributes.push([rAttribute]);
+    const syncAttribute = createSyncDocFactory()().createMap() as SyncAttribute;
+    this.syncAttributes.push([syncAttribute]);
 
-    rAttribute.set("guid", attribute.guid);
-    rAttribute.set("key", attribute.key);
-    rAttribute.set("value", attribute.value || "");
-    rAttribute.set("definition", attribute.definition || "");
-    const yAttributeStore = new AttributeStore(rAttribute, attribute);
-    this.attributes.set(attribute.guid, yAttributeStore);
+    syncAttribute.set("guid", attribute.guid);
+    syncAttribute.set("key", attribute.key);
+    syncAttribute.set("value", attribute.value || "");
+    syncAttribute.set("definition", attribute.definition || "");
+    const attributeStore = new AttributeStore(syncAttribute, attribute);
+    this.attributes.set(attribute.guid, attributeStore);
   }
 
   attribute(guid: string): AttributeStore {
@@ -7064,14 +7066,14 @@ export class KitStore {
 
   createConcept(concept: Concept): void {
     if (this.hasConcept(concept.guid)) throw new Error(`Concept (${concept.name}) already exists.`);
-    const rConcept = createYjsDocFactory()().createMap() as RxConcept;
-    this.rConcepts.push([rConcept]);
-    rConcept.set("guid", concept.guid);
-    rConcept.set("name", concept.name);
-    if (concept.description !== undefined) rConcept.set("description", concept.description);
-    if (concept.icon !== undefined) rConcept.set("icon", concept.icon);
-    const yConceptStore = new ConceptStore(rConcept, concept);
-    this.conceptStores.set(concept.guid, yConceptStore);
+    const syncConcept = createSyncDocFactory()().createMap() as SyncConcept;
+    this.syncConcepts.push([syncConcept]);
+    syncConcept.set("guid", concept.guid);
+    syncConcept.set("name", concept.name);
+    if (concept.description !== undefined) syncConcept.set("description", concept.description);
+    if (concept.icon !== undefined) syncConcept.set("icon", concept.icon);
+    const conceptStore = new ConceptStore(syncConcept, concept);
+    this.conceptStores.set(concept.guid, conceptStore);
     this._conceptsCache = undefined;
     this._conceptsVersion = 0;
   }
@@ -7091,12 +7093,12 @@ export class KitStore {
   deleteConcept(guid: string): void {
     const conceptStore = this.conceptStores.get(guid);
     if (!conceptStore) throw new Error(`Concept with guid ${guid} not found.`);
-    const index = this.rConcepts.toArray().findIndex((rConcept: any) => {
-      const rMap = rConcept[0] as RMap<any>;
-      return rMap.get("guid") === guid;
+    const index = this.syncConcepts.toArray().findIndex((syncConcept: any) => {
+      const syncMap = syncConcept[0] as SyncMap<any>;
+      return syncMap.get("guid") === guid;
     });
     if (index !== -1) {
-      this.rConcepts.delete(index, 1);
+      this.syncConcepts.delete(index, 1);
     }
     this.conceptStores.delete(guid);
     this._conceptsCache = undefined;
@@ -7148,7 +7150,7 @@ export class KitStore {
   };
 
   change = (diff: KitDiff) => {
-    this.rDoc.transact(() => {
+    this.syncDoc.transact(() => {
       if (diff.guid) this.guid = diff.guid;
       if (diff.name) this.name = diff.name;
       if (diff.version) this.version = diff.version;
@@ -7198,12 +7200,12 @@ export class KitStore {
             if (this.authors.has(authorGuid)) {
               this.authors.delete(authorGuid);
 
-              const index = Array.from(this.rAuthors).findIndex((rAuthor: any) => {
-                const rMap = rAuthor[0] as RMap<any>;
-                return rMap.get("guid") === authorGuid;
+              const index = Array.from(this.syncAuthors).findIndex((syncAuthor: any) => {
+                const syncMap = syncAuthor[0] as SyncMap<any>;
+                return syncMap.get("guid") === authorGuid;
               });
               if (index !== -1) {
-                this.rAuthors.delete(index, 1);
+                this.syncAuthors.delete(index, 1);
               }
             }
           });
@@ -7227,12 +7229,12 @@ export class KitStore {
             if (this.types.has(guid)) {
               this.types.delete(guid);
 
-              const index = Array.from(this.rTypes).findIndex((rType: any) => {
-                const rMap = rType[0] as RMap<any>;
-                return rMap.get("guid") === guid;
+              const index = Array.from(this.syncTypes).findIndex((syncType: any) => {
+                const syncMap = syncType[0] as SyncMap<any>;
+                return syncMap.get("guid") === guid;
               });
               if (index !== -1) {
-                this.rTypes.delete(index, 1);
+                this.syncTypes.delete(index, 1);
               }
             }
           });
@@ -7256,12 +7258,12 @@ export class KitStore {
             if (this.designs.has(guid)) {
               this.designs.delete(guid);
 
-              const index = Array.from(this.rDesigns).findIndex((rDesign: any) => {
-                const rMap = rDesign[0] as RMap<any>;
-                return rMap.get("guid") === guid;
+              const index = Array.from(this.syncDesigns).findIndex((syncDesign: any) => {
+                const syncMap = syncDesign[0] as SyncMap<any>;
+                return syncMap.get("guid") === guid;
               });
               if (index !== -1) {
-                this.rDesigns.delete(index, 1);
+                this.syncDesigns.delete(index, 1);
               }
             }
           });
@@ -7285,12 +7287,12 @@ export class KitStore {
             if (this.files.has(guid)) {
               this.files.delete(guid);
 
-              const index = Array.from(this.rFiles).findIndex((rFile: any) => {
-                const rMap = rFile[0] as RMap<any>;
-                return rMap.get("guid") === guid;
+              const index = Array.from(this.syncFiles).findIndex((syncFile: any) => {
+                const syncMap = syncFile[0] as SyncMap<any>;
+                return syncMap.get("guid") === guid;
               });
               if (index !== -1) {
-                this.rFiles.delete(index, 1);
+                this.syncFiles.delete(index, 1);
               }
             }
           });
@@ -7314,12 +7316,12 @@ export class KitStore {
             if (this.folders.has(guid)) {
               this.folders.delete(guid);
 
-              const index = Array.from(this.rFolders).findIndex((rFolder: any) => {
-                const rMap = rFolder[0] as RMap<any>;
-                return rMap.get("guid") === guid;
+              const index = Array.from(this.syncFolders).findIndex((syncFolder: any) => {
+                const syncMap = syncFolder[0] as SyncMap<any>;
+                return syncMap.get("guid") === guid;
               });
               if (index !== -1) {
-                this.rFolders.delete(index, 1);
+                this.syncFolders.delete(index, 1);
               }
             }
           });
@@ -7343,18 +7345,18 @@ export class KitStore {
             if (this.qualities.has(guid)) {
               this.qualities.delete(guid);
 
-              const index = Array.from(this.rQualities).findIndex((rQuality: any) => {
-                const rMap = rQuality[0] as RMap<any>;
-                return rMap.get("guid") === guid;
+              const index = Array.from(this.syncQualities).findIndex((syncQuality: any) => {
+                const syncMap = syncQuality[0] as SyncMap<any>;
+                return syncMap.get("guid") === guid;
               });
               if (index !== -1) {
-                this.rQualities.delete(index, 1);
+                this.syncQualities.delete(index, 1);
               }
             }
           });
         }
       }
-      this.rKit.set("updatedAt", new Date().toISOString());
+      this.syncKit.set("updatedAt", new Date().toISOString());
       this.dirty = true;
       this.cache = undefined;
       this.cacheHash = undefined;
@@ -7362,33 +7364,33 @@ export class KitStore {
   };
 
   onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.rKit, subscribe);
+    return createObserver(this.syncKit, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.rKit, subscribe, true);
+    return createObserver(this.syncKit, subscribe, true);
   };
 
-  // #region RxPath API
+  // #region SyncPath API
 
-  // [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🔖ypathapi](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/s/RxPath%20API)
-  // Path-based observation and subscription API for deep kit Yjs map access.
+  // [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🔖syncpathapi](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/s/SyncPath%20API)
+  // Path-based observation and subscription API for deep kit sync map access.
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
   public readonly derived: DerivedStore = new DerivedStore();
 
-  onPathChanged = (path: RxPath, subscribe: Subscribe): Unsubscribe => {
+  onPathChanged = (path: SyncPath, subscribe: Subscribe): Unsubscribe => {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
-      const pathObserver = createPathObserver(this.rKit, path, () => {
+      const pathObserver = createPathObserver(this.syncKit, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -7407,14 +7409,14 @@ export class KitStore {
     };
   };
 
-  getPathSnapshot = (path: RxPath): any => {
-    return getValueAtPath(this.rKit, path);
+  getPathSnapshot = (path: SyncPath): any => {
+    return getValueAtPath(this.syncKit, path);
   };
 
-  // #endregion RxPath API
+  // #endregion SyncPath API
 
   snapshotConcepts = (): Concept[] => {
-    const currentVersion = (this.rConcepts as any)._clock || this.conceptStores.size;
+    const currentVersion = (this.syncConcepts as any)._clock || this.conceptStores.size;
     if (this._conceptsCache && this._conceptsVersion === currentVersion) {
       return this._conceptsCache;
     }
@@ -7424,7 +7426,7 @@ export class KitStore {
   };
 
   snapshotFiles = (): SemioFile[] => {
-    const currentVersion = (this.rFiles as any)._clock || this.files.size;
+    const currentVersion = (this.syncFiles as any)._clock || this.files.size;
     if (this._filesCache && this._filesVersion === currentVersion) {
       return this._filesCache;
     }
@@ -7434,7 +7436,7 @@ export class KitStore {
   };
 
   snapshotTypes = (): Type[] => {
-    const currentVersion = (this.rTypes as any)._clock || this.types.size;
+    const currentVersion = (this.syncTypes as any)._clock || this.types.size;
     if (this._typesCache && this._typesVersion === currentVersion) {
       return this._typesCache;
     }
@@ -7444,7 +7446,7 @@ export class KitStore {
   };
 
   snapshotDesigns = (): Design[] => {
-    const currentVersion = (this.rDesigns as any)._clock || this.designs.size;
+    const currentVersion = (this.syncDesigns as any)._clock || this.designs.size;
     if (this._designsCache && this._designsVersion === currentVersion) {
       return this._designsCache;
     }
@@ -7454,7 +7456,7 @@ export class KitStore {
   };
 
   snapshotQualities = (): Quality[] => {
-    const currentVersion = (this.rQualities as any)._clock || this.qualities.size;
+    const currentVersion = (this.syncQualities as any)._clock || this.qualities.size;
     if (this._qualitiesCache && this._qualitiesVersion === currentVersion) {
       return this._qualitiesCache;
     }
@@ -7464,7 +7466,7 @@ export class KitStore {
   };
 
   snapshotAuthors = (): Author[] => {
-    const currentVersion = (this.rAuthors as any)._clock || this.authors.size;
+    const currentVersion = (this.syncAuthors as any)._clock || this.authors.size;
     if (this._authorsCache && this._authorsVersion === currentVersion) {
       return this._authorsCache;
     }
@@ -7474,7 +7476,7 @@ export class KitStore {
   };
 
   snapshotFolders = (): Folder[] => {
-    const currentVersion = (this.rFolders as any)._clock || this.folders.size;
+    const currentVersion = (this.syncFolders as any)._clock || this.folders.size;
     if (this._foldersCache && this._foldersVersion === currentVersion) {
       return this._foldersCache;
     }
@@ -7486,96 +7488,96 @@ export class KitStore {
   onConceptsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._conceptsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rConcepts.observeDeep(notifySubscriber);
-      return () => this.rConcepts.unobserveDeep(notifySubscriber);
+      this.syncConcepts.observeDeep(notifySubscriber);
+      return () => this.syncConcepts.unobserveDeep(notifySubscriber);
     }
-    this.rConcepts.observe(notifySubscriber);
-    return () => this.rConcepts.unobserve(notifySubscriber);
+    this.syncConcepts.observe(notifySubscriber);
+    return () => this.syncConcepts.unobserve(notifySubscriber);
   };
 
   onTypesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._typesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rTypes.observeDeep(notifySubscriber);
-      return () => this.rTypes.unobserveDeep(notifySubscriber);
+      this.syncTypes.observeDeep(notifySubscriber);
+      return () => this.syncTypes.unobserveDeep(notifySubscriber);
     }
-    this.rTypes.observe(notifySubscriber);
-    return () => this.rTypes.unobserve(notifySubscriber);
+    this.syncTypes.observe(notifySubscriber);
+    return () => this.syncTypes.unobserve(notifySubscriber);
   };
 
   onFilesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._filesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rFiles.observeDeep(notifySubscriber);
-      return () => this.rFiles.unobserveDeep(notifySubscriber);
+      this.syncFiles.observeDeep(notifySubscriber);
+      return () => this.syncFiles.unobserveDeep(notifySubscriber);
     }
-    this.rFiles.observe(notifySubscriber);
-    return () => this.rFiles.unobserve(notifySubscriber);
+    this.syncFiles.observe(notifySubscriber);
+    return () => this.syncFiles.unobserve(notifySubscriber);
   };
 
   onDesignsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._designsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rDesigns.observeDeep(notifySubscriber);
-      return () => this.rDesigns.unobserveDeep(notifySubscriber);
+      this.syncDesigns.observeDeep(notifySubscriber);
+      return () => this.syncDesigns.unobserveDeep(notifySubscriber);
     }
-    this.rDesigns.observe(notifySubscriber);
-    return () => this.rDesigns.unobserve(notifySubscriber);
+    this.syncDesigns.observe(notifySubscriber);
+    return () => this.syncDesigns.unobserve(notifySubscriber);
   };
 
   onQualitiesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._qualitiesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rQualities.observeDeep(notifySubscriber);
-      return () => this.rQualities.unobserveDeep(notifySubscriber);
+      this.syncQualities.observeDeep(notifySubscriber);
+      return () => this.syncQualities.unobserveDeep(notifySubscriber);
     }
-    this.rQualities.observe(notifySubscriber);
-    return () => this.rQualities.unobserve(notifySubscriber);
+    this.syncQualities.observe(notifySubscriber);
+    return () => this.syncQualities.unobserve(notifySubscriber);
   };
 
   onAuthorsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._authorsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rAuthors.observeDeep(notifySubscriber);
-      return () => this.rAuthors.unobserveDeep(notifySubscriber);
+      this.syncAuthors.observeDeep(notifySubscriber);
+      return () => this.syncAuthors.unobserveDeep(notifySubscriber);
     }
-    this.rAuthors.observe(notifySubscriber);
-    return () => this.rAuthors.unobserve(notifySubscriber);
+    this.syncAuthors.observe(notifySubscriber);
+    return () => this.syncAuthors.unobserve(notifySubscriber);
   };
 
   onFoldersChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._foldersCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
-      this.rFolders.observeDeep(notifySubscriber);
-      return () => this.rFolders.unobserveDeep(notifySubscriber);
+      this.syncFolders.observeDeep(notifySubscriber);
+      return () => this.syncFolders.unobserveDeep(notifySubscriber);
     }
-    this.rFolders.observe(notifySubscriber);
-    return () => this.rFolders.unobserve(notifySubscriber);
+    this.syncFolders.observe(notifySubscriber);
+    return () => this.syncFolders.unobserve(notifySubscriber);
   };
 
   onScalarFieldChanged = (key: string, subscribe: Subscribe): Disposable => {
-    return createFieldObserver(this.rKit, key, subscribe, false);
+    return createFieldObserver(this.syncKit, key, subscribe, false);
   };
 
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
@@ -7682,6 +7684,79 @@ export class KitStore {
       register: this.registerCommand.bind(this),
     };
   }
+
+  // #region 🔖KitStore Interface Implementation
+  // Specs: These methods implement the storage-agnostic KitStore interface from semio/js.
+  // They bridge the CRDT-backed internals to the neutral contract used by the editor.
+
+  private kitStoreListeners: Set<() => void> = new Set();
+  private kitStoreStatus: KitStoreStatus = "ready";
+
+  getSnapshot(): KitStoreSnapshot {
+    return {
+      kit: this.snapshot(),
+      sync: {
+        status: this.kitStoreStatus,
+        dirty: this.dirty,
+        readonly: false,
+      },
+    };
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.kitStoreListeners.add(listener);
+    const unsub = this.onChangedDeep(() => {
+      for (const l of this.kitStoreListeners) l();
+    });
+    return () => {
+      this.kitStoreListeners.delete(listener);
+      unsub();
+    };
+  }
+
+  transact<T>(label: string, run: () => T): T {
+    let result: T;
+    this.syncDoc.transact(() => {
+      result = run();
+    });
+    return result!;
+  }
+
+  apply(diff: KitDiff, meta?: { origin?: string }): void {
+    this.change(diff);
+  }
+
+  replace(next: Kit, meta?: { origin?: string }): void {
+    this.syncDoc.transact(() => {
+      this.change({
+        guid: next.guid,
+        name: next.name,
+        version: next.version,
+        remote: next.remote,
+        homepage: next.homepage,
+        license: next.license,
+        preview: next.preview,
+        icon: next.icon,
+        image: next.image,
+        description: next.description,
+      });
+    });
+  }
+
+  async save(): Promise<void> {
+    this.dirty = false;
+  }
+
+  async reload(): Promise<void> {
+    this.dirty = true;
+  }
+
+  dispose(): void {
+    this.kitStoreListeners.clear();
+    this.persistence?.destroy();
+  }
+
+  // #endregion 🔖KitStore Interface Implementation
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️kitscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/KitScope)
@@ -7719,7 +7794,7 @@ export const useIsInKitScope = () => useKitScope() !== null;
  * Hook for accessing the kit store with optional selector.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🛠️usekitstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/d/i/useKitStore)
  **/
-export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore | null {
+export function useKitStore<T>(selector?: (store: CollaborativeKitStore) => T, guid?: string): T | CollaborativeKitStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? guid;
@@ -7736,7 +7811,7 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid ?? undefined) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid ?? undefined) as CollaborativeKitStore | null;
   const syncedDeep = useSyncDeep<Kit, T>(kitStore, selector ? selector : (identitySelector as any));
   const synced = useSyncOptional<KitShallow, T>(kitStore as any, selector ? selector : (identitySelector as any));
   if (!resolvedGuid || !kitStore) return null;
@@ -7880,15 +7955,15 @@ const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
 export function useKitTypes(guid?: Guid): Type[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as CollaborativeKitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onTypesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -7909,14 +7984,14 @@ export function useKitTypes(guid?: Guid): Type[] {
 export function useKitName(guid?: Guid): string {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as CollaborativeKitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onScalarFieldChanged("name", () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [kitStore],
@@ -7937,14 +8012,14 @@ export function useKitName(guid?: Guid): string {
 export function useKitDescription(guid?: Guid): string | undefined {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as CollaborativeKitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onScalarFieldChanged("description", () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [kitStore],
@@ -7965,15 +8040,15 @@ export function useKitDescription(guid?: Guid): string | undefined {
 export function useKitAuthors(guid?: Guid): Author[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as CollaborativeKitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onAuthorsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -7994,15 +8069,15 @@ export function useKitAuthors(guid?: Guid): Author[] {
 export function useKitFiles(guid?: Guid): SemioFile[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as CollaborativeKitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onFilesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -8023,15 +8098,15 @@ export function useKitFiles(guid?: Guid): SemioFile[] {
 export function useKitQualities(guid?: Guid): Quality[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as CollaborativeKitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onQualitiesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -8052,15 +8127,15 @@ export function useKitQualities(guid?: Guid): Quality[] {
 export function useKitDesigns(guid?: Guid): Design[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as CollaborativeKitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onDesignsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -8089,15 +8164,15 @@ export function useDesigns(): Design[] {
 export function useKitFolders(guid?: Guid): Folder[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStore(identitySelector, resolvedGuid) as CollaborativeKitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onFoldersChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -8169,7 +8244,7 @@ export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } 
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🛠️usefileurls](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/d/i/useFileUrls)
  **/
 export function useFileUrls(): Map<Url, Url> {
-  const kitStore = useKitStore() as KitStore | null;
+  const kitStore = useKitStore() as CollaborativeKitStore | null;
   if (!kitStore) {
     return new Map();
   }
@@ -8193,10 +8268,10 @@ export function useKitTransaction(): Transaction {
   const kitStore = store.kit(kitGuid);
   return {
     start: () => {
-      kitStore.rDoc.transact(() => { }, getOrigin());
+      kitStore.syncDoc.transact(() => {}, getOrigin());
     },
-    finalize: () => { },
-    abort: () => { },
+    finalize: () => {},
+    abort: () => {},
   };
 }
 
@@ -8487,7 +8562,7 @@ export const kitCommands = {
               const fileBlob = await fileResponse.blob();
               const fileName = file.path.split("/").pop() || file.path;
               files.push(new File([fileBlob], fileName));
-            } catch (error) { }
+            } catch (error) {}
           }
           return {
             diff: {
@@ -8565,13 +8640,13 @@ export const kitCommands = {
                     piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece.guid === piece.guid || connection.connecting.piece.guid === piece.guid)
                       ? piece
                       : {
-                        ...piece,
-                        plane: {
-                          origin: { x: 0, y: 0, z: 0 },
-                          xAxis: { x: 1, y: 0, z: 0 },
-                          yAxis: { x: 0, y: 1, z: 0 },
+                          ...piece,
+                          plane: {
+                            origin: { x: 0, y: 0, z: 0 },
+                            xAxis: { x: 1, y: 0, z: 0 },
+                            yAxis: { x: 0, y: 1, z: 0 },
+                          },
                         },
-                      },
                   ],
                 },
               },
@@ -8595,13 +8670,13 @@ export const kitCommands = {
                     candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece.guid === candidate.guid || connection.connecting.piece.guid === candidate.guid)
                       ? candidate
                       : {
-                        ...candidate,
-                        plane: {
-                          origin: { x: 0, y: 0, z: 0 },
-                          xAxis: { x: 1, y: 0, z: 0 },
-                          yAxis: { x: 0, y: 1, z: 0 },
+                          ...candidate,
+                          plane: {
+                            origin: { x: 0, y: 0, z: 0 },
+                            xAxis: { x: 1, y: 0, z: 0 },
+                            yAxis: { x: 0, y: 1, z: 0 },
+                          },
                         },
-                      },
                   ),
                 },
               },
@@ -9198,63 +9273,63 @@ function migratePath(path: string): string {
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🪨buildsnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/buildSnapshot)
  **/
-function buildSnapshot(rSketchpad: RMap<any>): SketchpadState {
-  const settingsStr = rSketchpad.get("settings") as string;
+function buildSnapshot(syncSketchpad: SyncMap<any>): SketchpadState {
+  const settingsStr = syncSketchpad.get("settings") as string;
   const settings = settingsStr
     ? JSON.parse(settingsStr)
     : {
-      apps: {
-        design: {
-          diagram: { proximityConnectDistance: 10 },
-          scene: { gridSize: 24 },
+        apps: {
+          design: {
+            diagram: { proximityConnectDistance: 10 },
+            scene: { gridSize: 24 },
+          },
         },
-      },
-    };
+      };
 
-  const panelSizesStr = rSketchpad.get("panelSizes") as string;
+  const panelSizesStr = syncSketchpad.get("panelSizes") as string;
   const panelSizes = panelSizesStr
     ? JSON.parse(panelSizesStr)
     : {
-      toolbarHeight: 52,
-      toolsWidth: 230,
-      hudWidth: 230,
-      statsWidth: 230,
-      detailsWidth: 230,
-      consoleHeight: 200,
-    };
+        toolbarHeight: 52,
+        toolsWidth: 230,
+        hudWidth: 230,
+        statsWidth: 230,
+        detailsWidth: 230,
+        consoleHeight: 200,
+      };
 
-  const navigationHistoryStr = rSketchpad.get("navigationHistory") as string;
+  const navigationHistoryStr = syncSketchpad.get("navigationHistory") as string;
   const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
 
-  const recentSearchesStr = rSketchpad.get("recentSearches") as string;
+  const recentSearchesStr = syncSketchpad.get("recentSearches") as string;
   const recentSearches = recentSearchesStr ? JSON.parse(recentSearchesStr) : [];
 
-  const recentFocusItemsStr = rSketchpad.get("recentFocusItems") as string;
+  const recentFocusItemsStr = syncSketchpad.get("recentFocusItems") as string;
   const recentFocusItems = recentFocusItemsStr ? JSON.parse(recentFocusItemsStr) : {};
 
-  const hotkeyOverridesStr = rSketchpad.get("hotkeyOverrides") as string;
+  const hotkeyOverridesStr = syncSketchpad.get("hotkeyOverrides") as string;
   const hotkeyOverrides = hotkeyOverridesStr ? JSON.parse(hotkeyOverridesStr) : {};
 
-  const deviceStr = rSketchpad.get("device") as string;
+  const deviceStr = syncSketchpad.get("device") as string;
   const device: Device = deviceStr ? JSON.parse(deviceStr) : "desktop";
 
   return {
-    navigation: migratePath((rSketchpad.get("navigation") as string) || "/"),
+    navigation: migratePath((syncSketchpad.get("navigation") as string) || "/"),
     navigationHistory,
-    navigationHistoryIndex: (rSketchpad.get("navigationHistoryIndex") as number) ?? 0,
+    navigationHistoryIndex: (syncSketchpad.get("navigationHistoryIndex") as number) ?? 0,
     recentSearches,
     recentFocusItems,
-    theme: rSketchpad.get("theme") as Theme,
-    language: (rSketchpad.get("language") as string) || "en",
+    theme: syncSketchpad.get("theme") as Theme,
+    language: (syncSketchpad.get("language") as string) || "en",
     device,
-    expertise: (rSketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
-    mode: (rSketchpad.get("mode") as Mode) ?? Mode.USER,
+    expertise: (syncSketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
+    mode: (syncSketchpad.get("mode") as Mode) ?? Mode.USER,
     settings,
-    isFullscreen: (rSketchpad.get("isFullscreen") as boolean) || false,
-    isMobile: (rSketchpad.get("isMobile") as boolean) || false,
-    activeInteraction: (rSketchpad.get("activeInteraction") as string) || undefined,
+    isFullscreen: (syncSketchpad.get("isFullscreen") as boolean) || false,
+    isMobile: (syncSketchpad.get("isMobile") as boolean) || false,
+    activeInteraction: (syncSketchpad.get("activeInteraction") as string) || undefined,
     hotkeyOverrides,
-    activeHotkeySetting: (rSketchpad.get("activeHotkeySetting") as string) || undefined,
+    activeHotkeySetting: (syncSketchpad.get("activeHotkeySetting") as string) || undefined,
   };
 }
 
@@ -9262,49 +9337,49 @@ function buildSnapshot(rSketchpad: RMap<any>): SketchpadState {
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️applydiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/applyDiff)
  **/
-function applyDiff(rDoc: RDoc, rSketchpad: RMap<any>, diff: SketchpadDiff): void {
-  rDoc.transact(() => {
+function applyDiff(syncDoc: SyncDoc, syncSketchpad: SyncMap<any>, diff: SketchpadDiff): void {
+  syncDoc.transact(() => {
     if (diff.navigationHistory !== undefined) {
-      rSketchpad.set("navigationHistory", JSON.stringify(diff.navigationHistory));
+      syncSketchpad.set("navigationHistory", JSON.stringify(diff.navigationHistory));
     }
     if (diff.navigationHistoryIndex !== undefined) {
-      rSketchpad.set("navigationHistoryIndex", diff.navigationHistoryIndex);
+      syncSketchpad.set("navigationHistoryIndex", diff.navigationHistoryIndex);
     }
     if (diff.navigation) {
-      rSketchpad.set("navigation", diff.navigation);
+      syncSketchpad.set("navigation", diff.navigation);
     }
     if ("recentSearches" in diff) {
-      rSketchpad.set("recentSearches", JSON.stringify(diff.recentSearches || []));
+      syncSketchpad.set("recentSearches", JSON.stringify(diff.recentSearches || []));
     }
     if ("recentFocusItems" in diff) {
-      const current = JSON.parse((rSketchpad.get("recentFocusItems") as string) || "{}");
-      rSketchpad.set("recentFocusItems", JSON.stringify({ ...current, ...(diff.recentFocusItems || {}) }));
+      const current = JSON.parse((syncSketchpad.get("recentFocusItems") as string) || "{}");
+      syncSketchpad.set("recentFocusItems", JSON.stringify({ ...current, ...(diff.recentFocusItems || {}) }));
     }
-    if (diff.theme) rSketchpad.set("theme", diff.theme);
+    if (diff.theme) syncSketchpad.set("theme", diff.theme);
     if (diff.language !== undefined) {
-      rSketchpad.set("language", diff.language);
+      syncSketchpad.set("language", diff.language);
     }
-    if (diff.device) rSketchpad.set("device", JSON.stringify(diff.device));
-    if (diff.expertise) rSketchpad.set("expertise", diff.expertise);
-    if (diff.mode) rSketchpad.set("mode", diff.mode);
-    if (diff.isFullscreen !== undefined) rSketchpad.set("isFullscreen", diff.isFullscreen);
-    if (diff.isMobile !== undefined) rSketchpad.set("isMobile", diff.isMobile);
-    if ("activeInteraction" in diff) rSketchpad.set("activeInteraction", diff.activeInteraction || "");
+    if (diff.device) syncSketchpad.set("device", JSON.stringify(diff.device));
+    if (diff.expertise) syncSketchpad.set("expertise", diff.expertise);
+    if (diff.mode) syncSketchpad.set("mode", diff.mode);
+    if (diff.isFullscreen !== undefined) syncSketchpad.set("isFullscreen", diff.isFullscreen);
+    if (diff.isMobile !== undefined) syncSketchpad.set("isMobile", diff.isMobile);
+    if ("activeInteraction" in diff) syncSketchpad.set("activeInteraction", diff.activeInteraction || "");
     if (diff.settings) {
-      const current = JSON.parse((rSketchpad.get("settings") as string) || "{}");
+      const current = JSON.parse((syncSketchpad.get("settings") as string) || "{}");
       const merged = { ...current, apps: { ...current.apps, ...diff.settings.apps } };
-      rSketchpad.set("settings", JSON.stringify(merged));
+      syncSketchpad.set("settings", JSON.stringify(merged));
     }
     if (diff.panelSizes) {
-      const current = JSON.parse((rSketchpad.get("panelSizes") as string) || "{}");
-      rSketchpad.set("panelSizes", JSON.stringify({ ...current, ...diff.panelSizes }));
+      const current = JSON.parse((syncSketchpad.get("panelSizes") as string) || "{}");
+      syncSketchpad.set("panelSizes", JSON.stringify({ ...current, ...diff.panelSizes }));
     }
     if (diff.hotkeyOverrides) {
-      const current = JSON.parse((rSketchpad.get("hotkeyOverrides") as string) || "{}");
-      rSketchpad.set("hotkeyOverrides", JSON.stringify({ ...current, ...diff.hotkeyOverrides }));
+      const current = JSON.parse((syncSketchpad.get("hotkeyOverrides") as string) || "{}");
+      syncSketchpad.set("hotkeyOverrides", JSON.stringify({ ...current, ...diff.hotkeyOverrides }));
     }
     if ("activeHotkeySetting" in diff) {
-      rSketchpad.set("activeHotkeySetting", diff.activeHotkeySetting || "");
+      syncSketchpad.set("activeHotkeySetting", diff.activeHotkeySetting || "");
     }
   });
 }
@@ -9487,7 +9562,7 @@ function readSketchpadStateFromLocalStorage(id: string): Partial<SketchpadState>
     const raw = window.localStorage.getItem(`semio.sketchpad.state.${id}`);
     if (!raw) return undefined;
     return JSON.parse(raw) as Partial<SketchpadState>;
-  } catch { }
+  } catch {}
 }
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖helpers🛠️writesketchpadstatetolocalstorage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Helpers/d/i/writeSketchpadStateToLocalStorage)
@@ -9499,7 +9574,7 @@ function writeSketchpadStateToLocalStorage(id: string, state: SketchpadState): v
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(`semio.sketchpad.state.${id}`, JSON.stringify(state));
-  } catch { }
+  } catch {}
 }
 
 /** toSketchpadInitialState holds the data fields for a toSketchpadInitialState record.
@@ -9635,7 +9710,7 @@ export const sketchpadMachine = setup({
     },
   },
   actions: {
-    navigate: () => { },
+    navigate: () => {},
     navigateImpl: assign(({ context, event }) => {
       if (event.type !== "NAVIGATE") return {};
       const currentNav = context.sketchpad.navigation;
@@ -9689,7 +9764,7 @@ export const sketchpadMachine = setup({
       if (event.type !== "CHANGE") return {};
       return { sketchpad: applySketchpadDiffToState(context.sketchpad, event.diff) };
     }),
-    markDirty: () => { },
+    markDirty: () => {},
 
     dispatchAppEvent: assign(({ context, event }) => executeEventHandler(context, event)),
 
@@ -10663,24 +10738,24 @@ export interface AppMachineContext<TSelection = any, TId = any> {
 }
 
 /**
- * Legacy kit machine input with Yjs document and map references.
+ * Legacy kit machine input with sync document and map references.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖legacytypeexports🛠️kitmachineinput](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Legacy%20Type%20Exports/d/i/KitMachineInput)
  **/
 export interface KitMachineInput {
-  rDoc: RDoc;
-  rKit: RMap<any>;
+  syncDoc: SyncDoc;
+  syncKit: SyncMap<any>;
   guid: Guid;
   local?: boolean;
   remote?: boolean;
 }
 
 /**
- * Legacy kit context with Yjs-backed state and caching.
+ * Legacy kit context with Sync-backed state and caching.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖legacytypeexports🛠️kitcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Legacy%20Type%20Exports/d/i/KitContext)
  **/
 export interface KitContext {
-  rDoc: RDoc;
-  rKit: RMap<any>;
+  syncDoc: SyncDoc;
+  syncKit: SyncMap<any>;
   guid: Guid;
   local: boolean;
   remote: boolean;
@@ -10709,18 +10784,18 @@ export type KitEvent =
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖legacytypeexports🛠️buildkitsnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Legacy%20Type%20Exports/d/i/buildKitSnapshot)
  **/
-function buildKitSnapshot(rKit: RMap<any>): Partial<Kit> {
+function buildKitSnapshot(syncKit: SyncMap<any>): Partial<Kit> {
   return {
-    guid: rKit.get("guid") as string,
-    name: rKit.get("name") as string,
-    version: rKit.get("version") as string | undefined,
-    description: rKit.get("description") as string | undefined,
-    homepage: rKit.get("homepage") as string | undefined,
-    license: rKit.get("license") as string | undefined,
-    icon: rKit.get("icon") as string | undefined,
-    image: rKit.get("image") as string | undefined,
-    createdAt: rKit.get("createdAt") as string | undefined,
-    updatedAt: rKit.get("updatedAt") as string | undefined,
+    guid: syncKit.get("guid") as string,
+    name: syncKit.get("name") as string,
+    version: syncKit.get("version") as string | undefined,
+    description: syncKit.get("description") as string | undefined,
+    homepage: syncKit.get("homepage") as string | undefined,
+    license: syncKit.get("license") as string | undefined,
+    icon: syncKit.get("icon") as string | undefined,
+    image: syncKit.get("image") as string | undefined,
+    createdAt: syncKit.get("createdAt") as string | undefined,
+    updatedAt: syncKit.get("updatedAt") as string | undefined,
   };
 }
 
@@ -10800,7 +10875,7 @@ export function selectPanelSizes(context: SketchpadContext): PanelSizes {
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖legacytypeexports🛠️selectkitguid](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Legacy%20Type%20Exports/d/i/selectKitGuid)
  **/
 export function selectKitGuid(context: KitContext): Guid {
-  return context.rKit.get("guid") as Guid;
+  return context.syncKit.get("guid") as Guid;
 }
 
 /**
@@ -10808,7 +10883,7 @@ export function selectKitGuid(context: KitContext): Guid {
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖legacytypeexports🛠️selectkitname](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Legacy%20Type%20Exports/d/i/selectKitName)
  **/
 export function selectKitName(context: KitContext): string {
-  return context.rKit.get("name") as string;
+  return context.syncKit.get("name") as string;
 }
 
 /**
@@ -10819,7 +10894,7 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
   if (!context.dirty && context.cache) {
     return context.cache;
   }
-  return buildKitSnapshot(context.rKit);
+  return buildKitSnapshot(context.syncKit);
 }
 
 // #endregion Legacy Type Exports
@@ -11480,74 +11555,74 @@ export function useDiffedDesign(): Design {
 // Core reactive observation, synchronization hooks, and sketchpad store implementation.
 
 /**
- * Creates a Yjs observer that triggers the given subscription callback on changes.
+ * Creates a sync observer that triggers the given subscription callback on changes.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️createobserver](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/createObserver)
  **/
-export function createObserver<T>(rMap: RMap<T> | RArray<T>, subscribe: Subscribe, deep: boolean = false): Disposable {
+export function createObserver<T>(syncMap: SyncMap<T> | SyncArray<T>, subscribe: Subscribe, deep: boolean = false): Disposable {
   const callback = () => {
-    subscribe(() => { });
+    subscribe(() => {});
   };
   if (deep) {
-    rMap.observeDeep(callback);
-    return () => rMap.unobserveDeep(callback);
+    syncMap.observeDeep(callback);
+    return () => syncMap.unobserveDeep(callback);
   } else {
-    rMap.observe(callback);
-    return () => rMap.unobserve(callback);
+    syncMap.observe(callback);
+    return () => syncMap.unobserve(callback);
   }
 }
 
 /**
- * Creates a Yjs field observer that tracks a single key on a RMap.
+ * Creates a sync field observer that tracks a single key on a SyncMap.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️createfieldobserver](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/createFieldObserver)
  **/
-export function createFieldObserver<T>(rMap: RMap<T>, key: string, subscribe: Subscribe, deep: boolean = false): Disposable {
+export function createFieldObserver<T>(syncMap: SyncMap<T>, key: string, subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
-  let currentValue = rMap.get(key);
-  const notifySubscriber = () => subscribe(() => { });
+  let currentValue = syncMap.get(key);
+  const notifySubscriber = () => subscribe(() => {});
   const setupNestedObserver = (value: any) => {
-    if (deep && isRMap(value)) {
+    if (deep && isSyncMap(value)) {
       const nestedCallback = () => notifySubscriber();
       value.observeDeep(nestedCallback);
       disposables.push(() => value.unobserveDeep(nestedCallback));
-    } else if (deep && isRArray(value)) {
+    } else if (deep && isSyncArray(value)) {
       const nestedCallback = () => notifySubscriber();
       value.observeDeep(nestedCallback);
       disposables.push(() => value.unobserveDeep(nestedCallback));
     }
   };
   if (currentValue !== undefined) setupNestedObserver(currentValue);
-  const mapCallback = (event: RMapEvent) => {
+  const mapCallback = (event: SyncMapEvent) => {
     if (event.keysChanged.has(key)) {
       disposables.forEach((d) => d());
       disposables.length = 0;
-      currentValue = rMap.get(key);
+      currentValue = syncMap.get(key);
       if (currentValue !== undefined) setupNestedObserver(currentValue);
       notifySubscriber();
     }
   };
-  rMap.observe(mapCallback);
+  syncMap.observe(mapCallback);
   return () => {
-    rMap.unobserve(mapCallback);
+    syncMap.unobserve(mapCallback);
     disposables.forEach((d) => d());
   };
 }
 
 /**
- * Creates a Yjs observer that tracks multiple keys on a RMap.
+ * Creates a sync observer that tracks multiple keys on a SyncMap.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️createfieldsobserver](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/createFieldsObserver)
  **/
-export function createFieldsObserver<T>(rMap: RMap<T>, keys: string[], subscribe: Subscribe, deep: boolean = false): Disposable {
+export function createFieldsObserver<T>(syncMap: SyncMap<T>, keys: string[], subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
   const keySet = new Set(keys);
   const nestedDisposables = new Map<string, Disposable[]>();
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
   const setupNestedObserver = (key: string, value: any) => {
     const keyDisposables: Disposable[] = [];
-    if (deep && isRMap(value)) {
+    if (deep && isSyncMap(value)) {
       const nestedCallback = () => notifySubscriber();
       value.observeDeep(nestedCallback);
       keyDisposables.push(() => value.unobserveDeep(nestedCallback));
-    } else if (deep && isRArray(value)) {
+    } else if (deep && isSyncArray(value)) {
       const nestedCallback = () => notifySubscriber();
       value.observeDeep(nestedCallback);
       keyDisposables.push(() => value.unobserveDeep(nestedCallback));
@@ -11562,62 +11637,62 @@ export function createFieldsObserver<T>(rMap: RMap<T>, keys: string[], subscribe
     }
   };
   keys.forEach((key) => {
-    const value = rMap.get(key);
+    const value = syncMap.get(key);
     if (value !== undefined) setupNestedObserver(key, value);
   });
-  const mapCallback = (event: RMapEvent) => {
+  const mapCallback = (event: SyncMapEvent) => {
     let shouldNotify = false;
     event.keysChanged.forEach((key) => {
       if (keySet.has(key)) {
         cleanupNestedObserver(key);
-        const newValue = rMap.get(key);
+        const newValue = syncMap.get(key);
         if (newValue !== undefined) setupNestedObserver(key, newValue);
         shouldNotify = true;
       }
     });
     if (shouldNotify) notifySubscriber();
   };
-  rMap.observe(mapCallback);
+  syncMap.observe(mapCallback);
   return () => {
-    rMap.unobserve(mapCallback);
+    syncMap.unobserve(mapCallback);
     nestedDisposables.forEach((keyDisposables) => keyDisposables.forEach((d) => d()));
     nestedDisposables.clear();
   };
 }
 
 /**
- * Creates a Yjs observer tracking item membership in a RArray.
+ * Creates a sync observer tracking item membership in a SyncArray.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️createarrayitemmembershipobserver](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/createArrayItemMembershipObserver)
  **/
-export function createArrayItemMembershipObserver(getYArray: () => RArray<string> | undefined, itemId: string, subscribe: Subscribe): Disposable {
+export function createArrayItemMembershipObserver(getYArray: () => SyncArray<string> | undefined, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
 
   const checkMembership = () => {
-    const yArray = getYArray();
-    return yArray ? yArray.toArray().includes(itemId) : false;
+    const syncArray = getYArray();
+    return syncArray ? syncArray.toArray().includes(itemId) : false;
   };
   wasInArray = checkMembership();
 
   let arrayDisposer: Disposable | null = null;
 
   const setupArrayObserver = () => {
-    const yArray = getYArray();
-    if (!yArray) {
+    const syncArray = getYArray();
+    if (!syncArray) {
       arrayDisposer = null;
       return;
     }
 
     const arrayCallback = () => {
-      const isInArray = yArray.toArray().includes(itemId);
+      const isInArray = syncArray.toArray().includes(itemId);
       if (isInArray !== wasInArray) {
         wasInArray = isInArray;
         notifySubscriber();
       }
     };
 
-    yArray.observe(arrayCallback);
-    arrayDisposer = () => yArray.unobserve(arrayCallback);
+    syncArray.observe(arrayCallback);
+    arrayDisposer = () => syncArray.unobserve(arrayCallback);
   };
 
   setupArrayObserver();
@@ -11628,21 +11703,21 @@ export function createArrayItemMembershipObserver(getYArray: () => RArray<string
 }
 
 /**
- * Creates a Yjs observer tracking nested array item membership within a RMap.
+ * Creates a sync observer tracking nested array item membership within a SyncMap.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️performancelogcounts](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/performanceLogCounts)
  **/
-export function createNestedArrayItemMembershipObserver(rMap: RMap<any>, mapKey: string, arrayKey: string, itemId: string, subscribe: Subscribe): Disposable {
+export function createNestedArrayItemMembershipObserver(syncMap: SyncMap<any>, mapKey: string, arrayKey: string, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
-  let currentNestedMap: RMap<any> | undefined;
-  let currentArray: RArray<string> | undefined;
+  let currentNestedMap: SyncMap<any> | undefined;
+  let currentArray: SyncArray<string> | undefined;
   let nestedMapDisposer: Disposable | null = null;
   let arrayDisposer: Disposable | null = null;
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
 
   const checkMembership = (): boolean => {
-    const nestedMap = rMap.get(mapKey) as RMap<any> | undefined;
+    const nestedMap = syncMap.get(mapKey) as SyncMap<any> | undefined;
     if (!nestedMap) return false;
-    const arr = nestedMap.get(arrayKey) as RArray<string> | undefined;
+    const arr = nestedMap.get(arrayKey) as SyncArray<string> | undefined;
     if (!arr) return false;
     return arr.toArray().includes(itemId);
   };
@@ -11653,10 +11728,10 @@ export function createNestedArrayItemMembershipObserver(rMap: RMap<any>, mapKey:
       arrayDisposer = null;
     }
 
-    const nestedMap = rMap.get(mapKey) as RMap<any> | undefined;
+    const nestedMap = syncMap.get(mapKey) as SyncMap<any> | undefined;
     if (!nestedMap) return;
 
-    const arr = nestedMap.get(arrayKey) as RArray<string> | undefined;
+    const arr = nestedMap.get(arrayKey) as SyncArray<string> | undefined;
     if (!arr) return;
 
     currentArray = arr;
@@ -11679,12 +11754,12 @@ export function createNestedArrayItemMembershipObserver(rMap: RMap<any>, mapKey:
       nestedMapDisposer = null;
     }
 
-    const nestedMap = rMap.get(mapKey) as RMap<any> | undefined;
+    const nestedMap = syncMap.get(mapKey) as SyncMap<any> | undefined;
     if (!nestedMap) return;
 
     currentNestedMap = nestedMap;
 
-    const nestedMapCallback = (event: RMapEvent) => {
+    const nestedMapCallback = (event: SyncMapEvent) => {
       if (event.keysChanged.has(arrayKey)) {
         const prevInArray = wasInArray;
         setupArrayObserver();
@@ -11699,7 +11774,7 @@ export function createNestedArrayItemMembershipObserver(rMap: RMap<any>, mapKey:
     nestedMapDisposer = () => nestedMap.unobserve(nestedMapCallback);
   };
 
-  const topLevelCallback = (event: RMapEvent) => {
+  const topLevelCallback = (event: SyncMapEvent) => {
     if (event.keysChanged.has(mapKey)) {
       const prevInArray = wasInArray;
 
@@ -11725,10 +11800,10 @@ export function createNestedArrayItemMembershipObserver(rMap: RMap<any>, mapKey:
   wasInArray = checkMembership();
   setupNestedMapObserver();
   setupArrayObserver();
-  rMap.observe(topLevelCallback);
+  syncMap.observe(topLevelCallback);
 
   return () => {
-    rMap.unobserve(topLevelCallback);
+    syncMap.unobserve(topLevelCallback);
     if (nestedMapDisposer) nestedMapDisposer();
     if (arrayDisposer) arrayDisposer();
   };
@@ -11795,7 +11870,7 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
       return store.onChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -11814,11 +11889,11 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
 export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -11838,11 +11913,11 @@ export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe
 export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onChangedDeep((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -11856,7 +11931,7 @@ export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe
 }
 
 /**
- * Hook synchronizing a single field of a Yjs-backed store.
+ * Hook synchronizing a single field of a Sync-backed store.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️usesyncfield](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/useSyncField)
  **/
 export function useSyncField<T, TSelected = T>(
@@ -11873,7 +11948,7 @@ export function useSyncField<T, TSelected = T>(
         (cb: () => void) => {
           cb();
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -11921,7 +11996,7 @@ export function useSyncField<T, TSelected = T>(
 }
 
 /**
- * Hook synchronizing multiple fields of a Yjs-backed store.
+ * Hook synchronizing multiple fields of a Sync-backed store.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️usesyncfields](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/useSyncFields)
  **/
 export function useSyncFields<T, TSelected = T>(
@@ -11941,7 +12016,7 @@ export function useSyncFields<T, TSelected = T>(
         (cb: () => void) => {
           cb();
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -11983,17 +12058,17 @@ export function useSyncFields<T, TSelected = T>(
 }
 
 /**
- * Hook tracking nested array item membership via Yjs observation.
+ * Hook tracking nested array item membership via sync observation.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️usesyncnestedarrayitemmembership](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/useSyncNestedArrayItemMembership)
  **/
-export function useSyncNestedArrayItemMembership(store: { rMap: RMap<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
+export function useSyncNestedArrayItemMembership(store: { syncMap: SyncMap<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
-      return createNestedArrayItemMembershipObserver(store.rMap, mapKey, arrayKey, itemId, (cb: () => void) => {
+      if (!store) return () => {};
+      return createNestedArrayItemMembershipObserver(store.syncMap, mapKey, arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, mapKey, arrayKey, itemId],
@@ -12001,9 +12076,9 @@ export function useSyncNestedArrayItemMembership(store: { rMap: RMap<any> } | nu
 
   const getSnapshot = useCallback(() => {
     if (!store) return false;
-    const nestedMap = store.rMap.get(mapKey) as RMap<any> | undefined;
+    const nestedMap = store.syncMap.get(mapKey) as SyncMap<any> | undefined;
     if (!nestedMap) return false;
-    const arr = nestedMap.get(arrayKey) as RArray<string> | undefined;
+    const arr = nestedMap.get(arrayKey) as SyncArray<string> | undefined;
     if (!arr) return false;
     return arr.toArray().includes(itemId);
   }, [store, mapKey, arrayKey, itemId]);
@@ -12012,18 +12087,18 @@ export function useSyncNestedArrayItemMembership(store: { rMap: RMap<any> } | nu
 }
 
 /**
- * Hook tracking selection item membership via Yjs observation.
+ * Hook tracking selection item membership via sync observation.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️usesyncselectionitemmembership](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/useSyncSelectionItemMembership)
  **/
-export function useSyncSelectionItemMembership(store: { rMap: RMap<any> } | null, arrayKey: string, itemId: string): boolean {
+export function useSyncSelectionItemMembership(store: { syncMap: SyncMap<any> } | null, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
 
-      return createNestedArrayItemMembershipObserver(store.rMap, "selection", arrayKey, itemId, (cb: () => void) => {
+      return createNestedArrayItemMembershipObserver(store.syncMap, "selection", arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, arrayKey, itemId],
@@ -12031,9 +12106,9 @@ export function useSyncSelectionItemMembership(store: { rMap: RMap<any> } | null
 
   const getSnapshot = useCallback(() => {
     if (!store) return false;
-    const selection = store.rMap.get("selection") as RMap<any> | undefined;
+    const selection = store.syncMap.get("selection") as SyncMap<any> | undefined;
     if (!selection) return false;
-    const arr = selection.get(arrayKey) as RArray<string> | undefined;
+    const arr = selection.get(arrayKey) as SyncArray<string> | undefined;
     if (!arr) return false;
     return arr.toArray().includes(itemId);
   }, [store, arrayKey, itemId]);
@@ -12042,21 +12117,21 @@ export function useSyncSelectionItemMembership(store: { rMap: RMap<any> } | null
 }
 
 /**
- * Hook traversing a Yjs path and selecting a value from the resolved node.
+ * Hook traversing a sync path and selecting a value from the resolved node.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️usepath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/usePath)
  **/
 export function usePath<T, TSelected = T>(
-  store: { onPathChanged: (path: RxPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: RxPath) => any } | null,
-  path: RxPath,
+  store: { onPathChanged: (path: SyncPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: SyncPath) => any } | null,
+  path: SyncPath,
   selector: (value: any) => TSelected = identitySelector as any,
 ): TSelected | undefined {
   const pathKey = useMemo(() => JSON.stringify(path), [path]);
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onPathChanged(path, () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, pathKey],
@@ -12065,7 +12140,7 @@ export function usePath<T, TSelected = T>(
   const getSnapshot = useCallback(() => {
     if (!store) return undefined;
     const rawValue = store.getPathSnapshot(path);
-    const value = isRMap(rawValue) || isRArray(rawValue) ? rawValue.toJSON() : rawValue;
+    const value = isSyncMap(rawValue) || isSyncArray(rawValue) ? rawValue.toJSON() : rawValue;
     const newValue = selector(value);
     if (newValue === null || typeof newValue !== "object") {
       if (newValue === lastResultRef.current.value) return lastResultRef.current.value;
@@ -12102,7 +12177,7 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
   }, [derivedStore, key, depsKey]);
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!nodeRef.current) return () => { };
+      if (!nodeRef.current) return () => {};
       return nodeRef.current.subscribe(callback);
     },
     [derivedStore, key, depsKey],
@@ -12209,8 +12284,8 @@ function updateDocsPanelVisibilityState(update: DocsPanelVisibilityUpdate) {
  * nullStore holds the data fields for a nullStore record.
  **/
 const nullStore: Synchronizable<null> = {
-  onChanged: () => () => { },
-  onChangedDeep: () => () => { },
+  onChanged: () => () => {},
+  onChangedDeep: () => () => {},
   snapshot: () => null,
 };
 
@@ -12222,23 +12297,23 @@ export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchro
   const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl> & Store<TAccessl>);
   const state = deep
     ? useSyncExternalStore(
-      (onStoreChange: () => void) =>
-        actualStore.onChangedDeep((cb: () => void) => {
-          cb();
-          onStoreChange();
-          return () => { };
-        }),
-      actualStore.snapshot.bind(actualStore),
-    )
+        (onStoreChange: () => void) =>
+          actualStore.onChangedDeep((cb: () => void) => {
+            cb();
+            onStoreChange();
+            return () => {};
+          }),
+        actualStore.snapshot.bind(actualStore),
+      )
     : useSyncExternalStore(
-      (onStoreChange: () => void) =>
-        actualStore.onChanged((cb: () => void) => {
-          cb();
-          onStoreChange();
-          return () => { };
-        }),
-      actualStore.snapshot.bind(actualStore),
-    );
+        (onStoreChange: () => void) =>
+          actualStore.onChanged((cb: () => void) => {
+            cb();
+            onStoreChange();
+            return () => {};
+          }),
+        actualStore.snapshot.bind(actualStore),
+      );
   if (!store) {
     return { status: StoreStatus.IDLE, data: null as any };
   }
@@ -12278,7 +12353,7 @@ function hasSameDesignApp(designApp: DesignAppId, others: DesignAppId[]): boolea
 
 /** areSameKitApp holds the data fields for a areSameKitApp record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/RxKitApp)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/SyncKitApp)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️aresamekitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/areSameKitApp)
  **/
@@ -12295,38 +12370,38 @@ function hasSameKitApp(kitApp: KitAppId, others: KitAppId[]): boolean {
   return others.some((other) => areSameKitApp(kitApp, other));
 }
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/RxKitAppVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitAppVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/RxKitAppVal)
- * RxKitAppVal holds the data fields for a RxKitAppVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitAppVal)
+ * SyncKitAppVal holds the data fields for a SyncKitAppVal record.
  **/
-type RxKitAppVal = string | number | boolean | RxLeafMapString | RxLeafMapNumber | RxAttributes | RxStringArray;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/RxKitApp)
+type SyncKitAppVal = string | number | boolean | SyncLeafMapString | SyncLeafMapNumber | SyncAttributes | SyncStringArray;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitApp)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/RxKitApp)
- * RxKitApp holds the data fields for a RxKitApp record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitApp)
+ * SyncKitApp holds the data fields for a SyncKitApp record.
  **/
-type RxKitApp = RMap<RxKitAppVal>;
-/** RxKitApps holds the data fields for a RxKitApps record.
+type SyncKitApp = SyncMap<SyncKitAppVal>;
+/** SyncKitApps holds the data fields for a SyncKitApps record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/RxKitMetadata)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/SyncKitMetadata)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitapps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/RxKitApps)
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitapps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitApps)
  **/
-type RxKitApps = RMap<RxKitApp>;
+type SyncKitApps = SyncMap<SyncKitApp>;
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/RxKitMetadata)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitMetadata)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/RxKitMetadata)
- * RxKitMetadata holds the data fields for a RxKitMetadata record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitMetadata)
+ * SyncKitMetadata holds the data fields for a SyncKitMetadata record.
  **/
-type RxKitMetadata = RMap<string | boolean>;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitmetadatas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/RxKitMetadatas)
+type SyncKitMetadata = SyncMap<string | boolean>;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitmetadatas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitMetadatas)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitmetadatas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/RxKitMetadatas)
- * RxKitMetadatas holds the data fields for a RxKitMetadatas record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitmetadatas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitMetadatas)
+ * SyncKitMetadatas holds the data fields for a SyncKitMetadatas record.
  **/
-type RxKitMetadatas = RArray<RxKitMetadata>;
+type SyncKitMetadatas = SyncArray<SyncKitMetadata>;
 
 /** KitAppStoreInstance holds the data fields for a KitAppStoreInstance record.
  **/
@@ -12376,7 +12451,7 @@ type DocsAppStoreInstance = any;
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️kitappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/KitAppStoreFactory)
  * KitAppStoreFactory holds the data fields for a KitAppStoreFactory record.
  **/
-type KitAppStoreFactory = (parent: SketchpadStore, rMap: RxKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) => KitAppStoreInstance;
+type KitAppStoreFactory = (parent: SketchpadStore, syncMap: SyncKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) => KitAppStoreInstance;
 
 /** DesignAppStoreFactoryLocal holds the data fields for a DesignAppStoreFactoryLocal record.
  **/
@@ -12456,7 +12531,7 @@ export function registerDocsAppStoreFactory(factory: DocsAppStoreFactory) {
 
 /** resolveHomeStoreFactory holds the data fields for a resolveHomeStoreFactory record.
  **/
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/RxSketchpad)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/SyncSketchpad)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️resolvehomestorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/resolveHomeStoreFactory)
  **/
@@ -12477,18 +12552,18 @@ function resolveDocsAppStoreFactory(): DocsAppStoreFactory {
 
 export { registerDesignAppStoreFactory, registerKitAppStoreFactory, registerQualityAppStoreFactory, registerTypeAppStoreFactory };
 
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ysketchpadval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/RxSketchpadVal)
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ysketchpadval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncSketchpadVal)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ysketchpadval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/RxSketchpadVal)
- * RxSketchpadVal holds the data fields for a RxSketchpadVal record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ysketchpadval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncSketchpadVal)
+ * SyncSketchpadVal holds the data fields for a SyncSketchpadVal record.
  **/
-type RxSketchpadVal = string | number | boolean;
-// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/RxSketchpad)
+type SyncSketchpadVal = string | number | boolean;
+// [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncSketchpad)
 /**
- * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/RxSketchpad)
- * RxSketchpad holds the data fields for a RxSketchpad record.
+ * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ysketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncSketchpad)
+ * SyncSketchpad holds the data fields for a SyncSketchpad record.
  **/
-type RxSketchpad = RMap<RxSketchpadVal>;
+type SyncSketchpad = SyncMap<SyncSketchpadVal>;
 
 let designAppModuleCache: any;
 let homeAppModuleCache: any;
@@ -12496,7 +12571,7 @@ let kitAppModuleCache: any;
 let typeAppModuleCache: any;
 let qualityAppModuleCache: any;
 /**
- * Central store managing Yjs-backed sketchpad state with reactive subscriptions.
+ * Central store managing Sync-backed sketchpad state with reactive subscriptions.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🛠️sketchpadstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/SketchpadStore)
  **/
 export class SketchpadStore {
@@ -12520,16 +12595,16 @@ export class SketchpadStore {
       import("./Quality").then((m) => {
         qualityAppModuleCache = m;
       }),
-    ]).catch((err) => { });
+    ]).catch((err) => {});
   }
   private readonly id: string | undefined;
   private readonly remote: RemoteProviders | undefined;
-  private readonly rDoc: RDoc;
-  private readonly rSketchpad: RxSketchpad;
-  private readonly kits: Map<string, KitStore>;
-  private readonly rKits: RxKitMetadatas;
+  private readonly syncDoc: SyncDoc;
+  private readonly syncSketchpad: SyncSketchpad;
+  private readonly kits: Map<string, CollaborativeKitStore>;
+  private readonly syncKits: SyncKitMetadatas;
   private homeStore?: HomeStoreInstance;
-  private readonly rKitApps: RxKitApps;
+  private readonly syncKitApps: SyncKitApps;
   private readonly kitApps: Map<string, KitAppStoreInstance>;
   private readonly typeApps: Map<string, TypeAppStoreInstance>;
   private readonly qualityApps: Map<string, QualityAppStoreInstance>;
@@ -12554,14 +12629,16 @@ export class SketchpadStore {
   private readonly designAppCreatedSubscribers: Set<() => void>;
   private readonly designAppDeletedSubscribers: Set<() => void>;
   private readonly tutorialStoreInstance: any;
+  private readonly injectedKitStore?: KitStore;
   actor?: SketchpadActorRef;
   private actorUnsubscribe?: () => void;
 
-  constructor(id?: string, remote?: RemoteProviders, initialState?: ExtendedInitialState, persistenceFactory?: PersistenceFactory) {
+  constructor(id?: string, remote?: RemoteProviders, initialState?: ExtendedInitialState, persistenceFactory?: PersistenceFactory, injectedKitStore?: KitStore) {
     this.id = id;
     this.remote = remote;
     this.persistenceFactory = persistenceFactory;
-    this.rDoc = createYjsDocFactory()();
+    this.injectedKitStore = injectedKitStore;
+    this.syncDoc = createSyncDocFactory()();
     this.kits = new Map();
     this.kitApps = new Map();
     this.typeApps = new Map();
@@ -12581,66 +12658,66 @@ export class SketchpadStore {
     this.designAppDeletedSubscribers = new Set();
 
     if (id && this.persistenceFactory) {
-      this.persistence = this.persistenceFactory(this.rDoc, `semio-sketchpad-${id}`);
+      this.persistence = this.persistenceFactory(this.syncDoc, `semio-sketchpad-${id}`);
       this.persistence.once("synced", () => {
         const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
-        this.rSketchpad.set("isMobile", isMobile);
+        this.syncSketchpad.set("isMobile", isMobile);
       });
       if (this.remote) {
-        this.remote.yProvider(this.rDoc, id);
+        this.remote.syncProvider(this.syncDoc, id);
       }
     }
 
-    this.rSketchpad = this.rDoc.getMap("sketchpad");
-    this.rKits = this.rDoc.getArray("kits");
-    this.rKitApps = this.rDoc.getMap("kitApps");
+    this.syncSketchpad = this.syncDoc.getMap("sketchpad");
+    this.syncKits = this.syncDoc.getArray("kits");
+    this.syncKitApps = this.syncDoc.getMap("kitApps");
 
-    const rTutorials = this.rDoc.getMap("tutorials");
-    this.tutorialStoreInstance = new TutorialStore(rTutorials, (fn) => this.rDoc.transact(fn));
+    const syncTutorials = this.syncDoc.getMap("tutorials");
+    this.tutorialStoreInstance = new TutorialStore(syncTutorials, (fn) => this.syncDoc.transact(fn));
 
     this.loadPersistedKits();
 
-    this.rDoc.transact(() => {
-      if (!this.rSketchpad.has("navigation")) {
-        this.rSketchpad.set("navigation", "/");
+    this.syncDoc.transact(() => {
+      if (!this.syncSketchpad.has("navigation")) {
+        this.syncSketchpad.set("navigation", "/");
       }
-      if (!this.rSketchpad.has("navigationHistory")) {
-        this.rSketchpad.set("navigationHistory", JSON.stringify(["/"]));
+      if (!this.syncSketchpad.has("navigationHistory")) {
+        this.syncSketchpad.set("navigationHistory", JSON.stringify(["/"]));
       }
-      if (!this.rSketchpad.has("navigationHistoryIndex")) {
-        this.rSketchpad.set("navigationHistoryIndex", 0);
+      if (!this.syncSketchpad.has("navigationHistoryIndex")) {
+        this.syncSketchpad.set("navigationHistoryIndex", 0);
       }
-      if (!this.rSketchpad.has("recentSearches")) {
-        this.rSketchpad.set("recentSearches", JSON.stringify([]));
+      if (!this.syncSketchpad.has("recentSearches")) {
+        this.syncSketchpad.set("recentSearches", JSON.stringify([]));
       }
-      if (!this.rSketchpad.has("recentFocusItems")) {
-        this.rSketchpad.set("recentFocusItems", JSON.stringify({}));
+      if (!this.syncSketchpad.has("recentFocusItems")) {
+        this.syncSketchpad.set("recentFocusItems", JSON.stringify({}));
       }
-      if (!this.rSketchpad.has("theme")) {
-        this.rSketchpad.set("theme", Theme.SYSTEM);
+      if (!this.syncSketchpad.has("theme")) {
+        this.syncSketchpad.set("theme", Theme.SYSTEM);
       }
-      if (!this.rSketchpad.has("language")) {
-        this.rSketchpad.set("language", "en");
+      if (!this.syncSketchpad.has("language")) {
+        this.syncSketchpad.set("language", "en");
       }
-      if (!this.rSketchpad.has("device")) {
-        this.rSketchpad.set("device", JSON.stringify("desktop"));
+      if (!this.syncSketchpad.has("device")) {
+        this.syncSketchpad.set("device", JSON.stringify("desktop"));
       }
-      if (!this.rSketchpad.has("expertise")) {
-        this.rSketchpad.set("expertise", Expertise.BEGINNER);
+      if (!this.syncSketchpad.has("expertise")) {
+        this.syncSketchpad.set("expertise", Expertise.BEGINNER);
       }
-      if (!this.rSketchpad.has("mode")) {
-        this.rSketchpad.set("mode", Mode.USER);
+      if (!this.syncSketchpad.has("mode")) {
+        this.syncSketchpad.set("mode", Mode.USER);
       }
-      if (!this.rSketchpad.has("isFullscreen")) {
-        this.rSketchpad.set("isFullscreen", false);
+      if (!this.syncSketchpad.has("isFullscreen")) {
+        this.syncSketchpad.set("isFullscreen", false);
       }
       const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
-      this.rSketchpad.set("isMobile", isMobile);
-      if (!this.rSketchpad.has("activeInteraction")) {
-        this.rSketchpad.set("activeInteraction", "");
+      this.syncSketchpad.set("isMobile", isMobile);
+      if (!this.syncSketchpad.has("activeInteraction")) {
+        this.syncSketchpad.set("activeInteraction", "");
       }
-      if (!this.rSketchpad.has("settings")) {
-        this.rSketchpad.set(
+      if (!this.syncSketchpad.has("settings")) {
+        this.syncSketchpad.set(
           "settings",
           JSON.stringify({
             apps: {
@@ -12652,8 +12729,8 @@ export class SketchpadStore {
           }),
         );
       }
-      if (!this.rSketchpad.has("panelSizes")) {
-        this.rSketchpad.set(
+      if (!this.syncSketchpad.has("panelSizes")) {
+        this.syncSketchpad.set(
           "panelSizes",
           JSON.stringify({
             toolbarHeight: 52,
@@ -12675,28 +12752,60 @@ export class SketchpadStore {
     });
 
     if (initialState) {
-      this.rDoc.transact(() => {
-        if (initialState.navigation !== undefined) this.rSketchpad.set("navigation", initialState.navigation);
-        if (initialState.navigationHistory !== undefined) this.rSketchpad.set("navigationHistory", JSON.stringify(initialState.navigationHistory));
-        if (initialState.navigationHistoryIndex !== undefined) this.rSketchpad.set("navigationHistoryIndex", initialState.navigationHistoryIndex);
-        if (initialState.recentSearches !== undefined) this.rSketchpad.set("recentSearches", JSON.stringify(initialState.recentSearches));
-        if (initialState.recentFocusItems !== undefined) this.rSketchpad.set("recentFocusItems", JSON.stringify(initialState.recentFocusItems));
-        if (initialState.theme !== undefined) this.rSketchpad.set("theme", initialState.theme);
-        if (initialState.language !== undefined) this.rSketchpad.set("language", initialState.language);
-        if (initialState.device !== undefined) this.rSketchpad.set("device", JSON.stringify(initialState.device));
-        if (initialState.expertise !== undefined) this.rSketchpad.set("expertise", initialState.expertise);
-        if (initialState.mode !== undefined) this.rSketchpad.set("mode", initialState.mode);
-        if (initialState.settings !== undefined) this.rSketchpad.set("settings", JSON.stringify(initialState.settings));
-        if (initialState.panelSizes !== undefined) this.rSketchpad.set("panelSizes", JSON.stringify(initialState.panelSizes));
-        if (initialState.isFullscreen !== undefined) this.rSketchpad.set("isFullscreen", initialState.isFullscreen);
-        if (initialState.hotkeyOverrides !== undefined) this.rSketchpad.set("hotkeyOverrides", JSON.stringify(initialState.hotkeyOverrides));
-        if (initialState.activeHotkeySetting !== undefined) this.rSketchpad.set("activeHotkeySetting", initialState.activeHotkeySetting);
+      this.syncDoc.transact(() => {
+        if (initialState.navigation !== undefined) this.syncSketchpad.set("navigation", initialState.navigation);
+        if (initialState.navigationHistory !== undefined) this.syncSketchpad.set("navigationHistory", JSON.stringify(initialState.navigationHistory));
+        if (initialState.navigationHistoryIndex !== undefined) this.syncSketchpad.set("navigationHistoryIndex", initialState.navigationHistoryIndex);
+        if (initialState.recentSearches !== undefined) this.syncSketchpad.set("recentSearches", JSON.stringify(initialState.recentSearches));
+        if (initialState.recentFocusItems !== undefined) this.syncSketchpad.set("recentFocusItems", JSON.stringify(initialState.recentFocusItems));
+        if (initialState.theme !== undefined) this.syncSketchpad.set("theme", initialState.theme);
+        if (initialState.language !== undefined) this.syncSketchpad.set("language", initialState.language);
+        if (initialState.device !== undefined) this.syncSketchpad.set("device", JSON.stringify(initialState.device));
+        if (initialState.expertise !== undefined) this.syncSketchpad.set("expertise", initialState.expertise);
+        if (initialState.mode !== undefined) this.syncSketchpad.set("mode", initialState.mode);
+        if (initialState.settings !== undefined) this.syncSketchpad.set("settings", JSON.stringify(initialState.settings));
+        if (initialState.panelSizes !== undefined) this.syncSketchpad.set("panelSizes", JSON.stringify(initialState.panelSizes));
+        if (initialState.isFullscreen !== undefined) this.syncSketchpad.set("isFullscreen", initialState.isFullscreen);
+        if (initialState.hotkeyOverrides !== undefined) this.syncSketchpad.set("hotkeyOverrides", JSON.stringify(initialState.hotkeyOverrides));
+        if (initialState.activeHotkeySetting !== undefined) this.syncSketchpad.set("activeHotkeySetting", initialState.activeHotkeySetting);
       });
 
       if (initialState.kits) {
         initialState.kits.forEach(({ kit, local, remote }) => {
           this.createKit(kit, local, remote);
         });
+      }
+    }
+
+    // When an injected KitStore is provided, register its kit in the store.
+    // This allows Sketchpad to boot from an externally-provided KitStore
+    // instead of creating a CollaborativeKitStore internally.
+    if (this.injectedKitStore) {
+      const kitSnapshot = this.injectedKitStore.getSnapshot();
+      const kit = kitSnapshot.kit;
+      if (!this.kits.has(kit.guid)) {
+        // Wrap the injected KitStore as a CollaborativeKitStore for internal compatibility.
+        // The injected store provides the data; we register it so all existing hooks work.
+        const wrappedStore = new CollaborativeKitStore(this, kit, false, false);
+        this.kits.set(kit.guid, wrappedStore);
+
+        this.syncDoc.transact(() => {
+          const kitMetadata = createSyncDocFactory()().createMap<string | boolean>();
+          kitMetadata.set("guid", kit.guid);
+          kitMetadata.set("local", false);
+          kitMetadata.set("remote", false);
+          this.syncKits.push([kitMetadata as any]);
+        });
+
+        // Forward changes from injected store to internal collaborative store
+        this.injectedKitStore.subscribe(() => {
+          const newSnap = this.injectedKitStore!.getSnapshot();
+          const diff = getKitDiff(wrappedStore.snapshot(), newSnap.kit);
+          wrappedStore.change(diff);
+        });
+
+        this.kitShallowsVersion++;
+        this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
       }
     }
   }
@@ -12726,56 +12835,56 @@ export class SketchpadStore {
     if (this.actor) {
       return this.actor.getSnapshot().context.sketchpad;
     }
-    const settingsStr = this.rSketchpad.get("settings") as string;
+    const settingsStr = this.syncSketchpad.get("settings") as string;
     const settings = settingsStr
       ? JSON.parse(settingsStr)
       : {
-        apps: {
-          design: {
-            diagram: { proximityConnectDistance: 10 },
-            scene: { gridSize: 24 },
+          apps: {
+            design: {
+              diagram: { proximityConnectDistance: 10 },
+              scene: { gridSize: 24 },
+            },
           },
-        },
-      };
-    const panelSizesStr = this.rSketchpad.get("panelSizes") as string;
+        };
+    const panelSizesStr = this.syncSketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-        toolbarHeight: 52,
-        toolsWidth: 230,
-        hudWidth: 230,
-        statsWidth: 230,
-        detailsWidth: 230,
-        consoleHeight: 200,
-      };
-    const navigationHistoryStr = this.rSketchpad.get("navigationHistory") as string;
+          toolbarHeight: 52,
+          toolsWidth: 230,
+          hudWidth: 230,
+          statsWidth: 230,
+          detailsWidth: 230,
+          consoleHeight: 200,
+        };
+    const navigationHistoryStr = this.syncSketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
-    const recentSearchesStr = this.rSketchpad.get("recentSearches") as string;
+    const recentSearchesStr = this.syncSketchpad.get("recentSearches") as string;
     const recentSearches = recentSearchesStr ? JSON.parse(recentSearchesStr) : [];
-    const recentFocusItemsStr = this.rSketchpad.get("recentFocusItems") as string;
+    const recentFocusItemsStr = this.syncSketchpad.get("recentFocusItems") as string;
     const recentFocusItems = recentFocusItemsStr ? JSON.parse(recentFocusItemsStr) : {};
-    const hotkeyOverridesStr = this.rSketchpad.get("hotkeyOverrides") as string;
+    const hotkeyOverridesStr = this.syncSketchpad.get("hotkeyOverrides") as string;
     const hotkeyOverrides = hotkeyOverridesStr ? JSON.parse(hotkeyOverridesStr) : {};
-    const deviceStr = this.rSketchpad.get("device") as string;
+    const deviceStr = this.syncSketchpad.get("device") as string;
     const device: Device = deviceStr ? JSON.parse(deviceStr) : "desktop";
     const currentValues = {
-      navigation: migratePath((this.rSketchpad.get("navigation") as string) || "/"),
+      navigation: migratePath((this.syncSketchpad.get("navigation") as string) || "/"),
       navigationHistory: navigationHistory,
-      navigationHistoryIndex: (this.rSketchpad.get("navigationHistoryIndex") as number) ?? 0,
+      navigationHistoryIndex: (this.syncSketchpad.get("navigationHistoryIndex") as number) ?? 0,
       recentSearches: recentSearches,
       recentFocusItems: recentFocusItems,
-      theme: this.rSketchpad.get("theme") as Theme,
-      language: (this.rSketchpad.get("language") as string) || "en",
+      theme: this.syncSketchpad.get("theme") as Theme,
+      language: (this.syncSketchpad.get("language") as string) || "en",
       device: device,
-      expertise: (this.rSketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
-      mode: (this.rSketchpad.get("mode") as Mode) ?? Mode.USER,
+      expertise: (this.syncSketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
+      mode: (this.syncSketchpad.get("mode") as Mode) ?? Mode.USER,
       settings: settings,
       panelSizes: panelSizes,
-      isFullscreen: (this.rSketchpad.get("isFullscreen") as boolean) || false,
-      isMobile: (this.rSketchpad.get("isMobile") as boolean) || false,
-      activeInteraction: (this.rSketchpad.get("activeInteraction") as string) || undefined,
+      isFullscreen: (this.syncSketchpad.get("isFullscreen") as boolean) || false,
+      isMobile: (this.syncSketchpad.get("isMobile") as boolean) || false,
+      activeInteraction: (this.syncSketchpad.get("activeInteraction") as string) || undefined,
       hotkeyOverrides: hotkeyOverrides,
-      activeHotkeySetting: (this.rSketchpad.get("activeHotkeySetting") as string) || undefined,
+      activeHotkeySetting: (this.syncSketchpad.get("activeHotkeySetting") as string) || undefined,
     };
     const currentHash = this.hash(currentValues);
     if (!this.cache || this.cacheHash !== currentHash) {
@@ -12786,27 +12895,27 @@ export class SketchpadStore {
   };
 
   createKit = (kit: Kit, local?: boolean, remote?: boolean) => {
-    const kitStore = new KitStore(this, kit, local, remote, this.remote, this.persistenceFactory);
+    const kitStore = new CollaborativeKitStore(this, kit, local, remote, this.remote, this.persistenceFactory);
     this.kits.set(kit.guid, kitStore);
     kitStore.onChanged((cb: () => void) => {
       cb();
       this.kitShallowsVersion++;
-      return () => { };
+      return () => {};
     });
 
-    this.rDoc.transact(() => {
-      const kitMetadata = createYjsDocFactory()().createMap<string | boolean>();
+    this.syncDoc.transact(() => {
+      const kitMetadata = createSyncDocFactory()().createMap<string | boolean>();
       kitMetadata.set("guid", kit.guid);
       kitMetadata.set("local", local || false);
       kitMetadata.set("remote", remote || false);
-      this.rKits.push([kitMetadata as any]);
+      this.syncKits.push([kitMetadata as any]);
     });
 
     this.kitShallowsVersion++;
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
-  private loadKitFilesFromPublic = async (kitGuid: string, kitStore: KitStore) => {
+  private loadKitFilesFromPublic = async (kitGuid: string, kitStore: CollaborativeKitStore) => {
     try {
       const zipUrl = `/public/${kitGuid}.zip`;
       const response = await fetch(zipUrl);
@@ -12840,20 +12949,20 @@ export class SketchpadStore {
       });
 
       await Promise.all(filePromises);
-    } catch (error) { }
+    } catch (error) {}
   };
 
   createKitApp = (kit: Guid) => {
-    this.rDoc.transact(() => {
+    this.syncDoc.transact(() => {
       const kitStore = this.kit(kit);
-      let yKitApp = this.rKitApps.get(kit) as RMap<RxKitAppVal>;
-      if (!yKitApp) {
-        yKitApp = createYjsDocFactory()().createMap<RxKitAppVal>();
-        this.rKitApps.set(kit, yKitApp);
+      let syncKitApp = this.syncKitApps.get(kit) as SyncMap<SyncKitAppVal>;
+      if (!syncKitApp) {
+        syncKitApp = createSyncDocFactory()().createMap<SyncKitAppVal>();
+        this.syncKitApps.set(kit, syncKitApp);
       }
       const kitAppFactory = resolveKitAppStoreFactory();
-      const kitApp = kitAppFactory(this, yKitApp, (fn: () => void) => this.rDoc.transact(fn), { kit });
-      this.kitApps.set(kit, kitApp);
+      const kitAppInstance = kitAppFactory(this, syncKitApp, (fn: () => void) => this.syncDoc.transact(fn), { kit });
+      this.kitApps.set(kit, kitAppInstance);
     });
     this.kitAppCreatedSubscribers.forEach((subscriber) => subscriber());
   };
@@ -12876,57 +12985,57 @@ export class SketchpadStore {
       this.actor.send({ type: "CHANGE", diff });
       return;
     }
-    this.rDoc.transact(() => {
+    this.syncDoc.transact(() => {
       if (diff.navigationHistory !== undefined) {
-        this.rSketchpad.set("navigationHistory", JSON.stringify(diff.navigationHistory));
+        this.syncSketchpad.set("navigationHistory", JSON.stringify(diff.navigationHistory));
       }
       if (diff.navigationHistoryIndex !== undefined) {
-        this.rSketchpad.set("navigationHistoryIndex", diff.navigationHistoryIndex);
+        this.syncSketchpad.set("navigationHistoryIndex", diff.navigationHistoryIndex);
       }
       if (diff.navigation) {
-        this.rSketchpad.set("navigation", diff.navigation);
+        this.syncSketchpad.set("navigation", diff.navigation);
       }
       if ("recentSearches" in diff) {
-        this.rSketchpad.set("recentSearches", JSON.stringify(diff.recentSearches || []));
+        this.syncSketchpad.set("recentSearches", JSON.stringify(diff.recentSearches || []));
       }
       if ("recentFocusItems" in diff) {
-        const current = JSON.parse((this.rSketchpad.get("recentFocusItems") as string) || "{}");
-        this.rSketchpad.set("recentFocusItems", JSON.stringify({ ...current, ...(diff.recentFocusItems || {}) }));
+        const current = JSON.parse((this.syncSketchpad.get("recentFocusItems") as string) || "{}");
+        this.syncSketchpad.set("recentFocusItems", JSON.stringify({ ...current, ...(diff.recentFocusItems || {}) }));
       }
-      if (diff.theme) this.rSketchpad.set("theme", diff.theme);
+      if (diff.theme) this.syncSketchpad.set("theme", diff.theme);
       if (diff.language !== undefined) {
-        this.rSketchpad.set("language", diff.language);
+        this.syncSketchpad.set("language", diff.language);
       }
-      if (diff.device) this.rSketchpad.set("device", JSON.stringify(diff.device));
-      if (diff.expertise) this.rSketchpad.set("expertise", diff.expertise);
-      if (diff.mode) this.rSketchpad.set("mode", diff.mode);
-      if (diff.isFullscreen !== undefined) this.rSketchpad.set("isFullscreen", diff.isFullscreen);
-      if (diff.isMobile !== undefined) this.rSketchpad.set("isMobile", diff.isMobile);
-      if ("activeInteraction" in diff) this.rSketchpad.set("activeInteraction", diff.activeInteraction || "");
+      if (diff.device) this.syncSketchpad.set("device", JSON.stringify(diff.device));
+      if (diff.expertise) this.syncSketchpad.set("expertise", diff.expertise);
+      if (diff.mode) this.syncSketchpad.set("mode", diff.mode);
+      if (diff.isFullscreen !== undefined) this.syncSketchpad.set("isFullscreen", diff.isFullscreen);
+      if (diff.isMobile !== undefined) this.syncSketchpad.set("isMobile", diff.isMobile);
+      if ("activeInteraction" in diff) this.syncSketchpad.set("activeInteraction", diff.activeInteraction || "");
       if (diff.settings) {
-        const current = JSON.parse((this.rSketchpad.get("settings") as string) || "{}");
+        const current = JSON.parse((this.syncSketchpad.get("settings") as string) || "{}");
         const merged = { ...current, apps: { ...current.apps, ...diff.settings.apps } };
-        this.rSketchpad.set("settings", JSON.stringify(merged));
+        this.syncSketchpad.set("settings", JSON.stringify(merged));
       }
       if (diff.panelSizes) {
-        const current = JSON.parse((this.rSketchpad.get("panelSizes") as string) || "{}");
-        this.rSketchpad.set("panelSizes", JSON.stringify({ ...current, ...diff.panelSizes }));
+        const current = JSON.parse((this.syncSketchpad.get("panelSizes") as string) || "{}");
+        this.syncSketchpad.set("panelSizes", JSON.stringify({ ...current, ...diff.panelSizes }));
       }
       if (diff.hotkeyOverrides) {
-        const current = JSON.parse((this.rSketchpad.get("hotkeyOverrides") as string) || "{}");
-        this.rSketchpad.set("hotkeyOverrides", JSON.stringify({ ...current, ...diff.hotkeyOverrides }));
+        const current = JSON.parse((this.syncSketchpad.get("hotkeyOverrides") as string) || "{}");
+        this.syncSketchpad.set("hotkeyOverrides", JSON.stringify({ ...current, ...diff.hotkeyOverrides }));
       }
-      if ("activeHotkeySetting" in diff) this.rSketchpad.set("activeHotkeySetting", diff.activeHotkeySetting || "");
+      if ("activeHotkeySetting" in diff) this.syncSketchpad.set("activeHotkeySetting", diff.activeHotkeySetting || "");
     });
   }
 
   deleteKit = (guid: Guid) => {
     const kitStore = this.kits.get(guid);
     if (kitStore) {
-      this.rDoc.transact(() => {
-        const index = this.rKits.toArray().findIndex((kitMeta) => kitMeta.get("guid") === guid);
+      this.syncDoc.transact(() => {
+        const index = this.syncKits.toArray().findIndex((kitMeta) => kitMeta.get("guid") === guid);
         if (index !== -1) {
-          this.rKits.delete(index, 1);
+          this.syncKits.delete(index, 1);
         }
       });
       this.kits.delete(guid);
@@ -12939,8 +13048,8 @@ export class SketchpadStore {
     const kitApp = this.kitApps.get(kit);
     if (kitApp) {
       this.kitApps.delete(kit);
-      this.rDoc.transact(() => {
-        this.rKitApps.delete(kit);
+      this.syncDoc.transact(() => {
+        this.syncKitApps.delete(kit);
       });
       this.kitAppDeletedSubscribers.forEach((subscriber) => subscriber());
     }
@@ -13002,21 +13111,21 @@ export class SketchpadStore {
   onChanged = (subscribe: Subscribe): Unsubscribe => {
     if (this.actor) {
       const subscription = this.actor.subscribe(() => {
-        subscribe(() => { });
+        subscribe(() => {});
       });
       return () => subscription.unsubscribe();
     }
-    return createObserver(this.rSketchpad, subscribe);
+    return createObserver(this.syncSketchpad, subscribe);
   };
 
   onChangedDeep = (subscribe: Subscribe): Unsubscribe => {
     if (this.actor) {
       const subscription = this.actor.subscribe(() => {
-        subscribe(() => { });
+        subscribe(() => {});
       });
       return () => subscription.unsubscribe();
     }
-    return createObserver(this.rSketchpad, subscribe, true);
+    return createObserver(this.syncSketchpad, subscribe, true);
   };
 
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
@@ -13168,7 +13277,7 @@ export class SketchpadStore {
     const sketchpad = this.snapshot();
 
     const kits = Array.from(this.kits.entries()).map(([guid, kitStore]) => {
-      const kitMetadataArray = this.rKits.toArray();
+      const kitMetadataArray = this.syncKits.toArray();
       const kitMetadata = kitMetadataArray.find((m) => m.get("guid") === guid);
       return {
         guid,
@@ -13217,37 +13326,37 @@ export class SketchpadStore {
   }
 
   loadState(state: CompleteState): void {
-    this.rDoc.transact(() => {
+    this.syncDoc.transact(() => {
       this.kits.clear();
       this.kitApps.clear();
       this.typeApps.clear();
       this.qualityApps.clear();
       this.designApps.clear();
 
-      this.rKits.delete(0, this.rKits.length);
-      this.rKitApps.forEach((_, key) => this.rKitApps.delete(key));
+      this.syncKits.delete(0, this.syncKits.length);
+      this.syncKitApps.forEach((_, key) => this.syncKitApps.delete(key));
 
-      this.rSketchpad.set("navigation", state.sketchpad.navigation);
-      this.rSketchpad.set("navigationHistory", JSON.stringify(state.sketchpad.navigationHistory));
-      this.rSketchpad.set("navigationHistoryIndex", state.sketchpad.navigationHistoryIndex);
-      this.rSketchpad.set("recentSearches", JSON.stringify(state.sketchpad.recentSearches));
-      this.rSketchpad.set("recentFocusItems", JSON.stringify(state.sketchpad.recentFocusItems));
-      this.rSketchpad.set("theme", state.sketchpad.theme);
-      this.rSketchpad.set("device", JSON.stringify(state.sketchpad.device));
-      this.rSketchpad.set("expertise", state.sketchpad.expertise);
-      this.rSketchpad.set("mode", state.sketchpad.mode);
-      this.rSketchpad.set("settings", JSON.stringify(state.sketchpad.settings));
-      this.rSketchpad.set("panelSizes", JSON.stringify(state.sketchpad.panelSizes));
-      this.rSketchpad.set("isFullscreen", state.sketchpad.isFullscreen);
-      this.rSketchpad.set("isMobile", state.sketchpad.isMobile);
+      this.syncSketchpad.set("navigation", state.sketchpad.navigation);
+      this.syncSketchpad.set("navigationHistory", JSON.stringify(state.sketchpad.navigationHistory));
+      this.syncSketchpad.set("navigationHistoryIndex", state.sketchpad.navigationHistoryIndex);
+      this.syncSketchpad.set("recentSearches", JSON.stringify(state.sketchpad.recentSearches));
+      this.syncSketchpad.set("recentFocusItems", JSON.stringify(state.sketchpad.recentFocusItems));
+      this.syncSketchpad.set("theme", state.sketchpad.theme);
+      this.syncSketchpad.set("device", JSON.stringify(state.sketchpad.device));
+      this.syncSketchpad.set("expertise", state.sketchpad.expertise);
+      this.syncSketchpad.set("mode", state.sketchpad.mode);
+      this.syncSketchpad.set("settings", JSON.stringify(state.sketchpad.settings));
+      this.syncSketchpad.set("panelSizes", JSON.stringify(state.sketchpad.panelSizes));
+      this.syncSketchpad.set("isFullscreen", state.sketchpad.isFullscreen);
+      this.syncSketchpad.set("isMobile", state.sketchpad.isMobile);
       if (state.sketchpad.activeInteraction) {
-        this.rSketchpad.set("activeInteraction", state.sketchpad.activeInteraction);
+        this.syncSketchpad.set("activeInteraction", state.sketchpad.activeInteraction);
       }
       if (state.sketchpad.hotkeyOverrides) {
-        this.rSketchpad.set("hotkeyOverrides", JSON.stringify(state.sketchpad.hotkeyOverrides));
+        this.syncSketchpad.set("hotkeyOverrides", JSON.stringify(state.sketchpad.hotkeyOverrides));
       }
       if (state.sketchpad.activeHotkeySetting) {
-        this.rSketchpad.set("activeHotkeySetting", state.sketchpad.activeHotkeySetting);
+        this.syncSketchpad.set("activeHotkeySetting", state.sketchpad.activeHotkeySetting);
       }
 
       state.kits.forEach(({ guid, local, remote, kit }) => {
@@ -13306,7 +13415,7 @@ export class SketchpadStore {
     return this.kits.has(guid);
   }
 
-  kit(guid: string): KitStore {
+  kit(guid: string): CollaborativeKitStore {
     const kitStore = this.kits.get(guid);
     if (!kitStore) {
       throw new Error(`Kit with guid ${guid} not found`);
@@ -13498,7 +13607,7 @@ export class SketchpadStore {
       });
     }
 
-    const kitMetadataArray = this.rKits.toArray();
+    const kitMetadataArray = this.syncKits.toArray();
 
     for (const kitMetadata of kitMetadataArray) {
       const kitGuid = kitMetadata.get("guid") as string;
@@ -13509,58 +13618,58 @@ export class SketchpadStore {
 
       if (local && this.persistenceFactory) {
         try {
-          const rDoc = createYjsDocFactory()();
-          const persistence = this.persistenceFactory(rDoc, `semio-kit-${kitGuid}`);
+          const syncDoc = createSyncDocFactory()();
+          const persistence = this.persistenceFactory(syncDoc, `semio-kit-${kitGuid}`);
 
           await new Promise<void>((resolve) => {
             persistence.on("synced", () => resolve());
           });
 
-          const rKit = rDoc.getMap();
-          const conceptGuids = rKit.get("concepts") as string[] | undefined;
-          const rConcepts = rDoc.getArray("concepts");
+          const syncKit = syncDoc.getMap();
+          const conceptGuids = syncKit.get("concepts") as string[] | undefined;
+          const syncConcepts = syncDoc.getArray("concepts");
           const concepts =
-            rConcepts.length > 0
-              ? Array.from(rConcepts).map((rConcept: any) => {
-                const rMap = rConcept[0] as RMap<any>;
-                const concept: Concept = {
-                  guid: rMap.get("guid") as string,
-                  name: rMap.get("name") as string,
-                };
-                const description = rMap.get("description") as string | undefined;
-                if (description) concept.description = description;
-                const icon = rMap.get("icon") as string | undefined;
-                if (icon) concept.icon = icon;
-                const yAttrs = rMap.get("attributes") as RArray<any> | undefined;
-                if (yAttrs && yAttrs.length > 0) {
-                  const attributes = Array.from(yAttrs).map((yAttr: any) => {
-                    const attrMap = yAttr[0] as RMap<any>;
-                    const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
-                    const value = attrMap.get("value") as string | undefined;
-                    if (value) attribute.value = value;
-                    const definition = attrMap.get("definition") as string | undefined;
-                    if (definition) attribute.definition = definition;
-                    return attribute;
-                  });
-                  if (attributes.length > 0) concept.attributes = attributes;
-                }
-                return concept;
-              })
+            syncConcepts.length > 0
+              ? Array.from(syncConcepts).map((syncConcept: any) => {
+                  const syncMap = syncConcept[0] as SyncMap<any>;
+                  const concept: Concept = {
+                    guid: syncMap.get("guid") as string,
+                    name: syncMap.get("name") as string,
+                  };
+                  const description = syncMap.get("description") as string | undefined;
+                  if (description) concept.description = description;
+                  const icon = syncMap.get("icon") as string | undefined;
+                  if (icon) concept.icon = icon;
+                  const syncAttrs = syncMap.get("attributes") as SyncArray<any> | undefined;
+                  if (syncAttrs && syncAttrs.length > 0) {
+                    const attributes = Array.from(syncAttrs).map((syncAttr: any) => {
+                      const attrMap = syncAttr[0] as SyncMap<any>;
+                      const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
+                      const value = attrMap.get("value") as string | undefined;
+                      if (value) attribute.value = value;
+                      const definition = attrMap.get("definition") as string | undefined;
+                      if (definition) attribute.definition = definition;
+                      return attribute;
+                    });
+                    if (attributes.length > 0) concept.attributes = attributes;
+                  }
+                  return concept;
+                })
               : conceptGuids?.map((g) => ({ guid: g, name: g }));
           const kit: Partial<Kit> = {
-            guid: rKit.get("guid") as string,
-            name: rKit.get("name") as string,
-            version: rKit.get("version") as string,
-            remote: rKit.get("remote") as string,
-            homepage: rKit.get("homepage") as string,
-            license: rKit.get("license") as string,
-            preview: rKit.get("preview") as string,
+            guid: syncKit.get("guid") as string,
+            name: syncKit.get("name") as string,
+            version: syncKit.get("version") as string,
+            remote: syncKit.get("remote") as string,
+            homepage: syncKit.get("homepage") as string,
+            license: syncKit.get("license") as string,
+            preview: syncKit.get("preview") as string,
             concepts,
-            icon: rKit.get("icon") as string,
-            image: rKit.get("image") as string,
-            description: rKit.get("description") as string,
-            createdAt: rKit.get("createdAt") as string | undefined,
-            updatedAt: rKit.get("updatedAt") as string | undefined,
+            icon: syncKit.get("icon") as string,
+            image: syncKit.get("image") as string,
+            description: syncKit.get("description") as string,
+            createdAt: syncKit.get("createdAt") as string | undefined,
+            updatedAt: syncKit.get("updatedAt") as string | undefined,
             types: [],
             designs: [],
             files: [],
@@ -13571,21 +13680,21 @@ export class SketchpadStore {
 
           persistence.destroy();
 
-          const kitStore = new KitStore(this, kit, local, remote, this.remote, this.persistenceFactory);
+          const kitStore = new CollaborativeKitStore(this, kit, local, remote, this.remote, this.persistenceFactory);
           this.kits.set(kit.guid, kitStore);
           kitStore.onChanged((cb: () => void) => {
             cb();
             this.kitShallowsVersion++;
-            return () => { };
+            return () => {};
           });
           this.kitShallowsVersion++;
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
-        } catch (error) { }
+        } catch (error) {}
       } else {
-        this.rDoc.transact(() => {
+        this.syncDoc.transact(() => {
           const index = kitMetadataArray.findIndex((meta) => meta.get("guid") === kitGuid);
           if (index !== -1) {
-            this.rKits.delete(index, 1);
+            this.syncKits.delete(index, 1);
           }
         });
       }
@@ -13637,7 +13746,17 @@ export const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
  * React context provider initializing and scoping the sketchpad store and actor.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🪨sketchpadscopeprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/d/i/SketchpadScopeProvider)
  **/
-export const SketchpadScopeProvider = (props: { id?: string; store?: SketchpadStore; remote?: RemoteProviders; persistenceFactory?: PersistenceFactory; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: {
+  id?: string;
+  store?: SketchpadStore;
+  kitStore?: KitStore;
+  remote?: RemoteProviders;
+  persistenceFactory?: PersistenceFactory;
+  onWindowEvents?: WindowEvents;
+  initialState?: ExtendedInitialState;
+  importKitUrls?: string[];
+  children: React.ReactNode;
+}) => {
   const id = useMemo(() => props.id || guid(), [props.id]);
   const [configsReady, setConfigsReady] = useState(false);
 
@@ -13646,7 +13765,7 @@ export const SketchpadScopeProvider = (props: { id?: string; store?: SketchpadSt
   }, []);
 
   if (!stores.has(id)) {
-    const store = props.store ?? new SketchpadStore(id, props?.remote, props?.initialState, props?.persistenceFactory);
+    const store = props.store ?? new SketchpadStore(id, props?.remote, props?.initialState, props?.persistenceFactory, props?.kitStore);
     stores.set(id, store);
 
     const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(props?.initialState)) });
@@ -14267,7 +14386,7 @@ export function useKitShallows(): KitShallow[] {
         return kitStore.onChanged((cb: () => void) => {
           cb();
           onStoreChange();
-          return () => { };
+          return () => {};
         });
       });
       return () => {
@@ -14308,12 +14427,12 @@ export function useKitKind(kitGuid: string): "temporary" | "local" | "remote" | 
   const hasKit = useHasKit(kitGuid);
   return useSyncExternalStore(
     (onStoreChange) => {
-      if (!hasKit) return () => { };
+      if (!hasKit) return () => {};
       const kitStore = store.kit(kitGuid);
       return kitStore.onChanged((cb: () => void) => {
         cb();
         onStoreChange();
-        return () => { };
+        return () => {};
       });
     },
     () => {
@@ -14446,7 +14565,7 @@ export function useAppCommands() {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
             actor.send({ type: "HOME.TOGGLE_PANEL", panel: panelKey } as any);
           },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
       case "kit":
         return {
@@ -14460,7 +14579,7 @@ export function useAppCommands() {
             try {
               const app = store.kitApp(kitGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "design":
@@ -14475,7 +14594,7 @@ export function useAppCommands() {
             try {
               const app = store.designApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "type":
@@ -14490,7 +14609,7 @@ export function useAppCommands() {
             try {
               const app = store.typeApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "quality":
@@ -14505,7 +14624,7 @@ export function useAppCommands() {
             try {
               const app = store.qualityApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "docs":
@@ -14516,12 +14635,12 @@ export function useAppCommands() {
               [panelKey]: !prev[panelKey],
             }));
           },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
       default:
         return {
-          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => { },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => {},
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
     }
   }, [store, appType, kitGuid, itemGuid, actor]);
@@ -14697,7 +14816,7 @@ export function useKits(): KitShallow[] {
         return kitStore.onChanged((cb: () => void) => {
           cb();
           onStoreChange();
-          return () => { };
+          return () => {};
         });
       });
       return () => {
@@ -14964,7 +15083,7 @@ export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
     if (module && module.panels) {
       return module.panels;
     }
-  } catch (e) { }
+  } catch (e) {}
   return [];
 }
 
@@ -15071,7 +15190,7 @@ class AppRegistry {
  **/
 const appRegistry = new AppRegistry();
 
-import { type ActorRefFrom, type AnyActorRef, assign, createActor, setup, type SnapshotFrom } from "../../../semio-elements/ui";
+import { type ActorRefFrom, type AnyActorRef, assign, createActor, setup, type SnapshotFrom } from "../../../elements/ui";
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖appsregistry🪨appconfigsloadpromise](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps%20Registry/d/i/appConfigsLoadPromise)
 /**
@@ -15532,7 +15651,7 @@ export function useOrigin(): () => string {
 export function useOriginValue(): string {
   const store = useContext(OriginContext);
   return useSyncExternalStore(
-    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => { }), [store]),
+    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => {}), [store]),
     useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]),
   );
 }
@@ -15645,7 +15764,7 @@ const GlobalFooterItems: FC = () => {
       onClick: () => navigate("/feedback"),
     });
 
-    return () => { };
+    return () => {};
   }, [addFooterItem, removeFooterItem, navigate]);
 
   return null;
@@ -16802,7 +16921,7 @@ const buildSearchResultPath = (result: SearchResult): string => {
   return "";
 };
 
-const Search: FC = ({ }) => {
+const Search: FC = ({}) => {
   const navigate = useNavigate();
   const recentSearches = (useSketchpad((s) => s.recentSearches) as string[]) || [];
   const updateRecentSearches = useUpdateRecentSearches();
@@ -17020,7 +17139,7 @@ const Search: FC = ({ }) => {
   );
 };
 
-const Focus: FC = ({ }) => {
+const Focus: FC = ({}) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const focusContext = useFocusSafe();
@@ -17127,7 +17246,7 @@ const Focus: FC = ({ }) => {
   );
 };
 
-const PanelToggles: FC = ({ }) => {
+const PanelToggles: FC = ({}) => {
   const visiblePanels = useAppPanelVisibility();
   const appCommands = useAppCommands();
   const leftTabs = useSidePanelTabs("left");
@@ -17173,6 +17292,7 @@ const PanelToggles: FC = ({ }) => {
 
 export { createDefaultLayout } from "./shared";
 export type { AppWindowConfig, WindowControl, WindowKindDefinition } from "./shared";
+export { Canvas, HorizontalWindows, VerticalWindows };
 
 /**
  * Configuration for a canvas window pane.
@@ -17212,9 +17332,8 @@ export function useCanvasContext() {
   return context;
 }
 
-// Canvas, HorizontalWindows, VerticalWindows are now defined in @semio-elements/ui
-import { Canvas, HorizontalWindows, VerticalWindows } from "../../../semio-elements/ui";
-export { Canvas, HorizontalWindows, VerticalWindows };
+// Canvas, HorizontalWindows, VerticalWindows are now defined in @elements/ui
+import { Canvas, HorizontalWindows, VerticalWindows } from "../../../elements/ui";
 
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖canvas🪨windowcontrolsgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Canvas/d/i/WindowControlsGroup)
 /**
@@ -18241,7 +18360,7 @@ const LayoutWrapper: FC = () => {
       if (i18n.language !== language) {
         i18n
           .changeLanguage(language)
-          .then(() => { })
+          .then(() => {})
           .catch((err) => {
             console.error("[Language Sync] Failed to change language:", err);
           });
@@ -18657,41 +18776,41 @@ const LayoutWrapper: FC = () => {
               bottomPanel={
                 consoleSections.length > 0
                   ? {
-                    visible: true,
-                    size: panelSizes.consoleHeight,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
-                    sections: consoleSections,
-                    panelKey: "console",
-                  }
+                      visible: true,
+                      size: panelSizes.consoleHeight,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
+                      sections: consoleSections,
+                      panelKey: "console",
+                    }
                   : undefined
               }
               leftSidePanel={
                 leftSidePanelTabs.length > 0 && panelVisibility.leftSidePanel
                   ? {
-                    position: "left" as const,
-                    visible: true,
-                    size: panelSizes.leftSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
-                    tabs: leftSidePanelTabs,
-                    activeTabId: activeLeftTabId,
-                    onActiveTabChange: setActiveLeftTabId,
-                  }
+                      position: "left" as const,
+                      visible: true,
+                      size: panelSizes.leftSidePanelWidth,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
+                      tabs: leftSidePanelTabs,
+                      activeTabId: activeLeftTabId,
+                      onActiveTabChange: setActiveLeftTabId,
+                    }
                   : undefined
               }
               rightSidePanel={
                 rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
                   ? {
-                    position: "right" as const,
-                    visible: true,
-                    size: panelSizes.rightSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
-                    tabs: rightSidePanelTabs,
-                    activeTabId: activeRightTabId,
-                    onActiveTabChange: setActiveRightTabId,
-                    minSize: 150,
-                    maxSize: 500,
-                    className: rightSidePanelElementSizingClassName,
-                  }
+                      position: "right" as const,
+                      visible: true,
+                      size: panelSizes.rightSidePanelWidth,
+                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                      tabs: rightSidePanelTabs,
+                      activeTabId: activeRightTabId,
+                      onActiveTabChange: setActiveRightTabId,
+                      minSize: 150,
+                      maxSize: 500,
+                      className: rightSidePanelElementSizingClassName,
+                    }
                   : undefined
               }
               toolbar={
@@ -18880,6 +18999,7 @@ const SketchpadContent: FC = () => {
 const Sketchpad = ({
   id,
   store,
+  kitStore,
   remote,
   persistenceFactory,
   onWindowEvents,
@@ -18889,6 +19009,7 @@ const Sketchpad = ({
 }: {
   id?: string;
   store?: SketchpadStore;
+  kitStore?: KitStore;
   remote?: RemoteProviders;
   persistenceFactory?: PersistenceFactory;
   onWindowEvents?: WindowEvents;
@@ -18906,7 +19027,7 @@ const Sketchpad = ({
 
   const routerContent = (
     <GlobalNavigationBridge>
-      <SketchpadScopeProvider id={id} store={store} remote={remote} persistenceFactory={persistenceFactory} onWindowEvents={onWindowEvents} initialState={initialState} importKitUrls={importKitUrls}>
+      <SketchpadScopeProvider id={id} store={store} kitStore={kitStore} remote={remote} persistenceFactory={persistenceFactory} onWindowEvents={onWindowEvents} initialState={initialState} importKitUrls={importKitUrls}>
         <SketchpadInteractionBridge>
           <OriginProvider>
             <FocusProvider>
@@ -18939,7 +19060,7 @@ const Sketchpad = ({
 
 // #endregion Sketchpad Components
 
-export { SectionSpecificity, Window } from "../../../semio-elements/ui";
+export { SectionSpecificity, Window } from "../../../elements/ui";
 
 export { Sketchpad };
 export default Sketchpad;

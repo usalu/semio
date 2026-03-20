@@ -1,0 +1,13 @@
+{
+  "title": "Document Hardcoded URI Strings for Scheme Migration",
+  "status": "closed",
+  "description": "Find and document all hardcoded URI strings in repo/cli/main.go that need updating from OLD to NEW scheme",
+  "summary": "Documented all ~45 hardcoded OLD-scheme URI strings in repo/cli/main.go across 10 categories.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/680"
+  },
+  "goal": "🎯refactoring",
+  "sessions": [
+    "⚪8416c95de3874fc4aabfa5663701f617"
+  ]
+}

@@ -15,23 +15,23 @@
       "problemMatcher": []
     },
     {
-      "label": "📦build🧰semiorepo⌨️cli",
+      "label": "📦build🧰repo⌨️cli",
       "type": "shell",
-      "command": "npx nx build semio-repo/cli",
+      "command": "npx nx build repo/cli",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "📦build🧰semiorepo⌨️server",
+      "label": "📦build🧰repo⌨️server",
       "type": "shell",
-      "command": "npx nx build semio-repo/server",
+      "command": "npx nx build repo/server",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "📦build🧰semiorepo⌨️vscode",
+      "label": "📦build🧰repo⌨️vscode",
       "type": "shell",
-      "command": "npx nx build semio-repo/vscode",
+      "command": "npx nx build repo/vscode",
       "group": "build",
       "problemMatcher": []
     },
@@ -147,44 +147,44 @@
       "problemMatcher": []
     },
     {
-      "label": "🧪test🧰semiorepo⌨️cli",
+      "label": "🧪test🧰repo⌨️cli",
       "type": "shell",
-      "command": "npx nx test semio-repo/cli",
+      "command": "npx nx test repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "🧪test:unit🧰semiorepo⌨️cli",
+      "label": "🧪test:unit🧰repo⌨️cli",
       "type": "shell",
-      "command": "npx nx test:unit semio-repo/cli",
+      "command": "npx nx test:unit repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "🧪test:e2e🧰semiorepo⌨️cli",
+      "label": "🧪test:e2e🧰repo⌨️cli",
       "type": "shell",
-      "command": "npx nx test:e2e semio-repo/cli",
+      "command": "npx nx test:e2e repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "🧪test:coverage🧰semiorepo⌨️cli",
+      "label": "🧪test:coverage🧰repo⌨️cli",
       "type": "shell",
-      "command": "npx nx test:coverage semio-repo/cli",
+      "command": "npx nx test:coverage repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "🧪test🧰semiorepo⌨️server",
+      "label": "🧪test🧰repo⌨️server",
       "type": "shell",
-      "command": "npx nx test semio-repo/server",
+      "command": "npx nx test repo/server",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "🧪test🧰semiorepo⌨️vscode",
+      "label": "🧪test🧰repo⌨️vscode",
       "type": "shell",
-      "command": "npx nx test semio-repo/vscode",
+      "command": "npx nx test repo/vscode",
       "group": "test",
       "problemMatcher": []
     },
@@ -284,9 +284,9 @@
       "problemMatcher": []
     },
     {
-      "label": "🚀publish:test🧰semiorepo⌨️cli",
+      "label": "🚀publish:test🧰repo⌨️cli",
       "type": "shell",
-      "command": "npx nx publish:test semio-repo/cli",
+      "command": "npx nx publish:test repo/cli",
       "group": "build",
       "problemMatcher": []
     },
@@ -300,9 +300,9 @@
       "problemMatcher": []
     },
     {
-      "label": "🚀publish🧰semiorepo⌨️cli",
+      "label": "🚀publish🧰repo⌨️cli",
       "type": "shell",
-      "command": "npx nx publish semio-repo/cli",
+      "command": "npx nx publish repo/cli",
       "group": "build",
       "problemMatcher": []
     },
@@ -349,23 +349,54 @@
       "group": "none"
     },
     {
-      "label": "🛠️dev🧰semiorepo⌨️cli",
+      "label": "🛠️dev🧰repo⌨️cli",
       "type": "shell",
-      "command": "npx nx dev semio-repo/cli",
+      "command": "npx nx dev repo/cli",
       "group": "none",
       "problemMatcher": []
     },
     {
-      "label": "🛠️dev🧰semiorepo⌨️server",
+      "label": "🛠️dev🧰repo⌨️server",
       "type": "shell",
-      "command": "npx nx dev semio-repo/server",
+      "command": "npx nx dev repo/server",
       "group": "none",
       "problemMatcher": []
     },
     {
-      "label": "🛠️dev🧰semiorepo⌨️vscode",
+      "label": "🛠️dev🧰repo⌨️vscode",
       "type": "shell",
-      "command": "npx nx dev semio-repo",
+      "command": "npx nx dev repo",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^([^\\s].*?):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*vite.*building",
+          "endsPattern": ".*built in.*"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "🛠️dev👤semio⌨️vscode",
+      "type": "shell",
+      "command": "npx nx dev semio/vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -634,7 +665,7 @@
         "cwd": "${workspaceFolder}",
         "env": {
           "MCP_AUTO_OPEN_ENABLED": "false",
-          "MCP_PROXY_AUTH_TOKEN": "semio-repo-mcp-debug-token"
+          "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
         }
       },
       "problemMatcher": {

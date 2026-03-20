@@ -1,0 +1,29 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.starting",
+    "second": "2026-03-16T12:37:48Z",
+    "session": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PreToolUse",
+      "tool_name": "Edit",
+      "tool_input": {
+        "file_path": "/workspaces/semio/repo/cli/main.go",
+        "old_string": "\treturn WriteTextFile(absPath, formatted)\n}\n\n// WriteJSONFile MUST persist the content atomically.",
+        "new_string": "\treturn WriteTextFile(absPath, formatted)\n}\n\n// runFormatterForFile runs the language-appropriate formatter on the given file.\n// Unlike runFormatterAfterAutofix, this only runs the formatter with no fallback.\n// [🧰repo⌨️cli💻main🔖types🔖utils🛠️runformatterforfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterForFile)\nfunc runFormatterForFile(relPath string) {\n\tlang := GetLanguage(relPath)\n\tlangName := \"\"\n\tif lang != nil {\n\t\tlangName = lang.Name()\n\t}\n\tplans := formatterPlansForLanguage(langName, relPath)\n\tfor _, plan := range plans {\n\t\tif !isFormatterPlanAvailable(plan, rootDir) {\n\t\t\tcontinue\n\t\t}\n\t\tif err := formatterCommandRun(plan.binary, plan.args, rootDir); err == nil {\n\t\t\treturn\n\t\t}\n\t}\n}\n\n// WriteJSONFile MUST persist the content atomically.",
+        "replace_all": false
+      },
+      "tool_use_id": "toolu_01ENCthBpoQksU2M2TwWucZm"
+    }
+  },
+  "response": {}
+}

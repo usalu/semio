@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚go💻kitsqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go)
+// [👤semio📚go💻kitsqlite](repo://p/u/semio/b/l/go/f/kit_sqlite.go)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖SQLite Kit Operations
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations)
 // SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.
 
 package semio
@@ -39,7 +39,7 @@ import (
 
 // KitFromSqlite reads a Kit from a SQLite database file
 // Callers MUST provide a valid path to an existing SQLite database
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kitfromsqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitFromSqlite)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kitfromsqlite](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitFromSqlite)
 func KitFromSqlite(dbPath string) (*Kit, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -96,7 +96,7 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 
 // loadTypes loads all types belonging to a kit from the database
 // Callers MUST provide a valid open database connection and kit GUID
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loadtypes](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadTypes)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loadtypes](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadTypes)
 func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
 	rows, err := db.Query("SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = ?", kitGuid)
 	if err != nil {
@@ -156,7 +156,7 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
 
 // loadDesigns loads all designs belonging to a kit from the database
 // Callers MUST provide a valid open database connection and kit GUID
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loaddesigns](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadDesigns)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loaddesigns](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadDesigns)
 func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
 	rows, err := db.Query(`SELECT guid, name, parent_guid, variant, unit, folder, 
         is_abstract, can_scale, can_mirror, description, icon, image, created, updated 
@@ -225,7 +225,7 @@ func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
 
 // loadPieces loads all pieces belonging to a design from the database
 // Callers MUST provide a valid open database connection and design GUID
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loadpieces](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadPieces)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loadpieces](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadPieces)
 func loadPieces(db *sql.DB, designGuid string) ([]Piece, error) {
 	rows, err := db.Query(`SELECT guid, name, type_guid, design_guid_ref,
         plane_origin_x, plane_origin_y, plane_origin_z,
@@ -287,7 +287,7 @@ func loadPieces(db *sql.DB, designGuid string) ([]Piece, error) {
 
 // loadConnections loads all connections belonging to a design from the database
 // Callers MUST provide a valid open database connection and design GUID
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loadconnections](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadConnections)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loadconnections](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadConnections)
 func loadConnections(db *sql.DB, designGuid string) ([]Connection, error) {
 	rows, err := db.Query(`SELECT guid, connected_piece_guid, connected_connector_guid,
         connecting_piece_guid, connecting_connector_guid,
@@ -338,7 +338,7 @@ func loadConnections(db *sql.DB, designGuid string) ([]Connection, error) {
 
 // loadConnectors loads all connectors belonging to a type from the database
 // Callers MUST provide a valid open database connection and type GUID
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loadconnectors](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadConnectors)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loadconnectors](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadConnectors)
 func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
 	rows, err := db.Query(`SELECT guid, name, point_x, point_y, point_z,
         direction_x, direction_y, direction_z, t, mandatory, port_guid, description
@@ -378,7 +378,7 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
 
 // KitToSqlite writes a Kit to a SQLite database file
 // Callers MUST provide a valid Kit, writable database path, and schema SQL
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kittosqlite](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitToSqlite)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kittosqlite](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitToSqlite)
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -491,7 +491,7 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 
 // KitFromZip extracts a Kit and its files from a zip archive
 // Callers MUST provide a valid path to an existing zip file containing kit.json
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kitfromzip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitFromZip)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kitfromzip](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitFromZip)
 func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
 	r, err := zip.OpenReader(zipPath)
 	if err != nil {
@@ -545,7 +545,7 @@ func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
 
 // buildFilePath constructs the file path from the folder hierarchy and file name
 // buildFilePath MUST perform the buildFilePath operation.
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️buildfilepath](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/buildFilePath)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️buildfilepath](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/buildFilePath)
 func buildFilePath(kit *Kit, file *File) string {
 	if file.Folder == nil {
 		return file.Name
@@ -559,7 +559,7 @@ func buildFilePath(kit *Kit, file *File) string {
 
 // buildFolderPath constructs the folder path from the folder hierarchy
 // buildFolderPath MUST perform the buildFolderPath operation.
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️buildfolderpath](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/buildFolderPath)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️buildfolderpath](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/buildFolderPath)
 func buildFolderPath(kit *Kit, folderGuid string) string {
 	for _, f := range kit.Folders {
 		if f.Guid == folderGuid {
@@ -579,7 +579,7 @@ func buildFolderPath(kit *Kit, folderGuid string) string {
 // blobEncode encodes bytes to a data URI string with the mime type inferred from filename.
 // Falls back to "application/octet-stream" when the extension is unknown.
 // blobEncode MUST perform the blobEncode operation.
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobencode](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobEncode)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobencode](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobEncode)
 func blobEncode(data []byte, filename string) string {
 	mimeStr := mimeFromFilename(filename)
 	return "data:" + mimeStr + ";base64," + base64.StdEncoding.EncodeToString(data)
@@ -614,7 +614,7 @@ func mimeFromFilename(filename string) string {
 // blobDecode decodes a data URI string to bytes.
 // Supports "data:<mime>;base64,<data>" format as well as raw base64 for backwards compatibility.
 // blobDecode MUST perform the blobDecode operation.
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobdecode](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobDecode)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobdecode](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobDecode)
 func blobDecode(s string) ([]byte, error) {
 	if strings.HasPrefix(s, "data:") {
 		commaIdx := strings.Index(s, ",")
@@ -628,7 +628,7 @@ func blobDecode(s string) ([]byte, error) {
 
 // KitToZip packages a Kit and its files into a zip archive
 // Callers MUST provide a valid Kit, writable zip path
-// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kittozip](semiorepo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitToZip)
+// [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️kittozip](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/KitToZip)
 func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL string) error {
 
 	kitForZip := *kit

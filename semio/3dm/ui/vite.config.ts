@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚3dm🖱️ui⚙️viteconfig](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/f/vite.config.ts)
+// [👤semio📚3dm🖱️ui⚙️viteconfig](repo://p/u/semio/b/u/3dm/fd/req/ui/f/vite.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio📚3dm🖱️ui⚙️viteconfig🔖configuration](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/f/vite.config.ts/s/Configuration)
+// [👤semio📚3dm🖱️ui⚙️viteconfig🔖configuration](repo://p/u/semio/b/u/3dm/fd/req/ui/f/vite.config.ts/s/Configuration)
 // Vite configuration for the 3dm React UI embedded in Rhino WebView2.
 // Configuration MUST include React and Tailwind CSS plugins.
 

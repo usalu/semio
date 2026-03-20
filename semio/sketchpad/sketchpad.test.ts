@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚js🥼sketchpadtest](semiorepo://p/u/semio/b/l/js/f/sketchpad.test.ts)
+// [👤semio📚js🥼sketchpadtest](repo://p/u/semio/b/l/js/f/sketchpad.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -165,7 +165,7 @@ async function openDetailsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => {});
+    .catch(() => { });
 }
 
 async function getDetailsSections(page: Page): Promise<string[]> {
@@ -1011,7 +1011,7 @@ async function expectOnlyLeftAndRightPanelTogglesInNavbar(page: Page, appName: s
   await page
     .locator('[id="semio.sketchpad.navbar"]')
     .waitFor({ state: "visible", timeout: 30000 })
-    .catch(() => {});
+    .catch(() => { });
   await page.waitForTimeout(2000);
 
   const leftToggleCount = await page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]').count();
@@ -1286,13 +1286,13 @@ test.describe("sketchpad", () => {
     const expectHomeKindToggleCycle = async (toggle: Locator, kind: "temporary" | "local" | "remote") => {
       console.log(`[Home] Testing ${kind} filter toggle on/off`);
       await toggle.click();
-      await page.waitForURL((url) => new URL(url.href).searchParams.get("kind") === kind, { timeout: 5000 }).catch(() => {});
+      await page.waitForURL((url) => new URL(url.href).searchParams.get("kind") === kind, { timeout: 5000 }).catch(() => { });
       await page.waitForTimeout(300);
       const kindAfterOn = new URL(page.url()).searchParams.get("kind");
       console.log(`[Home] Kind after ${kind} on: ${kindAfterOn}`);
       expect(kindAfterOn).toBe(kind);
       await toggle.click();
-      await page.waitForURL((url) => !new URL(url.href).searchParams.has("kind"), { timeout: 5000 }).catch(() => {});
+      await page.waitForURL((url) => !new URL(url.href).searchParams.has("kind"), { timeout: 5000 }).catch(() => { });
       await page.waitForTimeout(300);
       const kindAfterOff = new URL(page.url()).searchParams.get("kind");
       console.log(`[Home] Kind after ${kind} off: ${kindAfterOff}`);
@@ -1547,7 +1547,7 @@ test.describe("sketchpad", () => {
       } else {
         await toggle.dispatchEvent("click");
       }
-      await page.waitForURL((url) => new URL(url.href).searchParams.getAll("kind").length > 0, { timeout: 5000 }).catch(() => {});
+      await page.waitForURL((url) => new URL(url.href).searchParams.getAll("kind").length > 0, { timeout: 5000 }).catch(() => { });
       await page.waitForTimeout(300);
       const kindsAfterOn = new URL(page.url()).searchParams.getAll("kind");
       console.log(`[Kit] Kinds after ${kind} on: ${JSON.stringify(kindsAfterOn)}`);
@@ -1558,7 +1558,7 @@ test.describe("sketchpad", () => {
       } else {
         await toggle.dispatchEvent("click");
       }
-      await page.waitForURL((url) => new URL(url.href).searchParams.getAll("kind").length === 0, { timeout: 5000 }).catch(() => {});
+      await page.waitForURL((url) => new URL(url.href).searchParams.getAll("kind").length === 0, { timeout: 5000 }).catch(() => { });
       await page.waitForTimeout(300);
       const kindsAfterOff = new URL(page.url()).searchParams.getAll("kind");
       console.log(`[Kit] Kinds after ${kind} off: ${JSON.stringify(kindsAfterOff)}`);
@@ -2754,8 +2754,8 @@ test.describe("sketchpad", () => {
     // Clean up any pending mouse state from timed-out hover/scene operations.
     // When Promise.race resolves with "timeout", the underlying page.mouse.down()
     // may still be active, leaving the page in drag/pan mode. Release it.
-    await page.mouse.up().catch(() => {});
-    await page.mouse.move(0, 0).catch(() => {});
+    await page.mouse.up().catch(() => { });
+    await page.mouse.move(0, 0).catch(() => { });
     await page.waitForTimeout(1000);
 
     console.log("[Design] Testing Design app sidepanel toggles");
@@ -2855,7 +2855,7 @@ test.describe("sketchpad", () => {
             await closedSections2
               .nth(i)
               .click({ timeout: 5000 })
-              .catch(() => {});
+              .catch(() => { });
             await page.waitForTimeout(250);
             if (await dragAvatar.isVisible({ timeout: 500 }).catch(() => false)) break;
           }
@@ -3952,7 +3952,7 @@ test.describe("sketchpad", () => {
                 const el = page.locator(`${panel} [id="${itemId}"]`).first();
                 const cnt = await el.count();
                 if (cnt > 0) {
-                  await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+                  await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => { });
                   const st = await el.getAttribute("data-state");
                   if (st === "closed") {
                     await el.click({ force: true });
@@ -5096,7 +5096,7 @@ test.describe("sketchpad", () => {
           const item = page.locator(`${panel} [id="${id}"]`).first();
           const count = await item.count();
           if (count > 0) {
-            await item.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
+            await item.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => { });
             const state = await item.getAttribute("data-state");
             if (state === "closed") {
               await item.click({ force: true });

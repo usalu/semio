@@ -10,7 +10,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@semio-elements/ui": "*",
+    "@elements/ui": "*",
     "@semio/js": "*",
     "@semio/assets": "*",
     "react": "^19.2.3",

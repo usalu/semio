@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🖱️vscode⚙️viteconfig](semiorepo://p/u/semio/b/u/vscode/f/vite.config.ts)
+// [👤semio🖱️vscode⚙️viteconfig](repo://p/u/semio/b/u/vscode/f/vite.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,41 +19,94 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🖱️vscode⚙️viteconfig🔖configuration](semiorepo://p/u/semio/b/u/vscode/f/vite.config.ts/s/Configuration)
+// [👤semio🖱️vscode⚙️viteconfig🔖configuration](repo://p/u/semio/b/u/vscode/f/vite.config.ts/s/Configuration)
 // Vite build configuration for the semio VS Code extension.
 // Configuration MUST output a CJS bundle targeting Node 18.
 
+import mdx from "@mdx-js/rollup";
+import react from "@vitejs/plugin-react";
 import path from "path";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
+import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
+import topLevelAwait from "vite-plugin-top-level-await";
+import wasm from "vite-plugin-wasm";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default defineConfig({
-  build: {
-    lib: {
-      entry: path.resolve(__dirname, "extension.ts"),
-      formats: ["cjs"],
-      fileName: () => "extension",
-    },
-    rollupOptions: {
-      external: ["vscode"],
-      output: {
-        entryFileNames: "extension.js",
-        format: "cjs",
+export default defineConfig(async ({ mode }) => {
+  // Webview build: produces sketchpad-dist/ with an HTML app for the VS Code webview.
+  if (mode === "webview") {
+    const tailwind = await import("@tailwindcss/vite");
+    return {
+      root: __dirname,
+      plugins: [
+        tailwind.default(),
+        {
+          ...mdx({
+            remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
+            rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+            providerImportSource: "@mdx-js/react",
+          }),
+          enforce: "pre" as const,
+        },
+        react(),
+        wasm(),
+        topLevelAwait(),
+      ],
+      build: {
+        outDir: "sketchpad-dist",
+        emptyOutDir: true,
+        rollupOptions: {
+          input: path.resolve(__dirname, "webview.html"),
+        },
+        target: "esnext",
         sourcemap: true,
+        minify: false,
       },
+      resolve: {
+        alias: {
+          "@semio/sketchpad": path.resolve(__dirname, "../sketchpad"),
+          "@semio/studio": path.resolve(__dirname, "../studio/studio.ts"),
+          "@semio/js": path.resolve(__dirname, "../js"),
+          "@elements/ui": path.resolve(__dirname, "../../.elements/ui"),
+          "@semio/assets": path.resolve(__dirname, "../assets"),
+        },
+      },
+    };
+  }
+
+  // Extension host build: produces out/extension.js targeting Node 18.
+  return {
+    build: {
+      lib: {
+        entry: path.resolve(__dirname, "extension.ts"),
+        formats: ["cjs"],
+        fileName: () => "extension",
+      },
+      rollupOptions: {
+        external: ["vscode"],
+        output: {
+          entryFileNames: "extension.js",
+          format: "cjs",
+          sourcemap: true,
+        },
+      },
+      outDir: "out",
+      emptyOutDir: true,
+      minify: false,
+      sourcemap: true,
+      target: "node18",
+      ssr: true,
     },
-    outDir: "out",
-    emptyOutDir: true,
-    minify: false,
-    sourcemap: true,
-    target: "node18",
-    ssr: true,
-  },
-  ssr: {
-    noExternal: true,
-  },
+    ssr: {
+      noExternal: true,
+    },
+  };
 });
 // #endregion 🔖Configuration

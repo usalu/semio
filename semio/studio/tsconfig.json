@@ -9,7 +9,11 @@
         "moduleResolution": "Bundler",
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "noEmit": true
+        "noEmit": true,
+        "paths": {
+            "@semio/js": ["../js"],
+            "@semio/js/*": ["../js/*"]
+        }
     },
     "include": [
         "studio.ts"

@@ -1,0 +1,13 @@
+{
+  "title": "Fix Semio Elements Ui Storybook Imports",
+  "status": "closed",
+  "description": "Fix Storybook in elements/ui after recent refactors so all stories run again. Reproduce the current Storybook preview/build failures, repair stale imports and package/config regressions, extend existing tests where there is meaningful coverage, and verify Storybook can build without story resolution errors.",
+  "summary": "Restored elements/ui Storybook after the sketchpad bundle refactor. Replaced stale story imports from @semio/js/sketchpad/Sketchpad with the new @semio/sketchpad public entrypoint, exported Canvas/HorizontalWindows/VerticalWindows from semio/sketchpad/index.ts, added the sketchpad dependency and tsconfig/storybook alias wiring in elements/ui, and verified both storybook build and dev server story index loading succeed without the prior preview import failure.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/887"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪17735164969693121345680311120650874543"
+  ]
+}

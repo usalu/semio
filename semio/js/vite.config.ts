@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚js⚙️viteconfig](semiorepo://p/u/semio/b/l/js/f/vite.config.ts)
+// [👤semio📚js⚙️viteconfig](repo://p/u/semio/b/l/js/f/vite.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio📚js⚙️viteconfig🔖configuration](semiorepo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration)
+// [👤semio📚js⚙️viteconfig🔖configuration](repo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration)
 import { defineConfig } from "vitest/config";
 
 // Vitest configuration for the domain-only semio package.

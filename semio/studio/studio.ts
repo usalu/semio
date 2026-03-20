@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio👥studio💻studio](semiorepo://p/u/semio/b/l/studio/f/studio.ts)
+// [👤semio👥studio💻studio](repo://p/u/semio/b/l/studio/f/studio.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -15,50 +15,53 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Specs: Defines abstract reactive data interfaces (RMap, RArray, RDoc) for
-// provider-agnostic state management. Provides Yjs implementation and persistence factories.
+// Specs: Defines abstract synchronizable state interfaces (SyncMap, SyncArray, SyncDoc) for
+// backend-agnostic state management. Provides CRDT implementation and persistence factories.
+// The abstraction separates the 'what' (synchronized kit data) from the 'how' (CRDT, JSON, SQLite).
 
-// Abstract reactive state layer and kit persistence providers for semio sketchpad.
+// Synchronizable state layer and kit persistence providers for semio studio.
 
 // #endregion Header
 
-// #region 🔖ReactiveInterfaces
+// #region 🔖SyncInterfaces
 
 /**
- * Event emitted when keys change in an RMap.
+ * Event emitted when fields change in a SyncMap.
  *
- * Specs: Mirrors Y.YMapEvent.keysChanged for provider-agnostic field observation.
+ * Specs: Backend-agnostic field change notification. `changedFields` contains
+ * the set of field keys that were modified in the change.
  **/
-export interface RMapEvent {
+export interface SyncMapEvent {
   keysChanged: Set<string>;
 }
 
 /**
- * Abstract reactive map with key-value storage and change observation.
+ * A synchronized field store supporting key-value access and change observation.
  *
- * Specs: API mirrors Y.Map. Observe callbacks receive RMapEvent for shallow,
- * or no args for deep. Implementations: Yjs, in-memory, JSON file, SQLite.
+ * Specs: Provides field-level get/set/delete with shallow and deep change
+ * observation. Multiple backends (CRDT, in-memory, JSON, SQLite) can implement
+ * this interface to provide different synchronization strategies.
  **/
-export interface RMap<V = any> {
+export interface SyncMap<V = any> {
   get(key: string): V | undefined;
   set(key: string, value: V): void;
   delete(key: string): void;
   has(key: string): boolean;
   toJSON(): Record<string, any>;
   forEach(f: (value: V, key: string, map: any) => void): void;
-  observe(f: (event: RMapEvent, ...args: any[]) => void): void;
-  unobserve(f: (event: RMapEvent, ...args: any[]) => void): void;
+  observe(f: (event: SyncMapEvent, ...args: any[]) => void): void;
+  unobserve(f: (event: SyncMapEvent, ...args: any[]) => void): void;
   observeDeep(f: (...args: any[]) => void): void;
   unobserveDeep(f: (...args: any[]) => void): void;
 }
 
 /**
- * Abstract reactive array with indexed storage and change observation.
+ * A synchronized ordered collection supporting indexed access and change observation.
  *
- * Specs: API mirrors Y.Array. Push takes an array of items.
- * Delete takes start index and count. Implementations match RMap.
+ * Specs: Provides indexed access, push/delete, iteration, and change observation.
+ * Multiple backends can implement this interface.
  **/
-export interface RArray<V = any> {
+export interface SyncArray<V = any> {
   get(index: number): V;
   push(items: V[]): void;
   delete(start: number, count: number): void;
@@ -73,26 +76,30 @@ export interface RArray<V = any> {
 }
 
 /**
- * Abstract reactive document root with named maps/arrays and transactions.
+ * A synchronizable document root containing named field stores and collections.
  *
- * Specs: API mirrors Y.Doc. createMap/createArray produce standalone instances
- * that become part of the document when inserted via set/push. Transact batches
- * mutations for atomic updates.
+ * Specs: Root container for synchronized state. Provides named access to field
+ * stores and collections, standalone store/collection creation for nesting, and
+ * transactional batching for atomic updates. The backend determines synchronization
+ * strategy (CRDT for real-time collaboration or plain storage for local persistence).
  **/
-export interface RDoc {
-  createMap<V = any>(): RMap<V>;
-  createArray<V = any>(): RArray<V>;
-  getMap<V = any>(name?: string): RMap<V>;
-  getArray<V = any>(name: string): RArray<V>;
+export interface SyncDoc {
+  createMap<V = any>(): SyncMap<V>;
+  createArray<V = any>(): SyncArray<V>;
+  getMap<V = any>(name?: string): SyncMap<V>;
+  getArray<V = any>(name: string): SyncArray<V>;
   transact(fn: () => void, origin?: any): void;
   on(event: string, handler: (...args: any[]) => void): void;
   off(event: string, handler: (...args: any[]) => void): void;
 }
 
 /**
- * Type guard for RMap instances.
+ * Type guard for SyncMap instances.
+ *
+ * Specs: Detects SyncMap by checking for get/set/observe/toJSON methods
+ * while excluding arrays.
  **/
-export function isRMap(value: any): value is RMap {
+export function isSyncMap(value: any): value is SyncMap {
   return (
     value != null &&
     typeof value === "object" &&
@@ -106,51 +113,51 @@ export function isRMap(value: any): value is RMap {
 }
 
 /**
- * Type guard for RArray instances.
+ * Type guard for SyncArray instances.
+ *
+ * Specs: Detects SyncArray by checking for toArray/push/observe methods.
  **/
-export function isRArray(value: any): value is RArray {
+export function isSyncArray(value: any): value is SyncArray {
   return value != null && typeof value === "object" && typeof value.toArray === "function" && typeof value.push === "function" && typeof value.observe === "function";
 }
 
 /**
- * Factory for creating RDoc instances with a specific backend.
+ * Factory for creating SyncDoc instances with a specific backend.
  *
- * Specs: Each call to createDoc produces an independent reactive document.
- * The factory determines the backend (Yjs, in-memory, JSON file, SQLite).
+ * Specs: Each call produces an independent synchronizable document.
+ * The factory determines the backend (CRDT, in-memory, JSON file, SQLite).
  **/
-export type RDocFactory = () => RDoc;
+export type SyncDocFactory = () => SyncDoc;
 
-// #endregion ReactiveInterfaces
+// #endregion SyncInterfaces
 
-// #region 🔖YjsImplementation
+// #region 🔖CrdtBackend
 
 import * as Y from "yjs";
-export { Y };
-export { IndexeddbPersistence } from "y-indexeddb";
 
 /**
- * Yjs-backed RDoc implementation wrapping Y.Doc, Y.Map, and Y.Array.
+ * CRDT-backed SyncDoc implementation using Yjs for real-time collaboration.
  *
  * Specs: createMap/createArray delegate to Y.Map/Y.Array constructors.
- * getMap/getArray delegate to Y.Doc methods. All reactive interfaces
- * are structurally satisfied by Yjs types.
+ * getMap/getArray delegate to Y.Doc methods. All sync interfaces
+ * are structurally satisfied by the CRDT types.
  **/
-class YjsDoc implements RDoc {
+class CrdtDoc implements SyncDoc {
   public readonly inner: Y.Doc;
   constructor() {
     this.inner = new Y.Doc();
   }
-  createMap<V = any>(): RMap<V> {
-    return new Y.Map<V>() as unknown as RMap<V>;
+  createMap<V = any>(): SyncMap<V> {
+    return new Y.Map<V>() as unknown as SyncMap<V>;
   }
-  createArray<V = any>(): RArray<V> {
-    return new Y.Array<V>() as unknown as RArray<V>;
+  createArray<V = any>(): SyncArray<V> {
+    return new Y.Array<V>() as unknown as SyncArray<V>;
   }
-  getMap<V = any>(name?: string): RMap<V> {
-    return (name !== undefined ? this.inner.getMap(name) : this.inner.getMap()) as unknown as RMap<V>;
+  getMap<V = any>(name?: string): SyncMap<V> {
+    return (name !== undefined ? this.inner.getMap(name) : this.inner.getMap()) as unknown as SyncMap<V>;
   }
-  getArray<V = any>(name: string): RArray<V> {
-    return this.inner.getArray(name) as unknown as RArray<V>;
+  getArray<V = any>(name: string): SyncArray<V> {
+    return this.inner.getArray(name) as unknown as SyncArray<V>;
   }
   transact(fn: () => void, origin?: any): void {
     this.inner.transact(fn, origin);
@@ -164,38 +171,37 @@ class YjsDoc implements RDoc {
 }
 
 /**
- * Creates an RDocFactory backed by Yjs CRDT documents.
+ * Creates a SyncDocFactory backed by CRDT documents for real-time collaboration.
+ *
+ * Specs: Default backend for sketchpad. Produces CrdtDoc instances wrapping Y.Doc.
  **/
-export function createYjsDocFactory(): RDocFactory {
-  return () => new YjsDoc();
+export function createSyncDocFactory(): SyncDocFactory {
+  return () => new CrdtDoc();
 }
 
 /**
- * Extracts the underlying Y.Doc from a YjsDoc RDoc instance.
- * Throws if the RDoc is not a YjsDoc.
+ * Extracts the underlying backend document for persistence and remote provider use.
+ * Throws if the SyncDoc is not backed by a CRDT implementation.
  *
- * Specs: Used by persistence and remote providers that need the raw Y.Doc.
+ * Specs: Used internally by persistence and remote providers that need
+ * direct backend access for binary state encoding.
  **/
-export function getYDoc(rDoc: RDoc): Y.Doc {
-  if (rDoc instanceof YjsDoc) return rDoc.inner;
-  throw new Error("RDoc is not a YjsDoc");
+export function getSyncBackendDoc(syncDoc: SyncDoc): Y.Doc {
+  if (syncDoc instanceof CrdtDoc) return syncDoc.inner;
+  throw new Error("SyncDoc is not backed by a CRDT implementation");
 }
 
-// #endregion YjsImplementation
-
-// #region 🔖Exports
-
-// Re-export Yjs types for backwards compat transition
-export type { Doc } from "yjs";
-
-// #endregion Exports
+// #endregion CrdtBackend
 
 // #region 🔖PersistenceProviders
 
 /**
- * Abstract persistence provider for syncing an RDoc to a storage backend.
- * Implementations MUST call the synced callback once initial data is loaded. Implementations
- * MUST provide a destroy method to release resources.
+ * Abstract persistence provider for syncing a SyncDoc to a storage backend.
+ * Implementations MUST call the synced callback once initial data is loaded.
+ * Implementations MUST provide a destroy method to release resources.
+ *
+ * Specs: Persistence providers bridge between SyncDoc state and durable storage.
+ * They handle initial load and ongoing change persistence.
  **/
 export interface PersistenceProvider {
   once(event: "synced", callback: () => void): void;
@@ -206,9 +212,12 @@ export interface PersistenceProvider {
 import { IndexeddbPersistence as IndexeddbPersistenceImpl } from "y-indexeddb";
 
 /**
- * Factory that creates a PersistenceProvider for a given RDoc and storage key.
+ * Factory that creates a PersistenceProvider for a given SyncDoc and storage key.
+ *
+ * Specs: The factory pattern allows different persistence strategies
+ * (IndexedDB, JSON file, SQLite) to be injected at construction time.
  **/
-export type PersistenceFactory = (rDoc: RDoc, key: string) => PersistenceProvider;
+export type PersistenceFactory = (syncDoc: SyncDoc, key: string) => PersistenceProvider;
 
 /**
  * I/O adapter for reading and writing kit data as a JSON string.
@@ -229,13 +238,13 @@ export interface SqliteAdapter {
 }
 
 /**
- * PersistenceProvider that syncs RDoc state via binary encoding.
- * Uses Y.encodeStateAsUpdate / Y.applyUpdate for round-tripping through an adapter.
+ * PersistenceProvider that syncs SyncDoc state via binary encoding.
  *
  * Specs: Uses binary state encoding for faithful CRDT persistence.
  * The key parameter maps to a storage location via the adapter.
+ * On construction, loads persisted state and subscribes to future updates.
  **/
-export class YDocBinaryPersistenceProvider implements PersistenceProvider {
+export class SyncBinaryPersistenceProvider implements PersistenceProvider {
   private doc: Y.Doc;
   private key: string;
   private adapter: { read(key: string): Promise<Uint8Array | null>; write(key: string, data: Uint8Array): Promise<void> };
@@ -244,8 +253,8 @@ export class YDocBinaryPersistenceProvider implements PersistenceProvider {
   private destroyed = false;
   private updateHandler: (update: Uint8Array) => void;
 
-  constructor(rDoc: RDoc, key: string, adapter: { read(key: string): Promise<Uint8Array | null>; write(key: string, data: Uint8Array): Promise<void> }) {
-    this.doc = getYDoc(rDoc);
+  constructor(syncDoc: SyncDoc, key: string, adapter: { read(key: string): Promise<Uint8Array | null>; write(key: string, data: Uint8Array): Promise<void> }) {
+    this.doc = getSyncBackendDoc(syncDoc);
     this.key = key;
     this.adapter = adapter;
 
@@ -284,49 +293,314 @@ export class YDocBinaryPersistenceProvider implements PersistenceProvider {
 
 /**
  * Creates a PersistenceFactory that uses IndexedDB for browser-based persistence.
+ *
+ * Specs: Delegates to IndexeddbPersistence with the raw backend document.
  **/
 export function createIndexeddbPersistenceFactory(): PersistenceFactory {
-  return (rDoc: RDoc, key: string) => new IndexeddbPersistenceImpl(key, getYDoc(rDoc));
+  return (syncDoc: SyncDoc, key: string) => new IndexeddbPersistenceImpl(key, getSyncBackendDoc(syncDoc));
 }
 
 /**
- * Creates a PersistenceFactory that persists RDoc state to a JSON file via an adapter.
+ * Creates a PersistenceFactory that persists SyncDoc state to a JSON file via an adapter.
  *
- * Specs: Wraps YDocBinaryPersistenceProvider with a JSON adapter that converts
+ * Specs: Wraps SyncBinaryPersistenceProvider with a JSON adapter that converts
  * between binary state and Base64 JSON for human-inspectable storage.
  **/
 export function createJsonFilePersistenceFactory(adapter: JsonFileAdapter): PersistenceFactory {
-  return (rDoc: RDoc, key: string) => {
+  return (syncDoc: SyncDoc, key: string) => {
     const binaryAdapter = {
       async read(k: string): Promise<Uint8Array | null> {
         const json = await adapter.read(k);
         if (!json) return null;
         const parsed = JSON.parse(json);
-        if (parsed?.yDocState) {
-          const binary = Uint8Array.from(atob(parsed.yDocState), (c) => c.charCodeAt(0));
+        if (parsed?.syncDocState) {
+          const binary = Uint8Array.from(atob(parsed.syncDocState), (c) => c.charCodeAt(0));
           return binary;
         }
         return null;
       },
       async write(k: string, data: Uint8Array): Promise<void> {
         const base64 = btoa(String.fromCharCode(...data));
-        await adapter.write(k, JSON.stringify({ yDocState: base64 }));
+        await adapter.write(k, JSON.stringify({ syncDocState: base64 }));
       },
     };
-    return new YDocBinaryPersistenceProvider(rDoc, key, binaryAdapter);
+    return new SyncBinaryPersistenceProvider(syncDoc, key, binaryAdapter);
   };
 }
 
 /**
- * Creates a PersistenceFactory that persists RDoc state to a SQLite database via an adapter.
+ * Creates a PersistenceFactory that persists SyncDoc state to a SQLite database via an adapter.
  *
  * Specs: Uses binary state encoding stored as a BLOB in a SQLite table.
  * The adapter provides platform-specific SQLite file I/O.
  **/
 export function createSqliteFolderPersistenceFactory(adapter: SqliteAdapter): PersistenceFactory {
-  return (rDoc: RDoc, key: string) => {
-    return new YDocBinaryPersistenceProvider(rDoc, key, adapter);
+  return (syncDoc: SyncDoc, key: string) => {
+    return new SyncBinaryPersistenceProvider(syncDoc, key, adapter);
   };
 }
 
 // #endregion PersistenceProviders
+
+// #region 🔖JsonFileKitStore
+// [👤semio👥studio💻studio🔖jsonfilekitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/JsonFileKitStore)
+// JSON file-backed kit store implementing UndoableKitStore.
+// Specs: Loads a Kit from a JSON file via adapter, holds an in-memory working copy,
+// persists on save() by serializing the full Kit back to JSON. Supports undo/redo
+// with a command stack. reload() re-reads state from the file, discarding changes.
+// Used by: VS Code extension for *.kit.json file editing.
+
+import { type Kit, type KitDiff, type KitChange, type KitStore, type KitStoreSnapshot, type KitStoreStatus, type KitSyncState, type UndoableKitStore, KitSchema, applyKitDiff, getKitDiff, inverseKitDiff, guid } from "@semio/js/semio";
+
+/**
+ * Adapter for reading/writing Kit JSON to a file.
+ *
+ * Specs: read() returns the raw JSON string from the file, or null if not found.
+ * write() writes the JSON string to the file. Implementations provide
+ * platform-specific I/O (Node fs, VS Code workspace, etc.).
+ * [👤semio👥studio💻studio🔖jsonfilekitstore🛠️kitjsonfileadapter](repo://p/u/semio/b/l/studio/f/studio.ts/s/JsonFileKitStore/d/i/KitJsonFileAdapter)
+ **/
+export interface KitJsonFileAdapter {
+  read(): Promise<string | null>;
+  write(json: string): Promise<void>;
+}
+
+/**
+ * JSON file-backed kit store with undo/redo.
+ *
+ * Specs: Holds a Kit in memory loaded from a JSON file. apply() merges diffs,
+ * replace() swaps the Kit. transact() groups mutations into one undo entry.
+ * save() serializes the Kit to JSON and writes via adapter. reload() re-reads
+ * from the file, resetting the working copy. Undo/redo uses a command stack.
+ * [👤semio👥studio💻studio🔖jsonfilekitstore🛠️jsonfilekitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/JsonFileKitStore/d/i/JsonFileKitStore)
+ **/
+export class JsonFileKitStore implements UndoableKitStore {
+  private kit: Kit;
+  private listeners: Set<() => void> = new Set();
+  private undoStack: KitChange[] = [];
+  private redoStack: KitChange[] = [];
+  private dirty: boolean = false;
+  private disposed: boolean = false;
+  private status: KitStoreStatus;
+  private transacting: boolean = false;
+  private error?: Error;
+  private lastSyncedAt?: string;
+  private readonly adapter: KitJsonFileAdapter;
+
+  private constructor(kit: Kit, adapter: KitJsonFileAdapter, status: KitStoreStatus) {
+    this.kit = kit;
+    this.adapter = adapter;
+    this.status = status;
+  }
+
+  /**
+   * Creates a JsonFileKitStore by loading Kit data from the adapter.
+   * If the file does not exist or is empty, creates a new empty kit.
+   *
+   * Specs: Factory method that handles async loading. Parses JSON with KitSchema
+   * validation. On parse failure, reports error status.
+   **/
+  static async create(adapter: KitJsonFileAdapter): Promise<JsonFileKitStore> {
+    const json = await adapter.read();
+    if (json) {
+      try {
+        const parsed = JSON.parse(json);
+        const kit = KitSchema.parse(parsed);
+        const store = new JsonFileKitStore(kit, adapter, "ready");
+        store.lastSyncedAt = new Date().toISOString();
+        return store;
+      } catch (e) {
+        const emptyKit: Kit = {
+          guid: guid(),
+          name: "New Kit",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const store = new JsonFileKitStore(emptyKit, adapter, "error");
+        store.error = e instanceof Error ? e : new Error(String(e));
+        return store;
+      }
+    }
+    const emptyKit: Kit = {
+      guid: guid(),
+      name: "New Kit",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const store = new JsonFileKitStore(emptyKit, adapter, "ready");
+    return store;
+  }
+
+  getSnapshot(): KitStoreSnapshot {
+    return {
+      kit: this.kit,
+      sync: {
+        status: this.status,
+        dirty: this.dirty,
+        readonly: false,
+        lastSyncedAt: this.lastSyncedAt,
+        error: this.error,
+      },
+    };
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  transact<T>(label: string, run: () => T): T {
+    const before = this.kit;
+    this.transacting = true;
+    try {
+      const result = run();
+      const after = this.kit;
+      if (before !== after && !this.disposed) {
+        const forward = getKitDiff(before, after);
+        const backward = inverseKitDiff(before, forward);
+        this.undoStack.push({ forward, backward });
+        this.redoStack = [];
+      }
+      return result;
+    } finally {
+      this.transacting = false;
+    }
+  }
+
+  apply(diff: KitDiff, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = applyKitDiff(this.kit, diff);
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, this.kit);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.notify();
+  }
+
+  replace(next: Kit, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = next;
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, next);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.notify();
+  }
+
+  async save(): Promise<void> {
+    this.status = "saving";
+    this.notify();
+    try {
+      const json = JSON.stringify(this.kit, null, 2);
+      await this.adapter.write(json);
+      this.dirty = false;
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  async reload(): Promise<void> {
+    this.status = "loading";
+    this.notify();
+    try {
+      const json = await this.adapter.read();
+      if (json) {
+        const parsed = JSON.parse(json);
+        this.kit = KitSchema.parse(parsed);
+      }
+      this.dirty = false;
+      this.undoStack = [];
+      this.redoStack = [];
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    this.listeners.clear();
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  undo(): void {
+    const change = this.undoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.backward);
+    this.redoStack.push(change);
+    this.dirty = true;
+    this.notify();
+  }
+
+  redo(): void {
+    const change = this.redoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.forward);
+    this.undoStack.push(change);
+    this.dirty = true;
+    this.notify();
+  }
+
+  /**
+   * Applies an external update to the kit (e.g., file changed on disk).
+   * Does NOT create undo entries.
+   *
+   * Specs: Used by file watchers to push external changes into the store.
+   * Resets dirty flag since the file is the source of truth.
+   **/
+  applyExternalUpdate(kit: Kit): void {
+    this.kit = kit;
+    this.dirty = false;
+    this.undoStack = [];
+    this.redoStack = [];
+    this.lastSyncedAt = new Date().toISOString();
+    this.error = undefined;
+    this.status = "ready";
+    this.notify();
+  }
+
+  private notify(): void {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+}
+
+/**
+ * Creates a JsonFileKitStore by loading kit data from a file adapter.
+ *
+ * Specs: Factory function matching the provider pattern. Returns a ready-to-use
+ * JsonFileKitStore. The adapter provides platform-specific file I/O.
+ * [👤semio👥studio💻studio🔖jsonfilekitstore🛠️createjsonfilekitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/JsonFileKitStore/d/i/createJsonFileKitStore)
+ **/
+export async function createJsonFileKitStore(adapter: KitJsonFileAdapter): Promise<JsonFileKitStore> {
+  return JsonFileKitStore.create(adapter);
+}
+
+// #endregion 🔖JsonFileKitStore

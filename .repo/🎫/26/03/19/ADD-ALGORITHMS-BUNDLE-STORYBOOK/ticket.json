@@ -1,0 +1,10 @@
+{
+  "title": "Add Algorithms Bundle Storybook",
+  "status": "closed",
+  "description": "Introduce semio-algorithms bundle with Storybook configured like elements/ui and add algorithm visualization stories using elements-ui primitives.",
+  "summary": "Created semio algorithms Storybook bundle with elements-ui aligned config and algorithm input stories.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪f6c09c16a5d14165857530b524ee68b1"
+  ]
+}

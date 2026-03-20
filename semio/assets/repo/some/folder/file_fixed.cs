@@ -1,5 +1,5 @@
 #region 🔖Header
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs)
 // 2025 Test User <test@test.com>
 
 // This program is free software: you can redistribute it and/or modify
@@ -18,14 +18,14 @@
 #endregion 🔖Header
 
 #region 🔖Classes
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖classes](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/s/Classes)
+// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖classes](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/s/Classes)
 // Domain classes for fixed values.
 // Classes MUST have public properties.
 
 /// <summary>Represents a fixed value container.</summary>
 /// <remarks>
 /// FixedClass MUST have a Value property.
-/// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖classes🛠️fixedclass](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/s/Classes/d/i/FixedClass)
+/// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖classes🛠️fixedclass](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.cs/s/Classes/d/i/FixedClass)
 /// </remarks>
 public class FixedClass
 {

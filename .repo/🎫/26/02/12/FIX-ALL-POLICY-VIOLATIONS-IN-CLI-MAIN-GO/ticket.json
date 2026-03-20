@@ -1,0 +1,10 @@
+{
+  "title": "Fix All Policy Breachs in CLI Main Go",
+  "status": "closed",
+  "description": "Fix all 673 remaining policy breachs in repo/cli/main.go by adding summary and spec comments to exported definitions and sections",
+  "summary": "Fixed all 673 policy breachs in repo/cli/main.go: added 329 definition summaries, 314 function requirements with RFC 2119 keywords, and 30 section summaries. All section summaries placed after #region markers. File compiles cleanly. Zero breachs remaining.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/542"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

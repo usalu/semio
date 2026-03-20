@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-// [👤semio📚net🛅semio📜build](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts)
+// [👤semio📚net🛅semio📜build](repo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,14 +20,14 @@
 // #endregion 🔖Header
 
 // #region 🔖Build
-// [👤semio📚net🛅semio💻build🔖build](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/s/Build)
+// [👤semio📚net🛅semio💻build🔖build](repo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/s/Build)
 // .NET build script. MUST compile the Semio C# project via MSBuild.
 
 import { execSync } from "child_process";
 
 /**
  * MSBuild executable path for Visual Studio 2022.
-// [👤semio📚net🛅semio💻build🔖build🪨msbuild](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/s/Build/d/i/msbuild)
+// [👤semio📚net🛅semio💻build🔖build🪨msbuild](repo://p/u/semio/b/l/net/fd/req/Semio/f/build.ts/s/Build/d/i/msbuild)
  * MUST point to the installed MSBuild binary.
  **/
 const msbuild = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe";

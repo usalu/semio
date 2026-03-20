@@ -2,13 +2,60 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "react-jsx",
     "strict": true,
     "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@semio/sketchpad": [
+        "../sketchpad"
+      ],
+      "@semio/sketchpad/*": [
+        "../sketchpad/*"
+      ],
+      "@semio/studio": [
+        "../studio"
+      ],
+      "@semio/studio/*": [
+        "../studio/*"
+      ],
+      "@semio/js": [
+        "../js"
+      ],
+      "@semio/js/*": [
+        "../js/*"
+      ],
+      "@elements/ui": [
+        "../../elements/ui"
+      ],
+      "@elements/ui/*": [
+        "../../elements/ui/*"
+      ],
+      "@semio/assets": [
+        "../assets"
+      ],
+      "@semio/assets/*": [
+        "../assets/*"
+      ]
+    },
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "vite/client"
+    ]
   },
-  "include": ["extension.ts"]
+  "include": [
+    "extension.ts",
+    "webview.tsx"
+  ]
 }

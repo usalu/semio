@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚3dm🖱️ui🗃️src💻bridge](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts)
+// [👤semio📚3dm🖱️ui🗃️src💻bridge](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖BridgeProtocol
-// [👤semio📚3dm🖱️ui🗃️src💻bridge🔖bridgeprotocol](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/BridgeProtocol)
+// [👤semio📚3dm🖱️ui🗃️src💻bridge🔖bridgeprotocol](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/BridgeProtocol)
 // Bridge protocol types MUST match the C# BridgeRequest/BridgeResponse/BridgeEvent types.
 
 export interface BridgeRequest {
@@ -48,7 +48,7 @@ export interface BridgeEvent {
 // #endregion 🔖BridgeProtocol
 
 // #region 🔖BridgeClient
-// [👤semio📚3dm🖱️ui🗃️src💻bridge🔖bridgeclient](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/BridgeClient)
+// [👤semio📚3dm🖱️ui🗃️src💻bridge🔖bridgeclient](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/BridgeClient)
 // Bridge client MUST route all native calls through WebView2 postMessage.
 
 let requestCounter = 0;
@@ -128,7 +128,7 @@ export function onBridgeEvent(event: string, callback: (payload: unknown) => voi
 // #endregion 🔖BridgeClient
 
 // #region 🔖TypedApis
-// [👤semio📚3dm🖱️ui🗃️src💻bridge🔖typedapis](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/TypedApis)
+// [👤semio📚3dm🖱️ui🗃️src💻bridge🔖typedapis](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/TypedApis)
 // Typed API wrappers MUST expose domain-specific operations only.
 
 export const appApi = {
@@ -157,7 +157,7 @@ export const importApi = {
 // #endregion 🔖TypedApis
 
 // #region 🔖WebViewGlobal
-// [👤semio📚3dm🖱️ui🗃️src💻bridge🔖webviewglobal](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/WebViewGlobal)
+// [👤semio📚3dm🖱️ui🗃️src💻bridge🔖webviewglobal](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/bridge.ts/s/WebViewGlobal)
 // Global type augmentation for the WebView2 chrome.webview API.
 
 declare global {

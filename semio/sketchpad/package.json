@@ -16,7 +16,7 @@
     "postinstall": "node -e \"require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')\""
   },
   "dependencies": {
-    "@semio-elements/ui": "*",
+    "@elements/ui": "*",
     "@semio/js": "*",
     "@semio/studio": "*",
     "react": "^19.2.3",

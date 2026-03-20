@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@electron/fuses": "^2.0.0",
-    "@semio-elements/ui": "*",
+    "@elements/ui": "*",
     "@semio/js": "^0.1.0",
     "@semio/sketchpad": "^0.1.0",
     "@semio/studio": "*",

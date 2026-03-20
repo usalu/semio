@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚js⚙️playwrightconfig](semiorepo://p/u/semio/b/l/js/f/playwright.config.ts)
+// [👤semio📚js⚙️playwrightconfig](repo://p/u/semio/b/l/js/f/playwright.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Playwright Configuration
-// [👤semio📚js⚙️playwrightconfig🔖playwrightconfiguration](semiorepo://p/u/semio/b/l/js/f/playwright.config.ts/s/Playwright%20Configuration)
+// [👤semio📚js⚙️playwrightconfig🔖playwrightconfiguration](repo://p/u/semio/b/l/js/f/playwright.config.ts/s/Playwright%20Configuration)
 // Configures Playwright for end-to-end browser tests against the sketchpad dev server.
 // MUST use a single worker to avoid port conflicts.
 

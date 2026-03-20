@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🖱️sketchpad⚙️postcssconfig](semiorepo://p/u/semio/b/u/sketchpad/f/postcss.config.ts)
+// [👤semio🖱️sketchpad⚙️postcssconfig](repo://p/u/semio/b/u/sketchpad/f/postcss.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🖱️sketchpad⚙️postcssconfig🔖configuration](semiorepo://p/u/semio/b/u/sketchpad/f/postcss.config.ts/s/Configuration)
+// [👤semio🖱️sketchpad⚙️postcssconfig🔖configuration](repo://p/u/semio/b/u/sketchpad/f/postcss.config.ts/s/Configuration)
 // PostCSS plugin configuration for the sketchpad application.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 
@@ -27,7 +27,7 @@ import { Config } from "postcss-load-config";
 
 /**
  * PostCSS configuration with the Tailwind CSS PostCSS plugin.
-// [👤semio🖱️sketchpad⚙️postcssconfig🔖configuration🪨config](semiorepo://p/u/semio/b/u/sketchpad/f/postcss.config.ts/s/Configuration/d/i/config)
+// [👤semio🖱️sketchpad⚙️postcssconfig🔖configuration🪨config](repo://p/u/semio/b/u/sketchpad/f/postcss.config.ts/s/Configuration/d/i/config)
  * Config MUST include the @tailwindcss/postcss plugin.
  **/
 const config: Config = {

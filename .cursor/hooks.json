@@ -2,92 +2,92 @@
   "hooks": {
     "afterAgentResponse": [
       {
-        "command": "./semio-repo/cli/cli hook afterAgentResponse cursor-chat"
+        "command": "./repo/cli/cli hook afterAgentResponse cursor-chat"
       }
     ],
     "afterAgentThought": [
       {
-        "command": "./semio-repo/cli/cli hook afterAgentThought cursor-chat"
+        "command": "./repo/cli/cli hook afterAgentThought cursor-chat"
       }
     ],
     "afterFileEdit": [
       {
-        "command": "./semio-repo/cli/cli hook afterFileEdit cursor-chat"
+        "command": "./repo/cli/cli hook afterFileEdit cursor-chat"
       }
     ],
     "afterMCPExecution": [
       {
-        "command": "./semio-repo/cli/cli hook afterMCPExecution cursor-chat"
+        "command": "./repo/cli/cli hook afterMCPExecution cursor-chat"
       }
     ],
     "afterShellExecution": [
       {
-        "command": "./semio-repo/cli/cli hook afterShellExecution cursor-chat"
+        "command": "./repo/cli/cli hook afterShellExecution cursor-chat"
       }
     ],
     "beforeMCPExecution": [
       {
-        "command": "./semio-repo/cli/cli hook beforeMCPExecution cursor-chat"
+        "command": "./repo/cli/cli hook beforeMCPExecution cursor-chat"
       }
     ],
     "beforeReadFile": [
       {
-        "command": "./semio-repo/cli/cli hook beforeReadFile cursor-chat"
+        "command": "./repo/cli/cli hook beforeReadFile cursor-chat"
       }
     ],
     "beforeShellExecution": [
       {
-        "command": "./semio-repo/cli/cli hook beforeShellExecution cursor-chat"
+        "command": "./repo/cli/cli hook beforeShellExecution cursor-chat"
       }
     ],
     "beforeSubmitPrompt": [
       {
-        "command": "./semio-repo/cli/cli hook beforeSubmitPrompt cursor-chat"
+        "command": "./repo/cli/cli hook beforeSubmitPrompt cursor-chat"
       }
     ],
     "postToolUse": [
       {
-        "command": "./semio-repo/cli/cli hook postToolUse cursor-chat"
+        "command": "./repo/cli/cli hook postToolUse cursor-chat"
       }
     ],
     "postToolUseFailure": [
       {
-        "command": "./semio-repo/cli/cli hook postToolUseFailure cursor-chat"
+        "command": "./repo/cli/cli hook postToolUseFailure cursor-chat"
       }
     ],
     "preCompact": [
       {
-        "command": "./semio-repo/cli/cli hook preCompact cursor-chat"
+        "command": "./repo/cli/cli hook preCompact cursor-chat"
       }
     ],
     "preToolUse": [
       {
-        "command": "./semio-repo/cli/cli hook preToolUse cursor-chat"
+        "command": "./repo/cli/cli hook preToolUse cursor-chat"
       }
     ],
     "sessionEnd": [
       {
-        "command": "./semio-repo/cli/cli hook sessionEnd cursor-chat"
+        "command": "./repo/cli/cli hook sessionEnd cursor-chat"
       }
     ],
     "sessionStart": [
       {
-        "command": "./semio-repo/cli/cli hook sessionStart cursor-chat"
+        "command": "./repo/cli/cli hook sessionStart cursor-chat"
       }
     ],
     "stop": [
       {
-        "command": "./semio-repo/cli/cli hook stop cursor-chat"
+        "command": "./repo/cli/cli hook stop cursor-chat"
       }
     ],
     "subagentStart": [
       {
-        "command": "./semio-repo/cli/cli hook subagentStart cursor-chat"
+        "command": "./repo/cli/cli hook subagentStart cursor-chat"
       }
     ],
     "subagentStop": [
       {
-        "command": "./semio-repo/cli/cli hook subagentStop cursor-chat"
+        "command": "./repo/cli/cli hook subagentStop cursor-chat"
       }
     ]
   },

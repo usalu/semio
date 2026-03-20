@@ -1,5 +1,5 @@
-@import "../../../semio-elements/ui/globals.css";
+@import "../../../.elements/ui/globals.css";
 @import "@xyflow/react/dist/style.css";
-@source "../../../semio-elements/ui";
+@source "../../../.elements/ui";
 @source "../../sketchpad";
 @source "../../js";

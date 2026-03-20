@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜publish](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜publish](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,7 +20,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Publish
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish)
 // Yak publish script. MUST push the built package to the Yak server.
 
 import { execSync } from "child_process";
@@ -33,7 +33,7 @@ import { join } from "path";
  **/
 /**
 // cwd holds the data fields for a cwd record.
- * [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨cwd](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/cwd)
+ * [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨cwd](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/cwd)
  **/
 const cwd = join(__dirname, "dist");
 
@@ -43,12 +43,12 @@ const cwd = join(__dirname, "dist");
  **/
 /**
 // manifestContent holds the data fields for a manifestContent record.
- * [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨manifestcontent](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/manifestContent)
+ * [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨manifestcontent](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/manifestContent)
  **/
 const manifestContent = readFileSync(join(cwd, "manifest.yml"), "utf-8");
 /**
  * Version regex match result from the manifest.
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨versionmatch](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/versionMatch)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨versionmatch](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/versionMatch)
  * MUST successfully extract the version string.
  **/
 const versionMatch = manifestContent.match(/version:\s*(.+)/);
@@ -57,7 +57,7 @@ if (!versionMatch) {
 }
 /**
  * Extracted version string from the manifest.
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨version](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/version)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨version](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/version)
  * MUST be trimmed of whitespace.
  **/
 const version = versionMatch[1].trim();
@@ -66,7 +66,7 @@ const version = versionMatch[1].trim();
  * MUST match the built package name pattern.
  **/
  * buildName holds the data fields for a buildName record.
- * [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨buildname](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/buildName)
+ * [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨buildname](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/buildName)
  **/
 const buildName = `semio-${version}-rh8_10-win.yak`;
 
@@ -75,7 +75,7 @@ const buildName = `semio-${version}-rh8_10-win.yak`;
  * MUST point to the installed Yak binary.
  **/
  * yak holds the data fields for a yak record.
- * [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/yak)
+ * [👤semio📚gh🛅semiograsshopper🗃️yak💻publish🔖publish🪨yak](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/publish.ts/s/Publish/d/i/yak)
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 execSync(`"${yak}" push ${buildName}`, { cwd, stdio: "inherit" });

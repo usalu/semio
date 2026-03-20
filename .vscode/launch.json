@@ -39,7 +39,7 @@
       }
     },
     {
-      "name": "🛠️dev👤semio-elements📚ui📖storybook",
+      "name": "🛠️dev👤elements📚ui📖storybook",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
@@ -156,19 +156,31 @@
       }
     },
     {
-      "name": "🛠️dev🧰semiorepo⌨️vscode",
+      "name": "🛠️dev👤semio⌨️vscode",
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/semio-repo/vscode"
+        "--extensionDevelopmentPath=${workspaceFolder}/semio/vscode"
       ],
       "outFiles": [
-        "${workspaceFolder}/semio-repo/vscode/out/**/*.js"
+        "${workspaceFolder}/semio/vscode/out/**/*.js"
       ],
-      "preLaunchTask": "semio-repo/vscode dev"
+      "preLaunchTask": "semio/vscode dev"
     },
     {
-      "name": "🛠️dev🧰semiorepo🤖mcp",
+      "name": "🛠️dev🧰repo⌨️vscode",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/repo/vscode"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/repo/vscode/out/**/*.js"
+      ],
+      "preLaunchTask": "repo/vscode dev"
+    },
+    {
+      "name": "🛠️dev🧰repo🤖mcp",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
@@ -178,14 +190,14 @@
       ],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
-        "MCP_PROXY_AUTH_TOKEN": "semio-repo-mcp-debug-token"
+        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
       },
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=./semio-repo/cli/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=./repo/cli/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
@@ -208,21 +220,21 @@
       "runtimeExecutable": "uv",
       "runtimeArgs": [
         "--directory",
-        "semio-coda/py",
+        "coda/py",
         "run",
         "coda.py",
         "--mcp-stdio"
       ],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
-        "MCP_PROXY_AUTH_TOKEN": "semio-repo-mcp-debug-token"
+        "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
       },
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=./semio-repo/cli/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=./repo/cli/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
@@ -286,37 +298,37 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build🧰semiorepo⌨️cli",
+      "name": "📦build🧰repo⌨️cli",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",
-        "build:semiorepo-cli"
+        "build:repo-cli"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build🧰semiorepo⌨️server",
+      "name": "📦build🧰repo⌨️server",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",
-        "build:semiorepo-server"
+        "build:repo-server"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
     {
-      "name": "📦build🧰semiorepo🖱️vscode",
+      "name": "📦build🧰repo🖱️vscode",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",
-        "build:semiorepo-vscode"
+        "build:repo-vscode"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"

@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚js🥼semiotest](semiorepo://p/u/semio/b/l/js/f/semio.test.ts)
+// [👤semio📚js🥼semiotest](repo://p/u/semio/b/l/js/f/semio.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -26,9 +26,9 @@ import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { getOntologyNodeDescriptor, getValidationNodeDescriptor, type OntologyTreeNode, type ValidationTreeNode } from "../../semio-coda/desktop/renderer";
-import * as ElementsBundle from "../../semio-elements/ui";
-import { buildControlTree, ControlDef, Action as UiAction } from "../../semio-elements/ui";
+import { getOntologyNodeDescriptor, getValidationNodeDescriptor, type OntologyTreeNode, type ValidationTreeNode } from "../../coda/desktop/renderer";
+import * as ElementsBundle from "../../.elements/ui";
+import { buildControlTree, ControlDef, Action as UiAction } from "../../.elements/ui";
 import {
   applyDesignDiff,
   applyKitDiff,
@@ -49,8 +49,11 @@ import {
   getKitDiff,
   hasErrors,
   importKit,
+  InMemoryKitStore,
   inverseKitDiff,
   Kit,
+  KitDiff,
+  KitSchema,
   Model,
   Plane,
   replaceClusterWithDesign,
@@ -60,6 +63,7 @@ import {
   validateKit,
   ValidationResult,
 } from "./semio";
+import { createJsonFileKitStore, JsonFileKitStore, type KitJsonFileAdapter } from "../studio/studio";
 
 const TOLERANCE = 0.001;
 
@@ -457,7 +461,7 @@ describe("Sketchpad ControlTree", () => {
 });
 
 describe("Elements Bundle", () => {
-  it("sources shared element primitives directly from semio-elements ui", () => {
+  it("sources shared element primitives directly from elements ui", () => {
     expect(UiAction).toBe(ElementsBundle.Action);
     expect(buildControlTree).toBe(ElementsBundle.buildControlTree);
     expect(ElementsBundle.LevelProvider).toBeDefined();
@@ -693,3 +697,414 @@ describe("Model/KPI", () => {
     }
   });
 });
+
+// #region 🔖InMemoryKitStore Tests
+// [👤semio📚js🥼semiotest🔖inmemorykitstoretests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/InMemoryKitStoreTests)
+// Contract tests for InMemoryKitStore MUST verify the full KitStore interface.
+
+describe("InMemoryKitStore", () => {
+  const makeKit = (overrides?: Partial<Kit>): Kit => ({
+    guid: "test-kit-guid",
+    name: "Test Kit",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  });
+
+  it("getSnapshot returns the initial kit and ready status", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+    const snapshot = store.getSnapshot();
+    expect(snapshot.kit.guid).toBe("test-kit-guid");
+    expect(snapshot.kit.name).toBe("Test Kit");
+    expect(snapshot.sync.status).toBe("ready");
+    expect(snapshot.sync.dirty).toBe(false);
+    expect(snapshot.sync.readonly).toBe(false);
+  });
+
+  it("apply merges a diff and notifies subscribers", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+    let notified = 0;
+    store.subscribe(() => notified++);
+
+    const diff: KitDiff = { name: "Updated Kit" };
+    store.apply(diff);
+
+    expect(store.getSnapshot().kit.name).toBe("Updated Kit");
+    expect(store.getSnapshot().sync.dirty).toBe(true);
+    expect(notified).toBe(1);
+  });
+
+  it("replace swaps the entire kit and notifies subscribers", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+    let notified = 0;
+    store.subscribe(() => notified++);
+
+    const newKit = makeKit({ guid: "new-guid", name: "Replaced Kit" });
+    store.replace(newKit);
+
+    expect(store.getSnapshot().kit.guid).toBe("new-guid");
+    expect(store.getSnapshot().kit.name).toBe("Replaced Kit");
+    expect(store.getSnapshot().sync.dirty).toBe(true);
+    expect(notified).toBe(1);
+  });
+
+  it("subscribe returns an unsubscribe function", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+    let notified = 0;
+    const unsub = store.subscribe(() => notified++);
+
+    store.apply({ name: "First" });
+    expect(notified).toBe(1);
+
+    unsub();
+    store.apply({ name: "Second" });
+    expect(notified).toBe(1);
+  });
+
+  it("transact groups mutations into one undo entry", () => {
+    const kit = makeKit({ types: [] });
+    const store = new InMemoryKitStore(kit);
+
+    store.transact("add type and rename", () => {
+      store.apply({ name: "Renamed" });
+      store.apply({
+        types: {
+          added: [{ guid: "t1", name: "Wall", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
+        },
+      });
+    });
+
+    const snap = store.getSnapshot();
+    expect(snap.kit.name).toBe("Renamed");
+    expect(snap.kit.types).toHaveLength(1);
+    expect(store.canUndo()).toBe(true);
+
+    store.undo();
+    const undone = store.getSnapshot();
+    expect(undone.kit.name).toBe("Test Kit");
+    expect(undone.kit.types ?? []).toHaveLength(0);
+  });
+
+  it("undo reverses the last mutation", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+
+    store.apply({ name: "Changed" });
+    expect(store.getSnapshot().kit.name).toBe("Changed");
+    expect(store.canUndo()).toBe(true);
+    expect(store.canRedo()).toBe(false);
+
+    store.undo();
+    expect(store.getSnapshot().kit.name).toBe("Test Kit");
+    expect(store.canUndo()).toBe(false);
+    expect(store.canRedo()).toBe(true);
+  });
+
+  it("redo re-applies the last undone mutation", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+
+    store.apply({ name: "Changed" });
+    store.undo();
+    expect(store.getSnapshot().kit.name).toBe("Test Kit");
+
+    store.redo();
+    expect(store.getSnapshot().kit.name).toBe("Changed");
+    expect(store.canUndo()).toBe(true);
+    expect(store.canRedo()).toBe(false);
+  });
+
+  it("apply after undo clears the redo stack", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+
+    store.apply({ name: "First" });
+    store.apply({ name: "Second" });
+    store.undo();
+    expect(store.canRedo()).toBe(true);
+
+    store.apply({ name: "Third" });
+    expect(store.canRedo()).toBe(false);
+    expect(store.getSnapshot().kit.name).toBe("Third");
+  });
+
+  it("save clears dirty flag", async () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+
+    store.apply({ name: "Changed" });
+    expect(store.getSnapshot().sync.dirty).toBe(true);
+
+    await store.save();
+    expect(store.getSnapshot().sync.dirty).toBe(false);
+  });
+
+  it("dispose clears all listeners and stacks", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+    let notified = 0;
+    store.subscribe(() => notified++);
+
+    store.apply({ name: "Before dispose" });
+    expect(notified).toBe(1);
+
+    store.dispose();
+    store.apply({ name: "After dispose" });
+    expect(notified).toBe(1);
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it("multiple subscribers are all notified", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+    let count1 = 0;
+    let count2 = 0;
+    store.subscribe(() => count1++);
+    store.subscribe(() => count2++);
+
+    store.apply({ name: "Changed" });
+    expect(count1).toBe(1);
+    expect(count2).toBe(1);
+  });
+
+  it("undo and redo with no stack are no-ops", () => {
+    const kit = makeKit();
+    const store = new InMemoryKitStore(kit);
+
+    store.undo();
+    expect(store.getSnapshot().kit.name).toBe("Test Kit");
+
+    store.redo();
+    expect(store.getSnapshot().kit.name).toBe("Test Kit");
+  });
+});
+
+// #endregion 🔖InMemoryKitStore Tests
+
+// #region 🔖JsonFileKitStore Tests
+// [👤semio📚js🥼semiotest🔖jsonfilekitstoretests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/JsonFileKitStoreTests)
+// Contract tests for JsonFileKitStore MUST verify the full UndoableKitStore interface
+// including file I/O, save, reload, undo/redo, and external update handling.
+
+describe("JsonFileKitStore", () => {
+  const makeKit = (overrides?: Partial<Kit>): Kit => ({
+    guid: "file-kit-guid",
+    name: "File Kit",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  });
+
+  const makeAdapter = (initialKit?: Kit): KitJsonFileAdapter & { stored: string | null } => {
+    const adapter = {
+      stored: initialKit ? JSON.stringify(initialKit) : null,
+      async read(): Promise<string | null> {
+        return adapter.stored;
+      },
+      async write(json: string): Promise<void> {
+        adapter.stored = json;
+      },
+    };
+    return adapter;
+  };
+
+  it("loads kit from adapter and reports ready status", async () => {
+    const kit = makeKit();
+    const adapter = makeAdapter(kit);
+    const store = await createJsonFileKitStore(adapter);
+    const snapshot = store.getSnapshot();
+    expect(snapshot.kit.guid).toBe("file-kit-guid");
+    expect(snapshot.kit.name).toBe("File Kit");
+    expect(snapshot.sync.status).toBe("ready");
+    expect(snapshot.sync.dirty).toBe(false);
+    expect(snapshot.sync.lastSyncedAt).toBeDefined();
+  });
+
+  it("creates empty kit when adapter returns null", async () => {
+    const adapter = makeAdapter();
+    const store = await createJsonFileKitStore(adapter);
+    const snapshot = store.getSnapshot();
+    expect(snapshot.kit.guid).toBeDefined();
+    expect(snapshot.kit.name).toBe("New Kit");
+    expect(snapshot.sync.status).toBe("ready");
+  });
+
+  it("reports error status for invalid JSON", async () => {
+    const adapter = {
+      stored: "not valid json {{{",
+      async read() {
+        return adapter.stored;
+      },
+      async write(json: string) {
+        adapter.stored = json;
+      },
+    };
+    const store = await createJsonFileKitStore(adapter);
+    expect(store.getSnapshot().sync.status).toBe("error");
+    expect(store.getSnapshot().sync.error).toBeDefined();
+  });
+
+  it("apply merges a diff and notifies subscribers", async () => {
+    const kit = makeKit();
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+    let notified = 0;
+    store.subscribe(() => notified++);
+
+    store.apply({ name: "Updated" });
+    expect(store.getSnapshot().kit.name).toBe("Updated");
+    expect(store.getSnapshot().sync.dirty).toBe(true);
+    expect(notified).toBe(1);
+  });
+
+  it("replace swaps the entire kit", async () => {
+    const kit = makeKit();
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+    let notified = 0;
+    store.subscribe(() => notified++);
+
+    const newKit = makeKit({ guid: "new-guid", name: "Replaced" });
+    store.replace(newKit);
+    expect(store.getSnapshot().kit.guid).toBe("new-guid");
+    expect(store.getSnapshot().kit.name).toBe("Replaced");
+    expect(notified).toBe(1);
+  });
+
+  it("save writes kit JSON to adapter and clears dirty", async () => {
+    const kit = makeKit();
+    const adapter = makeAdapter(kit);
+    const store = await createJsonFileKitStore(adapter);
+
+    store.apply({ name: "Saved Kit" });
+    expect(store.getSnapshot().sync.dirty).toBe(true);
+
+    await store.save();
+    expect(store.getSnapshot().sync.dirty).toBe(false);
+    expect(store.getSnapshot().sync.status).toBe("ready");
+
+    const savedKit = JSON.parse(adapter.stored!);
+    expect(savedKit.name).toBe("Saved Kit");
+  });
+
+  it("reload re-reads kit from adapter and resets state", async () => {
+    const kit = makeKit();
+    const adapter = makeAdapter(kit);
+    const store = await createJsonFileKitStore(adapter);
+
+    store.apply({ name: "Local Change" });
+    expect(store.getSnapshot().kit.name).toBe("Local Change");
+
+    // Simulate external file change
+    adapter.stored = JSON.stringify(makeKit({ name: "External Change" }));
+
+    await store.reload();
+    expect(store.getSnapshot().kit.name).toBe("External Change");
+    expect(store.getSnapshot().sync.dirty).toBe(false);
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it("undo reverses the last mutation", async () => {
+    const kit = makeKit();
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+
+    store.apply({ name: "Changed" });
+    expect(store.canUndo()).toBe(true);
+
+    store.undo();
+    expect(store.getSnapshot().kit.name).toBe("File Kit");
+    expect(store.canRedo()).toBe(true);
+  });
+
+  it("redo re-applies the last undone mutation", async () => {
+    const kit = makeKit();
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+
+    store.apply({ name: "Changed" });
+    store.undo();
+    store.redo();
+    expect(store.getSnapshot().kit.name).toBe("Changed");
+    expect(store.canUndo()).toBe(true);
+    expect(store.canRedo()).toBe(false);
+  });
+
+  it("transact groups mutations into one undo entry", async () => {
+    const kit = makeKit({ types: [] });
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+
+    store.transact("batch", () => {
+      store.apply({ name: "Renamed" });
+      store.apply({
+        types: {
+          added: [{ guid: "t1", name: "Wall", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+        },
+      });
+    });
+
+    expect(store.getSnapshot().kit.name).toBe("Renamed");
+    expect(store.getSnapshot().kit.types).toHaveLength(1);
+
+    store.undo();
+    expect(store.getSnapshot().kit.name).toBe("File Kit");
+    expect(store.getSnapshot().kit.types ?? []).toHaveLength(0);
+  });
+
+  it("subscribe returns unsubscribe function", async () => {
+    const kit = makeKit();
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+    let notified = 0;
+    const unsub = store.subscribe(() => notified++);
+
+    store.apply({ name: "First" });
+    expect(notified).toBe(1);
+
+    unsub();
+    store.apply({ name: "Second" });
+    expect(notified).toBe(1);
+  });
+
+  it("dispose clears listeners and stacks", async () => {
+    const kit = makeKit();
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+    let notified = 0;
+    store.subscribe(() => notified++);
+
+    store.apply({ name: "Before" });
+    expect(notified).toBe(1);
+
+    store.dispose();
+    store.apply({ name: "After" });
+    expect(notified).toBe(1);
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it("applyExternalUpdate resets state without undo entry", async () => {
+    const kit = makeKit();
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+
+    store.apply({ name: "Local" });
+    expect(store.canUndo()).toBe(true);
+
+    store.applyExternalUpdate(makeKit({ name: "External" }));
+    expect(store.getSnapshot().kit.name).toBe("External");
+    expect(store.getSnapshot().sync.dirty).toBe(false);
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it("save transitions through saving status", async () => {
+    const kit = makeKit();
+    const statuses: string[] = [];
+    const store = await createJsonFileKitStore(makeAdapter(kit));
+    store.subscribe(() => statuses.push(store.getSnapshot().sync.status));
+
+    store.apply({ name: "Changed" });
+    await store.save();
+
+    expect(statuses).toContain("saving");
+    expect(store.getSnapshot().sync.status).toBe("ready");
+  });
+});
+
+// #endregion 🔖JsonFileKitStore Tests

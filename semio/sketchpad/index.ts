@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🖱️sketchpad💻index](semiorepo://p/u/semio/b/u/sketchpad/f/index.ts)
+// [👤semio🖱️sketchpad💻index](repo://p/u/semio/b/u/sketchpad/f/index.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,12 +19,17 @@
 // #endregion 🔖Header
 
 // #region 🔖Exports
-// [👤semio🖱️sketchpad💻index🔖exports](semiorepo://p/u/semio/b/u/sketchpad/f/index.ts/s/Exports)
+// [👤semio🖱️sketchpad💻index🔖exports](repo://p/u/semio/b/u/sketchpad/f/index.ts/s/Exports)
 // Public API surface for sketchpad runtime, shared helpers, and app configs.
 // Exports MUST keep the sketchpad UI surface out of @semio/js.
 
 import "./i18n";
 
+export type { BlobAssetStore, KitStore, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js/semio";
+export { JsonFileKitStore, createJsonFileKitStore } from "@semio/studio";
+export type { KitJsonFileAdapter } from "@semio/studio";
+export { Canvas, HorizontalWindows, VerticalWindows } from "../../.elements/ui";
+export { SyncBinaryPersistenceProvider, createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory } from "./sketchpad/shared";
 export type {
   AppConfig,
   CompositeFileProviderConfig,
@@ -36,14 +41,10 @@ export type {
   PersistenceFactory,
   PersistenceProvider,
   RemoteFileProviderConfig,
-  RemoteProviders,
-  SqliteAdapter,
-  RxProviderFactory,
+  RemoteProviders, SqliteAdapter, SyncProviderFactory
 } from "./sketchpad/shared";
-export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, YDocBinaryPersistenceProvider } from "./sketchpad/shared";
 export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";
 export type { SketchpadStore } from "./sketchpad/Sketchpad";
-export { Canvas, HorizontalWindows, VerticalWindows } from "../../semio-elements/ui";
 
 export { config as designConfig } from "./sketchpad/Design";
 export { config as docsConfig } from "./sketchpad/Docs";

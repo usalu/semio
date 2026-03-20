@@ -1,0 +1,10 @@
+{
+  "title": "Fix Breach System",
+  "status": "closed",
+  "description": "Fix the breach system so that ./repo/cli/cli fix properly fixes all autofixable breachs. Extend existing tests to cover all breach features. Refactor as needed.",
+  "summary": "Implemented Fix() method and applyAutofixes() function with full autofix logic for all 6 autofixable statutes (empty section, missing end name, name mismatch, inline/block/JSDoc comments). Added 16 comprehensive tests. All 35 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/422"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repopolicymechanism"
+}

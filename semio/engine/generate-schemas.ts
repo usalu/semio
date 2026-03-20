@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-// [👤semio📚engine📜generateschemas](semiorepo://p/u/semio/b/l/engine/f/generate-schemas.ts)
+// [👤semio📚engine📜generateschemas](repo://p/u/semio/b/l/engine/f/generate-schemas.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,7 +20,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Schema Generation
-// [👤semio📚engine💻generateschemas🔖schemageneration](semiorepo://p/u/semio/b/l/engine/f/generate-schemas.ts/s/Schema%20Generation)
+// [👤semio📚engine💻generateschemas🔖schemageneration](repo://p/u/semio/b/l/engine/f/generate-schemas.ts/s/Schema%20Generation)
 // Schema generation script. MUST invoke the Python engine schema generator.
 
 import { execSync } from "child_process";

@@ -66,7 +66,7 @@ import {
 import React, { FC, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import i18n, { useLabel } from "../i18n";
 import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Port, Quality, File as SemioFile, Tag, Type, TypeDiff } from "@semio/js/semio";
-import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
+import type { CollaborativeKitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
   AppWindowConfig,
   Canvas,
@@ -118,7 +118,7 @@ import {
   useTypeScope,
   Window,
 } from "./Sketchpad";
-import type { ConnectionLineComponentProps, DragEndEvent, DragOverEvent, DragStartEvent, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "../../../semio-elements/ui";
+import type { ConnectionLineComponentProps, DragEndEvent, DragOverEvent, DragStartEvent, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "../../../.elements/ui";
 import {
   Action,
   applyNodeChanges,
@@ -173,8 +173,8 @@ import {
   useSearchParams,
   useTranslation,
   useXStateSelector as useSelector,
-} from "../../../semio-elements/ui";
-import type { RMap, RArray } from "../../studio/studio";
+} from "../../../.elements/ui";
+import type { SyncMap, SyncArray } from "../../studio/studio";
 import {
   addToSelection,
   clearSelectionDimension,
@@ -195,7 +195,7 @@ import {
   type KitDiagramShapeRenderPayload,
   type SelectionValue,
 } from "./kitSelectionHelper";
-import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, RxAttributes, RxLeafMapNumber, RxLeafMapString, RxStringArray } from "./shared";
+import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, SyncAttributes, SyncLeafMapNumber, SyncLeafMapString, SyncStringArray } from "./shared";
 import {
   AppConfig,
   applySelectionComposition,
@@ -272,23 +272,23 @@ const artifactKinds = ["designs", "types", "qualities", "ports", "tags", "concep
 
 // #region Internal State Management
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management)
-// Internal state management MUST define all Kit app types, interfaces, store, and Y.js synchronization.
+// Internal state management MUST define all Kit app types, interfaces, store, and sync state management.
 
 /**
- * RxKitAppVal holds the data fields for a RxKitAppVal record.
- * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/RxKitAppVal)
+ * SyncKitAppVal holds the data fields for a SyncKitAppVal record.
+ * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️synckitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/SyncKitAppVal)
  **/
-type RxKitAppVal = string | number | boolean | RxLeafMapString | RxLeafMapNumber | RxAttributes | RxStringArray;
+type SyncKitAppVal = string | number | boolean | SyncLeafMapString | SyncLeafMapNumber | SyncAttributes | SyncStringArray;
 /**
- * RxKitApp holds the data fields for a RxKitApp record.
- * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/RxKitApp)
+ * SyncKitApp holds the data fields for a SyncKitApp record.
+ * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️synckitapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/SyncKitApp)
  **/
-type RxKitApp = RMap<RxKitAppVal>;
+type SyncKitApp = SyncMap<SyncKitAppVal>;
 /**
- * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️ykitapps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/RxKitApps)
- * RxKitApps holds the data fields for a RxKitApps record.
+ * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement✂️synckitapps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/SyncKitApps)
+ * SyncKitApps holds the data fields for a SyncKitApps record.
  **/
-type RxKitApps = RMap<RxKitApp>;
+type SyncKitApps = SyncMap<SyncKitApp>;
 
 /**
  * Tracks the current entity selection state across all artifact kinds for the Kit app.
@@ -612,18 +612,18 @@ export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => 
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement🛠️kitstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/KitStore)
  * KitStore holds the data fields for a KitStore record.
  **/
-class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
-  constructor(parent: SketchpadOrchestrator, rMap: RxKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
-    super(parent, rMap, transact);
+class KitAppStoreImpl extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
+  constructor(parent: SketchpadOrchestrator, syncMap: SyncKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
+    super(parent, syncMap, transact);
 
     const kit = this.parent.kit(id.kit);
-    rMap.set("kit", kit.guid);
+    syncMap.set("kit", kit.guid);
 
-    rMap.set("fullscreenWindow", state?.fullscreenWindow || KitAppFullscreenWindow.None);
-    rMap.set("activeTool", state?.activeTool ?? ToolKind.SELECTION_NORMAL);
+    syncMap.set("fullscreenWindow", state?.fullscreenWindow || KitAppFullscreenWindow.None);
+    syncMap.set("activeTool", state?.activeTool ?? ToolKind.SELECTION_NORMAL);
 
     if (state?.hover) {
-      const hoverMap = this.rDoc.createMap<any>();
+      const hoverMap = this.syncDoc.createMap<any>();
       if (state.hover.type) hoverMap.set("type", state.hover.type);
       if (state.hover.design) hoverMap.set("design", state.hover.design);
       if (state.hover.quality) hoverMap.set("quality", state.hover.quality);
@@ -633,39 +633,39 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       if (state.hover.file) hoverMap.set("file", state.hover.file);
       if (state.hover.folder) hoverMap.set("folder", state.hover.folder);
       if (state.hover.author) hoverMap.set("author", state.hover.author);
-      rMap.set("hover", hoverMap);
+      syncMap.set("hover", hoverMap);
     }
 
     if (state?.diagramForce) {
-      const forceMap = this.rDoc.createMap<any>();
+      const forceMap = this.syncDoc.createMap<any>();
       forceMap.set("chargeStrength", state.diagramForce.chargeStrength ?? -200);
       forceMap.set("linkDistance", state.diagramForce.linkDistance ?? 100);
       forceMap.set("collideRadius", state.diagramForce.collideRadius ?? 0);
-      rMap.set("diagramForce", forceMap);
+      syncMap.set("diagramForce", forceMap);
     }
 
-    const selection = this.rDoc.createMap<any>();
-    const selectedTypes = this.rDoc.createArray<string>();
+    const selection = this.syncDoc.createMap<any>();
+    const selectedTypes = this.syncDoc.createArray<string>();
     if (state?.selection?.types?.length) {
       selectedTypes.push(state.selection.types);
     }
-    const selectedDesigns = this.rDoc.createArray<string>();
+    const selectedDesigns = this.syncDoc.createArray<string>();
     if (state?.selection?.designs?.length) {
       selectedDesigns.push(state.selection.designs);
     }
-    const selectedQualities = this.rDoc.createArray<string>();
+    const selectedQualities = this.syncDoc.createArray<string>();
     if (state?.selection?.qualities?.length) {
       selectedQualities.push(state.selection.qualities);
     }
-    const selectedFiles = this.rDoc.createArray<string>();
+    const selectedFiles = this.syncDoc.createArray<string>();
     if (state?.selection?.files?.length) {
       selectedFiles.push(state.selection.files);
     }
-    const selectedFolders = this.rDoc.createArray<string>();
+    const selectedFolders = this.syncDoc.createArray<string>();
     if (state?.selection?.folders?.length) {
       selectedFolders.push(state.selection.folders);
     }
-    const selectedAuthors = this.rDoc.createArray<string>();
+    const selectedAuthors = this.syncDoc.createArray<string>();
     if (state?.selection?.authors?.length) {
       selectedAuthors.push(state.selection.authors);
     }
@@ -675,22 +675,22 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     selection.set("files", selectedFiles);
     selection.set("folders", selectedFolders);
     selection.set("authors", selectedAuthors);
-    rMap.set("selection", selection);
+    syncMap.set("selection", selection);
 
-    rMap.set("isTransactionActive", false);
-    rMap.set("presence", this.rDoc.createMap<any>());
-    rMap.set("others", this.rDoc.createArray<any>());
-    rMap.set("diff", this.rDoc.createMap<any>());
-    rMap.set("currentTransactionStack", this.rDoc.createArray<any>());
-    rMap.set("pastTransactionsStack", this.rDoc.createArray<any>());
+    syncMap.set("isTransactionActive", false);
+    syncMap.set("presence", this.syncDoc.createMap<any>());
+    syncMap.set("others", this.syncDoc.createArray<any>());
+    syncMap.set("diff", this.syncDoc.createMap<any>());
+    syncMap.set("currentTransactionStack", this.syncDoc.createArray<any>());
+    syncMap.set("pastTransactionsStack", this.syncDoc.createArray<any>());
 
-    rMap.set("filterSearch", state?.filterSearch || "");
+    syncMap.set("filterSearch", state?.filterSearch || "");
 
-    const expandedRows = this.rDoc.createArray<string>();
+    const expandedRows = this.syncDoc.createArray<string>();
     if (state?.expandedRows) {
       expandedRows.push(state.expandedRows);
     }
-    rMap.set("expandedRows", expandedRows);
+    syncMap.set("expandedRows", expandedRows);
 
     Object.entries(commands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -698,15 +698,15 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get fullscreenWindow(): KitAppFullscreenWindow {
-    return this.rMap.get("fullscreenWindow") as KitAppFullscreenWindow;
+    return this.syncMap.get("fullscreenWindow") as KitAppFullscreenWindow;
   }
 
   get activeTool(): ToolKind {
-    return (this.rMap.get("activeTool") as ToolKind) ?? ToolKind.SELECTION_NORMAL;
+    return (this.syncMap.get("activeTool") as ToolKind) ?? ToolKind.SELECTION_NORMAL;
   }
 
   get hover(): KitAppHover | undefined {
-    const hoverMap = this.rMap.get("hover") as RMap<any>;
+    const hoverMap = this.syncMap.get("hover") as SyncMap<any>;
     if (!hoverMap) return undefined;
     return {
       type: hoverMap.get("type"),
@@ -722,7 +722,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get diagramForce(): DiagramForceSettings {
-    const forceMap = this.rMap.get("diagramForce") as RMap<any>;
+    const forceMap = this.syncMap.get("diagramForce") as SyncMap<any>;
     if (!forceMap) {
       return { chargeStrength: -200, linkDistance: 100, collideRadius: 0, centerStrength: 0.1 };
     }
@@ -735,8 +735,8 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get panelVisibility(): PanelVisibility {
-    const rPanelVisibility = this.rMap.get("panelVisibility") as RMap<boolean>;
-    if (!rPanelVisibility) {
+    const syncPanelVisibility = this.syncMap.get("panelVisibility") as SyncMap<boolean>;
+    if (!syncPanelVisibility) {
       return {
         toolbar: true,
         rightSidePanel: true,
@@ -744,47 +744,47 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       };
     }
     return {
-      toolbar: rPanelVisibility.get("toolbar") ?? true,
-      leftSidePanel: rPanelVisibility.get("leftSidePanel") ?? false,
-      rightSidePanel: rPanelVisibility.get("rightSidePanel") ?? true,
-      details: rPanelVisibility.get("details") ?? true,
-      chat: rPanelVisibility.get("chat") ?? false,
-      settings: rPanelVisibility.get("settings") ?? false,
+      toolbar: syncPanelVisibility.get("toolbar") ?? true,
+      leftSidePanel: syncPanelVisibility.get("leftSidePanel") ?? false,
+      rightSidePanel: syncPanelVisibility.get("rightSidePanel") ?? true,
+      details: syncPanelVisibility.get("details") ?? true,
+      chat: syncPanelVisibility.get("chat") ?? false,
+      settings: syncPanelVisibility.get("settings") ?? false,
     };
   }
 
   get selection(): KitAppSelection {
-    const selection = this.rMap.get("selection") as RMap<any>;
+    const selection = this.syncMap.get("selection") as SyncMap<any>;
     if (!selection) return {};
 
     const result: KitAppSelection = {};
 
-    const types = selection.get("types") as RArray<string>;
+    const types = selection.get("types") as SyncArray<string>;
     if (types && types.length > 0) {
       result.types = types.toArray();
     }
 
-    const designs = selection.get("designs") as RArray<string>;
+    const designs = selection.get("designs") as SyncArray<string>;
     if (designs && designs.length > 0) {
       result.designs = designs.toArray();
     }
 
-    const qualities = selection.get("qualities") as RArray<string>;
+    const qualities = selection.get("qualities") as SyncArray<string>;
     if (qualities && qualities.length > 0) {
       result.qualities = qualities.toArray();
     }
 
-    const files = selection.get("files") as RArray<string>;
+    const files = selection.get("files") as SyncArray<string>;
     if (files && files.length > 0) {
       result.files = files.toArray();
     }
 
-    const folders = selection.get("folders") as RArray<string>;
+    const folders = selection.get("folders") as SyncArray<string>;
     if (folders && folders.length > 0) {
       result.folders = folders.toArray();
     }
 
-    const authors = selection.get("authors") as RArray<string>;
+    const authors = selection.get("authors") as SyncArray<string>;
     if (authors && authors.length > 0) {
       result.authors = authors.toArray();
     }
@@ -795,8 +795,8 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   get presence(): KitAppPresence {
     return {
       cursor: {
-        u: (this.rMap.get("presenceCursorX") as number) || 0,
-        v: (this.rMap.get("presenceCursorY") as number) || 0,
+        u: (this.syncMap.get("presenceCursorX") as number) || 0,
+        v: (this.syncMap.get("presenceCursorY") as number) || 0,
       },
     };
   }
@@ -806,37 +806,37 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   get filterSearch(): string {
-    return (this.rMap.get("filterSearch") as string) || "";
+    return (this.syncMap.get("filterSearch") as string) || "";
   }
 
   get expandedRows(): string[] {
-    const yExpandedRows = this.rMap.get("expandedRows") as RArray<string>;
-    return yExpandedRows ? yExpandedRows.toArray() : [];
+    const syncExpandedRows = this.syncMap.get("expandedRows") as SyncArray<string>;
+    return syncExpandedRows ? syncExpandedRows.toArray() : [];
   }
 
   get sortColumn(): KitAppSortColumn | undefined {
-    return this.rMap.get("sortColumn") as KitAppSortColumn | undefined;
+    return this.syncMap.get("sortColumn") as KitAppSortColumn | undefined;
   }
 
   get sortDirection(): KitAppSortDirection | undefined {
-    return this.rMap.get("sortDirection") as KitAppSortDirection | undefined;
+    return this.syncMap.get("sortDirection") as KitAppSortDirection | undefined;
   }
 
   get windowLayout(): any {
-    return parseWindowLayout(this.rMap.get("windowLayout"));
+    return parseWindowLayout(this.syncMap.get("windowLayout"));
   }
 
   set windowLayout(layout: any) {
     const value = stringifyWindowLayout(layout);
     if (value) {
-      this.rMap.set("windowLayout", value);
+      this.syncMap.set("windowLayout", value);
     } else {
-      this.rMap.delete("windowLayout");
+      this.syncMap.delete("windowLayout");
     }
   }
 
   kit(): KitDataSource {
-    return this.parent.kit(this.rMap.get("kit") as string);
+    return this.parent.kit(this.syncMap.get("kit") as string);
   }
 
   protected getSelection(): KitAppSelection {
@@ -879,16 +879,16 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   change = (diff: KitAppDiff) => {
     this.transact(() => {
       if (diff.fullscreenWindow !== undefined) {
-        this.rMap.set("fullscreenWindow", diff.fullscreenWindow);
+        this.syncMap.set("fullscreenWindow", diff.fullscreenWindow);
       }
       if (diff.activeTool !== undefined) {
-        this.rMap.set("activeTool", diff.activeTool);
+        this.syncMap.set("activeTool", diff.activeTool);
       }
       if (diff.hover !== undefined) {
         if (diff.hover === null) {
-          this.rMap.delete("hover");
+          this.syncMap.delete("hover");
         } else {
-          const hoverMap = (this.rMap.get("hover") as RMap<any>) || this.rDoc.createMap<any>();
+          const hoverMap = (this.syncMap.get("hover") as SyncMap<any>) || this.syncDoc.createMap<any>();
           if (diff.hover.type !== undefined) hoverMap.set("type", diff.hover.type);
           if (diff.hover.design !== undefined) hoverMap.set("design", diff.hover.design);
           if (diff.hover.quality !== undefined) hoverMap.set("quality", diff.hover.quality);
@@ -898,25 +898,25 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
           if (diff.hover.file !== undefined) hoverMap.set("file", diff.hover.file);
           if (diff.hover.folder !== undefined) hoverMap.set("folder", diff.hover.folder);
           if (diff.hover.author !== undefined) hoverMap.set("author", diff.hover.author);
-          this.rMap.set("hover", hoverMap);
+          this.syncMap.set("hover", hoverMap);
         }
       }
       if (diff.diagramForce !== undefined) {
-        const forceMap = (this.rMap.get("diagramForce") as RMap<any>) || this.rDoc.createMap<any>();
+        const forceMap = (this.syncMap.get("diagramForce") as SyncMap<any>) || this.syncDoc.createMap<any>();
         if (diff.diagramForce.chargeStrength !== undefined) forceMap.set("chargeStrength", diff.diagramForce.chargeStrength);
         if (diff.diagramForce.linkDistance !== undefined) forceMap.set("linkDistance", diff.diagramForce.linkDistance);
         if (diff.diagramForce.collideRadius !== undefined) forceMap.set("collideRadius", diff.diagramForce.collideRadius);
-        this.rMap.set("diagramForce", forceMap);
+        this.syncMap.set("diagramForce", forceMap);
       }
       if (diff.panelVisibility !== undefined) {
-        let rPanelVisibility = this.rMap.get("panelVisibility") as RMap<boolean>;
-        if (!rPanelVisibility) {
-          rPanelVisibility = this.rDoc.createMap<boolean>();
-          this.rMap.set("panelVisibility", rPanelVisibility);
+        let syncPanelVisibility = this.syncMap.get("panelVisibility") as SyncMap<boolean>;
+        if (!syncPanelVisibility) {
+          syncPanelVisibility = this.syncDoc.createMap<boolean>();
+          this.syncMap.set("panelVisibility", syncPanelVisibility);
         }
         Object.entries(diff.panelVisibility).forEach(([key, value]) => {
           if (value !== undefined) {
-            rPanelVisibility.set(key, value);
+            syncPanelVisibility.set(key, value);
           }
         });
       }
@@ -924,16 +924,16 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
         this.applySelectionDiff(diff.selection);
       }
       if (diff.filterSearch !== undefined) {
-        this.rMap.set("filterSearch", diff.filterSearch);
+        this.syncMap.set("filterSearch", diff.filterSearch);
       }
       if (diff.expandedRows !== undefined) {
-        let yExpandedRows = this.rMap.get("expandedRows") as RArray<string>;
-        if (!yExpandedRows) {
-          yExpandedRows = this.rDoc.createArray<string>();
-          this.rMap.set("expandedRows", yExpandedRows);
+        let syncExpandedRows = this.syncMap.get("expandedRows") as SyncArray<string>;
+        if (!syncExpandedRows) {
+          syncExpandedRows = this.syncDoc.createArray<string>();
+          this.syncMap.set("expandedRows", syncExpandedRows);
         }
 
-        const currentRows = yExpandedRows.toArray();
+        const currentRows = syncExpandedRows.toArray();
         const newRows = diff.expandedRows;
         const currentSet = new Set(currentRows);
         const newSet = new Set(newRows);
@@ -946,19 +946,19 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
         });
 
         for (let i = toRemove.length - 1; i >= 0; i--) {
-          yExpandedRows.delete(toRemove[i], 1);
+          syncExpandedRows.delete(toRemove[i], 1);
         }
 
         const toAdd = newRows.filter((row) => !currentSet.has(row));
         if (toAdd.length > 0) {
-          yExpandedRows.push(toAdd);
+          syncExpandedRows.push(toAdd);
         }
       }
       if (diff.sortColumn !== undefined) {
-        this.rMap.set("sortColumn", diff.sortColumn);
+        this.syncMap.set("sortColumn", diff.sortColumn);
       }
       if (diff.sortDirection !== undefined) {
-        this.rMap.set("sortDirection", diff.sortDirection);
+        this.syncMap.set("sortDirection", diff.sortDirection);
       }
       if (Object.prototype.hasOwnProperty.call(diff, "windowLayout")) {
         this.windowLayout = (diff as any).windowLayout;
@@ -971,14 +971,14 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   }
 
   protected applySelectionDiff(selectionDiff: KitAppSelectionDiff): void {
-    let selection = this.rMap.get("selection") as RMap<any>;
+    let selection = this.syncMap.get("selection") as SyncMap<any>;
     if (!selection) {
-      selection = this.rDoc.createMap();
-      this.rMap.set("selection", selection);
+      selection = this.syncDoc.createMap();
+      this.syncMap.set("selection", selection);
     }
 
     if (selectionDiff.types) {
-      let types = (selection.get("types") as RArray<string>) || this.rDoc.createArray<string>();
+      let types = (selection.get("types") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("types")) {
         selection.set("types", types);
       }
@@ -1001,7 +1001,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.designs) {
-      let designs = (selection.get("designs") as RArray<string>) || this.rDoc.createArray<string>();
+      let designs = (selection.get("designs") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("designs")) {
         selection.set("designs", designs);
       }
@@ -1024,7 +1024,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.qualities) {
-      let qualities = (selection.get("qualities") as RArray<string>) || this.rDoc.createArray<string>();
+      let qualities = (selection.get("qualities") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("qualities")) {
         selection.set("qualities", qualities);
       }
@@ -1047,7 +1047,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.files) {
-      let files = (selection.get("files") as RArray<string>) || this.rDoc.createArray<string>();
+      let files = (selection.get("files") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("files")) {
         selection.set("files", files);
       }
@@ -1070,7 +1070,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.folders) {
-      let folders = (selection.get("folders") as RArray<string>) || this.rDoc.createArray<string>();
+      let folders = (selection.get("folders") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("folders")) {
         selection.set("folders", folders);
       }
@@ -1093,7 +1093,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     }
 
     if (selectionDiff.authors) {
-      let authors = (selection.get("authors") as RArray<string>) || this.rDoc.createArray<string>();
+      let authors = (selection.get("authors") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("authors")) {
         selection.set("authors", authors);
       }
@@ -1178,7 +1178,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
 }
 
 if (typeof window !== "undefined") {
-  registerKitStoreFactory((parent, rMap, transact, id, state) => new KitStore(parent, rMap, transact, id, state as any));
+  registerKitStoreFactory((parent, syncMap, transact, id, state) => new KitAppStoreImpl(parent, syncMap, transact, id, state as any));
 }
 
 // #region Kit App Plugin Registration
@@ -1319,18 +1319,18 @@ if (typeof window !== "undefined") {
  * Overload: returns the KitStore instance when no selector is provided.
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/useKitAppStore)
  **/
-export function useKitAppStore(selector?: undefined, id?: KitAppId): KitStore | null;
+export function useKitAppStore(selector?: undefined, id?: KitAppId): KitAppStoreImpl | null;
 /**
  * Overload: returns a derived value when a selector function is provided.
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/useKitAppStore)
  **/
-export function useKitAppStore<T>(selector: (controller: KitStore) => T, id?: KitAppId): T | null;
+export function useKitAppStore<T>(selector: (controller: KitAppStoreImpl) => T, id?: KitAppId): T | null;
 /**
  * Selects derived state or the raw KitStore from the sketchpad orchestrator.
  *MUST resolve the KitStore for the current kit scope and apply the optional selector.
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/useKitAppStore)
  **/
-export function useKitAppStore<T>(selector?: (controller: KitStore) => T, id?: KitAppId): T | KitStore | null {
+export function useKitAppStore<T>(selector?: (controller: KitAppStoreImpl) => T, id?: KitAppId): T | KitAppStoreImpl | null {
   const orchestrator = useSketchpadStore();
   const kitScope = useKitScope();
   const resolvedKitId = kitScope?.guid ?? id?.kit;
@@ -1341,7 +1341,7 @@ export function useKitAppStore<T>(selector?: (controller: KitStore) => T, id?: K
     if (!orchestrator || !orchestrator.hasKitApp({ kit: resolvedKitId })) {
       return null;
     }
-    const kitStore = orchestrator.kitApp(resolvedKitId) as unknown as KitStore;
+    const kitStore = orchestrator.kitApp(resolvedKitId) as unknown as KitAppStoreImpl;
     const result = selector ? selector(kitStore) : kitStore;
     return result;
   } catch {
@@ -1604,7 +1604,7 @@ export function useKitAppTransaction(): Transaction {
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement🛠️usekitappcommands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/useKitAppCommands)
  **/
 export function useKitAppCommands(id?: KitAppId) {
-  const controller = useKitAppStore(undefined, id) as KitStore | null;
+  const controller = useKitAppStore(undefined, id) as KitAppStoreImpl | null;
   const getOrigin = useOrigin();
   const noOp = () => {};
   if (!controller) {

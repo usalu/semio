@@ -9,10 +9,10 @@
     <br/>
     <a href="https://play.semio-tech.com"><img src="semio/assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
     <a href="https://docs.semio-tech.com"><img src="semio/assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
-    <a href="https://js.semio-tech.com"><img src="semio/assets/badges/dev-js.svg" alt="The semio-elements Storybook for shared javascript UI elements."></a>
+    <a href="https://js.semio-tech.com"><img src="semio/assets/badges/dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
-     <a href="https://github.com/usalu/semio"><img src="semio/assets/badges/repo-semio.svg" alt="The semio repository."></a>
+     <a href="https://github.com/usalu/semio"><img src="semio/assets/badges/repo-semio.svg" alt="The repository."></a>
     <a href="https://doi.org/10.5281/zenodo.8419156"><img src="semio/assets/badges/cite-zenodo.svg" alt="Cite"></a>
     <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="semio/assets/badges/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
@@ -61,7 +61,7 @@ Let me walk you through 🚶
    - [⚖️ Principles](#-principles-)
    - [🏗️ Projects](#-projects-)
      - [👤 semio](#-semio-)
-     - [🧰 semio-repo](#-semio-repo-)
+     - [🧰 repo](#-repo-)
      - [🔬 coda](#-coda-)
    - [♻ Ecosystems](#%EF%B8%8F-ecosystems-)
      - [🟦 Typescript](#-typescript-)
@@ -682,27 +682,28 @@ Documentation for each ecosystem has been migrated to the respective bundle READ
 
 Documentation for each bundle has been migrated to the respective bundle README.md files:
 
-| Bundle             | README                                                       |
-| ------------------ | ------------------------------------------------------------ |
-| .devcontainer      | [.devcontainer/README.md](.devcontainer/README.md)           |
-| semio-repo/cli     | [semio-repo/cli/README.md](semio-repo/cli/README.md)         |
-| semio-repo/vscode  | [semio-repo/vscode/README.md](semio-repo/vscode/README.md)   |
-| semio-repo/server  | [semio-repo/server/README.md](semio-repo/server/README.md)   |
-| semio-repo/graphql | [semio-repo/graphql/README.md](semio-repo/graphql/README.md) |
-| semio-repo/sqlite  | [semio-repo/sqlite/README.md](semio-repo/sqlite/README.md)   |
-| semio              | [semio/README.md](semio/README.md)                           |
-| semio/js           | [semio/js/README.md](semio/js/README.md)                     |
-| semio/engine       | [semio/engine/README.md](semio/engine/README.md)             |
-| semio/desktop      | [semio/desktop/README.md](semio/desktop/README.md)           |
-| semio/docs         | [semio/docs/README.md](semio/docs/README.md)                 |
-| semio/play         | [semio/play/README.md](semio/play/README.md)                 |
-| semio/net          | [semio/net/README.md](semio/net/README.md)                   |
-| semio/py           | [semio/py/README.md](semio/py/README.md)                     |
-| semio/go           | [semio/go/README.md](semio/go/README.md)                     |
-| semio/rs           | [semio/rs/README.md](semio/rs/README.md)                     |
-| semio/assets       | [semio/assets/README.md](semio/assets/README.md)             |
-| semio/sketchpad    | [semio/sketchpad/README.md](semio/sketchpad/README.md)       |
-| semio/sqlite       | [semio/sqlite/README.md](semio/sqlite/README.md)             |
+| Bundle           | README                                                   |
+| ---------------- | -------------------------------------------------------- |
+| .devcontainer    | [.devcontainer/README.md](.devcontainer/README.md)       |
+| repo/cli         | [repo/cli/README.md](repo/cli/README.md)                 |
+| repo/vscode      | [repo/vscode/README.md](repo/vscode/README.md)           |
+| repo/server      | [repo/server/README.md](repo/server/README.md)           |
+| repo/graphql     | [repo/graphql/README.md](repo/graphql/README.md)         |
+| repo/sqlite      | [repo/sqlite/README.md](repo/sqlite/README.md)           |
+| semio            | [semio/README.md](semio/README.md)                       |
+| semio/js         | [semio/js/README.md](semio/js/README.md)                 |
+| semio/engine     | [semio/engine/README.md](semio/engine/README.md)         |
+| semio/desktop    | [semio/desktop/README.md](semio/desktop/README.md)       |
+| semio/docs       | [semio/docs/README.md](semio/docs/README.md)             |
+| semio/play       | [semio/play/README.md](semio/play/README.md)             |
+| semio/net        | [semio/net/README.md](semio/net/README.md)               |
+| semio/py         | [semio/py/README.md](semio/py/README.md)                 |
+| semio/go         | [semio/go/README.md](semio/go/README.md)                 |
+| semio/rs         | [semio/rs/README.md](semio/rs/README.md)                 |
+| semio/assets     | [semio/assets/README.md](semio/assets/README.md)         |
+| semio/algorithms | [semio/algorithms/README.md](semio/algorithms/README.md) |
+| semio/sketchpad  | [semio/sketchpad/README.md](semio/sketchpad/README.md)   |
+| semio/sqlite     | [semio/sqlite/README.md](semio/sqlite/README.md)         |
 
 # 🏘 [Examples](semio/examples) [↑](#-overview)
 
@@ -854,7 +855,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
   <tbody>
     <tr style="border: none;">
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
-        <img src=".semio-repo/👤/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src=".repo/👤/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
@@ -882,7 +883,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
-        <img src=".semio-repo/👤/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src=".repo/👤/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
@@ -891,21 +892,21 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src=".semio-repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src=".repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
-        <img src=".semio-repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <img src=".repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
         <a href="#-semiojs-" title="🟨semio/js"><sub>🟨<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
-        <img src=".semio-repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
+        <img src=".repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
         <sub><b>ellumpine</b></sub></a>
         <br />
@@ -913,14 +914,14 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
-        <img src=".semio-repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src=".repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="#-semioengine-" title="⚙️️semio/engine"><sub>⚙️️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
-        <img src=".semio-repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
+        <img src=".repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />

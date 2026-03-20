@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜testpush](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜testpush](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,20 +20,20 @@
 // #endregion 🔖Header
 
 // #region 🔖Test Push
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push)
 // Yak test push script. MUST push the package to the test Yak server.
 
 import { execSync } from "child_process";
 
 /**
  * Yak CLI executable path for Rhino 8.
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush🪨yak](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push/d/i/yak)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush🪨yak](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push/d/i/yak)
  * MUST point to the installed Yak binary.
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 /**
  * Yak package filename from CLI argument or default.
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush🪨packagefile](semiorepo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push/d/i/packageFile)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻testpush🔖testpush🪨packagefile](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-push.ts/s/Test%20Push/d/i/packageFile)
  * MUST resolve to a valid .yak package file.
  **/
 const packageFile = process.argv[2] || "semio-2.1.0-any-win.yak";

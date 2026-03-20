@@ -1,0 +1,10 @@
+{
+  "title": "Add New LLMs gemini-3-1-pro and sonnet-4-6",
+  "status": "closed",
+  "description": "Add the new LLM models gemini-3-1-pro and sonnet-4-6 to the AllowedLLMs array in repo/cli/main.go to make them available throughout the repo system.",
+  "summary": "Successfully added gemini-3-1-pro and sonnet-4-6 to the AllowedLLMs array in repo/cli/main.go. Both new LLMs are now available throughout the repo system with proper CLI flags (--gemini-3-1-pro and --sonnet-4-6). The change has been tested and confirmed working.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/641"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

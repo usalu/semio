@@ -1,0 +1,10 @@
+{
+  "title": "Consistent Artifact Id And Uri System",
+  "status": "closed",
+  "description": "Fix inconsistencies in the repo ID and URI system. Ensure all IDs and URIs from tree commands resolve correctly. Fix file header artifact IDs (no space after emoji). Fix model GetID methods for contributors, commits. Fix tree node ID assignments for policies, statutes, drafts. Extend tests to cover round-trip ID→URI→ID resolution. Make sure all tests pass.",
+  "summary": "Made artifact ID and URI system consistent: fixed model GetID/GetURI for Contributor/Commit/Draft/Policy/Statute, fixed tree node IDs to use model methods, fixed GetArtifactURI/IdToUri/UriToId for uppercase URIs and colon-to-path statute conversion, added StatuteIdToUriPath/StatuteUriPathToId helpers, added round-trip tests",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/463"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms"
+}

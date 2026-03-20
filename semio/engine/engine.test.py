@@ -1,5 +1,5 @@
 # region Header
-# [👤semio📚engine🥼enginetest](semiorepo://p/u/semio/b/l/engine/f/engine.test.py)
+# [👤semio📚engine🥼enginetest](repo://p/u/semio/b/l/engine/f/engine.test.py)
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -26,9 +26,10 @@ import shutil
 import tempfile
 from unittest.mock import MagicMock, patch
 
-import engine
 import pytest
 from starlette.testclient import TestClient
+
+import engine
 
 # endregion Imports
 
@@ -258,56 +259,78 @@ class TestMcp:
         assert result.get("guid") == "d1"
 
     def test_get_design_family_tool(self):
-        kit = {"name": "test", "designs": [
-            {"guid": "d1", "name": "Root"},
-            {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
-        ]}
+        kit = {
+            "name": "test",
+            "designs": [
+                {"guid": "d1", "name": "Root"},
+                {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+            ],
+        }
         result = engine.get_design_family(kit, "d2")
         assert isinstance(result, list)
         assert len(result) == 2
 
     def test_get_design_siblings_tool(self):
-        kit = {"name": "test", "designs": [
-            {"guid": "d1", "name": "Root"},
-            {"guid": "d2", "name": "Child1", "parent": {"guid": "d1"}},
-            {"guid": "d3", "name": "Child2", "parent": {"guid": "d1"}},
-        ]}
+        kit = {
+            "name": "test",
+            "designs": [
+                {"guid": "d1", "name": "Root"},
+                {"guid": "d2", "name": "Child1", "parent": {"guid": "d1"}},
+                {"guid": "d3", "name": "Child2", "parent": {"guid": "d1"}},
+            ],
+        }
         result = engine.get_design_siblings(kit, "d2")
         assert isinstance(result, list)
         assert len(result) == 1
         assert result[0].get("guid") == "d3"
 
     def test_get_design_children_tool(self):
-        kit = {"name": "test", "designs": [
-            {"guid": "d1", "name": "Root"},
-            {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
-        ]}
+        kit = {
+            "name": "test",
+            "designs": [
+                {"guid": "d1", "name": "Root"},
+                {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+            ],
+        }
         result = engine.get_design_children(kit, "d1")
         assert isinstance(result, list)
         assert len(result) == 1
 
     def test_are_designs_in_same_family_tool(self):
-        kit = {"name": "test", "designs": [
-            {"guid": "d1", "name": "Root"},
-            {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
-        ]}
+        kit = {
+            "name": "test",
+            "designs": [
+                {"guid": "d1", "name": "Root"},
+                {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+            ],
+        }
         result = engine.are_designs_in_same_family(kit, "d1", "d2")
         assert result.get("result") is True
 
     def test_can_use_design_as_piece_tool(self):
-        kit = {"name": "test", "designs": [
-            {"guid": "d1", "name": "Root"},
-            {"guid": "d2", "name": "Other"},
-        ]}
+        kit = {
+            "name": "test",
+            "designs": [
+                {"guid": "d1", "name": "Root"},
+                {"guid": "d2", "name": "Other"},
+            ],
+        }
         result = engine.can_use_design_as_piece(kit, "d1", "d2")
         assert result.get("result") is True
 
     def test_find_same_family_design_pieces_tool(self):
-        kit = {"name": "test", "designs": [
-            {"guid": "d1", "name": "Design1", "pieces": [
-                {"guid": "p1", "name": "Piece1", "design": {"guid": "d1"}},
-            ]},
-        ]}
+        kit = {
+            "name": "test",
+            "designs": [
+                {
+                    "guid": "d1",
+                    "name": "Design1",
+                    "pieces": [
+                        {"guid": "p1", "name": "Piece1", "design": {"guid": "d1"}},
+                    ],
+                },
+            ],
+        }
         result = engine.find_same_family_design_pieces(kit, "d1")
         assert isinstance(result, list)
 
@@ -317,83 +340,119 @@ class TestMcp:
         assert result.get("guid") == "t1"
 
     def test_get_type_family_tool(self):
-        kit = {"name": "test", "types": [
-            {"guid": "t1", "name": "Root"},
-            {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
-        ]}
+        kit = {
+            "name": "test",
+            "types": [
+                {"guid": "t1", "name": "Root"},
+                {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+            ],
+        }
         result = engine.get_type_family(kit, "t2")
         assert isinstance(result, list)
         assert len(result) == 2
 
     def test_get_type_siblings_tool(self):
-        kit = {"name": "test", "types": [
-            {"guid": "t1", "name": "Root"},
-            {"guid": "t2", "name": "ChildA", "parent": {"guid": "t1"}},
-            {"guid": "t3", "name": "ChildB", "parent": {"guid": "t1"}},
-        ]}
+        kit = {
+            "name": "test",
+            "types": [
+                {"guid": "t1", "name": "Root"},
+                {"guid": "t2", "name": "ChildA", "parent": {"guid": "t1"}},
+                {"guid": "t3", "name": "ChildB", "parent": {"guid": "t1"}},
+            ],
+        }
         result = engine.get_type_siblings(kit, "t2")
         assert isinstance(result, list)
         assert len(result) == 1
 
     def test_get_type_children_tool(self):
-        kit = {"name": "test", "types": [
-            {"guid": "t1", "name": "Root"},
-            {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
-        ]}
+        kit = {
+            "name": "test",
+            "types": [
+                {"guid": "t1", "name": "Root"},
+                {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+            ],
+        }
         result = engine.get_type_children(kit, "t1")
         assert isinstance(result, list)
         assert len(result) == 1
 
     def test_are_types_in_same_family_tool(self):
-        kit = {"name": "test", "types": [
-            {"guid": "t1", "name": "Root"},
-            {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
-        ]}
+        kit = {
+            "name": "test",
+            "types": [
+                {"guid": "t1", "name": "Root"},
+                {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+            ],
+        }
         result = engine.are_types_in_same_family(kit, "t1", "t2")
         assert result.get("result") is True
 
     def test_find_piece_type_in_design_tool(self):
-        kit = {"name": "test", "types": [{"guid": "t1", "name": "Type1"}], "designs": [
-            {"guid": "d1", "name": "Design1", "pieces": [
-                {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
-            ]},
-        ]}
+        kit = {
+            "name": "test",
+            "types": [{"guid": "t1", "name": "Type1"}],
+            "designs": [
+                {
+                    "guid": "d1",
+                    "name": "Design1",
+                    "pieces": [
+                        {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
+                    ],
+                },
+            ],
+        }
         result = engine.find_piece_type_in_design(kit, "d1", "p1")
         assert result.get("guid") == "t1"
 
     def test_find_used_connectors_by_piece_in_design_tool(self):
-        kit = {"name": "test", "types": [
-            {"guid": "t1", "name": "Type1", "connectors": [{"guid": "c1", "name": "Con1"}]},
-        ], "designs": [
-            {"guid": "d1", "name": "Design1", "pieces": [
-                {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
-                {"guid": "p2", "name": "Piece2", "type": {"guid": "t1"}},
-            ], "connections": [
-                {"guid": "conn1", "connected": {"piece": {"guid": "p1"}, "connector": {"guid": "c1"}}, "connecting": {"piece": {"guid": "p2"}, "connector": {"guid": "c1"}}},
-            ]},
-        ]}
+        kit = {
+            "name": "test",
+            "types": [
+                {"guid": "t1", "name": "Type1", "connectors": [{"guid": "c1", "name": "Con1"}]},
+            ],
+            "designs": [
+                {
+                    "guid": "d1",
+                    "name": "Design1",
+                    "pieces": [
+                        {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
+                        {"guid": "p2", "name": "Piece2", "type": {"guid": "t1"}},
+                    ],
+                    "connections": [
+                        {"guid": "conn1", "connected": {"piece": {"guid": "p1"}, "connector": {"guid": "c1"}}, "connecting": {"piece": {"guid": "p2"}, "connector": {"guid": "c1"}}},
+                    ],
+                },
+            ],
+        }
         result = engine.find_used_connectors_by_piece_in_design(kit, "d1", "p1")
         assert isinstance(result, list)
         assert len(result) == 1
 
     def test_create_clustered_design_tool(self):
-        design = {"name": "test", "pieces": [
-            {"guid": "p1", "name": "P1"},
-            {"guid": "p2", "name": "P2"},
-        ], "connections": [
-            {"guid": "c1", "connected": {"piece": {"guid": "p1"}}, "connecting": {"piece": {"guid": "p2"}}},
-        ]}
+        design = {
+            "name": "test",
+            "pieces": [
+                {"guid": "p1", "name": "P1"},
+                {"guid": "p2", "name": "P2"},
+            ],
+            "connections": [
+                {"guid": "c1", "connected": {"piece": {"guid": "p1"}}, "connecting": {"piece": {"guid": "p2"}}},
+            ],
+        }
         result = engine.create_clustered_design(design, ["p1", "p2"], "Cluster")
         assert "clusteredDesign" in result
         assert "externalConnections" in result
 
     def test_get_clusterable_groups_tool(self):
-        design = {"pieces": [
-            {"guid": "p1", "name": "P1"},
-            {"guid": "p2", "name": "P2"},
-        ], "connections": [
-            {"guid": "c1", "connected": {"piece": {"guid": "p1"}}, "connecting": {"piece": {"guid": "p2"}}},
-        ]}
+        design = {
+            "pieces": [
+                {"guid": "p1", "name": "P1"},
+                {"guid": "p2", "name": "P2"},
+            ],
+            "connections": [
+                {"guid": "c1", "connected": {"piece": {"guid": "p1"}}, "connecting": {"piece": {"guid": "p2"}}},
+            ],
+        }
         result = engine.get_clusterable_groups(design, ["p1", "p2"])
         assert isinstance(result, list)
 
@@ -409,14 +468,23 @@ class TestMcp:
         assert result.get("value") == "red"
 
     def test_find_replaceable_types_for_piece_in_design_tool(self):
-        kit = {"name": "test", "types": [
-            {"guid": "t1", "name": "Type1", "connectors": [{"guid": "c1"}]},
-            {"guid": "t2", "name": "Type2", "connectors": [{"guid": "c2"}]},
-        ], "designs": [
-            {"guid": "d1", "name": "Design1", "pieces": [
-                {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
-            ], "connections": []},
-        ]}
+        kit = {
+            "name": "test",
+            "types": [
+                {"guid": "t1", "name": "Type1", "connectors": [{"guid": "c1"}]},
+                {"guid": "t2", "name": "Type2", "connectors": [{"guid": "c2"}]},
+            ],
+            "designs": [
+                {
+                    "guid": "d1",
+                    "name": "Design1",
+                    "pieces": [
+                        {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
+                    ],
+                    "connections": [],
+                },
+            ],
+        }
         result = engine.find_replaceable_types_for_piece_in_design(kit, "d1", "p1")
         assert isinstance(result, list)
 
@@ -442,20 +510,36 @@ class TestMcp:
         assert isinstance(result, dict)
 
     def test_sum_quality_in_design_tool(self):
-        kit = {"name": "test", "types": [
-            {"guid": "t1", "name": "TypeA", "props": [
-                {"guid": "p1", "quality": {"guid": "q1"}, "value": "10.5"},
-            ]},
-            {"guid": "t2", "name": "TypeB", "props": [
-                {"guid": "p2", "quality": {"guid": "q1"}, "value": "20.0"},
-            ]},
-        ], "designs": [
-            {"guid": "d1", "name": "Design1", "pieces": [
-                {"guid": "pc1", "name": "Piece1", "type": {"guid": "t1"}},
-                {"guid": "pc2", "name": "Piece2", "type": {"guid": "t2"}},
-                {"guid": "pc3", "name": "Piece3", "type": {"guid": "t1"}},
-            ]},
-        ]}
+        kit = {
+            "name": "test",
+            "types": [
+                {
+                    "guid": "t1",
+                    "name": "TypeA",
+                    "props": [
+                        {"guid": "p1", "quality": {"guid": "q1"}, "value": "10.5"},
+                    ],
+                },
+                {
+                    "guid": "t2",
+                    "name": "TypeB",
+                    "props": [
+                        {"guid": "p2", "quality": {"guid": "q1"}, "value": "20.0"},
+                    ],
+                },
+            ],
+            "designs": [
+                {
+                    "guid": "d1",
+                    "name": "Design1",
+                    "pieces": [
+                        {"guid": "pc1", "name": "Piece1", "type": {"guid": "t1"}},
+                        {"guid": "pc2", "name": "Piece2", "type": {"guid": "t2"}},
+                        {"guid": "pc3", "name": "Piece3", "type": {"guid": "t1"}},
+                    ],
+                },
+            ],
+        }
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine._mcp_session_kits[id(mock_ctx.session)] = kit
         result = engine.sum_quality_in_design("d1", "q1", mock_ctx)
@@ -650,9 +734,7 @@ class TestMcp:
 
     def test_stateful_flat_tools_build_exact_nakagin_capsule_tower_json(self, kitMetabolismJson: dict):
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        expected_design = next(
-            d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent")
-        )
+        expected_design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
 
         started_kit = engine.start_new_kit("Temporary Kit", "1.0.0", mock_ctx)
         assert started_kit.get("ok") is True
@@ -995,8 +1077,7 @@ class TestAuthCredentials:
         mock_response = MagicMock()
         mock_response.json.return_value = {"token": "new-token-123"}
         mock_response.raise_for_status.return_value = None
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.post", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", return_value=mock_response):
             result = engine.login("https://server.com", "user@test.com", "pass123")
             assert result["ok"] is True
             assert result["token"] == "new-token-123"
@@ -1008,8 +1089,7 @@ class TestAuthCredentials:
     def test_login_connection_error(self, tmp_path):
         """login raises ServerUnreachable on connection error."""
         auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
             with pytest.raises(engine.ServerUnreachable):
                 engine.login("https://unreachable.com", "user@test.com", "pass")
 
@@ -1020,8 +1100,7 @@ class TestAuthCredentials:
         mock_response.status_code = 401
         http_error = engine.requests.exceptions.HTTPError(response=mock_response)
         mock_response.raise_for_status.side_effect = http_error
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.post", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", return_value=mock_response):
             with pytest.raises(engine.InvalidAuthToken):
                 engine.login("https://server.com", "user@test.com", "wrong-pass")
 
@@ -1277,8 +1356,7 @@ class TestMcpAuth:
         mock_response = MagicMock()
         mock_response.json.return_value = {"token": "mcp-token"}
         mock_response.raise_for_status.return_value = None
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.post", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", return_value=mock_response):
             result = engine.mcp_login("https://server.com", "user@test.com", "pass")
             assert result["ok"] is True
             assert result["token"] == "mcp-token"
@@ -1286,8 +1364,7 @@ class TestMcpAuth:
     def test_mcp_login_error(self, tmp_path):
         """mcp_login returns error dict on connection failure."""
         auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
             result = engine.mcp_login("https://unreachable.com", "user@test.com", "pass")
             assert "error" in result
 
@@ -1329,8 +1406,7 @@ class TestMcpRemoteKit:
         mock_response.json.return_value = kit_data
         mock_response.raise_for_status.return_value = None
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
             assert result["ok"] is True
@@ -1355,8 +1431,7 @@ class TestMcpRemoteKit:
         """start_working_in_remote_kit returns error on connection failure."""
         auth_file = str(tmp_path / "auth.json")
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
             assert "error" in result
@@ -1373,8 +1448,7 @@ class TestMcpRemoteKit:
         engine._mcp_session_designs[sid] = {"guid": "old-design"}
         engine._mcp_session_types[sid] = {"guid": "old-type"}
         engine._mcp_session_kit_mode[sid] = "local"
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
             assert sid not in engine._mcp_session_designs
@@ -1406,8 +1480,7 @@ class TestMcpRemoteKit:
         mock_response.json.return_value = kit_data
         mock_response.raise_for_status.return_value = None
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
             mode = engine._get_session_kit_mode(mock_ctx)
@@ -1442,8 +1515,7 @@ class TestMcpRemoteKit:
         mock_response.json.return_value = kit_data
         mock_response.raise_for_status.return_value = None
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             engine.start_working_in_remote_kit("https://server.com", "remote-kit", mock_ctx)
 
@@ -1488,13 +1560,15 @@ class TestRestAuthEndpoints:
         mock_response = MagicMock()
         mock_response.json.return_value = {"token": "rest-token"}
         mock_response.raise_for_status.return_value = None
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.post", return_value=mock_response):
-            response = restClient.post("/auth/login", json={
-                "serverUrl": "https://server.com",
-                "email": "user@test.com",
-                "password": "pass123",
-            })
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", return_value=mock_response):
+            response = restClient.post(
+                "/auth/login",
+                json={
+                    "serverUrl": "https://server.com",
+                    "email": "user@test.com",
+                    "password": "pass123",
+                },
+            )
             assert response.status_code == 200
             data = response.json()
             assert data["ok"] is True
@@ -1544,8 +1618,7 @@ class TestLoadKitFromRemote:
         mock_response = MagicMock()
         mock_response.json.return_value = kit_data
         mock_response.raise_for_status.return_value = None
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             result = engine._load_kit_from_remote("https://server.com", "my-kit")
             assert result["name"] == "RemoteKit"
@@ -1553,8 +1626,7 @@ class TestLoadKitFromRemote:
     def test_load_kit_from_remote_connection_error(self, tmp_path):
         """_load_kit_from_remote raises ServerUnreachable on connection error."""
         auth_file = str(tmp_path / "auth.json")
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             with pytest.raises(engine.ServerUnreachable):
                 engine._load_kit_from_remote("https://server.com", "my-kit")
@@ -1566,8 +1638,7 @@ class TestLoadKitFromRemote:
         mock_response.status_code = 401
         http_error = engine.requests.exceptions.HTTPError(response=mock_response)
         mock_response.raise_for_status.side_effect = http_error
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "expired", "email": "user@test.com"}})
             with pytest.raises(engine.InvalidAuthToken):
                 engine._load_kit_from_remote("https://server.com", "my-kit")
@@ -1579,8 +1650,7 @@ class TestLoadKitFromRemote:
         mock_response.status_code = 404
         http_error = engine.requests.exceptions.HTTPError(response=mock_response)
         mock_response.raise_for_status.side_effect = http_error
-        with patch.object(engine, "AUTH_FILE", auth_file), \
-             patch("engine.requests.get", return_value=mock_response):
+        with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             with pytest.raises(engine.KitNotFound):
                 engine._load_kit_from_remote("https://server.com", "my-kit")

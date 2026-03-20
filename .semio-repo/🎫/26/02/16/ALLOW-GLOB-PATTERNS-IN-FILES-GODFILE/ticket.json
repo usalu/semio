@@ -1,7 +1,0 @@
-{
-  "title": "Allow Glob Patterns in Files Godfile",
-  "status": "closed",
-  "description": "Extend .semio-repo/files.json to allow for glob patterns.",
-  "summary": "Added glob support for .semio-repo/files.json in file policy with exact+glob matcher and tests.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism"
-}

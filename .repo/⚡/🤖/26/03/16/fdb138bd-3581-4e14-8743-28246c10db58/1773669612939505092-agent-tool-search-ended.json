@@ -1,0 +1,28 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T14:00:12Z",
+    "session": "fdb138bd-3581-4e14-8743-28246c10db58"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T14:00:12.787Z",
+      "hook_event_name": "PostToolUse",
+      "session_id": "fdb138bd-3581-4e14-8743-28246c10db58",
+      "tool_name": "grep_search",
+      "tool_input": {
+        "maxResults": 20,
+        "includePattern": "**/elements/ui/elements.tsx",
+        "query": "localValue|lazy|useImperativeHandle|defaultValue",
+        "isRegexp": true
+      },
+      "tool_response": "",
+      "tool_use_id": "toolu_bdrk_013jegoXdTf2PXg3FEXWFNxG__vscode-1773658270584",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

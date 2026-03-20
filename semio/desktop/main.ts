@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🖱️desktop💻main](semiorepo://p/u/semio/b/u/desktop/f/main.ts)
+// [👤semio🖱️desktop💻main](repo://p/u/semio/b/u/desktop/f/main.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Main Process
-// [👤semio🖱️desktop💻main🔖mainprocess](semiorepo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process)
+// [👤semio🖱️desktop💻main🔖mainprocess](repo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process)
 // Electron main process that creates the browser window and registers IPC handlers.
 // MUST quit on all windows closed except on macOS.
 
@@ -34,7 +34,7 @@ if (started) {
 
 /**
  * Creates the main Electron browser window with preload and vite integration.
-// [👤semio🖱️desktop💻main🔖mainprocess🛠️createwindow](semiorepo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process/d/i/createWindow)
+// [👤semio🖱️desktop💻main🔖mainprocess🛠️createwindow](repo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process/d/i/createWindow)
  * MUST load the vite dev server URL in development and the built file in production.
  **/
 const createWindow = () => {

@@ -5,7 +5,7 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "../../semio-elements/ui/globals.css",
+    "css": "../../elements/ui/globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""

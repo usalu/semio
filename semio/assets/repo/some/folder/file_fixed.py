@@ -1,5 +1,5 @@
 # region Header
-# [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py)
+# [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py)
 # 2025 Test User <test@test.com>
 
 # This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 # endregion Header
 
 # region Functions
-# [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py/s/Functions)
+# [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py/s/Functions)
 # Utility functions for fixed values.
 # Functions MUST accept typed parameters.
 
@@ -28,7 +28,7 @@
 def fixed_function(value: int) -> int:
     """Increments a value by one.
     fixed_function MUST return value plus one.
-    [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions🛠️fixedfunction](semiorepo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py/s/Functions/d/i/fixed_function)
+    [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions🛠️fixedfunction](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py/s/Functions/d/i/fixed_function)
     """
     return value + 1
 

@@ -18,7 +18,7 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 
 ## post-attach.sh
 
-Devcontainer post-attach script that uninstalls any existing semio-repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, generates Windsurf and Codex MCP configs from the repo `.mcp.json`, installs Linux GitKraken Desktop plus CLI when missing, and bootstraps a GitKraken local workspace for the repo plus submodules.
+Devcontainer post-attach script that uninstalls any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, generates Windsurf and Codex MCP configs from the repo `.mcp.json`, installs Linux GitKraken Desktop plus CLI when missing, and bootstraps a GitKraken local workspace for the repo plus submodules.
 
 ## Devcontainer Persistence
 
@@ -26,8 +26,8 @@ Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI au
 Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
 Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
 Post-attach reconciles VS Code workspace chat storage for `GitHub.copilot-chat` and `openai.chatgpt` by merging transcript and chat resource folders from older workspace-storage hashes into the active workspace-storage directories after attach.
-Post-attach uninstalls any existing semio-repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the fresh VSIX, validates installs by checking list-extensions output, and falls back to direct extensions directory installs plus extensions.json registration (with `$mid` location keys) when CLIs report WSL-only usage.
-Post-attach also materializes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` and merges Codex MCP server entries into `~/.codex/config.toml` from the monorepo `.mcp.json`, so both clients pick up the semio-repo, semio, coda, and Playwright servers after rebuilds without manual setup while preserving existing Codex user settings such as model and personality.
+Post-attach uninstalls any existing repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the fresh VSIX, validates installs by checking list-extensions output, and falls back to direct extensions directory installs plus extensions.json registration (with `$mid` location keys) when CLIs report WSL-only usage.
+Post-attach also materializes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` and merges Codex MCP server entries into `~/.codex/config.toml` from the monorepo `.mcp.json`, so both clients pick up the repo, semio, coda, and Playwright servers after rebuilds without manual setup while preserving existing Codex user settings such as model and personality.
 Post-create installs Linux GitKraken Desktop plus the official GitKraken `gk` CLI into the devcontainer, and post-attach creates or updates the default local GitKraken workspace from the repo root plus submodules so the Linux GitKraken app picks up the monorepo layout without manual workspace setup.
 Engine compatibility for the local extension is aligned to the lowest supported editor build so Cursor and VS Code accept the same VSIX.
 
@@ -60,7 +60,7 @@ The font configuration refreshes on container start and ensures emoji glyphs are
 
 ## Devcontainer Extension Install
 
-The devcontainer packages the workspace VS Code extension during setup, uninstalls any existing semio-repo extension on attach, and installs the generated `.vsix` across supported IDEs so the extension is ready without manual "Install Extension From Location..." steps.
+The devcontainer packages the workspace VS Code extension during setup, uninstalls any existing repo extension on attach, and installs the generated `.vsix` across supported IDEs so the extension is ready without manual "Install Extension From Location..." steps.
 This keeps the active editor clean of stale versions while aligning installation with a running IDE server, avoiding failures during container creation and preserving automatic delivery.
 
 ## GitKraken Zero Touch
@@ -118,7 +118,7 @@ The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, a
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
 
-Devcontainer post-attach MUST uninstall any existing semio-repo extension via IDE IPC hook CLIs and extensions directory cleanup, clear stale VS Code and Cursor extension caches, install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates that include mid location keys when CLIs report WSL-only usage.
+Devcontainer post-attach MUST uninstall any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clear stale VS Code and Cursor extension caches, install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates that include mid location keys when CLIs report WSL-only usage.
 
 Devcontainer post-attach MUST generate Windsurf MCP config and merge Codex MCP server entries from the monorepo `.mcp.json` into the clients' home config folders without removing unrelated Codex user settings.
 

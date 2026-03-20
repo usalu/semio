@@ -1,0 +1,31 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.tool.starting",
+    "second": "2026-03-16T14:39:58Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PreToolUse",
+      "tool_name": "mcp__repo__ticket_open",
+      "tool_input": {
+        "goal": "R26-03",
+        "title": "Tree Item Alternative Branches Navigation",
+        "prompt": "Extend tree items to support alternative branches with \u003c \u003e navigation to switch between them. Add alternatives field to TreeDataItem, implement branch navigation in TreeItem/DataItemView, and extend the default Tree storybook.",
+        "client": "claude-code",
+        "llm": "opus-4-6",
+        "no_github": true
+      },
+      "tool_use_id": "toolu_015Em1dfuNxfnBEtCT5LNvsw"
+    }
+  },
+  "response": {}
+}

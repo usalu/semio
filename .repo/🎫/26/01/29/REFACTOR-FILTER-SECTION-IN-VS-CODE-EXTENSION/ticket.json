@@ -1,0 +1,10 @@
+{
+  "title": "Refactor Filter Section in VS Code Extension",
+  "status": "closed",
+  "description": "Refactor the filter section in the repo sideview of vscode to match the specified structure. Toggles should be menu items, not tree items. update tests.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/275"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"
+}

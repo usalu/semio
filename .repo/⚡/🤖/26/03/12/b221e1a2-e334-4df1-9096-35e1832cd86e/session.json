@@ -1,0 +1,43 @@
+{
+  "id": "b221e1a2-e334-4df1-9096-35e1832cd86e",
+  "uri": "semiorepo://s/b221e1a2-e334-4df1-9096-35e1832cd86e",
+  "contributor": "🧑‍💻ueli",
+  "client": "cursor-chat",
+  "second": "2026-03-12T09:57:11Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "conversation_id": "b221e1a2-e334-4df1-9096-35e1832cd86e",
+          "generation_id": "b221e1a2-e334-4df1-9096-35e1832cd86e",
+          "model": "tab",
+          "file_path": "\\workspaces\\semio\\.cursor\\mcp.json",
+          "content": "{\n  \"mcpServers\": {\n    \"playwright-test\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"playwright\",\n        \"run-test-mcp-server\"\n      ]\n    },\n    \"repo\": {\n      \"command\": \"./repo/cli/cli\",\n      \"args\": [\n        \"mcp\"\n      ]\n    }\n  }\n}",
+          "hook_event_name": "beforeTabFileRead",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": null
+        }
+      },
+      "event": {
+        "checkpoint": "🔀68ae08219bbd3a68d8a72d460e05c86376d98380",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "llm": "tab",
+        "parent": "",
+        "ranges": [
+          "🛅🗃️workspaces🗃️semio🛅cursor⚙️mcp📌1"
+        ],
+        "second": "🎆26🌙03☀️12⏰09⌚57⏱️11",
+        "session": "⚪b221e1a2e3344df1909635e1832cd86e"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

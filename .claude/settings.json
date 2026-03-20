@@ -4,7 +4,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook Notification claude-code",
+            "command": "./repo/cli/cli hook Notification claude-code",
             "type": "command"
           }
         ],
@@ -15,7 +15,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook PermissionRequest claude-code",
+            "command": "./repo/cli/cli hook PermissionRequest claude-code",
             "type": "command"
           }
         ],
@@ -26,7 +26,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook PostToolUse claude-code",
+            "command": "./repo/cli/cli hook PostToolUse claude-code",
             "type": "command"
           }
         ],
@@ -37,7 +37,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook PostToolUseFailure claude-code",
+            "command": "./repo/cli/cli hook PostToolUseFailure claude-code",
             "type": "command"
           }
         ],
@@ -48,7 +48,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook PreCompact claude-code",
+            "command": "./repo/cli/cli hook PreCompact claude-code",
             "type": "command"
           }
         ],
@@ -59,7 +59,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook PreToolUse claude-code",
+            "command": "./repo/cli/cli hook PreToolUse claude-code",
             "type": "command"
           }
         ],
@@ -70,7 +70,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook SessionEnd claude-code",
+            "command": "./repo/cli/cli hook SessionEnd claude-code",
             "type": "command"
           }
         ],
@@ -81,7 +81,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook SessionStart claude-code",
+            "command": "./repo/cli/cli hook SessionStart claude-code",
             "type": "command"
           }
         ],
@@ -92,7 +92,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook Stop claude-code",
+            "command": "./repo/cli/cli hook Stop claude-code",
             "type": "command"
           }
         ],
@@ -103,7 +103,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook SubagentStart claude-code",
+            "command": "./repo/cli/cli hook SubagentStart claude-code",
             "type": "command"
           }
         ],
@@ -114,7 +114,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook SubagentStop claude-code",
+            "command": "./repo/cli/cli hook SubagentStop claude-code",
             "type": "command"
           }
         ],
@@ -125,7 +125,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook TaskCompleted claude-code",
+            "command": "./repo/cli/cli hook TaskCompleted claude-code",
             "type": "command"
           }
         ],
@@ -136,7 +136,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook TeammateIdle claude-code",
+            "command": "./repo/cli/cli hook TeammateIdle claude-code",
             "type": "command"
           }
         ],
@@ -147,7 +147,7 @@
       {
         "hooks": [
           {
-            "command": "./semio-repo/cli/cli hook UserPromptSubmit claude-code",
+            "command": "./repo/cli/cli hook UserPromptSubmit claude-code",
             "type": "command"
           }
         ],

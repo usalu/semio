@@ -1,6 +1,0 @@
-{
-  "title": "Refactor VS Code Sideview",
-  "status": "closed",
-  "description": "Refactor semio-repo/vscode sideview into two sections (Monorepo + Filter), fix missing children, and convert filter options into menu actions.",
-  "summary": "Refactored VS Code sidebar into two views (Monorepo + Filter), fixed repo binary resolution so root nodes expand, moved filter options into menu actions, wired filter state across all monorepo branches, and updated tests/docs accordingly."
-}

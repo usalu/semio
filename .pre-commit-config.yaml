@@ -1,9 +1,9 @@
 repos:
-- repo: local
-  hooks:
-  - id: semio-monorepo-preflight
-    name: semio monorepo preflight
-    entry: ./semio-repo/cli/cli hook version.checkpoint.starting
-    language: system
-    pass_filenames: false
-    always_run: true
+  - repo: local
+    hooks:
+      - id: semio-monorepo-preflight
+        name: semio monorepo preflight
+        entry: ./repo/cli/cli hook version.checkpoint.starting
+        language: system
+        pass_filenames: false
+        always_run: true

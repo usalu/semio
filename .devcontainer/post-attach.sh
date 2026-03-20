@@ -4,7 +4,7 @@
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VSIX_PATH="semio-repo/vscode/semio-repo.vsix"
+VSIX_PATH="repo/vscode/repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
 EXTENSION_ID=""
@@ -676,7 +676,7 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
       needs_rebuild="1"
       echo "📦 Extension VSIX not found, rebuilding..."
     else
-      for src in semio-repo/vscode/extension.ts semio-repo/vscode/queries.ts semio-repo/vscode/package.json semio-repo/vscode/vite.config.ts; do
+      for src in repo/vscode/extension.ts repo/vscode/queries.ts repo/vscode/package.json repo/vscode/vite.config.ts; do
         if [ -f "$src" ] && [ "$VSIX_PATH" -ot "$src" ]; then
           needs_rebuild="1"
           echo "📦 Extension source updated, rebuilding..."
@@ -686,7 +686,7 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     fi
     if [ -n "$needs_rebuild" ]; then
       echo "🔨 Building semio VSCode extension..."
-      if (cd semio-repo/vscode && npm run package); then
+      if (cd repo/vscode && npm run package); then
         echo "✅ Extension build completed."
       else
         echo "⚠️  Extension build failed, continuing without extension install."
@@ -695,9 +695,9 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
         # Continue with other setup even if extension build fails
       fi
     fi
-    if [ -f "semio-repo/vscode/package.json" ]; then
-      EXTENSION_PUBLISHER=$(node -p "require('./semio-repo/vscode/package.json').publisher" 2>/dev/null || echo "")
-      EXTENSION_NAME=$(node -p "require('./semio-repo/vscode/package.json').name" 2>/dev/null || echo "")
+    if [ -f "repo/vscode/package.json" ]; then
+      EXTENSION_PUBLISHER=$(node -p "require('./repo/vscode/package.json').publisher" 2>/dev/null || echo "")
+      EXTENSION_NAME=$(node -p "require('./repo/vscode/package.json').name" 2>/dev/null || echo "")
     fi
     if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
       EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"

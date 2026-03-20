@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/assets/repo/some/folder/file_empty_region.tsx](semiorepo://file/semio/assets/repo/some/folder/file_empty_region.tsx)
+// [💻semio/assets/repo/some/folder/file_empty_region.tsx](repo://file/semio/assets/repo/some/folder/file_empty_region.tsx)
 
 // 2025 Test User <test@test.com>
 

@@ -1,0 +1,34 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "cursor-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.ended",
+    "second": "2026-03-16T13:58:00Z",
+    "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+  },
+  "native": {
+    "event": {
+      "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+      "generation_id": "baef3b5c-2278-40dd-aa76-14114941dcb0",
+      "model": "default",
+      "tool_name": "FetchMcpResource",
+      "tool_input": {
+        "server": "project-0-semio-repo",
+        "uri": "semiorepo://gs"
+      },
+      "tool_output": "{\"uri\":\"semiorepo://gs\",\"mime_type\":\"text/plain\",\"content_type\":\"text\",\"content_length\":18009}",
+      "duration": 12.266,
+      "tool_use_id": "e81b130b-5a7f-4a1a-96b5-97bac41bd3e6",
+      "hook_event_name": "postToolUse",
+      "cursor_version": "2.6.19",
+      "workspace_roots": [
+        "/workspaces/semio"
+      ],
+      "user_email": "ueli.saluz@posteo.de",
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    }
+  },
+  "response": {}
+}

@@ -1,0 +1,38 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T14:41:07Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+        "offset": 4821,
+        "limit": 30
+      },
+      "tool_response": {
+        "type": "text",
+        "file": {
+          "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+          "content": "  className?: string;\n  isSelected?: boolean;\n  isHighlighted?: boolean;\n  isDragHandle?: boolean;\n  defaultOpen?: boolean;\n  isLastItem?: boolean;\n  actions?: TreeSectionAction[];\n  onDoubleClick?: (event: React.MouseEvent) =\u003e void;\n  draggable?: boolean;\n  onDragStart?: React.DragEventHandler\u003cHTMLDivElement\u003e;\n  onDragOver?: React.DragEventHandler\u003cHTMLDivElement\u003e;\n  onDragLeave?: React.DragEventHandler\u003cHTMLDivElement\u003e;\n  onDrop?: React.DragEventHandler\u003cHTMLDivElement\u003e;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treeitemprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeItemProps)\n * TreeItemProps holds the data fields for a TreeItemProps record.\n **/\ninterface TreeItemProps {\n  label?: React.ReactNode;\n  id?: string;\n  icon?: React.ReactNode;\n  children?: React.ReactNode;\n  onClick?: (event: React.MouseEvent) =\u003e void;\n  className?: string;\n  isSelected?: boolean;\n  isHighlighted?: boolean;\n  sortable?: boolean;\n  sortableId?: string;",
+          "numLines": 30,
+          "startLine": 4821,
+          "totalLines": 10328
+        }
+      },
+      "tool_use_id": "toolu_01JzVhBncvHpBTNB5bDoEiGW"
+    }
+  },
+  "response": {}
+}

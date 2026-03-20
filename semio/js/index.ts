@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚js💻index](semiorepo://p/u/semio/b/l/js/f/index.ts)
+// [👤semio📚js💻index](repo://p/u/semio/b/l/js/f/index.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Exports
-// [👤semio📚js💻index🔖exports](semiorepo://p/u/semio/b/l/js/f/index.ts/s/Exports)
+// [👤semio📚js💻index🔖exports](repo://p/u/semio/b/l/js/f/index.ts/s/Exports)
 // Public API surface re-exporting only semio domain logic and types.
 // Exports MUST exclude all sketchpad UI runtime symbols.
 

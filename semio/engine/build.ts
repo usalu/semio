@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
-// [👤semio📚engine📜build](semiorepo://p/u/semio/b/l/engine/f/build.ts)
+// [👤semio📚engine📜build](repo://p/u/semio/b/l/engine/f/build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,7 +20,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Build
-// [👤semio📚engine💻build🔖build](semiorepo://p/u/semio/b/l/engine/f/build.ts/s/Build)
+// [👤semio📚engine💻build🔖build](repo://p/u/semio/b/l/engine/f/build.ts/s/Build)
 // Build script for the engine binary. MUST bundle the engine via PyInstaller.
 
 import { execSync } from "child_process";
@@ -29,7 +29,7 @@ import { join } from "path";
 
 /**
  * Engine build working directory.
-// [👤semio📚engine💻build🔖build🪨cwd](semiorepo://p/u/semio/b/l/engine/f/build.ts/s/Build/d/i/cwd)
+// [👤semio📚engine💻build🔖build🪨cwd](repo://p/u/semio/b/l/engine/f/build.ts/s/Build/d/i/cwd)
  * MUST resolve to the engine folder.
  **/
 const cwd = __dirname;
@@ -49,7 +49,7 @@ if (existsSync(join(cwd, "dist"))) {
 
 /**
  * PyInstaller CLI arguments for bundling the engine binary.
-// [👤semio📚engine💻build🔖build🪨args](semiorepo://p/u/semio/b/l/engine/f/build.ts/s/Build/d/i/args)
+// [👤semio📚engine💻build🔖build🪨args](repo://p/u/semio/b/l/engine/f/build.ts/s/Build/d/i/args)
  * MUST include all required metadata and hidden imports.
  **/
 const args = [

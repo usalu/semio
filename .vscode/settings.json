@@ -18,11 +18,11 @@
   ],
   "eslint.workingDirectories": [
     {
-      "directory": "semio-elements/ui",
+      "directory": "elements/ui",
       "changeProcessCWD": true
     },
     {
-      "directory": "semio-repo/vscode",
+      "directory": "repo/vscode",
       "changeProcessCWD": true
     }
   ],
@@ -53,9 +53,9 @@
         "run-test-mcp-server"
       ]
     },
-    "semio-repo": {
+    "repo": {
       "type": "stdio",
-      "command": "./semio-repo/cli/cli",
+      "command": "./repo/cli/cli",
       "args": [
         "mcp"
       ]
@@ -76,7 +76,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "semio-coda/py",
+        "coda/py",
         "run",
         "coda.py",
         "--mcp-stdio"

@@ -1,5 +1,5 @@
 #region 🔖Header
-// [👤semio📚net🛅semiotests💻tests](semiorepo://p/u/semio/b/l/net/fd/req/Semio.Tests/f/Tests.cs)
+// [👤semio📚net🛅semiotests💻tests](repo://p/u/semio/b/l/net/fd/req/Semio.Tests/f/Tests.cs)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

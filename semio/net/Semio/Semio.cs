@@ -1,5 +1,5 @@
 #region 🔖Header
-// [👤semio📚net🛅semio💻semio](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs)
+// [👤semio📚net🛅semio💻semio](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 #endregion 🔖Header
 
 #region 🔖Imports
-// [👤semio📚net🛅semio💻semio🔖imports](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Imports)
+// [👤semio📚net🛅semio💻semio🔖imports](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Imports)
 // Callers MUST import all required namespaces listed here.
 using System.Collections;
 using System.Collections.Immutable;
@@ -56,13 +56,13 @@ using GltfNode = SharpGLTF.Schema2.Node;
 #endregion 🔖Imports
 
 #region 🔖Namespace
-// [👤semio📚net🛅semio💻semio🔖namespace](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Namespace)
+// [👤semio📚net🛅semio💻semio🔖namespace](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Namespace)
 // Implementations MUST reside in this namespace.
 namespace Semio;
 #endregion 🔖Namespace
 
 #region 🔖Constants
-// [👤semio📚net🛅semio💻semio🔖constants](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Constants)
+// [👤semio📚net🛅semio💻semio🔖constants](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Constants)
 // Consumers MUST use these shared constants for configuration.
 
 public static class Constants
@@ -124,7 +124,7 @@ public enum DiffStatus
 #endregion 🔖Constants
 
 #region 🔖Utility
-// [👤semio📚net🛅semio💻semio🔖utility](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility)
+// [👤semio📚net🛅semio💻semio🔖utility](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility)
 // Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
@@ -417,13 +417,13 @@ public static class Utility
 }
 
 #region 🔖Expressions
-// [👤semio📚net🛅semio💻semio🔖utility🔖expressions](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility/s/Expressions)
+// [👤semio📚net🛅semio💻semio🔖utility🔖expressions](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility/s/Expressions)
 // Implementations MUST evaluate expression trees through the Operator.Apply contract.
 
 /// <summary>Abstract base for all expression tree nodes.</summary>
 /// <remarks>
 /// Implementations MUST be immutable value types within expression trees.
-/// [👤semio📚net🛅semio💻semio🔖utility🔖expressions🛠️symbol](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility/s/Expressions/d/i/Symbol)
+/// [👤semio📚net🛅semio💻semio🔖utility🔖expressions🛠️symbol](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility/s/Expressions/d/i/Symbol)
 /// </remarks>
 public abstract class Symbol { }
 public abstract class Term : Symbol { }
@@ -1481,12 +1481,12 @@ public class Expression
 #endregion 🔖Utility
 
 #region 🔖Entitying
-// [👤semio📚net🛅semio💻semio🔖entitying](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying)
+// [👤semio📚net🛅semio💻semio🔖entitying](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying)
 // Implementations MUST extend Entity for equality, validation, and diff support.
 
 /// Abstract generic base class providing equality, hashing, cloning, and validation.
 /// Implementations MUST override equality based on serialized representation.
-/// [👤semio📚net🛅semio💻semio🔖entitying🛠️entity](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Entity)
+/// [👤semio📚net🛅semio💻semio🔖entitying🛠️entity](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Entity)
 public abstract class Entity<T> where T : Entity<T>
 {
     public override string ToString() => GetType().Name;
@@ -1536,7 +1536,7 @@ public abstract class Entity<T> where T : Entity<T>
 
 /// FluentValidation validator base for Entity subclasses.
 /// Implementations MUST define validation rules in the constructor.
-/// [👤semio📚net🛅semio💻semio🔖entitying🛠️entityvalidator](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/EntityValidator)
+/// [👤semio📚net🛅semio💻semio🔖entitying🛠️entityvalidator](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/EntityValidator)
 public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 {
     public EntityValidator()
@@ -1545,7 +1545,7 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 }
 
 #region 🔖SemioValidation
-// [👤semio📚net🛅semio💻semio🔖entitying🔖semiovalidation](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/SemioValidation)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖semiovalidation](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/SemioValidation)
 // Callers MUST use ValidationResult to report kit-level validation issues.
 
 public class SemioValidationFix
@@ -1965,7 +1965,7 @@ public class KitDiffUpdate
     public KitDiff? Diff { get; set; }
 }
 
-// [👤semio📚net🛅semio💻semio🔖entitying🛠️change](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Change)
+// [👤semio📚net🛅semio💻semio🔖entitying🛠️change](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Change)
 /// <summary>Change holds the data fields for a Change record.</summary>
 /// Change MUST perform the Change operation.
 public class Change<TEntity, TDiff>
@@ -2001,7 +2001,7 @@ public class DesignChange : Change<Design, DesignDiff> { }
 public class KitChange : Change<Kit, KitDiff> { }
 
 #region 🔖Attribute
-// [👤semio📚net🛅semio💻semio🔖entitying🔖attribute](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Attribute)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖attribute](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Attribute)
 // Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeId : Entity<AttributeId>
@@ -2130,7 +2130,7 @@ public class Attribute : Entity<Attribute>
 #endregion 🔖Attribute
 
 #region 🔖Coord
-// [👤semio📚net🛅semio💻semio🔖entitying🔖coord](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Coord)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖coord](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Coord)
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
 public class Coord : Entity<Coord>
@@ -2148,7 +2148,7 @@ public class Coord : Entity<Coord>
 #endregion 🔖Coord
 
 #region 🔖Point
-// [👤semio📚net🛅semio💻semio🔖entitying🔖point](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Point)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖point](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Point)
 // Implementations MUST represent a 3D point with X, Y, Z coordinates.
 
 public class Point : Entity<Point>
@@ -2161,7 +2161,7 @@ public class Point : Entity<Point>
 #endregion 🔖Point
 
 #region 🔖Vector
-// [👤semio📚net🛅semio💻semio🔖entitying🔖vector](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Vector)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖vector](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Vector)
 // Implementations MUST represent a 3D vector with X, Y, Z components.
 
 public class Vector : Entity<Vector>
@@ -2196,7 +2196,7 @@ public class Vector : Entity<Vector>
 #endregion 🔖Vector
 
 #region 🔖Plane
-// [👤semio📚net🛅semio💻semio🔖entitying🔖plane](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Plane)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖plane](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Plane)
 // Implementations MUST define a 3D plane by origin and X/Y direction vectors.
 
 public class Plane : Entity<Plane>
@@ -2230,7 +2230,7 @@ public class Plane : Entity<Plane>
 #endregion 🔖Plane
 
 #region 🔖Location
-// [👤semio📚net🛅semio💻semio🔖entitying🔖location](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Location)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖location](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Location)
 // Implementations MUST combine a plane with rotation and elevation for placement.
 
 public class LocationId : Entity<LocationId>
@@ -2257,7 +2257,7 @@ public class Location : Entity<Location>
 #endregion 🔖Location
 
 #region 🔖Author
-// [👤semio📚net🛅semio💻semio🔖entitying🔖author](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Author)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖author](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Author)
 // Implementations MUST provide author identity with name and contact.
 
 public class AuthorId : Entity<AuthorId>
@@ -2378,7 +2378,7 @@ public class AuthorsDiff : Entity<AuthorsDiff>
 #endregion 🔖Author
 
 #region 🔖File
-// [👤semio📚net🛅semio💻semio🔖entitying🔖file](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/File)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖file](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/File)
 // Implementations MUST reference a file with URI, MIME type, and optional content.
 
 public class FileId : Entity<FileId>
@@ -2488,7 +2488,7 @@ public class File : Entity<File>
 #endregion 🔖File
 
 #region 🔖Folder
-// [👤semio📚net🛅semio💻semio🔖entitying🔖folder](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Folder)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖folder](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Folder)
 // Implementations MUST reference a folder with name and optional parent.
 
 public class FolderId : Entity<FolderId>
@@ -2601,7 +2601,7 @@ public class Folder : Entity<Folder>
 #endregion 🔖Folder
 
 #region 🔖Benchmark
-// [👤semio📚net🛅semio💻semio🔖entitying🔖benchmark](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Benchmark)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖benchmark](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Benchmark)
 // Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkId : Entity<BenchmarkId>
@@ -2662,7 +2662,7 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
 #endregion 🔖Benchmark
 
 #region 🔖QualityKind
-// [👤semio📚net🛅semio💻semio🔖entitying🔖qualitykind](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/QualityKind)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖qualitykind](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/QualityKind)
 // Implementations MUST categorize quality metrics by kind.
 
 [Flags]
@@ -2679,7 +2679,7 @@ public enum QualityKind
 #endregion 🔖QualityKind
 
 #region 🔖Quality
-// [👤semio📚net🛅semio💻semio🔖entitying🔖quality](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Quality)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖quality](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Quality)
 // Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityId : Entity<QualityId>
@@ -2766,7 +2766,7 @@ public class Quality : Entity<Quality>
 #endregion 🔖Quality
 
 #region 🔖Tag
-// [👤semio📚net🛅semio💻semio🔖entitying🔖tag](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Tag)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖tag](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Tag)
 // Implementations MUST provide lightweight labels for categorizing entities.
 
 public class TagId : Entity<TagId>
@@ -2826,7 +2826,7 @@ public class TagsDiff : Entity<TagsDiff>
 #endregion 🔖Tag
 
 #region 🔖Concept
-// [👤semio📚net🛅semio💻semio🔖entitying🔖concept](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Concept)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖concept](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Concept)
 // Implementations MUST link a semantic concept name to description and icon.
 
 public class ConceptId : Entity<ConceptId>
@@ -2896,7 +2896,7 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 #endregion 🔖Concept
 
 #region 🔖Port
-// [👤semio📚net🛅semio💻semio🔖entitying🔖port](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Port)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖port](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Port)
 // Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortId : Entity<PortId>
@@ -3007,7 +3007,7 @@ public class Port : Entity<Port>
 #endregion 🔖Port
 
 #region 🔖Prop
-// [👤semio📚net🛅semio💻semio🔖entitying🔖prop](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Prop)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖prop](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Prop)
 // Implementations MUST bind a property name to an expression value.
 
 public class PropId : Entity<PropId>
@@ -3057,7 +3057,7 @@ public class PropDiff : Entity<PropDiff>
 #endregion 🔖Prop
 
 #region 🔖Model
-// [👤semio📚net🛅semio💻semio🔖entitying🔖model](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Model)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖model](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Model)
 // Implementations MUST reference a 3D model with URI, MIME type, and local plane.
 
 public class ModelId : Entity<ModelId>
@@ -3214,7 +3214,7 @@ public class Model : Entity<Model>
 #endregion 🔖Model
 
 #region 🔖Connector
-// [👤semio📚net🛅semio💻semio🔖entitying🔖connector](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Connector)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖connector](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Connector)
 // Implementations MUST define located interface points on a type.
 
 public class ConnectorId : Entity<ConnectorId>
@@ -3494,7 +3494,7 @@ public class Connector : Entity<Connector>
 #endregion 🔖Connector
 
 #region 🔖Type
-// [👤semio📚net🛅semio💻semio🔖entitying🔖type](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Type)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖type](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Type)
 // Implementations MUST compose ports, connectors, and models into a parametric type.
 
 public class TypeId : Entity<TypeId>
@@ -3874,7 +3874,7 @@ public class Type : Entity<Type>
 #endregion 🔖Type
 
 #region 🔖Layer
-// [👤semio📚net🛅semio💻semio🔖entitying🔖layer](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Layer)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖layer](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Layer)
 // Implementations MUST organize pieces into named layers within a design.
 
 public class LayerId : Entity<LayerId>
@@ -3932,7 +3932,7 @@ public class LayerDiff : Entity<LayerDiff>
 #endregion 🔖Layer
 
 #region 🔖Group
-// [👤semio📚net🛅semio💻semio🔖entitying🔖group](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Group)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖group](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Group)
 // Implementations MUST group pieces by name within a design.
 
 public class GroupId : Entity<GroupId>
@@ -3986,7 +3986,7 @@ public class GroupDiff : Entity<GroupDiff>
 #endregion 🔖Group
 
 #region 🔖Piece
-// [👤semio📚net🛅semio💻semio🔖entitying🔖piece](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Piece)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖piece](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Piece)
 // Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceId : Entity<PieceId>
@@ -4152,7 +4152,7 @@ public class Piece : Entity<Piece>
 
 #endregion 🔖Piece
 #region 🔖Side
-// [👤semio📚net🛅semio💻semio🔖entitying🔖side](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Side)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖side](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Side)
 // Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideDiff : Entity<SideDiff>
@@ -4249,7 +4249,7 @@ public class Side : Entity<Side>
 #endregion 🔖Side
 
 #region 🔖Connection
-// [👤semio📚net🛅semio💻semio🔖entitying🔖connection](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Connection)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖connection](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Connection)
 // Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionId : Entity<ConnectionId>
@@ -4527,7 +4527,7 @@ public class Connection : Entity<Connection>
 #endregion 🔖Connection
 
 #region 🔖Stat
-// [👤semio📚net🛅semio💻semio🔖entitying🔖stat](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Stat)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖stat](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Stat)
 // Implementations MUST associate statistical metrics with a design.
 
 public class StatId : Entity<StatId>
@@ -4585,7 +4585,7 @@ public class StatDiff : Entity<StatDiff>
 #endregion 🔖Stat
 
 #region 🔖Design
-// [👤semio📚net🛅semio💻semio🔖entitying🔖design](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Design)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖design](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Design)
 // Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignsDiff : Entity<DesignsDiff>
@@ -6052,7 +6052,7 @@ text {
 #endregion 🔖Design
 
 #region 🔖Kit
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kit](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖kit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit)
 // Implementations MUST collect types and designs into a reusable library.
 
 public class KitDiff : Entity<KitDiff>
@@ -6594,7 +6594,7 @@ public class Kit : Entity<Kit>
     }
 
     #region 🔖Design Family Helpers
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖designfamilyhelpers](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Design%20Family%20Helpers)
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖designfamilyhelpers](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Design%20Family%20Helpers)
     // Callers MUST use these helpers to traverse design parent-child hierarchies.
 
     public static Design FindDesignByGuid(Kit kit, string designGuid)
@@ -6656,7 +6656,7 @@ public class Kit : Entity<Kit>
     #endregion 🔖Design Family Helpers
 
     #region 🔖Type Family Helpers
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖typefamilyhelpers](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Type%20Family%20Helpers)
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖typefamilyhelpers](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Type%20Family%20Helpers)
     // Callers MUST use these helpers to traverse type parent-child hierarchies.
 
     public static Type FindTypeByGuid(Kit kit, string typeGuid)
@@ -6705,7 +6705,7 @@ public class Kit : Entity<Kit>
     #endregion 🔖Type Family Helpers
 
     #region 🔖Kit Finders
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitfinders](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Kit%20Finders)
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitfinders](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Kit%20Finders)
     // Callers MUST use these methods to locate entities within a kit by GUID.
 
     public static File FindFile(Kit kit, string fileGuid)
@@ -6911,7 +6911,7 @@ public class Kit : Entity<Kit>
     #endregion 🔖Kit Finders
 
     #region 🔖Flatten Design
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖flattendesign](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Flatten%20Design)
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖flattendesign](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Flatten%20Design)
     // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
 
     public static DesignDiff FlattenDesign(Kit kit, string designId)
@@ -7212,7 +7212,7 @@ public class Kit : Entity<Kit>
     #endregion 🔖Flatten Design
 
     #region 🔖Kit Model Export
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitmodelexport](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Kit%20Model%20Export)
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitmodelexport](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Kit%20Model%20Export)
     // Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
     // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
     // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
@@ -7659,7 +7659,7 @@ public class Kit : Entity<Kit>
     }
 
     #region 🔖Geometric Insights
-    // [👤semio📚net🛅semio💻semio🔖geometricinsights](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Geometric%20Insights)
+    // [👤semio📚net🛅semio💻semio🔖geometricinsights](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Geometric%20Insights)
     // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
     /// <summary>Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
@@ -7954,7 +7954,7 @@ public class Kit : Entity<Kit>
 #endregion 🔖Kit
 
 #region 🔖Api
-// [👤semio📚net🛅semio💻semio🔖entitying🔖api](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Api)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖api](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Api)
 // Callers MUST use these methods to communicate with the semio engine.
 
 public class PredictDesignBody
@@ -8081,7 +8081,7 @@ public class ServerException : Exception
 
 #endregion 🔖Api
 
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite)
 // Callers MUST use KitSqlite for direct CRUD operations on local static SQLite kit databases.
 
 /// <summary>Direct CRUD operations on local SQLite kit databases (.semio/kit.db).</summary>
@@ -8144,7 +8144,7 @@ public static class KitSqlite
     }
 
     #region 🔖KitSqliteLoad
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqliteload](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteLoad)
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqliteload](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteLoad)
     // Load operations for reading a kit from a local SQLite database.
 
     public static Kit LoadKit(string kitDirectory)
@@ -8887,7 +8887,7 @@ public static class KitSqlite
     #endregion 🔖KitSqliteLoad
 
     #region 🔖KitSqliteSave
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitesave](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteSave)
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitesave](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteSave)
     // Save operations for writing a kit to a local SQLite database.
 
     public static void SaveKit(string kitDirectory, Kit kit)
@@ -9484,7 +9484,7 @@ public static class KitSqlite
     #endregion 🔖KitSqliteSave
 
     #region 🔖KitSqliteChange
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitechange](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteChange)
+    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitechange](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteChange)
     // Change-based CRUD commands returning KitChange for undo/redo support.
 
     public static KitChange ApplyKitDiff(string kitDirectory, KitDiff diff)
@@ -9616,7 +9616,7 @@ public static class KitSqlite
 #endregion 🔖KitSqlite
 
 #region 🔖ZipRoundtrip
-// [👤semio📚net🛅semio💻semio🔖entitying🔖ziproundtrip](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/ZipRoundtrip)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖ziproundtrip](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/ZipRoundtrip)
 // Callers MUST use these methods to import and export kits as ZIP archives.
 
 public class KitImportResult
@@ -9961,7 +9961,7 @@ public static class ZipRoundtrip
 #endregion 🔖ZipRoundtrip
 
 #region 🔖KitImporter
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kitimporter](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitImporter)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖kitimporter](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitImporter)
 // Callers MUST use ImportFromZip for high-level kit import.
 
 public static class KitImporter
@@ -9975,7 +9975,7 @@ public static class KitImporter
 #endregion 🔖KitImporter
 
 #region 🔖KitExporter
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kitexporter](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitExporter)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖kitexporter](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitExporter)
 // Callers MUST use ExportToZip for high-level kit export.
 
 public static class KitExporter
@@ -9989,7 +9989,7 @@ public static class KitExporter
 #endregion 🔖KitExporter
 
 #region 🔖SemioDiff
-// [👤semio📚net🛅semio💻semio🔖entitying🔖semiodiff](semiorepo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/SemioDiff)
+// [👤semio📚net🛅semio💻semio🔖entitying🔖semiodiff](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/SemioDiff)
 // Callers MUST use these methods for diff computation and application on kits.
 
 public static class SemioDiff

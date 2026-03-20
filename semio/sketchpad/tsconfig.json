@@ -3,17 +3,41 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@semio/sketchpad": ["."],
-      "@semio/sketchpad/*": ["./*"],
-      "@semio/js": ["../js"],
-      "@semio/js/*": ["../js/*"],
-      "@semio/studio": ["../studio"],
-      "@semio/studio/*": ["../studio/*"],
-      "@semio-elements/ui": ["../../semio-elements/ui"],
-      "@semio-elements/ui/*": ["../../semio-elements/ui/*"],
-      "@semio/assets": ["../assets"],
-      "@semio/assets/*": ["../assets/*"]
+      "@semio/sketchpad": [
+        "."
+      ],
+      "@semio/sketchpad/*": [
+        "./*"
+      ],
+      "@semio/js": [
+        "../js"
+      ],
+      "@semio/js/*": [
+        "../js/*"
+      ],
+      "@semio/studio": [
+        "../studio"
+      ],
+      "@semio/studio/*": [
+        "../studio/*"
+      ],
+      "@elements/ui": [
+        "../../elements/ui"
+      ],
+      "@elements/ui/*": [
+        "../../elements/ui/*"
+      ],
+      "@semio/assets": [
+        "../assets"
+      ],
+      "@semio/assets/*": [
+        "../assets/*"
+      ]
     },
-    "types": ["react", "react-dom", "vite/client"]
+    "types": [
+      "react",
+      "react-dom",
+      "vite/client"
+    ]
   }
 }

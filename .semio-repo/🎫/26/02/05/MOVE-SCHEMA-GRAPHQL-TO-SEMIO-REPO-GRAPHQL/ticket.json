@@ -1,7 +1,0 @@
-{
-  "title": "Move Schema Graphql to Semio Repo Graphql",
-  "status": "closed",
-  "description": "Move schema.graphql and queries from semio-repo/cli to semio-repo/graphql. Fix the typo directory semio-repo/grapqhl. Update all references.",
-  "summary": "Also fixed VSCode extension codegen.ts schema path reference.",
-  "goal": "🎯aioptimizedrepo🎯reposerver"
-}

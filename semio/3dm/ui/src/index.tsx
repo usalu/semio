@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio📚3dm🖱️ui🗃️src💻index](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx)
+// [👤semio📚3dm🖱️ui🗃️src💻index](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx)
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Entrypoint
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖entrypoint](semiorepo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/Entrypoint)
+// [👤semio📚3dm🖱️ui🗃️src💻index🔖entrypoint](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/Entrypoint)
 // Entrypoint MUST initialize the bridge and render the RhinoPanel component.
 
 import { createRoot } from "react-dom/client";

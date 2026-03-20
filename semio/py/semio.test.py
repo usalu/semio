@@ -1,5 +1,5 @@
 # region Header
-# [👤semio📚py🥼semiotest](semiorepo://p/u/semio/b/l/py/f/semio.test.py)
+# [👤semio📚py🥼semiotest](repo://p/u/semio/b/l/py/f/semio.test.py)
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -29,7 +29,6 @@ import pytest
 sys.path.insert(0, os.path.dirname(__file__))
 
 from semio import (
-    geometric_insights_to_report_dict,
     GeometricInsights,
     Kit,
     KitData,
@@ -42,6 +41,7 @@ from semio import (
     export_design_model,
     export_kit,
     flattenDesignDict,
+    geometric_insights_to_report_dict,
     get_geometric_insights_for_model,
     getKitChange,
     getKitDiffDict,

@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🏪assets🛅logo💻logo](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts)
+// [👤semio🏪assets🛅logo💻logo](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#!/usr/bin/env node
+#!/usr/bin / env node
 
 // Generates animated SVG logo from static SVG input with keyframe sequences.
 
 // #endregion 🔖Header
 
 //#region 🔖Imports
-// [👤semio🏪assets🛅logo💻logo🔖imports](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Imports)
+// [👤semio🏪assets🛅logo💻logo🔖imports](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Imports)
 // MUST import Node.js file system, DOM parsing, and path resolution modules.
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
@@ -30,10 +30,10 @@ import * as path from "path";
 
 //#region 🔖Types
 // Types MUST provide the types functionality.
-// [👤semio🏪assets🛅logo💻logo🔖types](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types)
+// [👤semio🏪assets🛅logo💻logo🔖types](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types)
 /**
 // TransformData holds the data fields for a TransformData record.
- * [👤semio🏪assets🛅logo💻logo🔖types✂️transformdata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/TransformData)
+ * [👤semio🏪assets🛅logo💻logo🔖types✂️transformdata](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/TransformData)
  **/
 interface TransformData {
   translate: { x: number; y: number };
@@ -43,7 +43,7 @@ interface TransformData {
 
 /**
  * GroupData holds the data fields for a GroupData record.
- * [👤semio🏪assets🛅logo💻logo🔖types✂️groupdata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/GroupData)
+ * [👤semio🏪assets🛅logo💻logo🔖types✂️groupdata](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/GroupData)
  **/
 interface GroupData {
   id: string;
@@ -57,7 +57,7 @@ interface GroupData {
 }
 
 * KeyframeData holds the data fields for a KeyframeData record.
- * [👤semio🏪assets🛅logo💻logo🔖types✂️keyframedata](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/KeyframeData)
+ * [👤semio🏪assets🛅logo💻logo🔖types✂️keyframedata](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/KeyframeData)
  **/
 interface KeyframeData {
   groups: GroupData[];
@@ -66,11 +66,11 @@ interface KeyframeData {
 
 //#region 🔖Logo Generation
 // Logo Generation MUST provide the logo generation functionality.
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
 
 /**
- * [👤semio🏪assets🛅logo💻logo🔖logogeneration](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️transformtomatrix](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/transformToMatrix)
+ * [👤semio🏪assets🛅logo💻logo🔖logogeneration](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️transformtomatrix](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/transformToMatrix)
  * Functions for parsing SVG files and generating animated SVG logos.
  **/
 function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
@@ -124,107 +124,107 @@ function transformToMatrix(translate: { x: number; y: number }, rotate: { angle:
     return `${a} ${b} ${c} ${d} ${e} ${f}`;
   }
 
-  // [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
-  * [👤semio🏪assets🛅logo💻logo🔖logogeneration🪨parsetransform](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
+  // [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️parsetransform](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
+  * [👤semio🏪assets🛅logo💻logo🔖logogeneration🪨parsetransform](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
  * parseTransform holds the data fields for a parseTransform record.
  **/
 function parseTransform(transformStr: string): TransformData {
-        const result: TransformData = {
-          translate: { x: 0, y: 0 },
-          rotate: { angle: 0, cx: 0, cy: 0 },
-          scale: { x: 1, y: 1 },
-        };
+      const result: TransformData = {
+        translate: { x: 0, y: 0 },
+        rotate: { angle: 0, cx: 0, cy: 0 },
+        scale: { x: 1, y: 1 },
+      };
 
-        if (!transformStr) return result;
+      if (!transformStr) return result;
 
-        const matrixMatch = transformStr.match(/matrix\(([^)]+)\)/);
-        if (matrixMatch) {
-          const values = matrixMatch[1].split(/[,\s]+/).map(Number);
-          if (values.length === 6) {
-            const [a, b, c, d, e, f] = values;
+      const matrixMatch = transformStr.match(/matrix\(([^)]+)\)/);
+      if (matrixMatch) {
+        const values = matrixMatch[1].split(/[,\s]+/).map(Number);
+        if (values.length === 6) {
+          const [a, b, c, d, e, f] = values;
 
-            result.translate.x = e;
-            result.translate.y = f;
+          result.translate.x = e;
+          result.translate.y = f;
 
-            const det = a * d - b * c;
-            const hasReflection = det < 0;
+          const det = a * d - b * c;
+          const hasReflection = det < 0;
 
-            const scaleXMag = Math.sqrt(a * a + b * b);
-            const scaleYMag = Math.sqrt(c * c + d * d);
+          const scaleXMag = Math.sqrt(a * a + b * b);
+          const scaleYMag = Math.sqrt(c * c + d * d);
 
-            let rotation = Math.atan2(b, a) * (180 / Math.PI);
+          let rotation = Math.atan2(b, a) * (180 / Math.PI);
 
-            if (Math.abs(a) === 1 && b === 0 && c === 0 && Math.abs(d) === 1) {
-              result.scale.x = a;
-              result.scale.y = d;
-              result.rotate.angle = 0;
-            } else if (a === 0 && Math.abs(b) >= 1 && Math.abs(c) >= 1 && d === 0) {
-              const bSign = Math.sign(b);
-              const cSign = Math.sign(c);
-              const scaleValueB = Math.abs(b);
-              const scaleValueC = Math.abs(c);
+          if (Math.abs(a) === 1 && b === 0 && c === 0 && Math.abs(d) === 1) {
+            result.scale.x = a;
+            result.scale.y = d;
+            result.rotate.angle = 0;
+          } else if (a === 0 && Math.abs(b) >= 1 && Math.abs(c) >= 1 && d === 0) {
+            const bSign = Math.sign(b);
+            const cSign = Math.sign(c);
+            const scaleValueB = Math.abs(b);
+            const scaleValueC = Math.abs(c);
 
-              if (bSign === -1 && cSign === -1) {
-                result.scale.x = -scaleValueB;
-                result.scale.y = scaleValueC;
-                result.rotate.angle = 90;
-              } else if (bSign === 1 && cSign === -1) {
-                result.scale.x = scaleValueB;
-                result.scale.y = scaleValueC;
-                result.rotate.angle = -90;
-              } else if (bSign === -1 && cSign === 1) {
-                result.scale.x = scaleValueB;
-                result.scale.y = scaleValueC;
-                result.rotate.angle = 90;
-              } else {
-                result.scale.x = scaleValueB;
-                result.scale.y = -scaleValueC;
-                result.rotate.angle = -90;
-              }
+            if (bSign === -1 && cSign === -1) {
+              result.scale.x = -scaleValueB;
+              result.scale.y = scaleValueC;
+              result.rotate.angle = 90;
+            } else if (bSign === 1 && cSign === -1) {
+              result.scale.x = scaleValueB;
+              result.scale.y = scaleValueC;
+              result.rotate.angle = -90;
+            } else if (bSign === -1 && cSign === 1) {
+              result.scale.x = scaleValueB;
+              result.scale.y = scaleValueC;
+              result.rotate.angle = 90;
             } else {
-              if (hasReflection) {
-                result.scale.x = Math.sign(a) * scaleXMag;
-                result.scale.y = Math.sign(d) * scaleYMag;
-                result.rotate.angle = rotation;
-              } else {
-                result.scale.x = scaleXMag;
-                result.scale.y = scaleYMag;
-                result.rotate.angle = rotation;
-              }
+              result.scale.x = scaleValueB;
+              result.scale.y = -scaleValueC;
+              result.rotate.angle = -90;
             }
-
-            if (result.scale.x === 0) result.scale.x = 1;
-            if (result.scale.y === 0) result.scale.y = 1;
+          } else {
+            if (hasReflection) {
+              result.scale.x = Math.sign(a) * scaleXMag;
+              result.scale.y = Math.sign(d) * scaleYMag;
+              result.rotate.angle = rotation;
+            } else {
+              result.scale.x = scaleXMag;
+              result.scale.y = scaleYMag;
+              result.rotate.angle = rotation;
+            }
           }
-          return result;
+
+          if (result.scale.x === 0) result.scale.x = 1;
+          if (result.scale.y === 0) result.scale.y = 1;
         }
-
-        const translateMatch = transformStr.match(/translate\(([^)]+)\)/);
-        if (translateMatch) {
-          const values = translateMatch[1].split(/[,\s]+/).map(Number);
-          result.translate.x = values[0] || 0;
-          result.translate.y = values[1] || 0;
-        }
-
-        const rotateMatch = transformStr.match(/rotate\(([^)]+)\)/);
-        if (rotateMatch) {
-          const values = rotateMatch[1].split(/[,\s]+/).map(Number);
-          result.rotate.angle = values[0] || 0;
-          result.rotate.cx = values[1] || 0;
-
-          nsformStr.match(/scale\(([^)]+)\)/);
-          const values = scaleMatch[1 values[0] || 1;
-          const scaleY = values[1] || values[0] || 1;
-
-          result.scale.x = scaleX === 0 ? 1 : scaleX;
-          result.scale.y = scaleY === 0 ? 1 : scaleY;
-        }
-
         return result;
       }
 
+      const translateMatch = transformStr.match(/translate\(([^)]+)\)/);
+      if (translateMatch) {
+        const values = translateMatch[1].split(/[,\s]+/).map(Number);
+        result.translate.x = values[0] || 0;
+        result.translate.y = values[1] || 0;
+      }
+
+      const rotateMatch = transformStr.match(/rotate\(([^)]+)\)/);
+      if (rotateMatch) {
+        const values = rotateMatch[1].split(/[,\s]+/).map(Number);
+        result.rotate.angle = values[0] || 0;
+        result.rotate.cx = values[1] || 0;
+
+        nsformStr.match(/scale\(([^)]+)\)/);
+        const values = scaleMatch[1 values[0] || 1;
+        const scaleY = values[1] || values[0] || 1;
+
+        result.scale.x = scaleX === 0 ? 1 : scaleX;
+        result.scale.y = scaleY === 0 ? 1 : scaleY;
+      }
+
+      return result;
+    }
+
 //#region 🔖Parse SVG
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖parsesvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Parse%20SVG)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖parsesvg](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Parse%20SVG)
 // MUST read SVG content and extract all group transforms and path attributes.
 // Parses an SVG file and returns keyframe data with group transforms and paths.
 function parseSVGFile(filePath: string): KeyframeData {
@@ -260,7 +260,7 @@ function parseSVGFile(filePath: string): KeyframeData {
 //#endregion 🔖Parse SVG
 
 //#region 🔖Generate Keyframe Sequence
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖generatekeyframesequence](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Generate%20Keyframe%20Sequence)
+// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖generatekeyframesequence](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Generate%20Keyframe%20Sequence)
 // MUST produce forward and reverse sequence for smooth animation looping.
 // Generates a palindromic keyframe sequence with triple repetition per frame.
 function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
@@ -283,7 +283,7 @@ function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
   //#endregion 🔖Generate Keyframe Sequence
 
   //#region 🔖Create Animated SVG
-  // [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖createanimatedsvg](semiorepo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Create%20Animated%20SVG)
+  // [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖createanimatedsvg](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Create%20Animated%20SVG)
   // MUST generate translate, rotate, scale, fill, stroke, and stroke-width animations.
   // Creates an animated SVG file with SMIL animations from keyframe data.
   function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void {

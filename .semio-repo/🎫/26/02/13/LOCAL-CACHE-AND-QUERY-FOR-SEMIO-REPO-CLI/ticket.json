@@ -1,7 +1,0 @@
-{
-  "title": "Local Cache and Query for Semio Repo CLI",
-  "status": "closed",
-  "description": "Extend the query mechanism with local caching under .semio-repo/cache. All content of all resources (projects, bundles, folders, files, sections, definitions, tickets, goals, policies, statutes, contributors, commits) should be cached and indexed. Querying should use keywords and return all matching resources. Use composite git fingerprint (superproject HEAD, submodule SHAs, dirty state) for cache invalidation. Support incremental updates via git diff. One Bleve index for whole monorepo. Key cache by absolute repo path.",
-  "summary": "Extended tests for cache index (TestCacheIndexAndTreeQuery). Granular cache: when file changes, only file/folder/bundle/project docs updated via getChangedPathsFromGit+expandPathsWithAncestors. Parent docs include child names. Incremental update when index exists and dirty paths present.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms"
-}
