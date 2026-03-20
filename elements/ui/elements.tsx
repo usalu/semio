@@ -95,7 +95,6 @@ import * as dagre from "dagre";
 import Fuse, { type FuseResult } from "fuse.js";
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { createRoot } from "react-dom/client";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
 import * as ResizablePrimitive from "react-resizable-panels";
@@ -9595,8 +9594,19 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
 );
 
 /**
- * Golden-layout canvas that renders window kinds.
+ * Portal target for a golden-layout window kind.
+ * Holds the DOM element, window kind definition, and a unique key.
+ **/
+interface UICanvasPortal {
+  key: string;
+  element: HTMLElement;
+  windowKind: UIWindowKindDefinition;
+}
+
+/**
+ * Golden-layout canvas that renders window kinds using React portals.
  * Dynamically imports golden-layout and registers each window kind as a component.
+ * Uses portals instead of createRoot so that parent React context flows into golden-layout windows.
  **/
 const UICanvas: React.FC<{
   windowConfig: UIWindowConfig;
@@ -9606,6 +9616,7 @@ const UICanvas: React.FC<{
 }> = ({ windowConfig, layoutState, onLayoutChange, onActiveWindowChange }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const layoutRef = React.useRef<any>(null);
+  const [portals, setPortals] = React.useState<UICanvasPortal[]>([]);
 
   React.useEffect(() => {
     if (!containerRef.current || layoutRef.current) return;
@@ -9649,6 +9660,7 @@ const UICanvas: React.FC<{
 
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
+        let portalCounter = 0;
 
         windowConfig.windowKinds.forEach((windowKind) => {
           layout.registerComponent(windowKind.id, (container: any) => {
@@ -9667,32 +9679,12 @@ const UICanvas: React.FC<{
               return;
             }
 
-            const root = createRoot(domElement);
-            const WindowComponent = windowKind.component;
-
-            const clickGoldenLayoutControl = (selector: string) => {
-              const stackElement = domElement.closest(".lm_item.lm_stack") as HTMLElement | null;
-              const controlElement = stackElement?.querySelector(selector) as HTMLElement | null;
-              controlElement?.click();
-            };
-
-            root.render(
-              <Window
-                id={windowKind.id}
-                isVisible={true}
-                showControls={true}
-                onOpenInNewWindow={() => clickGoldenLayoutControl(".lm_popout")}
-                onMaximize={() => clickGoldenLayoutControl(".lm_maximise")}
-                onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
-                onClose={() => clickGoldenLayoutControl(".lm_close")}
-                controls={windowKind.controls ? <UIWindowControlsGroup controls={windowKind.controls} /> : undefined}
-              >
-                <WindowComponent />
-              </Window>,
-            );
+            const portalKey = `${windowKind.id}-${portalCounter++}`;
+            const portal: UICanvasPortal = { key: portalKey, element: domElement, windowKind };
+            setPortals((prev) => [...prev, portal]);
 
             container.on("destroy", () => {
-              setTimeout(() => root.unmount(), 0);
+              setPortals((prev) => prev.filter((p) => p.key !== portalKey));
             });
           });
         });
@@ -9726,6 +9718,7 @@ const UICanvas: React.FC<{
 
         return () => {
           window.removeEventListener("resize", handleResize);
+          setPortals([]);
           try {
             layout.destroy();
           } catch {}
@@ -9739,7 +9732,37 @@ const UICanvas: React.FC<{
     loadGoldenLayout();
   }, [windowConfig, layoutState, onLayoutChange, onActiveWindowChange]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  return (
+    <>
+      <div ref={containerRef} className="w-full h-full" />
+      {portals.map((portal) => {
+        const WindowComponent = portal.windowKind.component;
+
+        const clickGoldenLayoutControl = (selector: string) => {
+          const stackElement = portal.element.closest(".lm_item.lm_stack") as HTMLElement | null;
+          const controlElement = stackElement?.querySelector(selector) as HTMLElement | null;
+          controlElement?.click();
+        };
+
+        return createPortal(
+          <Window
+            key={portal.key}
+            id={portal.windowKind.id}
+            isVisible={true}
+            showControls={true}
+            onOpenInNewWindow={() => clickGoldenLayoutControl(".lm_popout")}
+            onMaximize={() => clickGoldenLayoutControl(".lm_maximise")}
+            onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
+            onClose={() => clickGoldenLayoutControl(".lm_close")}
+            controls={portal.windowKind.controls ? <UIWindowControlsGroup controls={portal.windowKind.controls} /> : undefined}
+          >
+            <WindowComponent />
+          </Window>,
+          portal.element,
+        );
+      })}
+    </>
+  );
 };
 
 // #region UISearch

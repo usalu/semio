@@ -20,7 +20,7 @@
             "new_string": "logFiles := getLogFiles(t, tmpDir)\n\t// After removing redundant files, only session.json should exist\n\t// Both events use the same session_id, so they should be in one session.json file\n\tsessionCount := 0\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tsessionCount++\n\t\t}\n\t}\n\tif sessionCount != 1 {\n\t\tt.Fatalf(\"expected exactly 1 session.json file for search-session, got %d\", sessionCount)\n\t}"
           }
         ],
-        "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+        "file_path": "/workspaces/semio/repo/cli/main_test.go"
       }
     }
   },

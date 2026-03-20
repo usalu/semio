@@ -19,7 +19,7 @@ import { useState } from "react";
 // #region 🔖Panel
 
 const meta = {
-  title: "semio-elements/Panel",
+  title: "elements/Panel",
   component: Panel,
   parameters: {
     layout: "padded",

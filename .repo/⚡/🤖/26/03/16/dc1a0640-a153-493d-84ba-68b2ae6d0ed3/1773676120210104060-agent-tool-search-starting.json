@@ -17,7 +17,7 @@
       "tool_name": "read_file",
       "tool_input": {
         "endLine": 3050,
-        "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+        "filePath": "/workspaces/elements/ui/elements.tsx",
         "startLine": 2949
       },
       "tool_use_id": "toolu_bdrk_01JY8KzAxqDLqQbuPrFTMDvp__vscode-1773671759844",

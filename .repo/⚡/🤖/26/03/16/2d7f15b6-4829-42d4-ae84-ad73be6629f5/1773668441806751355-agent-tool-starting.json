@@ -14,7 +14,7 @@
       "hook_event_name": "PreToolUse",
       "session_id": "2d7f15b6-4829-42d4-ae84-ad73be6629f5",
       "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2d7f15b6-4829-42d4-ae84-ad73be6629f5.jsonl",
-      "tool_name": "mcp_semio-repo_ticket_reopen",
+      "tool_name": "mcp_repo_ticket_reopen",
       "tool_input": {
         "path": "2026/03/15/MAKE-SKETCHPAD-DESIGN-APP-TESTS-COMPLY",
         "prompt": "Fix remaining Design app test failure: y-stepper diagram value not being applied (v stays at original value after fill). The x-stepper works but y-stepper fill doesn't commit the value through React's controlled input after re-render. Need to use a more robust input method for the y stepper.",

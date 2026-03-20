@@ -23,7 +23,7 @@ import { Box, Circle, Cylinder, Hexagon } from "lucide-react";
 
 // #region 🔖Select
 const meta = {
-  title: "semio-elements/Select",
+  title: "elements/Select",
   component: Select,
   parameters: {
     layout: "centered",

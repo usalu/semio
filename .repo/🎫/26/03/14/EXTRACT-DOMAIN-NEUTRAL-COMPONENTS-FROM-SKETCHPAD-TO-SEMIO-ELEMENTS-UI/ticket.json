@@ -1,5 +1,5 @@
 {
-  "title": "Extract Domain Neutral Components From Sketchpad to Semio Elements UI",
+  "title": "Extract Domain Neutral Components From Sketchpad to Elements UI",
   "status": "closed",
   "description": "Move all domain-neutral components from sketchpad to elements/ui. This includes Window management, Toolbar, App system, hotkeys, i18n initialization, and more. Create a new UI composite component that provides the full app shell (apps with window kinds, left/right panels with tabs, navbar, footer). Sketchpad should be a UI built on top of this. Add storybook stories for every component.",
   "summary": "Made elements/ui fully self-contained and domain-neutral. Added generic primitives directly in elements.tsx: cn utility, Expertise/setExpertiseProvider/useLabel (i18n), Point/Vector/Plane/Camera (geometry types), Canvas/HorizontalWindows/VerticalWindows (layout). Created a new UI composite component with UIAppConfig, UIWindowConfig, WindowKind, Theme, Mode types — providing a full application shell with app management, window layouts, side panels with tabs, navbar, footer, and toolbar. Sketchpad now re-exports from elements/ui. Added 10 new storybook story files: UI, Window, Page, Panel, Toolbar, Strip, Card (with Spinner/NotFound/LoadingRow/Section/Aside), DiagramNode, Steps, PageNavigation, Diagram. Storybook builds successfully.",

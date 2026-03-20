@@ -129,7 +129,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "glob": "**/mcps/project-0-semio-repo/tools/*.json",
+            "glob": "**/mcps/project-0-repo/tools/*.json",
             "output_mode": "files_with_matches"
           },
           "tool_use_id": "toolu_bdrk_01T4Qxw2eNywaPihetBztDsW",
@@ -205,7 +205,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "",
-            "glob": "**/mcps/project-0-semio-repo/tools/*.json",
+            "glob": "**/mcps/project-0-repo/tools/*.json",
             "output_mode": "files_with_matches"
           },
           "tool_output": "{\"pattern\":\"\",\"success\":true}",
@@ -535,7 +535,7 @@
           "tool_input": {
             "pattern": "",
             "file_path": "/home/vscode/.cursor/projects/workspaces-semio",
-            "glob": "**/mcps/project-0-semio-repo/tools/*.json",
+            "glob": "**/mcps/project-0-repo/tools/*.json",
             "output_mode": "files_with_matches"
           },
           "tool_use_id": "toolu_bdrk_01LGe8yAZAygHqU4NENyc9Tj",
@@ -608,7 +608,7 @@
           "tool_input": {
             "pattern": "",
             "file_path": "/home/vscode/.cursor/projects/workspaces-semio",
-            "glob": "**/mcps/project-0-semio-repo/tools/*.json",
+            "glob": "**/mcps/project-0-repo/tools/*.json",
             "output_mode": "files_with_matches"
           },
           "tool_output": "{\"pattern\":\"\",\"success\":true}",
@@ -806,7 +806,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/search.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/search.json"
           },
           "tool_use_id": "toolu_bdrk_01Ar5TaZ78qtGzq3u9bP3Pw9",
           "hook_event_name": "preToolUse",
@@ -848,7 +848,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json"
           },
           "tool_use_id": "toolu_bdrk_019W153dc3onWDMZfbyKkuSz",
           "hook_event_name": "preToolUse",
@@ -890,7 +890,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json"
           },
           "tool_use_id": "toolu_bdrk_01263c1uP9i3FqwAQrcuZJZi",
           "hook_event_name": "preToolUse",
@@ -931,7 +931,7 @@
           "generation_id": "d4bdd808-e41d-40d3-8666-f5108dfe6724",
           "model": "claude-4.6-opus-high-thinking",
           "content": "{\n  \"name\": \"search\",\n  \"description\": \"Search monorepo tree\",\n  \"arguments\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"query\": {\n        \"description\": \"Optional query filter\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": []\n  }\n}",
-          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/search.json",
+          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/search.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.19",
@@ -971,7 +971,7 @@
           "generation_id": "d4bdd808-e41d-40d3-8666-f5108dfe6724",
           "model": "claude-4.6-opus-high-thinking",
           "content": "{\n  \"name\": \"ticket_open\",\n  \"description\": \"Open a new ticket\",\n  \"arguments\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"client\": {\n        \"description\": \"Client used for this ticket\",\n        \"type\": \"string\"\n      },\n      \"draft\": {\n        \"description\": \"Optional draft slug to seed ticket workspace\",\n        \"type\": \"string\"\n      },\n      \"goal\": {\n        \"description\": \"Goal ID\",\n        \"type\": \"string\"\n      },\n      \"issue\": {\n        \"description\": \"Link to existing GitHub issue URL instead of creating new one\",\n        \"type\": \"string\"\n      },\n      \"llm\": {\n        \"description\": \"LLM used for this ticket\",\n        \"type\": \"string\"\n      },\n      \"no-issue\": {\n        \"description\": \"Skip GitHub issue creation\",\n        \"type\": \"boolean\"\n      },\n      \"no_github\": {\n        \"description\": \"Skip GitHub issue creation\",\n        \"type\": \"boolean\"\n      },\n      \"parent\": {\n        \"description\": \"Parent ticket slug for nested tickets\",\n        \"type\": \"string\"\n      },\n      \"prompt\": {\n        \"description\": \"Ticket prompt/description\",\n        \"type\": \"string\"\n      },\n      \"title\": {\n        \"description\": \"Ticket title\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": []\n  }\n}",
-          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json",
+          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.19",
@@ -1011,7 +1011,7 @@
           "generation_id": "d4bdd808-e41d-40d3-8666-f5108dfe6724",
           "model": "claude-4.6-opus-high-thinking",
           "content": "{\n  \"name\": \"ticket_close\",\n  \"description\": \"Close a ticket\",\n  \"arguments\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"files\": {\n        \"description\": \"Files to include\",\n        \"items\": {\n          \"type\": \"string\"\n        },\n        \"type\": \"array\"\n      },\n      \"no_github\": {\n        \"description\": \"Skip GitHub issue creation\",\n        \"type\": \"boolean\"\n      },\n      \"path\": {\n        \"description\": \"Ticket path\",\n        \"type\": \"string\"\n      },\n      \"summary\": {\n        \"description\": \"Summary of the ticket work\",\n        \"type\": \"string\"\n      },\n      \"title\": {\n        \"description\": \"New title for the ticket (also updates GitHub issue)\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": []\n  }\n}",
-          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json",
+          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.19",
@@ -1052,9 +1052,9 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/search.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/search.json"
           },
-          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/search.json\",\"content_length\":251}",
+          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/search.json\",\"content_length\":251}",
           "duration": 2.007,
           "tool_use_id": "toolu_bdrk_01Ar5TaZ78qtGzq3u9bP3Pw9",
           "hook_event_name": "postToolUse",
@@ -1096,9 +1096,9 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json"
           },
-          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json\",\"content_length\":1232}",
+          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json\",\"content_length\":1232}",
           "duration": 2.039,
           "tool_use_id": "toolu_bdrk_019W153dc3onWDMZfbyKkuSz",
           "hook_event_name": "postToolUse",
@@ -1140,9 +1140,9 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json"
           },
-          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json\",\"content_length\":735}",
+          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json\",\"content_length\":735}",
           "duration": 1.998,
           "tool_use_id": "toolu_bdrk_01263c1uP9i3FqwAQrcuZJZi",
           "hook_event_name": "postToolUse",
@@ -1222,7 +1222,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "search",
           "tool_input": "{\"query\":\"gltf-transform model export GLB kit design\"}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -1378,7 +1378,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_open",
           "tool_input": "{\"title\":\"Rewrite exportDesignModel to Use gltf-transform\",\"prompt\":\"Replace all manual GLB construction in the Kit Model Export region of semio/js/semio.ts with @gltf-transform/core library. Remove parseGlb, buildGlb, blobToArrayBuffer, mergeGlbModel. Use Document, NodeIO, Accessor, Primitive from gltf-transform. Keep EXPORT_MODEL_FORMATS, function signature, BFS traversal, connection hierarchy logic.\",\"client\":\"cursor-chat\",\"llm\":\"opus-4-6\",\"no_github\":true}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -1500,7 +1500,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "search",
           "tool_input": "{\"query\":\"goal model export\"}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -1648,7 +1648,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "search",
           "tool_input": "{\"query\":\"goals\"}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -2905,7 +2905,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_open",
           "tool_input": "{\"goal\":\"R2603/REWRITE-EXPORT-DESIGN-MODEL-TO-USE-PROPER-GLTF-LIBRARIES\",\"llm\":\"opus-4-6\",\"no_github\":true,\"prompt\":\"Rewrite exportDesignModel in semio/js/semio.ts to use @gltf-transform/core instead of manual GLB construction. Remove parseGlb, buildGlb, blobToArrayBuffer, mergeGlbModel. Keep EXPORT_MODEL_FORMATS, function signature, BFS traversal logic.\",\"client\":\"cursor-chat\",\"title\":\"Rewrite TypeScript exportDesignModel with gltf-transform\"}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -5206,7 +5206,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_close",
           "tool_input": "{\"path\":\"26/03/14/REWRITE-TYPE-SCRIPT-EXPORT-DESIGN-MODEL-WITH-GLTF-TRANSFORM\",\"summary\":\"Rewrote exportDesignModel in semio/js/semio.ts to use @gltf-transform/core instead of manual GLB binary construction. Removed parseGlb, buildGlb, blobToArrayBuffer, mergeGlbModel functions. Added import for Document, NodeIO, Accessor, Primitive, Buffer, Mesh, Node, Scene, Material, Texture from @gltf-transform/core. Added decodeBlobToBytes (base64 decoder), copyGltfTexture, copyGltfMaterial, copyGltfMeshes (deep-copy mesh data between documents), createBoxMesh (unit box placeholder). Rewrote exportDesignModel to: create a GltfDocument, read source GLB files via io.readBinary(), copy mesh data into target doc via copyGltfMeshes, build scene graph with GltfNode hierarchy and setMatrix for transforms, output via io.writeBinary() for .glb or io.writeJSON() for .gltf. Kept EXPORT_MODEL_FORMATS, planeToGlbTransform, findMatchingModel, function signature, BFS traversal, connection hierarchy, relative transform logic. All 18 tests pass.\",\"files\":[\"semio/js/semio.ts\"],\"no_github\":true}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [

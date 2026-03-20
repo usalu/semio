@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Shared export surface for semio-elements ui primitives.
+// Shared export surface for elements ui primitives.
 
 // #endregion 🔖Header
 
@@ -24,5 +24,6 @@
 // Re-export all shared element primitives from the bundle root.
 
 export * from "./elements";
+export { tailwindConfig } from "./tailwind.config";
 
 // #endregion 🔖Exports

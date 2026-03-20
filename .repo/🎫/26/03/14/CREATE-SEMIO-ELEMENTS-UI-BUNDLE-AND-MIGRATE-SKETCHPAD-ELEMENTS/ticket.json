@@ -1,5 +1,5 @@
 {
-  "title": "Create Semio Elements UI Bundle and Migrate Sketchpad Elements",
+  "title": "Create Elements UI Bundle and Migrate Sketchpad Elements",
   "status": "closed",
   "description": "Create a new elements technology with a ui bundle that owns the shared UI elements now living in semio/js/sketchpad. Migrate element exports and imports from sketchpad into semio js, and move the Storybook to the new ui bundle so semio/js consumes the bundle instead of hosting the element source and stories.",
   "summary": "Removed the remaining compatibility layer from the elements migration. semio/js no longer hosts or wraps Storybook, no longer re-exports shared element primitives, and no longer ships the old sketchpad elements shim. Shared UI consumers now import directly from @elements/ui, and the moved Storybook remains the only host for those elements. Verified semio/js tests pass and elements/ui Storybook builds successfully.",

@@ -17,14 +17,14 @@
       "hook_event_name": "PostToolUse",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+        "file_path": "/workspaces/elements/ui/elements.tsx",
         "offset": 5341,
         "limit": 60
       },
       "tool_response": {
         "type": "text",
         "file": {
-          "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+          "filePath": "/workspaces/elements/ui/elements.tsx",
           "content": "export const TreeItem: React.FC\u003cTreeItemProps\u003e = ({\n  label,\n  id,\n  icon,\n  children,\n  onClick,\n  className = \"\",\n  isSelected = false,\n  isHighlighted = false,\n  sortable = false,\n  sortableId,\n  isDragHandle = false,\n  defaultOpen = true,\n  isLastItem = false,\n  actions = [],\n  onDoubleClick,\n  open: controlledOpen,\n  onOpenChange,\n  expandable,\n  loading = false,\n  draggable = false,\n  onDragStart,\n  onDragOver,\n  onDragLeave,\n  onDrop,\n}) =\u003e {\n  const localizedLabel = id ? useLabel(id) : undefined;\n  const resolvedLabel = label ?? localizedLabel;\n  assertNoNestedTreeSections(children, \"TreeItem\");\n  if (sortable \u0026\u0026 sortableId) {\n    return (\n      \u003cSortableTreeItem\n        id={sortableId}\n        label={resolvedLabel}\n        icon={icon}\n        className={className}\n        isSelected={isSelected}\n        isHighlighted={isHighlighted}\n        isDragHandle={isDragHandle}\n        defaultOpen={defaultOpen}\n        isLastItem={isLastItem}\n        actions={actions}\n        onDoubleClick={onDoubleClick}\n      \u003e\n        {children}\n      \u003c/SortableTreeItem\u003e\n    );\n  }\n\n  const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);\n  const itemKey = id ?? resolvedLabel ?? sortableId ?? \"tree-item\";\n  const itemId = getTreeItemStateId(String(itemKey));\n  const treeOpenState = useTreeOpenState(itemId, defaultOpen);\n  const open = controlledOpen ?? treeOpenState.open;\n  const setOpen = React.useCallback(\n    (value: boolean) =\u003e {\n      treeOpenState.setOpen(value);\n      onOpenChange?.(value);\n    },\n    [onOpenChange, treeOpenState],",
           "numLines": 60,
           "startLine": 5341,

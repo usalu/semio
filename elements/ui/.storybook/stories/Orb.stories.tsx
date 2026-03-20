@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Orb
 const meta = {
-  title: "semio-elements/Orb",
+  title: "elements/Orb",
   component: Orb,
   parameters: {
     layout: "centered",

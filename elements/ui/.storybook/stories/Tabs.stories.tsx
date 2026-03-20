@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Tabs
 const meta = {
-  title: "semio-elements/Tabs",
+  title: "elements/Tabs",
   component: Tabs,
   parameters: {
     layout: "centered",

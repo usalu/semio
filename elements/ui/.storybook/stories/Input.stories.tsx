@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Input
 const meta = {
-  title: "semio-elements/Input",
+  title: "elements/Input",
   component: Input,
   parameters: {
     layout: "centered",

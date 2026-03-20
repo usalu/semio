@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Scrollable
 const meta = {
-  title: "semio-elements/Scrollable",
+  title: "elements/Scrollable",
   component: Scrollable,
   parameters: {
     layout: "centered",

@@ -17,7 +17,7 @@
       "hook_event_name": "PreToolUse",
       "tool_name": "Bash",
       "tool_input": {
-        "command": "cd /workspaces/semio/elements/ui \u0026\u0026 npx tsc --noEmit 2\u003e\u00261 | head -60",
+        "command": "cd /workspaces/elements/ui \u0026\u0026 npx tsc --noEmit 2\u003e\u00261 | head -60",
         "timeout": 120000,
         "description": "Type-check elements/ui"
       },

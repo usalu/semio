@@ -17,14 +17,14 @@
       "hook_event_name": "PostToolUse",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+        "file_path": "/workspaces/elements/ui/elements.tsx",
         "offset": 5330,
         "limit": 15
       },
       "tool_response": {
         "type": "text",
         "file": {
-          "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+          "filePath": "/workspaces/elements/ui/elements.tsx",
           "content": "      \u003cSortableContext items={items.map((item) =\u003e item.id)} strategy={verticalListSortingStrategy}\u003e\n        {items.map((item, index) =\u003e children(item, index))}\n      \u003c/SortableContext\u003e\n    \u003c/DndContext\u003e\n  );\n};\n\n/**\n * Single tree item row with icon, label, and interaction handlers.\n * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treeitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeItem)\n **/\nexport const TreeItem: React.FC\u003cTreeItemProps\u003e = ({\n  label,\n  id,\n  icon,",
           "numLines": 15,
           "startLine": 5330,

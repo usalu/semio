@@ -23,13 +23,24 @@
 // Electron main process that creates the browser window and registers IPC handlers.
 // MUST quit on all windows closed except on macOS.
 
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
+import fs from "node:fs";
 import os from "os";
 
 if (started) {
   app.quit();
+}
+
+// Disable GPU acceleration in containerized environments where GPU/WebGL is unavailable.
+// Without this, the GPU process crashes with "WebGL1 blocklisted" and kills the app.
+if (process.env.REMOTE_CONTAINERS || process.env.CODESPACES || process.env.CONTAINER) {
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch("disable-gpu");
+  app.commandLine.appendSwitch("disable-gpu-compositing");
+  app.commandLine.appendSwitch("disable-software-rasterizer");
+  app.commandLine.appendSwitch("in-process-gpu");
 }
 
 /**
@@ -57,6 +68,7 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+
 };
 
 app.on("ready", createWindow);
@@ -98,6 +110,106 @@ app.whenReady().then(() => {
   ipcMain.handle("get-user-id", (event) => {
     return os.userInfo().username;
   });
+
+  // #region 🔖FolderIPC
+  // IPC handlers for folder-based kit storage.
+  ipcMain.handle("select-folder", async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ["openDirectory"],
+      title: "Select Kit Folder",
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
+
+  ipcMain.handle("read-kit", async (_event, folderPath: string) => {
+    const kitPath = path.join(folderPath, ".semio", "kit.json");
+    try {
+      return fs.readFileSync(kitPath, "utf-8");
+    } catch {
+      return null;
+    }
+  });
+
+  ipcMain.handle("write-kit", async (_event, folderPath: string, json: string) => {
+    const semioDir = path.join(folderPath, ".semio");
+    if (!fs.existsSync(semioDir)) {
+      fs.mkdirSync(semioDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(semioDir, "kit.json"), json, "utf-8");
+  });
+
+  ipcMain.handle("read-file", async (_event, folderPath: string, filePath: string) => {
+    const fullPath = path.join(folderPath, filePath);
+    try {
+      const buffer = fs.readFileSync(fullPath);
+      return buffer.buffer;
+    } catch {
+      return null;
+    }
+  });
+
+  ipcMain.handle("write-file", async (_event, folderPath: string, filePath: string, data: ArrayBuffer) => {
+    const fullPath = path.join(folderPath, filePath);
+    const dir = path.dirname(fullPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(fullPath, Buffer.from(data));
+  });
+
+  ipcMain.handle("delete-file", async (_event, folderPath: string, filePath: string) => {
+    const fullPath = path.join(folderPath, filePath);
+    try {
+      fs.unlinkSync(fullPath);
+    } catch {
+      /* ignore */
+    }
+  });
+
+  ipcMain.handle("list-files", async (_event, folderPath: string) => {
+    const results: string[] = [];
+    function walk(dir: string, base: string) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name === ".semio" || entry.name === "node_modules") continue;
+        const rel = base ? `${base}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) {
+          walk(path.join(dir, entry.name), rel);
+        } else {
+          results.push(rel);
+        }
+      }
+    }
+    try {
+      walk(folderPath, "");
+    } catch {
+      /* ignore */
+    }
+    return results;
+  });
+
+  ipcMain.handle("get-recent-folders", () => {
+    const configPath = path.join(app.getPath("userData"), "recent-folders.json");
+    try {
+      return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    } catch {
+      return [];
+    }
+  });
+
+  ipcMain.handle("add-recent-folder", (_event, folderPath: string) => {
+    const configPath = path.join(app.getPath("userData"), "recent-folders.json");
+    let recent: string[] = [];
+    try {
+      recent = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    } catch {
+      /* ignore */
+    }
+    recent = [folderPath, ...recent.filter((f: string) => f !== folderPath)].slice(0, 10);
+    fs.writeFileSync(configPath, JSON.stringify(recent), "utf-8");
+  });
+  // #endregion 🔖FolderIPC
 });
 
 // #endregion 🔖Main Process

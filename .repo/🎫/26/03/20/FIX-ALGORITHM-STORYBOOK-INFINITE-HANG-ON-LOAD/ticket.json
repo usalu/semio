@@ -1,0 +1,12 @@
+{
+  "title": "Fix Algorithm Storybook Infinite Hang on Load",
+  "status": "open",
+  "description": "Algorithm storybook stories hang infinitely because UICanvas creates separate React roots via createRoot for golden-layout components, which breaks React context. The IpoContext.Provider in the story's IpoFrame is not accessible from golden-layout's separate React roots. Fix by adding a wrapper prop to UIWindowConfig that wraps components in golden-layout createRoot calls.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/990"
+  },
+  "goal": "🎯r2603🎯runningnet",
+  "sessions": [
+    "⚪af1cadd0ef2743968da61298f901f35d"
+  ]
+}

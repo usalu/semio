@@ -124,7 +124,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "search",
           "tool_input": "{\"query\":\"export_design_model Kit Model Export trimesh GLB glb model export\"}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -1192,7 +1192,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_reopen",
           "tool_input": "{\"ticket_id\":\"2026/03/14/ADD-EXPORT-DESIGN-MODEL-FUNCTION\",\"prompt\":\"Rewrite the export_design_model function in semio.py to use trimesh library instead of manual GLB construction. Remove all manual binary buffer manipulation helpers and replace with trimesh equivalents.\",\"client\":\"cursor-chat\",\"llm\":\"opus-4-6\"}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -1274,7 +1274,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_reopen.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_reopen.json"
           },
           "tool_use_id": "toolu_bdrk_01Tb9sZQTQmTyU7Pz8XPxXgS",
           "hook_event_name": "preToolUse",
@@ -1316,7 +1316,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json"
           },
           "tool_use_id": "toolu_bdrk_01MzCb29TASjgwyNqn7bRC86",
           "hook_event_name": "preToolUse",
@@ -1357,7 +1357,7 @@
           "generation_id": "ec95989a-b842-4ce7-93da-c029c6f8ed13",
           "model": "claude-4.6-opus-high-thinking",
           "content": "{\n  \"name\": \"ticket_reopen\",\n  \"description\": \"Reopen a closed ticket\",\n  \"arguments\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"client\": {\n        \"description\": \"Client used for this ticket\",\n        \"type\": \"string\"\n      },\n      \"draft\": {\n        \"description\": \"Optional draft slug to seed ticket workspace\",\n        \"type\": \"string\"\n      },\n      \"llm\": {\n        \"description\": \"LLM used for this ticket\",\n        \"type\": \"string\"\n      },\n      \"no_github\": {\n        \"description\": \"Skip GitHub issue creation\",\n        \"type\": \"boolean\"\n      },\n      \"path\": {\n        \"description\": \"Ticket path\",\n        \"type\": \"string\"\n      },\n      \"prompt\": {\n        \"description\": \"New prompt/description for the ticket\",\n        \"type\": \"string\"\n      },\n      \"title\": {\n        \"description\": \"New title for the ticket (also updates GitHub issue)\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": []\n  }\n}",
-          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_reopen.json",
+          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_reopen.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.19",
@@ -1397,7 +1397,7 @@
           "generation_id": "ec95989a-b842-4ce7-93da-c029c6f8ed13",
           "model": "claude-4.6-opus-high-thinking",
           "content": "{\n  \"name\": \"ticket_open\",\n  \"description\": \"Open a new ticket\",\n  \"arguments\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"client\": {\n        \"description\": \"Client used for this ticket\",\n        \"type\": \"string\"\n      },\n      \"draft\": {\n        \"description\": \"Optional draft slug to seed ticket workspace\",\n        \"type\": \"string\"\n      },\n      \"goal\": {\n        \"description\": \"Goal ID\",\n        \"type\": \"string\"\n      },\n      \"issue\": {\n        \"description\": \"Link to existing GitHub issue URL instead of creating new one\",\n        \"type\": \"string\"\n      },\n      \"llm\": {\n        \"description\": \"LLM used for this ticket\",\n        \"type\": \"string\"\n      },\n      \"no-issue\": {\n        \"description\": \"Skip GitHub issue creation\",\n        \"type\": \"boolean\"\n      },\n      \"no_github\": {\n        \"description\": \"Skip GitHub issue creation\",\n        \"type\": \"boolean\"\n      },\n      \"parent\": {\n        \"description\": \"Parent ticket slug for nested tickets\",\n        \"type\": \"string\"\n      },\n      \"prompt\": {\n        \"description\": \"Ticket prompt/description\",\n        \"type\": \"string\"\n      },\n      \"title\": {\n        \"description\": \"Ticket title\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": []\n  }\n}",
-          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json",
+          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.19",
@@ -1438,9 +1438,9 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_reopen.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_reopen.json"
           },
-          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_reopen.json\",\"content_length\":932}",
+          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_reopen.json\",\"content_length\":932}",
           "duration": 1.9,
           "tool_use_id": "toolu_bdrk_01Tb9sZQTQmTyU7Pz8XPxXgS",
           "hook_event_name": "postToolUse",
@@ -1482,9 +1482,9 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json"
           },
-          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json\",\"content_length\":1232}",
+          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json\",\"content_length\":1232}",
           "duration": 1.93,
           "tool_use_id": "toolu_bdrk_01MzCb29TASjgwyNqn7bRC86",
           "hook_event_name": "postToolUse",
@@ -1574,7 +1574,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_open",
           "tool_input": "{\"title\":\"Rewrite Export Design Model With Trimesh\",\"prompt\":\"Rewrite the export_design_model function in semio.py to use trimesh library instead of manual GLB construction. Remove all manual binary buffer manipulation helpers and replace with trimesh equivalents.\",\"client\":\"cursor-chat\",\"llm\":\"opus-4-6\",\"goal\":\"R26-03\",\"no_github\":true}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -4726,7 +4726,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json"
           },
           "tool_use_id": "toolu_bdrk_012ZoZvvyrTLm358fHVMbJMe",
           "hook_event_name": "preToolUse",
@@ -4767,7 +4767,7 @@
           "generation_id": "ec95989a-b842-4ce7-93da-c029c6f8ed13",
           "model": "claude-4.6-opus-high-thinking",
           "content": "{\n  \"name\": \"ticket_close\",\n  \"description\": \"Close a ticket\",\n  \"arguments\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"files\": {\n        \"description\": \"Files to include\",\n        \"items\": {\n          \"type\": \"string\"\n        },\n        \"type\": \"array\"\n      },\n      \"no_github\": {\n        \"description\": \"Skip GitHub issue creation\",\n        \"type\": \"boolean\"\n      },\n      \"path\": {\n        \"description\": \"Ticket path\",\n        \"type\": \"string\"\n      },\n      \"summary\": {\n        \"description\": \"Summary of the ticket work\",\n        \"type\": \"string\"\n      },\n      \"title\": {\n        \"description\": \"New title for the ticket (also updates GitHub issue)\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": []\n  }\n}",
-          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json",
+          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.19",
@@ -4808,9 +4808,9 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json"
           },
-          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json\",\"content_length\":735}",
+          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json\",\"content_length\":735}",
           "duration": 2.441,
           "tool_use_id": "toolu_bdrk_012ZoZvvyrTLm358fHVMbJMe",
           "hook_event_name": "postToolUse",
@@ -4900,7 +4900,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_close",
           "tool_input": "{\"path\":\"2026/03/14/REWRITE-EXPORT-DESIGN-MODEL-WITH-TRIMESH\",\"summary\":\"Rewrote the Kit Model Export region in semio.py to use trimesh instead of manual GLB/glTF binary construction. Removed 12 manual helper functions (_parse_glb, _build_glb, _blob_to_bytes, _plane_to_glb_transform, _merge_glb_model, _add_box_placeholder, _read_accessor_floats, _read_accessor_indices, _extract_world_geometry, _export_obj, _export_stl, _export_ply, _export_off) and replaced with 3 trimesh-based functions: _load_type_mesh (loads type GLB blobs via trimesh), _export_empty_scene (handles empty design case), _export_trimesh_scene (exports to all supported formats). Kept existing helpers (_plane_to_matrix_4x4, _identity_plane, _type_key_from_id, _type_key_from_type, _find_matching_model). All 14 tests pass.\",\"files\":[\"semio/py/semio.py\"],\"no_github\":true}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [
@@ -5175,7 +5175,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_close",
           "tool_input": "{\"path\":\"26/03/14/REWRITE-EXPORT-DESIGN-MODEL-WITH-TRIMESH\",\"summary\":\"Rewrote the Kit Model Export region in semio.py to use trimesh instead of manual GLB/glTF binary construction. Removed 12 manual helper functions (_parse_glb, _build_glb, _blob_to_bytes, _plane_to_glb_transform, _merge_glb_model, _add_box_placeholder, _read_accessor_floats, _read_accessor_indices, _extract_world_geometry, _export_obj, _export_stl, _export_ply, _export_off) and replaced with 3 trimesh-based functions: _load_type_mesh, _export_empty_scene, _export_trimesh_scene. Kept existing helpers. All 14 tests pass.\",\"files\":[\"semio/py/semio.py\"],\"no_github\":true}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.19",
           "workspace_roots": [

@@ -192,7 +192,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8350,
-            "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+            "filePath": "/workspaces/elements/ui/elements.tsx",
             "startLine": 8124
           },
           "tool_use_id": "toolu_012Kb8KNVWBzrzWb6EtYrHFW__vscode-1773492851103",
@@ -211,14 +211,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements🪨table",
+            "id": "🗃️elements🛅ui💻elements🪨table",
             "loc": 29
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌8124📌8350"
+          "🗃️elements🛅ui💻elements📌8124📌8350"
         ],
         "second": "🎆26🌙03☀️14⏰13⌚21⏱️27",
         "session": "⚪977e308b673e41b5a09ba140eaa260b1"
@@ -236,7 +236,7 @@
           "tool_name": "read_file",
           "tool_input": {
             "endLine": 8350,
-            "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+            "filePath": "/workspaces/elements/ui/elements.tsx",
             "startLine": 8124
           },
           "tool_response": "",
@@ -255,14 +255,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements🪨table",
+            "id": "🗃️elements🛅ui💻elements🪨table",
             "loc": 29
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌8124📌8350"
+          "🗃️elements🛅ui💻elements📌8124📌8350"
         ],
         "second": "🎆26🌙03☀️14⏰13⌚21⏱️41",
         "session": "⚪977e308b673e41b5a09ba140eaa260b1"

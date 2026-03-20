@@ -14,7 +14,7 @@
       "session_id": "fdb138bd-3581-4e14-8743-28246c10db58",
       "tool_name": "read_file",
       "tool_input": {
-        "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+        "filePath": "/workspaces/elements/ui/elements.tsx",
         "startLine": 2340,
         "endLine": 2475
       },

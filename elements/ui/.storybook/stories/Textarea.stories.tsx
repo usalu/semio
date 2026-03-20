@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Textarea
 const meta = {
-  title: "semio-elements/Textarea",
+  title: "elements/Textarea",
   component: Textarea,
   parameters: {
     layout: "centered",

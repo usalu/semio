@@ -1282,6 +1282,9 @@ test.describe("sketchpad", () => {
     const hasRemoteToggle = await remoteToggle.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Home] Remote filter toggle visible: ${hasRemoteToggle}`);
     expect(hasTemporaryToggle || hasLocalToggle || hasRemoteToggle).toBe(true);
+    expect(hasTemporaryToggle).toBe(true);
+    expect(hasLocalToggle).toBe(false);
+    expect(hasRemoteToggle).toBe(false);
 
     const expectHomeKindToggleCycle = async (toggle: Locator, kind: "temporary" | "local" | "remote") => {
       console.log(`[Home] Testing ${kind} filter toggle on/off`);
@@ -1317,6 +1320,9 @@ test.describe("sketchpad", () => {
     const hasCreateRemoteBtn = await createRemoteBtn.isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`[Home] Create remote button visible: ${hasCreateRemoteBtn}`);
     expect(hasCreateTempBtn || hasCreateLocalBtn || hasCreateRemoteBtn).toBe(true);
+    expect(hasCreateTempBtn).toBe(true);
+    expect(hasCreateLocalBtn).toBe(false);
+    expect(hasCreateRemoteBtn).toBe(false);
 
     console.log("[Home] Testing group mutual exclusivity - filter settings hidden when create active");
     const temporaryStillVisible = await temporaryToggle.isVisible({ timeout: 1000 }).catch(() => false);

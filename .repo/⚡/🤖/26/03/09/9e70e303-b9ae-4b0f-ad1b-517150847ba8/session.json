@@ -67,7 +67,7 @@
           "hook_event_name": "PreToolUse",
           "tool_name": "ToolSearch",
           "tool_input": {
-            "query": "select:mcp__semio-repo__search",
+            "query": "select:mcp__repo__search",
             "max_results": 1
           },
           "tool_use_id": "toolu_01Ujj4KLytefXYRF3GUyD9Bx"
@@ -79,7 +79,7 @@
         "contributor": "🧑‍💻ueli",
         "input": {
           "max_results": 1,
-          "query": "select:mcp__semio-repo__search"
+          "query": "select:mcp__repo__search"
         },
         "kind": "agent.tool.starting",
         "name": "ToolSearch",
@@ -102,14 +102,14 @@
           "hook_event_name": "PostToolUse",
           "tool_name": "ToolSearch",
           "tool_input": {
-            "query": "select:mcp__semio-repo__search",
+            "query": "select:mcp__repo__search",
             "max_results": 1
           },
           "tool_response": {
             "matches": [
-              "mcp__semio-repo__search"
+              "mcp__repo__search"
             ],
-            "query": "select:mcp__semio-repo__search",
+            "query": "select:mcp__repo__search",
             "total_deferred_tools": 64
           },
           "tool_use_id": "toolu_01Ujj4KLytefXYRF3GUyD9Bx"
@@ -121,16 +121,16 @@
         "contributor": "🧑‍💻ueli",
         "input": {
           "max_results": 1,
-          "query": "select:mcp__semio-repo__search"
+          "query": "select:mcp__repo__search"
         },
         "kind": "agent.tool.ended",
         "name": "ToolSearch",
         "parent": "",
         "response": {
           "matches": [
-            "mcp__semio-repo__search"
+            "mcp__repo__search"
           ],
-          "query": "select:mcp__semio-repo__search",
+          "query": "select:mcp__repo__search",
           "total_deferred_tools": 64
         },
         "second": "🎆26🌙03☀️09⏰13⌚06⏱️23",
@@ -149,7 +149,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob base64 encoding uri data"
           },
@@ -164,7 +164,7 @@
           "query": "file blob base64 encoding uri data"
         },
         "kind": "repo.search.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚06⏱️35",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -182,7 +182,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob base64 encoding uri data"
           },
@@ -197,7 +197,7 @@
           "query": "file blob base64 encoding uri data"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚06⏱️35",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -215,7 +215,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob base64 encoding uri data"
           },
@@ -236,7 +236,7 @@
           "query": "file blob base64 encoding uri data"
         },
         "kind": "repo.search.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -260,7 +260,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob base64 encoding uri data"
           },
@@ -281,7 +281,7 @@
           "query": "file blob base64 encoding uri data"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -305,7 +305,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "blob file encoding"
           },
@@ -320,7 +320,7 @@
           "query": "blob file encoding"
         },
         "kind": "repo.search.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚07⏱️18",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -338,7 +338,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "blob file encoding"
           },
@@ -353,7 +353,7 @@
           "query": "blob file encoding"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚07⏱️18",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -371,7 +371,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "blob file encoding"
           },
@@ -392,7 +392,7 @@
           "query": "blob file encoding"
         },
         "kind": "repo.search.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -416,7 +416,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "blob file encoding"
           },
@@ -437,7 +437,7 @@
           "query": "blob file encoding"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -461,7 +461,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "blob base64"
           },
@@ -476,7 +476,7 @@
           "query": "blob base64"
         },
         "kind": "repo.search.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚07⏱️43",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -494,7 +494,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "blob base64"
           },
@@ -509,7 +509,7 @@
           "query": "blob base64"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚07⏱️43",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -527,7 +527,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "blob base64"
           },
@@ -548,7 +548,7 @@
           "query": "blob base64"
         },
         "kind": "repo.search.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -572,7 +572,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "blob base64"
           },
@@ -593,7 +593,7 @@
           "query": "blob base64"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -617,7 +617,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob ADD-BLOB-TO-FILE refactoring"
           },
@@ -632,7 +632,7 @@
           "query": "file blob ADD-BLOB-TO-FILE refactoring"
         },
         "kind": "repo.search.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚08⏱️08",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -650,7 +650,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob ADD-BLOB-TO-FILE refactoring"
           },
@@ -665,7 +665,7 @@
           "query": "file blob ADD-BLOB-TO-FILE refactoring"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚08⏱️08",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -683,7 +683,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob ADD-BLOB-TO-FILE refactoring"
           },
@@ -704,7 +704,7 @@
           "query": "file blob ADD-BLOB-TO-FILE refactoring"
         },
         "kind": "repo.search.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -728,7 +728,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob ADD-BLOB-TO-FILE refactoring"
           },
@@ -749,7 +749,7 @@
           "query": "file blob ADD-BLOB-TO-FILE refactoring"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -775,7 +775,7 @@
           "hook_event_name": "PreToolUse",
           "tool_name": "ToolSearch",
           "tool_input": {
-            "query": "select:mcp__semio-repo__ticket_reopen,mcp__semio-repo__ticket_open,mcp__semio-repo__ticket_close",
+            "query": "select:mcp__repo__ticket_reopen,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "max_results": 5
           },
           "tool_use_id": "toolu_016unH1fpgVoQMhR8bfJnqNW"
@@ -787,7 +787,7 @@
         "contributor": "🧑‍💻ueli",
         "input": {
           "max_results": 5,
-          "query": "select:mcp__semio-repo__ticket_reopen,mcp__semio-repo__ticket_open,mcp__semio-repo__ticket_close"
+          "query": "select:mcp__repo__ticket_reopen,mcp__repo__ticket_open,mcp__repo__ticket_close"
         },
         "kind": "agent.tool.starting",
         "name": "ToolSearch",
@@ -810,16 +810,16 @@
           "hook_event_name": "PostToolUse",
           "tool_name": "ToolSearch",
           "tool_input": {
-            "query": "select:mcp__semio-repo__ticket_reopen,mcp__semio-repo__ticket_open,mcp__semio-repo__ticket_close",
+            "query": "select:mcp__repo__ticket_reopen,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "max_results": 5
           },
           "tool_response": {
             "matches": [
-              "mcp__semio-repo__ticket_reopen",
-              "mcp__semio-repo__ticket_open",
-              "mcp__semio-repo__ticket_close"
+              "mcp__repo__ticket_reopen",
+              "mcp__repo__ticket_open",
+              "mcp__repo__ticket_close"
             ],
-            "query": "select:mcp__semio-repo__ticket_reopen,mcp__semio-repo__ticket_open,mcp__semio-repo__ticket_close",
+            "query": "select:mcp__repo__ticket_reopen,mcp__repo__ticket_open,mcp__repo__ticket_close",
             "total_deferred_tools": 64
           },
           "tool_use_id": "toolu_016unH1fpgVoQMhR8bfJnqNW"
@@ -831,18 +831,18 @@
         "contributor": "🧑‍💻ueli",
         "input": {
           "max_results": 5,
-          "query": "select:mcp__semio-repo__ticket_reopen,mcp__semio-repo__ticket_open,mcp__semio-repo__ticket_close"
+          "query": "select:mcp__repo__ticket_reopen,mcp__repo__ticket_open,mcp__repo__ticket_close"
         },
         "kind": "agent.tool.ended",
         "name": "ToolSearch",
         "parent": "",
         "response": {
           "matches": [
-            "mcp__semio-repo__ticket_reopen",
-            "mcp__semio-repo__ticket_open",
-            "mcp__semio-repo__ticket_close"
+            "mcp__repo__ticket_reopen",
+            "mcp__repo__ticket_open",
+            "mcp__repo__ticket_close"
           ],
-          "query": "select:mcp__semio-repo__ticket_reopen,mcp__semio-repo__ticket_open,mcp__semio-repo__ticket_close",
+          "query": "select:mcp__repo__ticket_reopen,mcp__repo__ticket_open,mcp__repo__ticket_close",
           "total_deferred_tools": 64
         },
         "second": "🎆26🌙03☀️09⏰13⌚09⏱️25",
@@ -1596,7 +1596,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob refactoring goal"
           },
@@ -1611,7 +1611,7 @@
           "query": "file blob refactoring goal"
         },
         "kind": "repo.search.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚11⏱️34",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -1629,7 +1629,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob refactoring goal"
           },
@@ -1644,7 +1644,7 @@
           "query": "file blob refactoring goal"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚11⏱️34",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -1662,7 +1662,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob refactoring goal"
           },
@@ -1683,7 +1683,7 @@
           "query": "file blob refactoring goal"
         },
         "kind": "repo.search.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -1707,7 +1707,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "file blob refactoring goal"
           },
@@ -1728,7 +1728,7 @@
           "query": "file blob refactoring goal"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -1752,7 +1752,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__ticket_open",
+          "tool_name": "mcp__repo__ticket_open",
           "tool_input": {
             "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
             "title": "Encode File Blob as Data Uri",
@@ -1775,7 +1775,7 @@
           "llm": "sonnet-4-5"
         },
         "kind": "repo.ticket.open.starting",
-        "name": "mcp__semio-repo__ticket_open",
+        "name": "mcp__repo__ticket_open",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚12⏱️27",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -1793,7 +1793,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__ticket_open",
+          "tool_name": "mcp__repo__ticket_open",
           "tool_input": {
             "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
             "title": "Encode File Blob as Data Uri",
@@ -1816,7 +1816,7 @@
           "title": "Encode File Blob as Data Uri"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__ticket_open",
+        "name": "mcp__repo__ticket_open",
         "parent": "",
         "second": "🎆26🌙03☀️09⏰13⌚12⏱️27",
         "session": "⚪9e70e303b9ae4b0fad1b517150847ba8",
@@ -1834,7 +1834,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__ticket_open",
+          "tool_name": "mcp__repo__ticket_open",
           "tool_input": {
             "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
             "title": "Encode File Blob as Data Uri",
@@ -1863,7 +1863,7 @@
           "llm": "sonnet-4-5"
         },
         "kind": "repo.ticket.open.ended",
-        "name": "mcp__semio-repo__ticket_open",
+        "name": "mcp__repo__ticket_open",
         "parent": "",
         "response": [
           {
@@ -1887,7 +1887,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__ticket_open",
+          "tool_name": "mcp__repo__ticket_open",
           "tool_input": {
             "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
             "title": "Encode File Blob as Data Uri",
@@ -1916,7 +1916,7 @@
           "title": "Encode File Blob as Data Uri"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__ticket_open",
+        "name": "mcp__repo__ticket_open",
         "parent": "",
         "response": [
           {

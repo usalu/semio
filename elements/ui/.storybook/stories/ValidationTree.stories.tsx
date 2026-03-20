@@ -23,10 +23,10 @@
 // Storybook stories exercising the validation tree viewer with real evaluation data.
 // Stories MUST use the Treppenraum_A example from the OWL ontology validation.
 
+import type { ValidationReport } from "@coda/desktop/renderer";
+import { ValidationTree } from "@coda/desktop/renderer";
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
-import { ValidationTree } from "@semio/coda-desktop/renderer";
-import type { ValidationReport } from "@semio/coda-desktop/renderer";
 
 // #region 🔖CodaThemeWrapper
 const CodaThemeWrapper = ({ children }: { children: React.ReactNode }) => (

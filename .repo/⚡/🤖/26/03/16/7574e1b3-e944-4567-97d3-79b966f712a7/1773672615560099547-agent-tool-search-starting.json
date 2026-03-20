@@ -14,7 +14,7 @@
       "timestamp": "2026-03-16T14:50:15.422344656Z",
       "execution_id": "2f27430f-777c-45fd-a591-e79d51c28f09",
       "tool_info": {
-        "file_path": "/workspaces/semio/semio-repo/cli/main.go"
+        "file_path": "/workspaces/semio/repo/cli/main.go"
       }
     }
   },

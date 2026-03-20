@@ -22,7 +22,7 @@
           "timestamp": "2026-03-16T23:40:48.041229401Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -44,7 +44,7 @@
           "timestamp": "2026-03-16T23:40:48.105070646Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -66,7 +66,7 @@
           "timestamp": "2026-03-16T23:40:48.509326537Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -88,7 +88,7 @@
           "timestamp": "2026-03-16T23:40:48.513622169Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -110,7 +110,7 @@
           "timestamp": "2026-03-16T23:41:04.290303407Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -132,7 +132,7 @@
           "timestamp": "2026-03-16T23:41:04.346838188Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -154,7 +154,7 @@
           "timestamp": "2026-03-16T23:41:04.498720436Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -176,7 +176,7 @@
           "timestamp": "2026-03-16T23:41:04.546841814Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -198,7 +198,7 @@
           "timestamp": "2026-03-16T23:41:11.82102646Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -220,7 +220,7 @@
           "timestamp": "2026-03-16T23:41:11.842164204Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -242,7 +242,7 @@
           "timestamp": "2026-03-16T23:41:11.986207374Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -264,7 +264,7 @@
           "timestamp": "2026-03-16T23:41:12.010719313Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -286,7 +286,7 @@
           "timestamp": "2026-03-16T23:41:17.569516319Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -308,7 +308,7 @@
           "timestamp": "2026-03-16T23:41:17.615985314Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -330,7 +330,7 @@
           "timestamp": "2026-03-16T23:41:17.753176349Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -352,7 +352,7 @@
           "timestamp": "2026-03-16T23:41:17.803372672Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -375,7 +375,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -398,7 +398,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -420,7 +420,7 @@
           "timestamp": "2026-03-16T23:42:26.744926371Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -442,7 +442,7 @@
           "timestamp": "2026-03-16T23:42:26.754145458Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -464,7 +464,7 @@
           "timestamp": "2026-03-16T23:42:27.076010765Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -486,7 +486,7 @@
           "timestamp": "2026-03-16T23:42:27.12837447Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -509,7 +509,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -532,7 +532,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -554,7 +554,7 @@
           "timestamp": "2026-03-16T23:44:02.629660797Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -576,7 +576,7 @@
           "timestamp": "2026-03-16T23:44:02.798581879Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -598,7 +598,7 @@
           "timestamp": "2026-03-16T23:44:02.808021926Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -621,7 +621,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "npm run build",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -649,7 +649,7 @@
                 "new_string": "  for (const symbol of symbols) {\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else {\n      addScope(symbol.name, symbol.kind);\n    }\n  }\n\n  if (scopes.size === 0) {\n    return collectNativeDefinitionFallbackScopes(document);\n  }\n\n  return Array.from(scopes);\n}\n\nasync function getAnalyzeLensIds(document: vscode.TextDocument): Promise\u003cstring[]\u003e {\n  const lenses = await getCodeLenses(document);\n  return lenses"
               }
             ],
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -677,7 +677,7 @@
                 "new_string": "  for (const symbol of symbols) {\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else {\n      addScope(symbol.name, symbol.kind);\n    }\n  }\n\n  if (scopes.size === 0) {\n    return collectNativeDefinitionFallbackScopes(document);\n  }\n\n  return Array.from(scopes);\n}\n\nasync function getAnalyzeLensIds(document: vscode.TextDocument): Promise\u003cstring[]\u003e {\n  const lenses = await getCodeLenses(document);\n  return lenses"
               }
             ],
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -700,7 +700,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "npm run build",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -723,7 +723,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test -- --grep \"Analyze CodeLens covers native definition scopes in TypeScript and Go files\"",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -746,7 +746,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -768,7 +768,7 @@
           "timestamp": "2026-03-16T23:46:57.726989821Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/out/test/extension.test.js"
+            "file_path": "/workspaces/semio/repo/vscode/out/test/extension.test.js"
           }
         }
       },
@@ -790,7 +790,7 @@
           "timestamp": "2026-03-16T23:46:57.781316178Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -813,7 +813,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test -- --grep \"Analyze CodeLens covers\"",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -835,7 +835,7 @@
           "timestamp": "2026-03-16T23:46:57.897205733Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/out/test/extension.test.js"
+            "file_path": "/workspaces/semio/repo/vscode/out/test/extension.test.js"
           }
         }
       },
@@ -857,7 +857,7 @@
           "timestamp": "2026-03-16T23:46:57.958219157Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -880,7 +880,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test -- --grep \"Analyze CodeLens covers every definition entity in TypeScript and Go files\"",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -903,7 +903,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test -- --grep \"Analyze CodeLens covers native definition scopes in TypeScript and Go files\"",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -925,7 +925,7 @@
           "timestamp": "2026-03-16T23:48:26.415406268Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\nimport re\ntext = Path('/workspaces/semio/semio-repo/vscode/extension.ts').read_text()\n# extract emojis from ENTITY_EMOJIS map entries\nemojis = re.findall(r'\\[\"([^\"]+)\",\\s*\"[^\"]+\"\\]', text)\n# sort longest first and escape\nemoji_alt = '|'.join(sorted((re.escape(e) for e in emojis), key=len, reverse=True))\npattern = r'(?:\\[((?:' + emoji_alt + r')[^\\]]+)\\]\\((semiorepo:\\/\\/[^)]+)\\)|((?:' + emoji_alt + r')[^\\s/\"\\'\\[\\]()]+))'\nregex = re.compile(pattern)\nprint('emoji count', len(emojis))\nprint('regex ok', bool(regex))\n# count matches and specifically definition ids\nmatches = list(regex.finditer(text))\nprint('all matches', len(matches))\ndef_ids = []\nfor m in matches:\n    val = m.group(1) or m.group(3)\n    if '🛠️' in val or '✂️' in val or '🪨' in val or '🧪' in val:\n        def_ids.append(val)\nprint('definition-like matches', len(def_ids))\nprint(def_ids[:10])\nPY",
+            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\nimport re\ntext = Path('/workspaces/semio/repo/vscode/extension.ts').read_text()\n# extract emojis from ENTITY_EMOJIS map entries\nemojis = re.findall(r'\\[\"([^\"]+)\",\\s*\"[^\"]+\"\\]', text)\n# sort longest first and escape\nemoji_alt = '|'.join(sorted((re.escape(e) for e in emojis), key=len, reverse=True))\npattern = r'(?:\\[((?:' + emoji_alt + r')[^\\]]+)\\]\\((semiorepo:\\/\\/[^)]+)\\)|((?:' + emoji_alt + r')[^\\s/\"\\'\\[\\]()]+))'\nregex = re.compile(pattern)\nprint('emoji count', len(emojis))\nprint('regex ok', bool(regex))\n# count matches and specifically definition ids\nmatches = list(regex.finditer(text))\nprint('all matches', len(matches))\ndef_ids = []\nfor m in matches:\n    val = m.group(1) or m.group(3)\n    if '🛠️' in val or '✂️' in val or '🪨' in val or '🧪' in val:\n        def_ids.append(val)\nprint('definition-like matches', len(def_ids))\nprint(def_ids[:10])\nPY",
             "cwd": "/workspaces/semio"
           }
         }
@@ -949,7 +949,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test -- --grep 'Analyze CodeLens covers every definition entity in TypeScript and Go files'",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -972,7 +972,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test -- --grep 'Entity ID Regex Matching Test Suite'",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -994,7 +994,7 @@
           "timestamp": "2026-03-16T23:50:29.235710588Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1016,7 +1016,7 @@
           "timestamp": "2026-03-16T23:50:29.254071621Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1038,7 +1038,7 @@
           "timestamp": "2026-03-16T23:50:29.421578175Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1060,7 +1060,7 @@
           "timestamp": "2026-03-16T23:50:29.433311762Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1085,10 +1085,10 @@
             "edits": [
               {
                 "old_string": "        }),\n      );\n    }\n  \n    lenses.push(...(await collectNativeDefinitionCodeLenses(document, token)));\n  \n    return lenses;\n  }\n}",
-                "new_string": "        }),\n      );\n    }\n  \n    const nativeDefinitionLenses = await collectNativeDefinitionCodeLenses(document, token);\n    lenses.push(...nativeDefinitionLenses);\n\n    if (document.uri.fsPath.endsWith(\"/semio-repo/vscode/extension.ts\") || document.uri.fsPath.endsWith(\"/semio-repo/go/events.go\")) {\n      log(\"[DEBUG] CodeLens counts\", document.uri.fsPath, \"total\", lenses.length, \"native\", nativeDefinitionLenses.length);\n      log(\"[DEBUG] Analyze lens sample\", lenses.filter((lens) =\u003e lens.command?.command === \"semio.analyze\").slice(0, 20).map((lens) =\u003e String(lens.command?.arguments?.[0] ?? \"\")));\n    }\n  \n    return lenses;\n  }\n}"
+                "new_string": "        }),\n      );\n    }\n  \n    const nativeDefinitionLenses = await collectNativeDefinitionCodeLenses(document, token);\n    lenses.push(...nativeDefinitionLenses);\n\n    if (document.uri.fsPath.endsWith(\"/repo/vscode/extension.ts\") || document.uri.fsPath.endsWith(\"/repo/go/events.go\")) {\n      log(\"[DEBUG] CodeLens counts\", document.uri.fsPath, \"total\", lenses.length, \"native\", nativeDefinitionLenses.length);\n      log(\"[DEBUG] Analyze lens sample\", lenses.filter((lens) =\u003e lens.command?.command === \"semio.analyze\").slice(0, 20).map((lens) =\u003e String(lens.command?.arguments?.[0] ?? \"\")));\n    }\n  \n    return lenses;\n  }\n}"
               }
             ],
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1113,10 +1113,10 @@
             "edits": [
               {
                 "old_string": "        }),\n      );\n    }\n  \n    lenses.push(...(await collectNativeDefinitionCodeLenses(document, token)));\n  \n    return lenses;\n  }\n}",
-                "new_string": "        }),\n      );\n    }\n  \n    const nativeDefinitionLenses = await collectNativeDefinitionCodeLenses(document, token);\n    lenses.push(...nativeDefinitionLenses);\n\n    if (document.uri.fsPath.endsWith(\"/semio-repo/vscode/extension.ts\") || document.uri.fsPath.endsWith(\"/semio-repo/go/events.go\")) {\n      log(\"[DEBUG] CodeLens counts\", document.uri.fsPath, \"total\", lenses.length, \"native\", nativeDefinitionLenses.length);\n      log(\"[DEBUG] Analyze lens sample\", lenses.filter((lens) =\u003e lens.command?.command === \"semio.analyze\").slice(0, 20).map((lens) =\u003e String(lens.command?.arguments?.[0] ?? \"\")));\n    }\n  \n    return lenses;\n  }\n}"
+                "new_string": "        }),\n      );\n    }\n  \n    const nativeDefinitionLenses = await collectNativeDefinitionCodeLenses(document, token);\n    lenses.push(...nativeDefinitionLenses);\n\n    if (document.uri.fsPath.endsWith(\"/repo/vscode/extension.ts\") || document.uri.fsPath.endsWith(\"/repo/go/events.go\")) {\n      log(\"[DEBUG] CodeLens counts\", document.uri.fsPath, \"total\", lenses.length, \"native\", nativeDefinitionLenses.length);\n      log(\"[DEBUG] Analyze lens sample\", lenses.filter((lens) =\u003e lens.command?.command === \"semio.analyze\").slice(0, 20).map((lens) =\u003e String(lens.command?.arguments?.[0] ?? \"\")));\n    }\n  \n    return lenses;\n  }\n}"
               }
             ],
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1139,7 +1139,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "npm run build",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1162,7 +1162,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "rm -f activation.log \u0026\u0026 xvfb-run -a npm test -- --grep 'Analyze CodeLens covers every definition entity in TypeScript and Go files'",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1184,7 +1184,7 @@
           "timestamp": "2026-03-16T23:51:57.118443952Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/activation.log"
+            "file_path": "/workspaces/semio/repo/vscode/activation.log"
           }
         }
       },
@@ -1206,7 +1206,7 @@
           "timestamp": "2026-03-16T23:51:57.335297418Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/activation.log"
+            "file_path": "/workspaces/semio/repo/vscode/activation.log"
           }
         }
       },
@@ -1229,7 +1229,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1252,7 +1252,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1275,7 +1275,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1298,7 +1298,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1321,7 +1321,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "npm run build",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1344,7 +1344,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test -- --grep 'Analyze CodeLens covers native definition scopes in TypeScript and Go files'",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1367,7 +1367,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -1390,7 +1390,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
           }
         }
       },
@@ -1413,7 +1413,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "npm run build \u0026\u0026 xvfb-run -a npm test -- --grep 'Analyze CodeLens covers every definition entity in TypeScript and Go files'",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1435,7 +1435,7 @@
           "timestamp": "2026-03-16T23:55:13.30811911Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1457,7 +1457,7 @@
           "timestamp": "2026-03-16T23:55:13.515552706Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1479,7 +1479,7 @@
           "timestamp": "2026-03-16T23:55:59.62024879Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\npath = Path('/workspaces/semio/semio-repo/vscode/extension.ts')\ntext = path.read_text()\nmarker = '\\n/**\\n * [🧰semiorepo🖱️vscode💻extension🔖providers🛠️semiocodelensprovider]'\ninsert_after = 'function isDefinitionEntityId(id: string): boolean {\\n  for (const [emoji, entityKind] of ENTITY_EMOJIS.entries()) {\\n    if (id.includes(emoji) \u0026\u0026 entityKind.startsWith(\"definition-\")) {\\n      return true;\\n    }\\n  }\\n  return false;\\n}\\n'\nif marker not in text:\n    raise SystemExit('marker not found')\nif 'async function collectNativeDefinitionCodeLenses' in text:\n    raise SystemExit('helper already present')\nblock = '''\nconst NATIVE_DEFINITION_SYMBOL_KINDS = new Set\u003cvscode.SymbolKind\u003e([\n  vscode.SymbolKind.Class,\n  vscode.SymbolKind.Constant,\n  vscode.SymbolKind.Constructor,\n  vscode.SymbolKind.Enum,\n  vscode.SymbolKind.EnumMember,\n  vscode.SymbolKind.Field,\n  vscode.SymbolKind.Function,\n  vscode.SymbolKind.Interface,\n  vscode.SymbolKind.Method,\n  vscode.SymbolKind.Module,\n  vscode.SymbolKind.Namespace,\n  vscode.SymbolKind.Property,\n  vscode.SymbolKind.Struct,\n  vscode.SymbolKind.TypeParameter,\n  vscode.SymbolKind.Variable,\n]);\n\nfunction getDocumentRelativePath(document: vscode.TextDocument): string | null {\n  if (document.uri.scheme !== \"file\") return null;\n  const root = getWorkspaceRoot();\n  if (!root) return null;\n  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\\\/g, \"/\");\n  if (!relativePath || relativePath.startsWith(\"..\")) return null;\n  return relativePath;\n}\n\nfunction buildNativeDefinitionScope(relativePath: string, definitionName: string): string {\n  return `${relativePath}§${definitionName}`;\n}\n\nfunction isDocumentSymbol(value: vscode.DocumentSymbol | vscode.SymbolInformation): value is vscode.DocumentSymbol {\n  return \"selectionRange\" in value;\n}\n\nfunction collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): Array\u003c{ name: string; range: vscode.Range }\u003e {\n  const patternsByLanguage: Partial\u003cRecord\u003cstring, RegExp[]\u003e\u003e = {\n    typescript: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    typescriptreact: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    javascript: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    javascriptreact: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    go: [\n      /^\\s*func\\s+(?:\\([^)]+\\)\\s*)?([A-Za-z_][\\w]*)\\b/,\n      /^\\s*type\\s+([A-Za-z_][\\w]*)\\b/,\n      /^\\s*const\\s+([A-Za-z_][\\w]*)\\b/,\n      /^\\s*var\\s+([A-Za-z_][\\w]*)\\b/,\n    ],\n  };\n  const patterns = patternsByLanguage[document.languageId] ?? [];\n  if (patterns.length === 0) return [];\n  const results: Array\u003c{ name: string; range: vscode.Range }\u003e = [];\n  const seen = new Set\u003cstring\u003e();\n  for (let lineIndex = 0; lineIndex \u003c document.lineCount; lineIndex++) {\n    const textLine = document.lineAt(lineIndex).text;\n    for (const pattern of patterns) {\n      const match = pattern.exec(textLine);\n      if (!match?.[1]) continue;\n      const name = match[1];\n      const key = `${lineIndex}:${name}`;\n      if (seen.has(key)) continue;\n      seen.add(key);\n      const startCharacter = textLine.indexOf(name);\n      if (startCharacter \u003c 0) continue;\n      results.push({\n        name,\n        range: new vscode.Range(lineIndex, startCharacter, lineIndex, startCharacter + name.length),\n      });\n      break;\n    }\n  }\n  return results;\n}\n\nasync function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise\u003cvscode.CodeLens[]\u003e {\n  if (!shouldAnalyzeFile(document)) return [];\n  const relativePath = getDocumentRelativePath(document);\n  if (!relativePath) return [];\n  const symbols = await vscode.commands.executeCommand\u003cArray\u003cvscode.DocumentSymbol | vscode.SymbolInformation\u003e\u003e(\n    \"vscode.executeDocumentSymbolProvider\",\n    document.uri,\n  ) ?? [];\n  const scopes = new Map\u003cstring, vscode.CodeLens\u003e();\n\n  const addLens = (name: string, range: vscode.Range): void =\u003e {\n    if (!name) return;\n    const scope = buildNativeDefinitionScope(relativePath, name);\n    if (scopes.has(scope)) return;\n    scopes.set(scope, new vscode.CodeLens(range, {\n      title: \"Analyze\",\n      command: \"semio.analyze\",\n      arguments: [scope],\n    }));\n  };\n\n  const visitDocumentSymbol = (symbol: vscode.DocumentSymbol): void =\u003e {\n    if (token.isCancellationRequested) return;\n    if (NATIVE_DEFINITION_SYMBOL_KINDS.has(symbol.kind)) {\n      addLens(symbol.name, symbol.selectionRange);\n    }\n    for (const child of symbol.children) {\n      visitDocumentSymbol(child);\n    }\n  };\n\n  for (const symbol of symbols) {\n    if (token.isCancellationRequested) break;\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else if (NATIVE_DEFINITION_SYMBOL_KINDS.has(symbol.kind)) {\n      addLens(symbol.name, symbol.location.range);\n    }\n  }\n\n  if (scopes.size == 0) {\n    for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n      addLens(fallback.name, fallback.range);\n    }\n  }\n\n  return Array.from(scopes.values());\n}\n'''\ntext = text.replace(insert_after + marker, insert_after + block + marker, 1)\npath.write_text(text)\nPY",
+            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\npath = Path('/workspaces/semio/repo/vscode/extension.ts')\ntext = path.read_text()\nmarker = '\\n/**\\n * [🧰semiorepo🖱️vscode💻extension🔖providers🛠️semiocodelensprovider]'\ninsert_after = 'function isDefinitionEntityId(id: string): boolean {\\n  for (const [emoji, entityKind] of ENTITY_EMOJIS.entries()) {\\n    if (id.includes(emoji) \u0026\u0026 entityKind.startsWith(\"definition-\")) {\\n      return true;\\n    }\\n  }\\n  return false;\\n}\\n'\nif marker not in text:\n    raise SystemExit('marker not found')\nif 'async function collectNativeDefinitionCodeLenses' in text:\n    raise SystemExit('helper already present')\nblock = '''\nconst NATIVE_DEFINITION_SYMBOL_KINDS = new Set\u003cvscode.SymbolKind\u003e([\n  vscode.SymbolKind.Class,\n  vscode.SymbolKind.Constant,\n  vscode.SymbolKind.Constructor,\n  vscode.SymbolKind.Enum,\n  vscode.SymbolKind.EnumMember,\n  vscode.SymbolKind.Field,\n  vscode.SymbolKind.Function,\n  vscode.SymbolKind.Interface,\n  vscode.SymbolKind.Method,\n  vscode.SymbolKind.Module,\n  vscode.SymbolKind.Namespace,\n  vscode.SymbolKind.Property,\n  vscode.SymbolKind.Struct,\n  vscode.SymbolKind.TypeParameter,\n  vscode.SymbolKind.Variable,\n]);\n\nfunction getDocumentRelativePath(document: vscode.TextDocument): string | null {\n  if (document.uri.scheme !== \"file\") return null;\n  const root = getWorkspaceRoot();\n  if (!root) return null;\n  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\\\/g, \"/\");\n  if (!relativePath || relativePath.startsWith(\"..\")) return null;\n  return relativePath;\n}\n\nfunction buildNativeDefinitionScope(relativePath: string, definitionName: string): string {\n  return `${relativePath}§${definitionName}`;\n}\n\nfunction isDocumentSymbol(value: vscode.DocumentSymbol | vscode.SymbolInformation): value is vscode.DocumentSymbol {\n  return \"selectionRange\" in value;\n}\n\nfunction collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): Array\u003c{ name: string; range: vscode.Range }\u003e {\n  const patternsByLanguage: Partial\u003cRecord\u003cstring, RegExp[]\u003e\u003e = {\n    typescript: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    typescriptreact: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    javascript: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    javascriptreact: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    go: [\n      /^\\s*func\\s+(?:\\([^)]+\\)\\s*)?([A-Za-z_][\\w]*)\\b/,\n      /^\\s*type\\s+([A-Za-z_][\\w]*)\\b/,\n      /^\\s*const\\s+([A-Za-z_][\\w]*)\\b/,\n      /^\\s*var\\s+([A-Za-z_][\\w]*)\\b/,\n    ],\n  };\n  const patterns = patternsByLanguage[document.languageId] ?? [];\n  if (patterns.length === 0) return [];\n  const results: Array\u003c{ name: string; range: vscode.Range }\u003e = [];\n  const seen = new Set\u003cstring\u003e();\n  for (let lineIndex = 0; lineIndex \u003c document.lineCount; lineIndex++) {\n    const textLine = document.lineAt(lineIndex).text;\n    for (const pattern of patterns) {\n      const match = pattern.exec(textLine);\n      if (!match?.[1]) continue;\n      const name = match[1];\n      const key = `${lineIndex}:${name}`;\n      if (seen.has(key)) continue;\n      seen.add(key);\n      const startCharacter = textLine.indexOf(name);\n      if (startCharacter \u003c 0) continue;\n      results.push({\n        name,\n        range: new vscode.Range(lineIndex, startCharacter, lineIndex, startCharacter + name.length),\n      });\n      break;\n    }\n  }\n  return results;\n}\n\nasync function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise\u003cvscode.CodeLens[]\u003e {\n  if (!shouldAnalyzeFile(document)) return [];\n  const relativePath = getDocumentRelativePath(document);\n  if (!relativePath) return [];\n  const symbols = await vscode.commands.executeCommand\u003cArray\u003cvscode.DocumentSymbol | vscode.SymbolInformation\u003e\u003e(\n    \"vscode.executeDocumentSymbolProvider\",\n    document.uri,\n  ) ?? [];\n  const scopes = new Map\u003cstring, vscode.CodeLens\u003e();\n\n  const addLens = (name: string, range: vscode.Range): void =\u003e {\n    if (!name) return;\n    const scope = buildNativeDefinitionScope(relativePath, name);\n    if (scopes.has(scope)) return;\n    scopes.set(scope, new vscode.CodeLens(range, {\n      title: \"Analyze\",\n      command: \"semio.analyze\",\n      arguments: [scope],\n    }));\n  };\n\n  const visitDocumentSymbol = (symbol: vscode.DocumentSymbol): void =\u003e {\n    if (token.isCancellationRequested) return;\n    if (NATIVE_DEFINITION_SYMBOL_KINDS.has(symbol.kind)) {\n      addLens(symbol.name, symbol.selectionRange);\n    }\n    for (const child of symbol.children) {\n      visitDocumentSymbol(child);\n    }\n  };\n\n  for (const symbol of symbols) {\n    if (token.isCancellationRequested) break;\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else if (NATIVE_DEFINITION_SYMBOL_KINDS.has(symbol.kind)) {\n      addLens(symbol.name, symbol.location.range);\n    }\n  }\n\n  if (scopes.size == 0) {\n    for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n      addLens(fallback.name, fallback.range);\n    }\n  }\n\n  return Array.from(scopes.values());\n}\n'''\ntext = text.replace(insert_after + marker, insert_after + block + marker, 1)\npath.write_text(text)\nPY",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1502,7 +1502,7 @@
           "timestamp": "2026-03-16T23:56:12.302713824Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1524,7 +1524,7 @@
           "timestamp": "2026-03-16T23:56:12.485164687Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1546,7 +1546,7 @@
           "timestamp": "2026-03-16T23:56:12.496902549Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1578,7 +1578,7 @@
                 "new_string": "    if (scopes.size === 0) {\n      for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n        addLens(fallback.name, fallback.range);\n      }\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1610,7 +1610,7 @@
                 "new_string": "    if (scopes.size === 0) {\n      for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n        addLens(fallback.name, fallback.range);\n      }\n    }"
               }
             ],
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1633,7 +1633,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "npm run build \u0026\u0026 xvfb-run -a npm test -- --grep 'Analyze CodeLens covers native definition scopes in TypeScript and Go files'",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1655,7 +1655,7 @@
           "timestamp": "2026-03-16T23:57:40.9448337Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1677,7 +1677,7 @@
           "timestamp": "2026-03-16T23:57:41.142114221Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1700,7 +1700,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1723,7 +1723,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "edits": null,
-            "file_path": "/workspaces/semio/semio-repo/vscode/extension.ts"
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
           }
         }
       },
@@ -1746,7 +1746,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "npm run build",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1768,7 +1768,7 @@
           "timestamp": "2026-03-16T23:58:22.006142857Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\nlines = Path('/workspaces/semio/semio-repo/vscode/extension.ts').read_text().splitlines()\nfor i in range(2053,2058):\n    print(i, repr(lines[i-1]))\nPY",
+            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\nlines = Path('/workspaces/semio/repo/vscode/extension.ts').read_text().splitlines()\nfor i in range(2053,2058):\n    print(i, repr(lines[i-1]))\nPY",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1791,7 +1791,7 @@
           "timestamp": "2026-03-16T23:58:36.468210335Z",
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
-            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\npath = Path('/workspaces/semio/semio-repo/vscode/extension.ts')\nlines = path.read_text().splitlines()\nlines[2055] = '  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\\\\\\\/g, \"/\");'\npath.write_text('\\n'.join(lines) + '\\n')\nPY",
+            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\npath = Path('/workspaces/semio/repo/vscode/extension.ts')\nlines = path.read_text().splitlines()\nlines[2055] = '  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\\\\\\\/g, \"/\");'\npath.write_text('\\n'.join(lines) + '\\n')\nPY",
             "cwd": "/workspaces/semio"
           }
         }
@@ -1815,7 +1815,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "npm run build",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1838,7 +1838,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "xvfb-run -a npm test -- --grep 'Analyze CodeLens covers native definition scopes in TypeScript and Go files'",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },
@@ -1861,7 +1861,7 @@
           "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
           "tool_info": {
             "command_line": "bash -lc \"xvfb-run -a npm test -- --grep 'Analyze CodeLens covers native definition scopes in TypeScript and Go files' 2\u003e\u00261 | grep '\\[DEBUG\\]'\"",
-            "cwd": "/workspaces/semio/semio-repo/vscode"
+            "cwd": "/workspaces/semio/repo/vscode"
           }
         }
       },

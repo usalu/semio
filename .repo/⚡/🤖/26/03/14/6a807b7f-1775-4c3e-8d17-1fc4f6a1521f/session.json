@@ -4026,7 +4026,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_close",
           "tool_input": "{\"path\":\"2026/03/14/IMPLEMENT-EXPORT-DESIGN-MODEL-IN-C\",\"no_github\":true,\"summary\":\"Implemented ExportDesignModel as a static method on the Kit class in Semio.cs and ExportDesignModelComponent Grasshopper wrapper in Semio.Grasshopper.cs. The implementation: (1) builds an adjacency graph from connections, (2) BFS from root pieces with explicit planes to compute world planes for all pieces, (3) finds matching GLB models per type via tag matching, (4) parses and merges source GLB files (bufferViews, accessors, meshes, materials, textures) with offset remapping, (5) creates fallback box meshes for types without models, (6) builds a scene graph with relative transformation matrices (inverse parent * child world), (7) produces a valid GLB binary. Added using Newtonsoft.Json.Linq import. Both projects compile successfully (net8.0).\",\"files\":[\"semio/net/Semio/Semio.cs\",\"semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs\"]}",
-          "command": "semio-semio-repo",
+          "command": "semio-repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.18",
           "workspace_roots": [
@@ -4305,7 +4305,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_close",
           "tool_input": "{\"path\":\"26/03/14/IMPLEMENT-EXPORT-DESIGN-MODEL-IN-C\",\"no_github\":true,\"summary\":\"Implemented ExportDesignModel as a static method on the Kit class in Semio.cs and ExportDesignModelComponent Grasshopper wrapper in Semio.Grasshopper.cs. The implementation: (1) builds an adjacency graph from connections, (2) BFS from root pieces to compute world planes, (3) finds matching GLB models per type via tag matching, (4) parses and merges source GLB files with offset remapping, (5) creates fallback box meshes for types without models, (6) builds a scene graph with relative transformation matrices, (7) produces a valid GLB binary. Both projects compile successfully.\",\"files\":[\"semio/net/Semio/Semio.cs\",\"semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs\"]}",
-          "command": "semio-semio-repo",
+          "command": "semio-repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.18",
           "workspace_roots": [

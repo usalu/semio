@@ -8,8 +8,9 @@
 import type { Preview } from "@storybook/react-vite";
 import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
+import { AlgorithmLanguage, withLanguage } from "./withLanguage";
 
-import "../../../.elements/ui/globals.css";
+import "../../ui/globals.css";
 
 enum Theme {
   SYSTEM = "system",
@@ -40,11 +41,26 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    language: {
+      description: "Global implementation language for algorithm execution",
+      toolbar: {
+        title: "Language",
+        icon: "circlehollow",
+        items: [
+          { value: AlgorithmLanguage.TS, title: "TypeScript", icon: "code" },
+          { value: AlgorithmLanguage.PYTHON, title: "Python", icon: "python" },
+          { value: AlgorithmLanguage.RUST, title: "Rust", icon: "code-fork" },
+          { value: AlgorithmLanguage.GO, title: "Go", icon: "terminal" },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
   initialGlobals: {
     theme: Theme.SYSTEM,
+    language: AlgorithmLanguage.TS,
   },
-  decorators: [withLevel, withTheme],
+  decorators: [withLevel, withLanguage, withTheme],
   tags: ["autodocs"],
 };
 

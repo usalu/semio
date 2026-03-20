@@ -24,7 +24,8 @@
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
 import { createRoot } from "react-dom/client";
-import { createIndexeddbPersistenceFactory } from "../studio/studio";
+import { createIndexeddbPersistenceFactory, createJsonFileKitStore } from "../studio/studio";
+import type { KitJsonFileAdapter } from "../studio/studio";
 import { Sketchpad, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "./index";
 import "./globals.css";
 
@@ -38,11 +39,54 @@ appRegistry.register(kitConfig);
 appRegistry.register(qualityConfig);
 appRegistry.register(typeConfig);
 
-const indexeddbPersistenceFactory = createIndexeddbPersistenceFactory();
+// #region 🔖VscodeAdapter
+// VS Code webview adapter for JsonFileKitStore. Bridges file I/O via postMessage.
+const isVscodeWebview = typeof (window as any).__SEMIO_VSCODE_API__ !== "undefined";
 
-createRoot(document.getElementById("root")!).render(
-  <div className="h-screen w-screen">
-    <Sketchpad persistenceFactory={indexeddbPersistenceFactory} />
-  </div>,
-);
+function createVscodeAdapter(): KitJsonFileAdapter {
+  const vscodeApi = (window as any).__SEMIO_VSCODE_API__;
+  return {
+    read: async () => (window as any).__SEMIO_KIT_JSON__ ?? null,
+    write: async (json: string) => {
+      vscodeApi.postMessage({ kind: "kit.save", content: json });
+    },
+  };
+}
+// #endregion 🔖VscodeAdapter
+
+async function boot() {
+  let kitStore = undefined;
+  if (isVscodeWebview) {
+    const adapter = createVscodeAdapter();
+    kitStore = await createJsonFileKitStore(adapter);
+    // Listen for external updates from the VS Code extension host.
+    (window as any).__SEMIO_ON_EXTERNAL_UPDATE__ = (json: string) => {
+      try {
+        const parsed = JSON.parse(json);
+        const { KitSchema } = require("@semio/js/semio");
+        const kit = KitSchema.parse(parsed);
+        kitStore!.applyExternalUpdate(kit);
+      } catch {
+        /* ignore parse errors */
+      }
+    };
+    // Auto-save on changes for VS Code integration.
+    kitStore.subscribe(() => {
+      const snapshot = kitStore!.getSnapshot();
+      if (snapshot.sync.dirty) {
+        kitStore!.save();
+      }
+    });
+  }
+
+  const indexeddbPersistenceFactory = isVscodeWebview ? undefined : createIndexeddbPersistenceFactory();
+
+  createRoot(document.getElementById("root")!).render(
+    <div className="h-screen w-screen">
+      <Sketchpad persistenceFactory={indexeddbPersistenceFactory} kitStore={kitStore} />
+    </div>,
+  );
+}
+
+boot();
 // #endregion 🔖Entrypoint

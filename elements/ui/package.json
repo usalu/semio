@@ -7,6 +7,7 @@
   "type": "module",
   "exports": {
     ".": "./index.ts",
+    "./components.json": "./components.json",
     "./elements": "./elements.tsx",
     "./globals.css": "./globals.css",
     "./theme.css": "./theme.css",

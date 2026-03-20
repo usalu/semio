@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🔖Window
 
 const meta = {
-  title: "semio-elements/Window",
+  title: "elements/Window",
   component: Window,
   parameters: {
     layout: "fullscreen",

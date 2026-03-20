@@ -140,7 +140,7 @@
           "tool_response": {
             "matches": [
               "WebSearch",
-              "mcp__semio-repo__search",
+              "mcp__repo__search",
               "ExitPlanMode"
             ],
             "query": "ticket_open ticket_reopen search",
@@ -163,7 +163,7 @@
         "response": {
           "matches": [
             "WebSearch",
-            "mcp__semio-repo__search",
+            "mcp__repo__search",
             "ExitPlanMode"
           ],
           "query": "ticket_open ticket_reopen search",
@@ -227,7 +227,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "sketchpad tsx parse error jsdoc comment babel vite"
           },
@@ -242,7 +242,7 @@
           "query": "sketchpad tsx parse error jsdoc comment babel vite"
         },
         "kind": "repo.search.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️11⏰14⌚20⏱️30",
         "session": "⚪753f15d031434712883b4ce2b5e9cfe6",
@@ -260,7 +260,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "sketchpad tsx parse error jsdoc comment babel vite"
           },
@@ -275,7 +275,7 @@
           "query": "sketchpad tsx parse error jsdoc comment babel vite"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️11⏰14⌚20⏱️30",
         "session": "⚪753f15d031434712883b4ce2b5e9cfe6",
@@ -293,7 +293,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "sketchpad tsx parse error jsdoc comment babel vite"
           },
@@ -314,7 +314,7 @@
           "query": "sketchpad tsx parse error jsdoc comment babel vite"
         },
         "kind": "repo.search.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -338,7 +338,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "sketchpad tsx parse error jsdoc comment babel vite"
           },
@@ -359,7 +359,7 @@
           "query": "sketchpad tsx parse error jsdoc comment babel vite"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -383,7 +383,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "3dm-ui sketchpad parse error fix"
           },
@@ -398,7 +398,7 @@
           "query": "3dm-ui sketchpad parse error fix"
         },
         "kind": "repo.search.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️11⏰14⌚21⏱️31",
         "session": "⚪753f15d031434712883b4ce2b5e9cfe6",
@@ -416,7 +416,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "3dm-ui sketchpad parse error fix"
           },
@@ -431,7 +431,7 @@
           "query": "3dm-ui sketchpad parse error fix"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️11⏰14⌚21⏱️31",
         "session": "⚪753f15d031434712883b4ce2b5e9cfe6",
@@ -449,7 +449,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "3dm-ui sketchpad parse error fix"
           },
@@ -470,7 +470,7 @@
           "query": "3dm-ui sketchpad parse error fix"
         },
         "kind": "repo.search.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -494,7 +494,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "3dm-ui sketchpad parse error fix"
           },
@@ -515,7 +515,7 @@
           "query": "3dm-ui sketchpad parse error fix"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -539,7 +539,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "sketchpad tsx syntax error"
           },
@@ -554,7 +554,7 @@
           "query": "sketchpad tsx syntax error"
         },
         "kind": "repo.search.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️11⏰14⌚22⏱️02",
         "session": "⚪753f15d031434712883b4ce2b5e9cfe6",
@@ -572,7 +572,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PreToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "sketchpad tsx syntax error"
           },
@@ -587,7 +587,7 @@
           "query": "sketchpad tsx syntax error"
         },
         "kind": "agent.tool.starting",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "second": "🎆26🌙03☀️11⏰14⌚22⏱️02",
         "session": "⚪753f15d031434712883b4ce2b5e9cfe6",
@@ -605,7 +605,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "sketchpad tsx syntax error"
           },
@@ -626,7 +626,7 @@
           "query": "sketchpad tsx syntax error"
         },
         "kind": "repo.search.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -650,7 +650,7 @@
           "cwd": "/workspaces/semio",
           "permission_mode": "bypassPermissions",
           "hook_event_name": "PostToolUse",
-          "tool_name": "mcp__semio-repo__search",
+          "tool_name": "mcp__repo__search",
           "tool_input": {
             "query": "sketchpad tsx syntax error"
           },
@@ -671,7 +671,7 @@
           "query": "sketchpad tsx syntax error"
         },
         "kind": "agent.tool.ended",
-        "name": "mcp__semio-repo__search",
+        "name": "mcp__repo__search",
         "parent": "",
         "response": [
           {
@@ -697,7 +697,7 @@
           "hook_event_name": "PreToolUse",
           "tool_name": "ToolSearch",
           "tool_input": {
-            "query": "ticket_open semio-repo",
+            "query": "ticket_open repo",
             "max_results": 3
           },
           "tool_use_id": "toolu_01HEkymeACMjSAG4KCgVULr6"
@@ -709,7 +709,7 @@
         "contributor": "🧑‍💻ueli",
         "input": {
           "max_results": 3,
-          "query": "ticket_open semio-repo"
+          "query": "ticket_open repo"
         },
         "kind": "agent.tool.starting",
         "name": "ToolSearch",
@@ -732,16 +732,16 @@
           "hook_event_name": "PostToolUse",
           "tool_name": "ToolSearch",
           "tool_input": {
-            "query": "ticket_open semio-repo",
+            "query": "ticket_open repo",
             "max_results": 3
           },
           "tool_response": {
             "matches": [
-              "mcp__semio-repo__file_integrate",
-              "mcp__semio-repo__search",
-              "mcp__semio-repo__section_extract"
+              "mcp__repo__file_integrate",
+              "mcp__repo__search",
+              "mcp__repo__section_extract"
             ],
-            "query": "ticket_open semio-repo",
+            "query": "ticket_open repo",
             "total_deferred_tools": 65
           },
           "tool_use_id": "toolu_01HEkymeACMjSAG4KCgVULr6"
@@ -753,18 +753,18 @@
         "contributor": "🧑‍💻ueli",
         "input": {
           "max_results": 3,
-          "query": "ticket_open semio-repo"
+          "query": "ticket_open repo"
         },
         "kind": "agent.tool.ended",
         "name": "ToolSearch",
         "parent": "",
         "response": {
           "matches": [
-            "mcp__semio-repo__file_integrate",
-            "mcp__semio-repo__search",
-            "mcp__semio-repo__section_extract"
+            "mcp__repo__file_integrate",
+            "mcp__repo__search",
+            "mcp__repo__section_extract"
           ],
-          "query": "ticket_open semio-repo",
+          "query": "ticket_open repo",
           "total_deferred_tools": 65
         },
         "second": "🎆26🌙03☀️11⏰14⌚22⏱️48",
@@ -2966,7 +2966,7 @@
           "hook_event_name": "PreToolUse",
           "tool_name": "ToolSearch",
           "tool_input": {
-            "query": "ticket_open ticket_close ticket_reopen semio-repo",
+            "query": "ticket_open ticket_close ticket_reopen repo",
             "max_results": 5
           },
           "tool_use_id": "toolu_01ABD8z9yqdbaz4C3xWzTdKa"
@@ -2978,7 +2978,7 @@
         "contributor": "🧑‍💻ueli",
         "input": {
           "max_results": 5,
-          "query": "ticket_open ticket_close ticket_reopen semio-repo"
+          "query": "ticket_open ticket_close ticket_reopen repo"
         },
         "kind": "agent.tool.starting",
         "name": "ToolSearch",
@@ -3001,18 +3001,18 @@
           "hook_event_name": "PostToolUse",
           "tool_name": "ToolSearch",
           "tool_input": {
-            "query": "ticket_open ticket_close ticket_reopen semio-repo",
+            "query": "ticket_open ticket_close ticket_reopen repo",
             "max_results": 5
           },
           "tool_response": {
             "matches": [
-              "mcp__semio-repo__file_integrate",
-              "mcp__semio-repo__search",
-              "mcp__semio-repo__section_extract",
-              "mcp__semio-repo__section_move",
-              "mcp__semio-repo__ticket_close"
+              "mcp__repo__file_integrate",
+              "mcp__repo__search",
+              "mcp__repo__section_extract",
+              "mcp__repo__section_move",
+              "mcp__repo__ticket_close"
             ],
-            "query": "ticket_open ticket_close ticket_reopen semio-repo",
+            "query": "ticket_open ticket_close ticket_reopen repo",
             "total_deferred_tools": 65
           },
           "tool_use_id": "toolu_01ABD8z9yqdbaz4C3xWzTdKa"
@@ -3024,20 +3024,20 @@
         "contributor": "🧑‍💻ueli",
         "input": {
           "max_results": 5,
-          "query": "ticket_open ticket_close ticket_reopen semio-repo"
+          "query": "ticket_open ticket_close ticket_reopen repo"
         },
         "kind": "agent.tool.ended",
         "name": "ToolSearch",
         "parent": "",
         "response": {
           "matches": [
-            "mcp__semio-repo__file_integrate",
-            "mcp__semio-repo__search",
-            "mcp__semio-repo__section_extract",
-            "mcp__semio-repo__section_move",
-            "mcp__semio-repo__ticket_close"
+            "mcp__repo__file_integrate",
+            "mcp__repo__search",
+            "mcp__repo__section_extract",
+            "mcp__repo__section_move",
+            "mcp__repo__ticket_close"
           ],
-          "query": "ticket_open ticket_close ticket_reopen semio-repo",
+          "query": "ticket_open ticket_close ticket_reopen repo",
           "total_deferred_tools": 65
         },
         "second": "🎆26🌙03☀️11⏰14⌚32⏱️59",
@@ -3138,7 +3138,7 @@
           "hook_event_name": "PreToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "./semio-repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30"
+            "command": "./repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30"
           },
           "tool_use_id": "toolu_013kGBVwGsGu2aSYubSpthFZ"
         }
@@ -3146,7 +3146,7 @@
       "event": {
         "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
         "client": "claude-code",
-        "command": "./semio-repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30",
+        "command": "./repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30",
         "contributor": "🧑‍💻ueli",
         "kind": "repo.ticket.open.starting",
         "parent": "",
@@ -3168,7 +3168,7 @@
           "hook_event_name": "PreToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "./semio-repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30"
+            "command": "./repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30"
           },
           "tool_use_id": "toolu_013kGBVwGsGu2aSYubSpthFZ"
         }
@@ -3176,7 +3176,7 @@
       "event": {
         "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
         "client": "claude-code",
-        "command": "./semio-repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30",
+        "command": "./repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.starting",
         "parent": "",
@@ -3198,7 +3198,7 @@
           "hook_event_name": "PostToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "./semio-repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30"
+            "command": "./repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30"
           },
           "tool_response": {
             "stdout": "[🎫fix3dmuisketchpadparseerrors](semiorepo://y/26/m/03/d/11/tk/FIX-3DM-UI-SKETCHPAD-PARSE-ERRORS) - `OPEN`",
@@ -3213,7 +3213,7 @@
       "event": {
         "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
         "client": "claude-code",
-        "command": "./semio-repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30",
+        "command": "./repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30",
         "contributor": "🧑‍💻ueli",
         "kind": "repo.ticket.open.ended",
         "parent": "",
@@ -3235,7 +3235,7 @@
           "hook_event_name": "PostToolUse",
           "tool_name": "Bash",
           "tool_input": {
-            "command": "./semio-repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30"
+            "command": "./repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30"
           },
           "tool_response": {
             "stdout": "[🎫fix3dmuisketchpadparseerrors](semiorepo://y/26/m/03/d/11/tk/FIX-3DM-UI-SKETCHPAD-PARSE-ERRORS) - `OPEN`",
@@ -3250,7 +3250,7 @@
       "event": {
         "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
         "client": "claude-code",
-        "command": "./semio-repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30",
+        "command": "./repo/cli/cli ticket open \"FIX-3DM-UI-PARSE-ERRORS\" \"Fix 3dm-ui Sketchpad Parse Errors\" \"Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.\" \"claude-code\" \"sonnet-4-6\" 2\u003e\u00261 | head -30",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.terminal.ended",
         "parent": "",

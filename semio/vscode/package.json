@@ -36,7 +36,7 @@
   },
   "scripts": {
     "build": "vite build && vite build --mode webview",
-    "dev": "concurrently \"vite build --watch\" \"vite build --watch --mode webview\"",
+    "dev": "sh -c 'vite build --watch & vite build --watch --mode webview & wait'",
     "test": "echo 'no tests yet'"
   },
   "dependencies": {

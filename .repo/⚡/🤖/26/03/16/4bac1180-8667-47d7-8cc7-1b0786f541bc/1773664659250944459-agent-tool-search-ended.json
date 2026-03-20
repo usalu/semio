@@ -17,15 +17,15 @@
       "hook_event_name": "PostToolUse",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/workspaces/semio/semio-repo/cli/main.go",
+        "file_path": "/workspaces/semio/repo/cli/main.go",
         "offset": 16498,
         "limit": 35
       },
       "tool_response": {
         "type": "text",
         "file": {
-          "filePath": "/workspaces/semio/semio-repo/cli/main.go",
-          "content": "\t}\n\treturn formatted\n}\n\n// [🧰semiorepo⌨️cli💻main🔖types🔖utils🛠️runformatterafterautofix](semiorepo://p/i/semio-repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterAfterAutofix)\n// runFormatterAfterAutofix holds the data fields for a runFormatterAfterAutofix record.\n// runFormatterAfterAutofix MUST perform the runFormatterAfterAutofix operation.\nfunc runFormatterAfterAutofix(relPath string, language LanguagePlugin) error {\n\tabsPath := filepath.Join(rootDir, relPath)\n\tlangName := \"\"\n\tif language != nil {\n\t\tlangName = language.Name()\n\t}\n\tplans := formatterPlansForLanguage(langName, relPath)\n\tfor _, plan := range plans {\n\t\tif !isFormatterPlanAvailable(plan, rootDir) {\n\t\t\tcontinue\n\t\t}\n\t\tif err := formatterCommandRun(plan.binary, plan.args, rootDir); err == nil {\n\t\t\treturn nil\n\t\t}\n\t}\n\tcontent, err := ReadTextFile(absPath)\n\tif err != nil {\n\t\treturn err\n\t}\n\tformatted := fallbackFormatText(content)\n\tif formatted == content {\n\t\treturn nil\n\t}\n\treturn WriteTextFile(absPath, formatted)\n}\n\n// WriteJSONFile MUST persist the content atomically.\n// WriteJSONFile writes the j s o n file content to storage.",
+          "filePath": "/workspaces/semio/repo/cli/main.go",
+          "content": "\t}\n\treturn formatted\n}\n\n// [🧰semiorepo⌨️cli💻main🔖types🔖utils🛠️runformatterafterautofix](semiorepo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterAfterAutofix)\n// runFormatterAfterAutofix holds the data fields for a runFormatterAfterAutofix record.\n// runFormatterAfterAutofix MUST perform the runFormatterAfterAutofix operation.\nfunc runFormatterAfterAutofix(relPath string, language LanguagePlugin) error {\n\tabsPath := filepath.Join(rootDir, relPath)\n\tlangName := \"\"\n\tif language != nil {\n\t\tlangName = language.Name()\n\t}\n\tplans := formatterPlansForLanguage(langName, relPath)\n\tfor _, plan := range plans {\n\t\tif !isFormatterPlanAvailable(plan, rootDir) {\n\t\t\tcontinue\n\t\t}\n\t\tif err := formatterCommandRun(plan.binary, plan.args, rootDir); err == nil {\n\t\t\treturn nil\n\t\t}\n\t}\n\tcontent, err := ReadTextFile(absPath)\n\tif err != nil {\n\t\treturn err\n\t}\n\tformatted := fallbackFormatText(content)\n\tif formatted == content {\n\t\treturn nil\n\t}\n\treturn WriteTextFile(absPath, formatted)\n}\n\n// WriteJSONFile MUST persist the content atomically.\n// WriteJSONFile writes the j s o n file content to storage.",
           "numLines": 35,
           "startLine": 16498,
           "totalLines": 46805

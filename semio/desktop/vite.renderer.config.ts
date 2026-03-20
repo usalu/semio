@@ -26,13 +26,47 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import mdx from "@mdx-js/rollup";
+import remarkGfm from "remark-gfm";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkMdxFrontmatter from "remark-mdx-frontmatter";
+import rehypeSlug from "rehype-slug";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
 
-// Async Vite config loading Tailwind CSS and React plugins for the renderer.
-// Export MUST return a valid Vite config with both plugins enabled.
+// Async Vite config loading Tailwind CSS, MDX, React and WASM plugins for the renderer.
+// Export MUST return a valid Vite config with all plugins enabled.
 export default defineConfig(async () => {
   const tailwind = await import("@tailwindcss/vite");
   return {
-    plugins: [tailwind.default(), react()],
+    resolve: {
+      alias: {
+        "@semio/js": path.resolve(__dirname, "../js"),
+        "@semio/sketchpad": path.resolve(__dirname, "../sketchpad"),
+        "@semio/studio": path.resolve(__dirname, "../studio"),
+        "@semio/assets": path.resolve(__dirname, "../assets"),
+      },
+    },
+    plugins: [
+      tailwind.default(),
+      {
+        ...mdx({
+          remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
+          rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+          providerImportSource: "@mdx-js/react",
+        }),
+        enforce: "pre",
+      },
+      react(),
+      wasm(),
+      topLevelAwait(),
+    ],
+    optimizeDeps: {
+      entries: ["./renderer.tsx", "../sketchpad/index.ts"],
+      include: ["golden-layout", "@mdx-js/react"],
+      exclude: ["@semio/js", "@semio/sketchpad", "@semio/studio"],
+    },
   };
 });
 

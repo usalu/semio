@@ -4,7 +4,7 @@
   "name": "@semio/sketchpad",
   "version": "0.1.0",
   "type": "module",
-  "description": "semio \u22c5 sketchpad",
+  "description": "semio ⋅ sketchpad",
   "exports": {
     ".": "./index.ts"
   },
@@ -16,12 +16,13 @@
     "postinstall": "node -e \"require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')\""
   },
   "dependencies": {
-    "@elements/ui": "*",
+    "@semio/ui": "*",
     "@semio/js": "*",
     "@semio/studio": "*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "sql.js": "^1.13.0"
+    "sql.js": "^1.13.0",
+    "three": "^0.182.0"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",

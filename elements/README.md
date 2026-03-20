@@ -1,6 +1,6 @@
 # Summary
 
-Semio Elements contains shared React UI bundles for reusable semio interface elements and their visual documentation.
+Elements contains shared React UI bundles for reusable semio interface elements and their visual documentation.
 
 ### Specs
 

@@ -34,4 +34,19 @@ contextBridge.exposeInMainWorld("windowControls", {
 contextBridge.exposeInMainWorld("os", {
   getUserId: () => ipcRenderer.invoke("get-user-id"),
 });
+
+// #region 🔖FolderBridge
+// Exposes folder-based kit storage operations to the renderer process.
+contextBridge.exposeInMainWorld("kitFolder", {
+  selectFolder: () => ipcRenderer.invoke("select-folder"),
+  readKit: (folderPath: string) => ipcRenderer.invoke("read-kit", folderPath),
+  writeKit: (folderPath: string, json: string) => ipcRenderer.invoke("write-kit", folderPath, json),
+  readFile: (folderPath: string, filePath: string) => ipcRenderer.invoke("read-file", folderPath, filePath),
+  writeFile: (folderPath: string, filePath: string, data: ArrayBuffer) => ipcRenderer.invoke("write-file", folderPath, filePath, data),
+  deleteFile: (folderPath: string, filePath: string) => ipcRenderer.invoke("delete-file", folderPath, filePath),
+  listFiles: (folderPath: string) => ipcRenderer.invoke("list-files", folderPath),
+  getRecentFolders: () => ipcRenderer.invoke("get-recent-folders"),
+  addRecentFolder: (folderPath: string) => ipcRenderer.invoke("add-recent-folder", folderPath),
+});
+// #endregion 🔖FolderBridge
 // #endregion 🔖Preload

@@ -38,7 +38,7 @@ const configuration: UserConfig = {
     // because Electron's Chromium has a 6-connection-per-origin HTTP/1.1 limit
     // and the 80+ ESM module waterfall from elements.tsx stalls.
     warmup: {
-      clientFiles: ["./renderer.tsx", "../../.elements/ui/elements.tsx"],
+      clientFiles: ["./renderer.tsx", "../../elements/ui/elements.tsx"],
     },
     // Allow serving files from the entire monorepo since elements.tsx and
     // other dependencies live outside the desktop project root.
@@ -113,8 +113,8 @@ const configuration: UserConfig = {
     alias: {
       "@semio/js": path.resolve(__dirname, "../../semio/js"),
       "@semio/assets": path.resolve(__dirname, "../../semio/assets"),
-      "@elements/ui": path.resolve(__dirname, "../../.elements/ui"),
-      "@semio/coda-desktop": path.resolve(__dirname, "."),
+      "@elements/ui": path.resolve(__dirname, "../../elements/ui"),
+      "@coda/desktop": path.resolve(__dirname, "."),
     },
   },
   plugins: [...(tailwindcss() as unknown as NonNullable<UserConfig["plugins"]>), react() as unknown as NonNullable<UserConfig["plugins"]>[number]],

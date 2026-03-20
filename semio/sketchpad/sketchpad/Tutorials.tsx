@@ -20,11 +20,11 @@
 // #region Imports
 
 import { CloseIcon, PauseIcon, PlayIcon, RecordIcon, SkipBackIcon, SkipForwardIcon, StopIcon } from "@semio/assets";
-import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { guid, Guid } from "@semio/js/semio";
-import { useAddFooterItem, useMode, useRemoveFooterItem } from "./Sketchpad";
-import { Button, Slider } from "../../../.elements/ui";
+import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { Button, Slider } from "@semio/ui";
 import { Mode } from "./shared";
+import { useAddFooterItem, useMode, useRemoveFooterItem } from "./Sketchpad";
 
 // #endregion Imports
 

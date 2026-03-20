@@ -22,7 +22,7 @@
 import { AddIcon, AwardIcon, ChatIcon, CodeIcon, HandIcon, IntersectIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SettingsIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import { guid, Guid, Kit, Quality, QualityDiff, sumQualityInDesign } from "@semio/js/semio";
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
-import type { Connection, DragEndEvent, Edge, Node, NodeTypes, ReactFlowInstance } from "../../../.elements/ui";
+import type { Connection, DragEndEvent, Edge, Node, NodeTypes, ReactFlowInstance } from "@semio/ui";
 import {
   Diagram as BaseDiagram,
   BasicChatPanel,
@@ -51,7 +51,7 @@ import {
   useDroppable,
   useHotkeys,
   useTranslation,
-} from "../../../.elements/ui";
+} from "@semio/ui";
 import { useLabel } from "../i18n";
 import type { AppWindowConfig, HookNoSetResult, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, QualityAppId } from "./shared";
 import {

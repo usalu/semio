@@ -23,7 +23,7 @@ import { useState } from "react";
 
 // #region 🔖Slider
 const meta = {
-  title: "semio-elements/Slider",
+  title: "elements/Slider",
   component: Slider,
   parameters: {
     layout: "centered",

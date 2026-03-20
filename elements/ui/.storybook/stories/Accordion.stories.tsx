@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Accordion
 const meta = {
-  title: "semio-elements/Accordion",
+  title: "elements/Accordion",
   component: Accordion,
   parameters: {
     layout: "centered",

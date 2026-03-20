@@ -24,7 +24,7 @@ import { useState } from "react";
 
 // #region 🔖Button
 const meta = {
-  title: "semio-elements/Button",
+  title: "elements/Button",
   component: Button,
   parameters: {
     layout: "centered",
@@ -81,7 +81,7 @@ export const Temporary: Story = {
 // #region 🔖ButtonCycle
 
 const cycleMeta = {
-  title: "semio-elements/ButtonCycle",
+  title: "elements/ButtonCycle",
   component: ButtonCycle,
   parameters: {
     layout: "centered",

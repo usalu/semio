@@ -138,6 +138,54 @@ You MUST implement and test for all programming languages.
 All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
 
+## 👤semio🖱️algorithms
+
+The purpose of algorithms is to to have a ui to test all algorithms for all implementations (ts, python, rust, go).
+
+Algorithms:
+
+- Design
+  - Flatten
+  - Cluster
+  - Drag
+  - Move
+  - Delete
+
+Each Algorithm called `IPO` is a stories file and a UI from elements/ui. In the navbar show the algorithm e.g. Design > Drag
+
+Use the following GoldenLayout for IPO:
+IPO (UI)
+2 Rows 1. General (1/4)
+2 Columns 1. Description (1/3) 2. Requirements (2/3) 2. Logic (3/4)
+3 Columns 1. Inputs (1/3)
+{{input}} 2. Diffs (1/3)
+{{diff}} 3. Outputs (1/3)
+{{output}}
+
+e.g. Drag has as input: Vec and PieceSelection, diff: Diagram with diff, output: Diagram with design where the diff is applied.
+
+Add a language decorator to the algorithms storybook. Make sure that all native implementations are used to calculate.
+
+Add PieceSelection which is a Diagram component that only works for selecting pieces.
+
+## 👤semio📚ui
+
+semio ui:
+Create a new Vec component that takes a vec and displays the vector xy input with visible origin and axes. Optionally take minU, maxU, minV, maxV, showAxes, showOrigin, `onVecChange(vec)`
+
+Create a new PiecesSelection component where you can select pieces with `onPieceSelect(piece)` which is triggered when the circle on the piece diagram is selected. It should be Digram
+
+Extend the diagram component:
+
+- Optionally take a design diff. The diff colors pieces and connections in the diagram. 3 extra colors: removed, added, modified
+- Optionally take a selection (piece guids and connection guids)
+- Add callbacks `onPieceClick(piece)`, `onConnectionClick(connection)`
+
+Create a Diagram component that shows a minimal diagram of the design that can be displayed e.g. in a mini map.
+Use small filled circles for pieces and clean lines for connections (circles on top of lines, lines go center to center). Use flattenDesign for absolute placements. Fit the Diagram to the size to the div container. Add story for for Nakagin Capsule Tower to storybook.
+
+Create a new bundle semio/ui that holds reusable ui components. Make sure that all general ui dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.
+
 ## 👤semio⌨️engine
 
 semio engine:

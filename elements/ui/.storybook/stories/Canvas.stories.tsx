@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Canvas
 const meta = {
-  title: "semio-elements/Canvas",
+  title: "elements/Canvas",
   component: Canvas,
   parameters: {
     layout: "fullscreen",

@@ -19,7 +19,7 @@ import { expect, userEvent, within } from "storybook/test";
 // #region 🔖UI
 
 const meta = {
-  title: "semio-elements/UI",
+  title: "elements/UI",
   component: UI,
   parameters: {
     layout: "fullscreen",

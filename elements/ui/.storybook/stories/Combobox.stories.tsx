@@ -23,7 +23,7 @@ import { useState } from "react";
 
 // #region 🔖Combobox
 const meta = {
-  title: "semio-elements/Combobox",
+  title: "elements/Combobox",
   component: Combobox,
   parameters: {
     layout: "centered",

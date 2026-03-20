@@ -72,7 +72,7 @@ const TooltipExamples = () => (
 
 // #region 🔖Tooltip
 const meta = {
-  title: "semio-elements/Tooltip",
+  title: "elements/Tooltip",
   component: TooltipExamples,
   parameters: {
     layout: "centered",

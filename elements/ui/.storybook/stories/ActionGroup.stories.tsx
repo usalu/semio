@@ -23,7 +23,7 @@ import { Copy, Download, ExternalLink } from "lucide-react";
 
 // #region 🔖ActionGroup
 const meta = {
-  title: "semio-elements/ActionGroup",
+  title: "elements/ActionGroup",
   component: ActionGroup,
   parameters: {
     layout: "centered",

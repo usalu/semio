@@ -290,7 +290,7 @@
           "timestamp": "2026-03-16T16:47:13.11539971Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/elements/ui/package.json"
+            "file_path": "/workspaces/elements/ui/package.json"
           }
         }
       },
@@ -334,7 +334,7 @@
           "timestamp": "2026-03-16T16:47:13.378791452Z",
           "execution_id": "45f0bed1-24a3-432e-ac89-1a5bff1ac376",
           "tool_info": {
-            "file_path": "/workspaces/semio/elements/ui/package.json"
+            "file_path": "/workspaces/elements/ui/package.json"
           }
         }
       },
@@ -568,7 +568,7 @@
                 "new_string": ""
               }
             ],
-            "file_path": "/workspaces/semio/elements/ui/package.json"
+            "file_path": "/workspaces/elements/ui/package.json"
           }
         }
       },
@@ -596,7 +596,7 @@
                 "new_string": ""
               }
             ],
-            "file_path": "/workspaces/semio/elements/ui/package.json"
+            "file_path": "/workspaces/elements/ui/package.json"
           }
         }
       },
@@ -624,7 +624,7 @@
                 "new_string": "},\n  \"dependencies\": {"
               }
             ],
-            "file_path": "/workspaces/semio/elements/ui/package.json"
+            "file_path": "/workspaces/elements/ui/package.json"
           }
         }
       },
@@ -652,7 +652,7 @@
                 "new_string": "},\n  \"dependencies\": {"
               }
             ],
-            "file_path": "/workspaces/semio/elements/ui/package.json"
+            "file_path": "/workspaces/elements/ui/package.json"
           }
         }
       },

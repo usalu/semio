@@ -14,7 +14,7 @@
       "timestamp": "2026-03-16T13:21:24.938190146Z",
       "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
       "tool_info": {
-        "mcp_server_name": "semio-repo",
+        "mcp_server_name": "repo",
         "mcp_tool_arguments": {
           "files": [
             "package.json",
@@ -23,11 +23,11 @@
             ".vscode/settings.json",
             "elements/ui/package.json",
             "elements/ui/eslint.config.ts",
-            "semio-repo/vscode/package.json",
-            "semio-repo/vscode/eslint.config.ts"
+            "repo/vscode/package.json",
+            "repo/vscode/eslint.config.ts"
           ],
           "path": "2026/03/16/MIGRATE-TO-ES-LINT-10",
-          "summary": "Migrated the workspace to ESLint 10 by removing Nx ESLint inference, adding explicit lint targets for elements/ui and semio-repo/vscode, installing the ESLint 10 flat-config toolchain at the root, persisting VS Code zero-touch flat-config settings, and validating the root lint flow after excluding generated codegen artifacts from authored-source linting."
+          "summary": "Migrated the workspace to ESLint 10 by removing Nx ESLint inference, adding explicit lint targets for elements/ui and repo/vscode, installing the ESLint 10 flat-config toolchain at the root, persisting VS Code zero-touch flat-config settings, and validating the root lint flow after excluding generated codegen artifacts from authored-source linting."
         },
         "mcp_tool_name": "ticket_close"
       }

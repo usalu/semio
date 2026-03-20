@@ -23,7 +23,7 @@ import { CheckCircle2 } from "lucide-react";
 
 // #region 🔖Footer
 const meta = {
-  title: "semio-elements/Footer",
+  title: "elements/Footer",
   component: Footer,
   parameters: {
     layout: "fullscreen",

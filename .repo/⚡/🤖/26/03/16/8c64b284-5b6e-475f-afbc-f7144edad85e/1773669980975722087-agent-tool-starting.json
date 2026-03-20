@@ -14,7 +14,7 @@
       "timestamp": "2026-03-16T14:06:20.859992022Z",
       "execution_id": "dbbf90c6-c965-4826-a644-66ba4c5ec4c8",
       "tool_info": {
-        "mcp_server_name": "semio-repo",
+        "mcp_server_name": "repo",
         "mcp_tool_arguments": {
           "query": "session.json logging files cli"
         },

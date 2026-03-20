@@ -23,7 +23,7 @@ import { Bell, ChevronDown, Home, Menu, Redo, Search, Settings, Undo, User, Zoom
 
 // #region 🔖Navbar
 const meta = {
-  title: "semio-elements/Navbar",
+  title: "elements/Navbar",
   component: Navbar,
   parameters: {
     layout: "fullscreen",

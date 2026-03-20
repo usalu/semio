@@ -14,7 +14,7 @@
       "hook_event_name": "PreToolUse",
       "session_id": "2d7f15b6-4829-42d4-ae84-ad73be6629f5",
       "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2d7f15b6-4829-42d4-ae84-ad73be6629f5.jsonl",
-      "tool_name": "mcp_semio-repo_ticket_reopen",
+      "tool_name": "mcp_repo_ticket_reopen",
       "tool_input": {
         "client": "copilot-chat",
         "llm": "opus-4-6",

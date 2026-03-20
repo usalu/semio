@@ -21,7 +21,28 @@
 
 import { ChatIcon, SettingsIcon } from "@semio/assets";
 import { FC, ReactNode, Suspense, createContext, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  Aside,
+  MDXProvider as BaseMDXProvider,
+  Tabs as BaseTabs,
+  BasicChatPanel,
+  FileTree,
+  FileTreeNode,
+  Page,
+  PageFrontmatter,
+  PageNavigation,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Tree,
+  TreeItem,
+  TreeStateProvider,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "@semio/ui";
 import { useLabel } from "../i18n";
+import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, registerDocsRegistry, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 import type { SketchpadStore } from "./Sketchpad";
 import {
   Canvas,
@@ -39,8 +60,6 @@ import {
   useSettings,
   useSketchpadCommands,
 } from "./Sketchpad";
-import { Aside, BasicChatPanel, Tabs as BaseTabs, FileTree, FileTreeNode, MDXProvider as BaseMDXProvider, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, Tree, TreeContent, TreeItem, TreeRow, TreeStateProvider, useLocation, useNavigate, useParams } from "../../../.elements/ui";
-import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, registerDocsRegistry, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
 // #endregion Imports
 
@@ -643,7 +662,7 @@ export interface DocsPage {
   concepts?: string[];
 }
 
-export interface DocsSection extends SectionInfo { }
+export interface DocsSection extends SectionInfo {}
 
 /**
  * DocsRegistry holds the data fields for a DocsRegistry record.
@@ -858,7 +877,7 @@ export interface DocsAppDiff {
   sectionStatesDiff?: Record<string, Partial<DocsAppSectionState>>;
 }
 
-export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> { }
+export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> {}
 
 /**
  * Context passed to docs app command handlers.
@@ -1163,17 +1182,17 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     return {
       prev: prev
         ? {
-          path: prev.path,
-          title: prev.title,
-          section: prev.section,
-        }
+            path: prev.path,
+            title: prev.title,
+            section: prev.section,
+          }
         : undefined,
       next: next
         ? {
-          path: next.path,
-          title: next.title,
-          section: next.section,
-        }
+            path: next.path,
+            title: next.title,
+            section: next.section,
+          }
         : undefined,
     };
   }, [currentPath]);
@@ -1254,8 +1273,8 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
             onClick={
               childNode.page
                 ? () => {
-                  navigate(`/${childNode.page!.path}`);
-                }
+                    navigate(`/${childNode.page!.path}`);
+                  }
                 : undefined
             }
           >
@@ -1266,15 +1285,7 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
         const isCurrentPage = !!(currentPath && childNode.page.path === currentPath);
         const pageIcon = childNode.page.icon;
 
-        items.push(
-          <TreeItem
-            key={childNode.page.path}
-            icon={pageIcon ? <span className="text-sm">{pageIcon}</span> : undefined}
-            isHighlighted={isCurrentPage}
-            onClick={() => {
-            }}
-          />,
-        );
+        items.push(<TreeItem key={childNode.page.path} icon={pageIcon ? <span className="text-sm">{pageIcon}</span> : undefined} isHighlighted={isCurrentPage} onClick={() => {}} />);
       }
     });
 
@@ -1463,10 +1474,7 @@ const App: FC = () => {
       order: 100,
       content: () => (
         <TreeStateProvider>
-          <Tree
-            className="min-w-0 overflow-hidden p-double"
-            sections={[{ id: "semio.sketchpad.app.docs.settings.content", label: null, content: <Settings /> }]}
-          />
+          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.docs.settings.content", label: null, content: <Settings /> }]} />
         </TreeStateProvider>
       ),
     });
@@ -1482,34 +1490,34 @@ const App: FC = () => {
     };
   }, [appType, addSidePanelTab, removeSidePanelTab]);
 
-  const defaultLayout = useMemo(() => ({
-    root: {
-      type: "row",
-      content: [
-        {
-          type: "stack",
-          size: "100%",
-          content: [
-            {
-              type: "component",
-              componentName: DocsAppWindowKind.Page,
-              title: "page",
-              componentState: {},
-            },
-          ],
-        },
-      ],
-    },
-  }), []);
+  const defaultLayout = useMemo(
+    () => ({
+      root: {
+        type: "row",
+        content: [
+          {
+            type: "stack",
+            size: "100%",
+            content: [
+              {
+                type: "component",
+                componentName: DocsAppWindowKind.Page,
+                title: "page",
+                componentState: {},
+              },
+            ],
+          },
+        ],
+      },
+    }),
+    [],
+  );
   const storedWindowLayout = useMemo(() => parseWindowLayout(settings?.apps?.docs?.windowLayout), [settings]);
   const windowLayout = useMemo(() => {
     if (!storedWindowLayout) return defaultLayout;
     const removeWorkbenchWindowFromLayout = (layoutNode: any): any => {
       if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
-      if (
-        layoutNode.type === "component" &&
-        (layoutNode.componentName === "workbench" || layoutNode.componentName === "settings" || layoutNode.componentName === "chat")
-      ) {
+      if (layoutNode.type === "component" && (layoutNode.componentName === "workbench" || layoutNode.componentName === "settings" || layoutNode.componentName === "chat")) {
         return null;
       }
       if (layoutNode.root && typeof layoutNode.root === "object") {

@@ -15,7 +15,7 @@
       "model": "default",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/resources.json"
+        "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/resources.json"
       },
       "tool_use_id": "call_HBfgsD69SLbkZeiiY4HLgppb\nfc_07029c2b3907fcc90169b808e1149c819aa826d199d712db03",
       "hook_event_name": "preToolUse",

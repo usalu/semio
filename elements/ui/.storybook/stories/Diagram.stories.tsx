@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🔖Diagram
 
 const meta = {
-  title: "semio-elements/Diagram",
+  title: "elements/Diagram",
   component: DiagramSkeleton,
   parameters: {
     layout: "fullscreen",

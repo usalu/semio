@@ -15,7 +15,7 @@
       "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
       "tool_info": {
         "command_line": "npm run lint",
-        "cwd": "/workspaces/semio/semio-repo/vscode"
+        "cwd": "/workspaces/semio/repo/vscode"
       }
     }
   },

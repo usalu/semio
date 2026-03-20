@@ -15,7 +15,7 @@
       "execution_id": "dbbf90c6-c965-4826-a644-66ba4c5ec4c8",
       "tool_info": {
         "mcp_result": "[🎫removeredundantagenteventfiles](semiorepo://y/26/m/03/d/16/tk/REMOVE-REDUNDANT-AGENT-EVENT-FILES) - `open`\n",
-        "mcp_server_name": "semio-repo",
+        "mcp_server_name": "repo",
         "mcp_tool_arguments": {
           "client": "claude-code",
           "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT",

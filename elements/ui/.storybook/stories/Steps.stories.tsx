@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🔖Steps
 
 const meta = {
-  title: "semio-elements/Steps",
+  title: "elements/Steps",
   component: Steps,
   parameters: {
     layout: "padded",

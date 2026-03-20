@@ -24,7 +24,7 @@ import { MemoryRouter } from "react-router";
 
 // #region 🔖Breadcrumb
 const meta = {
-  title: "semio-elements/Breadcrumb",
+  title: "elements/Breadcrumb",
   component: Breadcrumb,
   parameters: {
     layout: "centered",

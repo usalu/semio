@@ -24,7 +24,7 @@ import { useState } from "react";
 
 // #region 🔖Collapsible
 const meta = {
-  title: "semio-elements/Collapsible",
+  title: "elements/Collapsible",
   component: Collapsible,
   parameters: {
     layout: "centered",

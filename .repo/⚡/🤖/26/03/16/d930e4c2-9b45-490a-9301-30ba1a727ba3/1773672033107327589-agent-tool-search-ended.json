@@ -17,14 +17,14 @@
       "hook_event_name": "PostToolUse",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+        "file_path": "/workspaces/elements/ui/elements.tsx",
         "offset": 4481,
         "limit": 30
       },
       "tool_response": {
         "type": "text",
         "file": {
-          "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+          "filePath": "/workspaces/elements/ui/elements.tsx",
           "content": "// #region Tree\n\n// [👤semio📚js🗃️sketchpad💻elements🔖tree](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree)\n// Hierarchical tree view with sections, items, and file trees.\n// Consumers MUST wrap components in TreeStateProvider.\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️treestatecontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeStateContextValue)\n * TreeStateContextValue holds the data fields for a TreeStateContextValue record.\n **/\ninterface TreeStateContextValue {\n  openStates: Record\u003cstring, boolean\u003e;\n  setOpenState: (id: string, open: boolean) =\u003e void;\n  getOpenState: (id: string, defaultOpen: boolean) =\u003e boolean;\n}\n\n/**\n * TreeStateContext holds the data fields for a TreeStateContext record.\n * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treestatecontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeStateContext)\n **/\nconst TreeStateContext = React.createContext\u003cTreeStateContextValue | null\u003e(null);\n\n/**\n * Context provider managing tree expansion state.\n * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨treestateprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/TreeStateProvider)\n **/\nexport const TreeStateProvider: React.FC\u003c{ children: React.ReactNode }\u003e = ({ children }) =\u003e {\n  const [openStates, setOpenStates] = React.useState\u003cRecord\u003cstring, boolean\u003e\u003e({});\n\n  const setOpenState = (id: string, open: boolean) =\u003e {",
           "numLines": 30,
           "startLine": 4481,

@@ -5,5 +5,5 @@ Semio Algorithms provides Storybook-based algorithm visualizations where each al
 ### Specs
 
 - The bundle exposes Storybook stories focused on algorithm behavior comparison across multiple implementations and inputs.
-- Storybook setup mirrors `elements/ui` so addons, decorators, MDX handling, and development behavior stay consistent.
-- Visual primitives for algorithm rendering come from `@elements/ui`.
+- Storybook setup mirrors `semio/ui` so addons, decorators, MDX handling, and development behavior stay consistent.
+- Visual primitives for algorithm rendering come from `@semio/ui`.

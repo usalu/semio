@@ -28,7 +28,7 @@ import type { Config } from "tailwindcss";
 
 // Tailwind CSS configuration with prose color mappings for light and dark modes.
 // Export MUST satisfy the Tailwind Config type.
-export default {
+export const tailwindConfig = {
   content: ["./**/*.{ts,tsx,mdx}"],
   darkMode: "media",
   theme: {
@@ -79,5 +79,7 @@ export default {
   },
   plugins: [typography],
 } satisfies Config;
+
+export default tailwindConfig;
 
 // #endregion 🔖Configuration

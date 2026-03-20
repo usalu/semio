@@ -15,9 +15,9 @@
       "model": "default",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json"
+        "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json"
       },
-      "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json\",\"content_length\":1232}",
+      "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json\",\"content_length\":1232}",
       "duration": 2.975,
       "tool_use_id": "call_4ZUtgv7eyRnxEZyicBViYhDV\nfc_07029c2b3907fcc90169b808da0fe0819a8493988d409107f1",
       "hook_event_name": "postToolUse",

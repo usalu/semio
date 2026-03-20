@@ -17,7 +17,7 @@
       "hook_event_name": "PreToolUse",
       "tool_name": "Edit",
       "tool_input": {
-        "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+        "file_path": "/workspaces/elements/ui/elements.tsx",
         "old_string": "  draggable = false,\n  onDragStart,\n  onDragOver,\n  onDragLeave,\n  onDrop,\n}) =\u003e {\n  const localizedLabel = id ? useLabel(id) : undefined;\n  const resolvedLabel = label ?? localizedLabel;\n  assertNoNestedTreeSections(children, \"TreeItem\");\n  if (sortable \u0026\u0026 sortableId) {",
         "new_string": "  draggable = false,\n  onDragStart,\n  onDragOver,\n  onDragLeave,\n  onDrop,\n  branchCount = 0,\n  activeBranchIndex = 0,\n  onBranchChange,\n}) =\u003e {\n  const localizedLabel = id ? useLabel(id) : undefined;\n  const resolvedLabel = label ?? localizedLabel;\n  assertNoNestedTreeSections(children, \"TreeItem\");\n  if (sortable \u0026\u0026 sortableId) {",
         "replace_all": false

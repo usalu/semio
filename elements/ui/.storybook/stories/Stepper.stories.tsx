@@ -23,7 +23,7 @@ import { useState } from "react";
 
 // #region 🔖Stepper
 const meta = {
-  title: "semio-elements/Stepper",
+  title: "elements/Stepper",
   component: Stepper,
   parameters: {
     layout: "centered",

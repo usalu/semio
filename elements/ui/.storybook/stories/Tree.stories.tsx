@@ -25,7 +25,7 @@ import { expect, fireEvent, within } from "storybook/test";
 
 // #region 🔖Tree
 const meta = {
-  title: "semio-elements/Tree",
+  title: "elements/Tree",
   component: Tree,
   parameters: {
     layout: "centered",

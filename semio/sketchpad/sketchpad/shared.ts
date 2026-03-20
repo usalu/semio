@@ -22,7 +22,7 @@
 import { CodeIcon, DetailsIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { Guid, Kit, KitDiff } from "@semio/js/semio";
 import { ComponentType, ReactNode } from "react";
-import { type AnyActorRef, assign, fromCallback } from "../../../.elements/ui";
+import { type AnyActorRef, assign, fromCallback } from "@semio/ui";
 import { type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent, isSyncArray, isSyncMap } from "../../studio/studio";
 
 // #endregion Imports
@@ -169,10 +169,10 @@ export function createAction(execute: () => void, canExecute: boolean): ActionFi
     execute: canExecute
       ? execute
       : () => {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[DEBUG] Attempted to execute a disabled action");
-        }
-      },
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[DEBUG] Attempted to execute a disabled action");
+          }
+        },
   };
 }
 
@@ -567,8 +567,8 @@ export function applySelectionComposition<T>(previous: T[] | undefined, incoming
   return uniquePrevious.filter((value) => incomingSet.has(value));
 }
 
-export { WindowKind, createDefaultLayout, deduplicateWindowLayout, parseWindowLayout, stringifyWindowLayout } from "../../../.elements/ui";
-export type { UIWindowControl as WindowControl, UIWindowKindDefinition as WindowKindDefinition } from "../../../.elements/ui";
+export { WindowKind, createDefaultLayout, deduplicateWindowLayout, parseWindowLayout, stringifyWindowLayout } from "@semio/ui";
+export type { UIWindowControl as WindowControl, UIWindowKindDefinition as WindowKindDefinition } from "@semio/ui";
 
 /**
  * Panel layout positions: left, right, middle, or bottom.
@@ -619,7 +619,7 @@ export interface FileProvider {
  * Configuration interface for in-memory file provider.
  * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🛠️memoryfileproviderconfig](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/d/i/MemoryFileProviderConfig)
  **/
-export interface MemoryFileProviderConfig { }
+export interface MemoryFileProviderConfig {}
 
 /**
  * Configuration interface for local IndexedDB file provider.
@@ -1029,7 +1029,7 @@ export interface AppConfig {
  * App registration entry extending AppConfig.
  * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🛠️appregistration](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/d/i/AppRegistration)
  **/
-export interface AppRegistration extends AppConfig { }
+export interface AppRegistration extends AppConfig {}
 
 // #endregion App Registry
 
@@ -1423,7 +1423,7 @@ export interface ToolGroupProps {
 // MUST define the focus item interface for search and navigation targets.
 
 // FocusItem is re-exported from elements.tsx as UIFindItem.
-export type { UIFindItem as FocusItem } from "../../../.elements/ui";
+export type { UIFindItem as FocusItem } from "@semio/ui";
 
 // #endregion Focus
 
@@ -1811,7 +1811,7 @@ export function getValueAtPath(root: SyncMap<any> | SyncArray<any>, path: SyncPa
  **/
 export function createPathObserver(root: SyncMap<any>, path: SyncPath, subscribe: Subscribe): Disposable {
   if (path.length === 0) {
-    const callback = () => subscribe(() => { });
+    const callback = () => subscribe(() => {});
     root.observeDeep(callback);
     return () => root.unobserveDeep(callback);
   }
@@ -1822,7 +1822,7 @@ export function createPathObserver(root: SyncMap<any>, path: SyncPath, subscribe
     const newJson = serializeValue(getValueAtPath(root, path));
     if (lastJson !== newJson) {
       lastJson = newJson;
-      subscribe(() => { });
+      subscribe(() => {});
     }
   };
   const setupObservers = (current: any, remainingPath: SyncPath, depth: number) => {
@@ -1926,7 +1926,7 @@ export class DerivedNode<T> {
     this.unsubscribers = this.deps.map((d) =>
       d.store.onPathChanged(d.path, () => {
         this.recompute();
-        return () => { };
+        return () => {};
       }),
     );
     this.recompute();
@@ -3448,7 +3448,7 @@ export interface KitAppHooks {
  * defaultDesignAppHooks holds the data fields for a defaultDesignAppHooks record.
  **/
 const defaultDesignAppHooks: DesignAppHooks = {
-  useDesignAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useDesignAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
   useDesignAppDiff: () => ({}),
   useDesignAppHover: () => undefined,
   useDesignAppIsPieceHovered: () => false,
@@ -3465,7 +3465,7 @@ const defaultDesignAppHooks: DesignAppHooks = {
  * defaultKitAppHooks holds the data fields for a defaultKitAppHooks record.
  **/
 const defaultKitAppHooks: KitAppHooks = {
-  useKitAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useKitAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
 };
 
 /**

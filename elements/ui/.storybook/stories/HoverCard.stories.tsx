@@ -64,7 +64,7 @@ const HoverCardExamples = () => (
 
 // #region 🔖HoverCard
 const meta = {
-  title: "semio-elements/HoverCard",
+  title: "elements/HoverCard",
   component: HoverCardExamples,
   parameters: {
     layout: "centered",

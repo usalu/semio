@@ -15,7 +15,7 @@
       "execution_id": "2f27430f-777c-45fd-a591-e79d51c28f09",
       "tool_info": {
         "command_line": "go test -run \"TestTrackHook|TestRunHook\" -v",
-        "cwd": "/workspaces/semio/semio-repo/cli"
+        "cwd": "/workspaces/semio/repo/cli"
       }
     }
   },

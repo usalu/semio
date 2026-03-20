@@ -28,7 +28,7 @@ import "./i18n";
 export type { BlobAssetStore, KitStore, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js/semio";
 export { JsonFileKitStore, createJsonFileKitStore } from "@semio/studio";
 export type { KitJsonFileAdapter } from "@semio/studio";
-export { Canvas, HorizontalWindows, VerticalWindows } from "../../.elements/ui";
+export { Canvas, HorizontalWindows, VerticalWindows } from "@semio/ui";
 export { SyncBinaryPersistenceProvider, createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory } from "./sketchpad/shared";
 export type {
   AppConfig,
@@ -41,10 +41,12 @@ export type {
   PersistenceFactory,
   PersistenceProvider,
   RemoteFileProviderConfig,
-  RemoteProviders, SqliteAdapter, SyncProviderFactory
+  RemoteProviders,
+  SqliteAdapter,
+  SyncProviderFactory,
 } from "./sketchpad/shared";
 export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";
-export type { SketchpadStore } from "./sketchpad/Sketchpad";
+export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory, SketchpadStore } from "./sketchpad/Sketchpad";
 
 export { config as designConfig } from "./sketchpad/Design";
 export { config as docsConfig } from "./sketchpad/Docs";

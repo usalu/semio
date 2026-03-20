@@ -23,7 +23,7 @@ import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 
 // #region 🔖Toggle
 const meta = {
-  title: "semio-elements/Toggle",
+  title: "elements/Toggle",
   component: Toggle,
   parameters: {
     layout: "centered",

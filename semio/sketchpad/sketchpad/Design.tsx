@@ -106,7 +106,7 @@ import {
   Type,
 } from "@semio/js/semio";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { ConnectionLineComponentProps, DragEndEvent, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, RFConnection, ThreeEvent } from "../../../.elements/ui";
+import type { ConnectionLineComponentProps, DragEndEvent, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, RFConnection, ThreeEvent } from "@semio/ui";
 import {
   applyNodeChanges,
   arrayMove,
@@ -154,7 +154,7 @@ import {
   useStoreApi,
   useTranslation,
   ViewportPortal,
-} from "../../../.elements/ui";
+} from "@semio/ui";
 import { useLabel } from "../i18n";
 import { getConnectorPortGuid, getPortCompatibilityState, getPortTone } from "./portColor";
 import { getKitAppHooks, registerDesignAppHooks, registerDesignAppStoreFactory } from "./shared";

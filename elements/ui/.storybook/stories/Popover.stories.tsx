@@ -23,7 +23,7 @@ import { Settings } from "lucide-react";
 
 // #region 🔖Popover
 const meta = {
-  title: "semio-elements/Popover",
+  title: "elements/Popover",
   component: Popover,
   parameters: {
     layout: "centered",

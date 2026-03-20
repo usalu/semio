@@ -21,6 +21,7 @@ import os
 import struct
 import sys
 import tempfile
+from base64 import b64encode
 from pathlib import Path
 from typing import Any
 
@@ -205,6 +206,70 @@ def _select_best_model_like_semio_ts(models: list[dict[str, Any]], selected_tag_
     return filtered_models[max_score_index]
 
 
+def _create_glb_blob(vertices: list[tuple[float, float, float]], faces: list[tuple[int, int, int]]) -> str:
+    def _pad4(data: bytes, fill: bytes) -> bytes:
+        padding = (-len(data)) % 4
+        return data + fill * padding
+
+    position_bytes = struct.pack("<" + "f" * (len(vertices) * 3), *(value for vertex in vertices for value in vertex))
+    index_values = [index for face in faces for index in face]
+    index_bytes = struct.pack("<" + "H" * len(index_values), *index_values)
+    position_bytes = _pad4(position_bytes, b"\x00")
+    index_bytes = _pad4(index_bytes, b"\x00")
+    position_length = len(position_bytes)
+    index_length = len(index_bytes)
+    binary_chunk = position_bytes + index_bytes
+    min_x = min(vertex[0] for vertex in vertices)
+    min_y = min(vertex[1] for vertex in vertices)
+    min_z = min(vertex[2] for vertex in vertices)
+    max_x = max(vertex[0] for vertex in vertices)
+    max_y = max(vertex[1] for vertex in vertices)
+    max_z = max(vertex[2] for vertex in vertices)
+    json_chunk = json.dumps(
+        {
+            "asset": {"version": "2.0"},
+            "buffers": [{"byteLength": len(binary_chunk)}],
+            "bufferViews": [
+                {"buffer": 0, "byteOffset": 0, "byteLength": position_length, "target": 34962},
+                {"buffer": 0, "byteOffset": position_length, "byteLength": index_length, "target": 34963},
+            ],
+            "accessors": [
+                {
+                    "bufferView": 0,
+                    "componentType": 5126,
+                    "count": len(vertices),
+                    "type": "VEC3",
+                    "min": [min_x, min_y, min_z],
+                    "max": [max_x, max_y, max_z],
+                },
+                {
+                    "bufferView": 1,
+                    "componentType": 5123,
+                    "count": len(index_values),
+                    "type": "SCALAR",
+                },
+            ],
+            "meshes": [{"primitives": [{"attributes": {"POSITION": 0}, "indices": 1}]}],
+            "nodes": [{"mesh": 0}],
+            "scenes": [{"nodes": [0]}],
+            "scene": 0,
+        },
+        separators=(",", ":"),
+    ).encode("utf-8")
+    json_chunk = _pad4(json_chunk, b" ")
+    total_length = 12 + 8 + len(json_chunk) + 8 + len(binary_chunk)
+    glb = b"".join(
+        [
+            struct.pack("<4sII", b"glTF", 2, total_length),
+            struct.pack("<I4s", len(json_chunk), b"JSON"),
+            json_chunk,
+            struct.pack("<I4s", len(binary_chunk), b"BIN\x00"),
+            binary_chunk,
+        ]
+    )
+    return "data:model/gltf-binary;base64," + b64encode(glb).decode("ascii")
+
+
 class TestRoundtrip:
     class TestMetabolism:
         def test_roundtrip(self):
@@ -352,6 +417,137 @@ class TestExportDesignModel:
         assert "scenes" in parsed
         REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
         (REPORTS_EXPORT_DIR / "py.gltf").write_bytes(result)
+
+    def test_export_ifc_returns_valid_ifc(self):
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+        ifc_text = result.decode("utf-8")
+        assert "ISO-10303-21" in ifc_text
+        assert "IFC4" in ifc_text
+        assert "IFCPROJECT" in ifc_text
+        assert "IFCSITE" in ifc_text
+        assert "IFCBUILDING" in ifc_text
+        assert "IFCBUILDINGSTOREY" in ifc_text
+        assert "IFCELEMENTASSEMBLY" in ifc_text
+
+    def test_export_ifc_contains_types_and_occurrences(self):
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        ifc_text = result.decode("utf-8")
+        assert "IFCBUILDINGELEMENTPROXYTYPE" in ifc_text
+        assert "IFCBUILDINGELEMENTPROXY(" in ifc_text
+
+    def test_export_ifc_contains_mesh_geometry(self):
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        ifc_text = result.decode("utf-8")
+        assert "IFCSHAPEREPRESENTATION" in ifc_text
+
+    def test_export_ifc_converts_gltf_mesh_axes_to_semio_axes(self):
+        import ifcopenshell
+
+        kit_dict = {
+            "name": "Axis Test Kit",
+            "guid": "axis-test-kit",
+            "uri": "axis-test-kit",
+            "types": [
+                {
+                    "guid": "axis-test-kind",
+                    "name": "Axis Test Kind",
+                    "variant": "",
+                    "attributes": [],
+                    "connectors": [],
+                    "models": [
+                        {
+                            "guid": "axis-test-model",
+                            "file": {"guid": "axis-test-file"},
+                            "tags": [],
+                        }
+                    ],
+                }
+            ],
+            "designs": [
+                {
+                    "guid": "axis-test-design",
+                    "name": "Axis Test Design",
+                    "pieces": [
+                        {
+                            "guid": "axis-test-piece",
+                            "name": "Axis Test Piece",
+                            "type": {"guid": "axis-test-kind"},
+                        }
+                    ],
+                    "connections": [],
+                }
+            ],
+            "files": [
+                {
+                    "guid": "axis-test-file",
+                    "name": "axis-test.glb",
+                    "blob": _create_glb_blob(
+                        [(0.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)],
+                        [(0, 1, 2)],
+                    ),
+                }
+            ],
+            "tags": [],
+            "authors": [],
+        }
+
+        result = export_design_model(kit_dict, "Axis Test Design", ".ifc")
+        ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
+        point_lists = ifc.by_type("IfcCartesianPointList3D")
+
+        assert len(point_lists) == 1
+        coordinates = [tuple(float(value) for value in row) for row in point_lists[0].CoordList]
+        assert any(abs(x) < 1e-6 and abs(y) < 1e-6 and z > 0 for x, y, z in coordinates)
+        assert any(abs(x) < 1e-6 and y < 0 and abs(z) < 1e-6 for x, y, z in coordinates)
+        assert not any(abs(x) < 1e-6 and y > 0 and abs(z) < 1e-6 for x, y, z in coordinates)
+
+    def test_export_ifc_contains_ports_and_connections(self):
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        ifc_text = result.decode("utf-8")
+        assert "IFCDISTRIBUTIONPORT" in ifc_text
+        assert "IFCRELCONNECTSPORTS" in ifc_text
+        assert "IFCRELCONNECTSELEMENTS" in ifc_text
+
+    def test_export_ifc_roundtrip_with_ifcopenshell(self):
+        import ifcopenshell
+
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
+        projects = ifc.by_type("IfcProject")
+        assert len(projects) == 1
+        sites = ifc.by_type("IfcSite")
+        assert len(sites) == 1
+        buildings = ifc.by_type("IfcBuilding")
+        assert len(buildings) == 1
+        storeys = ifc.by_type("IfcBuildingStorey")
+        assert len(storeys) == 1
+        assemblies = ifc.by_type("IfcElementAssembly")
+        assert len(assemblies) == 1
+        assert assemblies[0].Name == "Nakagin Capsule Tower"
+        type_products = ifc.by_type("IfcBuildingElementProxyType")
+        assert len(type_products) > 0
+        occurrences = ifc.by_type("IfcBuildingElementProxy")
+        assert len(occurrences) > 0
+        pieces = next(d for d in kit_dict.get("designs", []) if d.get("name") == "Nakagin Capsule Tower").get("pieces", [])
+        assert len(occurrences) == len(pieces)
+        ports = ifc.by_type("IfcDistributionPort")
+        assert len(ports) > 0
+        port_connections = ifc.by_type("IfcRelConnectsPorts")
+        connections = next(d for d in kit_dict.get("designs", []) if d.get("name") == "Nakagin Capsule Tower").get("connections", [])
+        assert len(port_connections) == len(connections)
+
+    def test_export_ifc_report(self):
+        kit_dict = load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+        (REPORTS_EXPORT_DIR / "py.ifc").write_bytes(result)
 
 
 class TestGetGeometricInsightsForModel:

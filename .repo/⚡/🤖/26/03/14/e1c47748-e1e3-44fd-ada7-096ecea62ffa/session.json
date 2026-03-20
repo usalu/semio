@@ -12,7 +12,7 @@
           "generation_id": "90bfda70-474f-4d70-b298-659c92fe5983",
           "model": "composer-1.5",
           "content": "{\n  \"$schema\": \"../../node_modules/nx/schemas/project-schema.json\",\n  \"projectType\": \"library\",\n  \"name\": \"@elements/ui\",\n  \"version\": \"0.1.0\",\n  \"description\": \"elements · ui\",\n  \"type\": \"module\",\n  \"exports\": {\n    \".\": \"./index.ts\",\n    \"./elements\": \"./elements.tsx\",\n    \"./globals.css\": \"./globals.css\",\n    \"./theme.css\": \"./theme.css\",\n    \"./tailwind.config\": \"./tailwind.config.ts\",\n    \"./postcss.config\": \"./postcss.config.ts\",\n    \"./eslint.config\": \"./eslint.config.ts\"\n  },\n  \"scripts\": {\n    \"dev\": \"storybook dev -p 6006 --exact-port --host 0.0.0.0 --no-open --debug\",\n    \"build\": \"storybook build\",\n    \"test\": \"vitest run --config vitest.config.ts --passWithNoTests\"\n  },\n  \"dependencies\": {\n    \"@dnd-kit/core\": \"^6.3.1\",\n    \"@dnd-kit/sortable\": \"^10.0.0\",\n    \"@dnd-kit/utilities\": \"^3.2.2\",\n    \"@mdx-js/react\": \"^3.1.1\",\n    \"@radix-ui/react-accordion\": \"^1.2.12\",\n    \"@radix-ui/react-avatar\": \"^1.1.11\",\n    \"@radix-ui/react-collapsible\": \"^1.1.11\",\n    \"@radix-ui/react-dialog\": \"^1.1.15\",\n    \"@radix-ui/react-dropdown-menu\": \"^2.1.16\",\n    \"@radix-ui/react-hover-card\": \"^1.1.15\",\n    \"@radix-ui/react-popover\": \"^1.1.15\",\n    \"@radix-ui/react-scroll-area\": \"^1.2.10\",\n    \"@radix-ui/react-select\": \"^2.2.6\",\n    \"@radix-ui/react-slider\": \"^1.3.6\",\n    \"@radix-ui/react-slot\": \"^1.2.0\",\n    \"@radix-ui/react-tabs\": \"^1.1.13\",\n    \"@radix-ui/react-toggle\": \"^1.1.3\",\n    \"@radix-ui/react-toggle-group\": \"^1.1.11\",\n    \"@radix-ui/react-tooltip\": \"^1.2.8\",\n    \"@react-three/drei\": \"^10.7.7\",\n    \"@react-three/fiber\": \"^9.5.0\",\n    \"@react-three/postprocessing\": \"^3.0.4\",\n    \"@semio/assets\": \"^1.0.0\",\n    \"@storybook/addon-docs\": \"^10.1.11\",\n    \"@storybook/addon-vitest\": \"^10.1.11\",\n    \"@storybook/react-vite\": \"^10.1.11\",\n    \"@xstate/react\": \"^6.0.0\",\n    \"@xyflow/react\": \"^12.10.0\",\n    \"class-variance-authority\": \"^0.7.1\",\n    \"clsx\": \"^2.1.1\",\n    \"cmdk\": \"^1.1.1\",\n    \"d3-force\": \"^3.0.0\",\n    \"dagre\": \"^0.8.5\",\n    \"golden-layout\": \"^2.6.0\",\n    \"i18next\": \"^25.7.4\",\n    \"motion\": \"^12.26.2\",\n    \"react\": \"^19.2.3\",\n    \"react-dom\": \"^19.2.3\",\n    \"react-i18next\": \"^16.5.2\",\n    \"react-resizable-panels\": \"^4.2.1\",\n    \"react-router\": \"^7.12.0\",\n    \"storybook\": \"^10.1.11\",\n    \"three\": \"^0.182.0\"\n  },\n  \"devDependencies\": {\n    \"@mdx-js/rollup\": \"^3.1.1\",\n    \"@tailwindcss/postcss\": \"^4.1.18\",\n    \"@tailwindcss/typography\": \"^0.5.19\",\n    \"@tailwindcss/vite\": \"^4.1.18\",\n    \"@types/d3-force\": \"^3.0.10\",\n    \"@types/dagre\": \"^0.7.53\",\n    \"@types/node\": \"^25.0.8\",\n    \"@types/react\": \"^19.2.8\",\n    \"@types/react-dom\": \"^19.2.3\",\n    \"@vitejs/plugin-react\": \"^5.1.2\",\n    \"@vitest/browser\": \"^4.0.17\",\n    \"@vitest/coverage-v8\": \"^4.0.17\",\n    \"postcss\": \"^8.5.6\",\n    \"postcss-load-config\": \"^6.0.1\",\n    \"prettier-plugin-tailwindcss\": \"^0.7.2\",\n    \"rehype-autolink-headings\": \"^7.1.0\",\n    \"rehype-slug\": \"^6.0.0\",\n    \"remark-frontmatter\": \"^5.0.0\",\n    \"remark-gfm\": \"^4.0.1\",\n    \"remark-mdx-frontmatter\": \"^5.2.0\",\n    \"tailwindcss\": \"^4.0.0\",\n    \"tailwindcss-animate\": \"^1.0.7\",\n    \"typescript\": \"^5.9.3\",\n    \"vitest\": \"^4.0.17\"\n  },\n  \"author\": {\n    \"name\": \"Ueli Saluz\",\n    \"email\": \"ueli@semio-tech.com\",\n    \"url\": \"https://github.com/usalu\"\n  },\n  \"license\": \"LGPL-3.0-or-later\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/usalu/semio.git\",\n    \"directory\": \"elements/ui\"\n  },\n  \"bundleKind\": \"ui\"\n}",
-          "file_path": "/workspaces/semio/elements/ui/package.json",
+          "file_path": "/workspaces/elements/ui/package.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -29,14 +29,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui⚙️package"
+            "id": "🗃️elements🛅ui⚙️package"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui⚙️package📌1📌105"
+          "🗃️elements🛅ui⚙️package📌1📌105"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚27⏱️56",
         "session": "⚪e1c47748e1e344fdada7096ecea62ffa"
@@ -357,9 +357,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/package.json"
+            "file_path": "/workspaces/elements/ui/package.json"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/elements/ui/package.json\",\"content_length\":3415}",
+          "tool_output": "{\"file_path\":\"/workspaces/elements/ui/package.json\",\"content_length\":3415}",
           "duration": 46.086,
           "tool_use_id": "tool_779e07df-da87-439d-9ac9-59c9f4dd30c",
           "hook_event_name": "postToolUse",
@@ -377,14 +377,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui⚙️package"
+            "id": "🗃️elements🛅ui⚙️package"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui⚙️package📌1📌105"
+          "🗃️elements🛅ui⚙️package📌1📌105"
         ],
         "second": "🎆26🌙03☀️14⏰15⌚28⏱️21",
         "session": "⚪e1c47748e1e344fdada7096ecea62ffa"

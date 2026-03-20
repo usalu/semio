@@ -17,14 +17,14 @@
       "hook_event_name": "PostToolUse",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+        "file_path": "/workspaces/elements/ui/elements.tsx",
         "offset": 5770,
         "limit": 50
       },
       "tool_response": {
         "type": "text",
         "file": {
-          "filePath": "/workspaces/semio/elements/ui/elements.tsx",
+          "filePath": "/workspaces/elements/ui/elements.tsx",
           "content": "      } finally {\n        setLoadingById((previousItems) =\u003e ({ ...previousItems, [getTreeItemLoadingId(item.id)]: false }));\n      }\n    },\n    [itemItemsById, loadingById],\n  );\n\n  const handleDragOver = React.useCallback((event: React.DragEvent\u003cHTMLDivElement\u003e) =\u003e {\n    event.preventDefault();\n    event.dataTransfer.dropEffect = \"move\";\n  }, []);\n\n  const handleSelectItem = React.useCallback(\n    (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) =\u003e {\n      const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);\n      const nextSelection = getTreeNextSelectionState({\n        selectionMode,\n        selectedIds: resolvedSelectedIds,\n        orderedIds,\n        targetId: item.id,\n        anchorId: anchorIdRef.current,\n        additiveKey: event.metaKey || event.ctrlKey,\n        rangeKey: event.shiftKey,\n      });\n      anchorIdRef.current = nextSelection.anchorId;\n      updateSelection(nextSelection.selectedIds);\n      item.onClick?.(event, { path, selectedIds: nextSelection.selectedIds, sectionId: section.id });\n    },\n    [itemItemsById, resolvedSections, resolvedSelectedIds, sectionItemsById, selectionMode, updateSelection],\n  );\n\n  const handleDoubleClickItem = React.useCallback(\n    (event: React.MouseEvent, item: TreeDataItem, section: TreeDataSection, path: string[]) =\u003e {\n      item.onDoubleClick?.(event, { path, selectedIds: resolvedSelectedIds, sectionId: section.id });\n    },\n    [resolvedSelectedIds],\n  );\n\n  const handleDragStart = React.useCallback(\n    (event: React.DragEvent\u003cHTMLDivElement\u003e, item: TreeDataItem, section: TreeDataSection) =\u003e {\n      const nextDraggedIds = resolvedSelectedIds.includes(item.id) ? resolvedSelectedIds : [item.id];\n      const sourceItems = nextDraggedIds.map((id) =\u003e itemMap[id]).filter(Boolean);\n      setDraggedIds(nextDraggedIds);\n      event.dataTransfer.effectAllowed = \"move\";\n      event.dataTransfer.setData(treeDefaultDragMimeKind, JSON.stringify(nextDraggedIds));\n      const customData = dragAndDropController?.getDragData?.({ items: sourceItems, sourceItem: item, section });\n      Object.entries(customData ?? {}).forEach(([kind, value]) =\u003e {\n        event.dataTransfer.setData(kind, value);\n      });\n      dragAndDropController?.onDragStart?.({ items: sourceItems, sourceItem: item, section });",
           "numLines": 50,
           "startLine": 5770,

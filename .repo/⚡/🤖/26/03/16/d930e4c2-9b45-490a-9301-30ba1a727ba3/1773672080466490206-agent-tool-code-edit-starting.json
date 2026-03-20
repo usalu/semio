@@ -17,7 +17,7 @@
       "hook_event_name": "PreToolUse",
       "tool_name": "Edit",
       "tool_input": {
-        "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+        "file_path": "/workspaces/elements/ui/elements.tsx",
         "old_string": "  onDragLeave?: React.DragEventHandler\u003cHTMLDivElement\u003e;\n  onDrop?: React.DragEventHandler\u003cHTMLDivElement\u003e;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️sortabletreeitemsprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/SortableTreeItemsProps)\n * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.",
         "new_string": "  onDragLeave?: React.DragEventHandler\u003cHTMLDivElement\u003e;\n  onDrop?: React.DragEventHandler\u003cHTMLDivElement\u003e;\n  /** Total number of alternative branches. When \u003e 0, shows branch navigation. */\n  branchCount?: number;\n  /** Currently active branch index (0-based). */\n  activeBranchIndex?: number;\n  /** Callback when the user navigates to a different branch. */\n  onBranchChange?: (index: number) =\u003e void;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tree✂️sortabletreeitemsprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/SortableTreeItemsProps)\n * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.",
         "replace_all": false

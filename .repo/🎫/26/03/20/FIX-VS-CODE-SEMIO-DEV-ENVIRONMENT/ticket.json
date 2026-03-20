@@ -1,0 +1,12 @@
+{
+  "title": "Fix VS Code Semio Dev Environment",
+  "status": "open",
+  "description": "Investigate and fix why the Semio development workflow does not work in VS Code. Inspect workspace settings, MCP configuration, hooks, devcontainer, launch/tasks, and root/package scripts. Implement the necessary changes in existing files and validate the relevant dev workflow.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1000"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪ce359584a1bd4a2085927c3fa6b375c0"
+  ]
+}

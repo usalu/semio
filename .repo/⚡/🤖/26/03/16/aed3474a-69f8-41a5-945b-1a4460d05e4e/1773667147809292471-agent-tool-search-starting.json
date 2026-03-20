@@ -14,7 +14,7 @@
       "timestamp": "2026-03-16T13:19:07.666791934Z",
       "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
       "tool_info": {
-        "file_path": "/workspaces/semio/elements/ui/eslint.config.ts"
+        "file_path": "/workspaces/elements/ui/eslint.config.ts"
       }
     }
   },

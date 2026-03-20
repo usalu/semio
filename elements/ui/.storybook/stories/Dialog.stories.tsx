@@ -23,7 +23,7 @@ import { useState } from "react";
 
 // #region 🔖Dialog
 const meta = {
-  title: "semio-elements/Dialog",
+  title: "elements/Dialog",
   component: Dialog,
   parameters: {
     layout: "centered",

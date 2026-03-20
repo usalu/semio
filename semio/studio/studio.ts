@@ -604,3 +604,282 @@ export async function createJsonFileKitStore(adapter: KitJsonFileAdapter): Promi
 }
 
 // #endregion 🔖JsonFileKitStore
+
+// #region 🔖FolderKitStore
+// [👤semio👥studio💻studio🔖folderkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore)
+// Folder-backed kit store implementing UndoableKitStore.
+// Specs: Uses a folder with `.semio/kit.json` for kit data. The folder serves as
+// the root for relative file references. Files referenced by the kit are stored
+// alongside the kit data in the folder. save() writes kit data back to `.semio/kit.json`.
+// reload() re-reads the kit data from the file. Used by: desktop app for local kit editing.
+
+/**
+ * Adapter for folder-based kit storage I/O.
+ *
+ * Specs: readKit()/writeKit() handle the `.semio/kit.json` file.
+ * readFile()/writeFile()/deleteFile() handle binary assets relative to the folder root.
+ * listFiles() returns all file paths in the folder.
+ * watch() optionally registers a callback for external changes.
+ * [👤semio👥studio💻studio🔖folderkitstore🛠️kitfolderadapter](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore/d/i/KitFolderAdapter)
+ **/
+export interface KitFolderAdapter {
+  readKit(): Promise<string | null>;
+  writeKit(json: string): Promise<void>;
+  readFile(path: string): Promise<Blob | null>;
+  writeFile(path: string, blob: Blob): Promise<void>;
+  deleteFile(path: string): Promise<void>;
+  listFiles(): Promise<string[]>;
+  watch?(callback: () => void): () => void;
+}
+
+/**
+ * Folder-backed kit store with undo/redo.
+ *
+ * Specs: Holds a Kit in memory loaded from a folder's `.semio/kit.json`.
+ * apply() merges diffs, replace() swaps the Kit. transact() groups mutations.
+ * save() writes the Kit as JSON. reload() re-reads from the folder.
+ * Undo/redo uses a command stack identical to JsonFileKitStore.
+ * [👤semio👥studio💻studio🔖folderkitstore🛠️folderkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore/d/i/FolderKitStore)
+ **/
+export class FolderKitStore implements UndoableKitStore {
+  private kit: Kit;
+  private listeners: Set<() => void> = new Set();
+  private undoStack: KitChange[] = [];
+  private redoStack: KitChange[] = [];
+  private dirty: boolean = false;
+  private disposed: boolean = false;
+  private status: KitStoreStatus;
+  private transacting: boolean = false;
+  private error?: Error;
+  private lastSyncedAt?: string;
+  private readonly adapter: KitFolderAdapter;
+  private unwatchFn?: () => void;
+
+  private constructor(kit: Kit, adapter: KitFolderAdapter, status: KitStoreStatus) {
+    this.kit = kit;
+    this.adapter = adapter;
+    this.status = status;
+    if (adapter.watch) {
+      this.unwatchFn = adapter.watch(() => {
+        this.reload().catch(console.error);
+      });
+    }
+  }
+
+  static async create(adapter: KitFolderAdapter): Promise<FolderKitStore> {
+    const json = await adapter.readKit();
+    if (json) {
+      try {
+        const parsed = JSON.parse(json);
+        const kit = KitSchema.parse(parsed);
+        const store = new FolderKitStore(kit, adapter, "ready");
+        store.lastSyncedAt = new Date().toISOString();
+        return store;
+      } catch (e) {
+        const emptyKit: Kit = {
+          guid: guid(),
+          name: "New Kit",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const store = new FolderKitStore(emptyKit, adapter, "error");
+        store.error = e instanceof Error ? e : new Error(String(e));
+        return store;
+      }
+    }
+    const emptyKit: Kit = {
+      guid: guid(),
+      name: "New Kit",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const store = new FolderKitStore(emptyKit, adapter, "ready");
+    return store;
+  }
+
+  getSnapshot(): KitStoreSnapshot {
+    return {
+      kit: this.kit,
+      sync: {
+        status: this.status,
+        dirty: this.dirty,
+        readonly: false,
+        lastSyncedAt: this.lastSyncedAt,
+        error: this.error,
+      },
+    };
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  transact<T>(label: string, run: () => T): T {
+    const before = this.kit;
+    this.transacting = true;
+    try {
+      const result = run();
+      const after = this.kit;
+      if (before !== after && !this.disposed) {
+        const forward = getKitDiff(before, after);
+        const backward = inverseKitDiff(before, forward);
+        this.undoStack.push({ forward, backward });
+        this.redoStack = [];
+      }
+      return result;
+    } finally {
+      this.transacting = false;
+    }
+  }
+
+  apply(diff: KitDiff, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = applyKitDiff(this.kit, diff);
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, this.kit);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.notify();
+  }
+
+  replace(next: Kit, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = next;
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, next);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.notify();
+  }
+
+  async save(): Promise<void> {
+    this.status = "saving";
+    this.notify();
+    try {
+      const json = JSON.stringify(this.kit, null, 2);
+      await this.adapter.writeKit(json);
+      this.dirty = false;
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  async reload(): Promise<void> {
+    this.status = "loading";
+    this.notify();
+    try {
+      const json = await this.adapter.readKit();
+      if (json) {
+        const parsed = JSON.parse(json);
+        this.kit = KitSchema.parse(parsed);
+      }
+      this.dirty = false;
+      this.undoStack = [];
+      this.redoStack = [];
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    if (this.unwatchFn) {
+      this.unwatchFn();
+      this.unwatchFn = undefined;
+    }
+    this.listeners.clear();
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  undo(): void {
+    const change = this.undoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.backward);
+    this.redoStack.push(change);
+    this.dirty = true;
+    this.notify();
+  }
+
+  redo(): void {
+    const change = this.redoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.forward);
+    this.undoStack.push(change);
+    this.dirty = true;
+    this.notify();
+  }
+
+  applyExternalUpdate(kit: Kit): void {
+    this.kit = kit;
+    this.dirty = false;
+    this.undoStack = [];
+    this.redoStack = [];
+    this.lastSyncedAt = new Date().toISOString();
+    this.error = undefined;
+    this.status = "ready";
+    this.notify();
+  }
+
+  async writeFile(path: string, blob: Blob): Promise<void> {
+    await this.adapter.writeFile(path, blob);
+  }
+
+  async readFile(path: string): Promise<Blob | null> {
+    return this.adapter.readFile(path);
+  }
+
+  async deleteFile(path: string): Promise<void> {
+    await this.adapter.deleteFile(path);
+  }
+
+  async listFiles(): Promise<string[]> {
+    return this.adapter.listFiles();
+  }
+
+  private notify(): void {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+}
+
+/**
+ * Creates a FolderKitStore by loading kit data from a folder adapter.
+ *
+ * Specs: Factory function matching the provider pattern. Returns a ready-to-use
+ * FolderKitStore. The adapter provides platform-specific folder I/O.
+ * [👤semio👥studio💻studio🔖folderkitstore🛠️createfolderkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore/d/i/createFolderKitStore)
+ **/
+export async function createFolderKitStore(adapter: KitFolderAdapter): Promise<FolderKitStore> {
+  return FolderKitStore.create(adapter);
+}
+
+// #endregion 🔖FolderKitStore

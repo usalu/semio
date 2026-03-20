@@ -24,7 +24,7 @@ import { useState } from "react";
 
 // #region 🔖Command
 const meta = {
-  title: "semio-elements/Command",
+  title: "elements/Command",
   component: Command,
   parameters: {
     layout: "centered",

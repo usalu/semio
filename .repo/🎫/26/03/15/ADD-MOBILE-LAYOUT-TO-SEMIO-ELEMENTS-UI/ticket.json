@@ -1,12 +1,12 @@
 {
-  "title": "Add Mobile Layout to Semio Elements UI",
+  "title": "Add Mobile Layout to Elements UI",
   "status": "closed",
   "description": "Add a mobile layout variant to the UI component. In mobile mode: no left/right panels, only one full-width panel with all tabs merged. No resizable panels. Add a Mobile story to the UI stories.",
   "summary": "Mobile panel now renders on top (above canvas) with border-b. Mobile mode overrides window layout using createTabStackLayout which places all windows in a single golden-layout stack as tabs instead of side-by-side columns.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/921"
   },
-  "goal": "🎯semioelements",
+  "goal": "🎯elements",
   "sessions": [
     "d3653667-549f-43a8-9871-43386c3423c0",
     "1b636df4-a8a4-408b-9d53-ea055a175164",

@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🔖Page
 
 const meta = {
-  title: "semio-elements/Page",
+  title: "elements/Page",
   component: Page,
   parameters: {
     layout: "padded",

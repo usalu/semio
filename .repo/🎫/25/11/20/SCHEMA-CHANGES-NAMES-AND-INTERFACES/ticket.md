@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Schema Changes: Names and Ports
 
 Date: 2025-11-20
@@ -46,7 +47,7 @@ This plan covers two major schema changes:
 
 - `js/semio/semio.ts` - Core domain logic and types
 - `js/semio/sketchpad/apps/*/App.tsx` - All app stores that work with these models
-- `js/semio/elements/**/*.tsx` - UI components that display/edit these properties
+- `js/elements/**/*.tsx` - UI components that display/edit these properties
 
 ### .NET
 

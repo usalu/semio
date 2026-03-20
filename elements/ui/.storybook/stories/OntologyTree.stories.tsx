@@ -23,10 +23,10 @@
 // Storybook stories exercising ontology and validation tree viewers.
 // Stories MUST provide example data matching the OWL Treppenraum ontology.
 
+import type { OntologyTreeNode } from "@coda/desktop/renderer";
+import { OntologyTree } from "@coda/desktop/renderer";
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
-import { OntologyTree, ValidationTree } from "@semio/coda-desktop/renderer";
-import type { OntologyTreeNode, ValidationReport } from "@semio/coda-desktop/renderer";
 
 // #region 🔖CodaThemeWrapper
 // Provides the coda-specific CSS variables needed by tree components.

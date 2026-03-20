@@ -23,7 +23,7 @@ import { Box, List, Network } from "lucide-react";
 
 // #region 🔖ButtonGroup
 const meta = {
-  title: "semio-elements/ButtonGroup",
+  title: "elements/ButtonGroup",
   component: ButtonGroup,
   parameters: {
     layout: "centered",

@@ -1,5 +1,5 @@
 // #region 🔖Header
-// [👤semio🌐docs⚙️tailwindconfig](repo://p/u/semio/b/w/docs/f/tailwind.config.ts)
+// [👤semio🌐sites📖docs⚙️tailwindconfig](repo://p/u/semio/b/w/docs/f/tailwind.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -19,7 +19,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
-// [👤semio🌐docs⚙️tailwindconfig🔖configuration](repo://p/u/semio/b/w/docs/f/tailwind.config.ts/s/Configuration)
+// [👤semio🌐sites📖docs⚙️tailwindconfig🔖configuration](repo://p/u/semio/b/w/docs/f/tailwind.config.ts/s/Configuration)
 // Tailwind CSS configuration extending the shared semio preset for the docs application.
 // Configuration MUST use the shared tailwindConfig preset from @elements/ui.
 
@@ -28,7 +28,7 @@ import type { Config } from "tailwindcss";
 
 /**
  * Tailwind CSS configuration with content paths and shared preset.
-// [👤semio🌐docs⚙️tailwindconfig🔖configuration🪨config](repo://p/u/semio/b/w/docs/f/tailwind.config.ts/s/Configuration/d/i/config)
+// [👤semio🌐sites📖docs⚙️tailwindconfig🔖configuration🪨config](repo://p/u/semio/b/w/docs/f/tailwind.config.ts/s/Configuration/d/i/config)
  * Config MUST include content glob patterns and the tailwindConfig preset.
  **/
 const config: Pick<Config, "content" | "presets"> = {

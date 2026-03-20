@@ -24,7 +24,7 @@ import { useState } from "react";
 
 // #region 🔖Ring
 const meta = {
-  title: "semio-elements/Ring",
+  title: "elements/Ring",
   component: Ring,
   parameters: {
     layout: "centered",

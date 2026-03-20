@@ -14,7 +14,7 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
           "tool_use_id": "tool_a19e6ae9-a898-4aa5-9953-7d3ec1af00d",
           "hook_event_name": "preToolUse",
@@ -32,14 +32,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️10",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -57,7 +57,7 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
           "tool_use_id": "tool_cf9c6802-42a6-45f1-a34e-2fdff5feb3e",
           "hook_event_name": "preToolUse",
@@ -75,14 +75,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️11",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -101,7 +101,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "^export (const|interface|type|function)",
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
           "tool_output": "{\"pattern\":\"^export (const|interface|type|function)\",\"success\":true}",
           "duration": 69.075,
@@ -121,14 +121,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️27",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -145,7 +145,7 @@
           "generation_id": "aa54e4ba-35c8-4bcb-a239-3f2b492c4dff",
           "model": "composer-1.5",
           "content": "// #region Command\n\n// [👤semio📚js🗃️sketchpad💻elementstsx🔖command](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/COMMAND)\n// Command palette UI built on cmdk primitives.\n// Consumers MUST use CommandInput for search functionality.\n\n/**\n * Command holds the data fields for a Command record.\n * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️command](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/Command)\n **/\nfunction Command({ className, ...props }: React.ComponentProps\u003ctypeof CommandPrimitive\u003e) {\n  return \u003cCommandPrimitive data-slot=\"command\" className={cn(\"bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden\", className)} {...props} /\u003e;\n}\n\n/**\n * CommandDialog holds the data fields for a CommandDialog record.\n * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commanddialog](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandDialog)\n **/\nfunction CommandDialog({\n  title = \"Command Palette\",\n  description = \"Search for a command to run...\",\n  children,\n  className,\n  showCloseButton = true,\n  ...props\n}: React.ComponentProps\u003ctypeof Dialog\u003e \u0026 {\n  title?: string;\n  description?: string;\n  className?: string;\n  showCloseButton?: boolean;\n}) {\n  return (\n    \u003cDialog {...props}\u003e\n      \u003cDialogHeader className=\"sr-only\"\u003e\n        \u003cDialogTitle\u003e{title}\u003c/DialogTitle\u003e\n        \u003cDialogDescription\u003e{description}\u003c/DialogDescription\u003e\n      \u003c/DialogHeader\u003e\n      \u003cDialogContent className={cn(\"overflow-hidden p-0\", className)} showCloseButton={showCloseButton}\u003e\n        \u003cCommand className=\"[\u0026_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-large [\u0026_[cmdk-group-heading]]:px-single [\u0026_[cmdk-group-heading]]:font-medium [\u0026_[cmdk-group]:px-single [\u0026_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [\u0026_[cmdk-input-wrapper]_svg]:h-small [\u0026_[cmdk-input-wrapper]_svg]:w-small [\u0026_[cmdk-input]]:h-large [\u0026_[cmdk-item]]:px-single [\u0026_[cmdk-item]]:py-tiny [\u0026_[cmdk-item]_svg]:h-small [\u0026_[cmdk-item]_svg]:w-small\"\u003e\n          {children}\n        \u003c/Command\u003e\n      \u003c/DialogContent\u003e\n    \u003c/Dialog\u003e\n  );\n}\n\n/**\n * CommandInput holds the data fields for a CommandInput record.\n * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandinput](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandInput)\n **/\nfunction CommandInput({ className, ...props }: React.ComponentProps\u003ctypeof CommandPrimitive.Input\u003e) {\n  return (\n    \u003cdiv data-slot=\"command-input-wrapper\" className=\"flex h-medium items-center gap-single border-b border-element px-tiny\"\u003e\n      \u003cSearchIcon className=\"size-small shrink-0 opacity-50\" /\u003e\n      \u003cCommandPrimitive.Input data-slot=\"command-input\" className={cn(\"placeholder:text-muted-foreground flex h-medium w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50\", className)} {...props} /\u003e\n    \u003c/div\u003e\n  );\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandlist](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandList)\n * CommandList holds the data fields for a CommandList record.\n **/\nfunction CommandList({ className, ...props }: React.ComponentProps\u003ctypeof CommandPrimitive.List\u003e) {\n  return \u003cCommandPrimitive.List data-slot=\"command-list\" className={cn(\"max-h-[300px] scroll-py-single overflow-x-hidden overflow-y-auto\", className)} {...props} /\u003e;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandempty](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandEmpty)\n * CommandEmpty holds the data fields for a CommandEmpty record.\n **/\nfunction CommandEmpty({ ...props }: React.ComponentProps\u003ctypeof CommandPrimitive.Empty\u003e) {\n  return \u003cCommandPrimitive.Empty data-slot=\"command-empty\" className=\"py-medium text-center text-sm\" {...props} /\u003e;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandGroup)\n * CommandGroup holds the data fields for a CommandGroup record.\n **/\nfunction CommandGroup({ className, ...props }: React.ComponentProps\u003ctypeof CommandPrimitive.Group\u003e) {\n  return (\n    \u003cCommandPrimitive.Group\n      data-slot=\"command-group\"\n      className={cn(\n        \"text-foreground [\u0026_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-single [\u0026_[cmdk-group-heading]]:px-single [\u0026_[cmdk-group-heading]]:py-single [\u0026_[cmdk-group-heading]]:text-xs [\u0026_[cmdk-group-heading]]:font-medium\",\n        className,\n      )}\n      {...props}\n    /\u003e\n  );\n}\n\nfunction CommandSeparator({ className, ...props }: React.ComponentProps\u003ctypeof CommandPrimitive.Separator\u003e) {\n  return \u003cCommandPrimitive.Separator data-slot=\"command-separator\" className={cn(\"bg-border -mx-single h-px\", className)} {...props} /\u003e;\n}\n\n/**\n * CommandItem holds the data fields for a CommandItem record.\n * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commanditem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandItem)\n **/\nfunction CommandItem({ className, ...props }: React.ComponentProps\u003ctypeof CommandPrimitive.Item\u003e) {\n  return (\n    \u003cCommandPrimitive.Item\n      data-slot=\"command-item\"\n      className={cn(\n        \"data-[selected=true]:bg-hover-temporary data-[selected=true]:text-foreground [\u0026_svg:not([class*='text-'])]:text-muted-foreground relative flex items-center gap-single p-single text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [\u0026_svg]:pointer-events-none [\u0026_svg]:shrink-0 [\u0026_svg:not([class*='size-'])]:size-tiny cursor-selectable\",\n        className,\n      )}\n      {...props}\n    /\u003e\n  );\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖command🛠️commandshortcut](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Command/d/i/CommandShortcut)\n * CommandShortcut holds the data fields for a CommandShortcut record.\n **/\nfunction CommandShortcut({ className, ...props }: React.ComponentProps\u003c\"span\"\u003e) {\n  return \u003cspan data-slot=\"command-shortcut\" className={cn(\"text-muted-foreground ml-auto text-xs tracking-widest\", className)} {...props} /\u003e;\n}\n\n// #endregion Command\n\nexport { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };\n\n// #region Footer\n\n// [👤semio📚js🗃️sketchpad💻elementstsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/FOOTER)\n// Status bar component at the bottom of the layout.\n// Consumers MUST provide FooterItem entries for each action.\n\n/**\n * Configuration interface for a single footer action item.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖footer🛠️footeritem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer/d/i/FooterItem)\n **/\nexport interface FooterItem {\n  id: string;\n  icon?: React.ReactNode;\n  text?: string;\n  content?: React.ReactNode;\n  order?: number;\n  onClick?: () =\u003e void;\n  className?: string;\n  disabled?: boolean;\n}\n\n/**\n * Props interface for the Footer component.\n *\n * [👤semio📚js🗃️sketchpad💻elements🔖footer🛠️footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer/d/i/Footer)\n **/\nexport interface FooterProps {\n  items?: FooterItem[];\n  className?: string;\n  isVisible?: boolean;\n}\n\n// [👤semio📚js🗃️sketchpad💻elements🔖footer🪨footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer/d/i/Footer)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖footer🪨footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Footer/d/i/Footer)\n * Footer holds the data fields for a Footer record.\n **/\nconst Footer: React.FC\u003cFooterProps\u003e = ({ items = [], className = \"\", isVisible = true }) =\u003e {\n  const level = useLevel();\n  const sortedItems = [...items].sort((a, b) =\u003e (a.order || 0) - (b.order || 0));\n  const bgClass = getLevelBgClass(level);\n  return (\n    \u003cfooter id=\"semio.sketchpad.footer\" data-slot=\"footer\" className={cn(\"border-t flex items-center h-medium transition-transform duration-200\", bgClass, isVisible ? \"translate-y-0\" : \"translate-y-full\", className)}\u003e\n      \u003cdiv className=\"flex items-center h-full px-single min-w-0\"\u003e\n        \u003cActionGroup className=\"border\"\u003e\n          {sortedItems.map((item) =\u003e (\n            \u003cActionGroupItem key={item.id} as={item.onClick ? \"button\" : \"div\"} id={item.id} text={item.text} onClick={item.onClick} disabled={item.disabled} className={cn(item.content \u0026\u0026 !item.text \u0026\u0026 \"aspect-auto\", item.className)}\u003e\n              {item.content ?? item.icon}\n            \u003c/ActionGroupItem\u003e\n          ))}\n        \u003c/ActionGroup\u003e\n      \u003c/div\u003e\n    \u003c/footer\u003e\n  );\n};\n\nexport { Footer };\n\n// #endregion Footer\n\n// #region Layout\n\n// [👤semio📚js🗃️sketchpad💻elementstsx🔖layout](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LAYOUT)\n// Top-level layout orchestrating navbar, panels, canvas, and footer.\n// Consumers MUST provide a canvas element.\n\n/**\n * Props interface for the top-level Layout component.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖layout🛠️layoutprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Layout/d/i/LayoutProps)\n **/\nexport interface LayoutProps {\n  navbar?: React.ReactNode;\n  footer?: React.ReactNode;\n  bottomPanel?: BottomPanelProps;\n  leftSidePanel?: SidePanelProps;\n  rightSidePanel?: SidePanelProps;\n  canvas: React.ReactNode;\n  toolbar?: React.ReactNode;\n  className?: string;\n}\n\nconst Layout: React.FC\u003cLayoutProps\u003e = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, canvas, toolbar, className = \"\" }) =\u003e (\n  \u003cdiv className={`flex flex-col h-screen w-screen overflow-hidden ${className}`}\u003e\n    {navbar \u0026\u0026 \u003cdiv className=\"flex-shrink-0\"\u003e{navbar}\u003c/div\u003e}\n    \u003cdiv className=\"flex flex-1 min-h-0 relative\"\u003e\n      {leftSidePanel \u0026\u0026 leftSidePanel.visible \u0026\u0026 \u003cSidePanel {...leftSidePanel} position=\"left\" /\u003e}\n      \u003cdiv className=\"flex flex-col flex-1 min-w-0 relative\"\u003e\n        \u003cdiv className=\"flex flex-1 min-h-0 relative\"\u003e\n          \u003cdiv className=\"flex-1 min-w-0 min-h-0 relative\"\u003e{canvas}\u003c/div\u003e\n          {rightSidePanel \u0026\u0026 rightSidePanel.visible \u0026\u0026 \u003cSidePanel {...rightSidePanel} position=\"right\" /\u003e}\n        \u003c/div\u003e\n        {bottomPanel \u0026\u0026 bottomPanel.visible \u0026\u0026 \u003cBottomPanel {...bottomPanel} /\u003e}\n      \u003c/div\u003e\n    \u003c/div\u003e\n    {(footer || toolbar) \u0026\u0026 (\n      \u003cdiv className=\"flex-shrink-0 relative\"\u003e\n        {toolbar \u0026\u0026 \u003cdiv className=\"absolute bottom-[calc(100%+var(--spacing-double))] left-1/2 -translate-x-1/2 z-panel pointer-events-none\"\u003e{toolbar}\u003c/div\u003e}\n        {footer}\n      \u003c/div\u003e\n    )}\n  \u003c/div\u003e\n);\n\nexport { Layout };\n\n// #endregion Layout\n\n// #region Popover\n\n// [👤semio📚js🗃️sketchpad💻elementstsx🔖popover](semiorepo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/POPOVER)\n// Floating popover component built on Radix primitives.\n\n/**\n * Popover holds the data fields for a Popover record.\n * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/Popover)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popover](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/Popover)\n * Popover holds the data fields for a Popover record.\n **/\nfunction Popover({ ...props }: React.ComponentProps\u003ctypeof PopoverPrimitive.Root\u003e) {\n  return \u003cPopoverPrimitive.Root data-slot=\"popover\" {...props} /\u003e;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popovertrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/PopoverTrigger)\n * PopoverTrigger holds the data fields for a PopoverTrigger record.\n **/\nfunction PopoverTrigger({ className, ...props }: React.ComponentProps\u003ctypeof PopoverPrimitive.Trigger\u003e) {\n  return \u003cPopoverPrimitive.Trigger data-slot=\"popover-trigger\" className={cn(className)} {...props} /\u003e;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popovercontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/PopoverContent)\n * PopoverContent holds the data fields for a PopoverContent record.\n **/\nfunction PopoverContent({ className, align = \"center\", sideOffset = 4, ...props }: React.ComponentProps\u003ctypeof PopoverPrimitive.Content\u003e) {\n  return (\n    \u003cPopoverPrimitive.Portal\u003e\n      \u003cPopoverPrimitive.Content\n        data-slot=\"popover-content\"\n        align={align}\n        sideOffset={sideOffset}\n        className={cn(\n          \"bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden\",\n          className,\n        )}\n        {...props}\n      /\u003e\n    \u003c/PopoverPrimitive.Portal\u003e\n  );\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖popover🛠️popoveranchor](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Popover/d/i/PopoverAnchor)\n * PopoverAnchor holds the data fields for a PopoverAnchor record.\n **/\nfunction PopoverAnchor({ ...props }: React.ComponentProps\u003ctypeof PopoverPrimitive.Anchor\u003e) {\n  return \u003cPopoverPrimitive.Anchor data-slot=\"popover-anchor\" {...props} /\u003e;\n}\n\nexport { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };\n\n// #endregion Popover\n\n// #region Tooltip\n\n// [👤semio📚js🗃️sketchpad💻elements🔖tooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip)\n// Tooltip components with expertise-level adaptive content.\n// Consumers MUST configure the expertise mode provider.\n\n/**\n * Configuration for enhanced tooltip with label, paths, and hotkey.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltipconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/TooltipConfig)\n **/\nexport interface TooltipConfig {\n  labelKey: string;\n  manualPath?: string;\n  tutorialPath?: string;\n  hotkey?: string;\n}\n\n/**\n * Data interface for description-based tooltip content.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️descriptiontooltipdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/DescriptionTooltipData)\n **/\nexport interface DescriptionTooltipData {\n  label?: string;\n  description?: string;\n  descriptionBeginner?: string;\n  manual?: string;\n  tutorial?: string;\n  hotkey?: string;\n}\n\n/**\n * getExpertiseFunction holds the data fields for a getExpertiseFunction record.\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🪨getexpertisefunction](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/getExpertiseFunction)\n **/\nlet getExpertiseFunction: (() =\u003e Expertise) | undefined;\n\n/**\n * Registers the expertise provider function for tooltips.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️settooltipmodeprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/setTooltipModeProvider)\n **/\nexport function setTooltipModeProvider(fn: () =\u003e Expertise) {\n  getExpertiseFunction = fn;\n  setExpertiseProvider(fn);\n}\n\n/**\n * Hook returning the current expertise level for tooltips.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️usetooltipmode](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/useTooltipMode)\n **/\nexport function useTooltipMode(): Expertise {\n  if (!getExpertiseFunction) return Expertise.BEGINNER;\n  return getExpertiseFunction();\n}\n\n/**\n * TooltipProvider holds the data fields for a TooltipProvider record.\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltipprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/TooltipProvider)\n **/\nfunction TooltipProvider({ delayDuration = 400, ...props }: React.ComponentProps\u003ctypeof TooltipPrimitive.Provider\u003e) {\n  return \u003cTooltipPrimitive.Provider data-slot=\"tooltip-provider\" delayDuration={delayDuration} {...props} /\u003e;\n}\n\n/**\n * Tooltip holds the data fields for a Tooltip record.\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltip](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/Tooltip)\n **/\nfunction Tooltip({ ...props }: React.ComponentProps\u003ctypeof TooltipPrimitive.Root\u003e) {\n  return (\n    \u003cTooltipProvider\u003e\n      \u003cTooltipPrimitive.Root data-slot=\"tooltip\" {...props} /\u003e\n    \u003c/TooltipProvider\u003e\n  );\n}\n\n/**\n * TooltipTrigger holds the data fields for a TooltipTrigger record.\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltiptrigger](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/TooltipTrigger)\n **/\nfunction TooltipTrigger({ className, asChild, ...props }: React.ComponentProps\u003ctypeof TooltipPrimitive.Trigger\u003e) {\n  return \u003cTooltipPrimitive.Trigger data-slot=\"tooltip-trigger\" asChild={asChild} className={cn(className)} {...props} /\u003e;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️tooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/TooltipContent)\n * TooltipContent holds the data fields for a TooltipContent record.\n **/\nfunction TooltipContent({ className, sideOffset = 8, children, ...props }: React.ComponentProps\u003ctypeof TooltipPrimitive.Content\u003e) {\n  return (\n    \u003cTooltipPrimitive.Portal\u003e\n      \u003cTooltipPrimitive.Content\n        data-slot=\"tooltip-content\"\n        sideOffset={sideOffset}\n        className={cn(\n          \"bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance w-max max-w-fit\",\n          className,\n        )}\n        {...props}\n      \u003e\n        {children}\n      \u003c/TooltipPrimitive.Content\u003e\n    \u003c/TooltipPrimitive.Portal\u003e\n  );\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip✂️enhancedtooltipcontentprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/EnhancedTooltipContentProps)\n * EnhancedTooltipContentProps holds the data fields for a EnhancedTooltipContentProps record.\n **/\ninterface EnhancedTooltipContentProps {\n  config: TooltipConfig;\n}\n\n/** EnhancedTooltipContent holds the data fields for a EnhancedTooltipContent record.\n **/\n// [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️enhancedtooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/EnhancedTooltipContent)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🪨enhancedtooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/EnhancedTooltipContent)\n **/\nfunction EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {\n  const { t } = useTranslation();\n  const mode = useTooltipMode();\n\n  if (mode === Expertise.EXPERT) return null;\n\n  const { labelKey, manualPath, tutorialPath, hotkey } = config;\n  const showManual = mode === Expertise.BEGINNER || mode === Expertise.NORMAL;\n  const showTutorial = mode === Expertise.BEGINNER;\n\n  const label = useLabel(labelKey);\n\n  const fullManualPath = manualPath ? `/docs/manual/${manualPath}` : undefined;\n  const fullTutorialPath = tutorialPath ? `/docs/tutorials/${tutorialPath}` : undefined;\n\n  const handleHotkeyClick = () =\u003e {\n    if (labelKey) {\n      window.dispatchEvent(\n        new CustomEvent(\"navigate-to-hotkey\", {\n          detail: { path: labelKey },\n        }),\n      );\n    }\n  };\n\n  return (\n    \u003cdiv className=\"flex flex-col gap-single\"\u003e\n      \u003cspan\u003e{label}\u003c/span\u003e\n      {(showManual \u0026\u0026 fullManualPath) || (showTutorial \u0026\u0026 fullTutorialPath) || hotkey ? (\n        \u003cdiv className=\"grid w-full grid-cols-3 items-center border-t border-accent-foreground pt-single gap-single\"\u003e\n          {showManual \u0026\u0026 fullManualPath ? (\n            \u003cLink to={fullManualPath} className=\"flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary\"\u003e\n              \u003cBookIcon className=\"size-tiny\" /\u003e\n              \u003cspan\u003e{useLabel(\"tooltip.manual\")}\u003c/span\u003e\n            \u003c/Link\u003e\n          ) : (\n            \u003cspan className=\"block\" /\u003e\n          )}\n          {showTutorial \u0026\u0026 fullTutorialPath ? (\n            \u003cLink to={fullTutorialPath} className=\"flex items-center gap-single cursor-pointer text-foreground transition-colors p-single hover:bg-hover-temporary\"\u003e\n              \u003cTutorialIcon className=\"size-tiny\" /\u003e\n              \u003cspan className=\"block text-center\"\u003e{useLabel(\"tooltip.tutorial\")}\u003c/span\u003e\n            \u003c/Link\u003e\n          ) : (\n            \u003cspan className=\"block\" /\u003e\n          )}\n          {hotkey ? (\n            \u003ckbd onClick={handleHotkeyClick} className=\"border border-accent-foreground text-muted-foreground p-single text-2xs font-mono justify-self-end cursor-pointer\"\u003e\n              {hotkey}\n            \u003c/kbd\u003e\n          ) : null}\n        \u003c/div\u003e\n      ) : null}\n    \u003c/div\u003e\n  );\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip✂️descriptiontooltipcontentprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/DescriptionTooltipContentProps)\n * DescriptionTooltipContentProps holds the data fields for a DescriptionTooltipContentProps record.\n **/\ninterface DescriptionTooltipContentProps {\n  id: string;\n}\n\n// [👤semio📚js🗃️sketchpad💻elements🔖tooltip🛠️descriptiontooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/DescriptionTooltipContent)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖tooltip🪨descriptiontooltipcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip/d/i/DescriptionTooltipContent)\n * DescriptionTooltipContent holds the data fields for a DescriptionTooltipContent record.\n **/\nfunction DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {\n  const { t } = useTranslation();\n  const mode = useTooltipMode();\n\n  if (mode === Expertise.EXPERT) return null;\n\n  const manualLabel = useLabel(\"tooltip.manual\");\n  const tutorialLabel = useLabel(\"tooltip.tutorial\");\n  const value = t(id as any) as any;\n  const manualPath = typeof value === \"object\" \u0026\u0026 value?.manual ? value.manual : undefined;\n  const tutorialPath = typeof value === \"object\" \u0026\u0026 value?.tutorial ? value.tutorial : undefined;\n  const label = typeof value === \"string\" ? value : typeof value === \"object\" \u0026\u0026 value?.label ? value.label : undefined;\n\n  let hotkey: string | undefined;\n  if (typeof value === \"object\" \u0026\u0026 value?.hotkey) {\n    hotkey = typeof value.hotkey === \"string\" ? value.hotkey : undefined;\n  } else {",
-          "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+          "file_path": "/workspaces/elements/ui/elements.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -162,14 +162,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️28",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -186,7 +186,7 @@
           "generation_id": "aa54e4ba-35c8-4bcb-a239-3f2b492c4dff",
           "model": "composer-1.5",
           "content": "  id?: string;\n}\n\n// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🛠️action](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/Action)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖actiongroup🪨action](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ActionGroup/d/i/Action)\n * Action holds the data fields for a Action record.\n **/\nfunction Action({ className, id, icon, text, as = \"button\", ...props }: ActionProps) {\n  const level = useLevel();\n  const borderClass = getLevelBorderElementClass(level);\n  const Comp = as;\n  const hasText = Boolean(text);\n\n  const actionElement = (\n    \u003cComp\n      type={Comp === \"button\" ? \"button\" : undefined}\n      role={Comp === \"div\" \u0026\u0026 (props as any).onClick ? \"button\" : undefined}\n      tabIndex={Comp === \"div\" \u0026\u0026 (props as any).onClick ? 0 : undefined}\n      id={id}\n      className={cn(\n        \"text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [\u0026_svg]:pointer-events-none [\u0026_svg]:size-tiny [\u0026_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single h-medium border\",\n        hasText \u0026\u0026 \"aspect-auto gap-single\",\n        level === \"base\" \u0026\u0026 \"hover:bg-hover-base\",\n        level === \"window\" \u0026\u0026 \"hover:bg-hover-window\",\n        level === \"panel\" \u0026\u0026 \"hover:bg-hover-panel\",\n        level === \"overlay\" \u0026\u0026 \"hover:bg-hover-overlay\",\n        level === \"temporary\" \u0026\u0026 \"hover:bg-hover-temporary\",\n        borderClass,\n        className,\n      )}\n      {...(props as any)}\n    \u003e\n      {icon}\n      {text \u0026\u0026 \u003cspan className=\"text-tiny whitespace-nowrap\"\u003e{text}\u003c/span\u003e}\n    \u003c/Comp\u003e\n  );\n\n  if (id) {\n    return (\n      \u003cTooltip\u003e\n        \u003cTooltipTrigger asChild\u003e\n          {actionElement}\n        \u003c/TooltipTrigger\u003e\n        \u003cTooltipContent\u003e\n          \u003cDescriptionTooltipContent id={id} /\u003e\n        \u003c/TooltipContent\u003e\n      \u003c/Tooltip\u003e\n    );\n  }\n\n  return actionElement;\n}\n\nexport { Action, ActionDropdown, ActionGroup, ActionGroupItem, actionGroupItemVariants };\nexport type { ActionDropdownOption, ActionDropdownProps, ActionProps };\n\n// #endregion ActionGroup\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨buttongroupitemvariants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/buttonGroupItemVariants)\n * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.\n **/\nconst buttonGroupItemVariants = cva(\n  \"text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [\u0026_svg]:pointer-events-none [\u0026_svg:not([class*='size-'])]:size-small [\u0026_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap h-medium aspect-square p-single overflow-hidden\",\n  {\n    variants: {\n      level: {\n        base: \"hover:bg-hover-base\",\n        window: \"hover:bg-hover-window\",\n        panel: \"hover:bg-hover-panel\",\n        overlay: \"hover:bg-hover-overlay\",\n        temporary: \"hover:bg-hover-temporary\",\n      },\n      variant: {\n        default: \"\",\n        ghost: \"border-transparent bg-transparent\",\n        outline: \"border border-element\",\n      },\n    },\n    defaultVariants: {\n      level: \"base\",\n      variant: \"default\",\n    },\n  },\n);\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨buttongroupcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroupContext)\n * ButtonGroupContext holds the data fields for a ButtonGroupContext record.\n **/\nconst ButtonGroupContext = React.createContext\u003c{ level: Level }\u003e({\n  level: \"base\",\n});\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents✂️buttongroupprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroupProps)\n * ButtonGroupProps holds the data fields for a ButtonGroupProps record.\n **/\ninterface ButtonGroupProps extends Omit\u003cReact.ComponentProps\u003c\"div\"\u003e, \"id\"\u003e {\n  id?: string;\n  showLabel?: boolean;\n  children: React.ReactNode;\n}\n\n// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🛠️buttongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroup)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨buttongroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroup)\n * ButtonGroup holds the data fields for a ButtonGroup record.\n **/\nfunction ButtonGroup({ className, id, showLabel, children, ...props }: ButtonGroupProps) {\n  const level = useLevel();\n  const borderClass = getLevelBorderElementClass(level);\n  const divideClass = getLevelDivideElementClass(level);\n  const buttonGroupElement = (\n    \u003cdiv data-slot=\"button-group\" id={id} data-level={level} className={cn(\"group/button-group flex w-fit shrink-0 items-center border divide-x overflow-hidden h-medium\", borderClass, divideClass, className)} {...props}\u003e\n      {children}\n    \u003c/div\u003e\n  );\n\n  if (showLabel \u0026\u0026 id) {\n    return (\n      \u003cLabel id={id} labelElementId={`${id}-label`}\u003e\n        {buttonGroupElement}\n      \u003c/Label\u003e\n    );\n  }\n\n  return buttonGroupElement;\n}\n\n/**\n * ButtonGroupItem holds the data fields for a ButtonGroupItem record.\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🛠️buttongroupitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonGroupItem)\n **/\nfunction ButtonGroupItem({\n  className,\n  children,\n  id,\n  icon,\n  text,\n  asChild = false,\n  ...props\n}: React.ComponentProps\u003c\"button\"\u003e \u0026 {\n  id?: string;\n  icon?: React.ReactNode;\n  text?: string;\n  asChild?: boolean;\n}) {\n  const context = React.useContext(ButtonGroupContext);\n  const level = context.level ?? \"base\";\n  const Comp = asChild ? Slot : \"button\";\n\n  const buttonGroupItemElement = (\n    \u003cComp\n      data-slot=\"button-group-item\"\n      id={id}\n      data-level={context.level || level}\n      className={cn(\n        buttonGroupItemVariants({\n          level: context.level || level,\n        }),\n        text ? \"w-auto shrink-0 focus:z-panel focus-visible:z-panel\" : \"min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel\",\n        text \u0026\u0026 \"flex items-center gap-single py-single px-double w-auto aspect-auto\",\n        className,\n      )}\n      {...(props as any)}\n    \u003e\n      {icon || children}\n      {text \u0026\u0026 \u003cspan className=\"text-xs whitespace-nowrap\"\u003e{text}\u003c/span\u003e}\n    \u003c/Comp\u003e\n  );\n\n  if (id) {\n    return (\n      \u003cTooltip\u003e\n        \u003cTooltipTrigger asChild\u003e\n          {buttonGroupItemElement}\n        \u003c/TooltipTrigger\u003e\n        \u003cTooltipContent\u003e\n          \u003cDescriptionTooltipContent id={id} /\u003e\n        \u003c/TooltipContent\u003e\n      \u003c/Tooltip\u003e\n    );\n  }\n\n  return buttonGroupItemElement;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents✂️buttonprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonProps)\n * ButtonProps holds the data fields for a ButtonProps record.\n **/\ntype ButtonProps = React.ComponentProps\u003c\"button\"\u003e \u0026\n  Omit\u003cVariantProps\u003ctypeof buttonGroupItemVariants\u003e, \"level\"\u003e \u0026 {\n    asChild?: boolean;\n    id?: string;\n    icon?: React.ReactNode;\n    text?: string;\n    children?: React.ReactNode;\n  };\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents✂️buttoncycleitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonCycleItem)\n * ButtonCycleItem holds the data fields for a ButtonCycleItem record.\n **/\ninterface ButtonCycleItem\u003cT extends string\u003e {\n  value: T;\n  label: string;\n  icon?: React.ReactNode;\n  text?: string;\n  id?: string;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents✂️buttoncycleprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonCycleProps)\n * ButtonCycleProps holds the data fields for a ButtonCycleProps record.\n **/\ninterface ButtonCycleProps\u003cT extends string\u003e extends Omit\u003cReact.ComponentProps\u003c\"button\"\u003e, \"children\" | \"id\"\u003e, ElementProps {\n  value?: T;\n  onValueChange?: (value: T) =\u003e void;\n  items: ButtonCycleItem\u003cT\u003e[];\n  showLabel?: boolean;\n}\n\n// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🛠️button](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/Button)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨button](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/Button)\n **/\nfunction Button({ className, asChild = false, id, icon, text, children, ...props }: ButtonProps) {\n  const level = useLevel();\n  return (\n    \u003cButtonGroup className={className}\u003e\n      \u003cButtonGroupItem id={id} asChild={asChild} text={text} {...props}\u003e\n        {icon || children}\n      \u003c/ButtonGroupItem\u003e\n    \u003c/ButtonGroup\u003e\n  );\n}\n\n// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🛠️buttoncycle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonCycle)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🪨buttoncycle](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/d/i/ButtonCycle)\n * ButtonCycle holds the data fields for a ButtonCycle record.\n **/\nfunction ButtonCycle\u003cT extends string = string\u003e({ className, id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps\u003cT\u003e) {\n  const level = useLevel();\n  const currentIndex = items.findIndex((item) =\u003e item.value === value);\n  const currentItem = currentIndex \u003e= 0 ? items[currentIndex] : items[0];\n\n  const handleCycle = () =\u003e {\n    const nextIndex = (currentIndex + 1) % items.length;\n    if (onValueChange) onValueChange(items[nextIndex].value);\n  };\n\n  return (\n    \u003cButtonGroup id={id} showLabel={showLabel} className={className}\u003e\n      \u003cButtonGroupItem id={id} onClick={handleCycle} text={currentItem?.label} {...props}\u003e\n        {currentItem?.icon}\n      \u003c/ButtonGroupItem\u003e\n    \u003c/ButtonGroup\u003e\n  );\n}\n\nexport { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };\nexport type { ButtonCycleProps, ButtonProps };\n\n// #region Combobox\n\n// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox)\n// Searchable dropdown with popover options list.\n// Consumers MUST provide options and onValueChange handler.\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox✂️comboboxoption](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox/d/i/ComboboxOption)\n * ComboboxOption holds the data fields for a ComboboxOption record.\n **/\ninterface ComboboxOption {\n  value: string;\n  label: string;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox✂️comboboxprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox/d/i/ComboboxProps)\n * ComboboxProps holds the data fields for a ComboboxProps record.\n **/\ninterface ComboboxProps extends ElementProps {\n  options: ComboboxOption[];\n  value?: string;\n  placeholder?: string;\n  placeholderId?: string;\n  emptyMessage?: string;\n  onValueChange?: (value: string) =\u003e void;\n  className?: string;\n  allowClear?: boolean;\n  showLabel?: boolean;\n}\n\n/**\n * Searchable combobox dropdown with autocomplete filtering.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox🪨combobox](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox/d/i/Combobox)\n **/\nexport const Combobox: React.FC\u003cComboboxProps\u003e = ({ options, value = \"\", placeholder = \"Select option...\", placeholderId, emptyMessage = \"No options found.\", onValueChange, className, allowClear = false, showLabel, id }) =\u003e {\n  const transaction = useTransaction();\n  const [open, setOpen] = React.useState(false);\n  const { t } = useTranslation();\n  const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;\n\n  const selectedOption = options.find((option) =\u003e option.value === value);\n\n  const handleOpenChange = (isOpen: boolean) =\u003e {\n    setOpen(isOpen);\n    if (isOpen) {\n      transaction?.start?.();\n    } else {\n      transaction?.finalize?.();\n    }\n  };\n\n  const handleSelect = (optionValue: string) =\u003e {\n    if (allowClear \u0026\u0026 optionValue === value) {\n      onValueChange?.(\"\");\n    } else {\n      onValueChange?.(optionValue);\n    }\n    setOpen(false);\n    transaction?.finalize?.();\n  };\n\n  const comboboxElement = (\n    \u003cPopover open={open} onOpenChange={handleOpenChange}\u003e\n      \u003cPopoverTrigger asChild\u003e\n        \u003cButton id={id} role=\"combobox\" aria-expanded={open} className=\"w-full justify-between flex-1 min-w-0\"\u003e\n          {selectedOption ? selectedOption.label : computedPlaceholder}\n          \u003cChevronsUpDownIcon className=\"ml-2 size-tiny shrink-0 opacity-50\" /\u003e\n        \u003c/Button\u003e\n      \u003c/PopoverTrigger\u003e\n      \u003cPopoverContent className=\"w-full\" align=\"start\"\u003e\n        \u003cCommand\u003e\n          \u003cCommandInput placeholder=\"Search...\" /\u003e\n          \u003cCommandList\u003e\n            \u003cCommandEmpty\u003e{emptyMessage}\u003c/CommandEmpty\u003e\n            \u003cCommandGroup\u003e\n              {allowClear \u0026\u0026 value \u0026\u0026 (\n                \u003cCommandItem value=\"\" onSelect={() =\u003e handleSelect(\"\")}\u003e\n                  \u003cdiv className=\"mr-2 size-tiny\" /\u003e\n                  \u003cspan className=\"text-muted-foreground italic\"\u003eClear selection\u003c/span\u003e\n                \u003c/CommandItem\u003e\n              )}\n              {options.map((option) =\u003e (\n                \u003cCommandItem key={option.value} value={option.value} onSelect={() =\u003e handleSelect(option.value)}\u003e\n                  \u003cCheckIcon className={cn(\"mr-2 size-small\", value === option.value ? \"opacity-100\" : \"opacity-0\")} /\u003e\n                \u003c/CommandItem\u003e\n              ))}\n            \u003c/CommandGroup\u003e\n          \u003c/CommandList\u003e\n        \u003c/Command\u003e\n      \u003c/PopoverContent\u003e\n    \u003c/Popover\u003e\n  );\n\n  if (showLabel \u0026\u0026 id) {\n    return (\n      \u003cLabel id={id} labelElementId={`${id}-label`} className={cn(\"h-medium\", className)}\u003e\n        {comboboxElement}\n      \u003c/Label\u003e\n    );\n  }\n\n  return comboboxElement;\n};\n\n// #endregion Combobox\n\n// #region Input\n\n// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Input)\n// Text input field with label, validation, and clear support.\n// Consumers MUST provide an id for accessibility.\n\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select✂️select](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select/d/i/Select)\n * InputProps holds the data fields for a InputProps record.\n **/\ninterface InputProps extends Omit\u003cReact.ComponentProps\u003c\"input\"\u003e, \"value\" | \"onChange\" | \"id\"\u003e, ElementProps {\n  lazy?: boolean;\n  value?: string | number | readonly string[];\n  onChange?: (e: React.ChangeEvent\u003cHTMLInputElement\u003e) =\u003e void;\n  onLazyChange?: (value: string) =\u003e void;\n  interactionId?: string;\n  placeholderId?: string;\n  showLabel?: boolean;\n}\n\n// [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖input🛠️input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Input/d/i/Input)\n/**\n * [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖input🪨input](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Input/d/i/Input)\n * Input holds the data fields for a Input record.\n **/\nfunction Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, ...props }: InputProps) {\n  const transaction = useTransaction();\n  const [localValue, setLocalValue] = React.useState(externalValue?.toString() || \"\");\n  const [isEditing, setIsEditing] = React.useState(false);\n  const commands = useInteractionCommands();\n  const setActiveInteraction = commands?.setActiveInteraction;\n  const placeholderLabel = useLabel(placeholderId || \"\");\n  const computedPlaceholder = placeholderId ? placeholderLabel : placeholder;\n\n  React.useEffect(() =\u003e {\n    if (!isEditing) setLocalValue(externalValue?.toString() || \"\");\n  }, [externalValue, isEditing]);\n\n  const handleChange = (e: React.ChangeEvent\u003cHTMLInputElement\u003e) =\u003e {\n    if (lazy) {\n      setLocalValue(e.target.value);\n    } else if (onChange) {\n      onChange(e);\n    }\n  };\n\n  const handleFocus = (e: React.FocusEvent\u003cHTMLInputElement\u003e) =\u003e {\n    if (interactionId \u0026\u0026 setActiveInteraction) setActiveInteraction(id, interactionId);\n    if (lazy) {\n      setIsEditing(true);\n      transaction?.start?.();\n    }\n    props.onFocus?.(e);\n  };\n\n  const handleBlur = (e: React.FocusEvent\u003cHTMLInputElement\u003e) =\u003e {\n    if (interactionId \u0026\u0026 setActiveInteraction) setActiveInteraction(id, interactionId);\n    if (lazy) {\n      setIsEditing(false);\n      onLazyChange?.(localValue);\n      transaction?.finalize?.();\n    }\n    props.onBlur?.(e);\n  };\n\n  const handleKeyDown = (e: React.KeyboardEvent\u003cHTMLInputElement\u003e) =\u003e {\n    if (lazy) {\n      if (e.key === \"Enter\") {\n        if (interactionId \u0026\u0026 setActiveInteraction) setActiveInteraction(id, undefined);\n        setIsEditing(false);\n        onLazyChange?.(localValue);\n        transaction?.finalize?.();\n        (e.target as HTMLInputElement).blur();\n      } else if (e.key === \"Escape\") {\n        if (interactionId \u0026\u0026 setActiveInteraction) setActiveInteraction(id, undefined);\n        setIsEditing(false);\n        setLocalValue(externalValue?.toString() || \"\");\n        transaction?.abort?.();\n        (e.target as HTMLInputElement).blur();\n      }\n    }\n    props.onKeyDown?.(e);\n  };\n\n  const inputValue = lazy ? localValue : externalValue;\n\n  const activeInteraction = useActiveInteraction();\n  const isInteracting = interactionId \u0026\u0026 activeInteraction === interactionId;\n  const shouldFade = activeInteraction \u0026\u0026 !isInteracting;\n\n  const inputElement = (\n    \u003cdiv style={{ opacity: shouldFade ? 0 : 1, transition: \"opacity 150ms\" }}\u003e\n      \u003cinput\n        type={type}\n        data-slot=\"input\"\n        id={id}\n        className={cn(\n          \"file:text-foreground placeholder:text-muted-foreground text-foreground flex h-medium w-full min-w-0 border bg-transparent p-single text-base transition-[color,border-color] outline-none file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm\",\n          \"focus-visible:border-accent\",\n          \"aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1\",\n          type === \"number\" \u0026\u0026 \"[\u0026::-webkit-outer-spin-button]:appearance-none [\u0026::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]\",\n          className,\n        )}\n        value={inputValue}\n        onChange={handleChange}\n        onFocus={handleFocus}\n        onBlur={handleBlur}\n        onKeyDown={handleKeyDown}\n        placeholder={computedPlaceholder}\n        {...props}\n      /\u003e\n    \u003c/div\u003e\n  );\n\n  if (showLabel \u0026\u0026 id) {\n    return (\n      \u003cLabel id={id} labelElementId={`${id}-label`}\u003e\n        {inputElement}\n      \u003c/Label\u003e\n    );\n  }\n\n  return inputElement;\n}\n",
-          "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+          "file_path": "/workspaces/elements/ui/elements.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -203,14 +203,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️34",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -228,9 +228,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/elements/ui/elements.tsx\",\"content_length\":22635}",
+          "tool_output": "{\"file_path\":\"/workspaces/elements/ui/elements.tsx\",\"content_length\":22635}",
           "duration": 1432.797,
           "tool_use_id": "tool_37f65140-6ce4-4b27-a17b-57a1f888173",
           "hook_event_name": "postToolUse",
@@ -248,14 +248,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️48",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -273,9 +273,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/elements/ui/elements.tsx\",\"content_length\":19505}",
+          "tool_output": "{\"file_path\":\"/workspaces/elements/ui/elements.tsx\",\"content_length\":19505}",
           "duration": 2792.078,
           "tool_use_id": "tool_a19e6ae9-a898-4aa5-9953-7d3ec1af00d",
           "hook_event_name": "postToolUse",
@@ -293,14 +293,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️49",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -350,7 +350,7 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
           "tool_use_id": "tool_323f03f7-ac90-429f-a14d-4a37499a3f2",
           "hook_event_name": "preToolUse",
@@ -368,14 +368,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️52",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -394,7 +394,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "^export \\{",
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
           "tool_use_id": "tool_ce0cf83e-8d33-48e9-a3ab-bbfa44b2b81",
           "hook_event_name": "preToolUse",
@@ -412,14 +412,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚46⏱️52",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -479,7 +479,7 @@
           "generation_id": "aa54e4ba-35c8-4bcb-a239-3f2b492c4dff",
           "model": "composer-1.5",
           "content": " **/\nexport interface TableSkeletonProps {\n  columns: TableColumn[];\n  rowCount?: number;\n  className?: string;\n}\n\n/**\n * Skeleton loading placeholder for a table.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table🪨tableskeleton](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table/d/i/TableSkeleton)\n **/\nexport const TableSkeleton: React.FC\u003cTableSkeletonProps\u003e = ({ columns, rowCount = 5, className = \"\" }) =\u003e (\n  \u003cScrollable className={`h-full w-full ${className}`}\u003e\n    \u003ctable className=\"w-full border-collapse\"\u003e\n      \u003cthead className=\"bg-window border-b border-element sticky top-0 z-panel\"\u003e\n        \u003ctr className=\"h-large\"\u003e\n          {columns.map((column) =\u003e (\n            \u003cth key={column.id} className={`text-left p-single text-sm font-medium h-large ${column.className || \"\"}`} style={{ width: column.width }}\u003e\n              {column.header}\n            \u003c/th\u003e\n          ))}\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {Array.from({ length: rowCount }).map((_, index) =\u003e (\n          \u003ctr key={index} className=\"border-b border-element h-medium\"\u003e\n            {columns.map((column) =\u003e (\n              \u003ctd key={column.id} className={`h-medium px-single py-0 align-middle text-sm [\u0026_svg:not([class*='size-'])]:size-small [\u0026_img]:size-small ${column.className || \"\"}`}\u003e\n                \u003cdiv className=\"flex items-center h-full min-w-0\"\u003e\n                  \u003cdiv className=\"h-small bg-muted-foreground/20 rounded animate-pulse w-full\" /\u003e\n                \u003c/div\u003e\n              \u003c/td\u003e\n            ))}\n          \u003c/tr\u003e\n        ))}\n      \u003c/tbody\u003e\n    \u003c/table\u003e\n  \u003c/Scrollable\u003e\n);\n\n// #endregion Table\n\n// #endregion Window Components\n",
-          "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+          "file_path": "/workspaces/elements/ui/elements.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -496,14 +496,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚47⏱️18",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -562,9 +562,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/elements/ui/elements.tsx\",\"content_length\":1689}",
+          "tool_output": "{\"file_path\":\"/workspaces/elements/ui/elements.tsx\",\"content_length\":1689}",
           "duration": 1690.214,
           "tool_use_id": "tool_323f03f7-ac90-429f-a14d-4a37499a3f2",
           "hook_event_name": "postToolUse",
@@ -582,14 +582,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚47⏱️40",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -684,7 +684,7 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
           "tool_use_id": "tool_f139da17-3c57-4655-a75b-948d06d3c7a",
           "hook_event_name": "preToolUse",
@@ -702,14 +702,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8423"
+          "🗃️elements🛅ui💻elements📌1📌8423"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️01",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -727,7 +727,7 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/globals.css"
+            "file_path": "/workspaces/elements/ui/globals.css"
           },
           "tool_use_id": "tool_90b48f07-ac03-4b3d-b1c0-0e22dc9f873",
           "hook_event_name": "preToolUse",
@@ -745,14 +745,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻globals"
+            "id": "🗃️elements🛅ui💻globals"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻globals📌1📌1136"
+          "🗃️elements🛅ui💻globals📌1📌1136"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️01",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -770,7 +770,7 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/theme.css"
+            "file_path": "/workspaces/elements/ui/theme.css"
           },
           "tool_use_id": "tool_6bd069f3-8b1c-46a6-afdb-36a6da759f4",
           "hook_event_name": "preToolUse",
@@ -788,14 +788,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻theme"
+            "id": "🗃️elements🛅ui💻theme"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻theme📌1📌208"
+          "🗃️elements🛅ui💻theme📌1📌208"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️01",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -812,7 +812,7 @@
           "generation_id": "aa54e4ba-35c8-4bcb-a239-3f2b492c4dff",
           "model": "composer-1.5",
           "content": "/* SPDX-License-Identifier: AGPL-3.0-only */\n@import \"tailwindcss\";\n@import \"./theme.css\";\n@import \"golden-layout/dist/css/goldenlayout-base.css\";\n@import \"golden-layout/dist/css/themes/goldenlayout-dark-theme.css\";\n@plugin \"@tailwindcss/typography\";\n\n#navbar {\n  position: relative !important;\n  z-index: var(--z-base) !important;\n  pointer-events: auto !important;\n}\n\n#navbar button,\n#navbar [role=\"button\"],\n#navbar a,\n#navbar [role=\"link\"],\n#navbar input,\n#navbar select,\n#navbar textarea {\n  pointer-events: auto !important;\n  -webkit-app-region: no-drag !important;\n}\n\n#navbar {\n  -webkit-app-region: drag !important;\n}\n\n.lm_goldenlayout {\n  background-color: var(--base) !important;\n  color: var(--foreground) !important;\n  z-index: var(--z-base) !important;\n  position: relative !important;\n  pointer-events: auto !important;\n  overflow: hidden !important;\n}\n\n.lm_goldenlayout * {\n  pointer-events: auto !important;\n}\n\n.lm_root {\n  z-index: var(--z-base) !important;\n  position: relative !important;\n  overflow: hidden !important;\n}\n\n.lm_item {\n  z-index: var(--z-base) !important;\n  position: relative !important;\n  box-sizing: border-box !important;\n}\n\n.lm_header,\n.lm_tabs,\n.lm_controls {\n  z-index: var(--z-panel) !important;\n}\n\n.lm_header {\n  display: flex !important;\n  visibility: visible !important;\n  height: 20px !important;\n  min-height: 20px !important;\n  max-height: 20px !important;\n  opacity: 1 !important;\n  z-index: var(--z-panel) !important;\n  position: relative !important;\n  background-color: transparent !important;\n  border-bottom: 1px solid var(--border-color) !important;\n}\n\n.lm_tabs {\n  display: flex !important;\n  visibility: visible !important;\n  opacity: 1 !important;\n  flex: 1 !important;\n  background-color: transparent !important;\n}\n",
-          "file_path": "/workspaces/semio/elements/ui/globals.css",
+          "file_path": "/workspaces/elements/ui/globals.css",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -829,14 +829,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻globals"
+            "id": "🗃️elements🛅ui💻globals"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻globals📌1📌1136"
+          "🗃️elements🛅ui💻globals📌1📌1136"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️17",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -853,7 +853,7 @@
           "generation_id": "aa54e4ba-35c8-4bcb-a239-3f2b492c4dff",
           "model": "composer-1.5",
           "content": "\n// #region Diagram\n\n// [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram)\n// Interactive node-edge diagram built on ReactFlow and D3 force.\n// Consumers MUST provide nodes and edges arrays.\n\nexport {\n  applyNodeChanges,\n  Background,\n  BackgroundVariant,\n  BaseEdge,\n  forceCenter,\n  forceCollide,\n  forceLink,\n  forceManyBody,\n  forceSimulation,\n  forceX,\n  forceY,\n  getBezierPath,\n  Handle,\n  Position,\n  ReactFlow,\n  ReactFlowProvider,\n  useInternalNode,\n  useReactFlow,\n  useStoreApi,\n  ViewportPortal\n};\nexport type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };\n\n/**\n * Base pixel unit for diagram node sizing.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🪨diagramunit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DIAGRAM_UNIT)\n **/\nexport const DIAGRAM_UNIT = 48;\n\n/**\n * Union type for diagram layout directions (TB/BT/LR/RL).\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️diagramlayoutdirection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DiagramLayoutDirection)\n **/\nexport type DiagramLayoutDirection = \"TB\" | \"BT\" | \"LR\" | \"RL\";\n\n/**\n * Configuration interface for dagre-based diagram layout.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️diagramlayoutoptions](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DiagramLayoutOptions)\n **/\nexport interface DiagramLayoutOptions {\n  direction?: DiagramLayoutDirection;\n  nodeWidth?: number;\n  nodeHeight?: number;\n  rankSep?: number;\n  nodeSep?: number;\n}\n\n/**\n * Computes dagre layout positions for diagram nodes and edges.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️calculatediagramlayout](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/calculateDiagramLayout)\n **/\nexport function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: DiagramLayoutOptions = {}): { nodes: Node[]; edges: Edge[] } {\n  const { direction = \"TB\", nodeWidth = DIAGRAM_UNIT, nodeHeight = DIAGRAM_UNIT, rankSep = DIAGRAM_UNIT * 1.67, nodeSep = DIAGRAM_UNIT * 1.04 } = options;\n\n  const dagreGraph = new dagre.graphlib.Graph();\n  dagreGraph.setDefaultEdgeLabel(() =\u003e ({}));\n  dagreGraph.setGraph({ rankdir: direction, ranksep: rankSep, nodesep: nodeSep });\n\n  nodes.forEach((node) =\u003e {\n    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });\n  });\n\n  edges.forEach((edge) =\u003e {\n    dagreGraph.setEdge(edge.source, edge.target);\n  });\n\n  dagre.layout(dagreGraph);\n\n  const layoutedNodes = nodes.map((node) =\u003e {\n    const nodeWithPosition = dagreGraph.node(node.id);\n    return {\n      ...node,\n      position: {\n        x: nodeWithPosition.x - nodeWidth / 2,\n        y: nodeWithPosition.y - nodeHeight / 2,\n      },\n    };\n  });\n\n  return { nodes: layoutedNodes, edges };\n}\n\n/**\n * Configuration interface for D3 force simulation parameters.\n *\n *  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram🛠️diagramforceconfig](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram/d/i/DiagramForceConfig)\n **/\nexport interface DiagramForceConfig {",
-          "file_path": "/workspaces/semio/elements/ui/elements.tsx",
+          "file_path": "/workspaces/elements/ui/elements.tsx",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -870,14 +870,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8424"
+          "🗃️elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️20",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -894,7 +894,7 @@
           "generation_id": "aa54e4ba-35c8-4bcb-a239-3f2b492c4dff",
           "model": "composer-1.5",
           "content": "@font-face {\n  font-family: \"Anta\";\n  src: url(\"../../semio/assets/fonts/anta/latin.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n@font-face {\n  font-family: \"Anta Extended\";\n  src: url(\"../../semio/assets/fonts/anta/latin-ext.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n@font-face {\n  font-family: \"Anta Math\";\n  src: url(\"../../semio/assets/fonts/anta/math.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n@font-face {\n  font-family: \"Anta Symbols\";\n  src: url(\"../../semio/assets/fonts/anta/symbols.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n\n@font-face {\n  font-family: \"Kelly Slab\";\n  src: url(\"../../semio/assets/fonts/kelly-slab/latin.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n@font-face {\n  font-family: \"Kelly Slab Extended\";\n  src: url(\"../../semio/assets/fonts/kelly-slab/latin-ext.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n@font-face {\n  font-family: \"Kelly Slab Cyrillic\";\n  src: url(\"../../semio/assets/fonts/kelly-slab/cyrillic.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n\n@font-face {\n  font-family: \"Share Tech Mono\";\n  src: url(\"../../semio/assets/fonts/share-tech-mono/latin.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n\n/* Noto Emoji Font */\n@font-face {\n  font-family: \"Noto Emoji\";\n  src: url(\"../../semio/assets/fonts/noto-emoji/emoji-400.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n@font-face {\n  font-family: \"Noto Emoji 0\";\n  src: url(\"../../semio/assets/fonts/noto-emoji/0-400.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;\n}\n@font-face {\n  font-family: \"Noto Emoji 1\";\n  src: url(\"../../semio/assets/fonts/noto-emoji/1-400.woff2\") format(\"woff2\");\n  font-weight: normal;\n  font-style: normal;\n  font-display: swap;",
-          "file_path": "/workspaces/semio/elements/ui/theme.css",
+          "file_path": "/workspaces/elements/ui/theme.css",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -911,14 +911,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻theme"
+            "id": "🗃️elements🛅ui💻theme"
           }
         ],
         "kind": "agent.tool.search.starting",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻theme📌1📌208"
+          "🗃️elements🛅ui💻theme📌1📌208"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️27",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -936,9 +936,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/globals.css"
+            "file_path": "/workspaces/elements/ui/globals.css"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/elements/ui/globals.css\",\"content_length\":1773}",
+          "tool_output": "{\"file_path\":\"/workspaces/elements/ui/globals.css\",\"content_length\":1773}",
           "duration": 267.728,
           "tool_use_id": "tool_90b48f07-ac03-4b3d-b1c0-0e22dc9f873",
           "hook_event_name": "postToolUse",
@@ -956,14 +956,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻globals"
+            "id": "🗃️elements🛅ui💻globals"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻globals📌1📌1136"
+          "🗃️elements🛅ui💻globals📌1📌1136"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️37",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -981,9 +981,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/elements.tsx"
+            "file_path": "/workspaces/elements/ui/elements.tsx"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/elements/ui/elements.tsx\",\"content_length\":3524}",
+          "tool_output": "{\"file_path\":\"/workspaces/elements/ui/elements.tsx\",\"content_length\":3524}",
           "duration": 2103.569,
           "tool_use_id": "tool_f139da17-3c57-4655-a75b-948d06d3c7a",
           "hook_event_name": "postToolUse",
@@ -1001,14 +1001,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻elements"
+            "id": "🗃️elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻elements📌1📌8424"
+          "🗃️elements🛅ui💻elements📌1📌8424"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️41",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",
@@ -1026,9 +1026,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/elements/ui/theme.css"
+            "file_path": "/workspaces/elements/ui/theme.css"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/elements/ui/theme.css\",\"content_length\":2134}",
+          "tool_output": "{\"file_path\":\"/workspaces/elements/ui/theme.css\",\"content_length\":2134}",
           "duration": 22.594,
           "tool_use_id": "tool_6bd069f3-8b1c-46a6-afdb-36a6da759f4",
           "hook_event_name": "postToolUse",
@@ -1046,14 +1046,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️semioelements🛅ui💻theme"
+            "id": "🗃️elements🛅ui💻theme"
           }
         ],
         "kind": "agent.tool.search.ended",
         "llm": "composer-1.5",
         "parent": "",
         "ranges": [
-          "🗃️semioelements🛅ui💻theme📌1📌208"
+          "🗃️elements🛅ui💻theme📌1📌208"
         ],
         "second": "🎆26🌙03☀️14⏰14⌚48⏱️50",
         "session": "⚪272ae63c45994cbd8949c9167ee253d4",

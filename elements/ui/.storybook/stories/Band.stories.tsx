@@ -22,7 +22,7 @@ import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, Use
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
-  title: "semio-elements/Band",
+  title: "elements/Band",
   component: Band,
   parameters: {
     layout: "centered",

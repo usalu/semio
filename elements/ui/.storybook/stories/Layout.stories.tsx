@@ -24,7 +24,7 @@ import { useState } from "react";
 
 // #region 🔖Layout
 const meta = {
-  title: "semio-elements/Layout",
+  title: "elements/Layout",
   component: Layout,
   parameters: {
     layout: "fullscreen",

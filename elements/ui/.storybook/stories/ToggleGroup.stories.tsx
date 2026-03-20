@@ -23,7 +23,7 @@ import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 
 // #region 🔖ToggleGroup
 const meta = {
-  title: "semio-elements/ToggleGroup",
+  title: "elements/ToggleGroup",
   component: ToggleGroup,
   parameters: {
     layout: "centered",

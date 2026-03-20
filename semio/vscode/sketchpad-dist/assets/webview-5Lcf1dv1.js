@@ -194235,7 +194235,7 @@ CREATE TABLE attribute (
                         "All shared UI elements for sketchpad can be found in our ",
                         jsxRuntimeExports.jsx(_components.a, {
                             href: "https://js.semio-tech.com",
-                            children: "semio-elements Storybook"
+                            children: "elements Storybook"
                         }),
                         "."
                     ]
@@ -224856,4 +224856,5 @@ CREATE TABLE attribute (
     }
     boot();
 })();
-export { commonjsGlobal$1 as a, getAugmentedNamespace as b, commonjsRequire as c, getDefaultExportFromCjs$1 as g, __tla };
+export { __tla, commonjsGlobal$1 as a, getAugmentedNamespace as b, commonjsRequire as c, getDefaultExportFromCjs$1 as g };
+

@@ -20,7 +20,7 @@
             "new_string": "// Should have 18 events (1 prompt + 15 agent events + 2 derived events from search operations)\n\texpectedEventCount := 18\n\tif len(meta.Events) != expectedEventCount {\n\t\tt.Fatalf(\"expected %d events in session.json, got %d\", expectedEventCount, len(meta.Events))\n\t}"
           }
         ],
-        "file_path": "/workspaces/semio/semio-repo/cli/main_test.go"
+        "file_path": "/workspaces/semio/repo/cli/main_test.go"
       }
     }
   },

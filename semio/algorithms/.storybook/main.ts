@@ -45,7 +45,7 @@ const config: StorybookConfig = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      "@elements/ui": resolve(__dirname, "../../../elements/ui"),
+      "@semio/ui": resolve(__dirname, "../../ui"),
       "@elements/ui": resolve(__dirname, "../../../elements/ui"),
       "@semio/algorithms": resolve(__dirname, ".."),
     };
@@ -64,7 +64,7 @@ const config: StorybookConfig = {
           if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-plugin") {
             indicesToRemove.push(i);
           }
-        } catch (e) { }
+        } catch (e) {}
       }
     }
     for (let i = indicesToRemove.length - 1; i >= 0; i--) {

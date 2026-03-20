@@ -23,7 +23,7 @@ import { Box } from "lucide-react";
 
 // #region 🔖Icons
 const meta = {
-  title: "semio-elements/Icons",
+  title: "elements/Icons",
   component: Cursor,
   parameters: {
     layout: "centered",

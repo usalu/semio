@@ -15,7 +15,7 @@
       "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
       "tool_info": {
         "mcp_result": "- [🎯Goals](repo://gs)\n  - [🎯🎯sketchpadimprovements🎫migratetoeslint10](repo://y/26/m/03/d/16/tk/MIGRATE-TO-ES-LINT-10) - `Migrate To ESLint 10` - `open` - `opened a long while ago` - `Migrate the repository to ESLint 10, update flat configuration and package metadata, and persist zero-touch developer configuration in existing repo settings so linting works without manual local setup.`\n",
-        "mcp_server_name": "semio-repo",
+        "mcp_server_name": "repo",
         "mcp_tool_arguments": {
           "query": "eslint 10 migrate ticket MIGRATE-TO-ES-LINT-10"
         },

@@ -23,7 +23,7 @@ import { useState } from "react";
 
 // #region 🔖Resizable
 const meta = {
-  title: "semio-elements/Resizable",
+  title: "elements/Resizable",
   component: ResizablePanelGroup,
   parameters: {
     layout: "centered",

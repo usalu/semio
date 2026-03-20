@@ -61,9 +61,9 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json"
           },
-          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_open.json\",\"content_length\":1232}",
+          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_open.json\",\"content_length\":1232}",
           "duration": 1.792,
           "tool_use_id": "toolu_bdrk_01K7fxd7N3Kec9gU5nXECcJP",
           "hook_event_name": "postToolUse",
@@ -105,7 +105,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_open",
           "tool_input": "{\"goal\":\"R26-03\",\"title\":\"Implement Export Design Model in Python\",\"prompt\":\"Port the TypeScript exportDesignModel function to Python in semio.py. Support GLB, GLTF, OBJ, STL, PLY, OFF formats.\",\"client\":\"cursor-chat\",\"llm\":\"opus-4-6\",\"no_github\":true}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.18",
           "workspace_roots": [
@@ -5971,7 +5971,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json"
           },
           "tool_use_id": "toolu_bdrk_01QSZkzfQu92k48AGVNv1Z9D",
           "hook_event_name": "preToolUse",
@@ -6012,7 +6012,7 @@
           "generation_id": "3119783b-1774-4e12-8c43-cfad92dda58d",
           "model": "claude-4.6-opus-high-thinking",
           "content": "{\n  \"name\": \"ticket_close\",\n  \"description\": \"Close a ticket\",\n  \"arguments\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"files\": {\n        \"description\": \"Files to include\",\n        \"items\": {\n          \"type\": \"string\"\n        },\n        \"type\": \"array\"\n      },\n      \"no_github\": {\n        \"description\": \"Skip GitHub issue creation\",\n        \"type\": \"boolean\"\n      },\n      \"path\": {\n        \"description\": \"Ticket path\",\n        \"type\": \"string\"\n      },\n      \"summary\": {\n        \"description\": \"Summary of the ticket work\",\n        \"type\": \"string\"\n      },\n      \"title\": {\n        \"description\": \"New title for the ticket (also updates GitHub issue)\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": []\n  }\n}",
-          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json",
+          "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -6053,9 +6053,9 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json"
+            "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json"
           },
-          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/ticket_close.json\",\"content_length\":735}",
+          "tool_output": "{\"file_path\":\"/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/ticket_close.json\",\"content_length\":735}",
           "duration": 1.388,
           "tool_use_id": "toolu_bdrk_01QSZkzfQu92k48AGVNv1Z9D",
           "hook_event_name": "postToolUse",
@@ -6145,7 +6145,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_close",
           "tool_input": "{\"path\":\"2026/03/14/IMPLEMENT-EXPORT-DESIGN-MODEL-IN-PYTHON\",\"no_github\":true,\"summary\":\"Ported export_design_model from TypeScript to Python in semio.py. Added Kit Model Export region with: EXPORT_MODEL_FORMATS dict, GLB parse/build helpers, blob decoder, plane-to-matrix conversion, model matching by tags, GLB model merging, box placeholder geometry, and format-specific exporters for GLB, GLTF, OBJ, STL, PLY, OFF. The main export_design_model function builds a connection graph via BFS, computes world planes for all pieces using computeChildPlane, creates glTF scene hierarchy with mesh instances per type and transforms per piece, then serializes to the requested format.\",\"files\":[\"semio/py/semio.py\"]}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.18",
           "workspace_roots": [
@@ -6420,7 +6420,7 @@
           "model": "claude-4.6-opus-high-thinking",
           "tool_name": "ticket_close",
           "tool_input": "{\"path\":\"26/03/14/IMPLEMENT-EXPORT-DESIGN-MODEL-IN-PYTHON\",\"no_github\":true,\"summary\":\"Ported export_design_model from TypeScript to Python in semio.py. Added Kit Model Export region with: EXPORT_MODEL_FORMATS dict, GLB parse/build helpers, blob decoder, plane-to-matrix conversion, model matching by tags, GLB model merging, box placeholder geometry, and format-specific exporters for GLB, GLTF, OBJ, STL, PLY, OFF. The main export_design_model function builds a connection graph via BFS, computes world planes for all pieces using computeChildPlane, creates glTF scene hierarchy with mesh instances per type and transforms per piece, then serializes to the requested format.\",\"files\":[\"semio/py/semio.py\"]}",
-          "command": "semio-repo",
+          "command": "repo",
           "hook_event_name": "beforeMCPExecution",
           "cursor_version": "2.6.18",
           "workspace_roots": [

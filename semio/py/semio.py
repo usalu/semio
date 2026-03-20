@@ -4915,9 +4915,9 @@ class Connection(
     def idMembers(self) -> RecursiveAnyList:
         return [
             self.connected.piece.id_,
-            self.connected.connector.id_ if self.connected.connector is not None else "",
+            (self.connected.connector.id_ if self.connected.connector is not None else ""),
             self.connecting.piece.id_,
-            self.connecting.connector.id_ if self.connecting.connector is not None else "",
+            (self.connecting.connector.id_ if self.connecting.connector is not None else ""),
         ]
 
 
@@ -6172,7 +6172,12 @@ class Kit(
                 result.append(connector)
         return result
 
-    def find_replaceable_types_for_piece_in_design(self, design_guid: str, piece_guid: str, variants: typing.Optional[list[str]] = None) -> list["Type"]:
+    def find_replaceable_types_for_piece_in_design(
+        self,
+        design_guid: str,
+        piece_guid: str,
+        variants: typing.Optional[list[str]] = None,
+    ) -> list["Type"]:
         """Finds all types that can replace a piece while maintaining connection compatibility."""
         design = self.find_design_by_guid(design_guid)
         connections = self.find_piece_connections_in_design(design_guid, piece_guid)
@@ -6208,7 +6213,12 @@ class Kit(
                 result.append(replacement_type)
         return result
 
-    def find_replaceable_types_for_pieces_in_design(self, design_guid: str, piece_guids: list[str], variants: typing.Optional[list[str]] = None) -> list["Type"]:
+    def find_replaceable_types_for_pieces_in_design(
+        self,
+        design_guid: str,
+        piece_guids: list[str],
+        variants: typing.Optional[list[str]] = None,
+    ) -> list["Type"]:
         """Finds types that can replace multiple pieces while maintaining all external connections."""
         design = self.find_design_by_guid(design_guid)
         external_connectors: list["Connector"] = []
@@ -7698,10 +7708,38 @@ def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnect
     [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️computechildplanedict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/computeChildPlaneDict)
     """
     parentMatrix = planeToMatrixDict(parentPlane)
-    parentPoint = numpy.array([parentConnector["point"]["x"], parentConnector["point"]["y"], parentConnector["point"]["z"]])
-    parentDirection = normalizeVector(numpy.array([parentConnector["direction"]["x"], parentConnector["direction"]["y"], parentConnector["direction"]["z"]]))
-    childPoint = numpy.array([childConnector["point"]["x"], childConnector["point"]["y"], childConnector["point"]["z"]])
-    childDirection = normalizeVector(numpy.array([childConnector["direction"]["x"], childConnector["direction"]["y"], childConnector["direction"]["z"]]))
+    parentPoint = numpy.array(
+        [
+            parentConnector["point"]["x"],
+            parentConnector["point"]["y"],
+            parentConnector["point"]["z"],
+        ]
+    )
+    parentDirection = normalizeVector(
+        numpy.array(
+            [
+                parentConnector["direction"]["x"],
+                parentConnector["direction"]["y"],
+                parentConnector["direction"]["z"],
+            ]
+        )
+    )
+    childPoint = numpy.array(
+        [
+            childConnector["point"]["x"],
+            childConnector["point"]["y"],
+            childConnector["point"]["z"],
+        ]
+    )
+    childDirection = normalizeVector(
+        numpy.array(
+            [
+                childConnector["direction"]["x"],
+                childConnector["direction"]["y"],
+                childConnector["direction"]["z"],
+            ]
+        )
+    )
     gap = connection.get("gap", 0) or 0
     shift = connection.get("shift", 0) or 0
     rise = connection.get("rise", 0) or 0
@@ -7752,9 +7790,21 @@ def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnect
     finalMatrix = parentMatrix @ transform
     result = matrixToPlaneDict(finalMatrix)
     return {
-        "origin": {"x": round(result["origin"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["origin"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["origin"]["z"] / TOLERANCE) * TOLERANCE},
-        "xAxis": {"x": round(result["xAxis"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["xAxis"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["xAxis"]["z"] / TOLERANCE) * TOLERANCE},
-        "yAxis": {"x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE},
+        "origin": {
+            "x": round(result["origin"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["origin"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["origin"]["z"] / TOLERANCE) * TOLERANCE,
+        },
+        "xAxis": {
+            "x": round(result["xAxis"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["xAxis"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["xAxis"]["z"] / TOLERANCE) * TOLERANCE,
+        },
+        "yAxis": {
+            "x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE,
+        },
     }
 
 
@@ -7839,7 +7889,10 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 else:
                     childU = parentCenter["u"] + connectionU * horizontalScale
                     childV = parentCenter["v"] + connectionV * horizontalScale
-            childCenter = {"u": round(childU / TOLERANCE) * TOLERANCE, "v": round(childV / TOLERANCE) * TOLERANCE}
+            childCenter = {
+                "u": round(childU / TOLERANCE) * TOLERANCE,
+                "v": round(childV / TOLERANCE) * TOLERANCE,
+            }
             pieceMap[childId]["center"] = childCenter
     updatedPieces = []
     for piece in pieces:
@@ -7944,7 +7997,10 @@ def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
             piece_diff = updated.get("diff", {})
             for i, p in enumerate(pieces):
                 if p.get("guid") == piece_id:
-                    pieces[i] = {**p, **{k: v for k, v in piece_diff.items() if v is not None}}
+                    pieces[i] = {
+                        **p,
+                        **{k: v for k, v in piece_diff.items() if v is not None},
+                    }
                     break
         result["pieces"] = pieces
     connections_diff = diff.get("connections")
@@ -7960,10 +8016,23 @@ def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
             conn_diff = updated.get("diff", {})
             for i, c in enumerate(connections):
                 if c.get("guid") == conn_id:
-                    connections[i] = {**c, **{k: v for k, v in conn_diff.items() if v is not None}}
+                    connections[i] = {
+                        **c,
+                        **{k: v for k, v in conn_diff.items() if v is not None},
+                    }
                     break
         result["connections"] = connections
-    for key in ["name", "isAbstract", "unit", "folder", "parent", "location", "icon", "image", "description"]:
+    for key in [
+        "name",
+        "isAbstract",
+        "unit",
+        "folder",
+        "parent",
+        "location",
+        "icon",
+        "image",
+        "description",
+    ]:
         if key in diff and diff[key] is not None:
             result[key] = diff[key]
     return result
@@ -8026,10 +8095,18 @@ def createClusteredDesignDict(original_design: dict, cluster_piece_ids: list[str
         "createdAt": now,
         "updatedAt": now,
     }
-    return {"clusteredDesign": clustered_design, "externalConnections": external_connections}
+    return {
+        "clusteredDesign": clustered_design,
+        "externalConnections": external_connections,
+    }
 
 
-def replaceClusterWithDesignDict(original_design: dict, cluster_piece_ids: list[str], clustered_design: dict, external_connections: list[dict]) -> dict:
+def replaceClusterWithDesignDict(
+    original_design: dict,
+    cluster_piece_ids: list[str],
+    clustered_design: dict,
+    external_connections: list[dict],
+) -> dict:
     """Returns a DesignDiff that replaces clustered pieces with a design reference.
     [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️replaceclusterwithdesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/replaceClusterWithDesignDict)
     """
@@ -8116,7 +8193,10 @@ def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
     if not design_ids:
         return expanded
     for design_ref_guid in design_ids:
-        referenced = next((d for d in kit.get("designs", []) if d.get("guid") == design_ref_guid), None)
+        referenced = next(
+            (d for d in kit.get("designs", []) if d.get("guid") == design_ref_guid),
+            None,
+        )
         if not referenced:
             continue
         expanded_ref = expandDesignPiecesDict(referenced, kit)
@@ -8275,7 +8355,12 @@ def findUsedConnectorsByPieceInDesignDict(kit: dict, design_guid: str, piece_gui
     return result
 
 
-def findReplaceableTypesForPieceInDesignDict(kit: dict, design_guid: str, piece_guid: str, variants: typing.Optional[list[str]] = None) -> list[dict]:
+def findReplaceableTypesForPieceInDesignDict(
+    kit: dict,
+    design_guid: str,
+    piece_guid: str,
+    variants: typing.Optional[list[str]] = None,
+) -> list[dict]:
     """Finds all types that can replace a piece while maintaining connection compatibility.
     [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict🛠️findreplaceabletypesforpieceindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict/d/i/findReplaceableTypesForPieceInDesignDict)
     """
@@ -8320,7 +8405,12 @@ def findReplaceableTypesForPieceInDesignDict(kit: dict, design_guid: str, piece_
     return result
 
 
-def findReplaceableTypesForPiecesInDesignDict(kit: dict, design_guid: str, piece_guids: list[str], variants: typing.Optional[list[str]] = None) -> list[dict]:
+def findReplaceableTypesForPiecesInDesignDict(
+    kit: dict,
+    design_guid: str,
+    piece_guids: list[str],
+    variants: typing.Optional[list[str]] = None,
+) -> list[dict]:
     """Finds types that can replace multiple pieces while maintaining all external connections.
     [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict🛠️findreplaceabletypesforpiecesindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict/d/i/findReplaceableTypesForPiecesInDesignDict)
     """
@@ -8376,7 +8466,10 @@ def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> fl
     design = _findDesignInKitDict(kit, design_guid)
     total = 0.0
     for piece in design.get("pieces", []):
-        piece_prop = next((p for p in piece.get("props", []) if p.get("quality", {}).get("guid") == quality_guid), None)
+        piece_prop = next(
+            (p for p in piece.get("props", []) if p.get("quality", {}).get("guid") == quality_guid),
+            None,
+        )
         if piece_prop is not None:
             total += float(piece_prop.get("value", 0))
             continue
@@ -8384,7 +8477,10 @@ def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> fl
         if type_ref and type_ref.get("guid"):
             try:
                 type_dict = _findTypeInKitDict(kit, type_ref["guid"])
-                type_prop = next((p for p in type_dict.get("props", []) if p.get("quality", {}).get("guid") == quality_guid), None)
+                type_prop = next(
+                    (p for p in type_dict.get("props", []) if p.get("quality", {}).get("guid") == quality_guid),
+                    None,
+                )
                 if type_prop is not None:
                     total += float(type_prop.get("value", 0))
             except ValueError:
@@ -9209,11 +9305,36 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
         aGuid = after.get(refKey, {}).get("guid") if isinstance(after.get(refKey), dict) else None
         if _normalizeValue(bGuid) != _normalizeValue(aGuid):
             diff[refKey] = after.get(refKey)
-    if json.dumps(sorted(before.get("concepts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("concepts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+    if json.dumps(
+        sorted(
+            before.get("concepts", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ) != json.dumps(
+        sorted(
+            after.get("concepts", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ):
         diff["concepts"] = after.get("concepts")
-    if json.dumps(sorted(before.get("authors", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("authors", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+    if json.dumps(
+        sorted(
+            before.get("authors", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ) != json.dumps(
+        sorted(
+            after.get("authors", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ):
         diff["authors"] = after.get("authors")
-    connectorsDiff = _getCollectionDiff(before.get("connectors", []), after.get("connectors", []), _getConnectorDiff, "connector")
+    connectorsDiff = _getCollectionDiff(
+        before.get("connectors", []),
+        after.get("connectors", []),
+        _getConnectorDiff,
+        "connector",
+    )
     if connectorsDiff:
         diff["connectors"] = connectorsDiff
     modelsDiff = _getCollectionDiff(before.get("models", []), after.get("models", []), _getModelDiff, "model")
@@ -9231,7 +9352,17 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applytypediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyTypeDiff)
     """
     result = dict(base)
-    for key in ["name", "description", "icon", "image", "folder", "unit", "stock", "isAbstract", "virtual"]:
+    for key in [
+        "name",
+        "description",
+        "icon",
+        "image",
+        "folder",
+        "unit",
+        "stock",
+        "isAbstract",
+        "virtual",
+    ]:
         if key in diff:
             result[key] = diff[key]
     for refKey in ["location", "parent"]:
@@ -9242,7 +9373,12 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
     if "authors" in diff:
         result["authors"] = diff["authors"]
     if diff.get("connectors"):
-        result["connectors"] = _applyCollectionDiff(base.get("connectors", []), diff["connectors"], _applyConnectorDiff, "connector")
+        result["connectors"] = _applyCollectionDiff(
+            base.get("connectors", []),
+            diff["connectors"],
+            _applyConnectorDiff,
+            "connector",
+        )
     if diff.get("models"):
         result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff, "model")
     if diff.get("attributes") or base.get("attributes"):
@@ -9308,13 +9444,21 @@ def _applyConnectorDiff(base: dict, diff: dict) -> dict:
     if "point" in diff:
         bPoint = base.get("point", {})
         if bPoint and isinstance(bPoint, dict):
-            result["point"] = {"x": (bPoint.get("x", 0) or 0) + (diff["point"].get("x", 0) or 0), "y": (bPoint.get("y", 0) or 0) + (diff["point"].get("y", 0) or 0), "z": (bPoint.get("z", 0) or 0) + (diff["point"].get("z", 0) or 0)}
+            result["point"] = {
+                "x": (bPoint.get("x", 0) or 0) + (diff["point"].get("x", 0) or 0),
+                "y": (bPoint.get("y", 0) or 0) + (diff["point"].get("y", 0) or 0),
+                "z": (bPoint.get("z", 0) or 0) + (diff["point"].get("z", 0) or 0),
+            }
         else:
             result["point"] = diff["point"]
     if "direction" in diff:
         bDir = base.get("direction", {})
         if bDir and isinstance(bDir, dict):
-            result["direction"] = {"x": (bDir.get("x", 0) or 0) + (diff["direction"].get("x", 0) or 0), "y": (bDir.get("y", 0) or 0) + (diff["direction"].get("y", 0) or 0), "z": (bDir.get("z", 0) or 0) + (diff["direction"].get("z", 0) or 0)}
+            result["direction"] = {
+                "x": (bDir.get("x", 0) or 0) + (diff["direction"].get("x", 0) or 0),
+                "y": (bDir.get("y", 0) or 0) + (diff["direction"].get("y", 0) or 0),
+                "z": (bDir.get("z", 0) or 0) + (diff["direction"].get("z", 0) or 0),
+            }
         else:
             result["direction"] = diff["direction"]
     if diff.get("attributes") or base.get("attributes"):
@@ -9336,7 +9480,17 @@ def _getModelDiff(before: dict, after: dict) -> dict:
     aFileGuid = after.get("file", {}).get("guid") if isinstance(after.get("file"), dict) else None
     if _normalizeValue(bFileGuid) != _normalizeValue(aFileGuid):
         diff["file"] = after.get("file")
-    if json.dumps(sorted(before.get("tags", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("tags", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+    if json.dumps(
+        sorted(
+            before.get("tags", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ) != json.dumps(
+        sorted(
+            after.get("tags", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ):
         diff["tags"] = after.get("tags")
     attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
     if attributesDiff:
@@ -9368,7 +9522,16 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getDesignDiff)
     """
     diff: dict = {}
-    for key in ["name", "variant", "view", "description", "icon", "image", "unit", "folder"]:
+    for key in [
+        "name",
+        "variant",
+        "view",
+        "description",
+        "icon",
+        "image",
+        "unit",
+        "folder",
+    ]:
         if _normalizeValue(before.get(key)) != _normalizeValue(after.get(key)):
             diff[key] = after.get(key)
     for key in ["isAbstract", "canScale", "canMirror"]:
@@ -9379,14 +9542,39 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
         aGuid = after.get(refKey, {}).get("guid") if isinstance(after.get(refKey), dict) else None
         if _normalizeValue(bGuid) != _normalizeValue(aGuid):
             diff[refKey] = after.get(refKey)
-    if json.dumps(sorted(before.get("concepts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("concepts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+    if json.dumps(
+        sorted(
+            before.get("concepts", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ) != json.dumps(
+        sorted(
+            after.get("concepts", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ):
         diff["concepts"] = after.get("concepts")
-    if json.dumps(sorted(before.get("authors", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(sorted(after.get("authors", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))):
+    if json.dumps(
+        sorted(
+            before.get("authors", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ) != json.dumps(
+        sorted(
+            after.get("authors", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ):
         diff["authors"] = after.get("authors")
     piecesDiff = _getCollectionDiff(before.get("pieces", []), after.get("pieces", []), _getPieceDiff, "piece")
     if piecesDiff:
         diff["pieces"] = piecesDiff
-    connectionsDiff = _getCollectionDiff(before.get("connections", []), after.get("connections", []), _getConnectionDiff, "connection")
+    connectionsDiff = _getCollectionDiff(
+        before.get("connections", []),
+        after.get("connections", []),
+        _getConnectionDiff,
+        "connection",
+    )
     if connectionsDiff:
         diff["connections"] = connectionsDiff
     attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
@@ -9401,7 +9589,19 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applydesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyDesignDiff)
     """
     result = dict(base)
-    for key in ["name", "variant", "view", "description", "icon", "image", "unit", "folder", "isAbstract", "canScale", "canMirror"]:
+    for key in [
+        "name",
+        "variant",
+        "view",
+        "description",
+        "icon",
+        "image",
+        "unit",
+        "folder",
+        "isAbstract",
+        "canScale",
+        "canMirror",
+    ]:
         if key in diff:
             result[key] = diff[key]
     for refKey in ["activeLayer", "parent", "location"]:
@@ -9414,7 +9614,12 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
     if diff.get("pieces"):
         result["pieces"] = _applyCollectionDiff(base.get("pieces", []), diff["pieces"], _applyPieceDiff, "piece")
     if diff.get("connections"):
-        result["connections"] = _applyCollectionDiff(base.get("connections", []), diff["connections"], _applyConnectionDiff, "connection")
+        result["connections"] = _applyCollectionDiff(
+            base.get("connections", []),
+            diff["connections"],
+            _applyConnectionDiff,
+            "connection",
+        )
     if diff.get("attributes") or base.get("attributes"):
         result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
@@ -9458,7 +9663,16 @@ def _applyPieceDiff(base: dict, diff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applypiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyPieceDiff)
     """
     result = dict(base)
-    for key in ["name", "description", "scale", "plane", "center", "color", "isHidden", "isLocked"]:
+    for key in [
+        "name",
+        "description",
+        "scale",
+        "plane",
+        "center",
+        "color",
+        "isHidden",
+        "isLocked",
+    ]:
         if key in diff:
             result[key] = diff[key]
     for refKey in ["type", "design"]:
@@ -9589,8 +9803,16 @@ def _getPortDiff(before: dict, after: dict) -> dict:
         diff["description"] = after.get("description")
     if _normalizeValue(before.get("icon")) != _normalizeValue(after.get("icon")):
         diff["icon"] = after.get("icon")
-    if json.dumps(sorted(before.get("compatiblePorts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))) != json.dumps(
-        sorted(after.get("compatiblePorts", []), key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x))
+    if json.dumps(
+        sorted(
+            before.get("compatiblePorts", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
+    ) != json.dumps(
+        sorted(
+            after.get("compatiblePorts", []),
+            key=lambda x: x.get("guid", "") if isinstance(x, dict) else str(x),
+        )
     ):
         diff["compatiblePorts"] = after.get("compatiblePorts")
     attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
@@ -10091,7 +10313,17 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversetypediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseTypeDiff)
     """
     inverse: dict = {}
-    for key in ["name", "description", "icon", "image", "folder", "unit", "stock", "isAbstract", "virtual"]:
+    for key in [
+        "name",
+        "description",
+        "icon",
+        "image",
+        "folder",
+        "unit",
+        "stock",
+        "isAbstract",
+        "virtual",
+    ]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     for refKey in ["location", "parent"]:
@@ -10102,9 +10334,19 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
     if "authors" in appliedDiff:
         inverse["authors"] = original.get("authors")
     if appliedDiff.get("connectors"):
-        inverse["connectors"] = _inverseCollectionDiff(original.get("connectors", []), appliedDiff["connectors"], _inverseConnectorDiff, "connector")
+        inverse["connectors"] = _inverseCollectionDiff(
+            original.get("connectors", []),
+            appliedDiff["connectors"],
+            _inverseConnectorDiff,
+            "connector",
+        )
     if appliedDiff.get("models"):
-        inverse["models"] = _inverseCollectionDiff(original.get("models", []), appliedDiff["models"], _inverseModelDiff, "model")
+        inverse["models"] = _inverseCollectionDiff(
+            original.get("models", []),
+            appliedDiff["models"],
+            _inverseModelDiff,
+            "model",
+        )
     if appliedDiff.get("attributes"):
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
@@ -10123,10 +10365,18 @@ def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
         inverse["port"] = original.get("port")
     if "point" in appliedDiff:
         p = appliedDiff["point"]
-        inverse["point"] = {"x": -(p.get("x", 0) or 0), "y": -(p.get("y", 0) or 0), "z": -(p.get("z", 0) or 0)}
+        inverse["point"] = {
+            "x": -(p.get("x", 0) or 0),
+            "y": -(p.get("y", 0) or 0),
+            "z": -(p.get("z", 0) or 0),
+        }
     if "direction" in appliedDiff:
         d = appliedDiff["direction"]
-        inverse["direction"] = {"x": -(d.get("x", 0) or 0), "y": -(d.get("y", 0) or 0), "z": -(d.get("z", 0) or 0)}
+        inverse["direction"] = {
+            "x": -(d.get("x", 0) or 0),
+            "y": -(d.get("y", 0) or 0),
+            "z": -(d.get("z", 0) or 0),
+        }
     if appliedDiff.get("attributes"):
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
@@ -10214,7 +10464,19 @@ def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversedesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseDesignDiff)
     """
     inverse: dict = {}
-    for key in ["name", "variant", "view", "description", "icon", "image", "unit", "folder", "isAbstract", "canScale", "canMirror"]:
+    for key in [
+        "name",
+        "variant",
+        "view",
+        "description",
+        "icon",
+        "image",
+        "unit",
+        "folder",
+        "isAbstract",
+        "canScale",
+        "canMirror",
+    ]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     for refKey in ["activeLayer", "parent", "location"]:
@@ -10225,9 +10487,19 @@ def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
     if "authors" in appliedDiff:
         inverse["authors"] = original.get("authors")
     if appliedDiff.get("pieces"):
-        inverse["pieces"] = _inverseCollectionDiff(original.get("pieces", []), appliedDiff["pieces"], _inversePieceDiff, "piece")
+        inverse["pieces"] = _inverseCollectionDiff(
+            original.get("pieces", []),
+            appliedDiff["pieces"],
+            _inversePieceDiff,
+            "piece",
+        )
     if appliedDiff.get("connections"):
-        inverse["connections"] = _inverseCollectionDiff(original.get("connections", []), appliedDiff["connections"], _inverseConnectionDiff, "connection")
+        inverse["connections"] = _inverseCollectionDiff(
+            original.get("connections", []),
+            appliedDiff["connections"],
+            _inverseConnectionDiff,
+            "connection",
+        )
     if appliedDiff.get("attributes"):
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
@@ -10239,7 +10511,16 @@ def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversepiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inversePieceDiff)
     """
     inverse: dict = {}
-    for key in ["name", "description", "scale", "plane", "center", "color", "isHidden", "isLocked"]:
+    for key in [
+        "name",
+        "description",
+        "scale",
+        "plane",
+        "center",
+        "color",
+        "isHidden",
+        "isLocked",
+    ]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     for refKey in ["type", "design"]:
@@ -10657,24 +10938,48 @@ class KitChange(Change):
     pass
 
 
-def getDesignChange(before: dict, after: dict, author: typing.Optional[str] = None, time: typing.Optional[datetime.datetime] = None) -> DesignChange:
+def getDesignChange(
+    before: dict,
+    after: dict,
+    author: typing.Optional[str] = None,
+    time: typing.Optional[datetime.datetime] = None,
+) -> DesignChange:
     """getDesignChange performs the getDesignChange operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesignchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getDesignChange)
     getDesignChange MUST perform the getDesignChange operation.
     """
     forward_diff = _getDesignDiff(before, after)
     backward_diff = _inverseDesignDiff(before, forward_diff)
-    return DesignChange(forward=forward_diff, backward=backward_diff, author=author, time=time, before=before, after=after)
+    return DesignChange(
+        forward=forward_diff,
+        backward=backward_diff,
+        author=author,
+        time=time,
+        before=before,
+        after=after,
+    )
 
 
-def getKitChange(before: dict, after: dict, author: typing.Optional[str] = None, time: typing.Optional[datetime.datetime] = None) -> KitChange:
+def getKitChange(
+    before: dict,
+    after: dict,
+    author: typing.Optional[str] = None,
+    time: typing.Optional[datetime.datetime] = None,
+) -> KitChange:
     """getKitChange performs the getKitChange operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getkitchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getKitChange)
     getKitChange MUST perform the getKitChange operation.
     """
     forward_diff = getKitDiffDict(before, after)
     backward_diff = inverseKitDiffDict(before, forward_diff)
-    return KitChange(forward=forward_diff, backward=backward_diff, author=author, time=time, before=before, after=after)
+    return KitChange(
+        forward=forward_diff,
+        backward=backward_diff,
+        author=author,
+        time=time,
+        before=before,
+        after=after,
+    )
 
 
 def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
@@ -10994,8 +11299,8 @@ def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[d
         "activeLayer": row.get("active_layer_guid"),
         "isAbstract": bool(row.get("is_abstract", False)),
         "folder": row.get("folder"),
-        "canScale": bool(row.get("can_scale", False)) if row.get("can_scale") is not None else None,
-        "canMirror": bool(row.get("can_mirror", False)) if row.get("can_mirror") is not None else None,
+        "canScale": (bool(row.get("can_scale", False)) if row.get("can_scale") is not None else None),
+        "canMirror": (bool(row.get("can_mirror", False)) if row.get("can_mirror") is not None else None),
         "description": row.get("description"),
         "icon": row.get("icon"),
         "image": row.get("image"),
@@ -11345,7 +11650,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
                 1 if d.get("isAbstract") else 0,
                 d.get("folder"),
                 1 if d.get("canScale") else (0 if d.get("canScale") is False else None),
-                1 if d.get("canMirror") else (0 if d.get("canMirror") is False else None),
+                (1 if d.get("canMirror") else (0 if d.get("canMirror") is False else None)),
                 d.get("description", ""),
                 d.get("icon", ""),
                 d.get("image", ""),
@@ -11481,7 +11786,7 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
 
 # region Kit Model Export
 # [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export)
-# 3D model export utilities for designs. Exports design scene graphs as GLB, GLTF, OBJ, STL, PLY, OFF.
+# 3D model export utilities for designs. Exports design scene graphs as GLB, GLTF, OBJ, STL, PLY, OFF, IFC.
 
 EXPORT_MODEL_FORMATS: dict[str, str] = {
     ".glb": "model/gltf-binary",
@@ -11490,6 +11795,7 @@ EXPORT_MODEL_FORMATS: dict[str, str] = {
     ".stl": "model/stl",
     ".ply": "application/x-ply",
     ".off": "application/x-off",
+    ".ifc": "application/x-ifc",
 }
 """Supported 3D export formats with their MIME types.
 EXPORT_MODEL_FORMATS MUST map file extension to MIME type.
@@ -11713,7 +12019,12 @@ def _load_glb_mesh_from_bytes(raw: bytes, mesh_name: str | None = None) -> "typi
 
     combined_vertices = numpy.vstack(vertex_blocks)
     combined_faces = numpy.vstack(face_blocks)
-    mesh = _trimesh.Trimesh(vertices=combined_vertices, faces=combined_faces, process=False, maintain_order=True)
+    mesh = _trimesh.Trimesh(
+        vertices=combined_vertices,
+        faces=combined_faces,
+        process=False,
+        maintain_order=True,
+    )
     if has_normals and len(normal_blocks) == len(vertex_blocks):
         combined_normals = numpy.vstack(normal_blocks)
         if len(combined_normals) == len(combined_vertices):
@@ -11792,7 +12103,10 @@ def export_design_model(
 
     if isinstance(kit, dict):
         designs = kit.get("designs", []) or []
-        design = next((d for d in designs if d.get("name") == design_id or d.get("guid") == design_id), None)
+        design = next(
+            (d for d in designs if d.get("name") == design_id or d.get("guid") == design_id),
+            None,
+        )
         if design is None:
             raise ValueError(f"Design '{design_id}' not found in kit")
         pieces = design.get("pieces", []) or []
@@ -11839,9 +12153,30 @@ def export_design_model(
             }
 
         def _plane_dict_to_matrix(plane_dict: dict) -> numpy.ndarray:
-            origin = numpy.array([plane_dict["origin"]["x"], plane_dict["origin"]["y"], plane_dict["origin"]["z"]], dtype=numpy.float64)
-            x_axis = numpy.array([plane_dict["xAxis"]["x"], plane_dict["xAxis"]["y"], plane_dict["xAxis"]["z"]], dtype=numpy.float64)
-            y_axis = numpy.array([plane_dict["yAxis"]["x"], plane_dict["yAxis"]["y"], plane_dict["yAxis"]["z"]], dtype=numpy.float64)
+            origin = numpy.array(
+                [
+                    plane_dict["origin"]["x"],
+                    plane_dict["origin"]["y"],
+                    plane_dict["origin"]["z"],
+                ],
+                dtype=numpy.float64,
+            )
+            x_axis = numpy.array(
+                [
+                    plane_dict["xAxis"]["x"],
+                    plane_dict["xAxis"]["y"],
+                    plane_dict["xAxis"]["z"],
+                ],
+                dtype=numpy.float64,
+            )
+            y_axis = numpy.array(
+                [
+                    plane_dict["yAxis"]["x"],
+                    plane_dict["yAxis"]["y"],
+                    plane_dict["yAxis"]["z"],
+                ],
+                dtype=numpy.float64,
+            )
             z_axis = numpy.cross(x_axis, y_axis)
             if numpy.linalg.norm(z_axis) > 1e-10:
                 z_axis = z_axis / numpy.linalg.norm(z_axis)
@@ -11892,8 +12227,14 @@ def export_design_model(
                 child_piece = piece_by_guid[neighbor_guid]
                 parent_type = _find_type_for_piece_dict(parent_piece)
                 child_type = _find_type_for_piece_dict(child_piece)
-                parent_connector = _find_connector_dict(parent_type, connection.get("connected", {}).get("connector", {}).get("guid"))
-                child_connector = _find_connector_dict(child_type, connection.get("connecting", {}).get("connector", {}).get("guid"))
+                parent_connector = _find_connector_dict(
+                    parent_type,
+                    connection.get("connected", {}).get("connector", {}).get("guid"),
+                )
+                child_connector = _find_connector_dict(
+                    child_type,
+                    connection.get("connecting", {}).get("connector", {}).get("guid"),
+                )
                 if parent_connector is not None and child_connector is not None:
                     piece_planes[neighbor_guid] = computeChildPlaneDict(current_plane, parent_connector, child_connector, connection)
                 else:
@@ -11911,13 +12252,19 @@ def export_design_model(
                 piece_planes[piece_guid] = _identity_plane_dict()
                 roots.append(piece_guid)
 
+        if format == ".ifc":
+            return _export_ifc_from_dict(kit, design_id, piece_planes, parent_of, children_of, roots, tags)
+
         def _select_model_dict(type_obj: dict) -> dict | None:
             models = type_obj.get("models", []) or []
             if len(models) == 0:
                 return None
             tag_lookup = {tag.get("guid"): tag for tag in (kit.get("tags", []) or []) if tag.get("guid")}
             if len(tags) == 0:
-                default_model = next((model for model in models if len(model.get("tags", []) or []) == 0), None)
+                default_model = next(
+                    (model for model in models if len(model.get("tags", []) or []) == 0),
+                    None,
+                )
                 return default_model if default_model is not None else models[0]
             selected_tag_guids: set[str] = set()
             for tag_value in tags:
@@ -11963,7 +12310,7 @@ def export_design_model(
                         loaded = _trimesh.load(_trimesh.util.wrap_as_stream(raw), file_type="glb")
                         if isinstance(loaded, _trimesh.Scene):
                             dumped = [geometry.copy() for geometry in loaded.geometry.values() if isinstance(geometry, _trimesh.Trimesh) and len(getattr(geometry, "faces", [])) > 0]
-                            mesh = dumped[0] if len(dumped) == 1 else _trimesh.util.concatenate(dumped) if len(dumped) > 1 else None
+                            mesh = dumped[0] if len(dumped) == 1 else (_trimesh.util.concatenate(dumped) if len(dumped) > 1 else None)
                         elif isinstance(loaded, _trimesh.Trimesh) and len(getattr(loaded, "faces", [])) > 0:
                             mesh = loaded
                     if mesh is not None and selected_file.get("name"):
@@ -12107,6 +12454,19 @@ def export_design_model(
             piece_planes[p.id_] = _identity_plane()
             roots.append(p.id_)
 
+    if format == ".ifc":
+        return _export_ifc_from_entities(
+            kit,
+            design,
+            piece_planes,
+            parent_of,
+            children_of,
+            roots,
+            pieces_dict,
+            types_dict,
+            tags,
+        )
+
     scene = _trimesh.Scene()
 
     # region Load or create meshes per type
@@ -12223,7 +12583,7 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
             gltf_key = next((key for key in exported.keys() if key.endswith(".gltf")), None)
             if gltf_key is not None:
                 gltf_value = exported[gltf_key]
-                gltf_json = json.loads(gltf_value.decode("utf-8") if isinstance(gltf_value, bytes) else json.dumps(gltf_value) if isinstance(gltf_value, dict) else str(gltf_value))
+                gltf_json = json.loads(gltf_value.decode("utf-8") if isinstance(gltf_value, bytes) else (json.dumps(gltf_value) if isinstance(gltf_value, dict) else str(gltf_value)))
                 for buffer in gltf_json.get("buffers", []) or []:
                     uri = buffer.get("uri")
                     if not uri or uri.startswith("data:") or uri not in exported:
@@ -12264,6 +12624,756 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
         return result.encode("utf-8")
     return bytes(result)
 
+
+# region IFC Export
+# [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export)
+# IFC exporter mapping semio domain to IFC4 schema via ifcopenshell.
+
+
+def _gltf_xyz_to_semio_xyz(x: float, y: float, z: float) -> tuple[float, float, float]:
+    """Convert glTF coordinates to semio/IFC coordinates.
+    _gltf_xyz_to_semio_xyz MUST map glTF +Y up geometry back to semio/IFC +Z up geometry.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport🛠️gltfxyztosemioxyz](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export/d/i/_gltf_xyz_to_semio_xyz)
+    """
+    return (float(x), float(-z), float(y))
+
+
+def _glb_bytes_to_vertices_faces(
+    raw: bytes,
+) -> tuple[list[tuple[float, float, float]], list[tuple[int, ...]]] | None:
+    """Extract vertices and faces from GLB bytes for IFC mesh representation.
+    _glb_bytes_to_vertices_faces MUST return (vertices, faces) or None if parsing fails.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport🛠️glbbytestoverticesfaces](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export/d/i/_glb_bytes_to_vertices_faces)
+    """
+    import struct as _struct
+
+    if len(raw) < 20 or raw[0:4] != b"glTF":
+        return None
+    offset = 12
+    json_chunk: bytes | None = None
+    bin_chunk = b""
+    while offset + 8 <= len(raw):
+        chunk_length, chunk_kind = _struct.unpack_from("<II", raw, offset)
+        offset += 8
+        chunk = raw[offset : offset + chunk_length]
+        offset += chunk_length
+        if chunk_kind == 0x4E4F534A:
+            json_chunk = chunk
+        elif chunk_kind == 0x004E4942:
+            bin_chunk = chunk
+    if json_chunk is None:
+        return None
+    try:
+        gltf = json.loads(json_chunk.decode("utf-8").rstrip(" \t\r\n\x00"))
+    except Exception:
+        return None
+    accessors = gltf.get("accessors", []) or []
+    buffer_views = gltf.get("bufferViews", []) or []
+    meshes = gltf.get("meshes", []) or []
+    component_formats: dict[int, tuple[str, int]] = {
+        5120: ("b", 1),
+        5121: ("B", 1),
+        5122: ("h", 2),
+        5123: ("H", 2),
+        5125: ("I", 4),
+        5126: ("f", 4),
+    }
+    type_widths = {
+        "SCALAR": 1,
+        "VEC2": 2,
+        "VEC3": 3,
+        "VEC4": 4,
+        "MAT2": 4,
+        "MAT3": 9,
+        "MAT4": 16,
+    }
+
+    def _read_accessor(accessor_index: int) -> numpy.ndarray | None:
+        if accessor_index < 0 or accessor_index >= len(accessors):
+            return None
+        accessor = accessors[accessor_index]
+        buffer_view_index = accessor.get("bufferView")
+        if not isinstance(buffer_view_index, int) or buffer_view_index < 0 or buffer_view_index >= len(buffer_views):
+            return None
+        buffer_view = buffer_views[buffer_view_index]
+        component_type = accessor.get("componentType")
+        accessor_kind = accessor.get("type")
+        count = accessor.get("count")
+        if component_type not in component_formats or accessor_kind not in type_widths or not isinstance(count, int):
+            return None
+        if buffer_view.get("buffer", 0) != 0:
+            return None
+        fmt_char, component_size = component_formats[component_type]
+        element_width = type_widths[accessor_kind]
+        stride = buffer_view.get("byteStride") or (component_size * element_width)
+        byte_offset = buffer_view.get("byteOffset", 0) + accessor.get("byteOffset", 0)
+        values: list[tuple[typing.Any, ...]] = []
+        for item_index in range(count):
+            start = byte_offset + item_index * stride
+            end = start + component_size * element_width
+            if end > len(bin_chunk):
+                return None
+            values.append(_struct.unpack_from("<" + fmt_char * element_width, bin_chunk, start))
+        return numpy.array(values)
+
+    all_vertices: list[tuple[float, float, float]] = []
+    all_faces: list[tuple[int, ...]] = []
+    for mesh in meshes:
+        primitives = mesh.get("primitives", []) or []
+        for primitive in primitives:
+            attributes = primitive.get("attributes", {}) or {}
+            position_accessor_index = attributes.get("POSITION")
+            if not isinstance(position_accessor_index, int):
+                continue
+            positions = _read_accessor(position_accessor_index)
+            if positions is None or positions.ndim != 2 or positions.shape[1] < 3:
+                continue
+            vertex_offset = len(all_vertices)
+            for row in positions:
+                all_vertices.append(_gltf_xyz_to_semio_xyz(float(row[0]), float(row[1]), float(row[2])))
+            if isinstance(primitive.get("indices"), int):
+                indices = _read_accessor(primitive.get("indices"))
+                if indices is None:
+                    continue
+                index_values = indices.reshape(-1).astype(int)
+            else:
+                index_values = numpy.arange(len(positions), dtype=int)
+            triangle_count = len(index_values) // 3
+            for tri_idx in range(triangle_count):
+                i0 = int(index_values[tri_idx * 3]) + vertex_offset
+                i1 = int(index_values[tri_idx * 3 + 1]) + vertex_offset
+                i2 = int(index_values[tri_idx * 3 + 2]) + vertex_offset
+                all_faces.append((i0, i1, i2))
+    if len(all_vertices) == 0 or len(all_faces) == 0:
+        return None
+    return (all_vertices, all_faces)
+
+
+def _export_ifc_from_dict(
+    kit: dict,
+    design_name: str,
+    piece_planes: dict[str, dict],
+    parent_of: dict[str, str],
+    children_of: dict[str, list[str]],
+    roots: list[str],
+    tags: list[str],
+) -> bytes:
+    """Export a design to IFC4 format from dict-based kit data.
+    _export_ifc_from_dict MUST produce a valid IFC4 file with spatial hierarchy, typed occurrences and mesh geometry.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport🛠️exportifcfromdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export/d/i/_export_ifc_from_dict)
+    """
+    import ifcopenshell as _ifc
+    import ifcopenshell.api as _ifc_api
+    import ifcopenshell.guid as _ifc_guid
+
+    # region Step 1: IFC file, project, units, context, spatial tree
+    ifc = _ifc_api.run("project.create_file", version="IFC4")
+    kit_name = kit.get("name", "semio Kit")
+    project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
+    _ifc_api.run("unit.assign_unit", ifc)
+    model_context = _ifc_api.run("context.add_context", ifc, context_type="Model")
+    body_context = _ifc_api.run(
+        "context.add_context",
+        ifc,
+        context_type="Model",
+        context_identifier="Body",
+        target_view="MODEL_VIEW",
+        parent=model_context,
+    )
+    site = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcSite", name="Site")
+    building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
+    storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
+    _ifc_api.run("aggregate.assign_object", ifc, relating_object=project, products=[site])
+    _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
+    _ifc_api.run("aggregate.assign_object", ifc, relating_object=building, products=[storey])
+    # endregion Step 1
+
+    # region Step 2: Design assembly
+    designs = kit.get("designs", []) or []
+    design = next(
+        (d for d in designs if d.get("name") == design_name or d.get("guid") == design_name),
+        None,
+    )
+    assembly = _ifc_api.run(
+        "root.create_entity",
+        ifc,
+        ifc_class="IfcElementAssembly",
+        name=design.get("name", design_name) if design else design_name,
+    )
+    _ifc_api.run("spatial.assign_container", ifc, relating_structure=storey, products=[assembly])
+    # endregion Step 2
+
+    pieces = (design.get("pieces", []) or []) if design else []
+    connections = (design.get("connections", []) or []) if design else []
+    types_by_guid = {t.get("guid"): t for t in (kit.get("types", []) or []) if t.get("guid")}
+    files_by_guid = {f.get("guid"): f for f in (kit.get("files", []) or []) if f.get("guid")}
+    piece_by_guid = {p.get("guid"): p for p in pieces if p.get("guid")}
+    tag_lookup = {tag.get("guid"): tag for tag in (kit.get("tags", []) or []) if tag.get("guid")}
+
+    # region Step 3: Types with geometry
+    ifc_types: dict[str, typing.Any] = {}
+    for piece in pieces:
+        type_ref = piece.get("type")
+        type_guid = type_ref.get("guid") if isinstance(type_ref, dict) else None
+        if type_guid is None or type_guid in ifc_types:
+            continue
+        type_obj = types_by_guid.get(type_guid)
+        if type_obj is None:
+            continue
+        type_name = type_obj.get("name", type_guid)
+        type_variant = type_obj.get("variant", "")
+        ifc_type_name = f"{type_name}:{type_variant}" if type_variant else type_name
+        ifc_type = _ifc_api.run(
+            "root.create_entity",
+            ifc,
+            ifc_class="IfcBuildingElementProxyType",
+            name=ifc_type_name,
+        )
+
+        # Type-level pset for type attributes
+        type_attrs = type_obj.get("attributes", []) or []
+        if type_attrs:
+            type_pset = _ifc_api.run("pset.add_pset", ifc, product=ifc_type, name="SemioTypeAttributes")
+            props = {}
+            for attr in type_attrs:
+                key = attr.get("key", "")
+                value = attr.get("value", "")
+                if key:
+                    props[key] = value
+            if props:
+                _ifc_api.run("pset.edit_pset", ifc, pset=type_pset, properties=props)
+
+        # Type-level metadata pset
+        type_meta = {}
+        if type_obj.get("description"):
+            type_meta["description"] = type_obj.get("description")
+        if type_obj.get("variant"):
+            type_meta["variant"] = type_obj.get("variant")
+        if type_obj.get("guid"):
+            type_meta["semioGuid"] = type_obj.get("guid")
+        if type_meta:
+            meta_pset = _ifc_api.run("pset.add_pset", ifc, product=ifc_type, name="SemioTypeMetadata")
+            _ifc_api.run("pset.edit_pset", ifc, pset=meta_pset, properties=type_meta)
+
+        # Geometry: find best model, extract GLB mesh
+        models = type_obj.get("models", []) or []
+        selected_model = None
+        if models:
+            selected_tag_guids: set[str] = set()
+            for tag_value in tags:
+                if tag_value in tag_lookup:
+                    selected_tag_guids.add(tag_value)
+                else:
+                    for tag in tag_lookup.values():
+                        if tag.get("name") == tag_value:
+                            selected_tag_guids.add(tag.get("guid"))
+            if not selected_tag_guids:
+                selected_model = next((m for m in models if len(m.get("tags", []) or []) == 0), None) or models[0]
+            else:
+                for m in models:
+                    model_tag_guids = {t.get("guid") if isinstance(t, dict) else t for t in (m.get("tags", []) or [])}
+                    if selected_tag_guids.issubset(model_tag_guids):
+                        selected_model = m
+                        break
+                if selected_model is None:
+                    selected_model = models[0]
+
+        if selected_model is not None:
+            file_ref = selected_model.get("file", {})
+            file_guid = file_ref.get("guid") if isinstance(file_ref, dict) else file_ref
+            file_obj = files_by_guid.get(file_guid)
+            if file_obj is not None and file_obj.get("blob"):
+                blob = file_obj.get("blob")
+                raw = base64.b64decode(blob.split(",", 1)[1] if isinstance(blob, str) and blob.startswith("data:") else blob)
+                result = _glb_bytes_to_vertices_faces(raw)
+                if result is not None:
+                    vertices, faces = result
+                    rep = _ifc_api.run(
+                        "geometry.add_mesh_representation",
+                        ifc,
+                        context=body_context,
+                        vertices=[list(vertices)],
+                        faces=[list(faces)],
+                    )
+                    _ifc_api.run(
+                        "geometry.assign_representation",
+                        ifc,
+                        product=ifc_type,
+                        representation=rep,
+                    )
+
+        ifc_types[type_guid] = ifc_type
+    # endregion Step 3
+
+    # region Step 4: Pieces as occurrences
+    ifc_occurrences: dict[str, typing.Any] = {}
+    ifc_connector_ports: dict[str, dict[str, typing.Any]] = {}
+    for piece in pieces:
+        piece_guid = piece.get("guid")
+        if piece_guid is None:
+            continue
+        piece_name = piece.get("name") or piece_guid
+        occurrence = _ifc_api.run(
+            "root.create_entity",
+            ifc,
+            ifc_class="IfcBuildingElementProxy",
+            name=piece_name,
+        )
+
+        type_ref = piece.get("type")
+        type_guid = type_ref.get("guid") if isinstance(type_ref, dict) else None
+        if type_guid and type_guid in ifc_types:
+            _ifc_api.run(
+                "type.assign_type",
+                ifc,
+                related_objects=[occurrence],
+                relating_type=ifc_types[type_guid],
+            )
+
+        # World placement from computed planes
+        world_plane = piece_planes.get(piece_guid)
+        if world_plane is not None:
+            origin = world_plane.get("origin", {})
+            x_axis = world_plane.get("xAxis", {})
+            y_axis = world_plane.get("yAxis", {})
+            ox, oy, oz = (
+                origin.get("x", 0.0),
+                origin.get("y", 0.0),
+                origin.get("z", 0.0),
+            )
+            xx, xy, xz = (
+                x_axis.get("x", 1.0),
+                x_axis.get("y", 0.0),
+                x_axis.get("z", 0.0),
+            )
+            yx, yy, yz = (
+                y_axis.get("x", 0.0),
+                y_axis.get("y", 1.0),
+                y_axis.get("z", 0.0),
+            )
+            x_vec = numpy.array([xx, xy, xz], dtype=numpy.float64)
+            y_vec = numpy.array([yx, yy, yz], dtype=numpy.float64)
+            z_vec = numpy.cross(x_vec, y_vec)
+            nz = numpy.linalg.norm(z_vec)
+            if nz > 1e-10:
+                z_vec = z_vec / nz
+            nx = numpy.linalg.norm(x_vec)
+            if nx > 1e-10:
+                x_vec = x_vec / nx
+            y_vec = numpy.cross(z_vec, x_vec)
+            ny = numpy.linalg.norm(y_vec)
+            if ny > 1e-10:
+                y_vec = y_vec / ny
+            mat = numpy.eye(4)
+            mat[:3, 0] = x_vec
+            mat[:3, 1] = y_vec
+            mat[:3, 2] = z_vec
+            mat[:3, 3] = [ox, oy, oz]
+            _ifc_api.run("geometry.edit_object_placement", ifc, product=occurrence, matrix=mat)
+
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=assembly,
+            products=[occurrence],
+        )
+
+        # Piece-level pset for piece attributes
+        piece_props: dict[str, typing.Any] = {}
+        if piece.get("name"):
+            piece_props["name"] = piece.get("name")
+        if piece.get("guid"):
+            piece_props["semioGuid"] = piece.get("guid")
+        piece_attrs = piece.get("attributes", []) or []
+        for attr in piece_attrs:
+            key = attr.get("key", "")
+            value = attr.get("value", "")
+            if key:
+                piece_props[key] = value
+        if piece_props:
+            piece_pset = _ifc_api.run("pset.add_pset", ifc, product=occurrence, name="SemioPieceAttributes")
+            _ifc_api.run("pset.edit_pset", ifc, pset=piece_pset, properties=piece_props)
+
+        ifc_occurrences[piece_guid] = occurrence
+
+        # Connectors as ports
+        type_obj = types_by_guid.get(type_guid) if type_guid else None
+        if type_obj is not None:
+            connectors = type_obj.get("connectors", []) or []
+            ifc_connector_ports[piece_guid] = {}
+            for conn in connectors:
+                conn_id = conn.get("guid") or conn.get("id_") or conn.get("name", "")
+                port = _ifc_api.run(
+                    "root.create_entity",
+                    ifc,
+                    ifc_class="IfcDistributionPort",
+                    name=conn_id,
+                )
+                _ifc_api.run(
+                    "nest.assign_object",
+                    ifc,
+                    relating_object=occurrence,
+                    related_objects=[port],
+                )
+
+                # Port placement relative to element (connector point/direction)
+                point = conn.get("point", {})
+                if point:
+                    port_mat = numpy.eye(4)
+                    port_mat[:3, 3] = [
+                        point.get("x", 0.0),
+                        point.get("y", 0.0),
+                        point.get("z", 0.0),
+                    ]
+                    direction = conn.get("direction", {})
+                    if direction:
+                        d = numpy.array(
+                            [
+                                direction.get("x", 0.0),
+                                direction.get("y", 0.0),
+                                direction.get("z", 1.0),
+                            ]
+                        )
+                        dn = numpy.linalg.norm(d)
+                        if dn > 1e-10:
+                            d = d / dn
+                            z = d
+                            up = numpy.array([0.0, 0.0, 1.0])
+                            if abs(numpy.dot(z, up)) > 0.99:
+                                up = numpy.array([1.0, 0.0, 0.0])
+                            x = numpy.cross(up, z)
+                            xn = numpy.linalg.norm(x)
+                            if xn > 1e-10:
+                                x = x / xn
+                            y = numpy.cross(z, x)
+                            port_mat[:3, 0] = x
+                            port_mat[:3, 1] = y
+                            port_mat[:3, 2] = z
+                    _ifc_api.run(
+                        "geometry.edit_object_placement",
+                        ifc,
+                        product=port,
+                        matrix=port_mat,
+                    )
+
+                # Connector pset
+                conn_props: dict[str, typing.Any] = {"semioConnectorId": conn_id}
+                if conn.get("description") and isinstance(conn.get("description"), str):
+                    conn_props["description"] = conn.get("description")
+                port_val = conn.get("port")
+                if port_val:
+                    conn_props["semioPort"] = port_val if isinstance(port_val, str) else str(port_val)
+                conn_pset = _ifc_api.run("pset.add_pset", ifc, product=port, name="SemioConnector")
+                _ifc_api.run("pset.edit_pset", ifc, pset=conn_pset, properties=conn_props)
+
+                ifc_connector_ports[piece_guid][conn_id] = port
+    # endregion Step 4
+
+    # region Step 5: Connections as port relationships
+    for connection in connections:
+        connected = connection.get("connected", {})
+        connecting = connection.get("connecting", {})
+        connected_piece_guid = connected.get("piece", {}).get("guid")
+        connecting_piece_guid = connecting.get("piece", {}).get("guid")
+        connected_connector_guid = connected.get("connector", {}).get("guid") if connected.get("connector") else None
+        connecting_connector_guid = connecting.get("connector", {}).get("guid") if connecting.get("connector") else None
+
+        connected_port = None
+        connecting_port = None
+        if connected_piece_guid in ifc_connector_ports and connected_connector_guid:
+            connected_port = ifc_connector_ports[connected_piece_guid].get(connected_connector_guid)
+        if connecting_piece_guid in ifc_connector_ports and connecting_connector_guid:
+            connecting_port = ifc_connector_ports[connecting_piece_guid].get(connecting_connector_guid)
+
+        # IfcRelConnectsPorts
+        if connected_port is not None and connecting_port is not None:
+            ifc.create_entity(
+                "IfcRelConnectsPorts",
+                GlobalId=_ifc_guid.new(),
+                RelatingPort=connected_port,
+                RelatedPort=connecting_port,
+            )
+
+        # IfcRelConnectsElements
+        connected_elem = ifc_occurrences.get(connected_piece_guid)
+        connecting_elem = ifc_occurrences.get(connecting_piece_guid)
+        if connected_elem is not None and connecting_elem is not None:
+            ifc.create_entity(
+                "IfcRelConnectsElements",
+                GlobalId=_ifc_guid.new(),
+                RelatingElement=connected_elem,
+                RelatedElement=connecting_elem,
+            )
+
+        # Connection solver parameters pset (on the connected element)
+        conn_solver_props: dict[str, typing.Any] = {}
+        for param in ("gap", "shift", "rise", "rotation", "turn", "tilt"):
+            val = connection.get(param)
+            if val is not None and val != 0:
+                conn_solver_props[param] = float(val)
+        if connection.get("description"):
+            conn_solver_props["description"] = connection.get("description")
+        if conn_solver_props and connected_elem is not None:
+            conn_pset = _ifc_api.run(
+                "pset.add_pset",
+                ifc,
+                product=connected_elem,
+                name="SemioConnectionParams",
+            )
+            _ifc_api.run("pset.edit_pset", ifc, pset=conn_pset, properties=conn_solver_props)
+    # endregion Step 5
+
+    # region Step 6: Kit-level metadata
+    kit_meta: dict[str, typing.Any] = {}
+    if kit.get("name"):
+        kit_meta["name"] = kit.get("name")
+    if kit.get("description"):
+        kit_meta["description"] = kit.get("description")
+    if kit.get("guid"):
+        kit_meta["semioGuid"] = kit.get("guid")
+    if kit.get("uri"):
+        kit_meta["semioUri"] = kit.get("uri")
+    authors = kit.get("authors", []) or []
+    if authors:
+        author_strs = [f"{a.get('name', '')} <{a.get('email', '')}>" for a in authors]
+        kit_meta["authors"] = "; ".join(author_strs)
+    if kit_meta:
+        kit_pset = _ifc_api.run("pset.add_pset", ifc, product=project, name="SemioKitMetadata")
+        _ifc_api.run("pset.edit_pset", ifc, pset=kit_pset, properties=kit_meta)
+    # endregion Step 6
+
+    return ifc.to_string().encode("utf-8")
+
+
+def _export_ifc_from_entities(
+    kit: "Kit",
+    design: "Design",
+    piece_planes: dict[str, "Plane"],
+    parent_of: dict[str, str],
+    children_of: dict[str, list[str]],
+    roots: list[str],
+    pieces_dict: dict[str, "Piece"],
+    types_dict: dict[str, "Type"],
+    tags: list[str],
+) -> bytes:
+    """Export a design to IFC4 format from entity-based kit data.
+    _export_ifc_from_entities MUST produce a valid IFC4 file with spatial hierarchy, typed occurrences and mesh geometry.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport🛠️exportifcfromentities](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export/d/i/_export_ifc_from_entities)
+    """
+    import ifcopenshell as _ifc
+    import ifcopenshell.api as _ifc_api
+    import ifcopenshell.guid as _ifc_guid
+
+    # region Step 1: IFC file, project, units, context, spatial tree
+    ifc = _ifc_api.run("project.create_file", version="IFC4")
+    kit_name = kit.name if hasattr(kit, "name") and kit.name else "semio Kit"
+    project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
+    _ifc_api.run("unit.assign_unit", ifc)
+    model_context = _ifc_api.run("context.add_context", ifc, context_type="Model")
+    body_context = _ifc_api.run(
+        "context.add_context",
+        ifc,
+        context_type="Model",
+        context_identifier="Body",
+        target_view="MODEL_VIEW",
+        parent=model_context,
+    )
+    site = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcSite", name="Site")
+    building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
+    storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
+    _ifc_api.run("aggregate.assign_object", ifc, relating_object=project, products=[site])
+    _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
+    _ifc_api.run("aggregate.assign_object", ifc, relating_object=building, products=[storey])
+    # endregion Step 1
+
+    # region Step 2: Design assembly
+    assembly = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcElementAssembly", name=design.name)
+    _ifc_api.run("spatial.assign_container", ifc, relating_structure=storey, products=[assembly])
+    # endregion Step 2
+
+    pieces = design.pieces or []
+    connections = design.connections or []
+
+    # region Step 3: Types with geometry
+    ifc_types: dict[str, typing.Any] = {}
+    for piece in pieces:
+        if piece.type is None:
+            continue
+        tk = _type_key_from_id(piece.type)
+        if tk in ifc_types:
+            continue
+        type_obj = types_dict.get(tk)
+        if type_obj is None:
+            continue
+        ifc_type_name = f"{type_obj.name}:{type_obj.variant}" if type_obj.variant else type_obj.name
+        ifc_type = _ifc_api.run(
+            "root.create_entity",
+            ifc,
+            ifc_class="IfcBuildingElementProxyType",
+            name=ifc_type_name,
+        )
+
+        # Type-level geometry
+        model = _find_matching_model(kit, type_obj, tags)
+        if model is not None:
+            files_list = kit.files_ or []
+            file_id = model.file.guid if hasattr(model.file, "guid") else model.file
+            file_obj = next((f for f in files_list if f.name == file_id or f.guid == file_id), None)
+            if file_obj is not None and file_obj.blob:
+                blob = file_obj.blob
+                raw = base64.b64decode(blob.split(",", 1)[1] if blob.startswith("data:") else blob)
+                result = _glb_bytes_to_vertices_faces(raw)
+                if result is not None:
+                    vertices, faces = result
+                    rep = _ifc_api.run(
+                        "geometry.add_mesh_representation",
+                        ifc,
+                        context=body_context,
+                        vertices=[list(vertices)],
+                        faces=[list(faces)],
+                    )
+                    _ifc_api.run(
+                        "geometry.assign_representation",
+                        ifc,
+                        product=ifc_type,
+                        representation=rep,
+                    )
+
+        ifc_types[tk] = ifc_type
+    # endregion Step 3
+
+    # region Step 4: Pieces as occurrences
+    ifc_occurrences: dict[str, typing.Any] = {}
+    ifc_connector_ports: dict[str, dict[str, typing.Any]] = {}
+    for piece in pieces:
+        piece_name = piece.name or piece.id_
+        occurrence = _ifc_api.run(
+            "root.create_entity",
+            ifc,
+            ifc_class="IfcBuildingElementProxy",
+            name=piece_name,
+        )
+
+        if piece.type is not None:
+            tk = _type_key_from_id(piece.type)
+            if tk in ifc_types:
+                _ifc_api.run(
+                    "type.assign_type",
+                    ifc,
+                    related_objects=[occurrence],
+                    relating_type=ifc_types[tk],
+                )
+
+        world_plane = piece_planes.get(piece.id_)
+        if world_plane is not None:
+            mat = _plane_to_matrix_4x4(world_plane)
+            _ifc_api.run("geometry.edit_object_placement", ifc, product=occurrence, matrix=mat)
+
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=assembly,
+            products=[occurrence],
+        )
+        ifc_occurrences[piece.id_] = occurrence
+
+        # Connectors as ports
+        type_obj = types_dict.get(_type_key_from_id(piece.type)) if piece.type else None
+        if type_obj is not None and type_obj.connectors:
+            ifc_connector_ports[piece.id_] = {}
+            for conn in type_obj.connectors:
+                conn_id = conn.id_
+                port = _ifc_api.run(
+                    "root.create_entity",
+                    ifc,
+                    ifc_class="IfcDistributionPort",
+                    name=conn_id,
+                )
+                _ifc_api.run(
+                    "nest.assign_object",
+                    ifc,
+                    relating_object=occurrence,
+                    related_objects=[port],
+                )
+
+                point = conn.point
+                port_mat = numpy.eye(4)
+                port_mat[:3, 3] = [point.x, point.y, point.z]
+                direction = conn.direction
+                d = numpy.array([direction.x, direction.y, direction.z])
+                dn = numpy.linalg.norm(d)
+                if dn > 1e-10:
+                    d = d / dn
+                    z = d
+                    up = numpy.array([0.0, 0.0, 1.0])
+                    if abs(numpy.dot(z, up)) > 0.99:
+                        up = numpy.array([1.0, 0.0, 0.0])
+                    x = numpy.cross(up, z)
+                    xn = numpy.linalg.norm(x)
+                    if xn > 1e-10:
+                        x = x / xn
+                    y = numpy.cross(z, x)
+                    port_mat[:3, 0] = x
+                    port_mat[:3, 1] = y
+                    port_mat[:3, 2] = z
+                _ifc_api.run("geometry.edit_object_placement", ifc, product=port, matrix=port_mat)
+
+                ifc_connector_ports[piece.id_][conn_id] = port
+    # endregion Step 4
+
+    # region Step 5: Connections as port relationships
+    for conn in connections:
+        connected_id = conn.connected.piece.id_
+        connecting_id = conn.connecting.piece.id_
+        connected_connector_id = conn.connected.connector.id_ if conn.connected.connector else None
+        connecting_connector_id = conn.connecting.connector.id_ if conn.connecting.connector else None
+
+        connected_port = None
+        connecting_port = None
+        if connected_id in ifc_connector_ports and connected_connector_id:
+            connected_port = ifc_connector_ports[connected_id].get(connected_connector_id)
+        if connecting_id in ifc_connector_ports and connecting_connector_id:
+            connecting_port = ifc_connector_ports[connecting_id].get(connecting_connector_id)
+
+        if connected_port is not None and connecting_port is not None:
+            ifc.create_entity(
+                "IfcRelConnectsPorts",
+                GlobalId=_ifc_guid.new(),
+                RelatingPort=connected_port,
+                RelatedPort=connecting_port,
+            )
+
+        connected_elem = ifc_occurrences.get(connected_id)
+        connecting_elem = ifc_occurrences.get(connecting_id)
+        if connected_elem is not None and connecting_elem is not None:
+            ifc.create_entity(
+                "IfcRelConnectsElements",
+                GlobalId=_ifc_guid.new(),
+                RelatingElement=connected_elem,
+                RelatedElement=connecting_elem,
+            )
+
+        conn_solver_props: dict[str, typing.Any] = {}
+        for param in ("gap", "shift", "rise", "rotation", "turn", "tilt"):
+            val = getattr(conn, param, 0)
+            if val is not None and val != 0:
+                conn_solver_props[param] = float(val)
+        if conn.description:
+            conn_solver_props["description"] = conn.description
+        if conn_solver_props and connected_elem is not None:
+            conn_pset = _ifc_api.run(
+                "pset.add_pset",
+                ifc,
+                product=connected_elem,
+                name="SemioConnectionParams",
+            )
+            _ifc_api.run("pset.edit_pset", ifc, pset=conn_pset, properties=conn_solver_props)
+    # endregion Step 5
+
+    return ifc.to_string().encode("utf-8")
+
+
+# endregion IFC Export
 
 # endregion Kit Model Export
 
@@ -12419,19 +13529,39 @@ def get_geometric_insights_for_model(model: str | bytes) -> GeometricInsights:
         out.slenderness = max_ext / float(numpy.cbrt(mesh.area * max_ext)) if mesh.area > 0 else None
 
     # Mass distribution (trimesh uses density=1)
-    cx_g, cy_g, cz_g = float(mesh.centroid[0]), float(mesh.centroid[1]), float(mesh.centroid[2])
+    cx_g, cy_g, cz_g = (
+        float(mesh.centroid[0]),
+        float(mesh.centroid[1]),
+        float(mesh.centroid[2]),
+    )
     # transform centroid as a point
     out.centroid = Point(x=cx_g, y=-cx_g, z=cy_g)
     try:
         components = mesh.principal_inertia_components
         vectors = mesh.principal_inertia_vectors
         if components is not None and vectors is not None:
-            out.moments_of_inertia = (float(components[0]), float(components[1]), float(components[2]))
+            out.moments_of_inertia = (
+                float(components[0]),
+                float(components[1]),
+                float(components[2]),
+            )
             # Transform axes from GLB to semio: (vx, vy, vz)_glb -> (vx, -vx, vy)_semio
             out.principal_axes = [
-                Vector(x=float(vectors[0][0]), y=float(-vectors[0][0]), z=float(vectors[0][1])),
-                Vector(x=float(vectors[1][0]), y=float(-vectors[1][0]), z=float(vectors[1][1])),
-                Vector(x=float(vectors[2][0]), y=float(-vectors[2][0]), z=float(vectors[2][1])),
+                Vector(
+                    x=float(vectors[0][0]),
+                    y=float(-vectors[0][0]),
+                    z=float(vectors[0][1]),
+                ),
+                Vector(
+                    x=float(vectors[1][0]),
+                    y=float(-vectors[1][0]),
+                    z=float(vectors[1][1]),
+                ),
+                Vector(
+                    x=float(vectors[2][0]),
+                    y=float(-vectors[2][0]),
+                    z=float(vectors[2][1]),
+                ),
             ]
     except Exception:
         pass
@@ -12465,10 +13595,18 @@ def geometric_insights_to_report_dict(insights: GeometricInsights, round_digits:
 
     if insights.bounding_box_min is not None:
         p = insights.bounding_box_min
-        out["bounding_box_min"] = {"x": round(p.x, r), "y": round(p.y, r), "z": round(p.z, r)}
+        out["bounding_box_min"] = {
+            "x": round(p.x, r),
+            "y": round(p.y, r),
+            "z": round(p.z, r),
+        }
     if insights.bounding_box_max is not None:
         p = insights.bounding_box_max
-        out["bounding_box_max"] = {"x": round(p.x, r), "y": round(p.y, r), "z": round(p.z, r)}
+        out["bounding_box_max"] = {
+            "x": round(p.x, r),
+            "y": round(p.y, r),
+            "z": round(p.z, r),
+        }
     if insights.centroid is not None:
         p = insights.centroid
         out["centroid"] = {"x": round(p.x, r), "y": round(p.y, r), "z": round(p.z, r)}

@@ -1840,16 +1840,16 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "    {\n      \"label\": \"📦build👤semio🌐docs\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/docs\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },",
-                "new_string": "    {\n      \"label\": \"📦build👤semio🌐docs\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/sites/docs\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },"
+                "old_string": "    {\n      \"label\": \"📦build👤semio🌐sites📖docs\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/docs\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },",
+                "new_string": "    {\n      \"label\": \"📦build👤semio🌐sites📖docs\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/sites/docs\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },"
               },
               {
                 "old_string": "    {\n      \"label\": \"📦build👤semio🌐play\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/play\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },",
                 "new_string": "    {\n      \"label\": \"📦build👤semio🌐play\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/sites/play\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },"
               },
               {
-                "old_string": "    {\n      \"label\": \"🛠️dev👤semio🌐docs\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/docs\",\n      \"problemMatcher\": {",
-                "new_string": "    {\n      \"label\": \"🛠️dev👤semio🌐docs\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/sites/docs\",\n      \"problemMatcher\": {"
+                "old_string": "    {\n      \"label\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/docs\",\n      \"problemMatcher\": {",
+                "new_string": "    {\n      \"label\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/sites/docs\",\n      \"problemMatcher\": {"
               },
               {
                 "old_string": "    {\n      \"label\": \"🛠️dev👤semio🌐play\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/play\",\n      \"problemMatcher\": {",
@@ -1883,16 +1883,16 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "    {\n      \"label\": \"📦build👤semio🌐docs\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/docs\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },",
-                "new_string": "    {\n      \"label\": \"📦build👤semio🌐docs\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/sites/docs\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },"
+                "old_string": "    {\n      \"label\": \"📦build👤semio🌐sites📖docs\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/docs\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },",
+                "new_string": "    {\n      \"label\": \"📦build👤semio🌐sites📖docs\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/sites/docs\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },"
               },
               {
                 "old_string": "    {\n      \"label\": \"📦build👤semio🌐play\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/play\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },",
                 "new_string": "    {\n      \"label\": \"📦build👤semio🌐play\",\n      \"type\": \"shell\",\n      \"command\": \"npx nx build semio/sites/play\",\n      \"group\": \"build\",\n      \"problemMatcher\": []\n    },"
               },
               {
-                "old_string": "    {\n      \"label\": \"🛠️dev👤semio🌐docs\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/docs\",\n      \"problemMatcher\": {",
-                "new_string": "    {\n      \"label\": \"🛠️dev👤semio🌐docs\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/sites/docs\",\n      \"problemMatcher\": {"
+                "old_string": "    {\n      \"label\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/docs\",\n      \"problemMatcher\": {",
+                "new_string": "    {\n      \"label\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/sites/docs\",\n      \"problemMatcher\": {"
               },
               {
                 "old_string": "    {\n      \"label\": \"🛠️dev👤semio🌐play\",\n      \"type\": \"shell\",\n      \"isBackground\": true,\n      \"command\": \"npx nx dev semio/play\",\n      \"problemMatcher\": {",
@@ -1926,20 +1926,20 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/docs dev\",\n      \"type\": \"node\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
+                "old_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/docs dev\",\n      \"type\": \"node\",",
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
               },
               {
-                "old_string": "    {\n      \"name\": \"📦build👤semio🌐docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
-                "new_string": "    {\n      \"name\": \"📦build👤semio🌐docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/sites/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
+                "old_string": "    {\n      \"name\": \"📦build👤semio🌐sites📖docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
+                "new_string": "    {\n      \"name\": \"📦build👤semio🌐sites📖docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/sites/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
               },
               {
                 "old_string": "    {\n      \"name\": \"📦build👤semio🌐play\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/play\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
                 "new_string": "    {\n      \"name\": \"📦build👤semio🌐play\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/sites/play\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
               },
               {
-                "old_string": "    {\n      \"name\": \"⬆️publish👤semio🌐docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
-                "new_string": "    {\n      \"name\": \"⬆️publish👤semio🌐docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/sites/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
+                "old_string": "    {\n      \"name\": \"⬆️publish👤semio🌐sites📖docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
+                "new_string": "    {\n      \"name\": \"⬆️publish👤semio🌐sites📖docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/sites/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
               },
               {
                 "old_string": "    {\n      \"name\": \"⬆️publish👤semio🌐play\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npm\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/play\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
@@ -1973,20 +1973,20 @@
           "tool_info": {
             "edits": [
               {
-                "old_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/docs dev\",\n      \"type\": \"node\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
+                "old_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/docs dev\",\n      \"type\": \"node\",",
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
               },
               {
-                "old_string": "    {\n      \"name\": \"📦build👤semio🌐docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
-                "new_string": "    {\n      \"name\": \"📦build👤semio🌐docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/sites/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
+                "old_string": "    {\n      \"name\": \"📦build👤semio🌐sites📖docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
+                "new_string": "    {\n      \"name\": \"📦build👤semio🌐sites📖docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/sites/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
               },
               {
                 "old_string": "    {\n      \"name\": \"📦build👤semio🌐play\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/play\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
                 "new_string": "    {\n      \"name\": \"📦build👤semio🌐play\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"build\",\n        \"semio/sites/play\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
               },
               {
-                "old_string": "    {\n      \"name\": \"⬆️publish👤semio🌐docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
-                "new_string": "    {\n      \"name\": \"⬆️publish👤semio🌐docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/sites/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
+                "old_string": "    {\n      \"name\": \"⬆️publish👤semio🌐sites📖docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
+                "new_string": "    {\n      \"name\": \"⬆️publish👤semio🌐sites📖docs\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npx\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/sites/docs\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },"
               },
               {
                 "old_string": "    {\n      \"name\": \"⬆️publish👤semio🌐play\",\n      \"type\": \"node\",\n      \"request\": \"launch\",\n      \"runtimeExecutable\": \"npm\",\n      \"runtimeArgs\": [\n        \"nx\",\n        \"publish\",\n        \"semio/play\"\n      ],\n      \"cwd\": \"${workspaceFolder}\",\n      \"console\": \"integratedTerminal\"\n    },",
@@ -2210,8 +2210,8 @@
                 "new_string": "      \"serverReadyAction\": {\n        \"action\": \"openExternally\",\n        \"pattern\": \"(http://localhost:5174)\",\n        \"uriFormat\": \"%s\"\n      }\n    },"
               },
               {
-                "old_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\","
+                "old_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",",
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\","
               },
               {
                 "old_string": "      \"serverReadyAction\": {\n        \"action\": \"openExternally\",\n        \"pattern\": \"(http://localhost:5174)\",\n        \"uriFormat\": \"%s\"\n      }\n    },",
@@ -2253,8 +2253,8 @@
                 "new_string": "      \"serverReadyAction\": {\n        \"action\": \"openExternally\",\n        \"pattern\": \"(http://localhost:5174)\",\n        \"uriFormat\": \"%s\"\n      }\n    },"
               },
               {
-                "old_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\","
+                "old_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",",
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\","
               },
               {
                 "old_string": "      \"serverReadyAction\": {\n        \"action\": \"openExternally\",\n        \"pattern\": \"(http://localhost:5174)\",\n        \"uriFormat\": \"%s\"\n      }\n    },",
@@ -2293,7 +2293,7 @@
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"type\": \"node\",\n      \"request\": \"launch\",",
@@ -2332,7 +2332,7 @@
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"type\": \"node\",\n      \"request\": \"launch\",",
@@ -2371,7 +2371,7 @@
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"type\": \"node\",\n      \"request\": \"launch\",",
@@ -2476,7 +2476,7 @@
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"type\": \"node\",\n      \"request\": \"launch\",",
@@ -2515,7 +2515,7 @@
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\",",
-                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
+                "new_string": "    {\n      \"name\": \"🛠️dev👤semio🌐sites📖docs\",\n      \"preLaunchTask\": \"semio/sites/docs dev\",\n      \"type\": \"node\","
               },
               {
                 "old_string": "    {\n      \"name\": \"\",\n      \"type\": \"node\",\n      \"request\": \"launch\",",
@@ -2632,7 +2632,7 @@
               },
               {
                 "old_string": "      \"name\": \"dev semio docs\",",
-                "new_string": "      \"name\": \"🛠️dev👤semio🌐docs\","
+                "new_string": "      \"name\": \"🛠️dev👤semio🌐sites📖docs\","
               },
               {
                 "old_string": "      \"name\": \"dev semio play\",",
@@ -2671,7 +2671,7 @@
               },
               {
                 "old_string": "      \"name\": \"dev semio docs\",",
-                "new_string": "      \"name\": \"🛠️dev👤semio🌐docs\","
+                "new_string": "      \"name\": \"🛠️dev👤semio🌐sites📖docs\","
               },
               {
                 "old_string": "      \"name\": \"dev semio play\",",

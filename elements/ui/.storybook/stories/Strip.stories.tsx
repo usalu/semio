@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🔖Strip
 
 const stripMeta = {
-  title: "semio-elements/Strip",
+  title: "elements/Strip",
   component: Strip,
   parameters: {
     layout: "padded",

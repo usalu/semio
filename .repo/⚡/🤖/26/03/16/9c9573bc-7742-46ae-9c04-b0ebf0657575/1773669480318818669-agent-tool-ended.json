@@ -15,7 +15,7 @@
       "model": "default",
       "tool_name": "FetchMcpResource",
       "tool_input": {
-        "server": "project-0-semio-repo",
+        "server": "project-0-repo",
         "uri": "semiorepo://gs"
       },
       "tool_output": "{\"uri\":\"semiorepo://gs\",\"mime_type\":\"text/plain\",\"content_type\":\"text\",\"content_length\":18009}",

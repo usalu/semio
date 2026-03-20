@@ -21,9 +21,9 @@
 
 import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
 import { FC, useCallback, useLayoutEffect, useMemo } from "react";
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, ToolbarGroup, useNavigate, useXStateSelector as useSelector, useTranslation } from "@semio/ui";
 import { useLabel } from "../i18n";
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, ToolbarGroup, useXStateSelector as useSelector, useTranslation, useNavigate } from "../../../.elements/ui";
-import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared";
+import type { AppPlugin, HookResult, PanelDefinition } from "./shared";
 import { conditionalHookResult, createPanelDefinition, EMPTY_PANEL_VISIBILITY, PanelKind, registerAppPlugin, registerEventHandler } from "./shared";
 import { Canvas, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, useAddPanelSection, useAppType, useRemovePanelSection, useSketchpadActor } from "./Sketchpad";
 

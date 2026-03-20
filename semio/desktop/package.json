@@ -3,10 +3,10 @@
   "projectType": "application",
   "name": "@semio/desktop",
   "version": "2.0.0-alpha",
-  "description": "A sketchpad for semio \ud83e\udde9",
+  "description": "A sketchpad for semio 🧩",
   "main": ".vite/build/main.js",
   "scripts": {
-    "dev": "electron-forge start",
+    "dev": "electron-forge start -- --no-sandbox",
     "build": "electron-forge make",
     "publish": "electron-forge publish"
   },

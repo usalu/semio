@@ -17,14 +17,14 @@
       "hook_event_name": "PostToolUse",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/workspaces/semio/elements/ui/.storybook/stories/Tree.stories.tsx",
+        "file_path": "/workspaces/elements/ui/.storybook/stories/Tree.stories.tsx",
         "offset": 217,
         "limit": 10
       },
       "tool_response": {
         "type": "text",
         "file": {
-          "filePath": "/workspaces/semio/elements/ui/.storybook/stories/Tree.stories.tsx",
+          "filePath": "/workspaces/elements/ui/.storybook/stories/Tree.stories.tsx",
           "content": "\nexport const ControlTreeStory: Story = {\n  args: { sections: [] },\n  render: () =\u003e \u003cControlTreeDemo /\u003e,\n};\n\n// #endregion 🔖Tree\n",
           "numLines": 8,
           "startLine": 217,

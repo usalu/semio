@@ -59,7 +59,7 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       "@elements/ui": resolve(__dirname, ".."),
-      "@semio/coda-desktop": resolve(__dirname, "../../../coda/desktop"),
+      "@coda/desktop": resolve(__dirname, "../../../coda/desktop"),
     };
 
     config.plugins = config.plugins || [];

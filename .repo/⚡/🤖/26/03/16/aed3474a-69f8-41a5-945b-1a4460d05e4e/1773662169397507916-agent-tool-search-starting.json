@@ -14,7 +14,7 @@
       "timestamp": "2026-03-16T11:56:09.242737445Z",
       "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
       "tool_info": {
-        "file_path": "/workspaces/semio/semio-repo/vscode/extension.test.ts"
+        "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
       }
     }
   },

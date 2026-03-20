@@ -17,7 +17,7 @@
       "hook_event_name": "PreToolUse",
       "tool_name": "ToolSearch",
       "tool_input": {
-        "query": "select:mcp__semio-repo__ticket_reopen",
+        "query": "select:mcp__repo__ticket_reopen",
         "max_results": 1
       },
       "tool_use_id": "toolu_01Wi7q1RknuBfem4qkhbSaDc"

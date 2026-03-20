@@ -16,7 +16,7 @@
       "tool_name": "Grep",
       "tool_input": {
         "pattern": "",
-        "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo",
+        "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo",
         "glob": "**/resources/**",
         "output_mode": "files_with_matches"
       },

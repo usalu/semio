@@ -17,12 +17,12 @@
       "hook_event_name": "PostToolUse",
       "tool_name": "Read",
       "tool_input": {
-        "file_path": "/workspaces/semio/elements/ui/vitest.config.ts"
+        "file_path": "/workspaces/elements/ui/vitest.config.ts"
       },
       "tool_response": {
         "type": "text",
         "file": {
-          "filePath": "/workspaces/semio/elements/ui/vitest.config.ts",
+          "filePath": "/workspaces/elements/ui/vitest.config.ts",
           "content": "import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  test: {\n    environment: \"node\",\n    include: [\"elements.tsx\"],\n    passWithNoTests: true,\n  },\n});\n",
           "numLines": 10,
           "startLine": 1,

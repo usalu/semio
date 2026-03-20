@@ -22,7 +22,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Avatar
 const meta = {
-  title: "semio-elements/Avatar",
+  title: "elements/Avatar",
   component: Avatar,
   parameters: {
     layout: "centered",

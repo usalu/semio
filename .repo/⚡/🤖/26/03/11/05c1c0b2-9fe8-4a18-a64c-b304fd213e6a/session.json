@@ -180,13 +180,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🌐docs💻globals"
+            "id": "👤semio🌐sites📖docs💻globals"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🌐docs💻globals📌1📌9999"
+          "👤semio🌐sites📖docs💻globals📌1📌9999"
         ],
         "second": "🎆26🌙03☀️11⏰00⌚47⏱️55",
         "session": "⚪05c1c0b29fe84a18a64cb304fd213e6a"
@@ -224,7 +224,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🌐docs⚙️viteconfig📌1📌40"
+          "👤semio🌐sites📖docs⚙️viteconfig📌1📌40"
         ],
         "second": "🎆26🌙03☀️11⏰00⌚47⏱️55",
         "session": "⚪05c1c0b29fe84a18a64cb304fd213e6a"
@@ -471,13 +471,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "👤semio🌐docs💻globals"
+            "id": "👤semio🌐sites📖docs💻globals"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "👤semio🌐docs💻globals📌1📌9999"
+          "👤semio🌐sites📖docs💻globals📌1📌9999"
         ],
         "second": "🎆26🌙03☀️11⏰00⌚48⏱️04",
         "session": "⚪05c1c0b29fe84a18a64cb304fd213e6a"
@@ -639,7 +639,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "👤semio🌐docs⚙️viteconfig📌1📌40"
+          "👤semio🌐sites📖docs⚙️viteconfig📌1📌40"
         ],
         "second": "🎆26🌙03☀️11⏰00⌚48⏱️11",
         "session": "⚪05c1c0b29fe84a18a64cb304fd213e6a"

@@ -23,7 +23,7 @@ import { FileCode, FileImage, FolderIcon } from "lucide-react";
 
 // #region 🔖Table
 const meta = {
-  title: "semio-elements/Table",
+  title: "elements/Table",
   component: Table,
   parameters: {
     layout: "padded",

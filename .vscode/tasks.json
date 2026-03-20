@@ -71,7 +71,7 @@
       "problemMatcher": []
     },
     {
-      "label": "📦build👤semio🌐docs",
+      "label": "📦build👤semio🌐sites📖docs",
       "type": "shell",
       "command": "npx nx build semio/sites/docs",
       "group": "build",
@@ -365,7 +365,7 @@
     {
       "label": "🛠️dev🧰repo⌨️vscode",
       "type": "shell",
-      "command": "npx nx dev repo",
+      "command": "npx nx dev repo/vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -517,7 +517,7 @@
       "group": "none"
     },
     {
-      "label": "🛠️dev👤semio🌐docs",
+      "label": "🛠️dev👤semio🌐sites📖docs",
       "type": "shell",
       "isBackground": true,
       "command": "npx nx dev semio/sites/docs",

@@ -18,7 +18,7 @@ import { MemoryRouter } from "react-router";
 // #region 🔖Card
 
 const meta = {
-  title: "semio-elements/Card",
+  title: "elements/Card",
   component: Card,
   parameters: {
     layout: "padded",

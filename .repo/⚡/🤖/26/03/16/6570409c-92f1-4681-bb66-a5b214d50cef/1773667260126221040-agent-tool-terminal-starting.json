@@ -15,7 +15,7 @@
       "execution_id": "8120202b-2524-4f38-b2a8-18da8845dffd",
       "tool_info": {
         "command_line": "npm run build",
-        "cwd": "/workspaces/semio/elements/ui"
+        "cwd": "/workspaces/elements/ui"
       }
     }
   },

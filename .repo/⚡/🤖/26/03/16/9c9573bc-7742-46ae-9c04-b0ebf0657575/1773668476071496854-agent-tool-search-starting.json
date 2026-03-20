@@ -14,7 +14,7 @@
       "generation_id": "c421f306-6a0e-4fcd-b949-f3f75020b8ab",
       "model": "default",
       "content": "{\n  \"name\": \"search\",\n  \"description\": \"Search monorepo tree\",\n  \"arguments\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"query\": {\n        \"description\": \"Optional query filter\",\n        \"type\": \"string\"\n      }\n    },\n    \"required\": []\n  }\n}",
-      "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-semio-repo/tools/search.json",
+      "file_path": "/home/vscode/.cursor/projects/workspaces-semio/mcps/project-0-repo/tools/search.json",
       "attachments": [],
       "hook_event_name": "beforeReadFile",
       "cursor_version": "2.6.19",

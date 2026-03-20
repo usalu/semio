@@ -18,7 +18,7 @@ import { Eye, EyeOff, Hand, Maximize2, MousePointer, Move, RotateCcw, RotateCw, 
 // #region 🔖Toolbar
 
 const meta = {
-  title: "semio-elements/Toolbar",
+  title: "elements/Toolbar",
   component: ToolbarZone,
   parameters: {
     layout: "centered",

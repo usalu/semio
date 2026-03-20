@@ -32,7 +32,8 @@
     "semio/studio",
     "semio/vscode",
     "semio/3dm/Semio.Rhino",
-    "semio/3dm/ui"
+    "semio/3dm/ui",
+    "semio/ui"
   ],
   "engines": {
     "node": ">=22.13.1"
@@ -46,9 +47,10 @@
     "dev:sites:play": "npx nx dev semio/sites/play",
     "dev:sites:docs": "npx nx dev semio/sites/docs",
     "dev:desktop": "npx nx dev semio/desktop",
+    "dev:ui": "npx nx dev @semio/ui",
     "dev:algorithms": "npx nx dev @semio/algorithms",
     "dev:sketchpad": "npx nx dev semio/sketchpad",
-    "dev:coda-desktop": "npx nx dev @semio/coda-desktop",
+    "dev:coda-desktop": "npx nx dev @coda/desktop",
     "build:engine": "npx nx build semio/engine",
     "build:sites": "npx nx build semio/sites",
     "build:desktop": "npx nx build semio/desktop",
@@ -57,12 +59,12 @@
     "build:repo-cli": "npx nx build repo/cli",
     "build:repo-server": "npx nx build repo/server",
     "build:repo-vscode": "npx nx build repo/vscode",
-    "build:coda-desktop": "npx nx build @semio/coda-desktop",
+    "build:coda-desktop": "npx nx build @coda/desktop",
     "publish:docs": "npx nx publish semio/sites/docs",
     "publish:play": "npx nx publish semio/sites/play",
     "publish:sketchpad": "npx nx publish semio/sketchpad",
     "publish:desktop": "npx nx publish semio/desktop",
-    "publish:coda-desktop": "npx nx publish @semio/coda-desktop"
+    "publish:coda-desktop": "npx nx publish @coda/desktop"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -17,7 +17,7 @@
       "hook_event_name": "PreToolUse",
       "tool_name": "Bash",
       "tool_input": {
-        "command": "cd /workspaces/semio/semio-repo/cli \u0026\u0026 go build -o /dev/null ./... 2\u003e\u00261 \u0026\u0026 go test -run \"TestCodeEditEndedRunsFormatter|TestHook|TestPopulateEventDataCodeEdited\" -v -timeout 30s 2\u003e\u00261 | tail -20",
+        "command": "cd /workspaces/semio/repo/cli \u0026\u0026 go build -o /dev/null ./... 2\u003e\u00261 \u0026\u0026 go test -run \"TestCodeEditEndedRunsFormatter|TestHook|TestPopulateEventDataCodeEdited\" -v -timeout 30s 2\u003e\u00261 | tail -20",
         "timeout": 60000,
         "description": "Build and run relevant tests"
       },

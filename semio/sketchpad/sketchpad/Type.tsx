@@ -21,7 +21,7 @@
 
 import { Author, AuthorId, Camera, Connector, Coord, findModel, guid, Guid, Kit, Model, Point, selectBestModel, File as SemioFile, toSemioRotation, toThreeRotation, Type, TypeDiff, Vector } from "@semio/js/semio";
 import React, { createContext, FC, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { ThreeEvent } from "../../../.elements/ui";
+import type { ThreeEvent } from "@semio/ui";
 import {
   arrayMove,
   BasicChatPanel,
@@ -56,7 +56,7 @@ import {
   useLoader,
   useSearchParams,
   useXStateSelector as useSelector,
-} from "../../../.elements/ui";
+} from "@semio/ui";
 import { useLabel } from "../i18n";
 import type { AppWindowConfig, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolRenderContext, TypeAppId } from "./shared";
 import {
