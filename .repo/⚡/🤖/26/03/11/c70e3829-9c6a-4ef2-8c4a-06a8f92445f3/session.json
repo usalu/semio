@@ -3284,8 +3284,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/package.json",
-            "oldString": "    \"repo/sqlite\",\n    \"coda/py\",\n    \"semio/sketchpad\"\n  ],",
-            "newString": "    \"repo/sqlite\",\n    \"coda/py\",\n    \"semio/sketchpad\",\n    \"semio/3dm/Semio.Rhino\",\n    \"semio/3dm/ui\"\n  ],"
+            "oldString": "    \"repo/sqlite\",\n    \"coda/engine\",\n    \"semio/sketchpad\"\n  ],",
+            "newString": "    \"repo/sqlite\",\n    \"coda/engine\",\n    \"semio/sketchpad\",\n    \"semio/3dm/Semio.Rhino\",\n    \"semio/3dm/ui\"\n  ],"
           },
           "tool_use_id": "toolu_bdrk_01XUgrBeyXEGpm5NHo7V6ky2__vscode-1773054464964",
           "cwd": "/workspaces/semio"
@@ -3302,8 +3302,8 @@
         "client": "copilot-chat",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
-        "new": "    \"repo/sqlite\",\n    \"coda/py\",\n    \"semio/sketchpad\",\n    \"semio/3dm/Semio.Rhino\",\n    \"semio/3dm/ui\"\n  ],",
-        "old": "    \"repo/sqlite\",\n    \"coda/py\",\n    \"semio/sketchpad\"\n  ],",
+        "new": "    \"repo/sqlite\",\n    \"coda/engine\",\n    \"semio/sketchpad\",\n    \"semio/3dm/Semio.Rhino\",\n    \"semio/3dm/ui\"\n  ],",
+        "old": "    \"repo/sqlite\",\n    \"coda/engine\",\n    \"semio/sketchpad\"\n  ],",
         "parent": "",
         "path": "⚙️package",
         "second": "🎆26🌙03☀️11⏰00⌚20⏱️23",
@@ -3324,8 +3324,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/package.json",
-            "oldString": "    \"repo/sqlite\",\n    \"coda/py\",\n    \"semio/sketchpad\"\n  ],",
-            "newString": "    \"repo/sqlite\",\n    \"coda/py\",\n    \"semio/sketchpad\",\n    \"semio/3dm/Semio.Rhino\",\n    \"semio/3dm/ui\"\n  ],"
+            "oldString": "    \"repo/sqlite\",\n    \"coda/engine\",\n    \"semio/sketchpad\"\n  ],",
+            "newString": "    \"repo/sqlite\",\n    \"coda/engine\",\n    \"semio/sketchpad\",\n    \"semio/3dm/Semio.Rhino\",\n    \"semio/3dm/ui\"\n  ],"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01XUgrBeyXEGpm5NHo7V6ky2__vscode-1773054464964",
@@ -3342,8 +3342,8 @@
         "client": "copilot-chat",
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
-        "new": "    \"repo/sqlite\",\n    \"coda/py\",\n    \"semio/sketchpad\",\n    \"semio/3dm/Semio.Rhino\",\n    \"semio/3dm/ui\"\n  ],",
-        "old": "    \"repo/sqlite\",\n    \"coda/py\",\n    \"semio/sketchpad\"\n  ],",
+        "new": "    \"repo/sqlite\",\n    \"coda/engine\",\n    \"semio/sketchpad\",\n    \"semio/3dm/Semio.Rhino\",\n    \"semio/3dm/ui\"\n  ],",
+        "old": "    \"repo/sqlite\",\n    \"coda/engine\",\n    \"semio/sketchpad\"\n  ],",
         "parent": "",
         "path": "⚙️package",
         "second": "🎆26🌙03☀️11⏰00⌚20⏱️35",

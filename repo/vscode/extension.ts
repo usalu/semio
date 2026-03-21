@@ -809,8 +809,9 @@ export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> 
     if ("data" in res || "errors" in res) {
       return res;
     }
+    return { data: res };
   }
-  return {};
+  return { data: lastResult };
 }
 
 // #endregion 🔖Utilities

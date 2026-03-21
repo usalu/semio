@@ -76,7 +76,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "coda/py",
+        "coda/engine",
         "run",
         "coda.py",
         "--mcp-stdio"

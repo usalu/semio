@@ -1040,7 +1040,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "translate|roomprogram|room-program",
-            "file_path": "/workspaces/semio/coda/py"
+            "file_path": "/workspaces/semio/coda/engine"
           },
           "tool_use_id": "tool_3ed51a5b-eb49-4116-aa83-79b75f06b8f",
           "hook_event_name": "preToolUse",
@@ -1119,7 +1119,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "translate|roomprogram|room-program",
-            "file_path": "/workspaces/semio/coda/py"
+            "file_path": "/workspaces/semio/coda/engine"
           },
           "tool_output": "{\"pattern\":\"translate|roomprogram|room-program\",\"success\":true}",
           "duration": 103.772,
@@ -1509,7 +1509,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "semio-to-|agent_name|subagent",
-            "file_path": "/workspaces/semio/coda/py"
+            "file_path": "/workspaces/semio/coda/engine"
           },
           "tool_use_id": "tool_e07c8e6e-d685-4ae9-8fee-ccf2cedea86",
           "hook_event_name": "preToolUse",
@@ -1544,7 +1544,7 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/coda/py/coda.py"
+            "file_path": "/workspaces/semio/coda/engine/coda.py"
           },
           "tool_use_id": "tool_fc12fe36-692c-41dd-8178-f5774ea820e",
           "hook_event_name": "preToolUse",
@@ -1588,7 +1588,7 @@
           "tool_name": "Grep",
           "tool_input": {
             "pattern": "semio-to-|agent_name|subagent",
-            "file_path": "/workspaces/semio/coda/py"
+            "file_path": "/workspaces/semio/coda/engine"
           },
           "tool_output": "{\"pattern\":\"semio-to-|agent_name|subagent\",\"success\":true}",
           "duration": 62.857,
@@ -1624,7 +1624,7 @@
           "generation_id": "90bcc9bc-9390-4c4a-9a14-2dfee1d7c351",
           "model": "composer-1.5",
           "content": "    return _get_mcp_session(ctx).get_status()\n\n\n@mcp.tool()\ndef translate(target_id: str, ctx: Context) -\u003e dict:\n    \"\"\"Translate design to target format by invoking the translator subagent.\n    Uses the session's active iteration or falls back to latest.\n    [🔬coda📚py💻coda🔖tools🛠️translate](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/translate)\n    \"\"\"\n    sess = _get_mcp_session(ctx)\n    if sess.project_root and sess.iteration_dir:\n        return sess.start_translation(target_id)\n    # Fallback: use helper-based resolution for backward compatibility\n    proj = _get_project_config()\n    if not proj:\n        return {\"error\": \"No project\"}\n    targets = proj.get(\"targets\", [])\n    if not any(t.get(\"id\") == target_id for t in targets):\n        return {\n            \"error\": f\"Target not in project: {target_id}\",\n            \"targets\": [t.get(\"id\") for t in targets],\n        }\n    root = _get_project_root()\n    if not root:\n        return {\"error\": \"No project root\"}\n    run_dir = _get_latest_run(root)\n    if not run_dir:\n        return {\"error\": \"No runs found. Call start_run first.\"}\n    iter_dir = _get_latest_iteration(run_dir)\n    if not iter_dir:\n        return {\"error\": \"No iterations found. Call start_iteration first.\"}\n    target_dir = iter_dir / \"targets\" / target_id\n    target_dir.mkdir(parents=True, exist_ok=True)\n    design_id = proj.get(\"design\", {}).get(\"id\", \"unknown\")\n    design_slug = design_id.split(\".\")[-1] if \".\" in design_id else design_id\n    target_slug = target_id.split(\".\")[-1] if \".\" in target_id else target_id\n    agent_name = f\"{design_slug}-to-{target_slug}-translation-subagent\"\n    return {\n        \"action\": \"invoke_subagent\",\n        \"agent_name\": agent_name,\n        \"target_id\": target_id,\n        \"design_id\": design_id,\n        \"output_path\": str(target_dir / \"translation.json\"),\n        \"instruction\": (\n            f\"Invoke the @{agent_name} subagent to translate the {design_id} \"\n            f\"design into the {target_id} target format. \"\n            f\"The subagent MUST write its output to {target_dir / 'translation.json'}.\"\n        ),\n    }\n\n\n@mcp.tool()\ndef save_translation(target_id: str, data: str) -\u003e dict:\n    \"\"\"Save translation output for a target in the current iteration.\n    [🔬coda📚py💻coda🔖tools🛠️savetranslation](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/save_translation)\n    \"\"\"\n    root = _get_project_root()\n    if not root:\n        return {\"error\": \"No project root\"}\n    run_dir = _get_latest_run(root)\n    if not run_dir:\n        return {\"error\": \"No runs found\"}\n    iter_dir = _get_latest_iteration(run_dir)\n    if not iter_dir:\n        return {\"error\": \"No iterations found\"}\n    target_dir = iter_dir / \"targets\" / target_id\n    target_dir.mkdir(parents=True, exist_ok=True)\n    translation_path = target_dir / \"translation.json\"\n    translation_path.write_text(data, encoding=\"utf-8\")\n    return {\"saved\": True, \"path\": str(translation_path)}\n\n\n@mcp.tool()\ndef validate(target_id: str) -\u003e dict:\n    \"\"\"Validate a target by running its validator on the translation output.\n    [🔬coda📚py💻coda🔖tools🛠️validate](semiorepo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/validate)\n    \"\"\"\n    root = _get_project_root()\n    if not root:\n        return {\"error\": \"No project root\"}",
-          "file_path": "/workspaces/semio/coda/py/coda.py",
+          "file_path": "/workspaces/semio/coda/engine/coda.py",
           "attachments": [],
           "hook_event_name": "beforeReadFile",
           "cursor_version": "2.6.18",
@@ -1666,9 +1666,9 @@
           "model": "composer-1.5",
           "tool_name": "Read",
           "tool_input": {
-            "file_path": "/workspaces/semio/coda/py/coda.py"
+            "file_path": "/workspaces/semio/coda/engine/coda.py"
           },
-          "tool_output": "{\"file_path\":\"/workspaces/semio/coda/py/coda.py\",\"content_length\":3287}",
+          "tool_output": "{\"file_path\":\"/workspaces/semio/coda/engine/coda.py\",\"content_length\":3287}",
           "duration": 363.507,
           "tool_use_id": "tool_fc12fe36-692c-41dd-8178-f5774ea820e",
           "hook_event_name": "postToolUse",

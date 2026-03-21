@@ -50,7 +50,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/53279b97-c4d8-46ad-ba8e-6fc69c42ad6d.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/coda/py/coda.json",
+            "filePath": "/workspaces/semio/coda/engine/coda.json",
             "startLine": 1,
             "endLine": 100
           },
@@ -243,7 +243,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/53279b97-c4d8-46ad-ba8e-6fc69c42ad6d.jsonl",
           "tool_name": "read_file",
           "tool_input": {
-            "filePath": "/workspaces/semio/coda/py/coda.json",
+            "filePath": "/workspaces/semio/coda/engine/coda.json",
             "startLine": 1,
             "endLine": 100
           },

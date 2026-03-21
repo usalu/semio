@@ -11124,3 +11124,281 @@ public class SumQualityInDesignComponent : ScriptingComponent
         catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
     }
 }
+
+#region 🔖ExportDesignToBlocks
+// [👤semio📚gh🛅semiograsshopper💻semiograsshopper🔖exportdesigntoblocks](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/f/Semio.Grasshopper.cs/s/ExportDesignToBlocks)
+// Exports a design to native Rhino block definitions and instances.
+// Every type becomes a block definition, every piece becomes a block instance.
+
+/// <summary>
+/// Exports a design to native Rhino block instances.
+/// Every type becomes a block definition and every piece becomes a block instance.
+/// Piece planes are computed via BFS over connections using connector geometry.
+/// </summary>
+public class ExportDesignToBlocksComponent : ScriptingComponent
+{
+    public ExportDesignToBlocksComponent() : base("Export Design To Blocks", "Des→Blk", "Exports a design to native Rhino block instances. Every type becomes a block definition and every piece becomes a block instance.") { }
+    public override Guid ComponentGuid => new("C4D5E6F7-8A9B-4C1D-A2E3-F4A5B6C7D8EA");
+    protected override Bitmap Icon => null;
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "K", "Kit containing types, designs, and files.", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "Id", "Design GUID to export.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Tags", "T", "Tags to filter models per type.", GH_ParamAccess.list);
+        pManager[2].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddGeometryParameter("BlockInstances", "BI*", "Native Rhino block instances for each piece.", GH_ParamAccess.list);
+        pManager.AddTextParameter("PieceGuids", "PG*", "Piece GUIDs corresponding to each block instance.", GH_ParamAccess.list);
+        pManager.AddTextParameter("TypeNames", "TN*", "Type names corresponding to each block instance.", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        KitGoo kitGoo = null;
+        if (!DA.GetData(0, ref kitGoo) || kitGoo?.Value is null) return;
+        string designId = "";
+        if (!DA.GetData(1, ref designId)) return;
+        var tagsList = new List<string>();
+        DA.GetDataList(2, tagsList);
+
+        try
+        {
+            var kit = kitGoo.Value;
+            var design = Kit.FindDesign(kit, designId);
+            var pieces = design.Pieces ?? new List<Piece>();
+            var connections = design.Connections ?? new List<Connection>();
+            var types = kit.Types ?? new List<Type>();
+
+            if (pieces.Count == 0)
+            {
+                DA.SetDataList(0, new List<object>());
+                DA.SetDataList(1, new List<string>());
+                DA.SetDataList(2, new List<string>());
+                return;
+            }
+
+            var typesDict = new Dictionary<string, Type>();
+            foreach (var t in types) typesDict[t.Guid] = t;
+            var piecesDict = new Dictionary<string, Piece>();
+            foreach (var p in pieces) piecesDict[p.Guid] = p;
+
+            #region 🔖ExportDesignToBlocks_PlanePropagation
+            // Build adjacency for connection-based plane propagation
+            var adjacency = new Dictionary<string, List<(Connection connection, string neighborGuid)>>();
+            foreach (var p in pieces) adjacency[p.Guid] = new List<(Connection, string)>();
+            foreach (var conn in connections)
+            {
+                var connectedGuid = conn.Connected.Piece.Guid;
+                var connectingGuid = conn.Connecting.Piece.Guid;
+                if (adjacency.ContainsKey(connectedGuid))
+                    adjacency[connectedGuid].Add((conn, connectingGuid));
+                if (adjacency.ContainsKey(connectingGuid))
+                    adjacency[connectingGuid].Add((conn, connectedGuid));
+            }
+
+            var piecePlanes = new Dictionary<string, Semio.Plane>();
+            var visited = new HashSet<string>();
+            var queue = new Queue<string>();
+
+            Type GetTypeLocal(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
+            Connector GetConnectorLocal(Type type, string connectorGuid)
+            {
+                if (type == null) return null;
+                if (string.IsNullOrEmpty(connectorGuid))
+                    return type.Connectors?.Count > 0 ? type.Connectors[0] : null;
+                return type.Connectors?.FirstOrDefault(c => c.Guid == connectorGuid);
+            }
+
+            var identityPlane = new Semio.Plane
+            {
+                Origin = new Semio.Point { X = 0, Y = 0, Z = 0 },
+                XAxis = new Semio.Vector { X = 1, Y = 0, Z = 0 },
+                YAxis = new Semio.Vector { X = 0, Y = 1, Z = 0 }
+            };
+
+            foreach (var p in pieces)
+            {
+                if (p.Plane != null)
+                {
+                    piecePlanes[p.Guid] = p.Plane;
+                    visited.Add(p.Guid);
+                    queue.Enqueue(p.Guid);
+                }
+            }
+
+            if (queue.Count == 0 && pieces.Count > 0)
+            {
+                piecePlanes[pieces[0].Guid] = identityPlane;
+                visited.Add(pieces[0].Guid);
+                queue.Enqueue(pieces[0].Guid);
+            }
+
+            while (queue.Count > 0)
+            {
+                var currentGuid = queue.Dequeue();
+                var currentPlane = piecePlanes[currentGuid];
+                if (!adjacency.TryGetValue(currentGuid, out var edges)) continue;
+                foreach (var edge in edges)
+                {
+                    if (visited.Contains(edge.neighborGuid)) continue;
+                    var conn = edge.connection;
+                    var isParent = conn.Connected.Piece.Guid == currentGuid;
+                    if (!isParent) continue;
+
+                    var childGuid = edge.neighborGuid;
+                    var parentPiece = piecesDict[currentGuid];
+                    var childPiece = piecesDict[childGuid];
+                    var parentType = parentPiece.Type != null ? GetTypeLocal(parentPiece.Type.Guid) : null;
+                    var childType = childPiece.Type != null ? GetTypeLocal(childPiece.Type.Guid) : null;
+                    var parentConnector = GetConnectorLocal(parentType, conn.Connected.Connector?.Guid);
+                    var childConnector = GetConnectorLocal(childType, conn.Connecting.Connector?.Guid);
+
+                    if (parentConnector != null && childConnector != null &&
+                        parentConnector.Point != null && parentConnector.Direction != null &&
+                        childConnector.Point != null && childConnector.Direction != null)
+                    {
+                        piecePlanes[childGuid] = Utility.ComputeChildPlane(
+                            currentPlane, parentConnector.Point, parentConnector.Direction,
+                            childConnector.Point, childConnector.Direction,
+                            conn.Gap, conn.Shift, conn.Rise,
+                            conn.Rotation, conn.Turn, conn.Tilt);
+                    }
+                    else
+                    {
+                        piecePlanes[childGuid] = currentPlane;
+                    }
+
+                    visited.Add(childGuid);
+                    queue.Enqueue(childGuid);
+                }
+            }
+
+            foreach (var p in pieces)
+            {
+                if (!visited.Contains(p.Guid))
+                    piecePlanes[p.Guid] = identityPlane;
+            }
+            #endregion 🔖ExportDesignToBlocks_PlanePropagation
+
+            #region 🔖ExportDesignToBlocks_BlockDefinitions
+            // Create block definitions per type in the active Rhino document
+            var doc = RhinoDoc.ActiveDoc;
+            if (doc == null)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No active Rhino document.");
+                return;
+            }
+
+            var typeBlockIndices = new Dictionary<string, int>();
+            var tags = tagsList.ToArray();
+
+            foreach (var piece in pieces)
+            {
+                var typeGuid = piece.Type?.Guid;
+                if (string.IsNullOrEmpty(typeGuid) || typeBlockIndices.ContainsKey(typeGuid)) continue;
+                if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
+
+                var blockName = $"semio::{type.Name}::{type.Guid}";
+                var existingDef = doc.InstanceDefinitions.Find(blockName);
+                if (existingDef != null && !existingDef.IsDeleted)
+                {
+                    typeBlockIndices[typeGuid] = existingDef.Index;
+                    continue;
+                }
+
+                var geometries = new List<GeometryBase>();
+                var objAttributes = new List<Rhino.DocObjects.ObjectAttributes>();
+
+                var model = Kit.ExportFindMatchingModel(kit, type, tags);
+                if (model != null)
+                {
+                    var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
+                    if (file?.Blob != null)
+                    {
+                        try
+                        {
+                            var rhinoContext = Utility.ImportRhinoModelContextFromBlob(file.Blob, file.Name);
+                            var sourceObjects = rhinoContext.Model.Objects
+                                .Where(o => o?.Geometry != null)
+                                .ToList();
+                            foreach (var sourceObj in sourceObjects)
+                            {
+                                geometries.Add(sourceObj.Geometry.Duplicate());
+                                var attr = new Rhino.DocObjects.ObjectAttributes();
+                                if (sourceObj.Attributes != null)
+                                {
+                                    attr.ColorSource = Rhino.DocObjects.ObjectColorSource.ColorFromObject;
+                                    attr.ObjectColor = sourceObj.Attributes.ObjectColor;
+                                }
+                                objAttributes.Add(attr);
+                            }
+                        }
+                        catch
+                        {
+                            // Fallback: empty block definition with placeholder box
+                        }
+                    }
+                }
+
+                if (geometries.Count == 0)
+                {
+                    var box = new Box(Rhino.Geometry.Plane.WorldXY, new Interval(-0.5, 0.5), new Interval(-0.5, 0.5), new Interval(0, 1.0));
+                    geometries.Add(box.ToBrep());
+                    objAttributes.Add(new Rhino.DocObjects.ObjectAttributes());
+                }
+
+                var blockIdx = doc.InstanceDefinitions.Add(blockName, type.Description ?? type.Name, Point3d.Origin, geometries, objAttributes);
+                if (blockIdx < 0)
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"Failed to create block definition for type '{type.Name}'.");
+                    continue;
+                }
+                typeBlockIndices[typeGuid] = blockIdx;
+            }
+            #endregion 🔖ExportDesignToBlocks_BlockDefinitions
+
+            #region 🔖ExportDesignToBlocks_BlockInstances
+            // Create block instances per piece
+            var blockInstances = new List<IGH_GeometricGoo>();
+            var pieceGuids = new List<string>();
+            var typeNamesList = new List<string>();
+
+            foreach (var piece in pieces)
+            {
+                var typeGuid = piece.Type?.Guid;
+                if (string.IsNullOrEmpty(typeGuid) || !typeBlockIndices.TryGetValue(typeGuid, out var blockIdx)) continue;
+                if (!piecePlanes.TryGetValue(piece.Guid, out var semioPlane)) continue;
+
+                var rhinoPlane = RhinoConverter.Convert(semioPlane);
+
+                var scale = piece.Scale ?? 1.0f;
+                var xform = Transform.PlaneToPlane(Rhino.Geometry.Plane.WorldXY, rhinoPlane);
+                if (Math.Abs(scale - 1.0f) > 1e-6)
+                    xform = xform * Transform.Scale(Point3d.Origin, scale);
+
+                var idef = doc.InstanceDefinitions[blockIdx];
+                var instanceRef = new InstanceReferenceGeometry(idef.Id, xform);
+
+                blockInstances.Add(GH_Convert.ToGeometricGoo(instanceRef));
+                pieceGuids.Add(piece.Guid);
+                typeNamesList.Add(typesDict.TryGetValue(typeGuid, out var tp) ? tp.Name : typeGuid);
+            }
+            #endregion 🔖ExportDesignToBlocks_BlockInstances
+
+            DA.SetDataList(0, blockInstances);
+            DA.SetDataList(1, pieceGuids);
+            DA.SetDataList(2, typeNamesList);
+        }
+        catch (Exception ex)
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message);
+        }
+    }
+}
+
+#endregion 🔖ExportDesignToBlocks

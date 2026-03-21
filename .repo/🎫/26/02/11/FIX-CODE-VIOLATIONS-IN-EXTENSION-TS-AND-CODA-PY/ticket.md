@@ -11,7 +11,7 @@ Fixed all code breachs in extension.ts (45→0) and coda.py (70→0). Added sect
 ## Changes
 
 - `repo/vscode/extension.ts`: Added section summaries, definition summaries, and spec comments for all sections and exported definitions.
-- `coda/py/coda.py`: Added 6 section regions with summaries, moved all definition summary/spec comments between decorators and def lines.
+- `coda/engine/coda.py`: Added 6 section regions with summaries, moved all definition summary/spec comments between decorators and def lines.
 
 ## Log
 

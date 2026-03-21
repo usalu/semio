@@ -25,7 +25,7 @@
     "semio/grasshopper/Semio.Grasshopper/yak",
     "semio/sqlite",
     "repo/sqlite",
-    "coda/py",
+    "coda/engine",
     "coda/desktop",
     "coda/desktop",
     "semio/sketchpad",

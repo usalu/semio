@@ -19,7 +19,7 @@ AGPL_TEXT_LINES = [
 ]
 
 AFFECTED_FILES = [
-    "coda/py/coda.py",
+    "coda/engine/coda.py",
     "conftest.py",
     "semio/assets/grasshopper/build.py",
     "semio/assets/icons.ts",

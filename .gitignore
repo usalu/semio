@@ -12,6 +12,7 @@ old
 *.exe
 generated
 reports
+*dist
 #--------------------------------------SEMIOREPO--------------------------------------
 .repo/cache
 SPECS.md

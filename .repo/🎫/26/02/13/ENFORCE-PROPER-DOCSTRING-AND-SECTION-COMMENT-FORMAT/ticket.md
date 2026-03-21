@@ -14,7 +14,7 @@ Implemented Python triple-quote docstring detection, autofix (create/merge), Def
 - `repo/cli/main_test.go`: Updated Python test from "should NOT flag" to "should flag" for `#` comments, added `TestPythonTripleQuoteDocstringAutofix` (converts `#` → `"""`), `TestPythonTripleQuoteDocstringMerge` (merges `#` into existing `"""`), `TestPythonTripleQuoteDocstringExemptFromCommentBan`, updated `TestBreachsNonEmpty` for 0-breach codebase
 - `semio/py/semio.py`: 533 definitions migrated from `#` comments to `"""` docstrings
 - `semio/engine/engine.py`: 57 definitions migrated
-- `coda/py/coda.py`: 25 definitions migrated
+- `coda/engine/coda.py`: 25 definitions migrated
 - `semio/js/semio.ts`: Fixed Constants section (extracted ID from JSDoc to `//`)
 - `semio/js/sketchpad/Design.tsx`: Fixed Windows section (extracted ID from JSDoc to `//`)
 - `semio/net/Semio/Semio.cs`: Fixed Expressions section (converted `///` to `//`)

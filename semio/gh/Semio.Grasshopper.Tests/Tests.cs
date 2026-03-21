@@ -354,3 +354,61 @@ public class NamingConventionTests
     }
 }
 #endregion 🔖NamingConventionTests
+
+#region 🔖ExportDesignToBlocksComponentTests
+// Tests MUST verify ExportDesignToBlocks component registration, param structure, and GUID uniqueness.
+public class ExportDesignToBlocksComponentTests
+{
+    [Fact]
+    public void RegisterParams_ShouldHaveCorrectInputsAndOutputs()
+    {
+        var component = new ExportDesignToBlocksComponent();
+
+        Assert.Equal(3, component.Params.Input.Count);
+        Assert.IsType<KitParam>(component.Params.Input[0]);
+        Assert.Equal(GH_ParamAccess.item, component.Params.Input[0].Access);
+        Assert.IsType<Param_String>(component.Params.Input[1]);
+        Assert.Equal(GH_ParamAccess.item, component.Params.Input[1].Access);
+        Assert.IsType<Param_String>(component.Params.Input[2]);
+        Assert.Equal(GH_ParamAccess.list, component.Params.Input[2].Access);
+        Assert.True(component.Params.Input[2].Optional);
+
+        Assert.Equal(3, component.Params.Output.Count);
+        Assert.IsType<Param_Geometry>(component.Params.Output[0]);
+        Assert.Equal(GH_ParamAccess.list, component.Params.Output[0].Access);
+        Assert.IsType<Param_String>(component.Params.Output[1]);
+        Assert.Equal(GH_ParamAccess.list, component.Params.Output[1].Access);
+        Assert.IsType<Param_String>(component.Params.Output[2]);
+        Assert.Equal(GH_ParamAccess.list, component.Params.Output[2].Access);
+    }
+
+    [Fact]
+    public void ComponentGuid_ShouldBeUnique()
+    {
+        var component = new ExportDesignToBlocksComponent();
+        var componentKind = typeof(global::Grasshopper.Kernel.GH_Component);
+        var allComponentKinds = component.GetType().Assembly.GetTypes()
+            .Where(kind => kind.IsClass && !kind.IsAbstract && componentKind.IsAssignableFrom(kind))
+            .ToList();
+
+        var guids = allComponentKinds
+            .Select(kind => (Activator.CreateInstance(kind) as global::Grasshopper.Kernel.GH_Component)?.ComponentGuid)
+            .Where(g => g.HasValue)
+            .Select(g => g!.Value)
+            .ToList();
+
+        var duplicates = guids.GroupBy(g => g).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+        Assert.Empty(duplicates);
+    }
+
+    [Fact]
+    public void Component_ShouldHaveCorrectMetadata()
+    {
+        var component = new ExportDesignToBlocksComponent();
+
+        Assert.Equal("Export Design To Blocks", component.Name);
+        Assert.Contains("block", component.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(GH_Exposure.primary, component.Exposure);
+    }
+}
+#endregion 🔖ExportDesignToBlocksComponentTests

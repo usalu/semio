@@ -1068,7 +1068,7 @@ suite("Data Structures Test Suite", () => {
 // #region 🔖CLI Tree Helper Tests
 suite("extractLeadingEmoji Test Suite", () => {
   test("Extracts single emoji from start", () => {
-    assert.strictEqual(extractLeadingEmoji("💻coda/py/coda.py"), "💻");
+    assert.strictEqual(extractLeadingEmoji("💻coda/engine/coda.py"), "💻");
   });
 
   test("Extracts compound emoji with variation selector", () => {

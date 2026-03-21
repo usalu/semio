@@ -1,74 +1,74 @@
 - [🚫Code#File#Wrong Id](repo://statute/CODE-FILE-WRONG-ID) - conftest.py#Header:3 - Wrong file ID in header of conftest.py (expected 🥼conftest.py)
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::orphan-block-29:29 - Orphan definition outside sections at coda/py/coda.py:29
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::orphan-block-31:31 - Orphan definition outside sections at coda/py/coda.py:31
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::orphan-block-33:33 - Orphan definition outside sections at coda/py/coda.py:33
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::orphan-block-39:39 - Orphan definition outside sections at coda/py/coda.py:39
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::orphan-block-41:41 - Orphan definition outside sections at coda/py/coda.py:41
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::orphan-block-43:43 - Orphan definition outside sections at coda/py/coda.py:43
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::_load_json_with_comments:47 - Orphan definition outside sections at coda/py/coda.py:47
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::_get_project_root:53 - Orphan definition outside sections at coda/py/coda.py:53
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::_get_coda_config:64 - Orphan definition outside sections at coda/py/coda.py:64
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::_get_project_config:70 - Orphan definition outside sections at coda/py/coda.py:70
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::_get_latest_run:77 - Orphan definition outside sections at coda/py/coda.py:77
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::_get_latest_iteration:84 - Orphan definition outside sections at coda/py/coda.py:84
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_measures:92 - Orphan definition outside sections at coda/py/coda.py:92
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_measure:98 - Orphan definition outside sections at coda/py/coda.py:98
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_targets:107 - Orphan definition outside sections at coda/py/coda.py:107
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_target:113 - Orphan definition outside sections at coda/py/coda.py:113
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_target_properties:122 - Orphan definition outside sections at coda/py/coda.py:122
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_target_property:131 - Orphan definition outside sections at coda/py/coda.py:131
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_target_rules:143 - Orphan definition outside sections at coda/py/coda.py:143
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_target_rule:152 - Orphan definition outside sections at coda/py/coda.py:152
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_project:164 - Orphan definition outside sections at coda/py/coda.py:164
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_current_run:172 - Orphan definition outside sections at coda/py/coda.py:172
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_current_iteration:185 - Orphan definition outside sections at coda/py/coda.py:185
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_iterations:201 - Orphan definition outside sections at coda/py/coda.py:201
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::get_report:217 - Orphan definition outside sections at coda/py/coda.py:217
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::start_run:234 - Orphan definition outside sections at coda/py/coda.py:234
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::start_iteration:249 - Orphan definition outside sections at coda/py/coda.py:249
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::translate:274 - Orphan definition outside sections at coda/py/coda.py:274
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::fix:285 - Orphan definition outside sections at coda/py/coda.py:285
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::change:293 - Orphan definition outside sections at coda/py/coda.py:293
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::main:297 - Orphan definition outside sections at coda/py/coda.py:297
-- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/py/coda.py::orphan-block-306:306 - Orphan definition outside sections at coda/py/coda.py:306
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_measures:92 - Definition "get_measures" is missing a summary comment in coda/py/coda.py:92
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_measures:92 - Definition "get_measures" is missing spec comments in coda/py/coda.py:92
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_measure:98 - Definition "get_measure" is missing a summary comment in coda/py/coda.py:98
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_measure:98 - Definition "get_measure" is missing spec comments in coda/py/coda.py:98
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_targets:107 - Definition "get_targets" is missing a summary comment in coda/py/coda.py:107
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_targets:107 - Definition "get_targets" is missing spec comments in coda/py/coda.py:107
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_target:113 - Definition "get_target" is missing a summary comment in coda/py/coda.py:113
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_target:113 - Definition "get_target" is missing spec comments in coda/py/coda.py:113
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_target_properties:122 - Definition "get_target_properties" is missing a summary comment in coda/py/coda.py:122
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_target_properties:122 - Definition "get_target_properties" is missing spec comments in coda/py/coda.py:122
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_target_property:131 - Definition "get_target_property" is missing a summary comment in coda/py/coda.py:131
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_target_property:131 - Definition "get_target_property" is missing spec comments in coda/py/coda.py:131
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_target_rules:143 - Definition "get_target_rules" is missing a summary comment in coda/py/coda.py:143
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_target_rules:143 - Definition "get_target_rules" is missing spec comments in coda/py/coda.py:143
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_target_rule:152 - Definition "get_target_rule" is missing a summary comment in coda/py/coda.py:152
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_target_rule:152 - Definition "get_target_rule" is missing spec comments in coda/py/coda.py:152
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_project:164 - Definition "get_project" is missing a summary comment in coda/py/coda.py:164
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_project:164 - Definition "get_project" is missing spec comments in coda/py/coda.py:164
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_current_run:172 - Definition "get_current_run" is missing a summary comment in coda/py/coda.py:172
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_current_run:172 - Definition "get_current_run" is missing spec comments in coda/py/coda.py:172
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_current_iteration:185 - Definition "get_current_iteration" is missing a summary comment in coda/py/coda.py:185
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_current_iteration:185 - Definition "get_current_iteration" is missing spec comments in coda/py/coda.py:185
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_iterations:201 - Definition "get_iterations" is missing a summary comment in coda/py/coda.py:201
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_iterations:201 - Definition "get_iterations" is missing spec comments in coda/py/coda.py:201
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::get_report:217 - Definition "get_report" is missing a summary comment in coda/py/coda.py:217
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::get_report:217 - Definition "get_report" is missing spec comments in coda/py/coda.py:217
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::start_run:234 - Definition "start_run" is missing a summary comment in coda/py/coda.py:234
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::start_run:234 - Definition "start_run" is missing spec comments in coda/py/coda.py:234
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::start_iteration:249 - Definition "start_iteration" is missing a summary comment in coda/py/coda.py:249
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::start_iteration:249 - Definition "start_iteration" is missing spec comments in coda/py/coda.py:249
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::translate:274 - Definition "translate" is missing a summary comment in coda/py/coda.py:274
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::translate:274 - Definition "translate" is missing spec comments in coda/py/coda.py:274
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::fix:285 - Definition "fix" is missing a summary comment in coda/py/coda.py:285
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::fix:285 - Definition "fix" is missing spec comments in coda/py/coda.py:285
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::change:293 - Definition "change" is missing a summary comment in coda/py/coda.py:293
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::change:293 - Definition "change" is missing spec comments in coda/py/coda.py:293
-- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/py/coda.py::main:297 - Definition "main" is missing a summary comment in coda/py/coda.py:297
-- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/py/coda.py::main:297 - Definition "main" is missing spec comments in coda/py/coda.py:297
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::orphan-block-29:29 - Orphan definition outside sections at coda/engine/coda.py:29
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::orphan-block-31:31 - Orphan definition outside sections at coda/engine/coda.py:31
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::orphan-block-33:33 - Orphan definition outside sections at coda/engine/coda.py:33
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::orphan-block-39:39 - Orphan definition outside sections at coda/engine/coda.py:39
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::orphan-block-41:41 - Orphan definition outside sections at coda/engine/coda.py:41
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::orphan-block-43:43 - Orphan definition outside sections at coda/engine/coda.py:43
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::_load_json_with_comments:47 - Orphan definition outside sections at coda/engine/coda.py:47
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::_get_project_root:53 - Orphan definition outside sections at coda/engine/coda.py:53
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::_get_coda_config:64 - Orphan definition outside sections at coda/engine/coda.py:64
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::_get_project_config:70 - Orphan definition outside sections at coda/engine/coda.py:70
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::_get_latest_run:77 - Orphan definition outside sections at coda/engine/coda.py:77
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::_get_latest_iteration:84 - Orphan definition outside sections at coda/engine/coda.py:84
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_measures:92 - Orphan definition outside sections at coda/engine/coda.py:92
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_measure:98 - Orphan definition outside sections at coda/engine/coda.py:98
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_targets:107 - Orphan definition outside sections at coda/engine/coda.py:107
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_target:113 - Orphan definition outside sections at coda/engine/coda.py:113
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_target_properties:122 - Orphan definition outside sections at coda/engine/coda.py:122
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_target_property:131 - Orphan definition outside sections at coda/engine/coda.py:131
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_target_rules:143 - Orphan definition outside sections at coda/engine/coda.py:143
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_target_rule:152 - Orphan definition outside sections at coda/engine/coda.py:152
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_project:164 - Orphan definition outside sections at coda/engine/coda.py:164
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_current_run:172 - Orphan definition outside sections at coda/engine/coda.py:172
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_current_iteration:185 - Orphan definition outside sections at coda/engine/coda.py:185
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_iterations:201 - Orphan definition outside sections at coda/engine/coda.py:201
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::get_report:217 - Orphan definition outside sections at coda/engine/coda.py:217
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::start_run:234 - Orphan definition outside sections at coda/engine/coda.py:234
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::start_iteration:249 - Orphan definition outside sections at coda/engine/coda.py:249
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::translate:274 - Orphan definition outside sections at coda/engine/coda.py:274
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::fix:285 - Orphan definition outside sections at coda/engine/coda.py:285
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::change:293 - Orphan definition outside sections at coda/engine/coda.py:293
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::main:297 - Orphan definition outside sections at coda/engine/coda.py:297
+- [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - coda/engine/coda.py::orphan-block-306:306 - Orphan definition outside sections at coda/engine/coda.py:306
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_measures:92 - Definition "get_measures" is missing a summary comment in coda/engine/coda.py:92
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_measures:92 - Definition "get_measures" is missing spec comments in coda/engine/coda.py:92
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_measure:98 - Definition "get_measure" is missing a summary comment in coda/engine/coda.py:98
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_measure:98 - Definition "get_measure" is missing spec comments in coda/engine/coda.py:98
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_targets:107 - Definition "get_targets" is missing a summary comment in coda/engine/coda.py:107
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_targets:107 - Definition "get_targets" is missing spec comments in coda/engine/coda.py:107
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_target:113 - Definition "get_target" is missing a summary comment in coda/engine/coda.py:113
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_target:113 - Definition "get_target" is missing spec comments in coda/engine/coda.py:113
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_target_properties:122 - Definition "get_target_properties" is missing a summary comment in coda/engine/coda.py:122
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_target_properties:122 - Definition "get_target_properties" is missing spec comments in coda/engine/coda.py:122
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_target_property:131 - Definition "get_target_property" is missing a summary comment in coda/engine/coda.py:131
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_target_property:131 - Definition "get_target_property" is missing spec comments in coda/engine/coda.py:131
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_target_rules:143 - Definition "get_target_rules" is missing a summary comment in coda/engine/coda.py:143
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_target_rules:143 - Definition "get_target_rules" is missing spec comments in coda/engine/coda.py:143
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_target_rule:152 - Definition "get_target_rule" is missing a summary comment in coda/engine/coda.py:152
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_target_rule:152 - Definition "get_target_rule" is missing spec comments in coda/engine/coda.py:152
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_project:164 - Definition "get_project" is missing a summary comment in coda/engine/coda.py:164
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_project:164 - Definition "get_project" is missing spec comments in coda/engine/coda.py:164
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_current_run:172 - Definition "get_current_run" is missing a summary comment in coda/engine/coda.py:172
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_current_run:172 - Definition "get_current_run" is missing spec comments in coda/engine/coda.py:172
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_current_iteration:185 - Definition "get_current_iteration" is missing a summary comment in coda/engine/coda.py:185
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_current_iteration:185 - Definition "get_current_iteration" is missing spec comments in coda/engine/coda.py:185
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_iterations:201 - Definition "get_iterations" is missing a summary comment in coda/engine/coda.py:201
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_iterations:201 - Definition "get_iterations" is missing spec comments in coda/engine/coda.py:201
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::get_report:217 - Definition "get_report" is missing a summary comment in coda/engine/coda.py:217
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::get_report:217 - Definition "get_report" is missing spec comments in coda/engine/coda.py:217
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::start_run:234 - Definition "start_run" is missing a summary comment in coda/engine/coda.py:234
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::start_run:234 - Definition "start_run" is missing spec comments in coda/engine/coda.py:234
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::start_iteration:249 - Definition "start_iteration" is missing a summary comment in coda/engine/coda.py:249
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::start_iteration:249 - Definition "start_iteration" is missing spec comments in coda/engine/coda.py:249
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::translate:274 - Definition "translate" is missing a summary comment in coda/engine/coda.py:274
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::translate:274 - Definition "translate" is missing spec comments in coda/engine/coda.py:274
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::fix:285 - Definition "fix" is missing a summary comment in coda/engine/coda.py:285
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::fix:285 - Definition "fix" is missing spec comments in coda/engine/coda.py:285
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::change:293 - Definition "change" is missing a summary comment in coda/engine/coda.py:293
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::change:293 - Definition "change" is missing spec comments in coda/engine/coda.py:293
+- [🚫Code#Definition#Missing Summary](repo://statute/CODE-DEFINITION-MISSING-SUMMARY) - coda/engine/coda.py::main:297 - Definition "main" is missing a summary comment in coda/engine/coda.py:297
+- [🚫Code#Definition#Missing Requirements](repo://statute/CODE-DEFINITION-MISSING-SPECS) - coda/engine/coda.py::main:297 - Definition "main" is missing spec comments in coda/engine/coda.py:297
 - [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - semio/assets/grasshopper/build.py::comment-block-1:1 - Orphan definition outside sections at semio/assets/grasshopper/build.py:1
 - [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - semio/assets/grasshopper/build.py::orphan-block-30:30 - Orphan definition outside sections at semio/assets/grasshopper/build.py:30
 - [🚫Code#Section#Orphan Definition](repo://statute/CODE-SECTION-ORPHAN-DEFINITION) - semio/assets/grasshopper/build.py::extract_param_props:33 - Orphan definition outside sections at semio/assets/grasshopper/build.py:33

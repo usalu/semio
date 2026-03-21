@@ -304,7 +304,7 @@ cat << 'MCPCONFIG' > /home/vscode/.gemini/antigravity/mcp_config.json
       "command": "uv",
       "args": [
         "--directory",
-        "/workspaces/semio/coda/py",
+        "/workspaces/semio/coda/engine",
         "run",
         "coda.py",
         "--mcp-stdio"

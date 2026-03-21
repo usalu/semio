@@ -17,7 +17,7 @@
 
 // #endregion Header
 
-export { composePluginContributions, getAppPlugin, getAppPlugins, hasAppPlugin, registerAppPlugin } from "../shared";
-export type { AppMachineContribution, AppPlugin } from "../shared";
+export { composePluginContributions, getAppPlugin, getAppPlugins, hasAppPlugin, registerAppPlugin } from "../Sketchpad";
+export type { AppMachineContribution, AppPlugin } from "../Sketchpad";
 
 // #endregion 🔖Exports

@@ -3340,7 +3340,7 @@ $ ./repo/cli/cli bundle list
 ```bash
 $ ./repo/cli/cli bundle list
 - [📚︎ coda/examples](repo://bundle/coda/examples) - coda/examples
-- [📚︎ coda/py](repo://bundle/coda/py) - coda/py
+- [📚︎ coda/engine](repo://bundle/coda/engine) - coda/engine
 - [📚︎ semio/examples](repo://bundle/semio/examples) - semio/examples
 ```
 
@@ -3349,7 +3349,7 @@ should be:
 ```bash
 $ ./repo/cli/cli bundle list
 - [📔coda/examples](repo://bundle/coda/examples) - coda/examples
-- [⌨️️coda/py](repo://bundle/coda/py) - coda/py
+- [⌨️️coda/engine](repo://bundle/coda/engine) - coda/engine
 - [📚semio/examples](repo://bundle/semio/examples) - semio/examples
 ```
 
@@ -3470,7 +3470,7 @@ All list commands currently output dfferent formats. They should have the follow
 ```bash
 ./repo/cli/cli bundle list
 📚coda/examples - coda/examples
-📚coda/py - coda/py
+📚coda/engine - coda/engine
 ```
 
 ```bash

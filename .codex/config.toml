@@ -18,5 +18,5 @@ enabled = true
 
 [mcp_servers.coda]
 command = "uv"
-args = ["--directory", "coda/py", "run", "coda.py", "--mcp-stdio"]
+args = ["--directory", "coda/engine", "run", "coda.py", "--mcp-stdio"]
 enabled = true

@@ -124,7 +124,7 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 17. `semio/grasshopper/Semio.Grasshopper/yak` → _(no package.json)_
 18. `semio/sqlite` → `@semio/sqlite`
 19. `repo/sqlite` → `@repo/sqlite`
-20. `coda/py` → `@coda/engine`
+20. `coda/engine` → `@coda/engine`
 21. `semio/sketchpad` → `@semio/sketchpad`
 
 ### 2.2 Additional Nx Auto-detected Projects (no npm workspace entry)
@@ -272,7 +272,7 @@ preflight publish   = nx run-many -t build → nx run-many -t publish
 **Python deps:** `semio` (workspace), `fastapi[standard]`, `graphene`, `lark`, `networkx`, `numpy`, `openai`, `pint`, `pydantic`, `pyside6`, `pytransform3d`, `sqlalchemy`, `sqlmodel`, `uvicorn`, `mcp[cli]` and more
 **Dev deps (npm):** `@semio/assets`
 
-#### `@coda/engine` (coda/py)
+#### `@coda/engine` (coda/engine)
 
 | Script      | Command                               | Behavior      |
 | ----------- | ------------------------------------- | ------------- |

@@ -7470,7 +7470,7 @@ public class Kit : Entity<Kit>
         return Convert.FromBase64String(base64);
     }
 
-    private static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
+    public static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
     {
         if (type.Models == null || type.Models.Count == 0) return null;
         if (tags == null || tags.Length == 0)

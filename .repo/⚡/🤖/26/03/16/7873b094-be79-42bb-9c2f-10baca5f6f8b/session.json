@@ -746,7 +746,7 @@
             "command": "find /workspaces/semio -maxdepth 3 -name \"package.json\" -type f ! -path \"*/node_modules/*\" | head -30"
           },
           "tool_response": {
-            "stdout": "/workspaces/semio/semio/desktop/package.json\n/workspaces/semio/semio/go/package.json\n/workspaces/semio/semio/assets/package.json\n/workspaces/semio/semio/sqlite/package.json\n/workspaces/semio/semio/engine/package.json\n/workspaces/semio/semio/sketchpad/package.json\n/workspaces/semio/semio/js/package.json\n/workspaces/semio/semio/rs/package.json\n/workspaces/semio/semio/py/package.json\n/workspaces/semio/package.json\n/workspaces/elements/ui/package.json\n/workspaces/semio/repo/cli/package.json\n/workspaces/semio/repo/vscode/package.json\n/workspaces/semio/repo/server/package.json\n/workspaces/semio/repo/sqlite/package.json\n/workspaces/semio/coda/desktop/package.json\n/workspaces/semio/coda/py/package.json",
+            "stdout": "/workspaces/semio/semio/desktop/package.json\n/workspaces/semio/semio/go/package.json\n/workspaces/semio/semio/assets/package.json\n/workspaces/semio/semio/sqlite/package.json\n/workspaces/semio/semio/engine/package.json\n/workspaces/semio/semio/sketchpad/package.json\n/workspaces/semio/semio/js/package.json\n/workspaces/semio/semio/rs/package.json\n/workspaces/semio/semio/py/package.json\n/workspaces/semio/package.json\n/workspaces/elements/ui/package.json\n/workspaces/semio/repo/cli/package.json\n/workspaces/semio/repo/vscode/package.json\n/workspaces/semio/repo/server/package.json\n/workspaces/semio/repo/sqlite/package.json\n/workspaces/semio/coda/desktop/package.json\n/workspaces/semio/coda/engine/package.json",
             "stderr": "",
             "interrupted": false,
             "isImage": false,

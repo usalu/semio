@@ -254,7 +254,7 @@
       "runtimeExecutable": "uv",
       "runtimeArgs": [
         "--directory",
-        "coda/py",
+        "coda/engine",
         "run",
         "coda.py",
         "--mcp-stdio"

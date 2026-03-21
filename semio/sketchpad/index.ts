@@ -29,7 +29,7 @@ export type { BlobAssetStore, KitStore, KitStoreSnapshot, KitStoreStatus, KitSyn
 export { JsonFileKitStore, createJsonFileKitStore } from "@semio/studio";
 export type { KitJsonFileAdapter } from "@semio/studio";
 export { Canvas, HorizontalWindows, VerticalWindows } from "@semio/ui";
-export { SyncBinaryPersistenceProvider, createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory } from "./sketchpad/shared";
+export { SyncBinaryPersistenceProvider, createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory } from "./sketchpad/Sketchpad";
 export type {
   AppConfig,
   CompositeFileProviderConfig,
@@ -44,16 +44,16 @@ export type {
   RemoteProviders,
   SqliteAdapter,
   SyncProviderFactory,
-} from "./sketchpad/shared";
+} from "./sketchpad/Sketchpad";
 export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";
 export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory, SketchpadStore } from "./sketchpad/Sketchpad";
 
-export { config as designConfig } from "./sketchpad/Design";
-export { config as docsConfig } from "./sketchpad/Docs";
-export { config as feedbackConfig } from "./sketchpad/Feedback";
-export { config as homeConfig } from "./sketchpad/Home";
-export { config as kitConfig } from "./sketchpad/Kit";
-export { config as qualityConfig } from "./sketchpad/Quality";
-export { config as typeConfig } from "./sketchpad/Type";
+export { designConfig } from "./sketchpad/Sketchpad";
+export { docsConfig } from "./sketchpad/Sketchpad";
+export { feedbackConfig } from "./sketchpad/Sketchpad";
+export { homeConfig } from "./sketchpad/Sketchpad";
+export { kitConfig } from "./sketchpad/Sketchpad";
+export { qualityConfig } from "./sketchpad/Sketchpad";
+export { typeConfig } from "./sketchpad/Sketchpad";
 
 // #endregion 🔖Exports
