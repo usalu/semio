@@ -5,8 +5,7 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": "./index.ts",
-    "./semio": "./semio.ts"
+    ".": "./index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

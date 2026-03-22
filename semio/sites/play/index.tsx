@@ -26,7 +26,7 @@
 import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
 import { createIndexeddbPersistenceFactory } from "@semio/studio";
-import { InMemoryKitStore } from "@semio/js/semio";
+import { InMemoryKitStore } from "@semio/js";
 import { createRoot } from "react-dom/client";
 import "./globals.css";
 

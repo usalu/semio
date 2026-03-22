@@ -350,7 +350,24 @@ export function createSqliteFolderPersistenceFactory(adapter: SqliteAdapter): Pe
 // with a command stack. reload() re-reads state from the file, discarding changes.
 // Used by: VS Code extension for *.kit.json file editing.
 
-import { type Kit, type KitDiff, type KitChange, type KitStore, type KitStoreSnapshot, type KitStoreStatus, type KitSyncState, type UndoableKitStore, KitSchema, applyKitDiff, getKitDiff, inverseKitDiff, guid } from "@semio/js/semio";
+import {
+  type Kit,
+  type KitDiff,
+  type KitChange,
+  type KitStore,
+  type KitStoreSnapshot,
+  type KitStoreStatus,
+  type KitSyncState,
+  type UndoableKitStore,
+  KitSchema,
+  applyKitDiff,
+  getKitDiff,
+  inverseKitDiff,
+  guid,
+  getSqlJs,
+  sqliteToKit,
+  kitToSqlite,
+} from "@semio/js";
 
 /**
  * Adapter for reading/writing Kit JSON to a file.
@@ -608,23 +625,23 @@ export async function createJsonFileKitStore(adapter: KitJsonFileAdapter): Promi
 // #region 🔖FolderKitStore
 // [👤semio👥studio💻studio🔖folderkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore)
 // Folder-backed kit store implementing UndoableKitStore.
-// Specs: Uses a folder with `.semio/kit.json` for kit data. The folder serves as
+// Specs: Uses a folder with `.semio/kit.db` SQLite database for kit data. The folder serves as
 // the root for relative file references. Files referenced by the kit are stored
-// alongside the kit data in the folder. save() writes kit data back to `.semio/kit.json`.
-// reload() re-reads the kit data from the file. Used by: desktop app for local kit editing.
+// alongside the kit data in the folder. save() writes kit data back to `.semio/kit.db`.
+// reload() re-reads the kit data from the database. Used by: desktop app for local kit editing.
 
 /**
  * Adapter for folder-based kit storage I/O.
  *
- * Specs: readKit()/writeKit() handle the `.semio/kit.json` file.
+ * Specs: readKit()/writeKit() handle the `.semio/kit.db` SQLite database as binary data.
  * readFile()/writeFile()/deleteFile() handle binary assets relative to the folder root.
  * listFiles() returns all file paths in the folder.
  * watch() optionally registers a callback for external changes.
  * [👤semio👥studio💻studio🔖folderkitstore🛠️kitfolderadapter](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore/d/i/KitFolderAdapter)
  **/
 export interface KitFolderAdapter {
-  readKit(): Promise<string | null>;
-  writeKit(json: string): Promise<void>;
+  readKit(): Promise<Uint8Array | null>;
+  writeKit(data: Uint8Array): Promise<void>;
   readFile(path: string): Promise<Blob | null>;
   writeFile(path: string, blob: Blob): Promise<void>;
   deleteFile(path: string): Promise<void>;
@@ -635,9 +652,9 @@ export interface KitFolderAdapter {
 /**
  * Folder-backed kit store with undo/redo.
  *
- * Specs: Holds a Kit in memory loaded from a folder's `.semio/kit.json`.
+ * Specs: Holds a Kit in memory loaded from a folder's `.semio/kit.db` SQLite database.
  * apply() merges diffs, replace() swaps the Kit. transact() groups mutations.
- * save() writes the Kit as JSON. reload() re-reads from the folder.
+ * save() serializes the Kit to SQLite and writes via adapter. reload() re-reads from the folder.
  * Undo/redo uses a command stack identical to JsonFileKitStore.
  * [👤semio👥studio💻studio🔖folderkitstore🛠️folderkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore/d/i/FolderKitStore)
  **/
@@ -667,11 +684,13 @@ export class FolderKitStore implements UndoableKitStore {
   }
 
   static async create(adapter: KitFolderAdapter): Promise<FolderKitStore> {
-    const json = await adapter.readKit();
-    if (json) {
+    const data = await adapter.readKit();
+    if (data) {
       try {
-        const parsed = JSON.parse(json);
-        const kit = KitSchema.parse(parsed);
+        const SQL = await getSqlJs();
+        const db = new SQL.Database(new Uint8Array(data));
+        const kit = await sqliteToKit(db);
+        db.close();
         const store = new FolderKitStore(kit, adapter, "ready");
         store.lastSyncedAt = new Date().toISOString();
         return store;
@@ -765,8 +784,12 @@ export class FolderKitStore implements UndoableKitStore {
     this.status = "saving";
     this.notify();
     try {
-      const json = JSON.stringify(this.kit, null, 2);
-      await this.adapter.writeKit(json);
+      const SQL = await getSqlJs();
+      const db = new SQL.Database();
+      await kitToSqlite(this.kit, db);
+      const data = db.export();
+      db.close();
+      await this.adapter.writeKit(data);
       this.dirty = false;
       this.lastSyncedAt = new Date().toISOString();
       this.error = undefined;
@@ -782,10 +805,12 @@ export class FolderKitStore implements UndoableKitStore {
     this.status = "loading";
     this.notify();
     try {
-      const json = await this.adapter.readKit();
-      if (json) {
-        const parsed = JSON.parse(json);
-        this.kit = KitSchema.parse(parsed);
+      const data = await this.adapter.readKit();
+      if (data) {
+        const SQL = await getSqlJs();
+        const db = new SQL.Database(new Uint8Array(data));
+        this.kit = await sqliteToKit(db);
+        db.close();
       }
       this.dirty = false;
       this.undoStack = [];

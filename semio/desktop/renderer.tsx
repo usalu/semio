@@ -27,7 +27,7 @@ import React, { useEffect, useState, useCallback, useMemo, lazy, Suspense } from
 import { createRoot } from "react-dom/client";
 import { createFolderKitStore } from "@semio/studio";
 import type { KitFolderAdapter } from "@semio/studio";
-import type { KitStore } from "@semio/js/semio";
+import type { KitStore } from "@semio/js";
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
 
 import "./globals.css";
@@ -58,8 +58,8 @@ declare global {
     };
     kitFolder: {
       selectFolder(): Promise<string | null>;
-      readKit(folderPath: string): Promise<string | null>;
-      writeKit(folderPath: string, json: string): Promise<void>;
+      readKit(folderPath: string): Promise<ArrayBuffer | null>;
+      writeKit(folderPath: string, data: ArrayBuffer): Promise<void>;
       readFile(folderPath: string, filePath: string): Promise<ArrayBuffer | null>;
       writeFile(folderPath: string, filePath: string, data: ArrayBuffer): Promise<void>;
       deleteFile(folderPath: string, filePath: string): Promise<void>;
@@ -112,8 +112,11 @@ const os = {
 // #region 🔖FolderAdapter
 function createElectronFolderAdapter(folderPath: string): KitFolderAdapter {
   return {
-    readKit: () => window.kitFolder.readKit(folderPath),
-    writeKit: (json: string) => window.kitFolder.writeKit(folderPath, json),
+    readKit: async () => {
+      const data = await window.kitFolder.readKit(folderPath);
+      return data ? new Uint8Array(data) : null;
+    },
+    writeKit: (data: Uint8Array) => window.kitFolder.writeKit(folderPath, data.buffer),
     readFile: async (path: string) => {
       const data = await window.kitFolder.readFile(folderPath, path);
       if (!data) return null;

@@ -40,7 +40,7 @@ contextBridge.exposeInMainWorld("os", {
 contextBridge.exposeInMainWorld("kitFolder", {
   selectFolder: () => ipcRenderer.invoke("select-folder"),
   readKit: (folderPath: string) => ipcRenderer.invoke("read-kit", folderPath),
-  writeKit: (folderPath: string, json: string) => ipcRenderer.invoke("write-kit", folderPath, json),
+  writeKit: (folderPath: string, data: ArrayBuffer) => ipcRenderer.invoke("write-kit", folderPath, data),
   readFile: (folderPath: string, filePath: string) => ipcRenderer.invoke("read-file", folderPath, filePath),
   writeFile: (folderPath: string, filePath: string, data: ArrayBuffer) => ipcRenderer.invoke("write-file", folderPath, filePath, data),
   deleteFile: (folderPath: string, filePath: string) => ipcRenderer.invoke("delete-file", folderPath, filePath),

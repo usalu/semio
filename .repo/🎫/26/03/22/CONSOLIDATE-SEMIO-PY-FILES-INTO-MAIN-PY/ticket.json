@@ -1,0 +1,13 @@
+{
+  "title": "Consolidate Semio Py Files Into Main Py",
+  "status": "closed",
+  "description": "Consolidate semio.py, semio.test.py, and semio.benchmark.py into a single main.py file in semio/py/. Update all references.",
+  "summary": "Consolidated semio.py, semio.test.py, and semio.benchmark.py into a single main.py file. Added missing imports (struct, time, pytest) to the top-level imports. Deduplicated helper functions with _test_ prefixes to avoid name collisions. Renamed test-specific TOLERANCE to TEST_TOLERANCE and ASSETS_DIR to TEST_ASSETS_DIR. Updated pyproject.toml hatch build includes and pytest config. Updated conftest.py to import main instead of semio. Updated engine.py sys.path and import from main. All 24 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1017"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪c64e9fe3ba694edaab24a5c7447bb50b"
+  ]
+}

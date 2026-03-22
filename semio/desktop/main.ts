@@ -68,7 +68,6 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
-
 };
 
 app.on("ready", createWindow);
@@ -123,20 +122,21 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle("read-kit", async (_event, folderPath: string) => {
-    const kitPath = path.join(folderPath, ".semio", "kit.json");
+    const kitPath = path.join(folderPath, ".semio", "kit.db");
     try {
-      return fs.readFileSync(kitPath, "utf-8");
+      const buffer = fs.readFileSync(kitPath);
+      return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
     } catch {
       return null;
     }
   });
 
-  ipcMain.handle("write-kit", async (_event, folderPath: string, json: string) => {
+  ipcMain.handle("write-kit", async (_event, folderPath: string, data: ArrayBuffer) => {
     const semioDir = path.join(folderPath, ".semio");
     if (!fs.existsSync(semioDir)) {
       fs.mkdirSync(semioDir, { recursive: true });
     }
-    fs.writeFileSync(path.join(semioDir, "kit.json"), json, "utf-8");
+    fs.writeFileSync(path.join(semioDir, "kit.db"), Buffer.from(data));
   });
 
   ipcMain.handle("read-file", async (_event, folderPath: string, filePath: string) => {

@@ -60,14 +60,11 @@
   },
   "include": [
     "index.ts",
-    "semio.ts",
     "constants.json"
   ],
   "exclude": [
     "node_modules",
     "_debug_diff.ts",
-    "debug_design.cjs",
-    "tests.ts",
-    "benchmarks.ts"
+    "debug_design.cjs"
   ]
 }

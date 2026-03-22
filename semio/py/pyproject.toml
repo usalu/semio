@@ -39,10 +39,10 @@ dev = []
 default-groups = ["test", "dev"]
 
 [tool.hatch.build.targets.sdist]
-include = ["semio.py"]
+include = ["main.py"]
 
 [tool.hatch.build.targets.wheel]
-include = ["semio.py"]
+include = ["main.py"]
 
 [build-system]
 requires = ["hatchling"]
@@ -52,6 +52,6 @@ build-backend = "hatchling.build"
 line-length = 250
 
 [tool.pytest.ini_options]
-python_files = ["test_*.py", "*_test.py", "*.test.py"]
+python_files = ["test_*.py", "*_test.py", "*.test.py", "main.py"]
 testpaths = ["."]
 addopts = "--import-mode=importlib"

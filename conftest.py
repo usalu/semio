@@ -25,6 +25,6 @@ sys.path.insert(0, str(root / "semio" / "engine"))
 
 import engine  # noqa: E402, F401
 
-import semio  # noqa: E402, F401
+import main as semio  # noqa: E402, F401
 
 semio.__path__ = [str(root / "semio")]

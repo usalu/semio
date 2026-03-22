@@ -23,9 +23,7 @@
 // Public API surface for sketchpad runtime, shared helpers, and app configs.
 // Exports MUST keep the sketchpad UI surface out of @semio/js.
 
-import "./i18n";
-
-export type { BlobAssetStore, KitStore, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js/semio";
+export type { BlobAssetStore, KitStore, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
 export { JsonFileKitStore, createJsonFileKitStore } from "@semio/studio";
 export type { KitJsonFileAdapter } from "@semio/studio";
 export { Canvas, HorizontalWindows, VerticalWindows } from "@semio/ui";

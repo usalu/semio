@@ -1,0 +1,13 @@
+{
+  "title": "Consolidate Sketchpad I18n Into Elements Ui",
+  "status": "closed",
+  "description": "Remove sketchpad-local i18n ownership. Move general i18n setup and translation resources into elements/ui so all UI packages use a shared multi-language API. Replace separate sketchpad locale JSON files with a single shared source code definition and update sketchpad to consume it.",
+  "summary": "Moved sketchpad-owned i18n setup and EN/DE translation resources into elements/ui as a single in-source bundle, removed sketchpad/i18n.ts and the locale JSON files, switched sketchpad to the shared initialized i18n API, updated stale semio/js imports that blocked startup, and extended the existing Home Playwright test with a German-language assertion.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1018"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪d0958cd3fcd14ff59b862f1ce78aab44"
+  ]
+}

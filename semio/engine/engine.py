@@ -55,8 +55,8 @@ import starlette_graphene3
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "semio"))
-from semio import (
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "py"))
+from main import (
     DEBUG_LOG_FILE,
     ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH,
     ENCODED_NAME_AND_VARIANT_PATH,

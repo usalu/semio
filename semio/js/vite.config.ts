@@ -29,7 +29,7 @@ export default defineConfig({
     name: "semio",
     environment: "node",
     testTimeout: 30000,
-    include: ["semio.test.ts"],
+    include: ["index.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
   },
 });

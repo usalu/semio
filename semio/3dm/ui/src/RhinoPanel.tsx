@@ -23,7 +23,7 @@
 // Imports MUST include React, semio types, bridge API, and Lucide icons from assets.
 
 import React, { useCallback, useEffect, useState } from "react";
-import type { Kit, Type as SemioType, Design, Model } from "@semio/js/semio";
+import type { Kit, Type as SemioType, Design, Model } from "@semio/js";
 import { importKit } from "@semio/js";
 import { importApi } from "./bridge";
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/assets";

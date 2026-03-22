@@ -20,7 +20,7 @@ import { expect, Locator, Page, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { importKit as importKitArchive } from "../js/semio";
+import { importKit as importKitArchive } from "@semio/js";
 import MetabolismKitData from "../assets/semio/kit_metabolism.json" with { type: "json" };
 
 test.use({
@@ -1266,6 +1266,9 @@ test.describe("sketchpad", () => {
   test("Home", async ({ page }) => {
     test.setTimeout(300000);
     const { errors } = await initConsole(page);
+    await page.addInitScript(() => {
+      window.localStorage.setItem("i18nextLng", "de");
+    });
     await warmSketchpadEntrypoint(page);
     await page.goto("/", { waitUntil: "commit" });
     await page.waitForTimeout(5000);
@@ -1411,6 +1414,10 @@ test.describe("sketchpad", () => {
     const metabolismRow = page.getByRole("row", { name: /Metabolism/i }).first();
     const isRowVisible = await metabolismRow.isVisible({ timeout: 10000 }).catch(() => false);
     console.log("[Home] Metabolism row visible:", isRowVisible);
+    const homeBodyText = await page.locator("body").textContent();
+    expect(homeBodyText).toContain("Zuletzt aktualisiert");
+    expect(homeBodyText).toContain("Art");
+    expect(homeBodyText).not.toContain("Last Updated");
 
     if (isRowVisible) {
       await metabolismRow.click();

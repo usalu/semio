@@ -2188,6 +2188,138 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "71e7e25d024d2e471aab2eebbd7532b9b5455be4",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-03-22T03:29:11Z",
+        "session": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionStart",
+          "source": "resume"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "71e7e25d024d2e471aab2eebbd7532b9b5455be4",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-03-22T03:29:23Z",
+        "session": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
+          "cwd": "/workspaces/semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "UserPromptSubmit",
+          "prompt": "Continue"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "71e7e25d024d2e471aab2eebbd7532b9b5455be4",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-22T03:29:27Z",
+        "session": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
+          "cwd": "/workspaces/semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PreToolUse",
+          "tool_name": "ToolSearch",
+          "tool_input": {
+            "query": "select:TaskOutput",
+            "max_results": 1
+          },
+          "tool_use_id": "toolu_01Audkoe8zhXQQt3UXKdSXti"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "71e7e25d024d2e471aab2eebbd7532b9b5455be4",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-22T03:29:27Z",
+        "session": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
+          "cwd": "/workspaces/semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PostToolUse",
+          "tool_name": "ToolSearch",
+          "tool_input": {
+            "query": "select:TaskOutput",
+            "max_results": 1
+          },
+          "tool_response": {
+            "matches": [
+              "TaskOutput"
+            ],
+            "query": "select:TaskOutput",
+            "total_deferred_tools": 23
+          },
+          "tool_use_id": "toolu_01Audkoe8zhXQQt3UXKdSXti"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "71e7e25d024d2e471aab2eebbd7532b9b5455be4",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-22T03:29:34Z",
+        "session": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "4a47c3d7-3058-4e98-a8d2-65bb5497ade6",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4a47c3d7-3058-4e98-a8d2-65bb5497ade6.jsonl",
+          "cwd": "/workspaces/semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PreToolUse",
+          "tool_name": "Bash",
+          "tool_input": {
+            "command": "npx nx dev @semio/desktop 2\u003e\u00261 | head -80",
+            "timeout": 120000,
+            "description": "Run desktop dev with polling fix"
+          },
+          "tool_use_id": "toolu_01TWXWvcHyh5KW9R4fgo4Lyx"
+        }
+      },
+      "response": {}
     }
   ]
 }

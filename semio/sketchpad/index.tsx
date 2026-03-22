@@ -24,9 +24,9 @@
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
 import { createRoot } from "react-dom/client";
+import { InMemoryKitStore } from "@semio/js";
 import type { KitJsonFileAdapter } from "../studio/studio";
 import { createIndexeddbPersistenceFactory, createJsonFileKitStore } from "../studio/studio";
-import { InMemoryKitStore } from "../js/semio";
 import "./globals.css";
 import { Sketchpad, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "./index";
 import type { SketchpadKitStoreFactory } from "./Sketchpad";
@@ -82,7 +82,7 @@ async function boot() {
     (window as any).__SEMIO_ON_EXTERNAL_UPDATE__ = (json: string) => {
       try {
         const parsed = JSON.parse(json);
-        const { KitSchema } = require("@semio/js/semio");
+        const { KitSchema } = require("@semio/js");
         const kit = KitSchema.parse(parsed);
         kitStore!.applyExternalUpdate(kit);
       } catch {

@@ -23,7 +23,7 @@
 
 // #region 🔖Imports
 
-import type { Connector, Port } from "@semio/js/semio";
+import type { Connector, Port } from "@semio/js";
 import {
   applyKitDiff,
   areDesignsInSameFamily,
@@ -98,7 +98,7 @@ import {
   TypeDiff,
   TypeShallow,
   Vector,
-} from "@semio/js/semio";
+} from "@semio/js";
 import type {
   ConnectionLineComponentProps,
   DragEndEvent,
@@ -249,10 +249,13 @@ import {
   useCommandHotkey,
   useDraggable,
   useDroppable,
+  elementUiI18n as i18n,
   useFBX,
   useGLTF,
+  useTranslatedHotkey as useHotkey,
   useTranslation as useI18nTranslation,
   useInternalNode,
+  useLabel,
   useLoader,
   useLocation,
   useParams,
@@ -339,7 +342,6 @@ import {
   WorkbenchIcon,
 } from "../assets/icons";
 import { createSyncDocFactory, isSyncArray, isSyncMap, type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent } from "../studio/studio";
-import i18n, { useHotkey, useLabel } from "./i18n";
 export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
 export { createDefaultLayout, deduplicateWindowLayout, parseWindowLayout, stringifyWindowLayout, WindowKind };
 export { Canvas, HorizontalWindows, VerticalWindows };
@@ -4494,7 +4496,7 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖builtintutorials🪨hellotutorial](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Built-in%20Tutorials/d/i/helloTutorial)
  **/
 export const helloTutorial: Tutorial = {
-  id: guid(),
+  id: "hello-semio-tutorial",
   name: "Hello semio Tutorial",
   description: "Learn the basics of semio by creating your first design",
   totalDuration: 300,
@@ -4503,7 +4505,7 @@ export const helloTutorial: Tutorial = {
   concepts: ["hello-semio", "getting-started", "beginner"],
   milestones: [
     {
-      id: guid(),
+      id: "hello-milestone-welcome",
       title: "Welcome to Semio",
       description: "Let's start by navigating to the home screen",
       commandPattern: {
@@ -4526,7 +4528,7 @@ export const helloTutorial: Tutorial = {
       order: 0,
     },
     {
-      id: guid(),
+      id: "hello-milestone-create-kit",
       title: "Create a New Kit",
       description: "Click the 'New Kit' button to create your first kit",
       commandPattern: {
@@ -4540,7 +4542,7 @@ export const helloTutorial: Tutorial = {
       order: 1,
     },
     {
-      id: guid(),
+      id: "hello-milestone-open-kit",
       title: "Open the Kit",
       description: "Now let's open your newly created kit",
       canSkip: true,
@@ -4548,7 +4550,7 @@ export const helloTutorial: Tutorial = {
       duration: 5,
     },
     {
-      id: guid(),
+      id: "hello-milestone-create-type",
       title: "Create a Type",
       description: "Add a new type to your kit",
       commandPattern: {
@@ -4558,7 +4560,7 @@ export const helloTutorial: Tutorial = {
       order: 3,
     },
     {
-      id: guid(),
+      id: "hello-milestone-complete",
       title: "Tutorial Complete!",
       description: "Congratulations! You've completed your first semio tutorial.",
       canSkip: false,
@@ -4573,7 +4575,7 @@ export const helloTutorial: Tutorial = {
  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖builtintutorials🪨sketchpadtour](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Built-in%20Tutorials/d/i/sketchpadTour)
  **/
 export const sketchpadTour: Tutorial = {
-  id: guid(),
+  id: "sketchpad-tour",
   name: "Sketchpad Tour",
   description: "A comprehensive introduction to Sketchpad - learn to create kits, types, designs, and more.",
   totalDuration: 600,
@@ -4581,7 +4583,7 @@ export const sketchpadTour: Tutorial = {
   concepts: ["getting-started", "beginner", "introduction"],
   milestones: [
     {
-      id: guid(),
+      id: "tour-milestone-welcome",
       title: "Welcome to Sketchpad",
       description: "Welcome! This tutorial will guide you through the core features of Sketchpad.",
       canSkip: true,
@@ -4589,7 +4591,7 @@ export const sketchpadTour: Tutorial = {
       duration: 5,
     },
     {
-      id: guid(),
+      id: "tour-milestone-create-kit",
       title: "Create a Kit",
       description: "Let''s start by creating a kit. Click the ''+'' button in the home view.",
       commandPattern: { command: "semio.home.kit.create" },
@@ -4599,7 +4601,7 @@ export const sketchpadTour: Tutorial = {
       duration: 10,
     },
     {
-      id: guid(),
+      id: "tour-milestone-open-kit",
       title: "Open Your Kit",
       description: "Great! Now click on the kit you just created to open it.",
       commandPattern: { command: "semio.home.kit.open" },
@@ -4609,7 +4611,7 @@ export const sketchpadTour: Tutorial = {
       duration: 10,
     },
     {
-      id: guid(),
+      id: "tour-milestone-create-type",
       title: "Create a Type",
       description: "Now let''s create a type. Click the ''+'' button in the types section.",
       commandPattern: { command: "semio.kit.type.create" },
@@ -4617,7 +4619,7 @@ export const sketchpadTour: Tutorial = {
       canSkip: true,
     },
     {
-      id: guid(),
+      id: "tour-milestone-complete",
       title: "Tutorial Complete!",
       description: "Congratulations! You''ve completed the Sketchpad tour.",
       canSkip: false,
