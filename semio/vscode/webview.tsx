@@ -27,9 +27,10 @@
 // [👤semio🖱️vscode💻webview🔖entrypoint](repo://p/u/semio/b/u/vscode/f/webview.tsx/s/Entrypoint)
 // Webview entrypoint MUST mount Sketchpad with a JsonFileKitStore backed by VS Code messaging.
 
-import { createRoot } from "react-dom/client";
 import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
+import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
 import { createJsonFileKitStore, type KitJsonFileAdapter } from "@semio/studio";
+import { createRoot } from "react-dom/client";
 
 // Declare globals injected by the extension host.
 declare global {
@@ -86,9 +87,22 @@ async function boot() {
     }
   });
 
+  // File kit store factory for creating new kits as JSON files via VS Code messaging.
+  const fileKitStoreFactory: SketchpadKitStoreFactory = async (kit) => {
+    const kitAdapter: KitJsonFileAdapter = {
+      async read(): Promise<string | null> {
+        return JSON.stringify(kit);
+      },
+      async write(json: string): Promise<void> {
+        vscodeApi?.postMessage({ kind: "kit.save", content: json });
+      },
+    };
+    return createJsonFileKitStore(kitAdapter);
+  };
+
   createRoot(document.getElementById("root")!).render(
     <div className="h-screen w-screen">
-      <Sketchpad kitStore={store} embedded />
+      <Sketchpad kitStore={store} fileKitStoreFactory={fileKitStoreFactory} embedded />
     </div>,
   );
 }

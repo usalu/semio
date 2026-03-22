@@ -97,8 +97,10 @@ Geometry: Piece in view
 TODO: Rename version to release
 TODO: Introduce activity to kit
 TODO: Introduce version to artifacts (design,type,shape)
+TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
 Add a new
 
 Replace the keys with semantic keys:
@@ -200,7 +202,7 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ## 👤semio📚js
 
-## 👤semio📚js🗃️sketchpad
+## 👤semio🗃️sketchpad
 
 semio sketchpad:
 Yjs-based logic and implementation needs to dissapear completly. You need to generalize the api. Right now, you mostly renamed Y to R. You MUST NOT rename but structurally refactor. You MUST NOT use the Array and Map based primitivies from Yjs as abstraction. Those are yjs internal impelemntation details. Central is that a kit can be synchronized. The what is important not the how (using primitive maps and arrays such as yjs for kit and s3 for file, using just a single json for everything including blobled files, or using a sqlite for kit and actual files for files)

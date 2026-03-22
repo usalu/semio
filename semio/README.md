@@ -204,5 +204,35 @@ Props define measurable characteristics of connectors using the quality system f
 ### 📈 Stat [↑](#-concepts-)
 
 A [`stat`](#-stat-) is a statistical measurement on a [`design`](#%EF%B8%8F-design-) that references a [`quality`](#-quality-) with **range** (min/max) and optional **unit** 📊
-
 Stats provide computed or measured performance data for entire designs using the quality framework 📈
+
+# 📦 Bundles [↑](#-overview)
+
+- [algorithms](algorithms/README.md) – Graph matching and placement algorithms
+- [antlr](antlr/README.md) – ANTLR lexer and parser definitions
+- [assets](assets/README.md) – Visual assets, logotypes, icons
+- [desktop](desktop/README.md) – The semio desktop Electron application
+- [docs](docs/README.md) – Monorepo documentation site
+- [engine](engine/README.md) – Core engine for design resolution
+- [examples](examples/README.md) – Example scripts and projects
+- [gh](gh/README.md) – Grasshopper plugin integration
+- [go](go/README.md) – Go implementation libraries
+- [graphql](graphql/README.md) – GraphQL schema extensions
+- [js](js/README.md) – TypeScript/Javascript implementations
+- [jsonschema](jsonschema/README.md) – JSON Schema specifications
+- [liveblocks](liveblocks/README.md) – Liveblocks real-time multiplayer configuration
+- [net](net/README.md) – .NET implementations and bridges
+- [openapi](openapi/README.md) – OpenAPI REST specification
+- [peg](peg/README.md) – PEG parsing definitions
+- [play](play/README.md) – semio play environment
+- [py](py/README.md) – Python implementations
+- [rb](rb/README.md) – Ruby implementations
+- [rdf](rdf/README.md) – Semantic web RDF descriptions
+- [reports](reports/README.md) – Reporting and statistics outputs
+- [rs](rs/README.md) – Rust implementations
+- [sites](sites/README.md) – Assorted web deployment packages
+- [sketchpad](sketchpad/README.md) – Browser-based sketching application
+- [sqlite](sqlite/README.md) – Database schema
+- [studio](studio/README.md) – Studio collaboration environment
+- [ui](ui/README.md) – Additional UI packages
+- [vscode](vscode/README.md) – Language intelligence and extension files

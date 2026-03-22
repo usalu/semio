@@ -24,21 +24,40 @@
 // MUST fall back to English when the detected language is unavailable.
 
 import { i18next as i18n, initReactI18next, LanguageDetector } from "@semio/ui";
-import de from "./sketchpad/locales/de.json?raw";
-import en from "./sketchpad/locales/en.json?raw";
 
 // Re-export generic i18n primitives from @elements/ui
 export { Expertise, setExpertiseProvider, useTranslatedHotkey as useHotkey, useLabel } from "@semio/ui";
+
+type LocaleCode = "de" | "en";
+
+const localeLoaders: Record<LocaleCode, () => Promise<{ default: string }>> = {
+  de: () => import("./locales/de.json?raw"),
+  en: () => import("./locales/en.json?raw"),
+};
+
+const loadedLocales = new Set<LocaleCode>();
+
+function normalizeLocale(language?: string): LocaleCode {
+  return language?.toLowerCase().startsWith("de") ? "de" : "en";
+}
+
+async function ensureLocaleLoaded(language: LocaleCode): Promise<void> {
+  if (loadedLocales.has(language)) {
+    return;
+  }
+
+  const module = await localeLoaders[language]();
+  i18n.addResourceBundle(language, "translation", JSON.parse(module.default), true, true);
+  loadedLocales.add(language);
+}
 
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources: {
-      en: { translation: JSON.parse(en) },
-      de: { translation: JSON.parse(de) },
-    },
+    resources: {},
     fallbackLng: "en",
+    lng: "en",
     returnObjects: true,
     interpolation: {
       escapeValue: false,
@@ -49,6 +68,17 @@ i18n
       bindI18nStore: "added removed",
     },
   });
+
+void (async () => {
+  const requestedLocale = normalizeLocale(i18n.resolvedLanguage || i18n.language || (typeof navigator !== "undefined" ? navigator.language : undefined));
+  await ensureLocaleLoaded("en");
+  if (requestedLocale !== "en") {
+    await ensureLocaleLoaded(requestedLocale);
+  }
+  if (i18n.language !== requestedLocale) {
+    await i18n.changeLanguage(requestedLocale);
+  }
+})();
 
 export default i18n;
 

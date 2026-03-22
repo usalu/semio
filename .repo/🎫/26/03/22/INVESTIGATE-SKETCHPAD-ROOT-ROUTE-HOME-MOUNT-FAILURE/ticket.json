@@ -1,0 +1,13 @@
+{
+  "title": "Investigate Sketchpad Root Route Home Mount Failure",
+  "status": "closed",
+  "description": "Research only, do not edit code. Investigate why semio/sketchpad root route '/' does not expose the Home import input in Playwright runs after consolidation into semio/sketchpad/Sketchpad.tsx. Focus on whether the React app mounts at all, whether routing defaults to Home, and whether there are silent runtime/render errors. Return confirmed behavior, likely root cause, and smallest plausible fix or next diagnostic step.",
+  "summary": "Researched sketchpad root route startup. Confirmed / routes to Home and HomeDropZone contains the import input, but Playwright root loads never surface the Home DOM. Evidence points to startup stalling before AppRouter/Home commit, likely from the consolidated monolith eagerly loading heavy modules and docs content.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1011"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪3400d0be90db49399d789289c247d731"
+  ]
+}

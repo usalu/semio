@@ -13,21 +13,21 @@ There are many inconsistencies that you MUST refactor. You MUST use clean mechan
   - You MUST get everything working.
   - You MUST fix unrelated problems if no other ticket is currently covering it.
 
-- You MUST use repo mcp (or the cli `./repo/cli/cli`) for repo-specific infrastructure.
+- You MUST use repo mcp for repo-specific infrastructure.
   - You MUST work inside a ticket.
-  - You MUST start by gathering information about the repo with mcp tool `search` (or `./repo/cli/cli search <query>`). `query` is list of keywords that are relevant to ticket. This includes all prefiltered information about relevant projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes.
-  - You MUST reopen a ticket with `ticket_reopen` (or `./repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>`) if an existing ticket is already covering the same task.
-  - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open` (or `./repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>?`). This creates a ticket folder `.repo/🎫/YY/MM/DD/TICKETSLUG`.
+  - You MUST start by gathering information about the repo with mcp tool `search`.
+  - You MUST reopen a ticket with `ticket_reopen` if an existing ticket is already covering the same task.
+  - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.repo/🎫/YY/MM/DD/TICKETSLUG`.
   - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
   - You MUST NOT create any additional folders or files outside the ticket folder.
   - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region 🔖RegionName` / `#endregion` in C#, or `//#region 🔖RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
     - You MUST NOT create additional test files for new tests but you MUST extend the existing test files to cover everything.
     - You MUST NOT create additional example files and you MUST implement it directly in the dependent parts.
-  - You MUST close the ticket once you are done with the mcp tool `ticket_close` (or `./repo/cli/cli ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat most likely it is related to the old task and you MAY reopen the same ticket with mcp tool `ticket_reopen` (or `./repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>?`).
+  - You MUST close the ticket once you are done with the mcp tool `ticket_close` to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat most likely it is related to the old task and you MAY reopen the same ticket with mcp tool `ticket_reopen`.
   - You MUST NOT open, close or reopen goals without the explicit instructions from the dev.
-  - Open a goal with mcp tool `goal_open` (or `./repo/cli/cli goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`).
-  - Close a goal with mcp tool `goal_close` (or `./repo/cli/cli goal close <GOALSLUG/SUBGOALSLUG> <summary>`).
-  - Reopen a goal with mcp tool `goal_reopen` (or `./repo/cli/cli goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
+  - Open a goal with mcp tool `goal_open`.
+  - Close a goal with mcp tool `goal_close`.
+  - Reopen a goal with mcp tool `goal_reopen`.
   - The due date is a date in the format `YYYY-MM-DD`.
   - A ticket id is `YYYY/MM/DD/TICKETSLUG`.
   - A goal id is `GOALSLUG/SUBGOALSLUG/...`.

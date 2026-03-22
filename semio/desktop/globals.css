@@ -1,5 +1,9 @@
 @import "../ui/globals.css";
 @import "@xyflow/react/dist/style.css";
+@source "../../elements/ui";
+@source "../ui";
+@source "../sketchpad";
+@source "../js";
 
 /* #navbar {
   -webkit-app-region: window-drag;

@@ -8,7 +8,10 @@ summary: Coda research project.
 
 Coda research project. ACC design assistant with MCP server (py) and Electron desktop UI (desktop).
 
-# Bundles
+# 📦 Bundles
 
-- **py** – coda MCP server (resources, tools, prompts)
-- **desktop** – Electron app for visualizing and interacting with coda
+- [blnbo](blnbo/README.md) – Optimization examples
+- [desktop](desktop/README.md) – Electron app for visualizing and interacting with coda
+- [engine](engine/README.md) – Backend processing engine specific to coda
+- [examples](examples/README.md) – Example scripts
+- [programming](programming/README.md) – Programming environments or integration interfaces

@@ -25,16 +25,18 @@
 
 import { defineConfig, devices } from "@playwright/test";
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181";
+
 export default defineConfig({
   testMatch: ["**/*.spec.ts", "**/sketchpad.test.ts"],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  timeout: 120000,
+  timeout: 300000,
   workers: 1,
   reporter: [["list"]],
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL,
     trace: "on-first-retry",
   },
   projects: [
@@ -43,17 +45,17 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
-          args: ["--enable-gpu", "--disable-software-rasterizer"],
+          args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
         },
       },
     },
   ],
 
   webServer: {
-    command: "npm run dev -- --port 5173 --host 0.0.0.0",
-    url: "http://127.0.0.1:5173",
+    command: "npm run build && npx vite preview --port 4181 --host 0.0.0.0",
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 300000,
   },
 });
 

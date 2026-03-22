@@ -30,6 +30,12 @@ import path from "path";
 // Vite build configuration for the preload script with CJS output.
 // Export MUST externalize electron and all Node.js builtins.
 export default defineConfig({
+  server: {
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
+  },
   build: {
     outDir: ".vite/build",
     lib: {

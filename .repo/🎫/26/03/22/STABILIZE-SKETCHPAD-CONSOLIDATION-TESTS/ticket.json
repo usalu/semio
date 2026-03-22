@@ -1,0 +1,12 @@
+{
+  "title": "Stabilize Sketchpad Consolidation Tests",
+  "status": "open",
+  "description": "Stabilize semio/sketchpad after consolidation into Sketchpad.tsx. Fix remaining runtime regressions and Playwright failures without removing functionality. Current known issues include missing alias regressions after consolidation and runtime errors in kit/type/design flows.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1010"
+  },
+  "goal": "🎯consolidatesketchpadapptests🎯finishsketchpadfolderconsolidationanddeletion",
+  "sessions": [
+    "⚪5282ba803c7241efb59da1deb85d424d"
+  ]
+}

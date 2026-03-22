@@ -6,7 +6,7 @@
 // #endregion 🔖Header
 
 import { getDesignDiff, type Connection, type Design, type Piece } from "@semio/js";
-import { Diagram } from "@semio/ui";
+import { SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismKit from "../../../assets/semio/kit_metabolism.json";

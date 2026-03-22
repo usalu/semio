@@ -23,16 +23,28 @@
 // Electron renderer process that mounts the Sketchpad React app with window controls.
 // MUST resolve the user identity before rendering the sketchpad.
 
-import React, { useEffect, useState, lazy, Suspense } from "react";
+import React, { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { createFolderKitStore } from "@semio/studio";
 import type { KitFolderAdapter } from "@semio/studio";
 import type { KitStore } from "@semio/js/semio";
+import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
 
 import "./globals.css";
 
 // Lazy-load the heavy sketchpad module (500KB+) to avoid blocking the renderer.
-const LazySketchpad = lazy(() => import("@semio/sketchpad").then((mod) => ({ default: mod.Sketchpad })));
+const LazySketchpad = lazy(() =>
+  import("@semio/sketchpad").then((mod) => {
+    mod.appRegistry.register(mod.designConfig);
+    mod.appRegistry.register(mod.docsConfig);
+    mod.appRegistry.register(mod.feedbackConfig);
+    mod.appRegistry.register(mod.homeConfig);
+    mod.appRegistry.register(mod.kitConfig);
+    mod.appRegistry.register(mod.qualityConfig);
+    mod.appRegistry.register(mod.typeConfig);
+    return { default: mod.Sketchpad };
+  }),
+);
 
 declare global {
   interface Window {
@@ -224,6 +236,17 @@ function App() {
     };
   }, [folderPath]);
 
+  // Folder kit store factory for creating new local kits via Electron IPC.
+  const folderKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
+    const selectedFolder = await window.kitFolder.selectFolder();
+    if (!selectedFolder) {
+      throw new Error("No folder selected for kit storage");
+    }
+    await window.kitFolder.addRecentFolder(selectedFolder);
+    const adapter = createElectronFolderAdapter(selectedFolder);
+    return createFolderKitStore(adapter);
+  }, []);
+
   if (!folderPath) {
     return <StartPage onFolderSelected={setFolderPath} />;
   }
@@ -235,7 +258,7 @@ function App() {
   return (
     <div className="h-screen w-screen">
       <Suspense fallback={<div className="flex h-full w-full items-center justify-center bg-neutral-950 text-white">Loading sketchpad...</div>}>
-        <LazySketchpad onWindowEvents={windowEvents} id={userId} kitStore={kitStore} />
+        <LazySketchpad onWindowEvents={windowEvents} id={userId} kitStore={kitStore} folderKitStoreFactory={folderKitStoreFactory} />
       </Suspense>
     </div>
   );

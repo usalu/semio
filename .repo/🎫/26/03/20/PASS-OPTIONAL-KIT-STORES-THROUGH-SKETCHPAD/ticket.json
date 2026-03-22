@@ -1,7 +1,8 @@
 {
   "title": "Pass Optional Kit Stores Through Sketchpad",
-  "status": "open",
+  "status": "closed",
   "description": "Optionally pass temporary, folder, file, and remote kit store factories through Sketchpad and update the home screen so filter/create actions depend on which stores Sketchpad received.",
+  "summary": "Wired optional kit store factories through all consumer entrypoints. play/index.tsx passes temporaryKitStoreFactory (InMemoryKitStore). vscode/webview.tsx passes fileKitStoreFactory (JsonFileKitStore via postMessage). desktop/renderer.tsx passes folderKitStoreFactory (FolderKitStore via Electron IPC folder selection). sketchpad/index.tsx passes temporaryKitStoreFactory (standalone) or fileKitStoreFactory (VS Code mode). Fixed missing InMemoryKitStore import in Sketchpad.tsx. Home screen already conditionally shows filter/create buttons based on availableKitKinds(). Added 14 new vitest tests covering availableKitKinds logic (9 tests) and createKit factory dispatch (5 tests). All 79 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/997"
   },

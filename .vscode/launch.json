@@ -90,23 +90,6 @@
       }
     },
     {
-      "name": "🛠️dev👤semio📚js✏️sketchpad",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev:js:sketchpad"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:5173)",
-        "uriFormat": "%s"
-      }
-    },
-    {
       "name": "🛠️dev👤semio🖱️3dm",
       "preLaunchTask": "🛠️dev:ui👤semio📚3dm",
       "type": "chrome",

@@ -34804,8 +34804,8 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddTool(
 		mcp.NewTool("search",
-			mcp.WithDescription("Search monorepo tree"),
-			mcp.WithString("query", mcp.Description("Optional query filter")),
+			mcp.WithDescription("Search inside the monorepo for relevant information (technologies, bundles, folders, files, sections, definitions, goals, tickets, policies, statutes, contributors, checkpoints)."),
+			mcp.WithString("query", mcp.Description("A list of keywords.")),
 		),
 		mcpTree,
 	)

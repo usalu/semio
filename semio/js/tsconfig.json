@@ -67,7 +67,7 @@
     "node_modules",
     "_debug_diff.ts",
     "debug_design.cjs",
-    "semio.test.ts",
-    "semio.benchmark.ts"
+    "tests.ts",
+    "benchmarks.ts"
   ]
 }

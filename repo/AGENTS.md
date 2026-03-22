@@ -4,13 +4,17 @@
 
 ### Repos, Technologies, Bundles, Folders, Files, Sections, Definitions
 
-### Goals, Tickets, Sessions
+### Specifications, Algorithms
+
+### Goals, Tickets
+
+### Contributors, Interactions, Agents, Sessions
 
 ### Events, Commands, Hooks
 
-### Policies, Breaches, Requirements, Specs, Docs
+### Policies, Statutes, Breaches, Requirements, Specs, Docs
 
-### Contributors, Agents, Checkpoints
+### Releases, Versions, Checkpoints
 
 ### Languages, Trackers
 
@@ -860,6 +864,8 @@ changes:
 - 🟥762🟩847➕85
 - 👤semio🟥211🟩156➖55
 ```
+
+## 🧮 Algorithms
 
 ## 📛 Entities
 

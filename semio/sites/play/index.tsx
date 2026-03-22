@@ -23,9 +23,11 @@
 // Play application entrypoint registering sketchpad apps and rendering the root.
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
-import { createRoot } from "react-dom/client";
-import { createIndexeddbPersistenceFactory } from "@semio/studio";
 import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
+import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
+import { createIndexeddbPersistenceFactory } from "@semio/studio";
+import { InMemoryKitStore } from "@semio/js/semio";
+import { createRoot } from "react-dom/client";
 import "./globals.css";
 
 appRegistry.register(designConfig);
@@ -37,10 +39,11 @@ appRegistry.register(qualityConfig);
 appRegistry.register(typeConfig);
 
 const indexeddbPersistenceFactory = createIndexeddbPersistenceFactory();
+const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
 
 createRoot(document.getElementById("root")!).render(
   <div className="h-screen w-screen">
-    <Sketchpad persistenceFactory={indexeddbPersistenceFactory} importKitUrls={["/metabolism.zip"]} />
+    <Sketchpad persistenceFactory={indexeddbPersistenceFactory} temporaryKitStoreFactory={temporaryKitStoreFactory} importKitUrls={["/metabolism.zip"]} />
   </div>,
 );
 // #endregion 🔖Entrypoint

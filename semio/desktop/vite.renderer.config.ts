@@ -40,6 +40,12 @@ import topLevelAwait from "vite-plugin-top-level-await";
 export default defineConfig(async () => {
   const tailwind = await import("@tailwindcss/vite");
   return {
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 1000,
+      },
+    },
     resolve: {
       alias: {
         "@semio/js": path.resolve(__dirname, "../js"),

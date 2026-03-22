@@ -305,7 +305,7 @@ const useInteractiveControllableValue = <T,>(value: T | undefined, defaultValue:
   return [resolvedValue, setValue, isControlled] as const;
 };
 
-export const Diagram: React.FC<SemioDiagramProps> = ({
+export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   kit,
   designGuid,
   designDiff,
@@ -622,7 +622,7 @@ export const PieceSelection: React.FC<PieceSelectionProps> = ({ selection, defau
   const mappedDefaultSelection = defaultSelection ? { pieceGuids: defaultSelection.pieceGuids ?? [], connectionGuids: [] } : undefined;
 
   return (
-    <Diagram
+    <SemioDiagram
       {...rest}
       pieceSelectionEnabled={true}
       connectionSelectionEnabled={false}

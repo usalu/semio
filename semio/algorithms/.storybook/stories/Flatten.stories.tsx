@@ -8,7 +8,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
-import { Diagram, UI, type BreadcrumbItemData, Section, Card } from "@semio/ui";
+import { SemioDiagram as Diagram, UI, type BreadcrumbItemData, Section, Card } from "@semio/ui";
 import { applyDesignDiff, findDesignInKit, flattenDesign, type Design, type DesignDiff, type Kit } from "@semio/js";
 import { AlgorithmLanguage, useAlgorithmLanguage } from "../withLanguage";
 

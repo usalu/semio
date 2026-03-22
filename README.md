@@ -59,16 +59,11 @@ Let me walk you through 🚶
    - [🐞 semio.ladybug](#-semioladybug-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#-principles-)
-   - [🏗️ Projects](#-projects-)
+   - [🏗️ Technologies](#-technologies-)
      - [👤 semio](#-semio-)
      - [🧰 repo](#-repo-)
      - [🔬 coda](#-coda-)
-   - [♻ Ecosystems](#%EF%B8%8F-ecosystems-)
-     - [🟦 Typescript](#-typescript-)
-     - [🐹 Go](#-go-)
-     - [🦀 Rust](#-rust-)
-     - [🟪 .NET](#-net-)
-     - [🐍 Python](#-python-)
+     - [🧩 elements](#-elements-)
    - [🔀 Git](#-git-)
      - [🦑 GitKraken](#-gitkraken-)
      - [💬 Discord](#-discord-)
@@ -127,7 +122,7 @@ Let me walk you through 🚶
 
 # 🛍 Products [↑](#-overview)
 
-> Do you wonder how semio is interopable? The reason are shared [specification](#-requirements-), [ecosystems](#%EF%B8%8F-ecosystems-) and [bundles](#-bundles-) 🪢
+> Do you wonder how semio is interoperable? The reason is a shared [specification](#-requirements-) 🪢
 
 ## ✏ sketchpad [↑](#%EF%B8%8F-products-)
 
@@ -373,6 +368,26 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 </details>
 
 **🚩 Don't worry, you'll figure out the possibilities and make the right choice for the specific problems ✅**
+
+## 🏗️ Technologies [↑](#-repo-)
+
+The monorepo organizes its code into distinct technologies, each serving a specific domain in the ecosystem:
+
+### [👤 semio](semio/README.md) [↑](#-technologies-)
+
+The core design-information-modeling technology, containing the main schema, engines, and domain implementations.
+
+### [🧰 repo](repo/README.md) [↑](#-technologies-)
+
+Infrastructure and tooling for the monorepo, including CLI, vscode integrations, MCP servers, and generic utilities.
+
+### [🔬 coda](coda/README.md) [↑](#-technologies-)
+
+A research project introducing an AI-first design assistant, bridging the semantic graph with interactive UI.
+
+### [🧩 elements](elements/README.md) [↑](#-technologies-)
+
+Shared React UI components and layouts used across the browser-based applications within the monorepo.
 
 ## 🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)
 
@@ -669,41 +684,6 @@ The default model for agent work is the one native to the platform we use for th
 All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
 The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
 Git pre-commit is managed by [pre-commit](https://pre-commit.com/): run `npm run pre-commit:install` once, then use `npm run pre-commit` to run hooks on all files.
-
-# ♻ Ecosystems [↑](#-overview)
-
-Documentation for each ecosystem has been migrated to the respective bundle README.md files:
-
-- [semio/js/README.md](semio/js/README.md) - JavaScript (React, TypeScript, Vite, Tailwind, Three.js)
-- [semio/net/README.md](semio/net/README.md) - .NET (C#, NuGet, Grasshopper)
-- [semio/py/README.md](semio/py/README.md) - Python (uv, Pydantic, SQLAlchemy)
-
-# 📦 Bundles [↑](#-overview)
-
-Documentation for each bundle has been migrated to the respective bundle README.md files:
-
-| Bundle           | README                                                   |
-| ---------------- | -------------------------------------------------------- |
-| .devcontainer    | [.devcontainer/README.md](.devcontainer/README.md)       |
-| repo/cli         | [repo/cli/README.md](repo/cli/README.md)                 |
-| repo/vscode      | [repo/vscode/README.md](repo/vscode/README.md)           |
-| repo/server      | [repo/server/README.md](repo/server/README.md)           |
-| repo/graphql     | [repo/graphql/README.md](repo/graphql/README.md)         |
-| repo/sqlite      | [repo/sqlite/README.md](repo/sqlite/README.md)           |
-| semio            | [semio/README.md](semio/README.md)                       |
-| semio/js         | [semio/js/README.md](semio/js/README.md)                 |
-| semio/engine     | [semio/engine/README.md](semio/engine/README.md)         |
-| semio/desktop    | [semio/desktop/README.md](semio/desktop/README.md)       |
-| semio/docs       | [semio/docs/README.md](semio/docs/README.md)             |
-| semio/play       | [semio/play/README.md](semio/play/README.md)             |
-| semio/net        | [semio/net/README.md](semio/net/README.md)               |
-| semio/py         | [semio/py/README.md](semio/py/README.md)                 |
-| semio/go         | [semio/go/README.md](semio/go/README.md)                 |
-| semio/rs         | [semio/rs/README.md](semio/rs/README.md)                 |
-| semio/assets     | [semio/assets/README.md](semio/assets/README.md)         |
-| semio/algorithms | [semio/algorithms/README.md](semio/algorithms/README.md) |
-| semio/sketchpad  | [semio/sketchpad/README.md](semio/sketchpad/README.md)   |
-| semio/sqlite     | [semio/sqlite/README.md](semio/sqlite/README.md)         |
 
 # 🏘 [Examples](semio/examples) [↑](#-overview)
 

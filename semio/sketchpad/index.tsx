@@ -24,12 +24,14 @@
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
 import { createRoot } from "react-dom/client";
-import { createIndexeddbPersistenceFactory, createJsonFileKitStore } from "../studio/studio";
 import type { KitJsonFileAdapter } from "../studio/studio";
-import { Sketchpad, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "./index";
+import { createIndexeddbPersistenceFactory, createJsonFileKitStore } from "../studio/studio";
+import { InMemoryKitStore } from "../js/semio";
 import "./globals.css";
+import { Sketchpad, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "./index";
+import type { SketchpadKitStoreFactory } from "./Sketchpad";
 
-import { appRegistry } from "./sketchpad/Sketchpad";
+import { appRegistry } from "./Sketchpad";
 
 appRegistry.register(designConfig);
 appRegistry.register(docsConfig);
@@ -52,13 +54,30 @@ function createVscodeAdapter(): KitJsonFileAdapter {
     },
   };
 }
+
+function createVscodeFileKitStoreFactory(): SketchpadKitStoreFactory {
+  const vscodeApi = (window as any).__SEMIO_VSCODE_API__;
+  return async (kit) => {
+    const adapter: KitJsonFileAdapter = {
+      read: async () => JSON.stringify(kit),
+      write: async (json: string) => {
+        vscodeApi.postMessage({ kind: "kit.save", content: json });
+      },
+    };
+    return createJsonFileKitStore(adapter);
+  };
+}
 // #endregion 🔖VscodeAdapter
+
+const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
 
 async function boot() {
   let kitStore = undefined;
+  let fileKitStoreFactory: SketchpadKitStoreFactory | undefined = undefined;
   if (isVscodeWebview) {
     const adapter = createVscodeAdapter();
     kitStore = await createJsonFileKitStore(adapter);
+    fileKitStoreFactory = createVscodeFileKitStoreFactory();
     // Listen for external updates from the VS Code extension host.
     (window as any).__SEMIO_ON_EXTERNAL_UPDATE__ = (json: string) => {
       try {
@@ -83,7 +102,7 @@ async function boot() {
 
   createRoot(document.getElementById("root")!).render(
     <div className="h-screen w-screen">
-      <Sketchpad persistenceFactory={indexeddbPersistenceFactory} kitStore={kitStore} />
+      <Sketchpad persistenceFactory={indexeddbPersistenceFactory} kitStore={kitStore} temporaryKitStoreFactory={isVscodeWebview ? undefined : temporaryKitStoreFactory} fileKitStoreFactory={fileKitStoreFactory} />
     </div>,
   );
 }

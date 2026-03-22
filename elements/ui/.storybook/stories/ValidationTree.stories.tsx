@@ -507,7 +507,6 @@ export default validationMeta;
 type ValidationStory = StoryObj<typeof validationMeta>;
 // #endregion 🔖ValidationTreeMeta
 
-// #region 🔖ValidationTreeStories
 /**
  * Full Treppenraum_A evaluation: NOT is false because inner EXACTLY 2 is true.
  * All witnesses are green, both floors satisfy the restriction.

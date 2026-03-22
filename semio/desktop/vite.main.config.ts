@@ -28,6 +28,13 @@ import path from "path";
 
 // Default Vite configuration for the Electron main process.
 // Export MUST define a valid Vite config.
-export default defineConfig({});
+export default defineConfig({
+  server: {
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
+  },
+});
 
 // #endregion 🔖Configuration

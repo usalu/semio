@@ -110,3 +110,13 @@ No problem, let them write what they know, until the tests are extended and let 
 ### 🔮 Future proof infrastructure
 
 ### 📊 Meaningful stats
+
+# 📦 Bundles
+
+- [cli](cli/README.md) – Command line tool for monorepo interactions
+- [go](go/README.md) – Go shared libraries or server components
+- [graphql](graphql/README.md) – GraphQL schema and core typings
+- [postgres](postgres/README.md) – PostgreSQL schema and configuration
+- [server](server/README.md) – MCP Server and backend services for repo tooling
+- [sqlite](sqlite/README.md) – SQLite schema and helpers
+- [vscode](vscode/README.md) – Visual Studio Code extension for semio 

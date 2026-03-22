@@ -1,0 +1,12 @@
+{
+  "title": "Fix Desktop Dev Inotify Watcher Exhaustion",
+  "status": "open",
+  "description": "The desktop electron app fails to start with ENOSPC: System limit for number of file watchers reached because 1,048,551 of 1,048,576 inotify watches are consumed. Need to increase the limit and configure Vite to reduce watcher usage.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1014"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪2fc4c8a31ce646b584704a4667a22953"
+  ]
+}
