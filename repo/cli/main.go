@@ -41,7 +41,6 @@ import (
 	"io/fs"
 	"math"
 	"math/rand"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -341,7 +340,7 @@ func buildPolicyEntityKindTree(groups []Territory) []*TreeNode {
 			Kind:    TreeNodeCategory,
 			ID:      fmt.Sprintf("entitykind:%s", entityKind),
 			Label:   entityKind,
-			URI:     "repo://entitykind/" + PathToUriPath(entityKind),
+			URI:     "repo://entitykind/" + entityKind,
 			SubKind: "entitykind",
 			Data: map[string]interface{}{
 				"kind": entityKind,
@@ -5585,10 +5584,7 @@ func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode
 				created, _ = tm["createdAt"].(string)
 			}
 
-			uri := fmt.Sprintf("repo://tks/%s", PathToUriPath(slug))
-			if tTime, err := time.Parse(time.RFC3339, created); err == nil {
-				uri = fmt.Sprintf("repo://y/%02d/m/%02d/d/%02d/tk/%s", tTime.Year()%100, tTime.Month(), tTime.Day(), PathToUriPath(slug))
-			}
+			uri := fmt.Sprintf("repo://ticket/%s%s", emojiText(EmojiTicket), Flat(slug))
 
 			node := &TicketNode{ID: id, Slug: slug, Status: status, Title: title, URI: uri, GoalID: goalID, ParentID: parentID, Created: created, Finished: finished, Description: prompt, Summary: summary}
 			allTickets = append(allTickets, node)
@@ -5709,24 +5705,6 @@ func ticketNodeToData(n *TicketNode) map[string]interface{} {
 		"finished": n.Finished,
 		"prompt":   n.Description,
 		"summary":  n.Summary,
-	}
-	if n.URI != "" {
-		yIdx := strings.Index(n.URI, "repo://y/")
-		if yIdx >= 0 {
-			rest := strings.TrimPrefix(n.URI[yIdx:], "repo://y/")
-			parts := strings.Split(rest, "/")
-			if len(parts) >= 6 {
-				if y, err := strconv.Atoi(parts[0]); err == nil {
-					data["year"] = float64(y)
-				}
-				if m, err := strconv.Atoi(parts[2]); err == nil {
-					data["month"] = float64(m)
-				}
-				if d, err := strconv.Atoi(parts[4]); err == nil {
-					data["day"] = float64(d)
-				}
-			}
-		}
 	}
 	return data
 }
@@ -5980,7 +5958,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}()
 	wg.Wait()
 
-	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: "�️Codebase", URI: "repo://cb"}
+	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: "�️Codebase", URI: "repo://codebase"}
 	sort.Slice(technologies, func(i, j int) bool { return technologies[i].Name < technologies[j].Name })
 
 	type folderEntry struct {
@@ -6103,7 +6081,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	sortTreeChildren(codebaseNode)
 	root.Children = append(root.Children, codebaseNode)
 
-	goalsNode := &TreeNode{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "repo://gs"}
+	goalsNode := &TreeNode{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "repo://goals"}
 	goalMap := make(map[string]*TreeNode)
 	sort.Slice(goals, func(i, j int) bool { return goals[i].ID < goals[j].ID })
 	for _, g := range goals {
@@ -6193,7 +6171,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root.Children = append(root.Children, goalsNode)
 
-	draftsNode := &TreeNode{Kind: TreeNodeCategory, ID: "drafts", Label: "✍Drafts", URI: "repo://drs"}
+	draftsNode := &TreeNode{Kind: TreeNodeCategory, ID: "drafts", Label: "✍Drafts", URI: "repo://drafts"}
 	if drafts != nil {
 		for _, d := range drafts {
 			dNode := &TreeNode{
@@ -6208,14 +6186,15 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root.Children = append(root.Children, draftsNode)
 
-	policiesNode := &TreeNode{Kind: TreeNodeCategory, ID: "policies", Label: "🛡️️Policies", URI: "repo://pls"}
+	policiesNode := &TreeNode{Kind: TreeNodeCategory, ID: "policies", Label: "🛡️️Policies", URI: "repo://policies"}
 	sort.Slice(policies, func(i, j int) bool { return policies[i].ID < policies[j].ID })
 	for _, p := range policies {
+		policyId := emojiText(EmojiPolicy) + Flat(strings.TrimPrefix(p.ID, "/"))
 		pNode := &TreeNode{
 			Kind:        TreeNodePolicy,
 			ID:          fmt.Sprintf("%s/%s", emojiText(EmojiPolicy), p.ID),
 			Label:       p.Name,
-			URI:         "repo://pls/pl/" + PathToUriPath(p.ID),
+			URI:         "repo://policy/" + policyId,
 			Description: p.Description,
 			Data:        map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description},
 		}
@@ -6224,7 +6203,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root.Children = append(root.Children, policiesNode)
 
-	contributorsNode := &TreeNode{Kind: TreeNodeCategory, ID: "contributors", Label: "🧑‍💻Contributors", URI: "repo://cs"}
+	contributorsNode := &TreeNode{Kind: TreeNodeCategory, ID: "contributors", Label: "🧑‍💻Contributors", URI: "repo://contributors"}
 	sort.Slice(contributors, func(i, j int) bool { return contributors[i].Alias < contributors[j].Alias })
 	for _, c := range contributors {
 		label := c.Alias
@@ -6253,7 +6232,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root.Children = append(root.Children, contributorsNode)
 
-	checkpointsNode := &TreeNode{Kind: TreeNodeCategory, ID: "checkpoints", Label: "🔀Checkpoints", URI: "repo://cms"}
+	checkpointsNode := &TreeNode{Kind: TreeNodeCategory, ID: "checkpoints", Label: "🔀Checkpoints", URI: "repo://checkpoints"}
 	for ci := range checkpoints {
 		c := &checkpoints[ci]
 		cNode := &TreeNode{
@@ -6275,7 +6254,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	root.Children = append(root.Children, checkpointsNode)
 
-	sessionsNode := &TreeNode{Kind: TreeNodeCategory, ID: "sessions", Label: "⚪Sessions", URI: "repo://s"}
+	sessionsNode := &TreeNode{Kind: TreeNodeCategory, ID: "sessions", Label: "⚪Sessions", URI: "repo://sessions"}
 	sort.Slice(sessions, func(i, j int) bool { return sessions[i].StartedAt > sessions[j].StartedAt })
 	for si := range sessions {
 		s := &sessions[si]
@@ -6352,7 +6331,7 @@ func buildSectionTreeNode(s *Section) *TreeNode {
 			Label:   d.Name,
 			URI:     d.GetURI(),
 			SubKind: string(d.Kind),
-			Data:    map[string]interface{}{"name": d.Name, "kind": string(d.Kind), "startLine": float64(d.StartLine), "endLine": float64(d.EndLine)},
+			Data:    map[string]interface{}{"path": d.FilePath, "name": d.Name, "kind": string(d.Kind), "startLine": float64(d.StartLine), "endLine": float64(d.EndLine)},
 		}
 		sNode.Children = append(sNode.Children, dNode)
 	}
@@ -6381,14 +6360,14 @@ func buildStatuteTree(kinds []Statute) []*TreeNode {
 		for i, part := range parts {
 			if _, ok := current[part]; !ok {
 				isLeaf := i == len(parts)-1
+				meta := k.Info()
 				n := &TreeNode{
 					Kind:  TreeNodeStatute,
 					ID:    string(k),
 					Label: part,
-					URI:   "repo://sts/" + StatuteIdToUriPath(string(k)),
+					URI:   meta.GetURI(),
 				}
 				if isLeaf {
-					meta := k.Info()
 					n.Description = meta.Reason
 					priorityIcon := "🟢"
 					if meta.Priority == BreachPriorityHigh {
@@ -6410,7 +6389,7 @@ func buildStatuteTree(kinds []Statute) []*TreeNode {
 				} else {
 					prefix := strings.Join(parts[:i+1], "/")
 					n.ID = "breachCategory:" + prefix
-					n.URI = "repo://sts/" + StatuteIdToUriPath(prefix)
+					n.URI = "repo://statute/" + Flat(prefix)
 					n.Kind = TreeNodeCategory
 				}
 				current[part] = &treeEntry{node: n, children: make(map[string]*treeEntry)}
@@ -6460,7 +6439,7 @@ func buildTerritoryTree(groups []Territory) []*TreeNode {
 			Kind:        TreeNodeCategory,
 			ID:          fmt.Sprintf("%s%s", emojiText(EmojiTerritory), g.Name),
 			Label:       g.Name,
-			URI:         "repo://territory/" + PathToUriPath(g.Name),
+			URI:         "repo://territory/" + g.GetID(),
 			Description: g.Description,
 			SubKind:     "territory",
 			Data: map[string]interface{}{
@@ -9001,7 +8980,7 @@ func (r *Repo) GetID() string { return emojiText(EmojiRepo) }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Repo.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
-func (r *Repo) GetURI() string { return "repo://" }
+func (r *Repo) GetURI() string { return "repo://root" }
 
 // TechnologyKind represents a technology kind value.
 // [🧰repo⌨️cli💻main🔖graphqltypes✂️technologykind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TechnologyKind)
@@ -9139,8 +9118,7 @@ func (p *Technology) GetID() string {
 // GetURI returns the u r i of the Technology.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (p *Technology) GetURI() string {
-	pkc := TechnologyKindToCode(p.Kind)
-	return fmt.Sprintf("repo://p/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(p.Name, "@")))
+	return "repo://technology/" + p.GetID()
 }
 
 // Bundle holds the data fields for a bundle record.
@@ -9206,15 +9184,7 @@ func (b *Bundle) GetID() string {
 // GetURI returns the u r i of the Bundle.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (b *Bundle) GetURI() string {
-	parts := strings.SplitN(b.Name, "/", 2)
-	technologyCode := parts[0]
-	bundleCode := technologyCode
-	if len(parts) > 1 {
-		bundleCode = parts[1]
-	}
-	pkc := TechnologyKindToCode(DeriveTechnologyKind(technologyCode))
-	bkc := BundleKindToCode(b.Kind)
-	return fmt.Sprintf("repo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(technologyCode, "@")), bkc, PathToUriPath(bundleCode))
+	return "repo://bundle/" + b.GetID()
 }
 
 // normalizeBundleLabel holds the data fields for a normalizeBundleLabel record.
@@ -9386,7 +9356,7 @@ func (f *Folder) GetID() string {
 // GetURI returns the u r i of the Folder.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (f *Folder) GetURI() string {
-	return buildFileUriFromPath(f.Path)
+	return buildFolderUriFromPath(f.Path)
 }
 
 // File holds the data fields for a file record.
@@ -9692,13 +9662,7 @@ func (s *Section) GetID() string {
 // GetURI returns the u r i of the Section.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (s *Section) GetURI() string {
-	if s.FilePath != "" && s.Path != "" {
-		return buildSectionUriFromPath(s.FilePath + "#" + s.Path)
-	}
-	if s.FilePath != "" {
-		return buildSectionUriFromPath(s.FilePath + "#" + s.Name)
-	}
-	return "repo://s/" + PathToUriPath(s.Name)
+	return "repo://section/" + s.GetID()
 }
 
 // Definition holds the data fields for a definition record.
@@ -9740,14 +9704,7 @@ func (d *Definition) GetID() string {
 // GetURI returns the u r i of the Definition.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (d *Definition) GetURI() string {
-	dkc := definitionKindCode(map[string]interface{}{"kind": string(d.Kind)})
-	if d.FilePath != "" {
-		if d.SectionPath != "" {
-			return buildDefinitionUriFromIdValue(d.FilePath+"#"+d.SectionPath+"§"+d.Name, dkc)
-		}
-		return buildDefinitionUriFromIdValue(d.FilePath+"§"+d.Name, dkc)
-	}
-	return "repo://d/" + dkc + "/" + PathToUriPath(d.Name)
+	return "repo://definition/" + d.GetID()
 }
 
 // Contributor holds the data fields for a contributor record.
@@ -9830,7 +9787,7 @@ func (c *Contributor) GetID() string {
 // GetURI returns the u r i of the Contributor.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (c *Contributor) GetURI() string {
-	return "repo://cs/" + PathToUriPath(c.Alias)
+	return "repo://contributor/" + c.GetID()
 }
 
 // Checkpoint holds the data fields for a checkpoint record.
@@ -9870,7 +9827,7 @@ func (d *Draft) GetID() string {
 // GetURI returns the u r i of the Draft.
 // [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/GetURI)
 func (d *Draft) GetURI() string {
-	return "repo://drs/" + PathToUriPath(d.ID)
+	return "repo://draft/" + d.GetID()
 }
 
 // GetDraftsPath MUST return the stored value without modification.
@@ -9951,7 +9908,7 @@ func (c *Checkpoint) GetID() string { return emojiText(EmojiCheckpoint) + c.SHA 
 // GetURI returns the u r i of the Checkpoint.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (c *Checkpoint) GetURI() string {
-	return "repo://cms/" + c.SHA
+	return "repo://checkpoint/" + c.GetID()
 }
 
 // Ticket holds the data fields for a ticket record.
@@ -10130,23 +10087,42 @@ func (t *Ticket) GetID() string {
 	return emojiText(EmojiTicket) + Flat(t.Slug)
 }
 
+// ticketIdToParts extracts year, month, day, slug from a ticket emoji ID.
+// It walks all tickets to find the one whose ID matches.
+func ticketIdToParts(emojiId string) (year, month, day int, slug string) {
+	norm := func(s string) string {
+		r := strings.ReplaceAll(s, "\uFE0E", "")
+		return strings.ReplaceAll(r, "\uFE0F", "")
+	}
+	normalizedId := norm(emojiId)
+	// Strip goal prefix to get ticket-only part
+	ticketEmoji := norm(emojiText(EmojiTicket))
+	lastTicketIdx := strings.LastIndex(normalizedId, ticketEmoji)
+	if lastTicketIdx < 0 {
+		return 0, 0, 0, ""
+	}
+	ticketSlugFlat := normalizedId[lastTicketIdx+len(ticketEmoji):]
+	tickets, err := ListTickets(nil, nil, nil)
+	if err != nil {
+		return 0, 0, 0, ""
+	}
+	for _, t := range tickets {
+		if Flat(t.Slug) == ticketSlugFlat {
+			return t.Year, t.Month, t.Day, t.Slug
+		}
+	}
+	return 0, 0, 0, ""
+}
+
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Ticket.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (t *Ticket) GetURI() string {
+	data := map[string]interface{}{"slug": t.Slug}
 	if t.Goal != "" {
-		goalParts := strings.Split(t.Goal, "/")
-		result := "repo://"
-		for i, p := range goalParts {
-			if i == 0 {
-				result += "g/" + PathToUriPath(p)
-			} else {
-				result += "/g/" + PathToUriPath(p)
-			}
-		}
-		return result + "/tk/" + PathToUriPath(t.Slug)
+		data["goalId"] = t.Goal
 	}
-	return fmt.Sprintf("repo://y/%02d/m/%02d/d/%02d/tk/%s", t.Year, t.Month, t.Day, PathToUriPath(t.Slug))
+	return GetArtifactURI("ticket", data)
 }
 
 // GetTitle MUST return the stored value without modification.
@@ -10360,7 +10336,7 @@ func (p *Policy) GetID() string {
 // GetURI returns the u r i of the Policy.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (p *Policy) GetURI() string {
-	return "repo://pls/pl/" + PathToUriPath(strings.TrimPrefix(p.ID, "/"))
+	return "repo://policy/" + p.GetID()
 }
 
 // StatuteMeta holds the data fields for a statute meta record.
@@ -10399,7 +10375,7 @@ func (v *StatuteMeta) GetID() string {
 // GetURI returns the u r i of the StatuteMeta.
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
 func (v *StatuteMeta) GetURI() string {
-	return "repo://pls/pl/" + PathToUriPath(v.PolicyID) + "/sts/" + PathToUriPath(string(v.Kind))
+	return "repo://statute/" + v.GetID()
 }
 
 // AnalyzeResult holds the data fields for a analyze result record.
@@ -12586,7 +12562,7 @@ func (t *Todo) GetID() string { return emojiText(EmojiTodo) + Flat(t.ID) }
 // GetURI returns the u r i of the Todo.
 // [🧰repo⌨️cli💻main🔖types🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/GetURI)
 func (t *Todo) GetURI() string {
-	return "repo://tos/" + PathToUriPath(t.ID)
+	return "repo://todo/" + t.GetID()
 }
 
 // Location holds the data fields for a location record.
@@ -12623,7 +12599,7 @@ func (v *Breach) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiBrea
 // GetURI returns the u r i of the Breach.
 // [🧰repo⌨️cli💻main🔖types🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/GetURI)
 func (v *Breach) GetURI() string {
-	return "repo://brs/" + PathToUriPath(v.ID)
+	return "repo://breach/" + v.GetID()
 }
 
 // Priority MUST derive the value from the statute metadata.
@@ -15117,16 +15093,7 @@ func (g *Goal) GetID() string { return goalArtifactID(g.ID) }
 // GetURI returns the u r i of the Goal.
 // [🧰repo⌨️cli💻main🔖types🔖languages🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetURI)
 func (g *Goal) GetURI() string {
-	parts := strings.Split(g.ID, "/")
-	result := "repo://"
-	for i, p := range parts {
-		if i == 0 {
-			result += "g/" + PathToUriPath(p)
-		} else {
-			result += "/g/" + PathToUriPath(p)
-		}
-	}
-	return result
+	return GetArtifactURI("goal", map[string]interface{}{"id": g.ID})
 }
 
 // GoalDates holds the data fields for a goal dates record.
@@ -15722,7 +15689,7 @@ func (g *Territory) GetID() string {
 // GetURI returns the u r i of the Territory.
 // [🧰repo⌨️cli💻main🔖types🔖languages🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetURI)
 func (g *Territory) GetURI() string {
-	return "repo://territory/" + PathToUriPath(g.Name)
+	return "repo://territory/" + g.GetID()
 }
 
 // PolicyDef holds the data fields for a policy def record.
@@ -22188,11 +22155,13 @@ func normalizeTicketFileInput(filePath string) string {
 	if normalized == "" {
 		return ""
 	}
-	if strings.HasPrefix(normalized, "repo://") && strings.Contains(normalized, "/f/") {
-		uri := strings.TrimPrefix(normalized, "repo://")
-		path := extractPathFromFileUri(uri)
-		if path != "" {
-			return normalizeRepoPath(path)
+	if strings.HasPrefix(normalized, "repo://") {
+		id := UriToId(normalized)
+		if id != "" {
+			path := IdToPath(id)
+			if path != "" {
+				return normalizeRepoPath(path)
+			}
 		}
 	}
 	if strings.HasPrefix(normalized, "file://") {
@@ -22200,11 +22169,13 @@ func normalizeTicketFileInput(filePath string) string {
 		return normalizeRepoPath(path)
 	}
 	uri := IdToUri(normalized)
-	if uri != "" && strings.HasPrefix(uri, "repo://") && strings.Contains(uri, "/f/") {
-		uriPath := strings.TrimPrefix(uri, "repo://")
-		path := extractPathFromFileUri(uriPath)
-		if path != "" {
-			return normalizeRepoPath(path)
+	if uri != "" && strings.HasPrefix(uri, "repo://") {
+		id := UriToId(uri)
+		if id != "" {
+			path := IdToPath(id)
+			if path != "" {
+				return normalizeRepoPath(path)
+			}
 		}
 	}
 	ctx := NewCodebaseContext()
@@ -24705,7 +24676,7 @@ func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal
 			"day":    ticket.Day,
 			"status": ticket.Status,
 			"path":   ticket.FolderPath,
-			"uri":    fmt.Sprintf("repo://y/%02d/m/%02d/d/%02d/tk/%s", ticket.Year, ticket.Month, ticket.Day, PathToUriPath(ticket.Slug)),
+			"uri":    ticket.GetURI(),
 		},
 	})
 	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
@@ -34647,91 +34618,91 @@ func createMcpServer() *server.MCPServer {
 		handleRepoResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://bs", "Bundles", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://bundles", "Bundles", mcp.WithMIMEType("text/plain")),
 		handleBundlesResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://p/{pkc}/{technology}/b/{bkc}/{bundle}", "Bundle"),
+		mcp.NewResourceTemplate("repo://bundle/{id}", "Bundle"),
 		handleBundleResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://fds", "Folders", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://folders", "Folders", mcp.WithMIMEType("text/plain")),
 		handleFoldersResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://p/{pkc}/{technology}/b/{bkc}/{bundle}/fd/{fkc}/{folder}", "Folder"),
+		mcp.NewResourceTemplate("repo://folder/{id}", "Folder"),
 		handleFolderResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://fis", "Files", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://files", "Files", mcp.WithMIMEType("text/plain")),
 		handleFilesResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}", "File"),
+		mcp.NewResourceTemplate("repo://file/{id}", "File"),
 		handleFileResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}/ss", "Sections"),
+		mcp.NewResourceTemplate("repo://sections/{id}", "Sections"),
 		handleSectionsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}/s/{section}", "Section"),
+		mcp.NewResourceTemplate("repo://section/{id}", "Section"),
 		handleSectionResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}/ds", "Definitions"),
+		mcp.NewResourceTemplate("repo://definitions/{id}", "Definitions"),
 		handleDefinitionsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://p/{pkc}/{technology}/b/{bkc}/{bundle}/f/{name}/d/{dkc}/{defname}", "Definition"),
+		mcp.NewResourceTemplate("repo://definition/{id}", "Definition"),
 		handleDefinitionResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://tks", "Tickets", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://tickets", "Tickets", mcp.WithMIMEType("text/plain")),
 		handleTicketsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://y/{yy}/m/{mm}/d/{dd}/tk/{slug}", "Ticket"),
+		mcp.NewResourceTemplate("repo://ticket/{id}", "Ticket"),
 		handleTicketResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://gs", "Goals", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://goals", "Goals", mcp.WithMIMEType("text/plain")),
 		handleGoalsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://g/{slug}", "Goal"),
+		mcp.NewResourceTemplate("repo://goal/{id}", "Goal"),
 		handleGoalResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://pls", "Policies", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://policies", "Policies", mcp.WithMIMEType("text/plain")),
 		handlePoliciesResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://pls/pl/{name}", "Policy"),
+		mcp.NewResourceTemplate("repo://policy/{id}", "Policy"),
 		handlePolicyResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://sts", "Breach Kinds", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://statutes", "Breach Kinds", mcp.WithMIMEType("text/plain")),
 		handleStatutesResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://pls/pl/{policy}/sts/{name}", "Breach Kind"),
+		mcp.NewResourceTemplate("repo://statute/{id}", "Breach Kind"),
 		handleStatuteResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://cs", "Contributors", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://contributors", "Contributors", mcp.WithMIMEType("text/plain")),
 		handleContributorsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://cs/{name}", "Contributor"),
+		mcp.NewResourceTemplate("repo://contributor/{id}", "Contributor"),
 		handleContributorResource,
 	)
 	s.AddResource(
-		mcp.NewResource("repo://cms", "Checkpoints", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("repo://checkpoints", "Checkpoints", mcp.WithMIMEType("text/plain")),
 		handleCheckpointsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://cms/{sha}", "Checkpoint"),
+		mcp.NewResourceTemplate("repo://checkpoint/{id}", "Checkpoint"),
 		handleCheckpointResource,
 	)
 	s.AddTool(
@@ -35847,22 +35818,28 @@ func handleBundlesResource(ctx context.Context, request mcp.ReadResourceRequest)
 // handleBundleResource holds the data fields for a handleBundleResource record.
 // handleBundleResource MUST perform the handleBundleResource operation.
 func handleBundleResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	uri := strings.TrimPrefix(request.Params.URI, "repo://")
-	parts := strings.Split(uri, "/")
-	var id string
-	if len(parts) >= 6 && parts[0] == "p" && parts[3] == "b" {
-		technologyName := PathFromUriPath(parts[2])
-		bundleName := PathFromUriPath(parts[5])
-		if technologyName == bundleName {
-			id = technologyName
-		} else {
-			id = technologyName + "/" + bundleName
+	id := UriToId(request.Params.URI)
+	if id == "" {
+		return nil, fmt.Errorf("invalid bundle URI: %s", request.Params.URI)
+	}
+	// Resolve bundle name from ID by walking bundles
+	bundles := LoadBundles()
+	norm := func(s string) string {
+		r := strings.ReplaceAll(s, "\uFE0E", "")
+		return strings.ReplaceAll(r, "\uFE0F", "")
+	}
+	var bundleName string
+	for _, b := range bundles {
+		if norm(b.GetID()) == norm(id) {
+			bundleName = b.Name
+			break
 		}
-	} else {
-		id = PathFromUriPath(uri)
+	}
+	if bundleName == "" {
+		bundleName = id
 	}
 	query := `query Bundle($id: String!) { bundle(name: $id) { id name root sourceRoot projectType tags kind } }`
-	result, err := gql(query, map[string]interface{}{"id": id})
+	result, err := gql(query, map[string]interface{}{"id": bundleName})
 	if err != nil {
 		return nil, err
 	}
@@ -35905,8 +35882,8 @@ func handleFoldersResource(ctx context.Context, request mcp.ReadResourceRequest)
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefolderresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFolderResource)
 // handleFolderResource performs the handleFolderResource operation.
 func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	uri := strings.TrimPrefix(request.Params.URI, "repo://")
-	path := extractPathFromFolderUri(uri)
+	id := UriToId(request.Params.URI)
+	path := IdToPath(id)
 	query := `query Folder($path: String!) { folder(path: $path) { id path name kind parent { path } children { path name kind } files { path name kind } breachs { id } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
@@ -35951,8 +35928,8 @@ func handleFilesResource(ctx context.Context, request mcp.ReadResourceRequest) (
 // handleFileResource holds the data fields for a handleFileResource record.
 // handleFileResource MUST perform the handleFileResource operation.
 func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	uri := strings.TrimPrefix(request.Params.URI, "repo://")
-	path := extractPathFromFileUri(uri)
+	id := UriToId(request.Params.URI)
+	path := IdToPath(id)
 	query := `query File($path: String!) { file(path: $path) { id path name kind extension folder { path } bundle { name } breachs { id } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
@@ -35975,8 +35952,8 @@ func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 // handleSectionsResource MUST perform the handleSectionsResource operation.
 // handleSectionsResource performs the handleSectionsResource operation.
 func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	uri := strings.TrimPrefix(request.Params.URI, "repo://")
-	path := extractPathFromFileUri(strings.TrimSuffix(uri, "/ss"))
+	id := UriToId(request.Params.URI)
+	path := IdToPath(id)
 	query := `query Sections($path: String!) { file(path: $path) { sections { id path name range { start end } definitions { name } children { name } } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
@@ -35999,9 +35976,12 @@ func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest
 // handleSectionResource holds the data fields for a handleSectionResource record.
 // handleSectionResource MUST perform the handleSectionResource operation.
 func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	uri := strings.TrimPrefix(request.Params.URI, "repo://")
-	path := extractPathFromFileUri(uri)
-	_, sectionSlugs := extractFileAndSectionsFromUri(uri)
+	id := UriToId(request.Params.URI)
+	if id == "" {
+		return nil, fmt.Errorf("invalid section URI: %s", request.Params.URI)
+	}
+	path := IdToPath(id)
+	sectionSlugs := IdToSectionPath(id)
 	if len(sectionSlugs) == 0 {
 		return nil, fmt.Errorf("invalid section URI: %s", request.Params.URI)
 	}
@@ -36032,8 +36012,8 @@ func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest)
 // handleDefinitionsResource holds the data fields for a handleDefinitionsResource record.
 // handleDefinitionsResource MUST perform the handleDefinitionsResource operation.
 func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	uri := strings.TrimPrefix(request.Params.URI, "repo://")
-	path := extractPathFromFileUri(strings.TrimSuffix(uri, "/ds"))
+	id := UriToId(request.Params.URI)
+	path := IdToPath(id)
 	query := `query Definitions($path: String!) { file(path: $path) { definitions { id name kind range { start end } } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
@@ -36056,9 +36036,12 @@ func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequ
 // handleDefinitionResource holds the data fields for a handleDefinitionResource record.
 // handleDefinitionResource MUST perform the handleDefinitionResource operation.
 func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	uri := strings.TrimPrefix(request.Params.URI, "repo://")
-	path := extractPathFromFileUri(uri)
-	_, defName := extractFileAndDefinitionFromUri(uri)
+	id := UriToId(request.Params.URI)
+	if id == "" {
+		return nil, fmt.Errorf("invalid definition URI: %s", request.Params.URI)
+	}
+	path := IdToPath(id)
+	defName := IdToDefinitionName(id)
 	if defName == "" {
 		return nil, fmt.Errorf("invalid definition URI: %s", request.Params.URI)
 	}
@@ -36108,14 +36091,15 @@ func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest)
 // handleTicketResource holds the data fields for a handleTicketResource record.
 // handleTicketResource MUST perform the handleTicketResource operation.
 func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	parts := strings.Split(strings.TrimPrefix(request.Params.URI, "repo://y/"), "/")
-	if len(parts) < 8 || parts[1] != "m" || parts[3] != "d" || parts[5] != "tk" {
+	id := UriToId(request.Params.URI)
+	if id == "" {
 		return nil, fmt.Errorf("invalid ticket URI: %s", request.Params.URI)
 	}
-	year, _ := strconv.Atoi(parts[0])
-	month, _ := strconv.Atoi(parts[2])
-	day, _ := strconv.Atoi(parts[4])
-	slug := strings.Join(parts[6:], "/")
+	// Parse ticket ID to extract year/month/day/slug
+	year, month, day, slug := ticketIdToParts(id)
+	if slug == "" {
+		return nil, fmt.Errorf("invalid ticket ID: %s", id)
+	}
 
 	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) { ticket(year: $year, month: $month, day: $day, slug: $slug) { id slug title status prompt interactions { prompt dates { started finished } } } }`
 	result, err := gql(query, map[string]interface{}{"year": year, "month": month, "day": day, "slug": slug})
@@ -36164,7 +36148,12 @@ func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) (
 // handleGoalResource holds the data fields for a handleGoalResource record.
 // handleGoalResource MUST perform the handleGoalResource operation.
 func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	goalPath := strings.TrimPrefix(request.Params.URI, "repo://g/")
+	id := UriToId(request.Params.URI)
+	if id == "" {
+		return nil, fmt.Errorf("invalid goal URI: %s", request.Params.URI)
+	}
+	// Convert emoji goal ID back to goal path
+	goalPath := semioIDToGoalPath(id)
 	goals, err := ListGoals()
 	if err != nil {
 		return nil, err
@@ -36217,7 +36206,10 @@ func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest
 // handlePolicyResource holds the data fields for a handlePolicyResource record.
 // handlePolicyResource MUST perform the handlePolicyResource operation.
 func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	id := strings.TrimPrefix(request.Params.URI, "repo://pls/pl/")
+	id := UriToId(request.Params.URI)
+	if id == "" {
+		return nil, fmt.Errorf("invalid policy URI: %s", request.Params.URI)
+	}
 	query := `query Policy($id: String!) { policy(id: $id) { id description breachs { id } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
@@ -36262,9 +36254,9 @@ func handleStatutesResource(ctx context.Context, request mcp.ReadResourceRequest
 // handleStatuteResource holds the data fields for a handleStatuteResource record.
 // handleStatuteResource MUST perform the handleStatuteResource operation.
 func handleStatuteResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	id := strings.TrimPrefix(request.Params.URI, "repo://pls/pl/")
-	if stsIdx := strings.Index(id, "/sts/"); stsIdx >= 0 {
-		id = id[stsIdx+5:]
+	id := UriToId(request.Params.URI)
+	if id == "" {
+		return nil, fmt.Errorf("invalid statute URI: %s", request.Params.URI)
 	}
 	query := `query Statute($id: String!) { statute(id: $id) { id priority autofixable reason solution } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
@@ -36310,7 +36302,10 @@ func handleContributorsResource(ctx context.Context, request mcp.ReadResourceReq
 // handleContributorResource holds the data fields for a handleContributorResource record.
 // handleContributorResource MUST perform the handleContributorResource operation.
 func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	id := strings.TrimPrefix(request.Params.URI, "repo://cs/")
+	id := UriToId(request.Params.URI)
+	if id == "" {
+		return nil, fmt.Errorf("invalid contributor URI: %s", request.Params.URI)
+	}
 	query := `query Contributor($id: String!) { contributor(id: $id) { id emails name contributions { checkpoints { id } tickets { id } } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
@@ -42149,25 +42144,41 @@ func interactionKindCode(data map[string]interface{}) string {
 // containsUriSection holds the data fields for a containsUriSection record.
 // containsUriSection MUST perform the containsUriSection operation.
 func containsUriSection(uri string) bool {
-	if strings.HasPrefix(uri, "repo://section/") {
-		return true
-	}
-
-	return strings.Contains(uri, "/s/") && !strings.Contains(uri, "/d/")
+	return strings.HasPrefix(uri, "repo://section/")
 }
 
 // containsUriDefinition holds the data fields for a containsUriDefinition record.
 // containsUriDefinition MUST perform the containsUriDefinition operation.
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️containsuridefinition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/containsUriDefinition)
 func containsUriDefinition(uri string) bool {
-	return strings.Contains(uri, "/d/") || strings.HasPrefix(uri, "repo://definition/")
+	return strings.HasPrefix(uri, "repo://definition/")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileandsectionsfromuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/extractFileAndSectionsFromUri)
-// extractFileAndSectionsFromUri holds the data fields for a extractFileAndSectionsFromUri record.
-// extractFileAndSectionsFromUri MUST perform the extractFileAndSectionsFromUri operation.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileandsectionsfromuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileandsectionsfromuri)
+// extractFileAndSectionsFromUri extracts the file path and section names from a URI.
+// Supports new format repo://section/{{id}} where ID encodes file+sections as emojis.
 func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []string) {
-	p := strings.TrimPrefix(uri, "repo://")
+	// New format: repo://section/{{id}}
+	if strings.HasPrefix(uri, "repo://section/") || strings.HasPrefix(uri, "repo://file/") {
+		id := UriToId(uri)
+		if id == "" {
+			return "", nil
+		}
+		filePath = IdToPath(id)
+		sectionSlugs = IdToSectionPath(id)
+		return filePath, sectionSlugs
+	}
+	// Try the raw string as an ID (for cases where "repo://" was already stripped)
+	prefixStripped := strings.TrimPrefix(uri, "repo://")
+	if strings.HasPrefix(prefixStripped, "section/") || strings.HasPrefix(prefixStripped, "file/") {
+		fullUri := "repo://" + prefixStripped
+		id := UriToId(fullUri)
+		if id != "" {
+			return IdToPath(id), IdToSectionPath(id)
+		}
+	}
+	// Legacy fallback: parse old /f/ and /s/ format
+	p := prefixStripped
 	var sectionParts []string
 	remaining := p
 	for {
@@ -42175,11 +42186,7 @@ func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []
 		if idx < 0 {
 			break
 		}
-		before := remaining[:idx]
 		after := remaining[idx+3:]
-		if len(sectionParts) == 0 {
-			_ = before
-		}
 		nextS := strings.Index(after, "/s/")
 		nextD := strings.Index(after, "/d/")
 		endIdx := len(after)
@@ -42205,11 +42212,31 @@ func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []
 	return filePath, sectionParts
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileanddefinitionfromuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/extractFileAndDefinitionFromUri)
-// extractFileAndDefinitionFromUri holds the data fields for a extractFileAndDefinitionFromUri record.
-// extractFileAndDefinitionFromUri MUST perform the extractFileAndDefinitionFromUri operation.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileanddefinitionfromuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileanddefinitionfromuri)
+// extractFileAndDefinitionFromUri extracts the file path and definition name from a URI.
+// Supports new format repo://definition/{{id}} where ID encodes file+sections+definition as emojis.
 func extractFileAndDefinitionFromUri(uri string) (filePath string, defName string) {
-	p := strings.TrimPrefix(uri, "repo://")
+	// New format: repo://definition/{{id}}
+	if strings.HasPrefix(uri, "repo://definition/") {
+		id := UriToId(uri)
+		if id == "" {
+			return "", ""
+		}
+		filePath = IdToPath(id)
+		defName = IdToDefinitionName(id)
+		return filePath, defName
+	}
+	// Try with the raw string (for cases where "repo://" was already stripped)
+	prefixStripped := strings.TrimPrefix(uri, "repo://")
+	if strings.HasPrefix(prefixStripped, "definition/") {
+		fullUri := "repo://" + prefixStripped
+		id := UriToId(fullUri)
+		if id != "" {
+			return IdToPath(id), IdToDefinitionName(id)
+		}
+	}
+	// Legacy fallback: parse old /f/ and /d/ format
+	p := prefixStripped
 	fIdx := strings.Index(p, "/f/")
 	if fIdx >= 0 {
 		rest := p[fIdx+3:]
@@ -42724,605 +42751,72 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 }
 
 // GetArtifactURI MUST retrieve the requested value or return an error.
-// GetArtifactURI retrieves and returns the artifact u r i.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifacturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/GetArtifactURI)
+// GetArtifactURI retrieves and returns the artifact URI using the format repo://{{entity-kind}}/{{id}}.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifacturi](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifacturi)
 func GetArtifactURI(kind string, data map[string]interface{}) string {
-	parentUri, _ := data["parentUri"].(string)
-	switch kind {
-	case "root":
-		return "repo://"
-	case "years":
-		return "repo://y"
-	case "year":
-		yy, _ := data["yy"].(string)
-		return fmt.Sprintf("repo://y/%s", yy)
-	case "months":
-		yy, _ := data["yy"].(string)
-		return fmt.Sprintf("repo://y/%s/m", yy)
-	case "month":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		return fmt.Sprintf("repo://y/%s/m/%s", yy, mm)
-	case "days":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		return fmt.Sprintf("repo://y/%s/m/%s/d", yy, mm)
-	case "day":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		dd, _ := data["dd"].(string)
-		return fmt.Sprintf("repo://y/%s/m/%s/d/%s", yy, mm, dd)
-	case "hours":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		dd, _ := data["dd"].(string)
-		return fmt.Sprintf("repo://y/%s/m/%s/d/%s/h", yy, mm, dd)
-	case "hour":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		dd, _ := data["dd"].(string)
-		hh, _ := data["hh"].(string)
-		return fmt.Sprintf("repo://y/%s/m/%s/d/%s/h/%s", yy, mm, dd, hh)
-	case "minutes":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		dd, _ := data["dd"].(string)
-		hh, _ := data["hh"].(string)
-		return fmt.Sprintf("repo://y/%s/m/%s/d/%s/h/%s/min", yy, mm, dd, hh)
-	case "minute":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		dd, _ := data["dd"].(string)
-		hh, _ := data["hh"].(string)
-		min, _ := data["min"].(string)
-		if min == "" {
-			min, _ = data["mm"].(string)
-		}
-		return fmt.Sprintf("repo://y/%s/m/%s/d/%s/h/%s/min/%s", yy, mm, dd, hh, min)
-	case "seconds":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		dd, _ := data["dd"].(string)
-		hh, _ := data["hh"].(string)
-		min, _ := data["min"].(string)
-		if min == "" {
-			min, _ = data["mm"].(string)
-		}
-		return fmt.Sprintf("repo://y/%s/m/%s/d/%s/h/%s/min/%s/s", yy, mm, dd, hh, min)
-	case "second":
-		yy, _ := data["yy"].(string)
-		mm, _ := data["mm"].(string)
-		dd, _ := data["dd"].(string)
-		hh, _ := data["hh"].(string)
-		min, _ := data["min"].(string)
-		if min == "" {
-			min, _ = data["mm"].(string)
-		}
-		ss, _ := data["ss"].(string)
-		return fmt.Sprintf("repo://y/%s/m/%s/d/%s/h/%s/min/%s/s/%s", yy, mm, dd, hh, min, ss)
-	case "codebase":
-		return "repo://cb"
-	case "technologies":
-		return "repo://p"
-	case "technology":
-		name, _ := data["name"].(string)
-		kc := technologyKindCode(data)
-		return fmt.Sprintf("repo://p/%s/%s", kc, PathToUriPath(strings.TrimPrefix(name, "@")))
-	case "bundles":
-		if parentUri != "" {
-			return parentUri + "/bs"
-		}
-		return "repo://p/bs"
-	case "bundle":
-		name, _ := data["name"].(string)
-		parts := strings.SplitN(name, "/", 2)
-		technologyCode := parts[0]
-		bundleCode := technologyCode
-		if len(parts) > 1 {
-			bundleCode = parts[1]
-		}
-		pkc := technologyKindCode(map[string]interface{}{"name": technologyCode})
-		bkc := bundleKindCode(data)
-		return fmt.Sprintf("repo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(strings.TrimPrefix(technologyCode, "@")), bkc, PathToUriPath(bundleCode))
-	case "folders":
-		if parentUri != "" {
-			return parentUri + "/fds"
-		}
-		return "repo://fds"
-	case "folder":
-		if parentUri != "" {
-			name := filepath.Base(data["path"].(string))
-			fkc := folderKindCode(data)
-			return fmt.Sprintf("%s/fd/%s/%s", parentUri, fkc, PathToUriPath(name))
-		}
-		path, _ := data["path"].(string)
-		name := filepath.Base(path)
-		fkc := folderKindCode(data)
-		return fmt.Sprintf("repo://fd/%s/%s", fkc, PathToUriPath(name))
-	case "files":
-		if parentUri != "" {
-			return parentUri + "/fis"
-		}
-		return "repo://fis"
-	case "file":
-		if parentUri != "" {
-			path, _ := data["path"].(string)
-			if path == "" {
-				path, _ = data["id"].(string)
-			}
-			name := filepath.Base(path)
-			return fmt.Sprintf("%s/f/%s", parentUri, PathToUriPath(name))
-		}
-		path, _ := data["path"].(string)
-		if path == "" {
-			path, _ = data["id"].(string)
-		}
-		return buildFileUriFromPath(path)
-	case "lines":
-		if parentUri != "" {
-			return parentUri + "/ls"
-		}
-		filePath, _ := data["filePath"].(string)
-		return buildFileUriFromPath(filePath) + "/ls"
-	case "line":
-		if parentUri != "" {
-			line, _ := data["line"].(float64)
-			return fmt.Sprintf("%s/l/%d", parentUri, int(line))
-		}
-		filePath, _ := data["filePath"].(string)
-		line, _ := data["line"].(float64)
-		return fmt.Sprintf("%s/l/%d", buildFileUriFromPath(filePath), int(line))
-	case "ranges":
-		if parentUri != "" {
-			return parentUri + "/rgs"
-		}
-		filePath, _ := data["filePath"].(string)
-		return buildFileUriFromPath(filePath) + "/rgs"
-	case "range":
-		if parentUri != "" {
-			start, _ := data["startLine"].(float64)
-			end, _ := data["endLine"].(float64)
-			return fmt.Sprintf("%s/rg/%d/%d", parentUri, int(start), int(end))
-		}
-		filePath, _ := data["filePath"].(string)
-		start, _ := data["startLine"].(float64)
-		end, _ := data["endLine"].(float64)
-		return fmt.Sprintf("%s/rg/%d/%d", buildFileUriFromPath(filePath), int(start), int(end))
-	case "sections":
-		if parentUri != "" {
-			return parentUri + "/ss"
-		}
-		filePath, _ := data["filePath"].(string)
-		return buildFileUriFromPath(filePath) + "/ss"
-	case "section":
-		if parentUri != "" {
-			name, _ := data["name"].(string)
-			if name == "" {
-				path, _ := data["path"].(string)
-				if idx := strings.LastIndex(path, "#"); idx >= 0 {
-					name = path[idx+1:]
-				} else {
-					name = path
-				}
-			}
-			return fmt.Sprintf("%s/s/%s", parentUri, PathToUriPath(name))
-		}
-		path, _ := data["path"].(string)
-		return buildSectionUriFromPath(path)
-	case "definitions":
-		if parentUri != "" {
-			return parentUri + "/ds"
-		}
-		filePath, _ := data["filePath"].(string)
-		return buildFileUriFromPath(filePath) + "/ds"
-	case "definition":
-		if parentUri != "" {
-			name, _ := data["name"].(string)
-			if name == "" {
-				id, _ := data["id"].(string)
-				if paragraphIdx := strings.LastIndex(id, "§"); paragraphIdx >= 0 {
-					name = id[paragraphIdx+len("§"):]
-				}
-			}
-			dkc := definitionKindCode(data)
-			return fmt.Sprintf("%s/d/%s/%s", parentUri, dkc, PathToUriPath(name))
-		}
-		id, _ := data["id"].(string)
-		if id == "" {
-			filePath, _ := data["filePath"].(string)
-			sectionPath, _ := data["sectionPath"].(string)
-			name, _ := data["name"].(string)
-			val := filePath
-			if sectionPath != "" {
-				val += "#" + sectionPath
-			}
-			val += "§" + name
-			id = val
-		}
-		return buildDefinitionUriFromIdValue(id, definitionKindCode(data))
-	case "goals":
-		if parentUri != "" {
-			return parentUri + "/gs"
-		}
-		return "repo://gs"
-	case "goal":
-		id, _ := data["id"].(string)
-		if parentUri != "" {
-			name := id
-			if idx := strings.LastIndex(id, "/"); idx >= 0 {
-				name = id[idx+1:]
-			}
-			return fmt.Sprintf("%s/g/%s", parentUri, PathToUriPath(name))
-		}
-		parts := strings.Split(id, "/")
-		result := "repo://"
-		for i, p := range parts {
-			if i == 0 {
-				result += "g/" + PathToUriPath(p)
-			} else {
-				result += "/g/" + PathToUriPath(p)
-			}
-		}
-		return result
-	case "tickets":
-		if parentUri != "" {
-			return parentUri + "/tks"
-		}
-		return "repo://tks"
-	case "ticket":
-		goal, _ := data["goal"].(string)
-		slug, _ := data["slug"].(string)
-		title, _ := data["title"].(string)
-		if slug == "" && title != "" {
-			slug = title
-		}
-		if parentUri != "" {
-			return fmt.Sprintf("%s/tk/%s", parentUri, PathToUriPath(slug))
-		}
-		if goal != "" && slug != "" {
-			goalParts := strings.Split(goal, "/")
-			result := "repo://"
-			for i, p := range goalParts {
-				if i == 0 {
-					result += "g/" + PathToUriPath(p)
-				} else {
-					result += "/g/" + PathToUriPath(p)
-				}
-			}
-			return fmt.Sprintf("%s/tk/%s", result, PathToUriPath(slug))
-		}
-		year, _ := data["year"].(float64)
-		month, _ := data["month"].(float64)
-		day, _ := data["day"].(float64)
-		if year == 0 && month == 0 && day == 0 {
-			if uri, ok := data["uri"].(string); ok && uri != "" {
-				return uri
-			}
-		}
-		return fmt.Sprintf("repo://y/%02d/m/%02d/d/%02d/tk/%s", int(year), int(month), int(day), PathToUriPath(slug))
-	case "drafts":
-		if parentUri != "" {
-			return parentUri + "/drs"
-		}
-		return "repo://drs"
-	case "draft":
-		slug, _ := data["slug"].(string)
-		if slug == "" {
-			slug, _ = data["id"].(string)
-		}
-		if parentUri != "" {
-			return fmt.Sprintf("%s/drs/%s", parentUri, PathToUriPath(slug))
-		}
-		return fmt.Sprintf("repo://drs/%s", PathToUriPath(slug))
-	case "todos":
-		if parentUri != "" {
-			return parentUri + "/tos"
-		}
-		return "repo://tos"
-	case "todo":
-		slug, _ := data["id"].(string)
-		if parentUri != "" {
-			return fmt.Sprintf("%s/tos/%s", parentUri, PathToUriPath(slug))
-		}
-		return fmt.Sprintf("repo://tos/%s", PathToUriPath(slug))
-	case "policies":
-		if parentUri != "" {
-			return parentUri + "/pls"
-		}
-		return "repo://pls"
-	case "policy":
-		id, _ := data["id"].(string)
-		id = strings.TrimPrefix(id, "/")
-		if parentUri != "" {
-			return fmt.Sprintf("%s/pls/pl/%s", parentUri, PathToUriPath(id))
-		}
-		return fmt.Sprintf("repo://pls/pl/%s", PathToUriPath(id))
-	case "statutes":
-		if parentUri != "" {
-			return parentUri + "/sts"
-		}
-		return "repo://sts"
-	case "statute":
-		id, _ := data["id"].(string)
-		if parentUri != "" {
-			return fmt.Sprintf("%s/sts/%s", parentUri, PathToUriPath(id))
-		}
-		return fmt.Sprintf("repo://sts/%s", StatuteIdToUriPath(id))
-	case "breaches":
-		if parentUri != "" {
-			return parentUri + "/brs"
-		}
-		return "repo://brs"
-	case "breach":
-		policyUri, _ := data["policyUri"].(string)
-		affected, _ := data["affected"].(string)
-		location, _ := data["location"].(string)
-		when, _ := data["when"].(string)
-		if policyUri != "" || parentUri != "" {
-			base := policyUri
-			if base == "" {
-				base = parentUri
-			}
-			return fmt.Sprintf("%s/brs/affects/%s/at/%s/when/%s", base, url.PathEscape(affected), url.PathEscape(location), url.PathEscape(when))
-		}
-		id, _ := data["id"].(string)
-		return fmt.Sprintf("repo://brs/%s", PathToUriPath(id))
-	case "contributors":
-		return "repo://cs"
-	case "contributor":
-		id, _ := data["github"].(string)
-		return fmt.Sprintf("repo://cs/%s", PathToUriPath(id))
-	case "checkpoints":
-		return "repo://cms"
-	case "checkpoint":
-		sha, _ := data["sha"].(string)
-		return fmt.Sprintf("repo://cms/%s", sha)
-	case "interactions":
-		return "repo://is"
-	case "interaction":
-		when, _ := data["when"].(string)
-		on, _ := data["on"].(string)
-		kind, _ := data["kind"].(string)
-		by, _ := data["by"].(string)
-		if when != "" {
-			return fmt.Sprintf("repo://is/when/%s/on/%s/%s/by/%s", url.PathEscape(when), url.PathEscape(on), PathToUriPath(kind), PathToUriPath(by))
-		}
-		entityUri, _ := data["entityUri"].(string)
-		if entityUri == "" {
-			entityID, _ := data["entityId"].(string)
-			entityUri = IdToUri(entityID)
-		}
-		if entityUri != "" {
-			return "repo://is/on/" + url.PathEscape(entityUri) + "/" + kind
-		}
-		return ""
-	case "sessions":
-		return "repo://s"
-	case "session":
-		uuid, _ := data["uuid"].(string)
-		if uuid == "" {
-			uuid, _ = data["id"].(string)
-		}
-		return fmt.Sprintf("repo://s/%s", PathToUriPath(uuid))
+	id := GetArtifactID(kind, data)
+	if id == "" {
+		return "repo://" + kind
 	}
-	return ""
+	return "repo://" + kind + "/" + id
 }
 
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildfolderurifrompath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/buildFolderUriFromPath)
 // buildFolderUriFromPath holds the data fields for a buildFolderUriFromPath record.
 // buildFolderUriFromPath MUST perform the buildFolderUriFromPath operation.
 func buildFolderUriFromPath(path string) string {
-	normalized := NormalizePath(path)
-	bundle := GetBundleByPath(normalized)
-	if bundle == nil {
-		fk := DeriveFolderKind(normalized)
-		fkc := FolderKindToCode(fk)
-		return "repo://fd/" + fkc + "/" + PathToUriPath(filepath.Base(normalized))
-	}
-	bundleRoot := NormalizePath(bundle.Root)
-	parts := strings.SplitN(bundle.Name, "/", 2)
-	technologyCode := parts[0]
-	bundleCode := technologyCode
-	if len(parts) > 1 {
-		bundleCode = parts[1]
-	}
-	pkc := TechnologyKindToCode(DeriveTechnologyKind(technologyCode))
-	bkc := BundleKindToCode(bundle.Kind)
-	technologyName := strings.TrimPrefix(technologyCode, "@")
-	bundleUri := fmt.Sprintf("repo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(technologyName), bkc, PathToUriPath(bundleCode))
-	relPath := normalized
-	if strings.HasPrefix(normalized, bundleRoot+"/") {
-		relPath = strings.TrimPrefix(normalized, bundleRoot+"/")
-	} else if normalized == bundleRoot {
-		fk := DeriveFolderKind(normalized)
-		fkc := FolderKindToCode(fk)
-		return bundleUri + "/fd/" + fkc + "/" + PathToUriPath(filepath.Base(normalized))
-	}
-	segments := strings.Split(relPath, "/")
-	result := bundleUri
-	folderPath := bundleRoot
-	for _, seg := range segments {
-		folderPath = filepath.Join(folderPath, seg)
-		fk := DeriveFolderKind(NormalizePath(folderPath))
-		fkc := FolderKindToCode(fk)
-		result += "/fd/" + fkc + "/" + PathToUriPath(seg)
-	}
-	return result
+	return GetArtifactURI("folder", map[string]interface{}{"path": path})
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfolderuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/extractPathFromFolderUri)
-// extractPathFromFolderUri holds the data fields for a extractPathFromFolderUri record.
-// extractPathFromFolderUri MUST perform the extractPathFromFolderUri operation.
+// extractPathFromFolderUri extracts the filesystem path from a folder URI.
+// With the new repo://folder/{{id}} format, it resolves the emoji ID back to a path.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfolderuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfolderuri)
 func extractPathFromFolderUri(uri string) string {
-	parts := strings.Split(uri, "/")
-	if len(parts) < 6 || parts[0] != "p" || parts[3] != "b" {
+	id := UriToId("repo://" + uri)
+	if id == "" {
+		id = UriToId(uri)
+	}
+	if id == "" {
 		return ""
 	}
-	technologyName := PathFromUriPath(parts[2])
-	bundleName := PathFromUriPath(parts[5])
-	bundleId := technologyName
-	if technologyName != bundleName {
-		bundleId = technologyName + "/" + bundleName
-	}
-	var bundle *Bundle
-	for i, b := range GetTechnologies() {
-		if b.Name == bundleId {
-			bundle = &GetTechnologies()[i]
-			break
-		}
-	}
-	if bundle == nil {
-		return ""
-	}
-	bundleRoot := NormalizePath(bundle.Root)
-	folderParts := []string{}
-	i := 6
-	for i < len(parts)-1 {
-		if parts[i] == "fd" && i+2 < len(parts) {
-			folderParts = append(folderParts, PathFromUriPath(parts[i+2]))
-			i += 3
-		} else {
-			break
-		}
-	}
-	if len(folderParts) == 0 {
-		return bundleRoot
-	}
-	return filepath.Join(bundleRoot, filepath.Join(folderParts...))
+	return IdToPath(id)
 }
 
-// extractPathFromFileUri holds the data fields for a extractPathFromFileUri record.
-// extractPathFromFileUri MUST perform the extractPathFromFileUri operation.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfileuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/extractPathFromFileUri)
+// extractPathFromFileUri extracts the filesystem path from a file URI.
+// With the new repo://file/{{id}} format, it resolves the emoji ID back to a path.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfileuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfileuri)
 func extractPathFromFileUri(uri string) string {
-	parts := strings.Split(uri, "/")
-	if len(parts) < 6 || parts[0] != "p" || parts[3] != "b" {
+	id := UriToId("repo://" + uri)
+	if id == "" {
+		id = UriToId(uri)
+	}
+	if id == "" {
 		return ""
 	}
-	technologyName := PathFromUriPath(parts[2])
-	bundleName := PathFromUriPath(parts[5])
-	bundleId := technologyName
-	if technologyName != bundleName {
-		bundleId = technologyName + "/" + bundleName
-	}
-	var bundle *Bundle
-	for i, b := range GetTechnologies() {
-		if b.Name == bundleId {
-			bundle = &GetTechnologies()[i]
-			break
-		}
-	}
-	if bundle == nil {
-		return ""
-	}
-	bundleRoot := NormalizePath(bundle.Root)
-	folderParts := []string{}
-	i := 6
-	for i < len(parts)-1 {
-		if parts[i] == "fd" && i+2 < len(parts) {
-			folderParts = append(folderParts, PathFromUriPath(parts[i+2]))
-			i += 3
-		} else if parts[i] == "f" && i+1 < len(parts) {
-			fileName := PathFromUriPath(parts[i+1])
-			if len(folderParts) == 0 {
-				return filepath.Join(bundleRoot, fileName)
-			}
-			return filepath.Join(bundleRoot, filepath.Join(folderParts...), fileName)
-		} else {
-			break
-		}
-	}
-	return ""
+	return IdToPath(id)
 }
 
-// buildFileUriFromPath holds the data fields for a buildFileUriFromPath record.
-// buildFileUriFromPath MUST perform the buildFileUriFromPath operation.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildfileurifrompath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/buildFileUriFromPath)
+// buildFileUriFromPath builds a file URI from a filesystem path.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildfileurifrompath](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildfileurifrompath)
 func buildFileUriFromPath(path string) string {
-	normalized := NormalizePath(path)
-	bundle := GetBundleByPath(normalized)
-	if bundle == nil {
-		return "repo://f/" + PathToUriPath(filepath.Base(normalized))
-	}
-	bundleRoot := NormalizePath(bundle.Root)
-	parts := strings.SplitN(bundle.Name, "/", 2)
-	technologyCode := parts[0]
-	bundleCode := technologyCode
-	if len(parts) > 1 {
-		bundleCode = parts[1]
-	}
-	pkc := TechnologyKindToCode(DeriveTechnologyKind(technologyCode))
-	bkc := BundleKindToCode(bundle.Kind)
-	technologyName := strings.TrimPrefix(technologyCode, "@")
-	bundleUri := fmt.Sprintf("repo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(technologyName), bkc, PathToUriPath(bundleCode))
-	relPath := normalized
-	if strings.HasPrefix(normalized, bundleRoot+"/") {
-		relPath = strings.TrimPrefix(normalized, bundleRoot+"/")
-	} else if normalized == bundleRoot {
-		return bundleUri + "/f/" + PathToUriPath(filepath.Base(normalized))
-	}
-	segments := strings.Split(relPath, "/")
-	if len(segments) <= 1 {
-		return bundleUri + "/f/" + PathToUriPath(filepath.Base(normalized))
-	}
-	result := bundleUri
-	folderPath := bundleRoot
-	for i := 0; i < len(segments)-1; i++ {
-		folderPath = filepath.Join(folderPath, segments[i])
-		fk := DeriveFolderKind(NormalizePath(folderPath))
-		fkc := FolderKindToCode(fk)
-		result += "/fd/" + fkc + "/" + PathToUriPath(segments[i])
-	}
-	result += "/f/" + PathToUriPath(segments[len(segments)-1])
-	return result
+	return GetArtifactURI("file", map[string]interface{}{"path": path})
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildsectionurifrompath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/buildSectionUriFromPath)
-// buildSectionUriFromPath MUST perform the buildSectionUriFromPath operation.
-// buildSectionUriFromPath performs the buildSectionUriFromPath operation.
+// buildSectionUriFromPath builds a section URI from a path#section format.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildsectionurifrompath](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildsectionurifrompath)
 func buildSectionUriFromPath(path string) string {
-	hashIdx := strings.Index(path, "#")
-	if hashIdx < 0 {
-		return buildFileUriFromPath(path) + "/s/" + PathToUriPath(path)
-	}
-	filePath := path[:hashIdx]
-	rest := path[hashIdx+1:]
-	sectionParts := strings.Split(rest, "#")
-	result := buildFileUriFromPath(filePath)
-	for _, p := range sectionParts {
-		result += "/s/" + PathToUriPath(p)
-	}
-	return result
+	return GetArtifactURI("section", map[string]interface{}{"path": path})
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️builddefinitionurifromidvalue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/buildDefinitionUriFromIdValue)
-// buildDefinitionUriFromIdValue holds the data fields for a buildDefinitionUriFromIdValue record.
-// buildDefinitionUriFromIdValue MUST perform the buildDefinitionUriFromIdValue operation.
+// buildDefinitionUriFromIdValue builds a definition URI from an id value.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️builddefinitionurifromidvalue](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️builddefinitionurifromidvalue)
 func buildDefinitionUriFromIdValue(id string, dkc string) string {
-	paragraphIdx := strings.LastIndex(id, "§")
-	if paragraphIdx < 0 {
-		return "repo://d/" + dkc + "/" + PathToUriPath(id)
-	}
-	name := id[paragraphIdx+len("§"):]
-	rest := id[:paragraphIdx]
-	hashIdx := strings.Index(rest, "#")
-	if hashIdx < 0 {
-		fileUri := buildFileUriFromPath(rest)
-		return fmt.Sprintf("%s/d/%s/%s", fileUri, dkc, PathToUriPath(name))
-	}
-	filePath := rest[:hashIdx]
-	sectionPart := rest[hashIdx+1:]
-	sectionParts := strings.Split(sectionPart, "#")
-	result := buildFileUriFromPath(filePath)
-	for _, p := range sectionParts {
-		result += "/s/" + PathToUriPath(p)
-	}
-	return fmt.Sprintf("%s/d/%s/%s", result, dkc, PathToUriPath(name))
+	return GetArtifactURI("definition", map[string]interface{}{"id": id})
 }
 
-// IdToUri MUST complete the operation successfully.
-// IdToUri performs the id to uri operation.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtouri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/IdToUri)
+// IdToUri converts an emoji-based ID to a repo:// URI.
+// New format: repo://{{entity-kind}}/{{id}}
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtouri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtouri)
 func IdToUri(id string) string {
 	normalized := strings.ReplaceAll(id, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
@@ -43330,382 +42824,402 @@ func IdToUri(id string) string {
 	if normalized == "" {
 		return ""
 	}
+	kind := DetectEntityKindFromId(normalized)
+	if kind == "" {
+		return ""
+	}
+	return "repo://" + kind + "/" + id
+}
+
+// DetectEntityKindFromId determines the entity kind from an emoji-based ID string.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️detectentitykindfromid](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️detectentitykindfromid)
+func DetectEntityKindFromId(id string) string {
+	normalized := strings.ReplaceAll(id, "\uFE0E", "")
+	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
 	norm := func(e string) string {
 		r := strings.ReplaceAll(e, "\uFE0F", "")
 		return strings.ReplaceAll(r, "\uFE0E", "")
 	}
-	hasPrefix := func(s, emoji string) (string, bool) {
+	hasPrefix := func(s, emoji string) bool {
 		p := norm(emoji)
-		if p == "" {
-			return s, false
-		}
-		if strings.HasPrefix(s, p) {
-			return strings.TrimPrefix(s, p), true
-		}
-		return s, false
+		return p != "" && strings.HasPrefix(s, p)
 	}
-	hasSuffix := func(s, emoji string) (string, bool) {
+	hasSuffix := func(s, emoji string) bool {
 		p := norm(emoji)
-		if p == "" {
-			return s, false
-		}
-		if strings.HasSuffix(s, p) {
-			return strings.TrimSuffix(s, p), true
-		}
-		return s, false
+		return p != "" && strings.HasSuffix(s, p)
 	}
-	findEmoji := func(s string, emojis []string) (before string, emoji string, after string, found bool) {
-		for _, e := range emojis {
-			ne := norm(e)
-			if ne == "" {
-				continue
-			}
-			idx := strings.Index(s, ne)
-			if idx >= 0 {
-				return s[:idx], e, s[idx+len(ne):], true
-			}
-		}
-		return s, "", "", false
+	contains := func(s, emoji string) bool {
+		p := norm(emoji)
+		return p != "" && strings.Contains(s, p)
 	}
-	technologyEmojis := []string{EmojiTechnologyUser, EmojiTechnologyInfra, EmojiTechnologyResearch, EmojiTechnologyMono}
-	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo}
-	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant, EmojiDefinitionTest}
+	// Check interaction suffixes first
 	interactionEmojis := []string{EmojiInteractionStarted, EmojiInteractionEdited, EmojiInteractionFinished, EmojiInteractionRestarted, EmojiInteractionDeleted}
 	for _, ie := range interactionEmojis {
-		if entityPart, ok := hasSuffix(normalized, ie); ok {
-			if entityPart == "" {
-				return "repo://is"
-			}
-			entityUri := IdToUri(entityPart)
-			if entityUri == "" {
-				return ""
-			}
-			return "repo://is/on/" + url.PathEscape(entityUri) + "/" + interactionKindFromEmoji(ie)
+		if hasSuffix(normalized, ie) {
+			return "interaction"
 		}
 	}
-	sectionEmoji := norm(EmojiSection)
-	implEmoji := norm(EmojiDefinitionImpl)
-	interfaceEmoji := norm(EmojiDefinitionInterface)
-	constantEmoji := norm(EmojiDefinitionConstant)
-	testEmoji := norm(EmojiDefinitionTest)
-	if idx := strings.Index(normalized, sectionEmoji); idx > 0 {
-		hasDefinitionSuffix := false
-		for _, de := range []string{implEmoji, interfaceEmoji, constantEmoji, testEmoji} {
-			if defIdx := strings.LastIndex(normalized, de); defIdx > idx {
-				hasDefinitionSuffix = true
-				break
-			}
+	// Check definition emojis (must check before section since definitions contain sections)
+	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant, EmojiDefinitionTest}
+	for _, de := range defEmojis {
+		if contains(normalized, de) {
+			return "definition"
 		}
-		if hasDefinitionSuffix {
-			goto skipSectionChain
+	}
+	// Check section emoji
+	if contains(normalized, EmojiSection) {
+		return "section"
+	}
+	// Check contributor before file emojis (contributor emoji 🧑‍💻 contains 💻 which matches EmojiFileCode)
+	if contains(normalized, EmojiContributor) {
+		return "contributor"
+	}
+	// Check file emojis
+	fileEmojis := []string{EmojiFileCode, EmojiFileLab, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
+	for _, fe := range fileEmojis {
+		if contains(normalized, fe) {
+			return "file"
 		}
-		{
-			filePart := normalized[:idx]
-			sectionPart := normalized[idx:]
-			fileUri := IdToUri(filePart)
-			if fileUri != "" {
-				sections := strings.Split(sectionPart, sectionEmoji)
-				result := fileUri
-				for _, sec := range sections {
-					if sec == "" {
-						continue
-					}
-					result += "/s/" + PathToUriPath(sec)
+	}
+	// Check folder emojis
+	folderEmojis := []string{EmojiFolderOrg, EmojiFolderRequired}
+	for _, fe := range folderEmojis {
+		if contains(normalized, fe) {
+			return "folder"
+		}
+	}
+	// Check technology/bundle emojis
+	technologyEmojis := []string{EmojiTechnologyUser, EmojiTechnologyInfra, EmojiTechnologyResearch, EmojiTechnologyMono}
+	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo}
+	for _, pe := range technologyEmojis {
+		if hasPrefix(normalized, pe) {
+			for _, be := range bundleEmojis {
+				if contains(normalized, be) {
+					return "bundle"
 				}
-				return result
 			}
+			return "technology"
 		}
 	}
-skipSectionChain:
-	handleDefinition := func(idx int, defEmojiLen int, defEmoji string) string {
-		sectionID := normalized[:idx]
-		defName := normalized[idx+defEmojiLen:]
-		if defName == "" {
-			return ""
-		}
-		dkc := definitionKindCodeFromEmoji(defEmoji)
-		parentUri := IdToUri(sectionID)
-		if parentUri != "" {
-			return parentUri + "/d/" + dkc + "/" + PathToUriPath(defName)
+
+	// singularOrPlural is a helper for entity kinds where singular and plural emojis are the same.
+	// If the ID has text after the emoji prefix → singular kind, otherwise → plural kind.
+	singularOrPlural := func(emoji, singular, plural string) string {
+		e := norm(emoji)
+		if e != "" && strings.HasPrefix(normalized, e) {
+			if len(normalized) > len(e) {
+				return singular
+			}
+			return plural
 		}
 		return ""
 	}
-	if idx := strings.LastIndex(normalized, implEmoji); idx > 0 {
-		if result := handleDefinition(idx, len(implEmoji), EmojiDefinitionImpl); result != "" {
-			return result
-		}
+
+	// Collection emojis where singular/plural differ
+	if hasPrefix(normalized, EmojiYears) && norm(EmojiYears) != norm(EmojiYear) {
+		return "years"
 	}
-	if idx := strings.LastIndex(normalized, interfaceEmoji); idx > 0 {
-		if result := handleDefinition(idx, len(interfaceEmoji), EmojiDefinitionInterface); result != "" {
-			return result
-		}
+	if hasPrefix(normalized, EmojiYear) {
+		return "year"
 	}
-	if idx := strings.LastIndex(normalized, constantEmoji); idx > 0 {
-		if result := handleDefinition(idx, len(constantEmoji), EmojiDefinitionConstant); result != "" {
-			return result
-		}
+	if hasPrefix(normalized, EmojiMonths) && norm(EmojiMonths) != norm(EmojiMonth) {
+		return "months"
 	}
-	if idx := strings.LastIndex(normalized, testEmoji); idx > 0 {
-		if result := handleDefinition(idx, len(testEmoji), EmojiDefinitionTest); result != "" {
-			return result
-		}
+	if hasPrefix(normalized, EmojiMonth) {
+		return "month"
 	}
-	for _, pe := range technologyEmojis {
-		if rest, ok := hasPrefix(normalized, pe); ok {
-			pkc := technologyKindCodeFromEmoji(pe)
-			if technologyVal, be, bundleVal, found := findEmoji(rest, bundleEmojis); found {
-				bkc := bundleKindCodeFromEmoji(be)
-				return fmt.Sprintf("repo://p/%s/%s/b/%s/%s", pkc, PathToUriPath(technologyVal), bkc, PathToUriPath(bundleVal))
-			}
-			return fmt.Sprintf("repo://p/%s/%s", pkc, PathToUriPath(rest))
-		}
+	if hasPrefix(normalized, EmojiDays) && norm(EmojiDays) != norm(EmojiDay) {
+		return "days"
 	}
-	folderEmojis := []string{EmojiFolderOrg, EmojiFolderRequired}
-	for _, fe := range folderEmojis {
-		if rest, ok := hasPrefix(normalized, fe); ok {
-			return buildFileUriFromPath(rest)
-		}
+	if hasPrefix(normalized, EmojiDay) {
+		return "day"
 	}
-	fileEmojis := []string{EmojiFileCode, EmojiFileLab, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
-	for _, fe := range fileEmojis {
-		if rest, ok := hasPrefix(normalized, fe); ok {
-			return buildFileUriFromPath(rest)
-		}
+	if hasPrefix(normalized, EmojiHours) && norm(EmojiHours) != norm(EmojiHour) {
+		return "hours"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiSection); ok {
-		if rest == "" {
-			return "repo://ss"
-		}
-		return buildSectionUriFromPath(PathFromUriPath(SectionIdValueToUriPath(rest)))
+	if hasPrefix(normalized, EmojiHour) {
+		return "hour"
 	}
-	for _, de := range defEmojis {
-		if rest, ok := hasPrefix(normalized, de); ok {
-			dkc := definitionKindCodeFromEmoji(de)
-			return buildDefinitionUriFromIdValue(rest, dkc)
-		}
+	if hasPrefix(normalized, EmojiMinutes) && norm(EmojiMinutes) != norm(EmojiMinute) {
+		return "minutes"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiTicket); ok {
-		if rest == "" {
-			return "repo://tks"
-		}
-		return "repo://tks/" + rest
+	if hasPrefix(normalized, EmojiMinute) {
+		return "minute"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiGoal); ok {
-		if rest == "" {
-			return "repo://gs"
-		}
-		goalEmoji := emojiText(EmojiGoal)
-		segments := strings.Split(rest, goalEmoji)
-		result := "repo://g/" + PathToUriPath(segments[0])
-		for _, s := range segments[1:] {
-			result += "/g/" + PathToUriPath(s)
-		}
-		return result
+	if hasPrefix(normalized, EmojiSeconds) && norm(EmojiSeconds) != norm(EmojiSecond) {
+		return "seconds"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiDraft); ok {
-		if rest == "" {
-			return "repo://drs"
-		}
-		return "repo://drs/" + rest
+	if hasPrefix(normalized, EmojiSecond) {
+		return "second"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiPolicy); ok {
-		if rest == "" {
-			return "repo://pls"
-		}
-		return "repo://pls/pl/" + rest
+	if hasPrefix(normalized, EmojiTechnologies) {
+		return "technologies"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiBreach); ok {
-		if rest == "" {
-			return "repo://brs"
-		}
-		return "repo://brs/" + rest
+	if hasPrefix(normalized, EmojiBundles) {
+		return "bundles"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiContributor); ok {
-		if rest == "" {
-			return "repo://cs"
-		}
-		return "repo://cs/" + rest
+	if hasPrefix(normalized, EmojiFolders) {
+		return "folders"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiCheckpoint); ok {
-		if rest == "" {
-			return "repo://cms"
-		}
-		return "repo://cms/" + rest
+	if hasPrefix(normalized, EmojiFiles) {
+		return "files"
 	}
-	if rest, ok := hasPrefix(normalized, EmojiSession); ok {
-		if rest == "" {
-			return "repo://s"
-		}
-		return "repo://s/" + rest
+	if hasPrefix(normalized, EmojiSections) {
+		return "sections"
+	}
+	if hasPrefix(normalized, EmojiDefinitions) {
+		return "definitions"
+	}
+	if hasPrefix(normalized, EmojiCodebase) {
+		return "codebase"
+	}
+	// Entity kinds where singular and plural emojis are the same
+	if k := singularOrPlural(EmojiTicket, "ticket", "tickets"); k != "" {
+		return k
+	}
+	if k := singularOrPlural(EmojiGoal, "goal", "goals"); k != "" {
+		return k
+	}
+	if k := singularOrPlural(EmojiDraft, "draft", "drafts"); k != "" {
+		return k
+	}
+	if k := singularOrPlural(EmojiTodo, "todo", "todos"); k != "" {
+		return k
+	}
+	if k := singularOrPlural(EmojiPolicy, "policy", "policies"); k != "" {
+		return k
+	}
+	if k := singularOrPlural(EmojiBreach, "breach", "breaches"); k != "" {
+		return k
+	}
+	// contributor already handled above via contains
+	if hasPrefix(normalized, EmojiContributors) {
+		return "contributors"
+	}
+	if k := singularOrPlural(EmojiCheckpoint, "checkpoint", "checkpoints"); k != "" {
+		return k
+	}
+	if hasPrefix(normalized, EmojiInteractions) {
+		return "interactions"
+	}
+	if k := singularOrPlural(EmojiSession, "session", "sessions"); k != "" {
+		return k
 	}
 	return ""
 }
 
-// UriToId MUST complete the operation successfully.
-// UriToId performs the uri to id operation.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️uritoid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/UriToId)
+// UriToId converts a repo:// URI to an emoji-based ID.
+// New format: repo://{{entity-kind}}/{{id}} → {{id}}
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️uritoid](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️uritoid)
 func UriToId(uri string) string {
 	if !strings.HasPrefix(uri, "repo://") {
 		return ""
 	}
 	p := strings.TrimPrefix(uri, "repo://")
-	switch {
-	case p == "":
+	if p == "" || p == "root" {
 		return ""
-	case p == "p":
-		return emojiText(EmojiTechnologies)
-	case strings.HasPrefix(p, "p/"):
-		rest := strings.TrimPrefix(p, "p/")
-		parts := strings.SplitN(rest, "/", 3)
-		if len(parts) < 2 {
-			return ""
+	}
+	// Find the first / to split kind from id
+	slashIdx := strings.Index(p, "/")
+	if slashIdx < 0 {
+		// No id part, just the kind — return empty for entity kinds
+		return ""
+	}
+	id := p[slashIdx+1:]
+	return id
+}
+
+// IdToPath converts an emoji-based artifact ID back to a filesystem path.
+// It walks all tracked bundles and files, computes their IDs, and matches.
+// For file/folder/section/definition IDs, it returns the file path.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtopath](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtopath)
+func IdToPath(id string) string {
+	normalized := strings.ReplaceAll(id, "\uFE0E", "")
+	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
+	if normalized == "" {
+		return ""
+	}
+	norm := func(s string) string {
+		r := strings.ReplaceAll(s, "\uFE0E", "")
+		return strings.ReplaceAll(r, "\uFE0F", "")
+	}
+	// Strip section and definition suffixes to get to the file-level ID.
+	fileId := normalized
+	sectionEmojis := []string{EmojiSection}
+	definitionEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant, EmojiDefinitionTest}
+	// Find the first section or definition emoji to truncate to file ID.
+	firstSectionIdx := -1
+	for _, se := range sectionEmojis {
+		nse := norm(se)
+		idx := strings.Index(fileId, nse)
+		if idx >= 0 && (firstSectionIdx < 0 || idx < firstSectionIdx) {
+			firstSectionIdx = idx
 		}
-		pkc := parts[0]
-		pName := Flat(parts[1])
-		pEmoji := technologyEmojiFromCode(pkc)
-		if len(parts) == 2 {
-			return emojiText(pEmoji) + pName
-		}
-		subPath := parts[2]
-		if subPath == "bs" {
-			return emojiText(EmojiBundles)
-		}
-		if strings.HasPrefix(subPath, "b/") {
-			bRest := strings.TrimPrefix(subPath, "b/")
-			bParts := strings.SplitN(bRest, "/", 3)
-			if len(bParts) < 2 {
-				return ""
+	}
+	if firstSectionIdx < 0 {
+		for _, de := range definitionEmojis {
+			nde := norm(de)
+			idx := strings.Index(fileId, nde)
+			if idx >= 0 && (firstSectionIdx < 0 || idx < firstSectionIdx) {
+				firstSectionIdx = idx
 			}
-			bEmoji := bundleEmojiFromCode(bParts[0])
-			bName := Flat(bParts[1])
-			bundleId := emojiText(pEmoji) + pName + emojiText(bEmoji) + bName
-			if len(bParts) == 2 {
-				return bundleId
+		}
+	}
+	if firstSectionIdx > 0 {
+		fileId = fileId[:firstSectionIdx]
+	}
+	// Now fileId should be a bundle+folder+file ID like "🧰repo⌨cli💻main"
+	// Walk all bundles and their files to find a match.
+	bundles := LoadBundles()
+	for _, b := range bundles {
+		bundleId := norm(b.GetID())
+		if !strings.HasPrefix(fileId, bundleId) {
+			continue
+		}
+		bundleRoot := filepath.Join(rootDir, NormalizePath(b.Root))
+		// Walk files in this bundle
+		filepath.Walk(bundleRoot, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() {
+				return nil
 			}
-			return uriSubPathToId(bundleId, bParts[2])
-		}
-		return ""
-	case p == "fds":
-		return emojiText(EmojiFolders)
-	case strings.HasPrefix(p, "fd/"):
-		fdRest := strings.TrimPrefix(p, "fd/")
-		fdParts := strings.SplitN(fdRest, "/", 3)
-		if len(fdParts) < 2 {
-			return ""
-		}
-		fEmoji := folderEmojiFromCode(fdParts[0])
-		fName := fdParts[1]
-		folderId := emojiText(fEmoji) + Flat(fName)
-		if len(fdParts) == 2 {
-			return folderId
-		}
-		return uriSubPathToId(folderId, fdParts[2])
-	case p == "fis":
-		return emojiText(EmojiFiles)
-	case strings.HasPrefix(p, "f/"):
-		fRest := strings.TrimPrefix(p, "f/")
-		fParts := strings.SplitN(fRest, "/", 2)
-		fileName := PathFromUriPath(fParts[0])
-		ext := filepath.Ext(fileName)
-		if ext != "" {
-			fileName = strings.TrimSuffix(fileName, ext)
-		}
-		fileId := emojiText(EmojiFileCode) + Flat(fileName)
-		if len(fParts) == 1 {
-			return fileId
-		}
-		return uriSubPathToIdFromFile(fileId, fParts[1])
-	case p == "ss":
-		return emojiText(EmojiSections)
-	case p == "ds":
-		return emojiText(EmojiDefinitions)
-	case strings.HasPrefix(p, "d/"):
-		dRest := strings.TrimPrefix(p, "d/")
-		dParts := strings.SplitN(dRest, "/", 2)
-		if len(dParts) < 2 {
-			return ""
-		}
-		dEmoji := definitionEmojiFromCode(dParts[0])
-		dName := PathFromUriPath(dParts[1])
-		return emojiText(dEmoji) + Flat(dName)
-	case p == "gs":
-		return emojiText(EmojiGoals)
-	case strings.HasPrefix(p, "g/"):
-		rest := strings.TrimPrefix(p, "g/")
-		return parseGoalUri(rest)
-	case p == "tks":
-		return emojiText(EmojiTickets)
-	case strings.HasPrefix(p, "tks/"):
-		v := strings.TrimPrefix(p, "tks/")
-		return emojiText(EmojiTicket) + Flat(v)
-	case strings.HasPrefix(p, "y/"):
-		rest := strings.TrimPrefix(p, "y/")
-		if tkIdx := strings.Index(rest, "/tk/"); tkIdx >= 0 {
-			slug := rest[tkIdx+4:]
-			return emojiText(EmojiTicket) + Flat(slug)
-		}
-		return ""
-	case p == "drs":
-		return emojiText(EmojiDrafts)
-	case strings.HasPrefix(p, "drs/"):
-		v := strings.TrimPrefix(p, "drs/")
-		return emojiText(EmojiDraft) + Flat(v)
-	case p == "tos":
-		return emojiText(EmojiTodos)
-	case strings.HasPrefix(p, "tos/"):
-		v := strings.TrimPrefix(p, "tos/")
-		return emojiText(EmojiTodo) + Flat(v)
-	case p == "pls":
-		return emojiText(EmojiPolicies)
-	case strings.HasPrefix(p, "pls/pl/"):
-		v := strings.TrimPrefix(p, "pls/pl/")
-		return emojiText(EmojiPolicy) + Flat(filepath.Base(v))
-	case p == "sts":
-		return emojiText(EmojiStatutes)
-	case p == "cs":
-		return emojiText(EmojiContributors)
-	case strings.HasPrefix(p, "cs/"):
-		v := strings.TrimPrefix(p, "cs/")
-		return emojiText(EmojiContributor) + Flat(v)
-	case p == "cms":
-		return emojiText(EmojiCheckpoints)
-	case strings.HasPrefix(p, "cms/"):
-		v := strings.TrimPrefix(p, "cms/")
-		return emojiText(EmojiCheckpoint) + Flat(v)
-	case p == "s":
-		return emojiText(EmojiSessions)
-	case strings.HasPrefix(p, "s/"):
-		v := strings.TrimPrefix(p, "s/")
-		return emojiText(EmojiSession) + Flat(v)
-	case p == "is":
-		return ""
-	case strings.HasPrefix(p, "is/on/"):
-		rest := strings.TrimPrefix(p, "is/on/")
-		lastSlash := strings.LastIndex(rest, "/")
-		if lastSlash > 0 {
-			encodedEntityUri := rest[:lastSlash]
-			kind := rest[lastSlash+1:]
-			entityUri, _ := url.PathUnescape(encodedEntityUri)
-			if !strings.HasPrefix(entityUri, "repo://") {
-				entityUri = "repo://" + entityUri
+			if isRepoExcludedPath(path) || isGitIgnored(path) {
+				return nil
 			}
-			entityId := UriToId(entityUri)
-			emoji := EmojiInteractionStarted
-			switch kind {
-			case "finished":
-				emoji = EmojiInteractionFinished
-			case "restarted":
-				emoji = EmojiInteractionRestarted
-			case "deleted":
-				emoji = EmojiInteractionDeleted
-			case "edited":
-				emoji = EmojiInteractionEdited
-			}
-			return entityId + emojiText(emoji)
+			return nil
+		})
+		// Instead of walking, compute ID for the remainder after bundle ID.
+		// The remainder encodes folder + file emojis.
+		rest := fileId[len(bundleId):]
+		if rest == "" {
+			// This is a bundle-level ID, return bundle root
+			return NormalizePath(b.Root)
 		}
-		return ""
-	case p == "brs":
-		return emojiText(EmojiBreach)
+		// Walk the bundle directory and match file IDs
+		var matchedPath string
+		filepath.Walk(bundleRoot, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return nil
+			}
+			if info.IsDir() {
+				return nil
+			}
+			if isRepoExcludedPath(path) || isGitIgnored(path) {
+				return nil
+			}
+			relPath, _ := filepath.Rel(rootDir, path)
+			relPath = NormalizePath(relPath)
+			computedId := norm(buildFileID(relPath, nil))
+			if computedId == fileId {
+				matchedPath = relPath
+				return filepath.SkipAll
+			}
+			return nil
+		})
+		if matchedPath != "" {
+			return matchedPath
+		}
+	}
+	// Fallback: try to match folder IDs
+	for _, b := range bundles {
+		bundleId := norm(b.GetID())
+		if !strings.HasPrefix(fileId, bundleId) {
+			continue
+		}
+		bundleRoot := filepath.Join(rootDir, NormalizePath(b.Root))
+		var matchedPath string
+		filepath.Walk(bundleRoot, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return nil
+			}
+			if !info.IsDir() {
+				return nil
+			}
+			if isRepoExcludedPath(path) {
+				return filepath.SkipDir
+			}
+			relPath, _ := filepath.Rel(rootDir, path)
+			relPath = NormalizePath(relPath)
+			computedId := norm(buildFolderID(relPath, nil))
+			if computedId == fileId {
+				matchedPath = relPath
+				return filepath.SkipAll
+			}
+			return nil
+		})
+		if matchedPath != "" {
+			return matchedPath
+		}
+	}
+	return ""
+}
+
+// IdToSectionPath extracts the section path parts from an emoji-based ID.
+// Returns the section names as a slice.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtosectionpath](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtosectionpath)
+func IdToSectionPath(id string) []string {
+	normalized := strings.ReplaceAll(id, "\uFE0E", "")
+	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
+	norm := func(s string) string {
+		r := strings.ReplaceAll(s, "\uFE0E", "")
+		return strings.ReplaceAll(r, "\uFE0F", "")
+	}
+	sectionEmoji := norm(EmojiSection)
+	definitionEmojis := []string{
+		norm(EmojiDefinitionImpl),
+		norm(EmojiDefinitionInterface),
+		norm(EmojiDefinitionConstant),
+		norm(EmojiDefinitionTest),
+	}
+	// Strip definition suffix if present
+	forSections := normalized
+	for _, de := range definitionEmojis {
+		idx := strings.LastIndex(forSections, de)
+		if idx >= 0 {
+			forSections = forSections[:idx]
+			break
+		}
+	}
+	// Find all section emoji occurrences
+	var sections []string
+	remaining := forSections
+	for {
+		idx := strings.Index(remaining, sectionEmoji)
+		if idx < 0 {
+			break
+		}
+		remaining = remaining[idx+len(sectionEmoji):]
+		// Find the end of this section name (next section emoji or end of string)
+		nextIdx := strings.Index(remaining, sectionEmoji)
+		if nextIdx < 0 {
+			sections = append(sections, remaining)
+			break
+		}
+		sections = append(sections, remaining[:nextIdx])
+		remaining = remaining[nextIdx:]
+	}
+	return sections
+}
+
+// IdToDefinitionName extracts the definition name from an emoji-based ID.
+// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtodefinitionname](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtodefinitionname)
+func IdToDefinitionName(id string) string {
+	normalized := strings.ReplaceAll(id, "\uFE0E", "")
+	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
+	norm := func(s string) string {
+		r := strings.ReplaceAll(s, "\uFE0E", "")
+		return strings.ReplaceAll(r, "\uFE0F", "")
+	}
+	definitionEmojis := []string{
+		norm(EmojiDefinitionImpl),
+		norm(EmojiDefinitionInterface),
+		norm(EmojiDefinitionConstant),
+		norm(EmojiDefinitionTest),
+	}
+	for _, de := range definitionEmojis {
+		idx := strings.LastIndex(normalized, de)
+		if idx >= 0 {
+			return normalized[idx+len(de):]
+		}
 	}
 	return ""
 }

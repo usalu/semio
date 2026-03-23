@@ -16,15 +16,25 @@
 
 # endregion Header
 
+import importlib.util
 import pathlib
 import sys
 
 root = pathlib.Path(__file__).parent
-sys.path.insert(0, str(root / "semio" / "py"))
-sys.path.insert(0, str(root / "semio" / "engine"))
 
-import engine  # noqa: E402, F401
+# Load semio/py/main.py as 'main' (the semio core library)
+_semio_py_path = str(root / "semio" / "py" / "main.py")
+_semio_spec = importlib.util.spec_from_file_location("main", _semio_py_path)
+_semio_mod = importlib.util.module_from_spec(_semio_spec)
+sys.modules["main"] = _semio_mod
+_semio_spec.loader.exec_module(_semio_mod)
 
-import main as semio  # noqa: E402, F401
-
+semio = _semio_mod  # noqa: F841
 semio.__path__ = [str(root / "semio")]
+
+# Load semio/engine/main.py as 'engine'
+_engine_path = str(root / "semio" / "engine" / "main.py")
+_engine_spec = importlib.util.spec_from_file_location("engine", _engine_path)
+engine = importlib.util.module_from_spec(_engine_spec)  # noqa: F841
+sys.modules["engine"] = engine
+_engine_spec.loader.exec_module(engine)

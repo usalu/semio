@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "semio.rs"
+path = "lib.rs"
 
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
@@ -34,10 +34,6 @@ base64 = "0.22"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 proptest = "1.9.0"
-
-[[bin]]
-name = "semio-benchmark"
-path = "semio.benchmark.rs"
 
 [features]
 default = []

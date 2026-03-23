@@ -21,6 +21,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import { getSketchpadDistCandidatePaths, isLikelyKitJsonFilePath, resolveSketchpadDistPath } from "../../semio/vscode/extension";
 import {
   buildCliTreeArgs,
   buildEntityEmojiPattern,
@@ -127,11 +128,7 @@ function getFixturePath(relativePath: string): string {
 
 async function openWorkspaceDocument(...relativePaths: string[]): Promise<vscode.TextDocument> {
   const workspaceRoot = getWorkspaceRoot();
-  const searchRoots = [
-    workspaceRoot,
-    path.join(workspaceRoot, ".."),
-    path.join(workspaceRoot, "..", ".."),
-  ];
+  const searchRoots = [workspaceRoot, path.join(workspaceRoot, ".."), path.join(workspaceRoot, "..", "..")];
 
   for (const relativePath of relativePaths) {
     for (const searchRoot of searchRoots) {
@@ -229,22 +226,9 @@ function collectNativeDefinitionFallbackScopes(document: vscode.TextDocument): s
       /^\s*(?:export\s+)?enum\s+([A-Za-z_$][\w$]*)\b/,
       /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
     ],
-    javascript: [
-      /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
-      /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/,
-      /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
-    ],
-    javascriptreact: [
-      /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
-      /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/,
-      /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/,
-    ],
-    go: [
-      /^\s*func\s+(?:\([^)]+\)\s*)?([A-Za-z_][\w]*)\b/,
-      /^\s*type\s+([A-Za-z_][\w]*)\b/,
-      /^\s*const\s+([A-Za-z_][\w]*)\b/,
-      /^\s*var\s+([A-Za-z_][\w]*)\b/,
-    ],
+    javascript: [/^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/, /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/, /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/],
+    javascriptreact: [/^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/, /^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)\b/, /^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/],
+    go: [/^\s*func\s+(?:\([^)]+\)\s*)?([A-Za-z_][\w]*)\b/, /^\s*type\s+([A-Za-z_][\w]*)\b/, /^\s*const\s+([A-Za-z_][\w]*)\b/, /^\s*var\s+([A-Za-z_][\w]*)\b/],
   };
   const patterns = patternsByLanguage[document.languageId] ?? [];
   const scopes = new Set<string>();
@@ -262,10 +246,7 @@ function collectNativeDefinitionFallbackScopes(document: vscode.TextDocument): s
 
 async function collectNativeDefinitionScopes(document: vscode.TextDocument): Promise<string[]> {
   const relativePath = getDocumentRelativePath(document);
-  const symbols = await vscode.commands.executeCommand<Array<vscode.DocumentSymbol | vscode.SymbolInformation>>(
-    "vscode.executeDocumentSymbolProvider",
-    document.uri,
-  ) ?? [];
+  const symbols = (await vscode.commands.executeCommand<Array<vscode.DocumentSymbol | vscode.SymbolInformation>>("vscode.executeDocumentSymbolProvider", document.uri)) ?? [];
   const scopes = new Set<string>();
 
   const addScope = (name: string, kind: vscode.SymbolKind): void => {
@@ -313,7 +294,7 @@ async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[
 async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
   await vscode.window.showTextDocument(document, { preview: true, preserveFocus: false });
   await new Promise((resolve) => setTimeout(resolve, 250));
-  return await vscode.commands.executeCommand<vscode.CodeLens[]>("vscode.executeCodeLensProvider", document.uri) ?? [];
+  return (await vscode.commands.executeCommand<vscode.CodeLens[]>("vscode.executeCodeLensProvider", document.uri)) ?? [];
 }
 
 // #endregion 🔖Utilities
@@ -1987,6 +1968,36 @@ suite("CodeLens Behavior Test Suite", function () {
 
       assert.deepStrictEqual(missingScopes, [], `missing native Analyze CodeLens scopes in ${testCase.label} source ${document.uri.fsPath}: ${missingScopes.join(", ")}`);
     }
+  });
+});
+
+suite("Semio VS Code Kit Editor Test Suite", () => {
+  test("Kit file detection matches semio kit naming conventions", () => {
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/kit_metabolism.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/kit-metabolism.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism/.semio/kit.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/jsonschema/kit.json"), false);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/diff_kit_metabolism.json"), false);
+  });
+
+  test("Sketchpad dist resolution prefers bundled assets and falls back to workspace sketchpad dist", () => {
+    const fixtureRoot = fs.mkdtempSync(path.join(getWorkspaceRoot(), ".tmp-semio-vscode-"));
+    const extensionPath = path.join(fixtureRoot, "extension");
+    const bundledDistPath = path.join(extensionPath, "sketchpad-dist");
+    const workspaceDistPath = path.join(fixtureRoot, "sketchpad", "dist");
+    fs.mkdirSync(bundledDistPath, { recursive: true });
+    fs.mkdirSync(workspaceDistPath, { recursive: true });
+    fs.writeFileSync(path.join(workspaceDistPath, "webview.html"), "<html>workspace</html>");
+
+    const candidatePaths = getSketchpadDistCandidatePaths(extensionPath);
+    assert.deepStrictEqual(candidatePaths, [bundledDistPath, workspaceDistPath]);
+    assert.strictEqual(resolveSketchpadDistPath(extensionPath), workspaceDistPath);
+
+    fs.writeFileSync(path.join(bundledDistPath, "webview.html"), "<html>bundled</html>");
+    assert.strictEqual(resolveSketchpadDistPath(extensionPath), bundledDistPath);
+
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
   });
 });
 

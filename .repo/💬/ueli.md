@@ -114,6 +114,11 @@ e.g.
 FlattenDesign is an operation.
 
 semio:
+semio:
+Extend the nakagin capsule tower design with a tower layer that has an attribute "ifc.type":"IfcBuilding". The tower layer has a sublayer for each storey with the number. Add attribute "ifc.type": "IfcBuildingStorey" to each storey layer.
+Extend the ifc export to export IfcProject -> IfcSite -> IfcBuilding -> IfcBuildingStorey. For each type create IfcBuildingElementProxyType and for each piece create IfcBuildingElementProxy with local placement. Add the model representation of the type to the proxy type.
+Make sure everything works and is tested and doesnt break existing tests.
+P
 Introduce change
 
 Currently all functions in semio return diffs. Extend all of them to return a change. This way everything gets undo/redo compatible.

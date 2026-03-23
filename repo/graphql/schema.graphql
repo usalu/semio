@@ -625,3 +625,89 @@ type FixResult {
 }
 
 # #endregion 🔖Types
+
+#region 🔖Queries
+query Nodes {
+  repos: repo {
+    id
+  }
+  bundles {
+    id
+  }
+  folders {
+    id
+  }
+  files {
+    id
+  }
+  sections {
+    id
+  }
+  definitions {
+    id
+  }
+  tickets {
+    id
+  }
+  contributors {
+    id
+  }
+  breachs {
+    id
+  }
+}
+
+query NodesAndEdges {
+  repo {
+    id
+    bundles {
+      id
+    }
+    folders {
+      id
+    }
+    files {
+      id
+    }
+    tickets {
+      id
+    }
+    contributors {
+      id
+    }
+    sections {
+      id
+    }
+    definitions {
+      id
+    }
+    breachs {
+      id
+    }
+  }
+  bundles {
+    id
+  }
+  folders {
+    id
+  }
+  files {
+    id
+  }
+  tickets {
+    id
+  }
+  contributors {
+    id
+  }
+  sections {
+    id
+  }
+  definitions {
+    id
+  }
+  breachs {
+    id
+  }
+}
+#endregion 🔖Queries

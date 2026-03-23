@@ -59,8 +59,7 @@
     }
   },
   "include": [
-    "index.ts",
-    "constants.json"
+    "index.ts"
   ],
   "exclude": [
     "node_modules",

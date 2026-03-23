@@ -2,8 +2,8 @@
 
 // 💻 semio/ui/index.tsx
 
-// Specs: Re-export generic ui primitives and override Diagram with a semio design mini-map renderer.
-// Summary: Shared semio ui exports plus a minimal design diagram component.
+// Specs: Re-export generic ui primitives and provide semio-specific Diagram, Scene, and Design components. All components are iframe compatible.
+// Summary: Shared semio ui exports plus Diagram (2D), Scene (3D), Vec (2D input), and Design (split view) components.
 //
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,8 +22,11 @@
 
 // #endregion 🔖Header
 
-import { applyDesignDiff, findDesignInKit, flattenDesign, type Connection, type Design, type DesignDiff, type Kit, type Piece } from "@semio/js";
+import { applyDesignDiff, findDesignInKit, flattenDesign, planeToMatrix, toThreeRotation, type Camera, type Connection, type Design, type DesignDiff, type Kit, type Piece, type Plane } from "@semio/js";
+import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
+import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls } from "@react-three/drei";
 import * as React from "react";
+import * as THREE from "three";
 
 // #region 🔖Exports
 
@@ -361,21 +364,16 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const toBasePixelX = (u: number) => offsetX + (u - snapshot.minU) * scale;
   const toBasePixelY = (y: number) => offsetY + (y - snapshot.minY) * scale;
   const fittedViewport = React.useMemo(() => {
-    const changedPoints = effectiveDiffEnabled
-      ? snapshot.points.filter((point) => point.status !== "default")
-      : [];
-    const changedLinePoints = effectiveDiffEnabled
-      ? snapshot.lines.filter((line) => line.status !== "default").flatMap((line) => [line.source, line.target])
-      : [];
-    const targetBounds =
-      buildDiagramBounds([...changedPoints, ...changedLinePoints]) ?? {
-        minU: snapshot.minU,
-        maxU: snapshot.maxU,
-        minY: snapshot.minY,
-        maxY: snapshot.maxY,
-        width: snapshot.width,
-        height: snapshot.height,
-      };
+    const changedPoints = effectiveDiffEnabled ? snapshot.points.filter((point) => point.status !== "default") : [];
+    const changedLinePoints = effectiveDiffEnabled ? snapshot.lines.filter((line) => line.status !== "default").flatMap((line) => [line.source, line.target]) : [];
+    const targetBounds = buildDiagramBounds([...changedPoints, ...changedLinePoints]) ?? {
+      minU: snapshot.minU,
+      maxU: snapshot.maxU,
+      minY: snapshot.minY,
+      maxY: snapshot.maxY,
+      width: snapshot.width,
+      height: snapshot.height,
+    };
     const targetMinX = toBasePixelX(targetBounds.minU);
     const targetMaxX = toBasePixelX(targetBounds.maxU);
     const targetMinY = toBasePixelY(targetBounds.minY);
@@ -799,3 +797,427 @@ export const Vec: React.FC<VecProps> = ({ id, vec, minU = -1, maxU = 1, minV = -
 };
 
 // #endregion 🔖Vec
+
+// #region 🔖Scene
+
+// Specs: Minimal 3D scene rendering a design from a kit. Uses React Three Fiber Canvas
+// with orthographic camera, grid, gizmo, and orbit controls. Pieces are rendered as
+// positioned box geometries via their plane data. Fully iframe compatible (no window.top
+// access, no cross-origin assumptions). frameloop="demand" for performance.
+// Summary: Lightweight 3D scene viewer that renders a design's pieces as positioned boxes.
+
+const SCENE_BOX_SIZE = 1;
+
+const getSceneComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+
+interface ScenePieceProps {
+  piece: Piece;
+  isSelected: boolean;
+  isHovered: boolean;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
+  onClick?: () => void;
+}
+
+const ScenePiece: React.FC<ScenePieceProps> = ({ piece, isSelected, isHovered, onPointerEnter, onPointerLeave, onClick }) => {
+  const foregroundColor = React.useMemo(() => getSceneComputedColor("--foreground") || "#888888", []);
+  const activeColor = React.useMemo(() => getSceneComputedColor("--accent") || "#3b82f6", []);
+  const hoverColor = React.useMemo(() => getSceneComputedColor("--accent-secondary") || "#60a5fa", []);
+
+  const matrix = React.useMemo(() => {
+    if (!piece.plane) return null;
+    const planeMatrix = planeToMatrix(piece.plane as Plane);
+    return new THREE.Matrix4().multiplyMatrices(toThreeRotation(), planeMatrix);
+  }, [piece.plane]);
+
+  const color = isSelected ? activeColor : isHovered ? hoverColor : foregroundColor;
+  const edgeColor = isSelected ? activeColor : isHovered ? hoverColor : foregroundColor;
+
+  if (!matrix) return null;
+
+  return (
+    <group matrix={matrix} matrixAutoUpdate={false}>
+      <mesh
+        onClick={
+          onClick
+            ? (e) => {
+                e.stopPropagation();
+                onClick();
+              }
+            : undefined
+        }
+        onPointerEnter={
+          onPointerEnter
+            ? (e) => {
+                e.stopPropagation();
+                onPointerEnter();
+              }
+            : undefined
+        }
+        onPointerLeave={
+          onPointerLeave
+            ? (e) => {
+                e.stopPropagation();
+                onPointerLeave();
+              }
+            : undefined
+        }
+      >
+        <boxGeometry args={[SCENE_BOX_SIZE, SCENE_BOX_SIZE, SCENE_BOX_SIZE]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0} />
+        <Edges scale={1.001} color={edgeColor} />
+      </mesh>
+    </group>
+  );
+};
+
+interface SceneGizmoProps {
+  show: boolean;
+}
+
+const SceneGizmo: React.FC<SceneGizmoProps> = ({ show }) => {
+  const [colors, setColors] = React.useState<[string, string, string]>(() => [getSceneComputedColor("--accent") || "#ef4444", getSceneComputedColor("--accent-tertiary") || "#22c55e", getSceneComputedColor("--accent-secondary") || "#3b82f6"]);
+
+  React.useEffect(() => {
+    const updateColors = () => setColors([getSceneComputedColor("--accent") || "#ef4444", getSceneComputedColor("--accent-tertiary") || "#22c55e", getSceneComputedColor("--accent-secondary") || "#3b82f6"]);
+    updateColors();
+    const observer = new MutationObserver(updateColors);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  if (!show) return null;
+  return (
+    <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+      <GizmoViewport labels={["X", "Z", "-Y"]} axisColors={colors} />
+    </GizmoHelper>
+  );
+};
+
+interface SceneGridProps {
+  show: boolean;
+}
+
+const SceneGrid: React.FC<SceneGridProps> = ({ show }) => {
+  const [gridColors, setGridColors] = React.useState({
+    sectionColor: getSceneComputedColor("--foreground") || "#888888",
+    cellColor: getSceneComputedColor("--accent-foreground") || "#cccccc",
+  });
+
+  React.useEffect(() => {
+    const updateColors = () =>
+      setGridColors({
+        sectionColor: getSceneComputedColor("--foreground") || "#888888",
+        cellColor: getSceneComputedColor("--accent-foreground") || "#cccccc",
+      });
+    updateColors();
+    const observer = new MutationObserver(updateColors);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  if (!show) return null;
+  return <Grid infiniteGrid sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />;
+};
+
+export interface SemioSceneSelection {
+  pieceGuids?: string[];
+}
+
+export interface SemioSceneProps {
+  kit: Kit;
+  designGuid: string;
+  designDiff?: DesignDiff;
+  diffEnabled?: boolean;
+  selection?: SemioSceneSelection;
+  defaultSelection?: SemioSceneSelection;
+  selectionEnabled?: boolean;
+  onSelectionChange?: (selection: SemioSceneSelection) => void;
+  onPieceClick?: (piece: Piece) => void;
+  showGrid?: boolean;
+  showGizmo?: boolean;
+  camera?: Camera;
+  onCameraChange?: (camera: Camera) => void;
+  className?: string;
+  title?: string;
+}
+
+interface SceneInnerContentProps {
+  showGrid: boolean;
+  showGizmo: boolean;
+  camera?: Camera;
+  onCameraChange?: (camera: Camera) => void;
+  children?: React.ReactNode;
+}
+
+const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGizmo, camera: initialCamera, onCameraChange, children }) => {
+  const { camera: threeCamera } = useThree();
+  const controlsRef = React.useRef<any>(null);
+  const isUpdatingCameraRef = React.useRef(false);
+  const cameraRestoredRef = React.useRef(false);
+
+  React.useEffect(() => {
+    const cam = threeCamera as THREE.OrthographicCamera;
+    if (cam && cam instanceof THREE.OrthographicCamera) {
+      cam.zoom = 50;
+      cam.updateProjectionMatrix();
+    }
+  }, [threeCamera]);
+
+  React.useEffect(() => {
+    if (!threeCamera || !controlsRef.current || cameraRestoredRef.current) return;
+    isUpdatingCameraRef.current = true;
+    if (initialCamera) {
+      requestAnimationFrame(() => {
+        if (!controlsRef.current) return;
+        threeCamera.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
+        threeCamera.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
+        const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
+        controlsRef.current.target.copy(target);
+        threeCamera.updateProjectionMatrix();
+        controlsRef.current.update();
+        setTimeout(() => {
+          isUpdatingCameraRef.current = false;
+        }, 300);
+      });
+    } else {
+      requestAnimationFrame(() => {
+        if (!controlsRef.current) return;
+        threeCamera.position.set(10, 10, 10);
+        threeCamera.up.set(0, 1, 0);
+        controlsRef.current.target.set(0, 0, 0);
+        threeCamera.updateProjectionMatrix();
+        controlsRef.current.update();
+        setTimeout(() => {
+          isUpdatingCameraRef.current = false;
+        }, 300);
+      });
+    }
+    cameraRestoredRef.current = true;
+  }, [initialCamera, threeCamera]);
+
+  const handleEnd = React.useCallback(() => {
+    if (isUpdatingCameraRef.current || !onCameraChange || !controlsRef.current) return;
+    const position = threeCamera.position;
+    const target = controlsRef.current.target;
+    const forwardVec = new THREE.Vector3().subVectors(target, position);
+    if (forwardVec.lengthSq() < 0.001) return;
+    const forward = forwardVec.normalize();
+    const up = threeCamera.up;
+    onCameraChange({
+      position: { x: position.x, y: position.y, z: position.z },
+      forward: { x: forward.x, y: forward.y, z: forward.z },
+      up: { x: up.x, y: up.y, z: up.z },
+    });
+  }, [onCameraChange, threeCamera]);
+
+  return (
+    <>
+      <OrbitControls ref={controlsRef} enableDamping={false} onEnd={handleEnd} />
+      <ambientLight intensity={1} />
+      {children}
+      <SceneGrid show={showGrid} />
+      <SceneGizmo show={showGizmo} />
+    </>
+  );
+};
+
+export const SemioScene: React.FC<SemioSceneProps> = ({
+  kit,
+  designGuid,
+  designDiff,
+  diffEnabled = true,
+  selection,
+  defaultSelection,
+  selectionEnabled = true,
+  onSelectionChange,
+  onPieceClick,
+  showGrid = true,
+  showGizmo = true,
+  camera,
+  onCameraChange,
+  className = "",
+  title = "Design Scene",
+}) => {
+  const snapshot = React.useMemo(() => {
+    const baseDesign = findDesignInKit(kit, designGuid);
+    const effectiveDiff = diffEnabled ? designDiff : undefined;
+    const nextDesign = effectiveDiff ? applyDesignDiff(baseDesign, effectiveDiff) : baseDesign;
+    const flatKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === nextDesign.guid ? nextDesign : d)) };
+    const flatDesign = applyDesignDiff(nextDesign, flattenDesign(flatKit, nextDesign.guid).forward);
+    return { pieces: flatDesign.pieces ?? [] };
+  }, [kit, designGuid, designDiff, diffEnabled]);
+
+  const [resolvedSelection, setResolvedSelection] = React.useState<SemioSceneSelection>(selection ?? defaultSelection ?? { pieceGuids: [] });
+  const effectiveSelection = selection ?? resolvedSelection;
+  const selectedPieceGuids = React.useMemo(() => new Set(selectionEnabled ? (effectiveSelection.pieceGuids ?? []) : []), [selectionEnabled, effectiveSelection.pieceGuids]);
+  const [hoveredPieceGuid, setHoveredPieceGuid] = React.useState<string | null>(null);
+
+  const handleSelectPiece = React.useCallback(
+    (pieceGuid: string) => {
+      if (!selectionEnabled) return;
+      const nextGuids = new Set(effectiveSelection.pieceGuids ?? []);
+      if (nextGuids.has(pieceGuid)) {
+        nextGuids.delete(pieceGuid);
+      } else {
+        nextGuids.add(pieceGuid);
+      }
+      const next = { pieceGuids: Array.from(nextGuids) };
+      if (!selection) setResolvedSelection(next);
+      onSelectionChange?.(next);
+    },
+    [selectionEnabled, effectiveSelection.pieceGuids, selection, onSelectionChange],
+  );
+
+  const piecesWithPlanes = React.useMemo(() => snapshot.pieces.filter((p) => p.plane), [snapshot.pieces]);
+
+  return (
+    <div className={`h-full w-full ${className}`} aria-label={title}>
+      <ThreeCanvas orthographic frameloop="demand" camera={{ zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 }} style={{ width: "100%", height: "100%" }}>
+        <SceneInnerContent showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange}>
+          {piecesWithPlanes.map((piece) => (
+            <ScenePiece
+              key={piece.guid}
+              piece={piece}
+              isSelected={selectedPieceGuids.has(piece.guid)}
+              isHovered={hoveredPieceGuid === piece.guid}
+              onClick={
+                selectionEnabled || onPieceClick
+                  ? () => {
+                      handleSelectPiece(piece.guid);
+                      onPieceClick?.(piece);
+                    }
+                  : undefined
+              }
+              onPointerEnter={() => setHoveredPieceGuid(piece.guid)}
+              onPointerLeave={() => setHoveredPieceGuid((prev) => (prev === piece.guid ? null : prev))}
+            />
+          ))}
+        </SceneInnerContent>
+      </ThreeCanvas>
+    </div>
+  );
+};
+
+// #endregion 🔖Scene
+
+// #region 🔖Design
+
+// Specs: Split-view design viewer with Diagram on the right and Scene on the left.
+// Uses CSS grid for layout. Fully iframe compatible. Selection state is shared between
+// the Diagram (2D) and Scene (3D) views. Handles the case where a design has no 3D
+// plane data by showing only the Diagram.
+// Summary: Combined 2D diagram + 3D scene split view for a design in a kit.
+
+export interface SemioDesignProps {
+  kit: Kit;
+  designGuid: string;
+  designDiff?: DesignDiff;
+  diffEnabled?: boolean;
+  selection?: DiagramSelection;
+  defaultSelection?: DiagramSelection;
+  selectionEnabled?: boolean;
+  onSelectionChange?: (selection: DiagramSelection) => void;
+  onPieceClick?: (piece: Piece) => void;
+  onConnectionClick?: (connection: Connection) => void;
+  showGrid?: boolean;
+  showGizmo?: boolean;
+  camera?: Camera;
+  onCameraChange?: (camera: Camera) => void;
+  className?: string;
+  title?: string;
+  sceneRatio?: number;
+}
+
+export const SemioDesign: React.FC<SemioDesignProps> = ({
+  kit,
+  designGuid,
+  designDiff,
+  diffEnabled = true,
+  selection,
+  defaultSelection,
+  selectionEnabled = true,
+  onSelectionChange,
+  onPieceClick,
+  onConnectionClick,
+  showGrid = true,
+  showGizmo = true,
+  camera,
+  onCameraChange,
+  className = "",
+  title = "Design",
+  sceneRatio = 0.5,
+}) => {
+  const hasPlanes = React.useMemo(() => {
+    const baseDesign = findDesignInKit(kit, designGuid);
+    const effectiveDiff = diffEnabled ? designDiff : undefined;
+    const nextDesign = effectiveDiff ? applyDesignDiff(baseDesign, effectiveDiff) : baseDesign;
+    const flatKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === nextDesign.guid ? nextDesign : d)) };
+    const flatDesign = applyDesignDiff(nextDesign, flattenDesign(flatKit, nextDesign.guid).forward);
+    return (flatDesign.pieces ?? []).some((p) => p.plane);
+  }, [kit, designGuid, designDiff, diffEnabled]);
+
+  const sceneSelection = React.useMemo((): SemioSceneSelection => ({ pieceGuids: selection?.pieceGuids ?? defaultSelection?.pieceGuids ?? [] }), [selection?.pieceGuids, defaultSelection?.pieceGuids]);
+
+  const handleSceneSelectionChange = React.useCallback(
+    (sceneSelection: SemioSceneSelection) => {
+      onSelectionChange?.({
+        pieceGuids: sceneSelection.pieceGuids ?? [],
+        connectionGuids: selection?.connectionGuids ?? [],
+      });
+    },
+    [onSelectionChange, selection?.connectionGuids],
+  );
+
+  const scenePercent = Math.max(0.1, Math.min(0.9, sceneRatio)) * 100;
+  const diagramPercent = 100 - scenePercent;
+
+  return (
+    <div
+      className={`h-full w-full ${className}`}
+      aria-label={title}
+      style={{
+        display: "grid",
+        gridTemplateColumns: hasPlanes ? `${scenePercent}% ${diagramPercent}%` : "1fr",
+      }}
+    >
+      {hasPlanes && (
+        <div className="h-full w-full overflow-hidden border-r border-border">
+          <SemioScene
+            kit={kit}
+            designGuid={designGuid}
+            designDiff={designDiff}
+            diffEnabled={diffEnabled}
+            selection={selection ? sceneSelection : undefined}
+            defaultSelection={defaultSelection ? { pieceGuids: defaultSelection.pieceGuids ?? [] } : undefined}
+            selectionEnabled={selectionEnabled}
+            onSelectionChange={handleSceneSelectionChange}
+            onPieceClick={onPieceClick}
+            showGrid={showGrid}
+            showGizmo={showGizmo}
+            camera={camera}
+            onCameraChange={onCameraChange}
+            title={`${title} Scene`}
+          />
+        </div>
+      )}
+      <div className="h-full w-full overflow-hidden">
+        <SemioDiagram
+          kit={kit}
+          designGuid={designGuid}
+          designDiff={designDiff}
+          diffEnabled={diffEnabled}
+          selection={selection}
+          defaultSelection={defaultSelection}
+          selectionEnabled={selectionEnabled}
+          onSelectionChange={onSelectionChange}
+          onPieceClick={onPieceClick}
+          onConnectionClick={onConnectionClick}
+          title={`${title} Diagram`}
+        />
+      </div>
+    </div>
+  );
+};
+
+// #endregion 🔖Design

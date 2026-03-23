@@ -25,7 +25,7 @@
 
 import { execSync } from "child_process";
 
-execSync('uv run python -c "from engine import generateSchemas; generateSchemas()"', {
+execSync('uv run python -c "from main import generateSchemas; generateSchemas()"', {
   cwd: __dirname,
   stdio: "inherit",
 });

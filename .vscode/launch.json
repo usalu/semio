@@ -157,13 +157,9 @@
     {
       "name": "🛠️dev👤semio🖱️sketchpad",
       "preLaunchTask": "🛠️dev👤semio🖱️sketchpad",
-      "type": "chrome",
+      "type": "node-terminal",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev:sketchpad"
-      ],
+      "command": "npx nx dev semio/sketchpad",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {

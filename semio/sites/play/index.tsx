@@ -27,7 +27,7 @@ import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeC
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
 import { createIndexeddbPersistenceFactory } from "@semio/studio";
 import { InMemoryKitStore } from "@semio/js";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import "./globals.css";
 
 appRegistry.register(designConfig);
@@ -41,7 +41,22 @@ appRegistry.register(typeConfig);
 const indexeddbPersistenceFactory = createIndexeddbPersistenceFactory();
 const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
 
-createRoot(document.getElementById("root")!).render(
+type RootHostElement = HTMLElement & { __semioReactRoot__?: Root };
+
+const getOrCreateDomRoot = (element: HTMLElement): Root => {
+  const rootHost = element as RootHostElement;
+  if (!rootHost.__semioReactRoot__) {
+    rootHost.__semioReactRoot__ = createRoot(element);
+  }
+  return rootHost.__semioReactRoot__;
+};
+
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error('Play root element "#root" was not found.');
+}
+
+getOrCreateDomRoot(rootElement).render(
   <div className="h-screen w-screen">
     <Sketchpad persistenceFactory={indexeddbPersistenceFactory} temporaryKitStoreFactory={temporaryKitStoreFactory} importKitUrls={["/metabolism.zip"]} />
   </div>,

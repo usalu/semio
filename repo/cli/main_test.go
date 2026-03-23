@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -4920,7 +4919,7 @@ func TestSectionIdentificationAutofix(t *testing.T) {
 		t.Fatal("expected at least one autofix applied")
 	}
 	fixedContent, _ := ReadTextFile(absPath)
-	if !strings.Contains(fixedContent, "/s/") {
+	if !strings.Contains(fixedContent, "repo://section/") {
 		t.Fatal("expected section identification URI after autofix")
 	}
 }
@@ -5017,7 +5016,7 @@ func TestDefinitionIdentificationAutofix(t *testing.T) {
 				t.Fatal("expected at least one autofix applied")
 			}
 			fixedContent, _ := ReadTextFile(absPath)
-			if !strings.Contains(fixedContent, "/d/") {
+			if !strings.Contains(fixedContent, "repo://definition/") {
 				t.Fatalf("expected definition identification URI after autofix, got:\n%s", fixedContent)
 			}
 		})
@@ -5579,11 +5578,11 @@ func TestSectionHeaderIdAndUri(t *testing.T) {
 		t.Fatalf("nested section header id should include section emoji before each nested segment, got: %s", nestedId)
 	}
 	uri := SectionHeaderUri("src/app.ts", "Functions")
-	if !strings.Contains(uri, "/s/") {
+	if !strings.HasPrefix(uri, "repo://section/") {
 		t.Fatalf("unexpected section header uri: %s", uri)
 	}
-	if !strings.Contains(uri, "Functions") {
-		t.Fatalf("section uri should contain slugified section name: %s", uri)
+	if !strings.Contains(uri, emojiText(EmojiSection)) {
+		t.Fatalf("section uri should contain section emoji: %s", uri)
 	}
 }
 
@@ -5593,11 +5592,11 @@ func TestDefinitionHeaderIdAndUri(t *testing.T) {
 		t.Fatalf("unexpected definition header id: %s", id)
 	}
 	uri := DefinitionHeaderUri("src/app.ts", "Functions", "doWork")
-	if !strings.Contains(uri, "/d/") {
+	if !strings.HasPrefix(uri, "repo://definition/") {
 		t.Fatalf("unexpected definition header uri: %s", uri)
 	}
-	if !strings.Contains(uri, "doWork") {
-		t.Fatalf("definition uri should contain slugified def name: %s", uri)
+	if !strings.Contains(uri, Flat("doWork")) {
+		t.Fatalf("definition uri should contain flattened def name: %s", uri)
 	}
 }
 
@@ -6003,15 +6002,17 @@ func TestDocsBreach(t *testing.T) {
 
 func TestFormatHeaderStructure(t *testing.T) {
 	lang := NewTypeScriptLanguage()
-	header := lang.FormatHeader("💻test/file.ts", "repo://f/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some requirements")
+	fileId := emojiText(EmojiFileCode) + "test/file.ts"
+	fileUri := "repo://file/" + emojiText(EmojiFileCode) + "test"
+	header := lang.FormatHeader(fileId, fileUri, "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some requirements")
 	if !strings.Contains(header, "// #region 🔖Header") {
 		t.Error("header missing Header region start")
 	}
 	if !strings.Contains(header, "// #endregion 🔖Header") {
 		t.Error("header missing Header region end")
 	}
-	if !strings.Contains(header, "[💻test/file.ts](repo://f/file.ts)") {
-		t.Error("header missing [ID](URI) identification")
+	if !strings.Contains(header, "["+fileId+"]("+fileUri+")") {
+		t.Errorf("header missing [ID](URI) identification, got: %s", header)
 	}
 	if !strings.Contains(header, "A test file") {
 		t.Error("header missing summary")
@@ -6029,7 +6030,7 @@ func TestFormatHeaderStructure(t *testing.T) {
 
 func TestFormatHeaderEmptyRequirements(t *testing.T) {
 	lang := NewGoLanguage()
-	header := lang.FormatHeader("💻test/file.go", "repo://f/file.go", "", "2025 Dev <dev@dev.com>", "AGPL text", "")
+	header := lang.FormatHeader("💻test/file.go", "repo://file/💻test", "", "2025 Dev <dev@dev.com>", "AGPL text", "")
 	if strings.Contains(header, "Requirements") {
 		t.Error("header should not contain Requirements subregion when requirements is empty")
 	}
@@ -6051,11 +6052,11 @@ func TestFormatHeaderAllLanguages(t *testing.T) {
 		NewGraphqlLanguage(),
 	}
 	for _, lang := range languages {
-		header := lang.FormatHeader("💻test/file", "repo://f/file", "", "2025 Dev <d@d.com>", "AGPL", "")
+		header := lang.FormatHeader("💻test/file", "repo://file/💻test", "", "2025 Dev <d@d.com>", "AGPL", "")
 		if header == "" {
 			t.Errorf("%s: FormatHeader returned empty", lang.Name())
 		}
-		if !strings.Contains(header, "[💻test/file](repo://f/file)") {
+		if !strings.Contains(header, "[💻test/file](repo://file/💻test)") {
 			t.Errorf("%s: header missing [ID](URI) identification", lang.Name())
 		}
 	}
@@ -6065,7 +6066,7 @@ func TestFormatHeaderAllLanguages(t *testing.T) {
 		NewYamlLanguage(),
 	}
 	for _, lang := range noHeader {
-		header := lang.FormatHeader("💻test/file", "repo://f/file", "", "2025 Dev <d@d.com>", "AGPL", "")
+		header := lang.FormatHeader("💻test/file", "repo://file/💻test", "", "2025 Dev <d@d.com>", "AGPL", "")
 		if header != "" {
 			t.Errorf("%s: FormatHeader should return empty for non-header language", lang.Name())
 		}
@@ -6773,7 +6774,7 @@ func TestFileCreateMoveDelete(t *testing.T) {
 
 // #region 🔖Section
 func TestSectionListCommand(t *testing.T) {
-	result := ToolSectionList("semio/js/semio.ts")
+	result := ToolSectionList("semio/js/index.ts")
 	if result.Error != "" {
 		t.Errorf("ToolSectionList returned error: %s", result.Error)
 	}
@@ -6796,12 +6797,12 @@ func TestSectionListCommand(t *testing.T) {
 		}
 	}
 	if !foundHeader {
-		t.Error("Expected to find 'Header' section in js/semio/semio.ts")
+		t.Error("Expected to find 'Header' section in semio/js/index.ts")
 	}
 }
 
 func TestSectionTreeCommand(t *testing.T) {
-	result := ToolSectionTree("semio/js/semio.ts")
+	result := ToolSectionTree("semio/js/index.ts")
 	if result.Error != "" {
 		t.Errorf("ToolSectionTree returned error: %s", result.Error)
 	}
@@ -6811,7 +6812,7 @@ func TestSectionTreeCommand(t *testing.T) {
 
 // #region 🔖Definition
 func TestDefinitionListCommand(t *testing.T) {
-	result := ToolDefinitionList("semio/js/semio.ts")
+	result := ToolDefinitionList("semio/js/index.ts")
 	if result.Error != "" {
 		t.Errorf("ToolDefinitionList returned error: %s", result.Error)
 	}
@@ -7684,7 +7685,7 @@ func TestGetArtifactID_Session(t *testing.T) {
 
 func TestGetArtifactURI_Sessions(t *testing.T) {
 	uri := GetArtifactURI("sessions", map[string]interface{}{})
-	expected := "repo://s"
+	expected := "repo://sessions/" + emojiText(EmojiSessions)
 	if uri != expected {
 		t.Errorf("sessions uri: expected %q, got %q", expected, uri)
 	}
@@ -7696,8 +7697,8 @@ func TestGetArtifactURI_Session(t *testing.T) {
 		data     map[string]interface{}
 		expected string
 	}{
-		{"session with uuid", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15"}, "repo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"},
-		{"session with id fallback", map[string]interface{}{"id": "abc123"}, "repo://s/abc123"},
+		{"session with uuid", map[string]interface{}{"uuid": "e753ed61-e8cc-49b7-88f7-dda53b8d5a15"}, "repo://session/" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session with id fallback", map[string]interface{}{"id": "abc123"}, "repo://session/" + emojiText(EmojiSession) + "abc123"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -7715,8 +7716,7 @@ func TestSessionIdToUri(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"session collection", emojiText(EmojiSession), "repo://s"},
-		{"session", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", "repo://s/e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", "repo://session/" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7734,8 +7734,7 @@ func TestSessionUriToId(t *testing.T) {
 		uri  string
 		want string
 	}{
-		{"sessions collection", "repo://s", emojiText(EmojiSessions)},
-		{"session", "repo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"session", "repo://session/" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7806,7 +7805,7 @@ func TestSessionGetURI(t *testing.T) {
 		Kind:  SessionKindCompleted,
 	}
 	uri := s.GetURI()
-	expected := "repo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
+	expected := "repo://session/" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"
 	if uri != expected {
 		t.Errorf("Session.GetURI() = %q, want %q", uri, expected)
 	}
@@ -8305,9 +8304,9 @@ func TestTechnologyListIDs(t *testing.T) {
 		t.Fatal("ToolTechnologyList data is not []Technology")
 	}
 	expectedIDs := map[string]string{
-		"semio":      emojiText(EmojiTechnologyUser) + "semio",
-		"repo": emojiText(EmojiTechnologyInfra) + "repo",
-		"coda":       emojiText(EmojiTechnologyResearch) + "coda",
+		"semio": emojiText(EmojiTechnologyUser) + "semio",
+		"repo":  emojiText(EmojiTechnologyInfra) + "repo",
+		"coda":  emojiText(EmojiTechnologyResearch) + "coda",
 	}
 	for _, p := range technologies {
 		expected, ok := expectedIDs[p.Name]
@@ -8335,24 +8334,24 @@ func TestBundleListIDs(t *testing.T) {
 		t.Fatal("ToolBundleList data is not []Bundle")
 	}
 	expectedIDs := map[string]string{
-		"semio/js":           emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
-		"semio/engine":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine",
-		"semio/go":           emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "go",
-		"semio/rs":           emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "rs",
-		"semio/py":           emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "py",
-		"semio/net":          emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "net",
-		"semio/graphql":      emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "graphql",
-		"semio/jsonschema":   emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "jsonschema",
-		"semio/openapi":      emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "openapi",
-		"semio/desktop":      emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
-		"semio/docs":         emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
-		"semio/play":         emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "play",
-		"semio/assets":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
-		"repo/cli":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli",
-		"repo/server":  emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "server",
-		"repo/go":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
-		"repo/vscode":  emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode",
-		"repo/graphql": emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleSchema) + "graphql",
+		"semio/js":         emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
+		"semio/engine":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine",
+		"semio/go":         emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "go",
+		"semio/rs":         emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "rs",
+		"semio/py":         emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "py",
+		"semio/net":        emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "net",
+		"semio/graphql":    emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "graphql",
+		"semio/jsonschema": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "jsonschema",
+		"semio/openapi":    emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "openapi",
+		"semio/desktop":    emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
+		"semio/docs":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
+		"semio/play":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "play",
+		"semio/assets":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
+		"repo/cli":         emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli",
+		"repo/server":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "server",
+		"repo/go":          emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
+		"repo/vscode":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode",
+		"repo/graphql":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleSchema) + "graphql",
 	}
 	for _, b := range bundles {
 		expected, ok := expectedIDs[b.Name]
@@ -8553,15 +8552,15 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 		t.Errorf("coda technology id: expected %q, got %q", expectedCodaId, actualCodaId)
 	}
 	bundleChecks := map[string]string{
-		"semio/js":          emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
-		"semio/go":          emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "go",
-		"semio/engine":      emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine",
-		"semio/assets":      emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
-		"semio/desktop":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
-		"semio/docs":        emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
-		"repo/cli":    emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli",
-		"repo/server": emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "server",
-		"repo/vscode": emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode",
+		"semio/js":      emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
+		"semio/go":      emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "go",
+		"semio/engine":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "engine",
+		"semio/assets":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
+		"semio/desktop": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
+		"semio/docs":    emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
+		"repo/cli":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli",
+		"repo/server":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "server",
+		"repo/vscode":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode",
 	}
 	allBundles := []*TreeNode{}
 	for _, technology := range []*TreeNode{semioTechnology, semioRepoTechnology, codaTechnology} {
@@ -8939,7 +8938,7 @@ func TestTreeCommands(t *testing.T) {
 	if err != nil {
 		t.Errorf("repo tree failed: %v", err)
 	}
-	if !strings.Contains(strings.ToLower(output), "semio.go") && !strings.Contains(output, "semiogo") {
+	if !strings.Contains(strings.ToLower(output), "semio.go") && !strings.Contains(output, "semiogo") && !strings.Contains(output, "💻semio") {
 		t.Errorf("repo tree semio/go missing semio.go, got:\n%s", output)
 	}
 	if strings.Contains(output, "├── ") || strings.Contains(output, "└── ") {
@@ -8967,7 +8966,7 @@ func TestTreeCommands(t *testing.T) {
 	if err != nil {
 		t.Errorf("file tree failed: %v", err)
 	}
-	if !strings.Contains(strings.ToLower(output), "semio.go") && !strings.Contains(output, "semiogo") {
+	if !strings.Contains(strings.ToLower(output), "semio.go") && !strings.Contains(output, "semiogo") && !strings.Contains(output, "💻semio") {
 		t.Errorf("file tree missing semio.go")
 	}
 	if !strings.Contains(output, "- [") {
@@ -11367,210 +11366,210 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "root",
 			data:    map[string]interface{}{},
 			wantID:  "",
-			wantURI: "repo://",
+			wantURI: "repo://root",
 		},
 		{
 			name:    "technologies collection",
 			kind:    "technologies",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiTechnologies),
-			wantURI: "repo://p",
+			wantURI: "repo://technologies/" + emojiText(EmojiTechnologies),
 		},
 		{
 			name:    "technology user",
 			kind:    "technology",
 			data:    map[string]interface{}{"name": "semio", "kind": "user"},
 			wantID:  emojiText(EmojiTechnologyUser) + "semio",
-			wantURI: "repo://p/u/semio",
+			wantURI: "repo://technology/" + emojiText(EmojiTechnologyUser) + "semio",
 		},
 		{
 			name:    "technology infrastructure",
 			kind:    "technology",
 			data:    map[string]interface{}{"name": "repo", "kind": "infrastructure"},
 			wantID:  emojiText(EmojiTechnologyInfra) + "repo",
-			wantURI: "repo://p/i/repo",
+			wantURI: "repo://technology/" + emojiText(EmojiTechnologyInfra) + "repo",
 		},
 		{
 			name:    "technology research",
 			kind:    "technology",
 			data:    map[string]interface{}{"name": "coda", "kind": "research"},
 			wantID:  emojiText(EmojiTechnologyResearch) + "coda",
-			wantURI: "repo://p/r/coda",
+			wantURI: "repo://technology/" + emojiText(EmojiTechnologyResearch) + "coda",
 		},
 		{
 			name:    "bundles collection",
 			kind:    "bundles",
 			data:    map[string]interface{}{"technologyCode": "semio", "parentId": emojiText(EmojiTechnologyUser) + "semio"},
 			wantID:  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundles),
-			wantURI: "repo://p/bs",
+			wantURI: "repo://bundles/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundles),
 		},
 		{
 			name:    "bundle library",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/js", "kind": "library"},
 			wantID:  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
-			wantURI: "repo://p/u/semio/b/l/js",
+			wantURI: "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
 		},
 		{
 			name:    "bundle example",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "coda/examples", "kind": "library"},
 			wantID:  emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleLibrary) + "examples",
-			wantURI: "repo://p/r/coda/b/l/examples",
+			wantURI: "repo://bundle/" + emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleLibrary) + "examples",
 		},
 		{
 			name:    "bundle ui",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/desktop", "kind": "ui"},
 			wantID:  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
-			wantURI: "repo://p/u/semio/b/u/desktop",
+			wantURI: "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
 		},
 		{
 			name:    "folders collection empty",
 			kind:    "folders",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiFolders),
-			wantURI: "repo://fds",
+			wantURI: "repo://folders/" + emojiText(EmojiFolders),
 		},
 		{
 			name:    "folders collection with parent",
 			kind:    "folders",
 			data:    map[string]interface{}{"parentPath": "semio/js/src", "parentId": emojiText(EmojiFolderOrg) + "src"},
 			wantID:  emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFolders),
-			wantURI: "repo://fds",
+			wantURI: "repo://folders/" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFolders),
 		},
 		{
 			name:    "folder required",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/src", "kind": "required"},
 			wantID:  emojiText(EmojiFolderRequired) + "src",
-			wantURI: "repo://fd/req/src",
+			wantURI: "repo://folder/" + emojiText(EmojiFolderRequired) + "src",
 		},
 		{
 			name:    "folder organization",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/utils", "kind": "organization"},
 			wantID:  emojiText(EmojiFolderOrg) + "utils",
-			wantURI: "repo://fd/org/utils",
+			wantURI: "repo://folder/" + emojiText(EmojiFolderOrg) + "utils",
 		},
 		{
 			name:    "files collection empty",
 			kind:    "files",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiFiles),
-			wantURI: "repo://fis",
+			wantURI: "repo://files/" + emojiText(EmojiFiles),
 		},
 		{
 			name:    "file docs",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
 			wantID:  emojiText(EmojiFileDocs) + "test",
-			wantURI: "repo://f/test.txt",
+			wantURI: "repo://file/" + emojiText(EmojiFileDocs) + "test",
 		},
 		{
 			name:    "file code",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "main.go", "kind": "code"},
 			wantID:  emojiText(EmojiFileCode) + "main",
-			wantURI: "repo://f/main.go",
+			wantURI: "repo://file/" + emojiText(EmojiFileCode) + "main",
 		},
 		{
 			name:    "file test",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "lab"},
 			wantID:  emojiText(EmojiFileLab) + "indextest",
-			wantURI: GetArtifactURI("file", map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "lab"}),
+			wantURI: "repo://file/" + emojiText(EmojiFileLab) + "indextest",
 		},
 		{
 			name:    "file config",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
 			wantID:  emojiText(EmojiFileConfig) + "tsconfig",
-			wantURI: "repo://f/tsconfig.json",
+			wantURI: "repo://file/" + emojiText(EmojiFileConfig) + "tsconfig",
 		},
 		{
 			name:    "file script",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "build.sh", "kind": "script"},
 			wantID:  emojiText(EmojiFileScript) + "build",
-			wantURI: "repo://f/build.sh",
+			wantURI: "repo://file/" + emojiText(EmojiFileScript) + "build",
 		},
 		{
 			name:    "file resource",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
 			wantID:  emojiText(EmojiFileResource) + "logo",
-			wantURI: "repo://f/logo.png",
+			wantURI: "repo://file/" + emojiText(EmojiFileResource) + "logo",
 		},
 		{
 			name:    "file license",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "LICENSE.md", "kind": "license"},
 			wantID:  emojiText(EmojiFileLicense) + "license",
-			wantURI: "repo://f/LICENSE.md",
+			wantURI: "repo://file/" + emojiText(EmojiFileLicense) + "license",
 		},
 		{
 			name:    "sections collection",
 			kind:    "sections",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "index"},
 			wantID:  emojiText(EmojiFileCode) + "index" + emojiText(EmojiSections),
-			wantURI: GetArtifactURI("sections", map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "index"}),
+			wantURI: "repo://sections/" + emojiText(EmojiFileCode) + "index" + emojiText(EmojiSections),
 		},
 		{
 			name:    "section",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"},
 			wantID:  buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
-			wantURI: GetArtifactURI("section", map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"}),
+			wantURI: "repo://section/" + buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
 		},
 		{
 			name:    "section single level",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/file.ts#Imports"},
 			wantID:  buildSectionID(buildFileID("semio/js/src/file.ts", nil), []string{"Imports"}),
-			wantURI: GetArtifactURI("section", map[string]interface{}{"path": "semio/js/src/file.ts#Imports"}),
+			wantURI: "repo://section/" + buildSectionID(buildFileID("semio/js/src/file.ts", nil), []string{"Imports"}),
 		},
 		{
 			name:    "definitions collection",
 			kind:    "definitions",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiSection) + "types"},
 			wantID:  emojiText(EmojiSection) + "types" + emojiText(EmojiDefinitions),
-			wantURI: GetArtifactURI("definitions", map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiSection) + "types"}),
+			wantURI: "repo://definitions/" + emojiText(EmojiSection) + "types" + emojiText(EmojiDefinitions),
 		},
 		{
 			name:    "definition with id",
 			kind:    "definition",
 			data:    map[string]interface{}{"id": "semio/js/src/index.ts#MyClass", "kind": "implementation"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
-			wantURI: "repo://d/i/semio/js/src/index.ts#MyClass",
+			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
-			wantURI: GetArtifactURI("definition", map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"}),
+			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
 		},
 		{
 			name:    "definition go type treated as interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "type", "filePath": "repo/cli/main.go", "sectionPath": "GraphQL Types#GraphQL Input Types", "name": "TicketCloseInput"},
 			wantID:  buildDefinitionID(buildFileID("repo/cli/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
-			wantURI: GetArtifactURI("definition", map[string]interface{}{"kind": "type", "filePath": "repo/cli/main.go", "sectionPath": "GraphQL Types#GraphQL Input Types", "name": "TicketCloseInput"}),
+			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("repo/cli/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
 		},
 		{
 			name:    "definition constant",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
-			wantURI: GetArtifactURI("definition", map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"}),
+			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
 		},
 		{
 			name:    "tickets collection",
 			kind:    "tickets",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiTickets),
-			wantURI: "repo://tks",
+			wantURI: "repo://tickets/" + emojiText(EmojiTickets),
 		},
 		{
 			name: "ticket",
@@ -11582,7 +11581,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"slug":  "test-ticket",
 			},
 			wantID:  emojiText(EmojiTicket) + "testticket",
-			wantURI: "repo://y/2025/m/02/d/04/tk/test-ticket",
+			wantURI: "repo://ticket/" + emojiText(EmojiTicket) + "testticket",
 		},
 		{
 			name: "ticket with status",
@@ -11595,133 +11594,133 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"status": "open",
 			},
 			wantID:  emojiText(EmojiTicket) + "testticket",
-			wantURI: "repo://y/2025/m/02/d/04/tk/test-ticket",
+			wantURI: "repo://ticket/" + emojiText(EmojiTicket) + "testticket",
 		},
 		{
 			name:    "goals collection",
 			kind:    "goals",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiGoals),
-			wantURI: "repo://gs",
+			wantURI: "repo://goals/" + emojiText(EmojiGoals),
 		},
 		{
 			name:    "goal",
 			kind:    "goal",
 			data:    map[string]interface{}{"id": "RUNNING-SKETCHPAD", "parentId": ""},
 			wantID:  emojiText(EmojiGoal) + "runningsketchpad",
-			wantURI: "repo://g/RUNNING-SKETCHPAD",
+			wantURI: "repo://goal/" + emojiText(EmojiGoal) + "runningsketchpad",
 		},
 		{
 			name:    "goal nested",
 			kind:    "goal",
 			data:    map[string]interface{}{"id": "R26-02/RUNNING-SKETCHPAD", "parentId": emojiText(EmojiGoal) + "r2602"},
 			wantID:  emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad",
-			wantURI: "repo://g/R26-02/g/RUNNING-SKETCHPAD",
+			wantURI: "repo://goal/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad",
 		},
 		{
 			name:    "drafts collection",
 			kind:    "drafts",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiDrafts),
-			wantURI: "repo://drs",
+			wantURI: "repo://drafts/" + emojiText(EmojiDrafts),
 		},
 		{
 			name:    "draft",
 			kind:    "draft",
 			data:    map[string]interface{}{"slug": "my-draft"},
 			wantID:  emojiText(EmojiDraft) + "mydraft",
-			wantURI: "repo://drs/my-draft",
+			wantURI: "repo://draft/" + emojiText(EmojiDraft) + "mydraft",
 		},
 		{
 			name:    "todos collection",
 			kind:    "todos",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiTodos),
-			wantURI: "repo://tos",
+			wantURI: "repo://todos/" + emojiText(EmojiTodos),
 		},
 		{
 			name:    "todo",
 			kind:    "todo",
 			data:    map[string]interface{}{"id": "my-todo"},
 			wantID:  emojiText(EmojiTodo) + "mytodo",
-			wantURI: "repo://tos/my-todo",
+			wantURI: "repo://todo/" + emojiText(EmojiTodo) + "mytodo",
 		},
 		{
 			name:    "policies collection",
 			kind:    "policies",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiPolicies),
-			wantURI: "repo://pls",
+			wantURI: "repo://policies/" + emojiText(EmojiPolicies),
 		},
 		{
 			name:    "policy",
 			kind:    "policy",
 			data:    map[string]interface{}{"id": "/code-hygiene"},
 			wantID:  emojiText(EmojiPolicy) + "codehygiene",
-			wantURI: "repo://pls/pl/code-hygiene",
+			wantURI: "repo://policy/" + emojiText(EmojiPolicy) + "codehygiene",
 		},
 		{
 			name:    "statutes collection",
 			kind:    "statutes",
 			data:    map[string]interface{}{},
 			wantID:  "",
-			wantURI: "repo://sts",
+			wantURI: "repo://statutes",
 		},
 		{
 			name:    "statute",
 			kind:    "statute",
 			data:    map[string]interface{}{"id": "code/inline-comment"},
 			wantID:  "codeinlinecomment",
-			wantURI: "repo://sts/code/inline-comment",
+			wantURI: "repo://statute/codeinlinecomment",
 		},
 		{
 			name:    "contributors collection",
 			kind:    "contributors",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiContributors),
-			wantURI: "repo://cs",
+			wantURI: "repo://contributors/" + emojiText(EmojiContributors),
 		},
 		{
 			name:    "contributor",
 			kind:    "contributor",
 			data:    map[string]interface{}{"github": "usalu"},
 			wantID:  emojiText(EmojiContributor) + "usalu",
-			wantURI: "repo://cs/usalu",
+			wantURI: "repo://contributor/" + emojiText(EmojiContributor) + "usalu",
 		},
 		{
 			name:    "checkpoints collection",
 			kind:    "checkpoints",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  emojiText(EmojiCheckpoints),
-			wantURI: "repo://cms",
+			wantURI: "repo://checkpoints/" + emojiText(EmojiCheckpoints),
 		},
 		{
 			name:    "checkpoint",
 			kind:    "checkpoint",
 			data:    map[string]interface{}{"sha": "abc123"},
 			wantID:  emojiText(EmojiCheckpoint) + "abc123",
-			wantURI: "repo://cms/abc123",
+			wantURI: "repo://checkpoint/" + emojiText(EmojiCheckpoint) + "abc123",
 		},
 		{
 			name:    "interactions collection",
 			kind:    "interactions",
 			data:    map[string]interface{}{"parentId": ""},
 			wantID:  "",
-			wantURI: "repo://is",
+			wantURI: "repo://interactions",
 		},
 		{
 			name:    "interaction started ticket",
 			kind:    "interaction",
 			data:    map[string]interface{}{"kind": "started", "entityId": emojiText(EmojiTicket) + "introduceinteractionmechanism"},
 			wantID:  emojiText(EmojiTicket) + "introduceinteractionmechanism" + emojiText(EmojiInteractionStarted),
-			wantURI: "repo://is/on/" + url.PathEscape(IdToUri(emojiText(EmojiTicket)+"introduceinteractionmechanism")) + "/started",
+			wantURI: "repo://interaction/" + emojiText(EmojiTicket) + "introduceinteractionmechanism" + emojiText(EmojiInteractionStarted),
 		},
 		{
 			name:    "interaction finished goal",
 			kind:    "interaction",
 			data:    map[string]interface{}{"kind": "finished", "entityId": emojiText(EmojiGoal) + "r2602"},
 			wantID:  emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished),
-			wantURI: "repo://is/on/" + url.PathEscape(IdToUri(emojiText(EmojiGoal)+"r2602")) + "/finished",
+			wantURI: "repo://interaction/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished),
 		},
 	}
 
@@ -11745,33 +11744,26 @@ func TestIdToUri(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"technology user", emojiText(EmojiTechnologyUser) + "semio", "repo://p/u/semio"},
-		{"technology infra", emojiText(EmojiTechnologyInfra) + "repo", "repo://p/i/repo"},
-		{"bundle", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "repo://p/u/semio/b/l/js"},
-		{"folder required", emojiText(EmojiFolderRequired) + "src", "repo://f/src"},
-		{"folder org", emojiText(EmojiFolderOrg) + "utils", "repo://f/utils"},
-		{"file docs", emojiText(EmojiFileDocs) + "test", "repo://f/test"},
-		{"file code", emojiText(EmojiFileCode) + "main", "repo://f/main"},
-		{"section collection", emojiText(EmojiSection), "repo://ss"},
-		{"section", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), IdToUri(buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}))},
-		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), IdToUri(buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation))},
-		{"ticket collection", emojiText(EmojiTicket), "repo://tks"},
-		{"ticket", emojiText(EmojiTicket) + "testticket", "repo://tks/testticket"},
-		{"goal collection", emojiText(EmojiGoal), "repo://gs"},
-		{"goal", emojiText(EmojiGoal) + "r2602runningsketchpad", "repo://g/r2602runningsketchpad"},
-		{"goal nested", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", "repo://g/r2602/g/runningsketchpad"},
-		{"draft collection", emojiText(EmojiDraft), "repo://drs"},
-		{"draft", emojiText(EmojiDraft) + "mydraft", "repo://drs/mydraft"},
-		{"policy collection", emojiText(EmojiPolicy), "repo://pls"},
-		{"policy", emojiText(EmojiPolicy) + "codehygiene", "repo://pls/pl/codehygiene"},
-		{"contributor collection", emojiText(EmojiContributor), "repo://cs"},
-		{"contributor", emojiText(EmojiContributor) + "usalu", "repo://cs/usalu"},
-		{"checkpoint collection", emojiText(EmojiCheckpoint), "repo://cms"},
-		{"checkpoint", emojiText(EmojiCheckpoint) + "abc123", "repo://cms/abc123"},
-		{"interaction started ticket", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), "repo://is/on/" + url.PathEscape("repo://tks/testticket") + "/started"},
-		{"interaction finished goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished), "repo://is/on/" + url.PathEscape("repo://g/r2602") + "/finished"},
-		{"session collection", emojiText(EmojiSession), "repo://s"},
-		{"session", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", "repo://s/e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"technology user", emojiText(EmojiTechnologyUser) + "semio", "repo://technology/" + emojiText(EmojiTechnologyUser) + "semio"},
+		{"technology infra", emojiText(EmojiTechnologyInfra) + "repo", "repo://technology/" + emojiText(EmojiTechnologyInfra) + "repo"},
+		{"bundle", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
+		{"folder required", emojiText(EmojiFolderRequired) + "src", "repo://folder/" + emojiText(EmojiFolderRequired) + "src"},
+		{"folder org", emojiText(EmojiFolderOrg) + "utils", "repo://folder/" + emojiText(EmojiFolderOrg) + "utils"},
+		{"file docs", emojiText(EmojiFileDocs) + "test", "repo://file/" + emojiText(EmojiFileDocs) + "test"},
+		{"file code", emojiText(EmojiFileCode) + "main", "repo://file/" + emojiText(EmojiFileCode) + "main"},
+		{"section", emojiText(EmojiSection), "repo://section/" + emojiText(EmojiSection)},
+		{"section nested", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), "repo://section/" + buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"})},
+		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation)},
+		{"ticket", emojiText(EmojiTicket) + "testticket", "repo://ticket/" + emojiText(EmojiTicket) + "testticket"},
+		{"goal", emojiText(EmojiGoal) + "r2602runningsketchpad", "repo://goal/" + emojiText(EmojiGoal) + "r2602runningsketchpad"},
+		{"goal nested", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", "repo://goal/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad"},
+		{"draft", emojiText(EmojiDraft) + "mydraft", "repo://draft/" + emojiText(EmojiDraft) + "mydraft"},
+		{"policy", emojiText(EmojiPolicy) + "codehygiene", "repo://policy/" + emojiText(EmojiPolicy) + "codehygiene"},
+		{"contributor", emojiText(EmojiContributor) + "usalu", "repo://contributor/" + emojiText(EmojiContributor) + "usalu"},
+		{"checkpoint", emojiText(EmojiCheckpoint) + "abc123", "repo://checkpoint/" + emojiText(EmojiCheckpoint) + "abc123"},
+		{"interaction started ticket", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), "repo://interaction/" + emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
+		{"interaction finished goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished), "repo://interaction/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished)},
+		{"session", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", "repo://session/" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
 		{"empty string", "", ""},
 	}
 	for _, tt := range tests {
@@ -11790,44 +11782,26 @@ func TestUriToId(t *testing.T) {
 		uri  string
 		want string
 	}{
-		{"repo", "repo://", ""},
-		{"technologies", "repo://p", emojiText(EmojiTechnologies)},
-		{"technology", "repo://p/u/semio", emojiText(EmojiTechnologyUser) + "semio"},
-		{"technology infra", "repo://p/i/repo", emojiText(EmojiTechnologyInfra) + "repo"},
-		{"bundles", "repo://p/u/semio/bs", emojiText(EmojiBundles)},
-		{"bundle", "repo://p/u/semio/b/l/js", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
-		{"folders", "repo://fds", emojiText(EmojiFolders)},
-		{"folders with parent", "repo://p/u/semio/b/l/js/fd/org/src/fds", emojiText(EmojiFolders)},
-		{"folder", "repo://fd/org/src", emojiText(EmojiFolderOrg) + "src"},
-		{"files", "repo://fis", emojiText(EmojiFiles)},
-		{"file", "repo://f/test.txt", emojiText(EmojiFileCode) + "test"},
-		{"sections", "repo://ss", emojiText(EmojiSections)},
-		{"section", "repo://f/Design.tsx/s/State%20Management/s/Design%20Store", emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "State Management" + emojiText(EmojiSection) + "Design Store"},
-		{"definitions", "repo://ds", emojiText(EmojiDefinitions)},
-		{"definition single", "repo://f/file.ts/d/i/myFunc", emojiText(EmojiFileCode) + "file" + emojiText(EmojiDefinitionImpl) + "myfunc"},
-		{"definition with section", "repo://f/file.ts/s/Section/d/i/myFunc", emojiText(EmojiFileCode) + "file" + emojiText(EmojiSection) + "Section" + emojiText(EmojiDefinitionImpl) + "myfunc"},
-		{"tickets", "repo://tks", emojiText(EmojiTickets)},
-		{"ticket", "repo://y/2025/m/02/d/04/tk/test-ticket", emojiText(EmojiTicket) + "testticket"},
-		{"goals", "repo://gs", emojiText(EmojiGoals)},
-		{"goal", "repo://g/RUNNING-SKETCHPAD", emojiText(EmojiGoal) + "runningsketchpad"},
-		{"goal nested", "repo://g/R26-02/g/RUNNING-SKETCHPAD", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad"},
-		{"drafts", "repo://drs", emojiText(EmojiDrafts)},
-		{"draft", "repo://drs/my-draft", emojiText(EmojiDraft) + "mydraft"},
-		{"todos", "repo://tos", emojiText(EmojiTodos)},
-		{"todo", "repo://tos/my-todo", emojiText(EmojiTodo) + "mytodo"},
-		{"policies", "repo://pls", emojiText(EmojiPolicies)},
-		{"policy", "repo://pls/pl/code-hygiene", emojiText(EmojiPolicy) + "codehygiene"},
-		{"statutes", "repo://sts", emojiText(EmojiStatutes)},
-		{"statute", "repo://sts/code/inline-comment", ""},
-		{"contributors", "repo://cs", emojiText(EmojiContributors)},
-		{"contributor", "repo://cs/usalu", emojiText(EmojiContributor) + "usalu"},
-		{"checkpoints", "repo://cms", emojiText(EmojiCheckpoints)},
-		{"checkpoint", "repo://cms/abc123", emojiText(EmojiCheckpoint) + "abc123"},
-		{"interactions", "repo://is", ""},
-		{"interaction ticket", "repo://is/on/" + url.PathEscape("repo://tks/testticket") + "/started", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
-		{"interaction goal", "repo://is/on/" + url.PathEscape("repo://g/r2602") + "/started", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
-		{"sessions", "repo://s", emojiText(EmojiSessions)},
-		{"session", "repo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"root", "repo://root", ""},
+		{"technologies", "repo://technologies/" + emojiText(EmojiTechnologies), emojiText(EmojiTechnologies)},
+		{"technology", "repo://technology/" + emojiText(EmojiTechnologyUser) + "semio", emojiText(EmojiTechnologyUser) + "semio"},
+		{"technology infra", "repo://technology/" + emojiText(EmojiTechnologyInfra) + "repo", emojiText(EmojiTechnologyInfra) + "repo"},
+		{"bundle", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
+		{"folder", "repo://folder/" + emojiText(EmojiFolderOrg) + "src", emojiText(EmojiFolderOrg) + "src"},
+		{"file", "repo://file/" + emojiText(EmojiFileCode) + "test", emojiText(EmojiFileCode) + "test"},
+		{"section", "repo://section/" + buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}), buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"})},
+		{"definition", "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "myFunc", DefinitionKindImplementation), buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "myFunc", DefinitionKindImplementation)},
+		{"definition with section", "repo://definition/" + buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Section"}, "myFunc", DefinitionKindImplementation), buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Section"}, "myFunc", DefinitionKindImplementation)},
+		{"ticket", "repo://ticket/" + emojiText(EmojiTicket) + "testticket", emojiText(EmojiTicket) + "testticket"},
+		{"goal", "repo://goal/" + emojiText(EmojiGoal) + "runningsketchpad", emojiText(EmojiGoal) + "runningsketchpad"},
+		{"goal nested", "repo://goal/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad"},
+		{"draft", "repo://draft/" + emojiText(EmojiDraft) + "mydraft", emojiText(EmojiDraft) + "mydraft"},
+		{"policy", "repo://policy/" + emojiText(EmojiPolicy) + "codehygiene", emojiText(EmojiPolicy) + "codehygiene"},
+		{"contributor", "repo://contributor/" + emojiText(EmojiContributor) + "usalu", emojiText(EmojiContributor) + "usalu"},
+		{"checkpoint", "repo://checkpoint/" + emojiText(EmojiCheckpoint) + "abc123", emojiText(EmojiCheckpoint) + "abc123"},
+		{"interaction", "repo://interaction/" + emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
+		{"session", "repo://session/" + emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15", emojiText(EmojiSession) + "e753ed61e8cc49b788f7dda53b8d5a15"},
+		{"kind only no id", "repo://technologies", ""},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -12080,17 +12054,17 @@ func TestIdUriRoundTrip(t *testing.T) {
 		id   string
 		uri  string
 	}{
-		{"policy", emojiText(EmojiPolicy) + "codehygiene", "repo://pls/pl/codehygiene"},
-		{"contributor", emojiText(EmojiContributor) + "usalu", "repo://cs/usalu"},
-		{"checkpoint", emojiText(EmojiCheckpoint) + "abc123", "repo://cms/abc123"},
-		{"draft", emojiText(EmojiDraft) + "mydraft", "repo://drs/mydraft"},
-		{"section", emojiText(EmojiFileCode) + "index" + emojiText(EmojiSection) + "imports", "repo://f/index/s/imports"},
-		{"file", emojiText(EmojiFileCode) + "index", "repo://f/index"},
-		{"ticket", emojiText(EmojiTicket) + "20260115someticket", "repo://tks/20260115someticket"},
-		{"goal", emojiText(EmojiGoal) + "r2602running", "repo://g/r2602running"},
-		{"interaction goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted), "repo://is/on/" + url.PathEscape("repo://g/r2602") + "/started"},
-		{"technology", emojiText(EmojiTechnologyUser) + "semio", "repo://p/u/semio"},
-		{"bundle", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "repo://p/u/semio/b/l/js"},
+		{"policy", emojiText(EmojiPolicy) + "codehygiene", "repo://policy/" + emojiText(EmojiPolicy) + "codehygiene"},
+		{"contributor", emojiText(EmojiContributor) + "usalu", "repo://contributor/" + emojiText(EmojiContributor) + "usalu"},
+		{"checkpoint", emojiText(EmojiCheckpoint) + "abc123", "repo://checkpoint/" + emojiText(EmojiCheckpoint) + "abc123"},
+		{"draft", emojiText(EmojiDraft) + "mydraft", "repo://draft/" + emojiText(EmojiDraft) + "mydraft"},
+		{"section", emojiText(EmojiFileCode) + "index" + emojiText(EmojiSection) + "imports", "repo://section/" + emojiText(EmojiFileCode) + "index" + emojiText(EmojiSection) + "imports"},
+		{"file", emojiText(EmojiFileCode) + "index", "repo://file/" + emojiText(EmojiFileCode) + "index"},
+		{"ticket", emojiText(EmojiTicket) + "20260115someticket", "repo://ticket/" + emojiText(EmojiTicket) + "20260115someticket"},
+		{"goal", emojiText(EmojiGoal) + "r2602running", "repo://goal/" + emojiText(EmojiGoal) + "r2602running"},
+		{"interaction goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted), "repo://interaction/" + emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
+		{"technology", emojiText(EmojiTechnologyUser) + "semio", "repo://technology/" + emojiText(EmojiTechnologyUser) + "semio"},
+		{"bundle", emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "repo://bundle/" + emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name+"_IdToUri", func(t *testing.T) {
@@ -12968,8 +12942,8 @@ func TestToolGoalUri(t *testing.T) {
 		if uri == "" {
 			t.Errorf("goal %s has empty URI", g.ID)
 		}
-		if !strings.HasPrefix(uri, "repo://g/") {
-			t.Errorf("goal %s URI %q should start with repo://g/", g.ID, uri)
+		if !strings.HasPrefix(uri, "repo://goal/") {
+			t.Errorf("goal %s URI %q should start with repo://goal/", g.ID, uri)
 		}
 	}
 }
@@ -13181,14 +13155,12 @@ func TestParityTechnologyTree(t *testing.T) {
 		var technologyNames []string
 		for _, line := range lines {
 			trimmed := strings.TrimSpace(line)
-			if idx := strings.Index(trimmed, "repo://p/"); idx >= 0 {
-				rest := trimmed[idx+len("repo://p/"):]
-				slashIdx := strings.Index(rest, "/")
-				if slashIdx >= 0 {
-					nameEnd := strings.Index(rest[slashIdx+1:], ")")
-					if nameEnd >= 0 {
-						technologyNames = append(technologyNames, rest[slashIdx+1:slashIdx+1+nameEnd])
-					}
+			if idx := strings.Index(trimmed, "repo://technology/"); idx >= 0 {
+				rest := trimmed[idx+len("repo://technology/"):]
+				// Extract inline name from parenthesized link
+				endParen := strings.Index(rest, ")")
+				if endParen >= 0 {
+					technologyNames = append(technologyNames, rest[:endParen])
 				}
 			}
 		}
@@ -13767,7 +13739,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders basic tree", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "codebase", Label: "🖥️Codebase", URI: "repo://cb", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "codebase", Label: "🖥️Codebase", URI: "repo://codebase", Children: []*TreeNode{
 					{Kind: TreeNodeTechnology, ID: "p1", Label: "semio"},
 				}},
 			},
@@ -13784,11 +13756,11 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders category URI", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "repo://gs"},
+				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "repo://goals"},
 			},
 		}
 		output := RenderMonorepoTree(tree)
-		if !strings.Contains(output, "[🎯Goals](repo://gs)") {
+		if !strings.Contains(output, "[🎯Goals](repo://goals)") {
 			t.Errorf("output should contain category with URI link, got: %s", output)
 		}
 	})
@@ -13819,13 +13791,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("markdown renderer uses list bullets", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "codebase", Label: "🖥️Codebase", URI: "repo://cb", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "codebase", Label: "🖥️Codebase", URI: "repo://codebase", Children: []*TreeNode{
 					{Kind: TreeNodeTechnology, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTreeMarkdown(tree)
-		if !strings.Contains(output, "- [🖥️Codebase](repo://cb)") {
+		if !strings.Contains(output, "- [🖥️Codebase](repo://codebase)") {
 			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
 		}
 		if !strings.Contains(output, "  - semio") {
@@ -13856,7 +13828,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 		}
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "repo://gs", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "repo://goals", Children: []*TreeNode{
 					{Kind: TreeNodeGoal, ID: "parentgoal", Label: "Parent Goal", Data: parentGoalData, Children: []*TreeNode{
 						{Kind: TreeNodeGoal, ID: "childgoal", Label: "Child Goal", Data: childGoalData, Children: []*TreeNode{
 							{Kind: TreeNodeGoal, ID: "grandchildgoal", Label: "Grandchild Goal", Data: grandchildGoalData},
@@ -14373,7 +14345,7 @@ func TestUnifiedRenderingGoalIdentity(t *testing.T) {
 			Kind:  TreeNodeGoal,
 			ID:    "TEST-GOAL",
 			Label: "TEST-GOAL",
-			URI:   "repo://g/test-goal",
+			URI:   "repo://goal/" + emojiText(EmojiGoal) + "testgoal",
 			Data:  data,
 		}
 		var sb strings.Builder
@@ -14399,7 +14371,7 @@ func TestUnifiedRenderingGoalIdentity(t *testing.T) {
 			Kind:  TreeNodeGoal,
 			ID:    "TEST-GOAL",
 			Label: "TEST-GOAL",
-			URI:   "repo://g/test-goal",
+			URI:   "repo://goal/" + emojiText(EmojiGoal) + "testgoal",
 			Data:  data,
 		}
 		var sb strings.Builder
@@ -14605,7 +14577,7 @@ func TestUnifiedRenderingSectionIdentity(t *testing.T) {
 			Kind:  TreeNodeSection,
 			ID:    "sec1",
 			Label: "MySection",
-			URI:   "repo://f/file.ts/s/mysection",
+			URI:   "repo://section/" + emojiText(EmojiFileCode) + "file" + emojiText(EmojiSection) + "mysection",
 			Data:  data,
 		}
 		var sb strings.Builder

@@ -106,7 +106,7 @@ export default defineConfig(async () => {
     ],
     optimizeDeps: {
       include: ["golden-layout"],
-      exclude: ["@semio/js", "@semio/sketchpad"],
+      exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core"],
       esbuildOptions: {
         target: "es2020",
       },

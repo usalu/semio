@@ -23,11 +23,10 @@
 // Electron renderer process that mounts the Sketchpad React app with window controls.
 // MUST resolve the user identity before rendering the sketchpad.
 
-import React, { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
+import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { createFolderKitStore } from "@semio/studio";
 import type { KitFolderAdapter } from "@semio/studio";
-import type { KitStore } from "@semio/js";
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
 
 import "./globals.css";
@@ -104,9 +103,9 @@ const os = {
 };
 
 /**
- * Root React component that shows a start page or the sketchpad.
+ * Root React component rendering the sketchpad with folder kit store factory.
 // [👤semio🖱️desktop💻renderer🔖renderer🛠️app](repo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/App)
- *MUST show folder selection start page when no folder is open.
+ *MUST render sketchpad directly with folder kit store factory for local kit persistence.
  **/
 
 // #region 🔖FolderAdapter
@@ -132,73 +131,13 @@ function createElectronFolderAdapter(folderPath: string): KitFolderAdapter {
 }
 // #endregion 🔖FolderAdapter
 
-// #region 🔖StartPage
-function StartPage({ onFolderSelected }: { onFolderSelected: (path: string) => void }) {
-  const [recentFolders, setRecentFolders] = useState<string[]>([]);
-
-  useEffect(() => {
-    window.kitFolder.getRecentFolders().then(setRecentFolders);
-  }, []);
-
-  const handleOpenFolder = async () => {
-    const folder = await window.kitFolder.selectFolder();
-    if (folder) {
-      await window.kitFolder.addRecentFolder(folder);
-      onFolderSelected(folder);
-    }
-  };
-
-  const handleCreateKit = async () => {
-    const folder = await window.kitFolder.selectFolder();
-    if (folder) {
-      await window.kitFolder.addRecentFolder(folder);
-      onFolderSelected(folder);
-    }
-  };
-
-  return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-8 bg-neutral-950 text-white">
-      <div className="app-region-drag w-full h-8" />
-      <h1 className="text-3xl font-bold">semio</h1>
-      <p className="text-neutral-400">Select a folder to open or create a new local kit.</p>
-      <div className="flex gap-4">
-        <button onClick={handleOpenFolder} className="rounded-lg bg-blue-600 px-6 py-3 font-medium hover:bg-blue-700 transition-colors">
-          Open Folder
-        </button>
-        <button onClick={handleCreateKit} className="rounded-lg border border-neutral-600 px-6 py-3 font-medium hover:bg-neutral-800 transition-colors">
-          Create New Kit
-        </button>
-      </div>
-      {recentFolders.length > 0 && (
-        <div className="mt-4 w-80">
-          <h2 className="mb-2 text-sm font-medium text-neutral-400">Recent</h2>
-          <div className="flex flex-col gap-1">
-            {recentFolders.map((folder) => (
-              <button
-                key={folder}
-                onClick={() => {
-                  window.kitFolder.addRecentFolder(folder);
-                  onFolderSelected(folder);
-                }}
-                className="w-full rounded px-3 py-2 text-left text-sm hover:bg-neutral-800 transition-colors truncate"
-                title={folder}
-              >
-                {folder.split(/[/\\]/).pop()} <span className="text-neutral-500 text-xs">{folder}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-// #endregion 🔖StartPage
+// #region 🔖App
+// [👤semio🖱️desktop💻renderer🔖renderer🔖app](repo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/s/App)
+// Root app renders the Sketchpad directly with folder kit store factory for local kit persistence.
+// No welcome/start page — the home app toolbar provides open/create actions.
 
 function App() {
   const [userId, setUserId] = useState<string>("");
-  const [folderPath, setFolderPath] = useState<string | null>(null);
-  const [kitStore, setKitStore] = useState<KitStore | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchUserId() {
@@ -214,32 +153,7 @@ function App() {
     fetchUserId();
   }, []);
 
-  useEffect(() => {
-    if (!folderPath) {
-      setKitStore(undefined);
-      return;
-    }
-    let disposed = false;
-    setLoading(true);
-    const adapter = createElectronFolderAdapter(folderPath);
-    createFolderKitStore(adapter).then((store) => {
-      if (disposed) {
-        store.dispose();
-        return;
-      }
-      setKitStore(store);
-      setLoading(false);
-    });
-    return () => {
-      disposed = true;
-      setKitStore((prev) => {
-        if (prev) prev.dispose();
-        return undefined;
-      });
-    };
-  }, [folderPath]);
-
-  // Folder kit store factory for creating new local kits via Electron IPC.
+  // Folder kit store factory for creating/opening local kits via Electron IPC.
   const folderKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
     const selectedFolder = await window.kitFolder.selectFolder();
     if (!selectedFolder) {
@@ -250,22 +164,19 @@ function App() {
     return createFolderKitStore(adapter);
   }, []);
 
-  if (!folderPath) {
-    return <StartPage onFolderSelected={setFolderPath} />;
-  }
-
-  if (loading || !userId || !kitStore) {
+  if (!userId) {
     return <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-white">Loading...</div>;
   }
 
   return (
     <div className="h-screen w-screen">
       <Suspense fallback={<div className="flex h-full w-full items-center justify-center bg-neutral-950 text-white">Loading sketchpad...</div>}>
-        <LazySketchpad onWindowEvents={windowEvents} id={userId} kitStore={kitStore} folderKitStoreFactory={folderKitStoreFactory} />
+        <LazySketchpad onWindowEvents={windowEvents} id={userId} folderKitStoreFactory={folderKitStoreFactory} />
       </Suspense>
     </div>
   );
 }
+// #endregion 🔖App
 
 export default App;
 

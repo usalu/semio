@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Specs: VS Code extension that opens *.kit.json files in an embedded sketchpad webview editor.
+// Specs: VS Code extension that opens semio kit JSON files in an embedded sketchpad webview editor.
 // Uses CustomTextEditorProvider to bridge between VS Code filesystem and sketchpad UI.
-// The webview loads the built sketchpad app and receives kit JSON via postMessage.
+// The webview loads the bundled sketchpad app or the sibling workspace sketchpad build and receives kit JSON via postMessage.
 // File writes flow back from the webview to the VS Code workspace API.
 
 // VS Code extension providing a sketchpad-based custom editor for semio kit JSON files.
@@ -28,6 +28,67 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 // #endregion 🔖Imports
+
+// #region 🔖KitFileDetection
+// [👤semio🖱️vscode💻extension🔖kitfiledetection](repo://p/u/semio/b/u/vscode/f/extension.ts/s/KitFileDetection)
+// Kit file detection MUST match the naming conventions used across the semio workspace.
+// Specs: Matches `*.kit.json`, `kit_*.json`, `kit-*.json`, and nested `.semio/kit.json` files.
+// Detection is path-based so the extension can route known kit files into the custom editor
+// without opening unrelated JSON artifacts such as schemas.
+
+/**
+ * Returns whether a file path should be treated as a semio kit JSON file.
+ * [👤semio🖱️vscode💻extension🔖kitfiledetection🛠️islikelykitjsonfilepath](repo://p/u/semio/b/u/vscode/f/extension.ts/s/KitFileDetection/d/i/isLikelyKitJsonFilePath)
+ *
+ * Specs: Normalizes path separators and matches the workspace kit filename conventions.
+ * Supports `*.kit.json`, `kit_*.json`, `kit-*.json`, and nested `.semio/kit.json` files.
+ **/
+export function isLikelyKitJsonFilePath(filePath: string): boolean {
+  const normalizedFilePath = filePath.replace(/\\/g, "/").toLowerCase();
+  const baseName = path.posix.basename(normalizedFilePath);
+
+  if (normalizedFilePath.endsWith("/.semio/kit.json")) return true;
+  if (baseName.endsWith(".kit.json")) return true;
+  if (/^kit[_-].+\.json$/u.test(baseName)) return true;
+  return false;
+}
+// #endregion 🔖KitFileDetection
+
+// #region 🔖SketchpadDist
+// [👤semio🖱️vscode💻extension🔖sketchpaddist](repo://p/u/semio/b/u/vscode/f/extension.ts/s/SketchpadDist)
+// Sketchpad asset resolution MUST support both packaged extensions and local development.
+// Specs: The extension first prefers bundled `sketchpad-dist`, then falls back to the
+// workspace sketchpad build at `../sketchpad/dist`. Resolution succeeds only when webview.html exists.
+// The resolved folder is exposed for test coverage and webview localResourceRoots setup.
+
+/**
+ * Returns the candidate sketchpad dist folders for the current extension path.
+ * [👤semio🖱️vscode💻extension🔖sketchpaddist🛠️getsketchpaddistcandidatepaths](repo://p/u/semio/b/u/vscode/f/extension.ts/s/SketchpadDist/d/i/getSketchpadDistCandidatePaths)
+ *
+ * Specs: Candidate order prefers the extension-bundled dist and then the sibling workspace dist.
+ * Returned paths are absolute and not filtered for existence.
+ **/
+export function getSketchpadDistCandidatePaths(extensionPath: string): string[] {
+  return [path.join(extensionPath, "sketchpad-dist"), path.resolve(extensionPath, "..", "sketchpad", "dist")];
+}
+
+/**
+ * Resolves the first usable sketchpad dist folder.
+ * [👤semio🖱️vscode💻extension🔖sketchpaddist🛠️resolvesketchpaddistpath](repo://p/u/semio/b/u/vscode/f/extension.ts/s/SketchpadDist/d/i/resolveSketchpadDistPath)
+ *
+ * Specs: A folder is usable only when `webview.html` exists inside it.
+ * Returns null when neither the bundled nor sibling workspace dist is available.
+ **/
+export function resolveSketchpadDistPath(extensionPath: string): string | null {
+  for (const candidatePath of getSketchpadDistCandidatePaths(extensionPath)) {
+    if (fs.existsSync(path.join(candidatePath, "webview.html"))) {
+      return candidatePath;
+    }
+  }
+
+  return null;
+}
+// #endregion 🔖SketchpadDist
 
 // #region 🔖MessageProtocol
 // [👤semio🖱️vscode💻extension🔖messageprotocol](repo://p/u/semio/b/u/vscode/f/extension.ts/s/MessageProtocol)
@@ -52,8 +113,8 @@ type WebviewToExtensionMessage = { kind: "kit.save"; content: string } | { kind:
 
 // #region 🔖KitEditor
 // [👤semio🖱️vscode💻extension🔖kiteditor](repo://p/u/semio/b/u/vscode/f/extension.ts/s/KitEditor)
-// Kit editor MUST provide a custom editor for *.kit.json files using the sketchpad webview.
-// Specs: Opens *.kit.json files in a webview panel that loads the built sketchpad app.
+// Kit editor MUST provide a custom editor for semio kit JSON files using the sketchpad webview.
+// Specs: Opens known semio kit file conventions in a webview panel that loads the sketchpad app.
 // File changes are bridged between the VS Code filesystem and the webview via messaging.
 // External file changes (e.g., from git or another editor) trigger kit.externalUpdate.
 
@@ -68,21 +129,22 @@ type WebviewToExtensionMessage = { kind: "kit.save"; content: string } | { kind:
 class KitEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = "semio.kitEditor";
 
-  constructor(private readonly context: vscode.ExtensionContext) { }
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
   public async resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
+    const sketchpadDistPath = resolveSketchpadDistPath(this.context.extensionPath);
+
     webviewPanel.webview.options = {
       enableScripts: true,
+      localResourceRoots: sketchpadDistPath ? [vscode.Uri.file(sketchpadDistPath), vscode.Uri.file(this.context.extensionPath)] : [vscode.Uri.file(this.context.extensionPath)],
     };
 
-    const sketchpadDistPath = path.join(this.context.extensionPath, "sketchpad-dist");
-    const indexHtmlPath = path.join(sketchpadDistPath, "index.html");
-
-    if (!fs.existsSync(indexHtmlPath)) {
+    if (!sketchpadDistPath) {
       webviewPanel.webview.html = this.getFallbackHtml(document);
       return;
     }
 
+    const indexHtmlPath = path.join(sketchpadDistPath, "webview.html");
     let html = fs.readFileSync(indexHtmlPath, "utf-8");
     const baseUri = webviewPanel.webview.asWebviewUri(vscode.Uri.file(sketchpadDistPath));
     html = html.replace(/<head>/, `<head><base href="${baseUri.toString()}/">`);
@@ -170,7 +232,7 @@ class KitEditorProvider implements vscode.CustomTextEditorProvider {
 </head>
 <body>
 <h1>Kit: ${kitName}</h1>
-<p>The sketchpad app is not bundled. Build with <code>npx nx build @semio/sketchpad</code> and copy dist to <code>sketchpad-dist/</code>.</p>
+<p>The sketchpad app was not found in <code>sketchpad-dist/</code> or <code>../sketchpad/dist/</code>. Build it with <code>npx nx build @semio/sketchpad</code>.</p>
 <pre>${content.slice(0, 5000)}</pre>
 </body></html>`;
   }
@@ -193,5 +255,5 @@ export function activate(context: vscode.ExtensionContext) {
  * Deactivates the semio VS Code extension.
  * [👤semio🖱️vscode💻extension🔖activation🛠️deactivate](repo://p/u/semio/b/u/vscode/f/extension.ts/s/Activation/d/i/deactivate)
  **/
-export function deactivate() { }
+export function deactivate() {}
 // #endregion 🔖Activation

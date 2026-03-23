@@ -13857,6 +13857,27 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-22T16:43:21Z",
+        "session": "69107da4-131e-4a90-8851-85e15432444c",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/69107da4-131e-4a90-8851-85e15432444c.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "69107da4-131e-4a90-8851-85e15432444c",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/69107da4-131e-4a90-8851-85e15432444c.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        }
+      },
+      "response": {}
     }
   ]
 }

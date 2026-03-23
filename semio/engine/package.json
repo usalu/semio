@@ -5,7 +5,7 @@
   "sourceRoot": "semio/engine",
   "projectType": "application",
   "scripts": {
-    "dev": "uv run engine.py",
+    "dev": "uv run main.py",
     "build": "tsx ./build.ts",
     "test": "tsx ./test.ts"
   },

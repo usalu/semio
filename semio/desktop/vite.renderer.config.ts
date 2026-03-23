@@ -71,7 +71,7 @@ export default defineConfig(async () => {
     optimizeDeps: {
       entries: ["./renderer.tsx", "../sketchpad/index.ts"],
       include: ["golden-layout", "@mdx-js/react"],
-      exclude: ["@semio/js", "@semio/sketchpad", "@semio/studio"],
+      exclude: ["@semio/js", "@semio/sketchpad", "@semio/studio", "@playwright/test", "playwright", "playwright-core"],
     },
   };
 });

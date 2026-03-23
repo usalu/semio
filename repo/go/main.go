@@ -1,0 +1,681 @@
+// #region 🔖Header
+// [🧰repo📚go💻main](repo://p/i/repo/b/l/go/f/main.go)
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+// GPL-3.0
+// Shared Go library for repo CLI and server: event kinds, payloads, and emit helper.
+// #region 🔖License
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🔖License
+
+// #endregion 🔖Header
+
+package repo
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
+)
+
+// #region 🔖EventKind
+// [🧰repo📚go💻main🔖eventkind](repo://p/i/repo/b/l/go/f/main.go/s/EventKind)
+
+// EventKind identifies a changing interaction. CLI emits; server subscribes and notifies.
+// [🧰repo📚go💻main🔖eventkind✂️eventkind](repo://p/i/repo/b/l/go/f/main.go/s/EventKind/d/i/EventKind)
+type EventKind string
+
+const (
+	EventTicketOpenStarting        EventKind = "ticket.open.starting"
+	EventTicketOpenEnded           EventKind = "ticket.open.ended"
+	EventTicketCloseStarting       EventKind = "ticket.close.starting"
+	EventTicketCloseEnded          EventKind = "ticket.close.ended"
+	EventTicketReopenStarting      EventKind = "ticket.reopen.starting"
+	EventTicketReopenEnded         EventKind = "ticket.reopen.ended"
+	EventTicketChangeStarting      EventKind = "ticket.change.starting"
+	EventTicketChangeEnded         EventKind = "ticket.change.ended"
+	EventTicketReadStarting        EventKind = "ticket.read.starting"
+	EventTicketReadEnded           EventKind = "ticket.read.ended"
+	EventGoalOpenStarting          EventKind = "goal.open.starting"
+	EventGoalOpenEnded             EventKind = "goal.open.ended"
+	EventGoalCloseStarting         EventKind = "goal.close.starting"
+	EventGoalCloseEnded            EventKind = "goal.close.ended"
+	EventGoalReopenStarting        EventKind = "goal.reopen.starting"
+	EventGoalReopenEnded           EventKind = "goal.reopen.ended"
+	EventGoalChangeStarting        EventKind = "goal.change.starting"
+	EventGoalChangeEnded           EventKind = "goal.change.ended"
+	EventContributorAddStarting    EventKind = "contributor.add.starting"
+	EventContributorAddEnded       EventKind = "contributor.add.ended"
+	EventContributorRemoveStarting EventKind = "contributor.remove.starting"
+	EventContributorRemoveEnded    EventKind = "contributor.remove.ended"
+	EventCheckpointStarting        EventKind = "checkpoint.starting"
+	EventCheckpointEnded           EventKind = "checkpoint.ended"
+	EventTodoCreateStarting        EventKind = "todo.create.starting"
+	EventTodoCreateEnded           EventKind = "todo.create.ended"
+	EventTodoChangeStarting        EventKind = "todo.change.starting"
+	EventTodoChangeEnded           EventKind = "todo.change.ended"
+	EventTodoDeleteStarting        EventKind = "todo.delete.starting"
+	EventTodoDeleteEnded           EventKind = "todo.delete.ended"
+	EventDraftCreateStarting       EventKind = "draft.create.starting"
+	EventDraftCreateEnded          EventKind = "draft.create.ended"
+	EventDraftDeleteStarting       EventKind = "draft.delete.starting"
+	EventDraftDeleteEnded          EventKind = "draft.delete.ended"
+	EventFileCreateStarting        EventKind = "file.create.starting"
+	EventFileCreateEnded           EventKind = "file.create.ended"
+	EventFileMoveStarting          EventKind = "file.move.starting"
+	EventFileMoveEnded             EventKind = "file.move.ended"
+	EventFileDeleteStarting        EventKind = "file.delete.starting"
+	EventFileDeleteEnded           EventKind = "file.delete.ended"
+	EventFolderCreateStarting      EventKind = "folder.create.starting"
+	EventFolderCreateEnded         EventKind = "folder.create.ended"
+	EventFolderMoveStarting        EventKind = "folder.move.starting"
+	EventFolderMoveEnded           EventKind = "folder.move.ended"
+	EventFolderDeleteStarting      EventKind = "folder.delete.starting"
+	EventFolderDeleteEnded         EventKind = "folder.delete.ended"
+	EventSectionCreateStarting     EventKind = "section.create.starting"
+	EventSectionCreateEnded        EventKind = "section.create.ended"
+	EventSectionMoveStarting       EventKind = "section.move.starting"
+	EventSectionMoveEnded          EventKind = "section.move.ended"
+	EventSectionDeleteStarting     EventKind = "section.delete.starting"
+	EventSectionDeleteEnded        EventKind = "section.delete.ended"
+	EventIntegrateStarting         EventKind = "integrate.starting"
+	EventIntegrateEnded            EventKind = "integrate.ended"
+	EventExtractStarting           EventKind = "extract.starting"
+	EventExtractEnded              EventKind = "extract.ended"
+	EventExportStarting            EventKind = "export.starting"
+	EventExportEnded               EventKind = "export.ended"
+	EventAnalyzeStarting           EventKind = "analyze.starting"
+	EventAnalyzeEnded              EventKind = "analyze.ended"
+	EventFixStarting               EventKind = "fix.starting"
+	EventFixEnded                  EventKind = "fix.ended"
+	EventTreeStarting              EventKind = "tree.starting"
+	EventTreeEnded                 EventKind = "tree.ended"
+	EventGraphqlStarting           EventKind = "graphql.starting"
+	EventGraphqlEnded              EventKind = "graphql.ended"
+	EventMoveStarting              EventKind = "move.starting"
+	EventMoveEnded                 EventKind = "move.ended"
+	EventPolicyCheckStarting       EventKind = "policy.check.starting"
+	EventPolicyCheckEnded          EventKind = "policy.check.ended"
+)
+
+// #endregion 🔖EventKind
+
+// #region 🔖Event
+// [🧰repo📚go💻main🔖event](repo://p/i/repo/b/l/go/f/main.go/s/Event)
+
+// Event is the canonical envelope for a changing interaction sent from CLI to server.
+// [🧰repo📚go💻main🔖event✂️event](repo://p/i/repo/b/l/go/f/main.go/s/Event/d/i/Event)
+type Event struct {
+	Kind    EventKind       `json:"kind"`
+	Source  string          `json:"source"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+// #endregion 🔖Event
+
+// #region 🔖Payloads
+// [🧰repo📚go💻main🔖payloads](repo://p/i/repo/b/l/go/f/main.go/s/Payloads)
+
+// TicketPayload holds common ticket identifiers.
+// [🧰repo📚go💻main🔖payloads✂️ticketpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketPayload)
+type TicketPayload struct {
+	ID    string `json:"id"`
+	Year  int    `json:"year,omitempty"`
+	Month int    `json:"month,omitempty"`
+	Day   int    `json:"day,omitempty"`
+	Slug  string `json:"slug,omitempty"`
+}
+
+// TicketOpenPayload payload for ticket.open.
+// [🧰repo📚go💻main🔖payloads✂️ticketopenpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketOpenPayload)
+type TicketOpenPayload struct {
+	TicketPayload
+	Title  string `json:"title"`
+	Prompt string `json:"prompt"`
+	LLM    string `json:"llm,omitempty"`
+	Client string `json:"client"`
+	Author string `json:"author,omitempty"`
+	Goal   string `json:"goal"`
+	Parent string `json:"parent,omitempty"`
+}
+
+// TicketClosePayload payload for ticket.close.
+// [🧰repo📚go💻main🔖payloads✂️ticketclosepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketClosePayload)
+type TicketClosePayload struct {
+	TicketPayload
+	Summary string   `json:"summary"`
+	Files   []string `json:"files"`
+	Author  string   `json:"author,omitempty"`
+}
+
+// TicketReopenPayload payload for ticket.reopen.
+// [🧰repo📚go💻main🔖payloads✂️ticketreopenpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketReopenPayload)
+type TicketReopenPayload struct {
+	TicketPayload
+	Prompt string `json:"prompt"`
+	LLM    string `json:"llm,omitempty"`
+	Client string `json:"client"`
+	Author string `json:"author,omitempty"`
+}
+
+// TicketChangePayload payload for ticket.change.
+// [🧰repo📚go💻main🔖payloads✂️ticketchangepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketChangePayload)
+type TicketChangePayload struct {
+	TicketPayload
+	Title  *string `json:"title,omitempty"`
+	Prompt *string `json:"prompt,omitempty"`
+	Goal   *string `json:"goal,omitempty"`
+	Parent *string `json:"parent,omitempty"`
+	Author string  `json:"author,omitempty"`
+}
+
+// GoalPayload holds common goal identifiers.
+// [🧰repo📚go💻main🔖payloads✂️goalpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalPayload)
+type GoalPayload struct {
+	ID string `json:"id"`
+}
+
+// GoalOpenPayload payload for goal.open.
+// [🧰repo📚go💻main🔖payloads✂️goalopenpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalOpenPayload)
+type GoalOpenPayload struct {
+	GoalPayload
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+	Parent      string `json:"parent,omitempty"`
+	Author      string `json:"author,omitempty"`
+}
+
+// GoalClosePayload payload for goal.close.
+// [🧰repo📚go💻main🔖payloads✂️goalclosepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalClosePayload)
+type GoalClosePayload struct {
+	GoalPayload
+	Summary string `json:"summary"`
+	Author  string `json:"author,omitempty"`
+}
+
+// GoalReopenPayload payload for goal.reopen.
+// [🧰repo📚go💻main🔖payloads✂️goalreopenpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalReopenPayload)
+type GoalReopenPayload struct {
+	GoalPayload
+	Prompt string `json:"prompt"`
+	Client string `json:"client"`
+	LLM    string `json:"llm,omitempty"`
+	Author string `json:"author,omitempty"`
+}
+
+// GoalChangePayload payload for goal.change.
+// [🧰repo📚go💻main🔖payloads✂️goalchangepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalChangePayload)
+type GoalChangePayload struct {
+	GoalPayload
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Parent      *string `json:"parent,omitempty"`
+	Author      string  `json:"author,omitempty"`
+}
+
+// ContributorPayload holds contributor identifiers.
+// [🧰repo📚go💻main🔖payloads✂️contributorpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/ContributorPayload)
+type ContributorPayload struct {
+	Github string `json:"github"`
+	Author string `json:"author,omitempty"`
+}
+
+// CheckpointPayload payload for checkpoint (GitHub push).
+// [🧰repo📚go💻main🔖payloads✂️checkpointpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/CheckpointPayload)
+type CheckpointPayload struct {
+	Author       string   `json:"author"`
+	Github       string   `json:"github"`
+	Sha          string   `json:"sha"`
+	Message      string   `json:"message"`
+	Files        []string `json:"files"`
+	Technologies []string `json:"technologies,omitempty"`
+	Bundles      []string `json:"bundles,omitempty"`
+	Folders      []string `json:"folders,omitempty"`
+	FilesChanged []string `json:"files_changed,omitempty"`
+	Sections     []string `json:"sections,omitempty"`
+	Definitions  []string `json:"definitions,omitempty"`
+}
+
+// TodoPayload holds todo identifiers.
+// [🧰repo📚go💻main🔖payloads✂️todopayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TodoPayload)
+type TodoPayload struct {
+	ID       string `json:"id"`
+	ParentID string `json:"parent_id,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Author   string `json:"author,omitempty"`
+}
+
+// TodoCreatePayload payload for todo.create.
+// [🧰repo📚go💻main🔖payloads✂️todocreatepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TodoCreatePayload)
+type TodoCreatePayload struct {
+	TodoPayload
+}
+
+// TodoChangePayload payload for todo.change.
+// [🧰repo📚go💻main🔖payloads✂️todochangepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TodoChangePayload)
+type TodoChangePayload struct {
+	TodoPayload
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+}
+
+// TodoDeletePayload payload for todo.delete.
+// [🧰repo📚go💻main🔖payloads✂️tododeletepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TodoDeletePayload)
+type TodoDeletePayload struct {
+	TodoPayload
+}
+
+// WorkItem represents a single item a contributor is working on (technology, bundle, folder, file, section, definition, ticket, goal, todo).
+// [🧰repo📚go💻main🔖payloads✂️workitem](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/WorkItem)
+type WorkItem struct {
+	Kind string `json:"kind"`
+	ID   string `json:"id"`
+}
+
+// ContributorWork holds all work items for one contributor.
+// [🧰repo📚go💻main🔖payloads✂️contributorwork](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/ContributorWork)
+type ContributorWork struct {
+	Github       string   `json:"github"`
+	Tickets      []string `json:"tickets"`
+	Goals        []string `json:"goals"`
+	Todos        []string `json:"todos"`
+	Technologies []string `json:"technologies"`
+	Bundles      []string `json:"bundles"`
+	Folders      []string `json:"folders"`
+	Files        []string `json:"files"`
+	Sections     []string `json:"sections"`
+	Definitions  []string `json:"definitions"`
+}
+
+// DraftPayload holds draft identifiers.
+// [🧰repo📚go💻main🔖payloads✂️draftpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/DraftPayload)
+type DraftPayload struct {
+	Slug   string `json:"slug"`
+	Title  string `json:"title,omitempty"`
+	Author string `json:"author,omitempty"`
+}
+
+// FilePayload holds file operation identifiers.
+// [🧰repo📚go💻main🔖payloads✂️filepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/FilePayload)
+type FilePayload struct {
+	Path   string `json:"path"`
+	From   string `json:"from,omitempty"`
+	Author string `json:"author,omitempty"`
+}
+
+// FolderPayload holds folder operation identifiers.
+// [🧰repo📚go💻main🔖payloads✂️folderpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/FolderPayload)
+type FolderPayload struct {
+	Path   string `json:"path"`
+	From   string `json:"from,omitempty"`
+	Author string `json:"author,omitempty"`
+}
+
+// SectionPayload holds section operation identifiers.
+// [🧰repo📚go💻main🔖payloads✂️sectionpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/SectionPayload)
+type SectionPayload struct {
+	File    string `json:"file"`
+	Name    string `json:"name"`
+	OldName string `json:"old_name,omitempty"`
+	Parent  string `json:"parent,omitempty"`
+	Author  string `json:"author,omitempty"`
+}
+
+// IntegratePayload holds integrate operation identifiers.
+// [🧰repo📚go💻main🔖payloads✂️integratepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/IntegratePayload)
+type IntegratePayload struct {
+	Source        string `json:"source"`
+	TargetFile    string `json:"target_file"`
+	TargetSection string `json:"target_section"`
+	Author        string `json:"author,omitempty"`
+}
+
+// ExtractPayload holds extract operation identifiers.
+// [🧰repo📚go💻main🔖payloads✂️extractpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/ExtractPayload)
+type ExtractPayload struct {
+	SourceFile    string `json:"source_file"`
+	SourceSection string `json:"source_section"`
+	TargetFile    string `json:"target_file"`
+	Author        string `json:"author,omitempty"`
+}
+
+// #endregion 🔖Payloads
+
+// #region 🔖Emit
+// [🧰repo📚go💻main🔖emit](repo://p/i/repo/b/l/go/f/main.go/s/Emit)
+
+// Emit posts an event to the repo server. No-op when SEMIO_SERVER_ADDR is unset.
+// Emit MUST perform the Emit operation.
+// [🧰repo📚go💻main🔖emit🛠️emit](repo://p/i/repo/b/l/go/f/main.go/s/Emit/d/i/Emit)
+func Emit(kind EventKind, source string, payload interface{}) {
+	addr := strings.TrimSpace(os.Getenv("SEMIO_SERVER_ADDR"))
+	if addr == "" {
+		return
+	}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+	ev := Event{Kind: kind, Source: source, Payload: payloadBytes}
+	body, err := json.Marshal(ev)
+	if err != nil {
+		return
+	}
+	url := addr
+	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
+		url = "http://" + addr
+	}
+	url = strings.TrimSuffix(url, "/") + "/events"
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if token := strings.TrimSpace(os.Getenv("SEMIO_SERVER_TOKEN")); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	client := &http.Client{Timeout: 5 * time.Second}
+	_, _ = client.Do(req)
+}
+
+// #endregion 🔖Emit
+
+// #region 🔖Parsing
+// [🧰repo📚go💻main🔖parsing](repo://p/i/repo/b/l/go/f/main.go/s/Parsing)
+
+// Shared source code parsing primitives for section/definition extraction used by CLI and server.
+
+// ParsedSection represents a parsed source code section from region markers or markdown headings.
+// [🧰repo📚go💻main🔖parsing✂️parsedsection](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParsedSection)
+type ParsedSection struct {
+	Name      string
+	Path      string
+	StartLine int
+	EndLine   int
+}
+
+// ParsedDefinition represents a parsed source code definition extracted by regex patterns.
+// [🧰repo📚go💻main🔖parsing✂️parseddefinition](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParsedDefinition)
+type ParsedDefinition struct {
+	Name      string
+	StartLine int
+	EndLine   int
+}
+
+// ParseRegionMarker detects region start/end markers in a line, stripping common comment prefixes.
+// [🧰repo📚go💻main🔖parsing🛠️parseregionmarker](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParseRegionMarker)
+func ParseRegionMarker(line string) (string, bool, bool) {
+	trimmed := strings.TrimSpace(line)
+	trimmed = strings.TrimPrefix(trimmed, "//")
+	trimmed = strings.TrimPrefix(trimmed, "#")
+	trimmed = strings.TrimPrefix(trimmed, "--")
+	trimmed = strings.TrimPrefix(trimmed, "/*")
+	trimmed = strings.TrimSuffix(trimmed, "*/")
+	trimmed = strings.TrimSpace(trimmed)
+	if strings.HasPrefix(trimmed, "#region 🔖") {
+		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#region 🔖")), true, false
+	}
+	if strings.HasPrefix(trimmed, "#endregion 🔖") {
+		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#endregion 🔖")), true, true
+	}
+	return "", false, false
+}
+
+// ParseMarkdownHeading parses a markdown heading line into level and title.
+// [🧰repo📚go💻main🔖parsing🛠️parsemarkdownheading](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParseMarkdownHeading)
+func ParseMarkdownHeading(line string) (int, string) {
+	trimmed := strings.TrimSpace(line)
+	if !strings.HasPrefix(trimmed, "#") {
+		return 0, ""
+	}
+	level := 0
+	for level < len(trimmed) && trimmed[level] == '#' {
+		level++
+	}
+	if level == 0 || level > 6 {
+		return 0, ""
+	}
+	name := strings.TrimSpace(trimmed[level:])
+	if name == "" {
+		return 0, ""
+	}
+	return level, name
+}
+
+// DefinitionPatterns returns language-specific regex patterns for extracting definitions by file extension.
+// [🧰repo📚go💻main🔖parsing🛠️definitionpatterns](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/DefinitionPatterns)
+func DefinitionPatterns(ext string) []*regexp.Regexp {
+	switch ext {
+	case ".go":
+		return []*regexp.Regexp{
+			regexp.MustCompile(`^\s*func\s+(?:\([^\)]*\)\s*)?([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*type\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*var\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*const\s+([A-Za-z0-9_]+)`),
+		}
+	case ".ts", ".tsx", ".js", ".jsx":
+		return []*regexp.Regexp{
+			regexp.MustCompile(`^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*(?:export\s+)?class\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*(?:export\s+)?interface\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*(?:export\s+)?type\s+([A-Za-z0-9_]+)`),
+		}
+	case ".py":
+		return []*regexp.Regexp{
+			regexp.MustCompile(`^\s*def\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*class\s+([A-Za-z0-9_]+)`),
+		}
+	case ".cs":
+		return []*regexp.Regexp{
+			regexp.MustCompile(`^\s*(?:public|private|protected|internal)?\s*(?:static\s+)?(?:class|struct|interface|enum|record)\s+([A-Za-z0-9_]+)`),
+		}
+	case ".rs":
+		return []*regexp.Regexp{
+			regexp.MustCompile(`^\s*(?:pub\s+)?fn\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*(?:pub\s+)?struct\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*(?:pub\s+)?enum\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*(?:pub\s+)?trait\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*impl\s+([A-Za-z0-9_]+)`),
+		}
+	case ".rb":
+		return []*regexp.Regexp{
+			regexp.MustCompile(`^\s*def\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*class\s+([A-Za-z0-9_]+)`),
+			regexp.MustCompile(`^\s*module\s+([A-Za-z0-9_]+)`),
+		}
+	case ".md", ".mdx":
+		return []*regexp.Regexp{}
+	default:
+		return []*regexp.Regexp{}
+	}
+}
+
+// ParseSectionsFromLines extracts sections from source lines using region markers and markdown headings.
+// [🧰repo📚go💻main🔖parsing🛠️parsesectionsfromlines](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParseSectionsFromLines)
+func ParseSectionsFromLines(lines []string, ext string) []ParsedSection {
+	var sections []ParsedSection
+	type sectionFrame struct {
+		Name      string
+		StartLine int
+		Level     int
+		Path      string
+	}
+	var stack []sectionFrame
+	for index, line := range lines {
+		lineNumber := index + 1
+		if name, ok, isEnd := ParseRegionMarker(line); ok {
+			if isEnd {
+				if len(stack) > 0 {
+					frame := stack[len(stack)-1]
+					stack = stack[:len(stack)-1]
+					sections = append(sections, ParsedSection{
+						Name:      frame.Name,
+						Path:      frame.Path,
+						StartLine: frame.StartLine,
+						EndLine:   lineNumber - 1,
+					})
+				}
+			} else {
+				path := name
+				if len(stack) > 0 {
+					path = stack[len(stack)-1].Path + "." + name
+				}
+				stack = append(stack, sectionFrame{Name: name, StartLine: lineNumber, Level: 0, Path: path})
+			}
+			continue
+		}
+		if ext == ".md" || ext == ".mdx" {
+			if level, title := ParseMarkdownHeading(line); level > 0 {
+				for len(stack) > 0 && stack[len(stack)-1].Level >= level {
+					frame := stack[len(stack)-1]
+					stack = stack[:len(stack)-1]
+					sections = append(sections, ParsedSection{
+						Name:      frame.Name,
+						Path:      frame.Path,
+						StartLine: frame.StartLine,
+						EndLine:   lineNumber - 1,
+					})
+				}
+				path := title
+				if len(stack) > 0 {
+					path = stack[len(stack)-1].Path + "." + title
+				}
+				stack = append(stack, sectionFrame{Name: title, StartLine: lineNumber, Level: level, Path: path})
+			}
+		}
+	}
+	for _, frame := range stack {
+		sections = append(sections, ParsedSection{
+			Name:      frame.Name,
+			Path:      frame.Path,
+			StartLine: frame.StartLine,
+			EndLine:   len(lines),
+		})
+	}
+	return sections
+}
+
+// ParseDefinitionsFromLines extracts definitions from source lines using the given regex patterns.
+// [🧰repo📚go💻main🔖parsing🛠️parsedefinitionsfromlines](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParseDefinitionsFromLines)
+func ParseDefinitionsFromLines(lines []string, patterns []*regexp.Regexp) []ParsedDefinition {
+	var defs []ParsedDefinition
+	for index, line := range lines {
+		lineNumber := index + 1
+		for _, pattern := range patterns {
+			matches := pattern.FindStringSubmatch(line)
+			if len(matches) > 1 {
+				defs = append(defs, ParsedDefinition{
+					Name:      matches[len(matches)-1],
+					StartLine: lineNumber,
+					EndLine:   lineNumber,
+				})
+				break
+			}
+		}
+	}
+	return defs
+}
+
+// BuildScopeID generates a deterministic scope ID from kind, file path, section path, and definition name.
+// [🧰repo📚go💻main🔖parsing🛠️buildscopeid](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/BuildScopeID)
+func BuildScopeID(kind string, filePath string, sectionPath string, definition string) string {
+	if kind == "file" {
+		return fmt.Sprintf("file:%s", filePath)
+	}
+	if kind == "section" {
+		return fmt.Sprintf("section:%s#%s", filePath, sectionPath)
+	}
+	if sectionPath != "" {
+		return fmt.Sprintf("def:%s#%s::%s", filePath, sectionPath, definition)
+	}
+	return fmt.Sprintf("def:%s#%s", filePath, definition)
+}
+
+// BuildScopesForFile parses a file into file, section, and definition scope tuples.
+// Returns (kind, id, filePath, sectionPath, definition, startLine, endLine) for each scope.
+// [🧰repo📚go💻main🔖parsing🛠️buildscopesforfile](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/BuildScopesForFile)
+type ScopeEntry struct {
+	Kind        string
+	ID          string
+	FilePath    string
+	SectionPath string
+	Definition  string
+	StartLine   int
+	EndLine     int
+}
+
+// BuildScopesForFile parses file content into scope entries for file, sections, and definitions.
+// [🧰repo📚go💻main🔖parsing🛠️buildscopesforfile2](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/BuildScopesForFile2)
+func BuildScopesForFile(path string, content string) []ScopeEntry {
+	lines := strings.Split(content, "\n")
+	ext := strings.ToLower(filepath.Ext(path))
+
+	var entries []ScopeEntry
+
+	fileEntry := ScopeEntry{
+		Kind:      "file",
+		ID:        BuildScopeID("file", path, "", ""),
+		FilePath:  path,
+		StartLine: 1,
+		EndLine:   len(lines),
+	}
+	entries = append(entries, fileEntry)
+
+	sections := ParseSectionsFromLines(lines, ext)
+	for _, s := range sections {
+		entry := ScopeEntry{
+			Kind:        "section",
+			ID:          BuildScopeID("section", path, s.Path, ""),
+			FilePath:    path,
+			SectionPath: s.Path,
+			StartLine:   s.StartLine,
+			EndLine:     s.EndLine,
+		}
+		entries = append(entries, entry)
+	}
+
+	sectionByLine := map[int]string{}
+	for _, s := range sections {
+		for line := s.StartLine; line <= s.EndLine; line++ {
+			sectionByLine[line] = s.Path
+		}
+	}
+
+	patterns := DefinitionPatterns(ext)
+	defs := ParseDefinitionsFromLines(lines, patterns)
+	for _, d := range defs {
+		sp := sectionByLine[d.StartLine]
+		entry := ScopeEntry{
+			Kind:        "definition",
+			ID:          BuildScopeID("definition", path, sp, d.Name),
+			FilePath:    path,
+			SectionPath: sp,
+			Definition:  d.Name,
+			StartLine:   d.StartLine,
+			EndLine:     d.EndLine,
+		}
+		entries = append(entries, entry)
+	}
+
+	return entries
+}
+
+// #endregion 🔖Parsing

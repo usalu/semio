@@ -257,7 +257,129 @@
   "designs": {
     "removed": [
       {
-        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
+        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef",
+        "layers": [
+          {
+            "guid": "85032a32-8506-5868-2e59-39d20f6eddab",
+            "path": "tower",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuilding"
+              }
+            ]
+          },
+          {
+            "guid": "375f8239-8a6b-d6bb-ac00-22e473dd1e46",
+            "path": "tower/0",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "353abbc4-31a3-7b88-ac56-02bf96b6d64d",
+            "path": "tower/1",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "33fd965c-44fd-fc63-68d8-c07de5d7e839",
+            "path": "tower/2",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "d00d2603-fde1-891c-edb9-c7142d63d938",
+            "path": "tower/3",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "5ae3514c-b31c-604e-886b-7fc91b625740",
+            "path": "tower/4",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "e8b65ed3-9538-24e8-0c7f-91a8b81da8c1",
+            "path": "tower/5",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "57d972fb-8c2e-24d5-46a3-ffd52f49ef74",
+            "path": "tower/6",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "8f4486ea-7327-354c-91e2-5b2b5332c7e3",
+            "path": "tower/7",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "ce2f0293-e0f9-00fc-c4b0-cec8eebdf507",
+            "path": "tower/8",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "120dbb87-0f81-f49a-66be-0b102341c36f",
+            "path": "tower/9",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          },
+          {
+            "guid": "e9183906-91b9-5c57-f1af-55fc020f9022",
+            "path": "tower/10",
+            "attributes": [
+              {
+                "key": "ifc.type",
+                "value": "IfcBuildingStorey"
+              }
+            ]
+          }
+        ]
       }
     ],
     "updated": [

@@ -9,7 +9,7 @@ summary: VS Code extension providing a sketchpad-based custom editor for semio k
 VS Code extension providing a sketchpad-based custom editor for semio kit JSON files.
 
 ### Specs
-- Registers a CustomTextEditorProvider for kit.json files
-- Loads the built sketchpad app in a webview panel
+- Registers a CustomTextEditorProvider for `*.kit.json`, `kit_*.json`, `kit-*.json`, and `**/.semio/kit.json`
+- Loads the built sketchpad app in a webview panel from bundled `sketchpad-dist` or sibling `../sketchpad/dist`
 - Bridges file read/write between VS Code filesystem and the sketchpad webview via postMessage
 - Falls back to a simple HTML view when sketchpad-dist is not available

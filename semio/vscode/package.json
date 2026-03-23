@@ -28,6 +28,15 @@
         "selector": [
           {
             "filenamePattern": "*.kit.json"
+          },
+          {
+            "filenamePattern": "kit_*.json"
+          },
+          {
+            "filenamePattern": "kit-*.json"
+          },
+          {
+            "filenamePattern": "**/.semio/kit.json"
           }
         ],
         "priority": "default"

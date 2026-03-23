@@ -46,6 +46,30 @@ export default defineConfig(async ({ mode }) => {
     return {
       root: __dirname,
       plugins: [
+        // Stub Node.js-only modules, test frameworks, and benchmark assets as empty modules
+        // so the browser bundle does not crash on missing Node.js built-ins.
+        {
+          name: "stub-node-modules",
+          enforce: "pre" as const,
+          resolveId(source: string) {
+            const nodeBuiltins = ["fs", "path", "url", "child_process", "crypto", "os", "stream", "util", "events", "buffer", "http", "https", "net", "tls", "zlib", "assert", "querystring", "string_decoder", "tty", "worker_threads"];
+            const stubTargets = ["@playwright/test", "better-sqlite3", "electron"];
+            if (source.startsWith("node:") || nodeBuiltins.includes(source) || stubTargets.includes(source)) {
+              return `\0stub-node:${source}`;
+            }
+            // Stub benchmark/test JSON assets — use .js virtual ID to avoid vite:json plugin.
+            if (/kit_metabolism|metabolism\.kit|kit_metabolism_diffed|diff_kit_metabolism|kit_invalid/.test(source)) {
+              return `\0stub-asset:${source.replace(/\.json$/, "")}.js`;
+            }
+            return null;
+          },
+          load(id: string) {
+            if (id.startsWith("\0stub-node:") || id.startsWith("\0stub-asset:")) {
+              return "export default {};";
+            }
+            return null;
+          },
+        },
         tailwind.default(),
         {
           ...mdx({
@@ -61,7 +85,7 @@ export default defineConfig(async ({ mode }) => {
       ],
       build: {
         outDir: "sketchpad-dist",
-        emptyOutDir: true,
+        emptyOutDir: false,
         rollupOptions: {
           input: path.resolve(__dirname, "webview.html"),
         },

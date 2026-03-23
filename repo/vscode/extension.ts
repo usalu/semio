@@ -597,7 +597,7 @@ function writeLog(level: string, args: any[]): void {
   try {
     const logPath = path.join(getWorkspaceRoot() || "", "activation.log");
     fs.appendFileSync(logPath, `[${level}] ${message}\n`);
-  } catch (e) { }
+  } catch (e) {}
 }
 
 /**
@@ -1127,18 +1127,11 @@ async function navigateToUri(uri: string): Promise<void> {
     }
     case "ticket": {
       let ticketPath = "";
-      if (node && node.Year && node.Month && node.Day && node.ID) {
-        const slug = node.ID.replace(/^[^\w]+/, "");
+      if (node && node.Year && node.Month && node.Day && node.Data?.slug) {
         const year = String(node.Year).padStart(2, "0");
         const month = String(node.Month).padStart(2, "0");
         const day = String(node.Day).padStart(2, "0");
-        ticketPath = path.join(wsRoot, ".repo", "🎫", year, month, day, slug);
-      } else {
-        if (parsed.path.match(/^\d+\/\d+\/\d+\/.+/)) {
-          ticketPath = path.join(wsRoot, ".repo", "🎫", parsed.path);
-        } else {
-          const slug = path.basename(parsed.path);
-        }
+        ticketPath = path.join(wsRoot, ".repo", "🎫", year, month, day, node.Data.slug);
       }
 
       if (ticketPath && fs.existsSync(ticketPath)) {
@@ -1147,14 +1140,15 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "goal": {
-      const goalJsonPath = path.join(wsRoot, ".repo", "🎯", parsed.path, "goal.json");
+      const goalId = node?.Data?.id || parsed.path;
+      const goalJsonPath = path.join(wsRoot, ".repo", "🎯", goalId, "goal.json");
       if (fs.existsSync(goalJsonPath)) {
         return vscode.commands.executeCommand("semio.navigateToFile", goalJsonPath) as any;
       }
       break;
     }
     case "draft": {
-      const slug = path.basename(parsed.path);
+      const slug = node?.Data?.slug || node?.Data?.id || parsed.path;
       const draftPath = path.join(wsRoot, ".repo", "✍️", slug);
       if (fs.existsSync(draftPath)) {
         return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(draftPath)) as any;
@@ -1162,7 +1156,7 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "todo": {
-      const slug = path.basename(parsed.path);
+      const slug = node?.Data?.slug || node?.Data?.id || parsed.path;
       const todoPath = path.join(wsRoot, ".repo", "todos", slug);
       if (fs.existsSync(todoPath)) {
         return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(todoPath)) as any;
@@ -1170,21 +1164,23 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "contributor": {
-      const github = path.basename(parsed.path);
-      return vscode.env.openExternal(vscode.Uri.parse(`https://github.com/${github}`)) as any;
+      const github = node?.Data?.github || parsed.path;
+      return vscode.env.openExternal(vscode.Uri.parse(`https://github.com/${encodeURIComponent(github)}`)) as any;
     }
     case "checkpoint": {
-      const sha = path.basename(parsed.path);
+      const sha = node?.Data?.sha || parsed.path;
       const baseUrl = getGitHubRepoBaseUrl();
       if (baseUrl) {
-        return vscode.env.openExternal(vscode.Uri.parse(`${baseUrl}/commit/${sha}`)) as any;
+        return vscode.env.openExternal(vscode.Uri.parse(`${baseUrl}/commit/${encodeURIComponent(sha)}`)) as any;
       }
       break;
     }
     case "technology": {
-      const abs = path.join(wsRoot, parsed.path);
-      if (fs.existsSync(abs)) {
-        return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+      if (node?.Data?.path) {
+        const abs = path.join(wsRoot, node.Data.path);
+        if (fs.existsSync(abs)) {
+          return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+        }
       }
       break;
     }
@@ -1202,104 +1198,39 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "folder": {
-      const abs = path.join(wsRoot, parsed.path);
-      if (fs.existsSync(abs)) {
-        return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+      if (node?.Data?.path) {
+        const abs = path.join(wsRoot, node.Data.path);
+        if (fs.existsSync(abs)) {
+          return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+        }
       }
       break;
     }
     case "file": {
-      const abs = path.join(wsRoot, parsed.path);
+      const filePath = node?.Data?.path || parsed.path;
+      const abs = path.join(wsRoot, filePath);
       if (fs.existsSync(abs)) {
-        return vscode.commands.executeCommand("semio.navigateToFile", parsed.path) as any;
+        return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
       }
       break;
     }
     case "section": {
-      const parts = parsed.path.split("/");
-      const filePathParts: string[] = [];
-      const sectionParts: string[] = [];
-      let foundFile = false;
-      for (const part of parts) {
-        if (!foundFile) {
-          filePathParts.push(part);
-          const candidatePath = filePathParts.join("/");
-          const abs = path.join(wsRoot, candidatePath);
-          if (fs.existsSync(abs) && fs.statSync(abs).isFile()) {
-            foundFile = true;
-          }
-        } else {
-          sectionParts.push(part);
-        }
+      if (node?.Data?.startLine && node?.Data?.path) {
+        return openFileAtLine(node.Data.path, node.Data.startLine, node.Data.endLine);
       }
-      const filePath = filePathParts.join("/");
-      const sectionPath = sectionParts.join("/");
-      const binaryPath = getRepoBinaryPath();
-      if (binaryPath) {
-        await acquireCliSlot();
-        let sectionResult: { filePath: string; startLine: number; endLine?: number } | undefined;
-        try {
-          const { stdout } = await execAsync(`"${binaryPath}" --json section list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
-          const events = parseRepoEvents(stdout);
-          for (const event of events) {
-            const section = (event as any).section;
-            if (section) {
-              const found = findSectionByPath(section, sectionPath);
-              if (found) {
-                sectionResult = { filePath, startLine: found.startLine, endLine: found.endLine };
-                break;
-              }
-            }
-          }
-        } catch {
-        } finally {
-          releaseCliSlot();
-        }
-        if (sectionResult) return openFileAtLine(sectionResult.filePath, sectionResult.startLine, sectionResult.endLine);
+      if (node?.Data?.path) {
+        return vscode.commands.executeCommand("semio.navigateToFile", node.Data.path) as any;
       }
-      return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
+      break;
     }
     case "definition": {
-      const parts = parsed.path.split("/");
-      const filePathParts: string[] = [];
-      let foundFile = false;
-      let defName = "";
-      for (const part of parts) {
-        if (!foundFile) {
-          filePathParts.push(part);
-          const candidatePath = filePathParts.join("/");
-          const abs = path.join(wsRoot, candidatePath);
-          if (fs.existsSync(abs) && fs.statSync(abs).isFile()) {
-            foundFile = true;
-          }
-        } else {
-          defName = part;
-        }
+      if (node?.Data?.startLine && node?.Data?.path) {
+        return openFileAtLine(node.Data.path, node.Data.startLine, node.Data.endLine);
       }
-      const filePath = filePathParts.join("/");
-      if (defName) {
-        const binaryPath = getRepoBinaryPath();
-        if (binaryPath) {
-          await acquireCliSlot();
-          let defResult: { filePath: string; startLine: number; endLine?: number } | undefined;
-          try {
-            const { stdout } = await execAsync(`"${binaryPath}" --json definition list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
-            const events = parseRepoEvents(stdout);
-            for (const event of events) {
-              const def = (event as any).definition;
-              if (def && slugify(def.name) === slugify(defName) && def.startLine) {
-                defResult = { filePath, startLine: def.startLine, endLine: def.endLine };
-                break;
-              }
-            }
-          } catch {
-          } finally {
-            releaseCliSlot();
-          }
-          if (defResult) return openFileAtLine(defResult.filePath, defResult.startLine, defResult.endLine);
-        }
+      if (node?.Data?.path) {
+        return vscode.commands.executeCommand("semio.navigateToFile", node.Data.path) as any;
       }
-      return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
+      break;
     }
     case "policy": {
       if (node) {
@@ -1316,23 +1247,6 @@ async function navigateToUri(uri: string): Promise<void> {
         vscode.window.showInformationMessage(`Breach Kind: ${path.basename(parsed.path)}`);
       }
       break;
-    }
-  }
-}
-
-/**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️findsectionbypath](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/findSectionByPath)
- * [🧰repo🖱️vscode💻extension🔖uriresolution🪨findsectionbypath](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/findSectionByPath)
- * findSectionByPath holds the data fields for a findSectionByPath record.
- **/
-function findSectionByPath(section: any, sectionPath: string): any | null {
-  const parts = sectionPath.split("/");
-  if (slugify(section.name) === slugify(parts[0]) || section.name === parts[0]) {
-    if (parts.length === 1) return section;
-    const rest = parts.slice(1).join("/");
-    for (const child of section.children || []) {
-      const found = findSectionByPath(child, rest);
-      if (found) return found;
     }
   }
 }
@@ -1897,7 +1811,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(public filterProvider?: FilterTreeDataProvider) { }
+  constructor(public filterProvider?: FilterTreeDataProvider) {}
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -2004,7 +1918,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
             if (parsed.section) {
               sections.push(parsed.section);
             }
-          } catch (e) { }
+          } catch (e) {}
         }
         return this.createSectionItems(sections, filePath);
       } catch (e) {
@@ -2755,6 +2669,6 @@ export function activate(context: vscode.ExtensionContext) {
  *Implementations MUST clean up any active subscriptions.
  * [🧰repo🖱️vscode💻extension🔖activation🛠️deactivate](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/deactivate)
  **/
-export function deactivate() { }
+export function deactivate() {}
 
 // #endregion 🔖Activation

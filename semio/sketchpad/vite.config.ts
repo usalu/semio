@@ -111,6 +111,11 @@ export default defineConfig(async () => {
         target: "es2020",
       },
     },
+    build: {
+      rollupOptions: {
+        external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/semio/kit_metabolism.json", "fs", "path", "url"],
+      },
+    },
     ssr: {
       noExternal: ["golden-layout"],
     },

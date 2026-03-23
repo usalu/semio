@@ -29,7 +29,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 from starlette.testclient import TestClient
 
-import engine
+import importlib.util as _ilu
+import sys as _sys
+
+_engine_path = str(pathlib.Path(__file__).parent / "main.py")
+_engine_spec = _ilu.spec_from_file_location("engine", _engine_path)
+engine = _ilu.module_from_spec(_engine_spec)
+_sys.modules["engine"] = engine
+_engine_spec.loader.exec_module(engine)
 
 # endregion Imports
 

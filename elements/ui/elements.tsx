@@ -14968,7 +14968,9 @@ export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onR
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-        {items.map((item, index) => children(item, index))}
+        {items.map((item, index) => (
+          <React.Fragment key={item.id}>{children(item, index)}</React.Fragment>
+        ))}
       </SortableContext>
     </DndContext>
   );

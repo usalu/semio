@@ -69,7 +69,7 @@ const args = [
   "../assets/icons/semio_512x512.png;icons/",
   "--icon",
   "../assets/icons/semio.ico",
-  "engine.py",
+  "main.py",
 ];
 
 execSync(`uv run pyinstaller ${args.join(" ")}`, { cwd, stdio: "inherit" });

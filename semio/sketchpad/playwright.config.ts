@@ -23,12 +23,14 @@
 // Configures Playwright for end-to-end browser tests against the sketchpad dev server.
 // MUST use a single worker to avoid port conflicts.
 
+process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ''} --import data:text/javascript,export%20async%20function%20load(url,context,nextLoad)%7Bif(url.endsWith(%22.css%22))return%7Bformat:%22module%22,shortCircuit:true,source:%22export%20default%20%7B%7D%22%7D;return%20nextLoad(url,context)%7D`.trim();
+
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181";
 
 export default defineConfig({
-  testMatch: ["**/*.spec.ts", "**/sketchpad.test.ts"],
+  testMatch: ["**/*.spec.ts", "**/index.tsx"],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -52,7 +54,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run build && npx vite preview --port 4181 --host 0.0.0.0",
+    command: "NODE_OPTIONS='' npx vite preview --port 4181 --host 0.0.0.0",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 300000,

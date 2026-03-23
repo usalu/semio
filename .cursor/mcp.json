@@ -19,7 +19,7 @@
         "--directory",
         "semio/engine",
         "run",
-        "engine.py",
+        "main.py",
         "--mcp-stdio"
       ]
     },

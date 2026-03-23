@@ -37,33 +37,25 @@ Homepage = "https://github.com/usalu/semio"
 Repository = "https://github.com/usalu/semio"
 
 [project.scripts]
-run = "engine:run"
-dev = "engine:dev"
+run = "main:run"
+dev = "main:dev"
 
 [dependency-groups]
-test = [
-    "pytest>=8.4.0,<10",
-    "deepdiff>=8.5.0,<9",
-    "pytest-cov>=6.1.1,<8",
-]
+test = ["pytest>=8.4.0,<10", "deepdiff>=8.5.0,<9", "pytest-cov>=6.1.1,<8"]
 dev = []
 build = ["pyinstaller>=6.13.0,<7"]
 
 [tool.uv]
-default-groups = [
-    "test",
-    "dev",
-    "build",
-]
+default-groups = ["test", "dev", "build"]
 
 [tool.uv.sources]
 semio = { workspace = true }
 
 [tool.hatch.build.targets.sdist]
-include = ["engine.py"]
+include = ["main.py"]
 
 [tool.hatch.build.targets.wheel]
-include = ["engine.py"]
+include = ["main.py"]
 
 [build-system]
 requires = ["hatchling"]

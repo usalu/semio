@@ -1,0 +1,13 @@
+{
+  "title": "Consolidate Repo Go Emit and Events Into Main",
+  "status": "closed",
+  "description": "Consolidate repo/go/emit.go and repo/go/events.go into a single main.go file.",
+  "summary": "Consolidated repo/go/emit.go and repo/go/events.go into a single repo/go/main.go. Deleted the two original files. All repo URI references updated from emit.go/events.go to main.go. Downstream consumers (repo/cli, repo/server) build successfully.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1036"
+  },
+  "goal": "🎯repogo",
+  "sessions": [
+    "⚪a3ba7104af0444b4be7076b351ab62e1"
+  ]
+}

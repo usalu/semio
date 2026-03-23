@@ -809,7 +809,7 @@ func parseHunkIntWithDefault(value string, fallback int) int {
 
 // #region 🔖Indexing
 // [🧰repo⌨️server💻main🔖indexing](repo://p/i/repo/b/b/server/f/main.go/s/Indexing)
-// Source code indexer that parses files into scopes covering files, sections, and definitions. MUST support region-marker-based sections and language-specific definition patterns.
+// Source code indexer that delegates to the shared repo/go parsing package. MUST support region-marker-based sections and language-specific definition patterns.
 
 // IndexCache holds in-memory caches of indexed scopes partitioned by file path.
 // [🧰repo⌨️server💻main🔖indexing✂️indexcache](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/IndexCache)
@@ -830,232 +830,26 @@ func newIndexCache() IndexCache {
 	}
 }
 
-// buildScopesForFile parses a file into file, section, and definition scopes.
+// buildScopesForFile delegates to the shared repopkg.BuildScopesForFile and converts ScopeEntry to Scope.
 // [🧰repo⌨️server💻main🔖indexing🛠️buildscopesforfile](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/buildScopesForFile)
 // buildScopesForFile MUST perform the buildScopesForFile operation.
 func buildScopesForFile(path string, content string) []Scope {
-	lines := strings.Split(content, "\n")
 	now := time.Now().UTC()
-	var scopes []Scope
-	fileScope := Scope{
-		ID:        fmt.Sprintf("file:%s", path),
-		Kind:      "file",
-		FilePath:  path,
-		StartLine: 1,
-		EndLine:   len(lines),
-		UpdatedAt: now,
-	}
-	scopes = append(scopes, fileScope)
-	ext := strings.ToLower(filepath.Ext(path))
-	sections := parseSections(lines, ext)
-	definitions := parseDefinitions(lines, ext)
-	for i := range sections {
-		sections[i].FilePath = path
-		sections[i].ID = fmt.Sprintf("section:%s#%s", path, sections[i].SectionPath)
-	}
-	for _, section := range sections {
-		section.UpdatedAt = now
-		scopes = append(scopes, section)
-	}
-	sectionByLine := map[int]string{}
-	for _, section := range sections {
-		for line := section.StartLine; line <= section.EndLine; line++ {
-			sectionByLine[line] = section.SectionPath
-		}
-	}
-	for i := range definitions {
-		definitions[i].FilePath = path
-		definitions[i].ID = fmt.Sprintf("def:%s#%s", path, definitions[i].Definition)
-		def := definitions[i]
-		def.SectionPath = sectionByLine[def.StartLine]
-		def.UpdatedAt = now
-		scopes = append(scopes, def)
-	}
-	return scopes
-}
-
-// parseSections extracts section scopes from region markers and markdown headings.
-// [🧰repo⌨️server💻main🔖indexing🛠️parsesections](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/parseSections)
-// parseSections MUST perform the parseSections operation.
-func parseSections(lines []string, ext string) []Scope {
-	var scopes []Scope
-	type sectionFrame struct {
-		Name      string
-		StartLine int
-		Level     int
-		Path      string
-	}
-	var stack []sectionFrame
-	for index, line := range lines {
-		lineNumber := index + 1
-		if name, ok, isEnd := parseRegionMarker(line); ok {
-			if isEnd {
-				if len(stack) > 0 {
-					frame := stack[len(stack)-1]
-					stack = stack[:len(stack)-1]
-					scope := Scope{
-						ID:          fmt.Sprintf("section:%s#%s", "", frame.Path),
-						Kind:        "section",
-						SectionPath: frame.Path,
-						StartLine:   frame.StartLine,
-						EndLine:     lineNumber - 1,
-					}
-					scopes = append(scopes, scope)
-				}
-			} else {
-				path := name
-				if len(stack) > 0 {
-					path = stack[len(stack)-1].Path + "." + name
-				}
-				stack = append(stack, sectionFrame{Name: name, StartLine: lineNumber, Level: 0, Path: path})
-			}
-			continue
-		}
-		if ext == ".md" || ext == ".mdx" {
-			if level, title := parseMarkdownHeading(line); level > 0 {
-				for len(stack) > 0 && stack[len(stack)-1].Level >= level {
-					frame := stack[len(stack)-1]
-					stack = stack[:len(stack)-1]
-					scope := Scope{
-						ID:          fmt.Sprintf("section:%s#%s", "", frame.Path),
-						Kind:        "section",
-						SectionPath: frame.Path,
-						StartLine:   frame.StartLine,
-						EndLine:     lineNumber - 1,
-					}
-					scopes = append(scopes, scope)
-				}
-				path := title
-				if len(stack) > 0 {
-					path = stack[len(stack)-1].Path + "." + title
-				}
-				stack = append(stack, sectionFrame{Name: title, StartLine: lineNumber, Level: level, Path: path})
-			}
-		}
-	}
-	for _, frame := range stack {
-		scope := Scope{
-			ID:          fmt.Sprintf("section:%s#%s", "", frame.Path),
-			Kind:        "section",
-			SectionPath: frame.Path,
-			StartLine:   frame.StartLine,
-			EndLine:     len(lines),
-		}
-		scopes = append(scopes, scope)
-	}
-	return scopes
-}
-
-// parseRegionMarker detects region start/end markers in a line.
-// parseRegionMarker MUST perform the parseRegionMarker operation.
-// [🧰repo⌨️server💻main🔖indexing🛠️parseregionmarker](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/parseRegionMarker)
-func parseRegionMarker(line string) (string, bool, bool) {
-	trimmed := strings.TrimSpace(line)
-	trimmed = strings.TrimPrefix(trimmed, "//")
-	trimmed = strings.TrimPrefix(trimmed, "#")
-	trimmed = strings.TrimPrefix(trimmed, "/*")
-	trimmed = strings.TrimSuffix(trimmed, "*/")
-	trimmed = strings.TrimSpace(trimmed)
-	if strings.HasPrefix(trimmed, "#region 🔖") {
-		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#region 🔖")), true, false
-	}
-	if strings.HasPrefix(trimmed, "#endregion 🔖") {
-		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#endregion 🔖")), true, true
-	}
-	return "", false, false
-}
-
-// parseMarkdownHeading parses a markdown heading line into level and title.
-// [🧰repo⌨️server💻main🔖indexing🛠️parsemarkdownheading](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/parseMarkdownHeading)
-// parseMarkdownHeading MUST perform the parseMarkdownHeading operation.
-func parseMarkdownHeading(line string) (int, string) {
-	trimmed := strings.TrimSpace(line)
-	if !strings.HasPrefix(trimmed, "#") {
-		return 0, ""
-	}
-	level := 0
-	for level < len(trimmed) && trimmed[level] == '#' {
-		level++
-	}
-	if level == 0 || level > 6 {
-		return 0, ""
-	}
-	name := strings.TrimSpace(trimmed[level:])
-	if name == "" {
-		return 0, ""
-	}
-	return level, name
-}
-
-// assignSectionPaths updates section IDs to include the file path.
-// [🧰repo⌨️server💻main🔖indexing🛠️assignsectionpaths](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/assignSectionPaths)
-// assignSectionPaths MUST perform the assignSectionPaths operation.
-func assignSectionPaths(sections []Scope) []Scope {
-	for i := range sections {
-		sections[i].ID = fmt.Sprintf("section:%s#%s", sections[i].FilePath, sections[i].SectionPath)
-	}
-	return sections
-}
-
-// parseDefinitions extracts definition scopes using language-specific patterns.
-// [🧰repo⌨️server💻main🔖indexing🛠️parsedefinitions](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/parseDefinitions)
-// parseDefinitions MUST perform the parseDefinitions operation.
-func parseDefinitions(lines []string, ext string) []Scope {
-	var scopes []Scope
-	patterns := definitionPatterns(ext)
-	for index, line := range lines {
-		lineNumber := index + 1
-		for _, pattern := range patterns {
-			matches := pattern.FindStringSubmatch(line)
-			if len(matches) > 1 {
-				name := matches[len(matches)-1]
-				scopes = append(scopes, Scope{
-					ID:         fmt.Sprintf("def:%s#%s", "", name),
-					Kind:       "definition",
-					Definition: name,
-					StartLine:  lineNumber,
-					EndLine:    lineNumber,
-				})
-				break
-			}
+	entries := repopkg.BuildScopesForFile(path, content)
+	scopes := make([]Scope, len(entries))
+	for i, e := range entries {
+		scopes[i] = Scope{
+			ID:          e.ID,
+			Kind:        e.Kind,
+			FilePath:    e.FilePath,
+			SectionPath: e.SectionPath,
+			Definition:  e.Definition,
+			StartLine:   e.StartLine,
+			EndLine:     e.EndLine,
+			UpdatedAt:   now,
 		}
 	}
 	return scopes
-}
-
-// definitionPatterns returns language-specific regex patterns for extracting definitions.
-// [🧰repo⌨️server💻main🔖indexing🛠️definitionpatterns](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/definitionPatterns)
-// definitionPatterns MUST perform the definitionPatterns operation.
-func definitionPatterns(ext string) []*regexp.Regexp {
-	switch ext {
-	case ".go":
-		return []*regexp.Regexp{
-			regexp.MustCompile(`^\s*func\s+(?:\([^\)]*\)\s*)?([A-Za-z0-9_]+)`),
-			regexp.MustCompile(`^\s*type\s+([A-Za-z0-9_]+)`),
-			regexp.MustCompile(`^\s*var\s+([A-Za-z0-9_]+)`),
-			regexp.MustCompile(`^\s*const\s+([A-Za-z0-9_]+)`),
-		}
-	case ".ts", ".tsx", ".js", ".jsx":
-		return []*regexp.Regexp{
-			regexp.MustCompile(`^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_]+)`),
-			regexp.MustCompile(`^\s*(?:export\s+)?class\s+([A-Za-z0-9_]+)`),
-			regexp.MustCompile(`^\s*(?:export\s+)?interface\s+([A-Za-z0-9_]+)`),
-			regexp.MustCompile(`^\s*(?:export\s+)?type\s+([A-Za-z0-9_]+)`),
-		}
-	case ".py":
-		return []*regexp.Regexp{
-			regexp.MustCompile(`^\s*def\s+([A-Za-z0-9_]+)`),
-			regexp.MustCompile(`^\s*class\s+([A-Za-z0-9_]+)`),
-		}
-	case ".cs":
-		return []*regexp.Regexp{
-			regexp.MustCompile(`^\s*(?:public|private|protected|internal)?\s*(?:static\s+)?(?:class|struct|interface|enum|record)\s+([A-Za-z0-9_]+)`),
-		}
-	case ".md", ".mdx":
-		return []*regexp.Regexp{}
-	default:
-		return []*regexp.Regexp{}
-	}
 }
 
 // #endregion 🔖Indexing
@@ -1759,8 +1553,6 @@ func (s *Server) updateIndexForFile(ctx context.Context, filePath string, conten
 	var sections []Scope
 	var definitions []Scope
 	for _, scope := range scopes {
-		scope.FilePath = filePath
-		scope.ID = buildScopeID(scope)
 		if scope.Kind == "file" {
 			fileScope = scope
 		}
@@ -1778,22 +1570,6 @@ func (s *Server) updateIndexForFile(ctx context.Context, filePath string, conten
 	s.cache.Definitions[filePath] = definitions
 	s.cacheLock.Unlock()
 	_ = s.bus.Publish(ctx, "IndexUpdated", "server", map[string]interface{}{"file": filePath})
-}
-
-// buildScopeID generates a deterministic scope ID from the scope's kind and path.
-// [🧰repo⌨️server💻main🔖processing🛠️buildscopeid](repo://p/i/repo/b/b/server/f/main.go/s/Processing/d/i/buildScopeID)
-// buildScopeID MUST perform the buildScopeID operation.
-func buildScopeID(scope Scope) string {
-	if scope.Kind == "file" {
-		return fmt.Sprintf("file:%s", scope.FilePath)
-	}
-	if scope.Kind == "section" {
-		return fmt.Sprintf("section:%s#%s", scope.FilePath, scope.SectionPath)
-	}
-	if scope.SectionPath != "" {
-		return fmt.Sprintf("def:%s#%s::%s", scope.FilePath, scope.SectionPath, scope.Definition)
-	}
-	return fmt.Sprintf("def:%s#%s", scope.FilePath, scope.Definition)
 }
 
 // walkRepoFiles walks the repo root and returns all non-hidden file paths.

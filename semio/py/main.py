@@ -4005,6 +4005,7 @@ class Layer(
     """
 
     PLURAL = "layers"
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
 # endregion Layer
@@ -12769,7 +12770,7 @@ def _export_ifc_from_dict(
     import ifcopenshell.api as _ifc_api
     import ifcopenshell.guid as _ifc_guid
 
-    # region Step 1: IFC file, project, units, context, spatial tree
+    # region Step 1: IFC file, project, units, context, spatial tree from layers
     ifc = _ifc_api.run("project.create_file", version="IFC4")
     kit_name = kit.get("name", "semio Kit")
     project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
@@ -12784,26 +12785,74 @@ def _export_ifc_from_dict(
         parent=model_context,
     )
     site = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcSite", name="Site")
-    building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
-    storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
     _ifc_api.run("aggregate.assign_object", ifc, relating_object=project, products=[site])
-    _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
-    _ifc_api.run("aggregate.assign_object", ifc, relating_object=building, products=[storey])
-    # endregion Step 1
 
-    # region Step 2: Design assembly
     designs = kit.get("designs", []) or []
     design = next(
         (d for d in designs if d.get("name") == design_name or d.get("guid") == design_name),
         None,
     )
-    assembly = _ifc_api.run(
-        "root.create_entity",
-        ifc,
-        ifc_class="IfcElementAssembly",
-        name=design.get("name", design_name) if design else design_name,
-    )
-    _ifc_api.run("spatial.assign_container", ifc, relating_structure=storey, products=[assembly])
+    layers = (design.get("layers", []) or []) if design else []
+
+    def _get_layer_ifc_type(layer: dict) -> str | None:
+        for attr in layer.get("attributes", []) or []:
+            if attr.get("key") == "ifc.type":
+                return attr.get("value")
+        return None
+
+    # Build spatial hierarchy from layers
+    ifc_buildings: dict[str, typing.Any] = {}
+    ifc_storeys: dict[str, typing.Any] = {}
+    storey_by_number: dict[int, typing.Any] = {}
+    default_building = None
+    default_storey = None
+
+    for layer in layers:
+        layer_path = layer.get("path", "")
+        ifc_type = _get_layer_ifc_type(layer)
+        if ifc_type == "IfcBuilding":
+            building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name=layer_path)
+            _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
+            ifc_buildings[layer_path] = building
+            if default_building is None:
+                default_building = building
+        elif ifc_type == "IfcBuildingStorey":
+            parts = layer_path.rsplit("/", 1)
+            parent_path = parts[0] if len(parts) > 1 else ""
+            storey_name = parts[-1] if len(parts) > 1 else layer_path
+            storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name=storey_name)
+            parent_building = ifc_buildings.get(parent_path)
+            if parent_building is not None:
+                _ifc_api.run("aggregate.assign_object", ifc, relating_object=parent_building, products=[storey])
+            ifc_storeys[layer_path] = storey
+            try:
+                storey_number = int(storey_name)
+                storey_by_number[storey_number] = storey
+            except ValueError:
+                pass
+            if default_storey is None:
+                default_storey = storey
+
+    # Fallback: create default building and storey if no layers define them
+    if default_building is None:
+        default_building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
+        _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[default_building])
+    if default_storey is None:
+        default_storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
+        _ifc_api.run("aggregate.assign_object", ifc, relating_object=default_building, products=[default_storey])
+    # endregion Step 1
+
+    # region Step 2: Piece-to-storey mapping from piece names
+    import re as _re
+
+    def _piece_storey(piece_name: str) -> typing.Any:
+        m = _re.search(r"_f(\d+)_", piece_name or "")
+        if m:
+            floor = int(m.group(1))
+            if floor in storey_by_number:
+                return storey_by_number[floor]
+        return default_storey
+
     # endregion Step 2
 
     pieces = (design.get("pieces", []) or []) if design else []
@@ -12974,12 +13023,8 @@ def _export_ifc_from_dict(
             mat[:3, 3] = [ox, oy, oz]
             _ifc_api.run("geometry.edit_object_placement", ifc, product=occurrence, matrix=mat)
 
-        _ifc_api.run(
-            "aggregate.assign_object",
-            ifc,
-            relating_object=assembly,
-            products=[occurrence],
-        )
+        # Assign piece to the correct storey based on its floor number
+        _ifc_api.run("spatial.assign_container", ifc, relating_structure=_piece_storey(piece_name), products=[occurrence])
 
         # Piece-level pset for piece attributes
         piece_props: dict[str, typing.Any] = {}
@@ -13167,7 +13212,7 @@ def _export_ifc_from_entities(
     import ifcopenshell.api as _ifc_api
     import ifcopenshell.guid as _ifc_guid
 
-    # region Step 1: IFC file, project, units, context, spatial tree
+    # region Step 1: IFC file, project, units, context, spatial tree from layers
     ifc = _ifc_api.run("project.create_file", version="IFC4")
     kit_name = kit.name if hasattr(kit, "name") and kit.name else "semio Kit"
     project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
@@ -13182,16 +13227,69 @@ def _export_ifc_from_entities(
         parent=model_context,
     )
     site = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcSite", name="Site")
-    building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
-    storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
     _ifc_api.run("aggregate.assign_object", ifc, relating_object=project, products=[site])
-    _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
-    _ifc_api.run("aggregate.assign_object", ifc, relating_object=building, products=[storey])
+
+    layers = design.layers or [] if hasattr(design, "layers") else []
+
+    def _get_layer_ifc_type_entity(layer: typing.Any) -> str | None:
+        if hasattr(layer, "attributes"):
+            for attr in layer.attributes or []:
+                key = attr.key if hasattr(attr, "key") else attr.get("key", "")
+                value = attr.value if hasattr(attr, "value") else attr.get("value", "")
+                if key == "ifc.type":
+                    return value
+        return None
+
+    ifc_buildings: dict[str, typing.Any] = {}
+    ifc_storeys: dict[str, typing.Any] = {}
+    storey_by_number: dict[int, typing.Any] = {}
+    default_building = None
+    default_storey = None
+
+    for layer in layers:
+        layer_name = layer.name if hasattr(layer, "name") else layer.get("name", "")
+        ifc_type_val = _get_layer_ifc_type_entity(layer)
+        if ifc_type_val == "IfcBuilding":
+            building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name=layer_name)
+            _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
+            ifc_buildings[layer_name] = building
+            if default_building is None:
+                default_building = building
+        elif ifc_type_val == "IfcBuildingStorey":
+            parts = layer_name.rsplit("/", 1)
+            parent_name = parts[0] if len(parts) > 1 else ""
+            storey_label = parts[-1] if len(parts) > 1 else layer_name
+            storey_ent = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name=storey_label)
+            parent_building = ifc_buildings.get(parent_name)
+            if parent_building is not None:
+                _ifc_api.run("aggregate.assign_object", ifc, relating_object=parent_building, products=[storey_ent])
+            ifc_storeys[layer_name] = storey_ent
+            try:
+                storey_by_number[int(storey_label)] = storey_ent
+            except ValueError:
+                pass
+            if default_storey is None:
+                default_storey = storey_ent
+
+    if default_building is None:
+        default_building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
+        _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[default_building])
+    if default_storey is None:
+        default_storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
+        _ifc_api.run("aggregate.assign_object", ifc, relating_object=default_building, products=[default_storey])
     # endregion Step 1
 
-    # region Step 2: Design assembly
-    assembly = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcElementAssembly", name=design.name)
-    _ifc_api.run("spatial.assign_container", ifc, relating_structure=storey, products=[assembly])
+    # region Step 2: Piece-to-storey mapping
+    import re as _re
+
+    def _piece_storey_entity(piece_name: str) -> typing.Any:
+        m = _re.search(r"_f(\d+)_", piece_name or "")
+        if m:
+            floor = int(m.group(1))
+            if floor in storey_by_number:
+                return storey_by_number[floor]
+        return default_storey
+
     # endregion Step 2
 
     pieces = design.pieces or []
@@ -13272,12 +13370,8 @@ def _export_ifc_from_entities(
             mat = _plane_to_matrix_4x4(world_plane)
             _ifc_api.run("geometry.edit_object_placement", ifc, product=occurrence, matrix=mat)
 
-        _ifc_api.run(
-            "aggregate.assign_object",
-            ifc,
-            relating_object=assembly,
-            products=[occurrence],
-        )
+        # Assign piece to the correct storey based on its floor number
+        _ifc_api.run("spatial.assign_container", ifc, relating_structure=_piece_storey_entity(piece_name), products=[occurrence])
         ifc_occurrences[piece.id_] = occurrence
 
         # Connectors as ports
@@ -14155,7 +14249,6 @@ class TestExportDesignModel:
         assert "IFCSITE" in ifc_text
         assert "IFCBUILDING" in ifc_text
         assert "IFCBUILDINGSTOREY" in ifc_text
-        assert "IFCELEMENTASSEMBLY" in ifc_text
 
     def test_export_ifc_contains_types_and_occurrences(self):
         kit_dict = _test_load_json("kit_metabolism.json")
@@ -14251,11 +14344,11 @@ class TestExportDesignModel:
         assert len(sites) == 1
         buildings = ifc.by_type("IfcBuilding")
         assert len(buildings) == 1
+        assert buildings[0].Name == "tower"
         storeys = ifc.by_type("IfcBuildingStorey")
-        assert len(storeys) == 1
-        assemblies = ifc.by_type("IfcElementAssembly")
-        assert len(assemblies) == 1
-        assert assemblies[0].Name == "Nakagin Capsule Tower"
+        assert len(storeys) == 11
+        storey_names = sorted([s.Name for s in storeys])
+        assert storey_names == sorted([str(i) for i in range(11)])
         type_products = ifc.by_type("IfcBuildingElementProxyType")
         assert len(type_products) > 0
         occurrences = ifc.by_type("IfcBuildingElementProxy")
@@ -14267,6 +14360,38 @@ class TestExportDesignModel:
         port_connections = ifc.by_type("IfcRelConnectsPorts")
         connections = next(d for d in kit_dict.get("designs", []) if d.get("name") == "Nakagin Capsule Tower").get("connections", [])
         assert len(port_connections) == len(connections)
+
+    def test_export_ifc_layer_spatial_hierarchy(self):
+        import ifcopenshell
+
+        kit_dict = _test_load_json("kit_metabolism.json")
+        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
+        # IfcProject -> IfcSite -> IfcBuilding -> IfcBuildingStorey
+        project = ifc.by_type("IfcProject")[0]
+        site = ifc.by_type("IfcSite")[0]
+        building = ifc.by_type("IfcBuilding")[0]
+        storeys = ifc.by_type("IfcBuildingStorey")
+        # Verify aggregation hierarchy
+        project_children = [rel.RelatedObjects for rel in project.IsDecomposedBy]
+        site_in_project = any(site in children for children in project_children)
+        assert site_in_project
+        site_children = [rel.RelatedObjects for rel in site.IsDecomposedBy]
+        building_in_site = any(building in children for children in site_children)
+        assert building_in_site
+        building_children_list = [rel.RelatedObjects for rel in building.IsDecomposedBy]
+        building_children = [child for children in building_children_list for child in children]
+        for storey in storeys:
+            assert storey in building_children, f"Storey {storey.Name} not aggregated under building"
+        # Each storey should contain pieces
+        for storey in storeys:
+            contained = [rel.RelatedElements for rel in storey.ContainsElements] if storey.ContainsElements else []
+            elements = [e for group in contained for e in group]
+            assert len(elements) > 0, f"Storey {storey.Name} has no contained elements"
+        # Verify types have representations (model geometry)
+        type_products = ifc.by_type("IfcBuildingElementProxyType")
+        types_with_rep = [t for t in type_products if t.RepresentationMaps]
+        assert len(types_with_rep) > 0
 
     def test_export_ifc_report(self):
         kit_dict = _test_load_json("kit_metabolism.json")

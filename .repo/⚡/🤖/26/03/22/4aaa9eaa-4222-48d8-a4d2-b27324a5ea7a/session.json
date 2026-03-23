@@ -27,6 +27,27 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-22T16:43:21Z",
+        "session": "4aaa9eaa-4222-48d8-a4d2-b27324a5ea7a",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4aaa9eaa-4222-48d8-a4d2-b27324a5ea7a.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "4aaa9eaa-4222-48d8-a4d2-b27324a5ea7a",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4aaa9eaa-4222-48d8-a4d2-b27324a5ea7a.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        }
+      },
+      "response": {}
     }
   ]
 }
