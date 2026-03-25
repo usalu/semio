@@ -1,0 +1,54 @@
+{
+  "id": "9be1ed80-34fe-45af-93ff-bff862b6df1b",
+  "uri": "repo://session/9be1ed80-34fe-45af-93ff-bff862b6df1b",
+  "client": "claude-code",
+  "second": "2026-03-25T15:30:06Z",
+  "checkpoint": "987bd622370cf5ab37603778af10d2b885fa3790",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/9be1ed80-34fe-45af-93ff-bff862b6df1b.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "987bd622370cf5ab37603778af10d2b885fa3790",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-03-25T15:30:06Z",
+        "session": "9be1ed80-34fe-45af-93ff-bff862b6df1b",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/9be1ed80-34fe-45af-93ff-bff862b6df1b.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "9be1ed80-34fe-45af-93ff-bff862b6df1b",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/9be1ed80-34fe-45af-93ff-bff862b6df1b.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionStart",
+          "source": "startup"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "987bd622370cf5ab37603778af10d2b885fa3790",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-03-25T15:30:20Z",
+        "session": "9be1ed80-34fe-45af-93ff-bff862b6df1b",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/9be1ed80-34fe-45af-93ff-bff862b6df1b.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "9be1ed80-34fe-45af-93ff-bff862b6df1b",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/9be1ed80-34fe-45af-93ff-bff862b6df1b.jsonl",
+          "cwd": "/workspaces/semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "UserPromptSubmit",
+          "prompt": "semio play is not running.\nsemio algorithms:\nEvery algorithm should be a elements/ui/UI with an AlgorthmApp and semio ui for the window kinds.\nThe following WindowKinds exist:\n- VecInput\n- PiecesSelectionInput (which is a Diagram with no diff, only piece selection)\n- DesignDiffOutput (which is a Diagram with diff, no selection)\n- DesignOutput (which is a Diagram with no diff, no selection)\n\nDrag: VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput\nDelete: PiecesSelectionInput, DesignDiffOutput, DesignOutput\netc"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

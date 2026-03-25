@@ -19,8 +19,11 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "../../..");
-const elementsUiEntryPath = resolve(__dirname, "../../../elements/ui/elements.tsx");
+const elementsUiDir = resolve(__dirname, "../../../elements/ui");
+const elementsUiEntryPath = resolve(elementsUiDir, "index.tsx");
 const algorithmsEntryPath = resolve(__dirname, "../index.ts");
+const semioUiEntryPath = resolve(__dirname, "../../ui/index.tsx");
+const semioJsEntryPath = resolve(__dirname, "../../js/index.ts");
 
 function getAbsolutePath(value: string): string {
   try {
@@ -48,8 +51,11 @@ const config: StorybookConfig = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      "@elements/ui": elementsUiEntryPath,
       "@elements/ui/elements": elementsUiEntryPath,
+      "@elements/ui": elementsUiDir,
+      "@semio/ui": semioUiEntryPath,
+      "@semio/js": semioJsEntryPath,
+      "@semio/assets": resolve(__dirname, "../../assets"),
       "@semio/algorithms": algorithmsEntryPath,
     };
     config.server = config.server || {};
@@ -88,7 +94,8 @@ const config: StorybookConfig = {
     );
 
     config.optimizeDeps = config.optimizeDeps || {};
-    config.optimizeDeps.exclude = Array.from(new Set([...(config.optimizeDeps.exclude || []), "@semio/ui", "@elements/ui", "@elements/ui/elements"]));
+    config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
+    config.optimizeDeps.exclude = Array.from(new Set([...(config.optimizeDeps.exclude || []), "@semio/ui", "@semio/js", "@semio/assets", "@elements/ui", "@elements/ui/elements"]));
     config.optimizeDeps.esbuildOptions = {
       ...config.optimizeDeps.esbuildOptions,
       target: "es2020",

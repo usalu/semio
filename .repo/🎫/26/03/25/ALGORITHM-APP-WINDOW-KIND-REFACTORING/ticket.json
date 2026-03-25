@@ -1,0 +1,12 @@
+{
+  "title": "Algorithm App Window Kind Refactoring",
+  "status": "open",
+  "description": "Refactor semio algorithms to use elements/ui UI with AlgorithmApp and semio UI for window kinds. WindowKinds: VecInput, PiecesSelectionInput (Diagram with piece selection, no diff), DesignDiffOutput (Diagram with diff, no selection), DesignOutput (Diagram with no diff, no selection). Remove DESIGN_INPUT. Update all algorithm stories (Drag, Delete, Move, Flatten, Cluster) to use the correct window kinds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1083"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪fb40c4afc70c4f2b93aa8ebfcddfd52b"
+  ]
+}

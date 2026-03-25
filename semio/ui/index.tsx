@@ -1850,6 +1850,8 @@ if (import.meta.vitest) {
 // PiecesSelectionInput, DesignDiffOutput, DesignOutput) and an AlgorithmApp creates
 // the UIAppConfig and renders the UI composite component. Data flows through
 // AlgorithmContext which provides kit, design, diff, selection, vec, and output state.
+// WindowKinds: VecInput (2D vector pad), PiecesSelectionInput (Diagram with piece selection, no diff),
+// DesignDiffOutput (Diagram with diff, no selection), DesignOutput (Diagram with no diff, no selection).
 // Summary: Standardized algorithm IPO shell using typed WindowKind-based windows.
 
 import { WindowKind, createDefaultLayout, type UIAppConfig, type UIWindowKindDefinition, type SidePanelTabConfig, type FooterItem, type UIToolbarItem, UI, TreeSection, TreeRow, cn } from "@elements/ui/elements";
@@ -1955,18 +1957,6 @@ const AlgorithmDesignDiffOutputWindow: React.FC = () => {
 };
 
 /**
- * DesignInput window component: Diagram showing base design with no diff, no selection.
- **/
-const AlgorithmDesignInputWindow: React.FC = () => {
-  const { kit, designGuid } = useAlgorithm();
-  return (
-    <div className="h-full w-full">
-      <SemioDiagram kit={kit} designGuid={designGuid} diffEnabled={false} selectionEnabled={false} />
-    </div>
-  );
-};
-
-/**
  * DesignOutput window component: Diagram with no diff, no selection.
  **/
 const AlgorithmDesignOutputWindow: React.FC = () => {
@@ -1981,7 +1971,6 @@ const AlgorithmDesignOutputWindow: React.FC = () => {
 const ALGORITHM_WINDOW_COMPONENTS: Record<string, React.ComponentType<any>> = {
   [WindowKind.VEC_INPUT]: AlgorithmVecInputWindow,
   [WindowKind.PIECES_SELECTION_INPUT]: AlgorithmPiecesSelectionInputWindow,
-  [WindowKind.DESIGN_INPUT]: AlgorithmDesignInputWindow,
   [WindowKind.DESIGN_DIFF_OUTPUT]: AlgorithmDesignDiffOutputWindow,
   [WindowKind.DESIGN_OUTPUT]: AlgorithmDesignOutputWindow,
 };

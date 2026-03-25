@@ -1,7 +1,7 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Cluster.stories.tsx
-// Specs: Uses the local AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Runtime-safe Cluster story that keeps Storybook interactive without semio/js execution dependencies.
+// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
+// Summary: Cluster story using real Diagram-based algorithm windows from @semio/ui.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 

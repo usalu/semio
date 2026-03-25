@@ -1,7 +1,7 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Flatten.stories.tsx
-// Specs: Uses the local AlgorithmApp shell with DESIGN_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Runtime-safe Flatten story that exercises the algorithm shell without semio/js execution dependencies.
+// Specs: Uses the AlgorithmApp shell with DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
+// Summary: Flatten story using real Diagram-based algorithm windows from @semio/ui.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
@@ -16,7 +16,6 @@ import metabolismKit from "../../../assets/semio/kit_metabolism.json";
 const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 
 const WINDOWS: AlgorithmWindowDef[] = [
-  { id: "flatten-input", kind: WindowKind.DESIGN_INPUT, label: "Input" },
   { id: "flatten-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
   { id: "flatten-output", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];

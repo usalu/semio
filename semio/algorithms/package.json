@@ -23,6 +23,8 @@
   "dependencies": {
     "@mdx-js/react": "^3.1.1",
     "@semio/ui": "*",
+    "@semio/js": "*",
+    "@elements/ui": "*",
     "@storybook/addon-docs": "^10.2.19",
     "@storybook/addon-vitest": "^10.2.19",
     "@storybook/react-vite": "^10.2.19",

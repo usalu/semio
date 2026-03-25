@@ -1,7 +1,7 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Move.stories.tsx
-// Specs: Uses the local AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Runtime-safe Move story that keeps Storybook interactive without semio/js execution dependencies.
+// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
+// Summary: Move story using real Diagram-based algorithm windows from @semio/ui.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
