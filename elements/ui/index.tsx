@@ -31,43 +31,40 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as dagre from "dagre";
 import Fuse, { type FuseResult } from "fuse.js";
 import LanguageDetector from "i18next-browser-languagedetector";
-import React from "react";
 import i18next from "i18next";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
-import type { OntologyTreeNode } from "@coda/desktop/renderer";
-import type { ValidationReport } from "@coda/desktop/renderer";
 
 import {
-  AddIcon,
-  AlertCircleIcon,
-  BookIcon,
-  CameraIcon,
-  CheckIcon,
-  CheckIconAlt,
-  ChevronDownIcon,
-  ChevronDownIconAlt,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsUpDownIcon,
-  CloseIcon,
-  CloseIconAlt,
-  DocumentIcon,
-  ExternalLinkIcon,
-  FolderIcon,
-  GripVerticalIcon,
-  InfoIcon,
-  LightbulbIcon,
-  LucideIcon,
-  Maximize2Icon,
-  Minimize2Icon,
-  NavigateBackIcon,
-  NavigateForwardIcon,
-  NavigateUpIcon,
-  RemoveIcon,
-  SearchIcon,
-  TriangleAlertIcon,
-  TutorialIcon,
-} from "@semio/assets/icons";
+  Plus as AddIcon,
+  AlertCircle as AlertCircleIcon,
+  BookOpen as BookIcon,
+  Camera as CameraIcon,
+  Check as CheckIcon,
+  CheckIcon as CheckIconAlt,
+  ChevronDown as ChevronDownIcon,
+  ChevronDownIcon as ChevronDownIconAlt,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronsUpDown as ChevronsUpDownIcon,
+  X as CloseIcon,
+  XIcon as CloseIconAlt,
+  FileText as DocumentIcon,
+  ExternalLink as ExternalLinkIcon,
+  Folder as FolderIcon,
+  GripVertical as GripVerticalIcon,
+  Info as InfoIcon,
+  Lightbulb as LightbulbIcon,
+  Maximize2 as Maximize2Icon,
+  Minimize2 as Minimize2Icon,
+  ArrowLeft as NavigateBackIcon,
+  ArrowRight as NavigateForwardIcon,
+  ArrowUp as NavigateUpIcon,
+  Minus as RemoveIcon,
+  SearchIcon as SearchIcon,
+  TriangleAlert as TriangleAlertIcon,
+  GraduationCap as TutorialIcon,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   applyNodeChanges,
   Background,
@@ -86,72 +83,22 @@ import {
   useStoreApi,
   ViewportPortal,
 } from "@xyflow/react";
-import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/assets";
-import { AlertCircle, Home } from "lucide-react";
-import { BarChart, BookOpen, ClipboardPaste, Copy, File, FileText, FolderOpen, Home, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
-import { Bell, ChevronDown, Home, Menu, Redo, Search, Settings, Undo, User, ZoomIn, ZoomOut } from "lucide-react";
-import { Box } from "lucide-react";
-import { Box, ChevronDown } from "lucide-react";
-import { Box, Circle, Cylinder, Hexagon } from "lucide-react";
-import { Box, Circle, Cylinder, Settings, User } from "lucide-react";
-import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
-import { Box, List, Network } from "lucide-react";
-import { Box, List, Network, Plus } from "lucide-react";
 import { CSS } from "@dnd-kit/utilities";
-import { CalendarDays } from "lucide-react";
 import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
-import { CheckCircle2 } from "lucide-react";
 import { ClassValue, clsx } from "clsx";
 import { Command as CommandPrimitive } from "cmdk";
-import { Config } from "postcss-load-config";
-import { Copy, Download, ExternalLink } from "lucide-react";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
-import { Eye, EyeOff, Hand, Maximize2, MousePointer, Move, RotateCcw, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
-import { File, Folder, Settings } from "lucide-react";
-import { FileCode, FileImage, FolderIcon } from "lucide-react";
-import { Home, Info, Layers, Settings, User } from "lucide-react";
-import { Info, Layers, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import { MemoryRouter } from "react-router";
-import { OntologyTree } from "@coda/desktop/renderer";
-import { Plus, Settings, Trash2 } from "lucide-react";
-import { Settings } from "lucide-react";
 import { Slot } from "@radix-ui/react-slot";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { ValidationTree } from "@coda/desktop/renderer";
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { createPortal } from "react-dom";
 import { cva, type VariantProps } from "class-variance-authority";
-
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import { initReactI18next, useTranslation } from "react-i18next";
 import { twMerge } from "tailwind-merge";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useState } from "react";
-
-// #endregion 🔖Imports
-
-// #region Header
-
-// .elements/ui/elements.tsx
-
-// 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// #endregion Header
-
-// #region Imports
-
 // #endregion Imports
 
 // #region Utilities
@@ -10077,7 +10024,7 @@ export interface ElementBaseProps {
   id: string;
 }
 
-export interface ElementProps extends ElementBaseProps {}
+export interface ElementProps extends ElementBaseProps { }
 
 /**
  * Returns the Tailwind background class for a given level.
@@ -11069,12 +11016,12 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, classN
   const normalizedName = (name ?? "").trim();
   const initials = normalizedName
     ? normalizedName
-        .split(" ")
-        .slice(0, 2)
-        .map((word: string) => word.charAt(0))
-        .join("")
-        .toUpperCase()
-        .substring(0, 2)
+      .split(" ")
+      .slice(0, 2)
+      .map((word: string) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
     : "";
   const isImageIcon = typeof icon === "string";
   const isReactIcon = icon && !isImageIcon;
@@ -14561,7 +14508,7 @@ interface TreeItemProps {
  * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.
  **/
 interface SortableTreeItemsProps {
-  items: { id: string; [key: string]: any }[];
+  items: { id: string;[key: string]: any }[];
   onReorder: (oldIndex: number, newIndex: number) => void;
   children: (item: any, index: number) => React.ReactNode;
 }
@@ -16262,7 +16209,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
           </span>
         );
       }
-      const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
+      const elementProps = itemContent.props as { className?: string;["data-slot"]?: string };
       return React.cloneElement(itemContent as React.ReactElement<any>, {
         className: cn("cursor-selectable", elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
@@ -19444,7 +19391,7 @@ const UICanvas: React.FC<{
           setPortals([]);
           try {
             layout.destroy();
-          } catch {}
+          } catch { }
           layoutRef.current = null;
         };
       } catch (error) {
@@ -20163,13 +20110,13 @@ export const UI: React.FC<UIProps> = ({
         panelVisibility,
         togglePanel,
         uri: uriProp,
-        navigate: onNavigate ?? (() => {}),
+        navigate: onNavigate ?? (() => { }),
         canGoBack: canGoBackProp,
-        goBack: onGoBack ?? (() => {}),
+        goBack: onGoBack ?? (() => { }),
         canGoForward: canGoForwardProp,
-        goForward: onGoForward ?? (() => {}),
+        goForward: onGoForward ?? (() => { }),
         canGoUp: canGoUpProp,
-        goUp: onGoUp ?? (() => {}),
+        goUp: onGoUp ?? (() => { }),
       }}
     >
       <UIFindProvider>
@@ -20183,31 +20130,31 @@ export const UI: React.FC<UIProps> = ({
           mobilePanel={
             resolvedMobile && hasMobilePanelTabs
               ? {
-                  visible: mobilePanelVisible,
-                  tabs: mobilePanelTabs,
-                }
+                visible: mobilePanelVisible,
+                tabs: mobilePanelTabs,
+              }
               : undefined
           }
           leftSidePanel={
             !resolvedMobile && hasLeftPanel
               ? {
-                  position: "left" as const,
-                  visible: panelVisibility.leftSidePanel,
-                  size: leftPanelSize,
-                  onSizeChange: setLeftPanelSize,
-                  tabs: activeApp.leftPanelTabs!,
-                }
+                position: "left" as const,
+                visible: panelVisibility.leftSidePanel,
+                size: leftPanelSize,
+                onSizeChange: setLeftPanelSize,
+                tabs: activeApp.leftPanelTabs!,
+              }
               : undefined
           }
           rightSidePanel={
             !resolvedMobile && hasRightPanel
               ? {
-                  position: "right" as const,
-                  visible: panelVisibility.rightSidePanel,
-                  size: rightPanelSize,
-                  onSizeChange: setRightPanelSize,
-                  tabs: activeApp.rightPanelTabs!,
-                }
+                position: "right" as const,
+                visible: panelVisibility.rightSidePanel,
+                size: rightPanelSize,
+                onSizeChange: setRightPanelSize,
+                tabs: activeApp.rightPanelTabs!,
+              }
               : undefined
           }
           canvas={
@@ -20216,9 +20163,9 @@ export const UI: React.FC<UIProps> = ({
               defaultLayout={
                 resolvedMobile
                   ? createTabStackLayout(
-                      activeApp.windowKinds.map((windowKind) => windowKind.id),
-                      activeApp.windowKinds.map((windowKind) => windowKind.label ?? windowKind.id),
-                    )
+                    activeApp.windowKinds.map((windowKind) => windowKind.id),
+                    activeApp.windowKinds.map((windowKind) => windowKind.label ?? windowKind.id),
+                  )
                   : activeApp.defaultLayout
               }
             />

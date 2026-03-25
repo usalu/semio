@@ -20,7 +20,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "../../..");
 const semioUiEntryPath = resolve(__dirname, "../index.tsx");
-const elementsUiEntryPath = resolve(__dirname, "../../../elements/ui/elements.tsx");
+const elementsUiDir = resolve(__dirname, "../../../elements/ui");
+const elementsUiEntryPath = resolve(elementsUiDir, "index.tsx");
 const semioJsEntryPath = resolve(__dirname, "../../js/index.ts");
 
 function getAbsolutePath(value: string): string {
@@ -50,8 +51,8 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       "@semio/ui": semioUiEntryPath,
-      "@elements/ui": elementsUiEntryPath,
       "@elements/ui/elements": elementsUiEntryPath,
+      "@elements/ui": elementsUiDir,
       "@semio/js": semioJsEntryPath,
     };
     config.server = config.server || {};

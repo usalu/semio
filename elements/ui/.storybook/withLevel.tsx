@@ -19,7 +19,7 @@
 
 import type { Decorator } from "@storybook/react";
 import React from "react";
-import { Level, LevelProvider, getLevelBgClass } from "../elements";
+import { Level, LevelProvider, getLevelBgClass } from "..";
 
 export const LevelShowcase: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const levels: Level[] = ["base", "window", "panel", "overlay", "temporary"];

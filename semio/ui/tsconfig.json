@@ -19,7 +19,8 @@
     "paths": {
       "@semio/ui": ["./index.tsx"],
       "@semio/ui/*": ["./*"],
-      "@elements/ui": ["../../elements/ui/index.ts"],
+      "@elements/ui": ["../../elements/ui/index.tsx"],
+      "@elements/ui/elements": ["../../elements/ui/index.tsx"],
       "@elements/ui/*": ["../../elements/ui/*"],
       "@semio/js": ["../js"],
       "@semio/js/*": ["../js/*"],

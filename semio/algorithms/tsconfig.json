@@ -23,8 +23,8 @@
       "@semio/ui/*": ["../ui/*"],
       "@semio/js": ["../js/index.ts"],
       "@semio/js/*": ["../js/*"],
-      "@elements/ui": ["../../elements/ui/elements.tsx"],
-      "@elements/ui/elements": ["../../elements/ui/elements.tsx"]
+      "@elements/ui": ["../../elements/ui/index.tsx"],
+      "@elements/ui/elements": ["../../elements/ui/index.tsx"]
     }
   },
   "exclude": ["node_modules", "storybook-static"]

@@ -38,7 +38,7 @@ const configuration: UserConfig = {
     // because Electron's Chromium has a 6-connection-per-origin HTTP/1.1 limit
     // and the 80+ ESM module waterfall from elements.tsx stalls.
     warmup: {
-      clientFiles: ["./renderer.tsx", "../../elements/ui/elements.tsx"],
+      clientFiles: ["./renderer.tsx", "../../elements/ui/index.tsx"],
     },
     // Allow serving files from the entire monorepo since elements.tsx and
     // other dependencies live outside the desktop project root.

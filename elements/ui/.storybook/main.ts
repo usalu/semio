@@ -59,7 +59,6 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       "@elements/ui": resolve(__dirname, ".."),
-      "@coda/desktop": resolve(__dirname, "../../../coda/desktop"),
     };
 
     config.plugins = config.plugins || [];
@@ -80,7 +79,7 @@ const config: StorybookConfig = {
           if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-plugin") {
             indicesToRemove.push(i);
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
 

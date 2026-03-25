@@ -51,7 +51,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@react-three/postprocessing": "^3.0.4",
-    "@semio/assets": "^1.0.0",
+    "lucide-react": "^0.536.0",
     "@storybook/addon-docs": "^10.2.19",
     "@storybook/addon-vitest": "^10.2.19",
     "@storybook/react-vite": "^10.2.19",
