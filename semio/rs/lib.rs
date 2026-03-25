@@ -2361,6 +2361,825 @@ pub type KitChange = Change<Kit, KitDiff>;
 
 // #endregion 🔖Diff Types
 
+// #region 🔖Meta And Shallow Types
+// [👤semio📚rs💻semio🔖metaandshallowtypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Meta%20And%20Shallow%20Types)
+// Meta And Shallow Types MUST provide lightweight entity representations.
+
+// #region 🔖Sub-entity Meta Types
+
+/// AttributeMeta is identical to Attribute (no Vec fields to omit).
+pub type AttributeMeta = Attribute;
+
+/// StatMeta is identical to Stat (no Vec fields to omit).
+pub type StatMeta = Stat;
+
+/// TagMeta is identical to Tag (no Vec fields to omit).
+pub type TagMeta = Tag;
+
+/// ConceptMeta is identical to Concept (no Vec fields to omit).
+pub type ConceptMeta = Concept;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// PropMeta is Prop without attributes.
+pub struct PropMeta {
+    pub guid: Guid,
+    pub quality: QualityId,
+    pub value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// AuthorMeta is Author without attributes.
+pub struct AuthorMeta {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// FileMeta is File without blob.
+pub struct FileMeta {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remote: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder: Option<FolderId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hash: Option<String>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// FolderMeta is Folder without attributes.
+pub struct FolderMeta {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<FolderId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// QualityMeta is Quality without attributes.
+pub struct QualityMeta {
+    pub guid: Guid,
+    pub key: String,
+    pub name: String,
+    #[serde(default)]
+    pub kind: QualityKind,
+    #[serde(rename = "defaultValue", skip_serializing_if = "Option::is_none")]
+    pub default_value: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub formula: Option<String>,
+    #[serde(rename = "defaultSiUnit", skip_serializing_if = "Option::is_none")]
+    pub default_si_unit: Option<String>,
+    #[serde(
+        rename = "defaultImperialUnit",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub default_imperial_unit: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(rename = "isMinExcluded", skip_serializing_if = "Option::is_none")]
+    pub is_min_excluded: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(rename = "isMaxExcluded", skip_serializing_if = "Option::is_none")]
+    pub is_max_excluded: Option<bool>,
+    #[serde(rename = "canScale", skip_serializing_if = "Option::is_none")]
+    pub can_scale: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uri: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// PortMeta is Port without compatible_ports and attributes.
+pub struct PortMeta {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// ModelMeta is Model without tags and attributes.
+pub struct ModelMeta {
+    pub guid: Guid,
+    pub file: FileId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// ConnectorMeta is Connector without props and attributes.
+pub struct ConnectorMeta {
+    pub guid: Guid,
+    pub point: Vector,
+    pub direction: Vector,
+    pub t: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mandatory: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port: Option<PortId>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// LayerMeta is Layer without attributes.
+pub struct LayerMeta {
+    pub guid: Guid,
+    pub path: String,
+    #[serde(rename = "isHidden", skip_serializing_if = "Option::is_none")]
+    pub is_hidden: Option<bool>,
+    #[serde(rename = "isLocked", skip_serializing_if = "Option::is_none")]
+    pub is_locked: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+/// PieceMeta is Piece without props and attributes.
+pub struct PieceMeta {
+    pub guid: Guid,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub type_ref: Option<TypeId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub design: Option<DesignId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plane: Option<Plane>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub center: Option<Coord>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scale: Option<f64>,
+    #[serde(rename = "mirrorPlane", skip_serializing_if = "Option::is_none")]
+    pub mirror_plane: Option<Plane>,
+    #[serde(rename = "isHidden", skip_serializing_if = "Option::is_none")]
+    pub is_hidden: Option<bool>,
+    #[serde(rename = "isLocked", skip_serializing_if = "Option::is_none")]
+    pub is_locked: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// GroupMeta is Group without pieces and attributes.
+pub struct GroupMeta {
+    pub guid: Guid,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// ConnectionMeta is Connection without attributes.
+pub struct ConnectionMeta {
+    pub guid: Guid,
+    pub connected: Side,
+    pub connecting: Side,
+    #[serde(default)]
+    pub gap: f64,
+    #[serde(default)]
+    pub shift: f64,
+    #[serde(default)]
+    pub rise: f64,
+    #[serde(default)]
+    pub rotation: f64,
+    #[serde(default)]
+    pub turn: f64,
+    #[serde(default)]
+    pub tilt: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub u: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub v: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+// #endregion 🔖Sub-entity Meta Types
+
+// #region 🔖Main Entity Meta Types
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// TypeMeta is Type with only scalar fields (no models, connectors, props, attributes, authors, concepts).
+pub struct TypeMeta {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<TypeId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stock: Option<i32>,
+    #[serde(rename = "isAbstract", skip_serializing_if = "Option::is_none")]
+    pub is_abstract: Option<bool>,
+    #[serde(rename = "virtual", skip_serializing_if = "Option::is_none")]
+    pub virtual_type: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location: Option<LocationId>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// TypeShallow is Type with Vec fields replaced by Meta item vectors.
+pub struct TypeShallow {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<TypeId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stock: Option<i32>,
+    #[serde(rename = "isAbstract", skip_serializing_if = "Option::is_none")]
+    pub is_abstract: Option<bool>,
+    #[serde(rename = "virtual", skip_serializing_if = "Option::is_none")]
+    pub virtual_type: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location: Option<LocationId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub concepts: Option<Vec<ConceptId>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authors: Option<Vec<AuthorId>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub props: Option<Vec<PropMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub models: Option<Vec<ModelMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub connectors: Option<Vec<ConnectorMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attributes: Option<Vec<AttributeMeta>>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// DesignMeta is Design with only scalar fields.
+pub struct DesignMeta {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<DesignId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(rename = "isAbstract", skip_serializing_if = "Option::is_none")]
+    pub is_abstract: Option<bool>,
+    #[serde(rename = "canScale", skip_serializing_if = "Option::is_none")]
+    pub can_scale: Option<bool>,
+    #[serde(rename = "canMirror", skip_serializing_if = "Option::is_none")]
+    pub can_mirror: Option<bool>,
+    #[serde(rename = "activeLayer", skip_serializing_if = "Option::is_none")]
+    pub active_layer: Option<LayerId>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// DesignShallow is Design with Vec fields replaced by Meta item vectors.
+pub struct DesignShallow {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<DesignId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(rename = "isAbstract", skip_serializing_if = "Option::is_none")]
+    pub is_abstract: Option<bool>,
+    #[serde(rename = "canScale", skip_serializing_if = "Option::is_none")]
+    pub can_scale: Option<bool>,
+    #[serde(rename = "canMirror", skip_serializing_if = "Option::is_none")]
+    pub can_mirror: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub concepts: Option<Vec<ConceptId>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authors: Option<Vec<AuthorId>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub props: Option<Vec<PropMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pieces: Option<Vec<PieceMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub connections: Option<Vec<ConnectionMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub layers: Option<Vec<LayerMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub groups: Option<Vec<GroupMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stats: Option<Vec<StatMeta>>,
+    #[serde(rename = "activeLayer", skip_serializing_if = "Option::is_none")]
+    pub active_layer: Option<LayerId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attributes: Option<Vec<AttributeMeta>>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// KitMeta is Kit with only scalar fields.
+pub struct KitMeta {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remote: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub homepage: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub license: Option<String>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// KitShallow is Kit with Vec fields replaced by Meta item vectors.
+pub struct KitShallow {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remote: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub homepage: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub license: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub concepts: Option<Vec<ConceptMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Vec<TagMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub types: Option<Vec<TypeMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub designs: Option<Vec<DesignMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ports: Option<Vec<PortMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qualities: Option<Vec<QualityMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub files: Option<Vec<FileMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folders: Option<Vec<FolderMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authors: Option<Vec<AuthorMeta>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attributes: Option<Vec<AttributeMeta>>,
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
+}
+
+// #endregion 🔖Main Entity Meta Types
+
+// #region 🔖Meta And Shallow Conversion Functions
+
+impl Prop {
+    pub fn to_meta(&self) -> PropMeta {
+        PropMeta {
+            guid: self.guid.clone(),
+            quality: self.quality.clone(),
+            value: self.value.clone(),
+            unit: self.unit.clone(),
+        }
+    }
+}
+
+impl Author {
+    pub fn to_meta(&self) -> AuthorMeta {
+        AuthorMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            email: self.email.clone(),
+        }
+    }
+}
+
+impl File {
+    pub fn to_meta(&self) -> FileMeta {
+        FileMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            remote: self.remote.clone(),
+            folder: self.folder.clone(),
+            size: self.size,
+            hash: self.hash.clone(),
+            created_at: self.created_at.clone(),
+            updated_at: self.updated_at.clone(),
+        }
+    }
+}
+
+impl Folder {
+    pub fn to_meta(&self) -> FolderMeta {
+        FolderMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            parent: self.parent.clone(),
+            description: None,
+            created_at: self.created_at.clone(),
+            updated_at: self.updated_at.clone(),
+        }
+    }
+}
+
+impl Quality {
+    pub fn to_meta(&self) -> QualityMeta {
+        QualityMeta {
+            guid: self.guid.clone(),
+            key: self.key.clone(),
+            name: self.name.clone(),
+            kind: self.kind,
+            default_value: self.default_value,
+            formula: self.formula.clone(),
+            default_si_unit: self.default_si_unit.clone(),
+            default_imperial_unit: self.default_imperial_unit.clone(),
+            min: self.min,
+            is_min_excluded: self.is_min_excluded,
+            max: self.max,
+            is_max_excluded: self.is_max_excluded,
+            can_scale: self.can_scale,
+            uri: self.uri.clone(),
+        }
+    }
+}
+
+impl Port {
+    pub fn to_meta(&self) -> PortMeta {
+        PortMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+        }
+    }
+}
+
+impl Model {
+    pub fn to_meta(&self) -> ModelMeta {
+        ModelMeta {
+            guid: self.guid.clone(),
+            file: self.file.clone(),
+            name: self.name.clone(),
+            description: self.description.clone(),
+        }
+    }
+}
+
+impl Connector {
+    pub fn to_meta(&self) -> ConnectorMeta {
+        ConnectorMeta {
+            guid: self.guid.clone(),
+            point: self.point.clone(),
+            direction: self.direction.clone(),
+            t: self.t,
+            name: self.name.clone(),
+            description: self.description.clone(),
+            mandatory: self.mandatory,
+            port: self.port.clone(),
+        }
+    }
+}
+
+impl Layer {
+    pub fn to_meta(&self) -> LayerMeta {
+        LayerMeta {
+            guid: self.guid.clone(),
+            path: self.path.clone(),
+            is_hidden: self.is_hidden,
+            is_locked: self.is_locked,
+            color: self.color.clone(),
+            description: self.description.clone(),
+        }
+    }
+}
+
+impl Piece {
+    pub fn to_meta(&self) -> PieceMeta {
+        PieceMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            type_ref: self.type_ref.clone(),
+            design: self.design.clone(),
+            plane: self.plane.clone(),
+            center: self.center.clone(),
+            scale: self.scale,
+            mirror_plane: self.mirror_plane.clone(),
+            is_hidden: self.is_hidden,
+            is_locked: self.is_locked,
+            color: self.color.clone(),
+            description: self.description.clone(),
+        }
+    }
+}
+
+impl Group {
+    pub fn to_meta(&self) -> GroupMeta {
+        GroupMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            color: self.color.clone(),
+            description: self.description.clone(),
+        }
+    }
+}
+
+impl Connection {
+    pub fn to_meta(&self) -> ConnectionMeta {
+        ConnectionMeta {
+            guid: self.guid.clone(),
+            connected: self.connected.clone(),
+            connecting: self.connecting.clone(),
+            gap: self.gap,
+            shift: self.shift,
+            rise: self.rise,
+            rotation: self.rotation,
+            turn: self.turn,
+            tilt: self.tilt,
+            u: self.u,
+            v: self.v,
+            description: self.description.clone(),
+        }
+    }
+}
+
+impl Type {
+    pub fn to_meta(&self) -> TypeMeta {
+        TypeMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            parent: self.parent.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            image: self.image.clone(),
+            folder: self.folder.clone(),
+            unit: self.unit.clone(),
+            stock: self.stock,
+            is_abstract: self.is_abstract,
+            virtual_type: self.virtual_type,
+            location: self.location.clone(),
+            created_at: self.created_at.clone(),
+            updated_at: self.updated_at.clone(),
+        }
+    }
+
+    pub fn to_shallow(&self) -> TypeShallow {
+        TypeShallow {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            parent: self.parent.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            image: self.image.clone(),
+            folder: self.folder.clone(),
+            unit: self.unit.clone(),
+            stock: self.stock,
+            is_abstract: self.is_abstract,
+            virtual_type: self.virtual_type,
+            location: self.location.clone(),
+            concepts: self.concepts.clone(),
+            authors: self.authors.clone(),
+            props: self
+                .props
+                .as_ref()
+                .map(|v| v.iter().map(|p| p.to_meta()).collect()),
+            models: self
+                .models
+                .as_ref()
+                .map(|v| v.iter().map(|m| m.to_meta()).collect()),
+            connectors: self
+                .connectors
+                .as_ref()
+                .map(|v| v.iter().map(|c| c.to_meta()).collect()),
+            attributes: self.attributes.clone(),
+            created_at: self.created_at.clone(),
+            updated_at: self.updated_at.clone(),
+        }
+    }
+}
+
+impl Design {
+    pub fn to_meta(&self) -> DesignMeta {
+        DesignMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            parent: self.parent.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            image: self.image.clone(),
+            folder: self.folder.clone(),
+            unit: self.unit.clone(),
+            is_abstract: self.is_abstract,
+            can_scale: self.can_scale,
+            can_mirror: self.can_mirror,
+            active_layer: self.active_layer.clone(),
+            created_at: self.created_at.clone(),
+            updated_at: self.updated_at.clone(),
+        }
+    }
+
+    pub fn to_shallow(&self) -> DesignShallow {
+        DesignShallow {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            parent: self.parent.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            image: self.image.clone(),
+            folder: self.folder.clone(),
+            unit: self.unit.clone(),
+            is_abstract: self.is_abstract,
+            can_scale: self.can_scale,
+            can_mirror: self.can_mirror,
+            concepts: self.concepts.clone(),
+            authors: self.authors.clone(),
+            props: self
+                .props
+                .as_ref()
+                .map(|v| v.iter().map(|p| p.to_meta()).collect()),
+            pieces: self
+                .pieces
+                .as_ref()
+                .map(|v| v.iter().map(|p| p.to_meta()).collect()),
+            connections: self
+                .connections
+                .as_ref()
+                .map(|v| v.iter().map(|c| c.to_meta()).collect()),
+            layers: self
+                .layers
+                .as_ref()
+                .map(|v| v.iter().map(|l| l.to_meta()).collect()),
+            groups: self
+                .groups
+                .as_ref()
+                .map(|v| v.iter().map(|g| g.to_meta()).collect()),
+            stats: self.stats.clone(),
+            active_layer: self.active_layer.clone(),
+            attributes: self.attributes.clone(),
+            created_at: self.created_at.clone(),
+            updated_at: self.updated_at.clone(),
+        }
+    }
+}
+
+impl Kit {
+    pub fn to_meta(&self) -> KitMeta {
+        KitMeta {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            version: self.version.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            image: self.image.clone(),
+            preview: self.preview.clone(),
+            remote: self.remote.clone(),
+            homepage: self.homepage.clone(),
+            license: self.license.clone(),
+            created_at: self.created_at.clone(),
+            updated_at: self.updated_at.clone(),
+        }
+    }
+
+    pub fn to_shallow(&self) -> KitShallow {
+        KitShallow {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            version: self.version.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            image: self.image.clone(),
+            preview: self.preview.clone(),
+            remote: self.remote.clone(),
+            homepage: self.homepage.clone(),
+            license: self.license.clone(),
+            concepts: self.concepts.clone(),
+            tags: self.tags.clone(),
+            types: self
+                .types
+                .as_ref()
+                .map(|v| v.iter().map(|t| t.to_meta()).collect()),
+            designs: self
+                .designs
+                .as_ref()
+                .map(|v| v.iter().map(|d| d.to_meta()).collect()),
+            ports: self
+                .ports
+                .as_ref()
+                .map(|v| v.iter().map(|p| p.to_meta()).collect()),
+            qualities: self
+                .qualities
+                .as_ref()
+                .map(|v| v.iter().map(|q| q.to_meta()).collect()),
+            files: self
+                .files
+                .as_ref()
+                .map(|v| v.iter().map(|f| f.to_meta()).collect()),
+            folders: self
+                .folders
+                .as_ref()
+                .map(|v| v.iter().map(|f| f.to_meta()).collect()),
+            authors: self
+                .authors
+                .as_ref()
+                .map(|v| v.iter().map(|a| a.to_meta()).collect()),
+            attributes: self.attributes.clone(),
+            created_at: self.created_at.clone(),
+            updated_at: self.updated_at.clone(),
+        }
+    }
+}
+
+// #endregion 🔖Meta And Shallow Conversion Functions
+
+// #endregion 🔖Meta And Shallow Types
+
 // #region 🔖HasGuid Trait
 // [👤semio📚rs💻semio🔖hasguidtrait](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait)
 // HasGuid Trait MUST provide the hasguid trait functionality.
@@ -4246,6 +5065,348 @@ pub fn get_design_change(before: &Design, after: &Design) -> DesignChange {
 
 // #endregion 🔖Kit Change Helpers
 
+// #region 🔖Filter
+// [👤semio📚rs💻semio🔖filter](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter)
+// Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
+
+fn select_best_model_for_filter(models: &[Model], selected_tag_guids: &[String]) -> Option<Model> {
+    if models.is_empty() {
+        return None;
+    }
+    if selected_tag_guids.is_empty() {
+        if let Some(model) = models.iter().find(|model| {
+            model
+                .tags
+                .as_ref()
+                .map(|tags| tags.is_empty())
+                .unwrap_or(true)
+        }) {
+            return Some(model.clone());
+        }
+        return Some(models[0].clone());
+    }
+
+    let filtered: Vec<Model> = models
+        .iter()
+        .filter(|model| {
+            let model_tag_guids: HashSet<String> = model
+                .tags
+                .as_ref()
+                .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
+                .unwrap_or_default();
+            selected_tag_guids
+                .iter()
+                .all(|selected| model_tag_guids.contains(selected))
+        })
+        .cloned()
+        .collect();
+    if filtered.is_empty() {
+        return None;
+    }
+
+    let mut best_model = filtered[0].clone();
+    let mut best_score = -1.0_f64;
+    for model in filtered {
+        let model_tag_guids: HashSet<String> = model
+            .tags
+            .as_ref()
+            .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
+            .unwrap_or_default();
+        let selected: HashSet<String> = selected_tag_guids.iter().cloned().collect();
+        let intersection = model_tag_guids.intersection(&selected).count();
+        let union = model_tag_guids.union(&selected).count();
+        let score = if union == 0 {
+            0.0
+        } else {
+            intersection as f64 / union as f64
+        };
+        if score > best_score {
+            best_score = score;
+            best_model = model;
+        }
+    }
+    Some(best_model)
+}
+
+/// Filters a kit to only include entities related to a specific design.
+/// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
+/// files not used by selected models, and keeps at most one model per type according to the optional tags.
+/// [👤semio📚rs💻semio🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit_with_design)
+pub fn filter_kit_with_design(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
+    let design = match find_design_in_kit(kit, design_guid) {
+        Some(design) => design,
+        None => {
+            return Kit {
+                guid: kit.guid.clone(),
+                name: kit.name.clone(),
+                version: kit.version.clone(),
+                description: None,
+                icon: None,
+                image: None,
+                preview: None,
+                remote: None,
+                homepage: None,
+                license: None,
+                concepts: None,
+                tags: None,
+                types: None,
+                designs: None,
+                ports: None,
+                qualities: None,
+                files: None,
+                folders: None,
+                authors: None,
+                attributes: None,
+                created_at: None,
+                updated_at: None,
+            }
+        }
+    };
+
+    let mut used_type_guids: HashSet<String> = HashSet::new();
+    let mut used_design_guids: HashSet<String> = HashSet::from([design_guid.to_string()]);
+    for piece in design
+        .pieces
+        .as_ref()
+        .map(|pieces| pieces.as_slice())
+        .unwrap_or(&[])
+    {
+        if let Some(piece_type) = piece.type_ref.as_ref() {
+            used_type_guids.insert(piece_type.guid.clone());
+        }
+        if let Some(piece_design) = piece.design.as_ref() {
+            used_design_guids.insert(piece_design.guid.clone());
+        }
+    }
+
+    let type_by_guid: HashMap<String, Type> = kit
+        .types
+        .as_ref()
+        .map(|types| {
+            types
+                .iter()
+                .cloned()
+                .map(|type_item| (type_item.guid.clone(), type_item))
+                .collect()
+        })
+        .unwrap_or_default();
+    fn collect_type_ancestors(
+        type_by_guid: &HashMap<String, Type>,
+        used_type_guids: &mut HashSet<String>,
+        type_guid: &str,
+    ) {
+        let Some(type_item) = type_by_guid.get(type_guid) else {
+            return;
+        };
+        let Some(parent) = type_item.parent.as_ref() else {
+            return;
+        };
+        if used_type_guids.insert(parent.guid.clone()) {
+            collect_type_ancestors(type_by_guid, used_type_guids, &parent.guid);
+        }
+    }
+    let type_snapshot: Vec<String> = used_type_guids.iter().cloned().collect();
+    for type_guid in type_snapshot {
+        collect_type_ancestors(&type_by_guid, &mut used_type_guids, &type_guid);
+    }
+
+    let all_tags: &[Tag] = kit.tags.as_deref().unwrap_or(&[]);
+    let mut resolved_tag_guids: Vec<String> = Vec::new();
+    for tag_value in tags.unwrap_or(&[]) {
+        if let Some(tag) = all_tags.iter().find(|tag| tag.guid == *tag_value) {
+            resolved_tag_guids.push(tag.guid.clone());
+            continue;
+        }
+        for tag in all_tags.iter().filter(|tag| tag.name == *tag_value) {
+            resolved_tag_guids.push(tag.guid.clone());
+        }
+    }
+
+    let mut used_port_guids: HashSet<String> = HashSet::new();
+    let mut used_file_guids: HashSet<String> = HashSet::new();
+    let mut used_tag_guids: HashSet<String> = HashSet::new();
+    let mut used_concept_guids: HashSet<String> = HashSet::new();
+    let mut used_quality_guids: HashSet<String> = HashSet::new();
+    let mut used_author_guids: HashSet<String> = HashSet::new();
+    let mut used_folder_names: HashSet<String> = HashSet::new();
+    let mut selected_models: HashMap<String, Model> = HashMap::new();
+
+    let mut collect_quality_from_props = |props: &[Prop]| {
+        for prop in props {
+            used_quality_guids.insert(prop.quality.guid.clone());
+        }
+    };
+
+    for type_guid in &used_type_guids {
+        let Some(type_item) = type_by_guid.get(type_guid) else {
+            continue;
+        };
+        if let Some(folder) = type_item.folder.as_ref() {
+            used_folder_names.insert(folder.clone());
+        }
+        for connector in type_item.connectors.as_deref().unwrap_or(&[]) {
+            if let Some(port) = connector.port.as_ref() {
+                used_port_guids.insert(port.guid.clone());
+            }
+            collect_quality_from_props(connector.props.as_deref().unwrap_or(&[]));
+        }
+        collect_quality_from_props(type_item.props.as_deref().unwrap_or(&[]));
+        for author in type_item.authors.as_deref().unwrap_or(&[]) {
+            used_author_guids.insert(author.guid.clone());
+        }
+        for concept in type_item.concepts.as_deref().unwrap_or(&[]) {
+            used_concept_guids.insert(concept.guid.clone());
+        }
+        if let Some(best_model) = select_best_model_for_filter(
+            type_item.models.as_deref().unwrap_or(&[]),
+            &resolved_tag_guids,
+        ) {
+            used_file_guids.insert(best_model.file.guid.clone());
+            for tag in best_model.tags.as_deref().unwrap_or(&[]) {
+                used_tag_guids.insert(tag.guid.clone());
+            }
+            selected_models.insert(type_guid.clone(), best_model);
+        }
+    }
+
+    for piece in design.pieces.as_deref().unwrap_or(&[]) {
+        collect_quality_from_props(piece.props.as_deref().unwrap_or(&[]));
+    }
+    for concept in design.concepts.as_deref().unwrap_or(&[]) {
+        used_concept_guids.insert(concept.guid.clone());
+    }
+    for author in design.authors.as_deref().unwrap_or(&[]) {
+        used_author_guids.insert(author.guid.clone());
+    }
+    let port_snapshot: Vec<String> = used_port_guids.iter().cloned().collect();
+    for port_guid in port_snapshot {
+        if let Some(port) = kit
+            .ports
+            .as_deref()
+            .unwrap_or(&[])
+            .iter()
+            .find(|port| port.guid == port_guid)
+        {
+            for compatible in port.compatible_interfaces.as_deref().unwrap_or(&[]) {
+                used_port_guids.insert(compatible.guid.clone());
+            }
+        }
+    }
+    for tag_guid in resolved_tag_guids {
+        used_tag_guids.insert(tag_guid);
+    }
+
+    let filtered_types = kit
+        .types
+        .as_deref()
+        .unwrap_or(&[])
+        .iter()
+        .filter(|type_item| used_type_guids.contains(&type_item.guid))
+        .map(|type_item| {
+            let mut filtered_type = type_item.clone();
+            filtered_type.models = Some(
+                selected_models
+                    .get(&type_item.guid)
+                    .cloned()
+                    .into_iter()
+                    .collect(),
+            );
+            filtered_type
+        })
+        .collect();
+
+    Kit {
+        guid: kit.guid.clone(),
+        name: kit.name.clone(),
+        version: kit.version.clone(),
+        description: kit.description.clone(),
+        icon: kit.icon.clone(),
+        image: kit.image.clone(),
+        preview: kit.preview.clone(),
+        remote: kit.remote.clone(),
+        homepage: kit.homepage.clone(),
+        license: kit.license.clone(),
+        types: Some(filtered_types),
+        designs: Some(
+            kit.designs
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|design_item| used_design_guids.contains(&design_item.guid))
+                .cloned()
+                .collect(),
+        ),
+        ports: Some(
+            kit.ports
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|port| used_port_guids.contains(&port.guid))
+                .cloned()
+                .collect(),
+        ),
+        files: Some(
+            kit.files
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|file| used_file_guids.contains(&file.guid))
+                .cloned()
+                .collect(),
+        ),
+        tags: Some(
+            kit.tags
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|tag| used_tag_guids.contains(&tag.guid))
+                .cloned()
+                .collect(),
+        ),
+        concepts: Some(
+            kit.concepts
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|concept| used_concept_guids.contains(&concept.guid))
+                .cloned()
+                .collect(),
+        ),
+        qualities: Some(
+            kit.qualities
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|quality| used_quality_guids.contains(&quality.guid))
+                .cloned()
+                .collect(),
+        ),
+        folders: Some(
+            kit.folders
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|folder| used_folder_names.contains(&folder.name))
+                .cloned()
+                .collect(),
+        ),
+        authors: Some(
+            kit.authors
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|author| used_author_guids.contains(&author.guid))
+                .cloned()
+                .collect(),
+        ),
+        attributes: kit.attributes.clone(),
+        created_at: kit.created_at.clone(),
+        updated_at: kit.updated_at.clone(),
+    }
+}
+
+// #endregion 🔖Filter
+
 // #region 🔖FlattenDesign
 // [👤semio📚rs💻semio🔖flattendesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign)
 // FlattenDesign MUST provide the flattendesign functionality.
@@ -5605,7 +6766,10 @@ pub struct GeometricInsights {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn read_gltf_mesh_data(json: &serde_json::Value, bin: &[u8]) -> Option<(Vec<[f32; 3]>, Vec<u32>, [f32; 3], [f32; 3])> {
+fn read_gltf_mesh_data(
+    json: &serde_json::Value,
+    bin: &[u8],
+) -> Option<(Vec<[f32; 3]>, Vec<u32>, [f32; 3], [f32; 3])> {
     let accessors = json.get("accessors")?.as_array()?;
     let buffer_views = json.get("bufferViews")?.as_array()?;
     let gltf_int = |v: Option<&serde_json::Value>| v.and_then(|x| x.as_u64()).unwrap_or(0) as usize;
@@ -5632,9 +6796,24 @@ fn read_gltf_mesh_data(json: &serde_json::Value, bin: &[u8]) -> Option<(Vec<[f32
                 if start + 12 > bin.len() {
                     break;
                 }
-                let x = f32::from_le_bytes([bin[start], bin[start + 1], bin[start + 2], bin[start + 3]]);
-                let y = f32::from_le_bytes([bin[start + 4], bin[start + 5], bin[start + 6], bin[start + 7]]);
-                let z = f32::from_le_bytes([bin[start + 8], bin[start + 9], bin[start + 10], bin[start + 11]]);
+                let x = f32::from_le_bytes([
+                    bin[start],
+                    bin[start + 1],
+                    bin[start + 2],
+                    bin[start + 3],
+                ]);
+                let y = f32::from_le_bytes([
+                    bin[start + 4],
+                    bin[start + 5],
+                    bin[start + 6],
+                    bin[start + 7],
+                ]);
+                let z = f32::from_le_bytes([
+                    bin[start + 8],
+                    bin[start + 9],
+                    bin[start + 10],
+                    bin[start + 11],
+                ]);
                 let v = [x, y, z];
                 positions.push(v);
                 pos_min[0] = pos_min[0].min(x);
@@ -5665,7 +6844,12 @@ fn read_gltf_mesh_data(json: &serde_json::Value, bin: &[u8]) -> Option<(Vec<[f32
                     let idx = match component_type {
                         5121 => bin.get(start).copied().unwrap_or(0) as u32,
                         5123 => u16::from_le_bytes([bin[start], bin[start + 1]]) as u32,
-                        _ => u32::from_le_bytes([bin[start], bin[start + 1], bin[start + 2], bin[start + 3]]),
+                        _ => u32::from_le_bytes([
+                            bin[start],
+                            bin[start + 1],
+                            bin[start + 2],
+                            bin[start + 3],
+                        ]),
                     };
                     indices.push(vertex_base as u32 + idx);
                 }
@@ -5689,21 +6873,31 @@ fn read_gltf_mesh_data(json: &serde_json::Value, bin: &[u8]) -> Option<(Vec<[f32
 /// [👤semio📚rs💻semio🔖geometricinsights🛠️getgeometricinsightsformodel](repo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights/d/i/get_geometric_insights_for_model)
 #[cfg(not(target_arch = "wasm32"))]
 pub fn get_geometric_insights_for_model(model: &[u8]) -> Result<GeometricInsights> {
-    let (json, bin) = if model.len() >= 4 && u32::from_le_bytes([model[0], model[1], model[2], model[3]]) == 0x46546C67 {
-        parse_glb(model).ok_or_else(|| SemioError::InvalidOperation { message: "Invalid GLB".to_string() })?
+    let (json, bin) = if model.len() >= 4
+        && u32::from_le_bytes([model[0], model[1], model[2], model[3]]) == 0x46546C67
+    {
+        parse_glb(model).ok_or_else(|| SemioError::InvalidOperation {
+            message: "Invalid GLB".to_string(),
+        })?
     } else {
-        let json: serde_json::Value = serde_json::from_slice(model)
-            .map_err(|e| SemioError::InvalidOperation { message: format!("Invalid glTF JSON: {}", e) })?;
+        let json: serde_json::Value =
+            serde_json::from_slice(model).map_err(|e| SemioError::InvalidOperation {
+                message: format!("Invalid glTF JSON: {}", e),
+            })?;
         let mut bin_data = Vec::new();
         if let Some(buffers) = json.get("buffers").and_then(|b| b.as_array()) {
             if let Some(buf) = buffers.first().and_then(|b| b.as_object()) {
                 if let Some(uri) = buf.get("uri").and_then(|u| u.as_str()) {
                     if uri.starts_with("data:") {
                         if let Some(b64) = uri.split(',').nth(1) {
-                            let b64_clean: String = b64.chars().filter(|c| !c.is_whitespace()).collect();
+                            let b64_clean: String =
+                                b64.chars().filter(|c| !c.is_whitespace()).collect();
                             bin_data = base64::engine::general_purpose::STANDARD
                                 .decode(&b64_clean)
-                                .or_else(|_| base64::engine::general_purpose::STANDARD_NO_PAD.decode(&b64_clean))
+                                .or_else(|_| {
+                                    base64::engine::general_purpose::STANDARD_NO_PAD
+                                        .decode(&b64_clean)
+                                })
                                 .unwrap_or_default();
                         }
                     }
@@ -5713,8 +6907,10 @@ pub fn get_geometric_insights_for_model(model: &[u8]) -> Result<GeometricInsight
         (json, bin_data)
     };
 
-    let (positions, indices, _pos_min, _pos_max) = read_gltf_mesh_data(&json, &bin)
-        .ok_or_else(|| SemioError::InvalidOperation { message: "No mesh data in model".to_string() })?;
+    let (positions, indices, _pos_min, _pos_max) =
+        read_gltf_mesh_data(&json, &bin).ok_or_else(|| SemioError::InvalidOperation {
+            message: "No mesh data in model".to_string(),
+        })?;
 
     let n = positions.len();
     let mut sx_min = f64::MAX;
@@ -5762,10 +6958,12 @@ pub fn get_geometric_insights_for_model(model: &[u8]) -> Result<GeometricInsight
             ab[2] * ac[0] - ab[0] * ac[2],
             ab[0] * ac[1] - ab[1] * ac[0],
         ];
-        area += 0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt() as f64;
-        volume += (1.0 / 6.0) * (a[0] as f64 * (b[1] as f64 * c[2] as f64 - b[2] as f64 * c[1] as f64)
-            + a[1] as f64 * (b[2] as f64 * c[0] as f64 - b[0] as f64 * c[2] as f64)
-            + a[2] as f64 * (b[0] as f64 * c[1] as f64 - b[1] as f64 * c[0] as f64));
+        area +=
+            0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt() as f64;
+        volume += (1.0 / 6.0)
+            * (a[0] as f64 * (b[1] as f64 * c[2] as f64 - b[2] as f64 * c[1] as f64)
+                + a[1] as f64 * (b[2] as f64 * c[0] as f64 - b[0] as f64 * c[2] as f64)
+                + a[2] as f64 * (b[0] as f64 * c[1] as f64 - b[1] as f64 * c[0] as f64));
     }
     volume = volume.abs();
     let face_count = indices.len() / 3;
@@ -5820,22 +7018,30 @@ pub fn get_geometric_insights_for_model_path(path: &str) -> Result<GeometricInsi
         message: format!("Failed to read model file: {}", e),
     })?;
     if path.to_lowercase().ends_with(".gltf") {
-        let json: serde_json::Value = serde_json::from_slice(&data)
-            .map_err(|e| SemioError::InvalidOperation { message: format!("Invalid glTF JSON: {}", e) })?;
+        let json: serde_json::Value =
+            serde_json::from_slice(&data).map_err(|e| SemioError::InvalidOperation {
+                message: format!("Invalid glTF JSON: {}", e),
+            })?;
         let mut bin_data = Vec::new();
         if let Some(buffers) = json.get("buffers").and_then(|b| b.as_array()) {
             if let Some(buf) = buffers.first().and_then(|b| b.as_object()) {
                 if let Some(uri) = buf.get("uri").and_then(|u| u.as_str()) {
                     if uri.starts_with("data:") {
                         if let Some(b64) = uri.split(',').nth(1) {
-                            let b64_clean: String = b64.chars().filter(|c| !c.is_whitespace()).collect();
+                            let b64_clean: String =
+                                b64.chars().filter(|c| !c.is_whitespace()).collect();
                             bin_data = base64::engine::general_purpose::STANDARD
                                 .decode(&b64_clean)
-                                .or_else(|_| base64::engine::general_purpose::STANDARD_NO_PAD.decode(&b64_clean))
+                                .or_else(|_| {
+                                    base64::engine::general_purpose::STANDARD_NO_PAD
+                                        .decode(&b64_clean)
+                                })
                                 .unwrap_or_default();
                         }
                     } else {
-                        let dir = std::path::Path::new(path).parent().unwrap_or(std::path::Path::new("."));
+                        let dir = std::path::Path::new(path)
+                            .parent()
+                            .unwrap_or(std::path::Path::new("."));
                         let bin_path = dir.join(uri);
                         if let Ok(b) = std::fs::read(&bin_path) {
                             bin_data = b;
@@ -5845,7 +7051,9 @@ pub fn get_geometric_insights_for_model_path(path: &str) -> Result<GeometricInsi
             }
         }
         let (positions, indices, _pos_min, _pos_max) = read_gltf_mesh_data(&json, &bin_data)
-            .ok_or_else(|| SemioError::InvalidOperation { message: "No mesh data in model".to_string() })?;
+            .ok_or_else(|| SemioError::InvalidOperation {
+                message: "No mesh data in model".to_string(),
+            })?;
         let n = positions.len();
         let mut sx_min = f64::MAX;
         let mut sy_min = f64::MAX;
@@ -5892,10 +7100,12 @@ pub fn get_geometric_insights_for_model_path(path: &str) -> Result<GeometricInsi
                 ab[2] * ac[0] - ab[0] * ac[2],
                 ab[0] * ac[1] - ab[1] * ac[0],
             ];
-            area += 0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt() as f64;
-            volume += (1.0 / 6.0) * (a[0] as f64 * (b[1] as f64 * c[2] as f64 - b[2] as f64 * c[1] as f64)
-                + a[1] as f64 * (b[2] as f64 * c[0] as f64 - b[0] as f64 * c[2] as f64)
-                + a[2] as f64 * (b[0] as f64 * c[1] as f64 - b[1] as f64 * c[0] as f64));
+            area += 0.5
+                * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt() as f64;
+            volume += (1.0 / 6.0)
+                * (a[0] as f64 * (b[1] as f64 * c[2] as f64 - b[2] as f64 * c[1] as f64)
+                    + a[1] as f64 * (b[2] as f64 * c[0] as f64 - b[0] as f64 * c[2] as f64)
+                    + a[2] as f64 * (b[0] as f64 * c[1] as f64 - b[1] as f64 * c[0] as f64));
         }
         volume = volume.abs();
         let face_count = indices.len() / 3;
@@ -8004,6 +9214,168 @@ mod tests {
 
     // #endregion 🔖DesignModel Tests
 
+    // #region 🔖KitFilter Tests
+    // [👤semio📚rs💻semio🔖tests🔖kitfiltertests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/KitFilter%20Tests)
+    // KitFilter Tests MUST verify design-scoped kit extraction.
+
+    mod kit_filter {
+        use super::*;
+
+        #[test]
+        fn nakagin_capsule_tower_filter_produces_expected_subset() {
+            let kit = load_kit("kit_metabolism.json");
+            let expected = load_kit("nakagin-capsule-tower.filtered.kit.semio.json");
+            let design = kit
+                .designs
+                .as_ref()
+                .and_then(|designs| {
+                    designs.iter().find(|design| {
+                        design.name == "Nakagin Capsule Tower" && design.parent.is_none()
+                    })
+                })
+                .expect("Nakagin Capsule Tower design not found");
+
+            let filtered = filter_kit_with_design(&kit, &design.guid, None);
+
+            assert_eq!(
+                filtered.designs.as_ref().map(|v| v.len()).unwrap_or(0),
+                expected.designs.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
+            assert_eq!(
+                filtered.types.as_ref().map(|v| v.len()).unwrap_or(0),
+                expected.types.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
+            assert_eq!(
+                filtered.files.as_ref().map(|v| v.len()).unwrap_or(0),
+                expected.files.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
+            assert_eq!(
+                filtered.ports.as_ref().map(|v| v.len()).unwrap_or(0),
+                expected.ports.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
+            assert_eq!(
+                filtered.qualities.as_ref().map(|v| v.len()).unwrap_or(0),
+                expected.qualities.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
+            assert_eq!(
+                filtered.authors.as_ref().map(|v| v.len()).unwrap_or(0),
+                expected.authors.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
+
+            let filtered_design = filtered
+                .designs
+                .as_ref()
+                .and_then(|designs| {
+                    designs
+                        .iter()
+                        .find(|filtered_design| filtered_design.guid == design.guid)
+                })
+                .expect("Filtered design not found");
+            assert_eq!(
+                filtered_design
+                    .pieces
+                    .as_ref()
+                    .map(|v| v.len())
+                    .unwrap_or(0),
+                design.pieces.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
+
+            let empty_types = Vec::new();
+            for expected_type in expected.types.as_ref().unwrap_or(&empty_types) {
+                let filtered_type = filtered
+                    .types
+                    .as_ref()
+                    .and_then(|types| {
+                        types
+                            .iter()
+                            .find(|filtered_type| filtered_type.guid == expected_type.guid)
+                    })
+                    .expect("Expected filtered type missing");
+                assert_eq!(
+                    filtered_type.models.as_ref().map(|v| v.len()).unwrap_or(0),
+                    expected_type.models.as_ref().map(|v| v.len()).unwrap_or(0)
+                );
+            }
+
+            let empty_pieces = Vec::new();
+            for piece in filtered_design.pieces.as_ref().unwrap_or(&empty_pieces) {
+                if let Some(piece_type) = piece.type_ref.as_ref() {
+                    assert!(
+                        filtered
+                            .types
+                            .as_ref()
+                            .map(|types| types
+                                .iter()
+                                .any(|filtered_type| filtered_type.guid == piece_type.guid))
+                            .unwrap_or(false),
+                        "Missing type {} for filtered piece",
+                        piece_type.guid
+                    );
+                }
+            }
+
+            for filtered_type in filtered.types.as_ref().unwrap_or(&empty_types) {
+                assert!(filtered_type.models.as_ref().map(|v| v.len()).unwrap_or(0) <= 1);
+                let empty_models = Vec::new();
+                for model in filtered_type.models.as_ref().unwrap_or(&empty_models) {
+                    assert!(
+                        filtered
+                            .files
+                            .as_ref()
+                            .map(|files| files.iter().any(|file| file.guid == model.file.guid))
+                            .unwrap_or(false),
+                        "Missing file {} for filtered type {}",
+                        model.file.guid,
+                        filtered_type.guid
+                    );
+                }
+                let empty_connectors = Vec::new();
+                for connector in filtered_type
+                    .connectors
+                    .as_ref()
+                    .unwrap_or(&empty_connectors)
+                {
+                    if let Some(port) = connector.port.as_ref() {
+                        assert!(
+                            filtered
+                                .ports
+                                .as_ref()
+                                .map(|ports| ports
+                                    .iter()
+                                    .any(|filtered_port| filtered_port.guid == port.guid))
+                                .unwrap_or(false),
+                            "Missing port {} for filtered type {}",
+                            port.guid,
+                            filtered_type.guid
+                        );
+                    }
+                }
+            }
+        }
+
+        #[test]
+        fn nakagin_capsule_tower_filter_preserves_metadata() {
+            let kit = load_kit("kit_metabolism.json");
+            let design = kit
+                .designs
+                .as_ref()
+                .and_then(|designs| {
+                    designs.iter().find(|design| {
+                        design.name == "Nakagin Capsule Tower" && design.parent.is_none()
+                    })
+                })
+                .expect("Nakagin Capsule Tower design not found");
+
+            let filtered = filter_kit_with_design(&kit, &design.guid, None);
+
+            assert_eq!(filtered.guid, kit.guid);
+            assert_eq!(filtered.name, kit.name);
+            assert_eq!(filtered.version, kit.version);
+        }
+    }
+
+    // #endregion 🔖KitFilter Tests
+
     // #region 🔖Model/KPI Tests
     // [👤semio📚rs💻semio🔖tests🔖modelkpi](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Model%20KPI)
     // Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf.
@@ -8019,11 +9391,12 @@ mod tests {
                 return;
             }
             let data = std::fs::read(path).expect("read gltf file");
-            let insights = get_geometric_insights_for_model(&data).expect("get_geometric_insights_for_model");
+            let insights =
+                get_geometric_insights_for_model(&data).expect("get_geometric_insights_for_model");
             // Save per-language report mirroring ExportDesignModel behavior.
+            use serde_json::json;
             use std::fs;
             use std::path::PathBuf;
-            use serde_json::json;
 
             let mut reports_dir = PathBuf::from("..");
             reports_dir.push("..");
@@ -8054,19 +9427,29 @@ mod tests {
                 "vertex_count": insights.vertex_count,
             });
             let report_path = reports_dir.join("rs.json");
-            fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap()).expect("Failed to write report");
+            fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap())
+                .expect("Failed to write report");
 
             let canonical_path = std::path::Path::new(ASSETS_DIR).join("model-kpi-nakagin.json");
-            let canonical_bytes = fs::read(&canonical_path).expect("read canonical model-kpi asset");
-            let canonical: serde_json::Value = serde_json::from_slice(&canonical_bytes).expect("parse canonical model-kpi asset");
-            let skip: std::collections::HashSet<&str> = ["centroid", "total_surface_area"].into_iter().collect();
+            let canonical_bytes =
+                fs::read(&canonical_path).expect("read canonical model-kpi asset");
+            let canonical: serde_json::Value =
+                serde_json::from_slice(&canonical_bytes).expect("parse canonical model-kpi asset");
+            let skip: std::collections::HashSet<&str> =
+                ["centroid", "total_surface_area"].into_iter().collect();
             let canon_obj = canonical.as_object().expect("canonical is object");
             for (k, v) in canon_obj {
                 if skip.contains(k.as_str()) {
                     continue;
                 }
                 let got = report.get(k).expect("report has key");
-                assert!(serde_json::Value::eq(got, v), "mismatch for {}: {:?} != {:?}", k, got, v);
+                assert!(
+                    serde_json::Value::eq(got, v),
+                    "mismatch for {}: {:?} != {:?}",
+                    k,
+                    got,
+                    v
+                );
             }
         }
     }
@@ -8362,6 +9745,149 @@ mod tests {
     }
 
     // #endregion 🔖Export Design Model Tests
+
+    // #region 🔖Meta And Shallow Tests
+
+    fn load_json<T: serde::de::DeserializeOwned>(filename: &str) -> T {
+        let path = Path::new(ASSETS_DIR).join(filename);
+        let data = fs::read_to_string(&path).expect(&format!("Failed to read {}", path.display()));
+        serde_json::from_str(&data).expect(&format!("Failed to deserialize {}", filename))
+    }
+
+    #[test]
+    fn type_meta_from_asset() {
+        let meta: TypeMeta = load_json("tambour.meta.type.semio.json");
+        assert_eq!(meta.name, "Tambour");
+        assert!(!meta.guid.is_empty());
+        assert!(meta.description.is_some());
+        assert!(meta.unit.is_some());
+    }
+
+    #[test]
+    fn type_shallow_from_asset() {
+        let shallow: TypeShallow = load_json("tambour.shallow.type.semio.json");
+        assert_eq!(shallow.name, "Tambour");
+        assert!(!shallow.guid.is_empty());
+        assert!(shallow.connectors.is_some());
+        assert!(shallow.models.is_some());
+        assert!(shallow.props.is_some());
+    }
+
+    #[test]
+    fn design_meta_from_asset() {
+        let meta: DesignMeta = load_json("nakagin-capsule-tower.meta.design.semio.json");
+        assert_eq!(meta.name, "Nakagin Capsule Tower");
+        assert!(!meta.guid.is_empty());
+        assert!(meta.description.is_some());
+        assert!(meta.unit.is_some());
+    }
+
+    #[test]
+    fn design_shallow_from_asset() {
+        let shallow: DesignShallow = load_json("nakagin-capsule-tower.shallow.design.semio.json");
+        assert_eq!(shallow.name, "Nakagin Capsule Tower");
+        assert!(!shallow.guid.is_empty());
+        assert!(shallow.pieces.is_some());
+        assert!(shallow.connections.is_some());
+        assert!(shallow.layers.is_some());
+    }
+
+    #[test]
+    fn kit_meta_from_asset() {
+        let meta: KitMeta = load_json("metabolism.meta.kit.semio.json");
+        assert_eq!(meta.name, "Metabolism");
+        assert!(!meta.guid.is_empty());
+        assert!(meta.version.is_some());
+        assert!(meta.description.is_some());
+    }
+
+    #[test]
+    fn kit_shallow_from_asset() {
+        let shallow: KitShallow = load_json("metabolism.shallow.kit.semio.json");
+        assert_eq!(shallow.name, "Metabolism");
+        assert!(!shallow.guid.is_empty());
+        assert!(shallow.types.is_some());
+        assert!(shallow.designs.is_some());
+        assert!(shallow.tags.is_some());
+        assert!(shallow.concepts.is_some());
+        assert!(shallow.ports.is_some());
+        assert!(shallow.qualities.is_some());
+        assert!(shallow.files.is_some());
+        assert!(shallow.folders.is_some());
+        assert!(shallow.authors.is_some());
+    }
+
+    #[test]
+    fn kit_to_meta_to_shallow() {
+        let kit = load_kit("kit_metabolism.json");
+        let meta = kit.to_meta();
+        assert_eq!(meta.name, kit.name);
+        assert_eq!(meta.guid, kit.guid);
+        assert_eq!(meta.version, kit.version);
+        assert_eq!(meta.description, kit.description);
+
+        let shallow = kit.to_shallow();
+        assert_eq!(shallow.name, kit.name);
+        assert_eq!(shallow.guid, kit.guid);
+        assert_eq!(
+            shallow.types.as_ref().map(|v| v.len()),
+            kit.types.as_ref().map(|v| v.len())
+        );
+        assert_eq!(
+            shallow.designs.as_ref().map(|v| v.len()),
+            kit.designs.as_ref().map(|v| v.len())
+        );
+
+        // Verify type meta conversion preserves names
+        if let (Some(full_types), Some(meta_types)) = (&kit.types, &shallow.types) {
+            for (full, meta) in full_types.iter().zip(meta_types.iter()) {
+                assert_eq!(full.guid, meta.guid);
+                assert_eq!(full.name, meta.name);
+            }
+        }
+
+        // Verify design meta conversion preserves names
+        if let (Some(full_designs), Some(meta_designs)) = (&kit.designs, &shallow.designs) {
+            for (full, meta) in full_designs.iter().zip(meta_designs.iter()) {
+                assert_eq!(full.guid, meta.guid);
+                assert_eq!(full.name, meta.name);
+            }
+        }
+
+        // Verify a single type to_meta and to_shallow roundtrip
+        if let Some(types) = &kit.types {
+            let first_type = &types[0];
+            let type_meta = first_type.to_meta();
+            assert_eq!(type_meta.guid, first_type.guid);
+            assert_eq!(type_meta.name, first_type.name);
+
+            let type_shallow = first_type.to_shallow();
+            assert_eq!(type_shallow.guid, first_type.guid);
+            assert_eq!(type_shallow.name, first_type.name);
+            assert_eq!(
+                type_shallow.connectors.as_ref().map(|v| v.len()),
+                first_type.connectors.as_ref().map(|v| v.len())
+            );
+        }
+
+        // Verify a single design to_meta and to_shallow roundtrip
+        if let Some(designs) = &kit.designs {
+            let first_design = &designs[0];
+            let design_meta = first_design.to_meta();
+            assert_eq!(design_meta.guid, first_design.guid);
+            assert_eq!(design_meta.name, first_design.name);
+
+            let design_shallow = first_design.to_shallow();
+            assert_eq!(design_shallow.guid, first_design.guid);
+            assert_eq!(design_shallow.name, first_design.name);
+            assert_eq!(
+                design_shallow.pieces.as_ref().map(|v| v.len()),
+                first_design.pieces.as_ref().map(|v| v.len())
+            );
+        }
+    }
+
+    // #endregion 🔖Meta And Shallow Tests
 }
 
 // #endregion 🔖Tests
@@ -8369,26 +9895,26 @@ mod tests {
 // #region 🔖Benchmark
 #[cfg(test)]
 pub mod benchmark {
-    use std::time::Instant;
+    use super::*;
     use std::fs;
     use std::path::Path;
-    use super::*;
-    
+    use std::time::Instant;
+
     const ASSETS_DIR: &str = "../assets/semio";
     const ITERATIONS: u32 = 3;
-    
+
     fn load_kit(filename: &str) -> Kit {
         let path = Path::new(ASSETS_DIR).join(filename);
         let data = fs::read_to_string(&path).expect(&format!("Failed to read {}", path.display()));
         serde_json::from_str(&data).expect("Failed to deserialize kit")
     }
-    
+
     fn load_kit_diff(filename: &str) -> KitDiff {
         let path = Path::new(ASSETS_DIR).join(filename);
         let data = fs::read_to_string(&path).expect(&format!("Failed to read {}", path.display()));
         serde_json::from_str(&data).expect("Failed to deserialize kit diff")
     }
-    
+
     fn bench<F: Fn()>(name: &str, f: F) {
         let start = Instant::now();
         for _ in 0..ITERATIONS {
@@ -8397,85 +9923,101 @@ pub mod benchmark {
         let duration = start.elapsed().as_secs_f64() / ITERATIONS as f64;
         println!("{},{:.6}", name, duration);
     }
-    
+
     fn find_design<'a>(kit: &'a Kit, name: &str, parent_name: Option<&str>) -> &'a Design {
         let parent_guid = if let Some(pn) = parent_name {
-            kit.designs.iter().flatten().find(|d| d.name == pn).map(|d| d.guid.clone())
+            kit.designs
+                .iter()
+                .flatten()
+                .find(|d| d.name == pn)
+                .map(|d| d.guid.clone())
         } else {
             None
         };
-        
+
         if parent_name.is_some() && parent_guid.is_none() {
             panic!("Parent {} not found", parent_name.unwrap());
         }
-        
-        kit.designs.iter().flatten().find(|d| {
-            if d.name != name { return false; }
-            match &d.parent {
-                Some(p) => match &parent_guid {
-                    Some(pg) => p.guid == *pg,
-                    None => false,
-                },
-                None => parent_guid.is_none(),
-            }
-        }).expect(&format!("Design {} not found", name))
+
+        kit.designs
+            .iter()
+            .flatten()
+            .find(|d| {
+                if d.name != name {
+                    return false;
+                }
+                match &d.parent {
+                    Some(p) => match &parent_guid {
+                        Some(pg) => p.guid == *pg,
+                        None => false,
+                    },
+                    None => parent_guid.is_none(),
+                }
+            })
+            .expect(&format!("Design {} not found", name))
     }
-    
+
     pub fn run_benchmarks() {
         let kit_metabolism = load_kit("metabolism.kit.semio.json");
         let kit_invalid = load_kit("metabolism.kit.semio.json");
         let metabolism_zip_path = Path::new(ASSETS_DIR).join("metabolism.semio.zip");
         let metabolism_zip_str = metabolism_zip_path.to_str().unwrap();
         // We assume running from rs/semio
-        
+
         bench("Roundtrip/Metabolism", || {
-            let import_result = super::zip_roundtrip::import_kit_from_zip(metabolism_zip_str).unwrap();
-            
+            let import_result =
+                super::zip_roundtrip::import_kit_from_zip(metabolism_zip_str).unwrap();
+
             let temp_zip = "temp_benchmark_metabolism.zip";
             // Need schema? Rust ExportKitToZip calls KitToSqlite which executes schema.
             // Wait, Rust implementation of export_kit_to_zip in semio.rs...
             // Let's check signature.
-    
-            super::zip_roundtrip::export_kit_to_zip(&import_result.kit, &import_result.files, temp_zip).unwrap();
+
+            super::zip_roundtrip::export_kit_to_zip(
+                &import_result.kit,
+                &import_result.files,
+                temp_zip,
+            )
+            .unwrap();
             if Path::new(temp_zip).exists() {
                 std::fs::remove_file(temp_zip).unwrap();
             }
         });
-    
+
         let d1 = find_design(&kit_metabolism, "Nakagin Capsule Tower", None);
         let d1_guid = d1.guid.clone();
         bench("Flatten Design/Nakagin Capsule Tower", || {
             let _ = flatten_design(&kit_metabolism, &d1_guid);
         });
-    
+
         let d2 = find_design(&kit_metabolism, "Slanted", Some("Nakagin Capsule Tower"));
         let d2_guid = d2.guid.clone();
         bench("Flatten Design/Nakagin Capsule Tower/Slanted", || {
             let _ = flatten_design(&kit_metabolism, &d2_guid);
         });
-    
+
         let d3 = find_design(&kit_metabolism, "Twisted", Some("Nakagin Capsule Tower"));
         let d3_guid = d3.guid.clone();
         bench("Flatten Design/Nakagin Capsule Tower/Twisted", || {
             let _ = flatten_design(&kit_metabolism, &d3_guid);
         });
-    
+
         let d4 = find_design(&kit_metabolism, "Dancing", Some("Nakagin Capsule Tower"));
         let d4_guid = d4.guid.clone();
         bench("Flatten Design/Nakagin Capsule Tower/Dancing", || {
             let _ = flatten_design(&kit_metabolism, &d4_guid);
         });
-    
+
         let d5 = find_design(&kit_metabolism, "Capsule Dream", None);
         let d5_guid = d5.guid.clone();
         bench("Flatten Design/Capsule Dream", || {
             let _ = flatten_design(&kit_metabolism, &d5_guid);
         });
-    
+
         bench("Validation/Invalid Kit", || {
             let _ = validate_kit(&kit_invalid);
         });
-    
+
         bench("Validation/Metabolism", || {
             let _ = validate_kit(&kit_metabolism);
         });

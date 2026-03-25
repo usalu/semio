@@ -888,6 +888,51 @@ export const serializeAttribute = (attribute: Attribute): string => JSON.stringi
 export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of AttributeMetaSchema.
+ * [👤semio📚js💻semio🔖attribute🪨attributemetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributeMetaSchema)
+ **/
+export const AttributeMetaSchema = AttributeSchema;
+/**
+ * Type alias for AttributeMeta.
+ * [👤semio📚js💻semio🔖attribute🛠️attributemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributeMeta)
+ **/
+export type AttributeMeta = z.infer<typeof AttributeMetaSchema>;
+/**
+ * Serializes AttributeMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖attribute🪨serializeattributemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/serializeAttributeMeta)
+ **/
+export const serializeAttributeMeta = (attribute: AttributeMeta): string => JSON.stringify(AttributeMetaSchema.parse(attribute));
+/**
+ * Performs the deserializeAttributeMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖attribute🪨deserializeattributemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/deserializeAttributeMeta)
+ **/
+export const deserializeAttributeMeta = (json: string): AttributeMeta => AttributeMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of AttributeShallowSchema.
+ * [👤semio📚js💻semio🔖attribute🪨attributeshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributeShallowSchema)
+ **/
+export const AttributeShallowSchema = AttributeSchema;
+/**
+ * Type alias for AttributeShallow.
+ * [👤semio📚js💻semio🔖attribute🛠️attributeshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributeShallow)
+ **/
+export type AttributeShallow = z.infer<typeof AttributeShallowSchema>;
+/**
+ * Serializes AttributeShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖attribute🪨serializeattributeshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/serializeAttributeShallow)
+ **/
+export const serializeAttributeShallow = (attribute: AttributeShallow): string => JSON.stringify(AttributeShallowSchema.parse(attribute));
+/**
+ * Performs the deserializeAttributeShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖attribute🪨deserializeattributeshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/deserializeAttributeShallow)
+ **/
+export const deserializeAttributeShallow = (json: string): AttributeShallow => AttributeShallowSchema.parse(JSON.parse(json));
+
+/**
  * Zod schema for Attribute diff validation.
  * [👤semio📚js💻semio🔖attribute🪨attributediffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Attribute/d/i/AttributeDiffSchema)
  **/
@@ -1879,6 +1924,51 @@ export const serializeAuthor = (author: Author): string => JSON.stringify(Author
 export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of AuthorMetaSchema.
+ * [👤semio📚js💻semio🔖author🪨authormetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorMetaSchema)
+ **/
+export const AuthorMetaSchema = AuthorSchema.omit({ attributes: true });
+/**
+ * Type alias for AuthorMeta.
+ * [👤semio📚js💻semio🔖author🛠️authormeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorMeta)
+ **/
+export type AuthorMeta = z.infer<typeof AuthorMetaSchema>;
+/**
+ * Serializes AuthorMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖author🪨serializeauthormeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/serializeAuthorMeta)
+ **/
+export const serializeAuthorMeta = (author: AuthorMeta): string => JSON.stringify(AuthorMetaSchema.parse(author));
+/**
+ * Performs the deserializeAuthorMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖author🪨deserializeauthormeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/deserializeAuthorMeta)
+ **/
+export const deserializeAuthorMeta = (json: string): AuthorMeta => AuthorMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of AuthorShallowSchema.
+ * [👤semio📚js💻semio🔖author🪨authorshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorShallowSchema)
+ **/
+export const AuthorShallowSchema = AuthorSchema;
+/**
+ * Type alias for AuthorShallow.
+ * [👤semio📚js💻semio🔖author🛠️authorshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorShallow)
+ **/
+export type AuthorShallow = z.infer<typeof AuthorShallowSchema>;
+/**
+ * Serializes AuthorShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖author🪨serializeauthorshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/serializeAuthorShallow)
+ **/
+export const serializeAuthorShallow = (author: AuthorShallow): string => JSON.stringify(AuthorShallowSchema.parse(author));
+/**
+ * Performs the deserializeAuthorShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖author🪨deserializeauthorshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/deserializeAuthorShallow)
+ **/
+export const deserializeAuthorShallow = (json: string): AuthorShallow => AuthorShallowSchema.parse(JSON.parse(json));
+
+/**
  * Zod schema for Author diff validation.
  * [👤semio📚js💻semio🔖author🪨authordiffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Author/d/i/AuthorDiffSchema)
  **/
@@ -1997,6 +2087,51 @@ export const serializeFile = (file: File): string => JSON.stringify(FileSchema.p
  * [👤semio📚js💻semio🔖file🪨deserializefile](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/deserializeFile)
  **/
 export const deserializeFile = (json: string): File => FileSchema.parse(JSON.parse(json));
+
+/**
+ * Definition of FileMetaSchema.
+ * [👤semio📚js💻semio🔖file🪨filemetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FileMetaSchema)
+ **/
+export const FileMetaSchema = FileSchema.omit({ blob: true });
+/**
+ * Type alias for FileMeta.
+ * [👤semio📚js💻semio🔖file🛠️filemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FileMeta)
+ **/
+export type FileMeta = z.infer<typeof FileMetaSchema>;
+/**
+ * Serializes FileMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖file🪨serializefilemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/serializeFileMeta)
+ **/
+export const serializeFileMeta = (file: FileMeta): string => JSON.stringify(FileMetaSchema.parse(file));
+/**
+ * Performs the deserializeFileMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖file🪨deserializefilemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/deserializeFileMeta)
+ **/
+export const deserializeFileMeta = (json: string): FileMeta => FileMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of FileShallowSchema.
+ * [👤semio📚js💻semio🔖file🪨fileshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FileShallowSchema)
+ **/
+export const FileShallowSchema = FileSchema;
+/**
+ * Type alias for FileShallow.
+ * [👤semio📚js💻semio🔖file🛠️fileshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/FileShallow)
+ **/
+export type FileShallow = z.infer<typeof FileShallowSchema>;
+/**
+ * Serializes FileShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖file🪨serializefileshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/serializeFileShallow)
+ **/
+export const serializeFileShallow = (file: FileShallow): string => JSON.stringify(FileShallowSchema.parse(file));
+/**
+ * Performs the deserializeFileShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖file🪨deserializefileshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/File/d/i/deserializeFileShallow)
+ **/
+export const deserializeFileShallow = (json: string): FileShallow => FileShallowSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for File diff validation.
@@ -2130,6 +2265,51 @@ export const serializeFolder = (folder: Folder): string => JSON.stringify(Folder
  * [👤semio📚js💻semio🔖folder🪨deserializefolder](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/deserializeFolder)
  **/
 export const deserializeFolder = (json: string): Folder => FolderSchema.parse(JSON.parse(json));
+
+/**
+ * Definition of FolderMetaSchema.
+ * [👤semio📚js💻semio🔖folder🪨foldermetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FolderMetaSchema)
+ **/
+export const FolderMetaSchema = FolderSchema.omit({ attributes: true });
+/**
+ * Type alias for FolderMeta.
+ * [👤semio📚js💻semio🔖folder🛠️foldermeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FolderMeta)
+ **/
+export type FolderMeta = z.infer<typeof FolderMetaSchema>;
+/**
+ * Serializes FolderMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖folder🪨serializefoldermeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/serializeFolderMeta)
+ **/
+export const serializeFolderMeta = (folder: FolderMeta): string => JSON.stringify(FolderMetaSchema.parse(folder));
+/**
+ * Performs the deserializeFolderMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖folder🪨deserializefoldermeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/deserializeFolderMeta)
+ **/
+export const deserializeFolderMeta = (json: string): FolderMeta => FolderMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of FolderShallowSchema.
+ * [👤semio📚js💻semio🔖folder🪨foldershallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FolderShallowSchema)
+ **/
+export const FolderShallowSchema = FolderSchema;
+/**
+ * Type alias for FolderShallow.
+ * [👤semio📚js💻semio🔖folder🛠️foldershallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/FolderShallow)
+ **/
+export type FolderShallow = z.infer<typeof FolderShallowSchema>;
+/**
+ * Serializes FolderShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖folder🪨serializefoldershallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/serializeFolderShallow)
+ **/
+export const serializeFolderShallow = (folder: FolderShallow): string => JSON.stringify(FolderShallowSchema.parse(folder));
+/**
+ * Performs the deserializeFolderShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖folder🪨deserializefoldershallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Folder/d/i/deserializeFolderShallow)
+ **/
+export const deserializeFolderShallow = (json: string): FolderShallow => FolderShallowSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Folder diff validation.
@@ -2474,6 +2654,51 @@ export const serializeQuality = (quality: Quality): string => JSON.stringify(Qua
 export const deserializeQuality = (json: string): Quality => QualitySchema.parse(JSON.parse(json));
 
 /**
+ * Definition of QualityMetaSchema.
+ * [👤semio📚js💻semio🔖quality🪨qualitymetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualityMetaSchema)
+ **/
+export const QualityMetaSchema = QualitySchema.omit({ benchmarks: true, attributes: true });
+/**
+ * Type alias for QualityMeta.
+ * [👤semio📚js💻semio🔖quality🛠️qualitymeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualityMeta)
+ **/
+export type QualityMeta = z.infer<typeof QualityMetaSchema>;
+/**
+ * Serializes QualityMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖quality🪨serializequalitymeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/serializeQualityMeta)
+ **/
+export const serializeQualityMeta = (quality: QualityMeta): string => JSON.stringify(QualityMetaSchema.parse(quality));
+/**
+ * Performs the deserializeQualityMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖quality🪨deserializequalitymeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/deserializeQualityMeta)
+ **/
+export const deserializeQualityMeta = (json: string): QualityMeta => QualityMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of QualityShallowSchema.
+ * [👤semio📚js💻semio🔖quality🪨qualityshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualityShallowSchema)
+ **/
+export const QualityShallowSchema = QualitySchema;
+/**
+ * Type alias for QualityShallow.
+ * [👤semio📚js💻semio🔖quality🛠️qualityshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualityShallow)
+ **/
+export type QualityShallow = z.infer<typeof QualityShallowSchema>;
+/**
+ * Serializes QualityShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖quality🪨serializequalityshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/serializeQualityShallow)
+ **/
+export const serializeQualityShallow = (quality: QualityShallow): string => JSON.stringify(QualityShallowSchema.parse(quality));
+/**
+ * Performs the deserializeQualityShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖quality🪨deserializequalityshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/deserializeQualityShallow)
+ **/
+export const deserializeQualityShallow = (json: string): QualityShallow => QualityShallowSchema.parse(JSON.parse(json));
+
+/**
  * [👤semio📚js💻semio🔖quality🪨qualitydiffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Quality/d/i/QualityDiffSchema)
  **/
 export const QualityDiffSchema = QualitySchema.partial().omit({ benchmarks: true, attributes: true }).extend({
@@ -2637,6 +2862,51 @@ export const serializePort = (iface: Port): string => JSON.stringify(PortSchema.
  * [👤semio📚js💻semio🔖port🪨deserializeport](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/deserializePort)
  **/
 export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
+
+/**
+ * Definition of PortMetaSchema.
+ * [👤semio📚js💻semio🔖port🪨portmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortMetaSchema)
+ **/
+export const PortMetaSchema = PortSchema.omit({ compatiblePorts: true, attributes: true });
+/**
+ * Type alias for PortMeta.
+ * [👤semio📚js💻semio🔖port🛠️portmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortMeta)
+ **/
+export type PortMeta = z.infer<typeof PortMetaSchema>;
+/**
+ * Serializes PortMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖port🪨serializeportmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/serializePortMeta)
+ **/
+export const serializePortMeta = (port: PortMeta): string => JSON.stringify(PortMetaSchema.parse(port));
+/**
+ * Performs the deserializePortMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖port🪨deserializeportmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/deserializePortMeta)
+ **/
+export const deserializePortMeta = (json: string): PortMeta => PortMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of PortShallowSchema.
+ * [👤semio📚js💻semio🔖port🪨portshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortShallowSchema)
+ **/
+export const PortShallowSchema = PortSchema;
+/**
+ * Type alias for PortShallow.
+ * [👤semio📚js💻semio🔖port🛠️portshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/PortShallow)
+ **/
+export type PortShallow = z.infer<typeof PortShallowSchema>;
+/**
+ * Serializes PortShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖port🪨serializeportshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/serializePortShallow)
+ **/
+export const serializePortShallow = (port: PortShallow): string => JSON.stringify(PortShallowSchema.parse(port));
+/**
+ * Performs the deserializePortShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖port🪨deserializeportshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Port/d/i/deserializePortShallow)
+ **/
+export const deserializePortShallow = (json: string): PortShallow => PortShallowSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Port diff validation.
@@ -2870,6 +3140,51 @@ export const serializeProp = (prop: Prop): string => JSON.stringify(PropSchema.p
 export const deserializeProp = (json: string): Prop => PropSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of PropMetaSchema.
+ * [👤semio📚js💻semio🔖prop🪨propmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropMetaSchema)
+ **/
+export const PropMetaSchema = PropSchema.omit({ attributes: true });
+/**
+ * Type alias for PropMeta.
+ * [👤semio📚js💻semio🔖prop🛠️propmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropMeta)
+ **/
+export type PropMeta = z.infer<typeof PropMetaSchema>;
+/**
+ * Serializes PropMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖prop🪨serializepropmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/serializePropMeta)
+ **/
+export const serializePropMeta = (prop: PropMeta): string => JSON.stringify(PropMetaSchema.parse(prop));
+/**
+ * Performs the deserializePropMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖prop🪨deserializepropmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/deserializePropMeta)
+ **/
+export const deserializePropMeta = (json: string): PropMeta => PropMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of PropShallowSchema.
+ * [👤semio📚js💻semio🔖prop🪨propshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropShallowSchema)
+ **/
+export const PropShallowSchema = PropSchema;
+/**
+ * Type alias for PropShallow.
+ * [👤semio📚js💻semio🔖prop🛠️propshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropShallow)
+ **/
+export type PropShallow = z.infer<typeof PropShallowSchema>;
+/**
+ * Serializes PropShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖prop🪨serializepropshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/serializePropShallow)
+ **/
+export const serializePropShallow = (prop: PropShallow): string => JSON.stringify(PropShallowSchema.parse(prop));
+/**
+ * Performs the deserializePropShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖prop🪨deserializepropshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/deserializePropShallow)
+ **/
+export const deserializePropShallow = (json: string): PropShallow => PropShallowSchema.parse(JSON.parse(json));
+
+/**
  * Zod schema for Prop diff validation.
  * [👤semio📚js💻semio🔖prop🪨propdiffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Prop/d/i/PropDiffSchema)
  **/
@@ -3052,6 +3367,51 @@ export const serializeTag = (tag: Tag): string => JSON.stringify(TagSchema.parse
  * [👤semio📚js💻semio🔖tag🪨deserializetag](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/deserializeTag)
  **/
 export const deserializeTag = (json: string): Tag => TagSchema.parse(JSON.parse(json));
+
+/**
+ * Definition of TagMetaSchema.
+ * [👤semio📚js💻semio🔖tag🪨tagmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagMetaSchema)
+ **/
+export const TagMetaSchema = TagSchema.omit({ attributes: true });
+/**
+ * Type alias for TagMeta.
+ * [👤semio📚js💻semio🔖tag🛠️tagmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagMeta)
+ **/
+export type TagMeta = z.infer<typeof TagMetaSchema>;
+/**
+ * Serializes TagMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖tag🪨serializetagmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/serializeTagMeta)
+ **/
+export const serializeTagMeta = (tag: TagMeta): string => JSON.stringify(TagMetaSchema.parse(tag));
+/**
+ * Performs the deserializeTagMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖tag🪨deserializetagmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/deserializeTagMeta)
+ **/
+export const deserializeTagMeta = (json: string): TagMeta => TagMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of TagShallowSchema.
+ * [👤semio📚js💻semio🔖tag🪨tagshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagShallowSchema)
+ **/
+export const TagShallowSchema = TagSchema;
+/**
+ * Type alias for TagShallow.
+ * [👤semio📚js💻semio🔖tag🛠️tagshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/TagShallow)
+ **/
+export type TagShallow = z.infer<typeof TagShallowSchema>;
+/**
+ * Serializes TagShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖tag🪨serializetagshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/serializeTagShallow)
+ **/
+export const serializeTagShallow = (tag: TagShallow): string => JSON.stringify(TagShallowSchema.parse(tag));
+/**
+ * Performs the deserializeTagShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖tag🪨deserializetagshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Tag/d/i/deserializeTagShallow)
+ **/
+export const deserializeTagShallow = (json: string): TagShallow => TagShallowSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Tag diff validation.
@@ -3281,6 +3641,51 @@ export const serializeConcept = (concept: Concept): string => JSON.stringify(Con
 export const deserializeConcept = (json: string): Concept => ConceptSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of ConceptMetaSchema.
+ * [👤semio📚js💻semio🔖concept🪨conceptmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptMetaSchema)
+ **/
+export const ConceptMetaSchema = ConceptSchema.omit({ attributes: true });
+/**
+ * Type alias for ConceptMeta.
+ * [👤semio📚js💻semio🔖concept🛠️conceptmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptMeta)
+ **/
+export type ConceptMeta = z.infer<typeof ConceptMetaSchema>;
+/**
+ * Serializes ConceptMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖concept🪨serializeconceptmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/serializeConceptMeta)
+ **/
+export const serializeConceptMeta = (concept: ConceptMeta): string => JSON.stringify(ConceptMetaSchema.parse(concept));
+/**
+ * Performs the deserializeConceptMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖concept🪨deserializeconceptmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/deserializeConceptMeta)
+ **/
+export const deserializeConceptMeta = (json: string): ConceptMeta => ConceptMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of ConceptShallowSchema.
+ * [👤semio📚js💻semio🔖concept🪨conceptshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptShallowSchema)
+ **/
+export const ConceptShallowSchema = ConceptSchema;
+/**
+ * Type alias for ConceptShallow.
+ * [👤semio📚js💻semio🔖concept🛠️conceptshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptShallow)
+ **/
+export type ConceptShallow = z.infer<typeof ConceptShallowSchema>;
+/**
+ * Serializes ConceptShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖concept🪨serializeconceptshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/serializeConceptShallow)
+ **/
+export const serializeConceptShallow = (concept: ConceptShallow): string => JSON.stringify(ConceptShallowSchema.parse(concept));
+/**
+ * Performs the deserializeConceptShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖concept🪨deserializeconceptshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/deserializeConceptShallow)
+ **/
+export const deserializeConceptShallow = (json: string): ConceptShallow => ConceptShallowSchema.parse(JSON.parse(json));
+
+/**
  * Zod schema for Concept diff validation.
  * [👤semio📚js💻semio🔖concept🪨conceptdiffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Concept/d/i/ConceptDiffSchema)
  **/
@@ -3507,6 +3912,51 @@ export const serializeModel = (model: Model): string => JSON.stringify(ModelSche
  * [👤semio📚js💻semio🔖model🪨deserializemodel](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/deserializeModel)
  **/
 export const deserializeModel = (json: string): Model => ModelSchema.parse(JSON.parse(json));
+
+/**
+ * Definition of ModelMetaSchema.
+ * [👤semio📚js💻semio🔖model🪨modelmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelMetaSchema)
+ **/
+export const ModelMetaSchema = ModelSchema.omit({ tags: true, attributes: true });
+/**
+ * Type alias for ModelMeta.
+ * [👤semio📚js💻semio🔖model🛠️modelmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelMeta)
+ **/
+export type ModelMeta = z.infer<typeof ModelMetaSchema>;
+/**
+ * Serializes ModelMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖model🪨serializemodelmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/serializeModelMeta)
+ **/
+export const serializeModelMeta = (model: ModelMeta): string => JSON.stringify(ModelMetaSchema.parse(model));
+/**
+ * Performs the deserializeModelMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖model🪨deserializemodelmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/deserializeModelMeta)
+ **/
+export const deserializeModelMeta = (json: string): ModelMeta => ModelMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of ModelShallowSchema.
+ * [👤semio📚js💻semio🔖model🪨modelshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelShallowSchema)
+ **/
+export const ModelShallowSchema = ModelSchema;
+/**
+ * Type alias for ModelShallow.
+ * [👤semio📚js💻semio🔖model🛠️modelshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/ModelShallow)
+ **/
+export type ModelShallow = z.infer<typeof ModelShallowSchema>;
+/**
+ * Serializes ModelShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖model🪨serializemodelshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/serializeModelShallow)
+ **/
+export const serializeModelShallow = (model: ModelShallow): string => JSON.stringify(ModelShallowSchema.parse(model));
+/**
+ * Performs the deserializeModelShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖model🪨deserializemodelshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Model/d/i/deserializeModelShallow)
+ **/
+export const deserializeModelShallow = (json: string): ModelShallow => ModelShallowSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Model diff validation.
@@ -3817,6 +4267,51 @@ export const serializeConnector = (connector: Connector): string => JSON.stringi
 export const deserializeConnector = (json: string): Connector => ConnectorSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of ConnectorMetaSchema.
+ * [👤semio📚js💻semio🔖connector🪨connectormetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorMetaSchema)
+ **/
+export const ConnectorMetaSchema = ConnectorSchema.omit({ props: true, attributes: true });
+/**
+ * Type alias for ConnectorMeta.
+ * [👤semio📚js💻semio🔖connector🛠️connectormeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorMeta)
+ **/
+export type ConnectorMeta = z.infer<typeof ConnectorMetaSchema>;
+/**
+ * Serializes ConnectorMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖connector🪨serializeconnectormeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/serializeConnectorMeta)
+ **/
+export const serializeConnectorMeta = (connector: ConnectorMeta): string => JSON.stringify(ConnectorMetaSchema.parse(connector));
+/**
+ * Performs the deserializeConnectorMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖connector🪨deserializeconnectormeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/deserializeConnectorMeta)
+ **/
+export const deserializeConnectorMeta = (json: string): ConnectorMeta => ConnectorMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of ConnectorShallowSchema.
+ * [👤semio📚js💻semio🔖connector🪨connectorshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorShallowSchema)
+ **/
+export const ConnectorShallowSchema = ConnectorSchema.omit({ props: true }).extend({ props: z.array(PropMetaSchema).optional() });
+/**
+ * Type alias for ConnectorShallow.
+ * [👤semio📚js💻semio🔖connector🛠️connectorshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorShallow)
+ **/
+export type ConnectorShallow = z.infer<typeof ConnectorShallowSchema>;
+/**
+ * Serializes ConnectorShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖connector🪨serializeconnectorshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/serializeConnectorShallow)
+ **/
+export const serializeConnectorShallow = (connector: ConnectorShallow): string => JSON.stringify(ConnectorShallowSchema.parse(connector));
+/**
+ * Performs the deserializeConnectorShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖connector🪨deserializeconnectorshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/deserializeConnectorShallow)
+ **/
+export const deserializeConnectorShallow = (json: string): ConnectorShallow => ConnectorShallowSchema.parse(JSON.parse(json));
+
+/**
  * Zod schema for Connector diff validation.
  * [👤semio📚js💻semio🔖connector🪨connectordiffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Connector/d/i/ConnectorDiffSchema)
  **/
@@ -4026,12 +4521,36 @@ export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.p
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of TypeMetaSchema.
+ * [👤semio📚js💻semio🔖type🪨typemetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypeMetaSchema)
+ **/
+export const TypeMetaSchema = TypeSchema.omit({ models: true, connectors: true, props: true, attributes: true, authors: true, concepts: true });
+/**
+ * Type alias for TypeMeta.
+ * [👤semio📚js💻semio🔖type🛠️typemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypeMeta)
+ **/
+export type TypeMeta = z.infer<typeof TypeMetaSchema>;
+/**
+ * Serializes TypeMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖type🪨serializetypemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/serializeTypeMeta)
+ **/
+export const serializeTypeMeta = (type: TypeMeta): string => JSON.stringify(TypeMetaSchema.parse(type));
+/**
+ * Performs the deserializeTypeMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖type🪨deserializetypemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/deserializeTypeMeta)
+ **/
+export const deserializeTypeMeta = (json: string): TypeMeta => TypeMetaSchema.parse(JSON.parse(json));
+/**
  * Definition of TypeShallowSchema.
  * [👤semio📚js💻semio🔖type🪨typeshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/TypeShallowSchema)
  **/
-export const TypeShallowSchema = TypeSchema.omit({ models: true, connectors: true }).extend({
-  models: z.array(z.string()).optional(),
-  connectors: z.array(z.string()).optional(),
+export const TypeShallowSchema = TypeSchema.omit({ models: true, connectors: true, props: true, attributes: true }).extend({
+  models: z.array(ModelMetaSchema).optional(),
+  connectors: z.array(ConnectorMetaSchema).optional(),
+  props: z.array(PropMetaSchema).optional(),
+  attributes: z.array(AttributeMetaSchema).optional(),
 });
 /**
  * Type alias for TypeShallow.
@@ -4244,6 +4763,51 @@ export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSche
 export const deserializeLayer = (json: string): Layer => LayerSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of LayerMetaSchema.
+ * [👤semio📚js💻semio🔖layer🪨layermetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayerMetaSchema)
+ **/
+export const LayerMetaSchema = LayerSchema.omit({ attributes: true });
+/**
+ * Type alias for LayerMeta.
+ * [👤semio📚js💻semio🔖layer🛠️layermeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayerMeta)
+ **/
+export type LayerMeta = z.infer<typeof LayerMetaSchema>;
+/**
+ * Serializes LayerMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖layer🪨serializelayermeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/serializeLayerMeta)
+ **/
+export const serializeLayerMeta = (layer: LayerMeta): string => JSON.stringify(LayerMetaSchema.parse(layer));
+/**
+ * Performs the deserializeLayerMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖layer🪨deserializelayermeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/deserializeLayerMeta)
+ **/
+export const deserializeLayerMeta = (json: string): LayerMeta => LayerMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of LayerShallowSchema.
+ * [👤semio📚js💻semio🔖layer🪨layershallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayerShallowSchema)
+ **/
+export const LayerShallowSchema = LayerSchema;
+/**
+ * Type alias for LayerShallow.
+ * [👤semio📚js💻semio🔖layer🛠️layershallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayerShallow)
+ **/
+export type LayerShallow = z.infer<typeof LayerShallowSchema>;
+/**
+ * Serializes LayerShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖layer🪨serializelayershallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/serializeLayerShallow)
+ **/
+export const serializeLayerShallow = (layer: LayerShallow): string => JSON.stringify(LayerShallowSchema.parse(layer));
+/**
+ * Performs the deserializeLayerShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖layer🪨deserializelayershallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/deserializeLayerShallow)
+ **/
+export const deserializeLayerShallow = (json: string): LayerShallow => LayerShallowSchema.parse(JSON.parse(json));
+
+/**
  * Zod schema for Layer diff validation.
  * [👤semio📚js💻semio🔖layer🪨layerdiffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Layer/d/i/LayerDiffSchema)
  **/
@@ -4375,6 +4939,51 @@ export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSche
  * [👤semio📚js💻semio🔖piece🪨deserializepiece](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/deserializePiece)
  **/
 export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
+
+/**
+ * Definition of PieceMetaSchema.
+ * [👤semio📚js💻semio🔖piece🪨piecemetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PieceMetaSchema)
+ **/
+export const PieceMetaSchema = PieceSchema.omit({ props: true, attributes: true });
+/**
+ * Type alias for PieceMeta.
+ * [👤semio📚js💻semio🔖piece🛠️piecemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PieceMeta)
+ **/
+export type PieceMeta = z.infer<typeof PieceMetaSchema>;
+/**
+ * Serializes PieceMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖piece🪨serializepiecemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/serializePieceMeta)
+ **/
+export const serializePieceMeta = (piece: PieceMeta): string => JSON.stringify(PieceMetaSchema.parse(piece));
+/**
+ * Performs the deserializePieceMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖piece🪨deserializepiecemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/deserializePieceMeta)
+ **/
+export const deserializePieceMeta = (json: string): PieceMeta => PieceMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of PieceShallowSchema.
+ * [👤semio📚js💻semio🔖piece🪨pieceshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PieceShallowSchema)
+ **/
+export const PieceShallowSchema = PieceSchema.omit({ props: true }).extend({ props: z.array(PropMetaSchema).optional() });
+/**
+ * Type alias for PieceShallow.
+ * [👤semio📚js💻semio🔖piece🛠️pieceshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/PieceShallow)
+ **/
+export type PieceShallow = z.infer<typeof PieceShallowSchema>;
+/**
+ * Serializes PieceShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖piece🪨serializepieceshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/serializePieceShallow)
+ **/
+export const serializePieceShallow = (piece: PieceShallow): string => JSON.stringify(PieceShallowSchema.parse(piece));
+/**
+ * Performs the deserializePieceShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖piece🪨deserializepieceshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Piece/d/i/deserializePieceShallow)
+ **/
+export const deserializePieceShallow = (json: string): PieceShallow => PieceShallowSchema.parse(JSON.parse(json));
 
 /**
  * Zod schema for Piece diff validation.
@@ -4712,6 +5321,51 @@ export const serializeGroup = (group: Group): string => JSON.stringify(GroupSche
  **/
 export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.parse(json));
 
+/**
+ * Definition of GroupMetaSchema.
+ * [👤semio📚js💻semio🔖group🪨groupmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/GroupMetaSchema)
+ **/
+export const GroupMetaSchema = GroupSchema.omit({ pieces: true, attributes: true });
+/**
+ * Type alias for GroupMeta.
+ * [👤semio📚js💻semio🔖group🛠️groupmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/GroupMeta)
+ **/
+export type GroupMeta = z.infer<typeof GroupMetaSchema>;
+/**
+ * Serializes GroupMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖group🪨serializegroupmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/serializeGroupMeta)
+ **/
+export const serializeGroupMeta = (group: GroupMeta): string => JSON.stringify(GroupMetaSchema.parse(group));
+/**
+ * Performs the deserializeGroupMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖group🪨deserializegroupmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/deserializeGroupMeta)
+ **/
+export const deserializeGroupMeta = (json: string): GroupMeta => GroupMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of GroupShallowSchema.
+ * [👤semio📚js💻semio🔖group🪨groupshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/GroupShallowSchema)
+ **/
+export const GroupShallowSchema = GroupSchema;
+/**
+ * Type alias for GroupShallow.
+ * [👤semio📚js💻semio🔖group🛠️groupshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/GroupShallow)
+ **/
+export type GroupShallow = z.infer<typeof GroupShallowSchema>;
+/**
+ * Serializes GroupShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖group🪨serializegroupshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/serializeGroupShallow)
+ **/
+export const serializeGroupShallow = (group: GroupShallow): string => JSON.stringify(GroupShallowSchema.parse(group));
+/**
+ * Performs the deserializeGroupShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖group🪨deserializegroupshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Group/d/i/deserializeGroupShallow)
+ **/
+export const deserializeGroupShallow = (json: string): GroupShallow => GroupShallowSchema.parse(JSON.parse(json));
+
 // #endregion 🔖Group
 
 // #region 🔖Side
@@ -4993,6 +5647,51 @@ export const serializeConnection = (connection: Connection): string => JSON.stri
 export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of ConnectionMetaSchema.
+ * [👤semio📚js💻semio🔖connection🪨connectionmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionMetaSchema)
+ **/
+export const ConnectionMetaSchema = ConnectionSchema.omit({ attributes: true });
+/**
+ * Type alias for ConnectionMeta.
+ * [👤semio📚js💻semio🔖connection🛠️connectionmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionMeta)
+ **/
+export type ConnectionMeta = z.infer<typeof ConnectionMetaSchema>;
+/**
+ * Serializes ConnectionMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖connection🪨serializeconnectionmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/serializeConnectionMeta)
+ **/
+export const serializeConnectionMeta = (connection: ConnectionMeta): string => JSON.stringify(ConnectionMetaSchema.parse(connection));
+/**
+ * Performs the deserializeConnectionMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖connection🪨deserializeconnectionmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/deserializeConnectionMeta)
+ **/
+export const deserializeConnectionMeta = (json: string): ConnectionMeta => ConnectionMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of ConnectionShallowSchema.
+ * [👤semio📚js💻semio🔖connection🪨connectionshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionShallowSchema)
+ **/
+export const ConnectionShallowSchema = ConnectionSchema;
+/**
+ * Type alias for ConnectionShallow.
+ * [👤semio📚js💻semio🔖connection🛠️connectionshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/ConnectionShallow)
+ **/
+export type ConnectionShallow = z.infer<typeof ConnectionShallowSchema>;
+/**
+ * Serializes ConnectionShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖connection🪨serializeconnectionshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/serializeConnectionShallow)
+ **/
+export const serializeConnectionShallow = (connection: ConnectionShallow): string => JSON.stringify(ConnectionShallowSchema.parse(connection));
+/**
+ * Performs the deserializeConnectionShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖connection🪨deserializeconnectionshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/deserializeConnectionShallow)
+ **/
+export const deserializeConnectionShallow = (json: string): ConnectionShallow => ConnectionShallowSchema.parse(JSON.parse(json));
+
+/**
  * Equality check for Connection values.
  * MUST return a boolean equality result.
  * [👤semio📚js💻semio🔖connection🪨aresameconnection](repo://p/u/semio/b/l/js/f/semio.ts/s/Connection/d/i/areSameConnection)
@@ -5157,6 +5856,51 @@ export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.p
  **/
 export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.parse(json));
 
+/**
+ * Definition of StatMetaSchema.
+ * [👤semio📚js💻semio🔖stat🪨statmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/StatMetaSchema)
+ **/
+export const StatMetaSchema = StatSchema;
+/**
+ * Type alias for StatMeta.
+ * [👤semio📚js💻semio🔖stat🛠️statmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/StatMeta)
+ **/
+export type StatMeta = z.infer<typeof StatMetaSchema>;
+/**
+ * Serializes StatMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖stat🪨serializestatmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/serializeStatMeta)
+ **/
+export const serializeStatMeta = (stat: StatMeta): string => JSON.stringify(StatMetaSchema.parse(stat));
+/**
+ * Performs the deserializeStatMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖stat🪨deserializestatmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/deserializeStatMeta)
+ **/
+export const deserializeStatMeta = (json: string): StatMeta => StatMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of StatShallowSchema.
+ * [👤semio📚js💻semio🔖stat🪨statshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/StatShallowSchema)
+ **/
+export const StatShallowSchema = StatSchema;
+/**
+ * Type alias for StatShallow.
+ * [👤semio📚js💻semio🔖stat🛠️statshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/StatShallow)
+ **/
+export type StatShallow = z.infer<typeof StatShallowSchema>;
+/**
+ * Serializes StatShallow for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖stat🪨serializestatshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/serializeStatShallow)
+ **/
+export const serializeStatShallow = (stat: StatShallow): string => JSON.stringify(StatShallowSchema.parse(stat));
+/**
+ * Performs the deserializeStatShallow operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖stat🪨deserializestatshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Stat/d/i/deserializeStatShallow)
+ **/
+export const deserializeStatShallow = (json: string): StatShallow => StatShallowSchema.parse(JSON.parse(json));
+
 // #endregion 🔖Stat
 
 // #region 🔖Design
@@ -5213,15 +5957,40 @@ export const serializeDesign = (design: Design): string => JSON.stringify(Design
 export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of DesignMetaSchema.
+ * [👤semio📚js💻semio🔖design🪨designmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignMetaSchema)
+ **/
+export const DesignMetaSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, attributes: true, authors: true, concepts: true });
+/**
+ * Type alias for DesignMeta.
+ * [👤semio📚js💻semio🔖design🛠️designmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignMeta)
+ **/
+export type DesignMeta = z.infer<typeof DesignMetaSchema>;
+/**
+ * Serializes DesignMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖design🪨serializedesignmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/serializeDesignMeta)
+ **/
+export const serializeDesignMeta = (design: DesignMeta): string => JSON.stringify(DesignMetaSchema.parse(design));
+/**
+ * Performs the deserializeDesignMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖design🪨deserializedesignmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/deserializeDesignMeta)
+ **/
+export const deserializeDesignMeta = (json: string): DesignMeta => DesignMetaSchema.parse(JSON.parse(json));
+/**
  * Definition of DesignShallowSchema.
  * [👤semio📚js💻semio🔖design🪨designshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignShallowSchema)
  **/
-export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true }).extend({
-  pieces: z.array(z.string()).optional(),
-  connections: z.array(z.string()).optional(),
-  stats: z.array(z.string()).optional(),
+export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, attributes: true }).extend({
+  pieces: z.array(PieceMetaSchema).optional(),
+  connections: z.array(ConnectionMetaSchema).optional(),
+  stats: z.array(StatMetaSchema).optional(),
+  props: z.array(PropMetaSchema).optional(),
+  layers: z.array(LayerMetaSchema).optional(),
+  groups: z.array(GroupMetaSchema).optional(),
+  attributes: z.array(AttributeMetaSchema).optional(),
 });
-
 /**
  * Type alias for DesignShallow.
  * [👤semio📚js💻semio🔖design🛠️designshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignShallow)
@@ -6466,18 +7235,42 @@ export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse
 export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 
 /**
+ * Definition of KitMetaSchema.
+ * [👤semio📚js💻semio🔖kit🪨kitmetaschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitMetaSchema)
+ **/
+export const KitMetaSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, files: true, folders: true, authors: true, attributes: true });
+/**
+ * Type alias for KitMeta.
+ * [👤semio📚js💻semio🔖kit🛠️kitmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitMeta)
+ **/
+export type KitMeta = z.infer<typeof KitMetaSchema>;
+/**
+ * Serializes KitMeta for transport.
+ * MUST produce a serializable output.
+ * [👤semio📚js💻semio🔖kit🪨serializekitmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/serializeKitMeta)
+ **/
+export const serializeKitMeta = (kit: KitMeta): string => JSON.stringify(KitMetaSchema.parse(kit));
+/**
+ * Performs the deserializeKitMeta operation.
+ * MUST perform the operation correctly.
+ * [👤semio📚js💻semio🔖kit🪨deserializekitmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/deserializeKitMeta)
+ **/
+export const deserializeKitMeta = (json: string): KitMeta => KitMetaSchema.parse(JSON.parse(json));
+/**
  * Definition of KitShallowSchema.
  * [👤semio📚js💻semio🔖kit🪨kitshallowschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitShallowSchema)
  **/
-export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, folders: true, authors: true }).extend({
-  types: z.array(z.string()).optional(),
-  designs: z.array(z.string()).optional(),
-  tags: z.array(z.string()).optional(),
-  concepts: z.array(z.string()).optional(),
-  ports: z.array(z.string()).optional(),
-  qualities: z.array(z.string()).optional(),
-  folders: z.array(z.string()).optional(),
-  authors: z.array(z.string()).optional(),
+export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, files: true, folders: true, authors: true, attributes: true }).extend({
+  types: z.array(TypeMetaSchema).optional(),
+  designs: z.array(DesignMetaSchema).optional(),
+  tags: z.array(TagMetaSchema).optional(),
+  concepts: z.array(ConceptMetaSchema).optional(),
+  ports: z.array(PortMetaSchema).optional(),
+  qualities: z.array(QualityMetaSchema).optional(),
+  files: z.array(FileMetaSchema).optional(),
+  folders: z.array(FolderMetaSchema).optional(),
+  authors: z.array(AuthorMetaSchema).optional(),
+  attributes: z.array(AttributeMetaSchema).optional(),
 });
 /**
  * Type alias for KitShallow.
@@ -6496,6 +7289,66 @@ export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(K
  * [👤semio📚js💻semio🔖kit🪨deserializekitshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/deserializeKitShallow)
  **/
 export const deserializeKitShallow = (json: string): KitShallow => KitShallowSchema.parse(JSON.parse(json));
+/**
+ * Converts a Type to TypeMeta.
+ * [👤semio📚js💻semio🔖type🪨totypemeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/toTypeMeta)
+ **/
+export const toTypeMeta = (type: Type): TypeMeta => TypeMetaSchema.parse(type);
+/**
+ * Converts a Type to TypeShallow.
+ * [👤semio📚js💻semio🔖type🪨totypeshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Type/d/i/toTypeShallow)
+ **/
+export const toTypeShallow = (type: Type): TypeShallow => {
+  const result: any = { ...type };
+  if (result.models) result.models = result.models.map((m: Model) => ModelMetaSchema.parse(m));
+  if (result.connectors) result.connectors = result.connectors.map((c: Connector) => ConnectorMetaSchema.parse(c));
+  if (result.props) result.props = result.props.map((p: Prop) => PropMetaSchema.parse(p));
+  if (result.attributes) result.attributes = result.attributes.map((a: Attribute) => AttributeMetaSchema.parse(a));
+  return TypeShallowSchema.parse(result);
+};
+/**
+ * Converts a Design to DesignMeta.
+ * [👤semio📚js💻semio🔖design🪨todesignmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/toDesignMeta)
+ **/
+export const toDesignMeta = (design: Design): DesignMeta => DesignMetaSchema.parse(design);
+/**
+ * Converts a Design to DesignShallow.
+ * [👤semio📚js💻semio🔖design🪨todesignshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/toDesignShallow)
+ **/
+export const toDesignShallow = (design: Design): DesignShallow => {
+  const result: any = { ...design };
+  if (result.pieces) result.pieces = result.pieces.map((p: Piece) => PieceMetaSchema.parse(p));
+  if (result.connections) result.connections = result.connections.map((c: Connection) => ConnectionMetaSchema.parse(c));
+  if (result.stats) result.stats = result.stats.map((s: Stat) => StatMetaSchema.parse(s));
+  if (result.props) result.props = result.props.map((p: Prop) => PropMetaSchema.parse(p));
+  if (result.layers) result.layers = result.layers.map((l: Layer) => LayerMetaSchema.parse(l));
+  if (result.groups) result.groups = result.groups.map((g: Group) => GroupMetaSchema.parse(g));
+  if (result.attributes) result.attributes = result.attributes.map((a: Attribute) => AttributeMetaSchema.parse(a));
+  return DesignShallowSchema.parse(result);
+};
+/**
+ * Converts a Kit to KitMeta.
+ * [👤semio📚js💻semio🔖kit🪨tokitmeta](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/toKitMeta)
+ **/
+export const toKitMeta = (kit: Kit): KitMeta => KitMetaSchema.parse(kit);
+/**
+ * Converts a Kit to KitShallow.
+ * [👤semio📚js💻semio🔖kit🪨tokitshallow](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/toKitShallow)
+ **/
+export const toKitShallow = (kit: Kit): KitShallow => {
+  const result: any = { ...kit };
+  if (result.types) result.types = result.types.map((t: Type) => TypeMetaSchema.parse(t));
+  if (result.designs) result.designs = result.designs.map((d: Design) => DesignMetaSchema.parse(d));
+  if (result.tags) result.tags = result.tags.map((t: Tag) => TagMetaSchema.parse(t));
+  if (result.concepts) result.concepts = result.concepts.map((c: Concept) => ConceptMetaSchema.parse(c));
+  if (result.ports) result.ports = result.ports.map((p: Port) => PortMetaSchema.parse(p));
+  if (result.qualities) result.qualities = result.qualities.map((q: Quality) => QualityMetaSchema.parse(q));
+  if (result.files) result.files = result.files.map((f: File) => FileMetaSchema.parse(f));
+  if (result.folders) result.folders = result.folders.map((f: Folder) => FolderMetaSchema.parse(f));
+  if (result.authors) result.authors = result.authors.map((a: Author) => AuthorMetaSchema.parse(a));
+  if (result.attributes) result.attributes = result.attributes.map((a: Attribute) => AttributeMetaSchema.parse(a));
+  return KitShallowSchema.parse(result);
+};
 /**
  * Zod schema for Kit diff validation.
  * [👤semio📚js💻semio🔖kit🪨kitdiffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitDiffSchema)
@@ -7132,6 +7985,111 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
   const design = kit.designs?.find((d) => d.guid === designGuid);
   if (!design) throw new Error(`Design ${designGuid} not found in kit ${kit.name}`);
   return design;
+};
+
+/**
+ * Filters a kit to only include entities related to a specific design.
+ * Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
+ * files not used by selected models, and keeps at most one model per type according to the optional tags.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨filterkitwithdesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/filterKitWithDesign)
+ **/
+export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[]): Kit => {
+  const design = findDesignInKit(kit, designGuid);
+
+  const usedTypeGuids = new Set<string>();
+  const usedDesignGuids = new Set<string>([designGuid]);
+  for (const piece of design.pieces ?? []) {
+    if (piece.type?.guid) usedTypeGuids.add(piece.type.guid);
+    if (piece.design?.guid) usedDesignGuids.add(piece.design.guid);
+  }
+
+  const typeByGuid = new Map((kit.types ?? []).map((type) => [type.guid, type]));
+  const collectAncestors = (typeGuid: string) => {
+    const type = typeByGuid.get(typeGuid);
+    if (!type?.parent?.guid || usedTypeGuids.has(type.parent.guid)) return;
+    usedTypeGuids.add(type.parent.guid);
+    collectAncestors(type.parent.guid);
+  };
+  for (const typeGuid of [...usedTypeGuids]) collectAncestors(typeGuid);
+
+  const resolvedTagGuids = (tags ?? []).flatMap((tagValue) => {
+    const byGuid = (kit.tags ?? []).find((tag) => tag.guid === tagValue);
+    if (byGuid) return [byGuid.guid];
+    return (kit.tags ?? []).filter((tag) => tag.name === tagValue).map((tag) => tag.guid);
+  });
+
+  const usedPortGuids = new Set<string>();
+  const usedFileGuids = new Set<string>();
+  const usedTagGuids = new Set<string>();
+  const usedConceptGuids = new Set<string>();
+  const usedQualityGuids = new Set<string>();
+  const usedAuthorGuids = new Set<string>();
+  const usedFolderNames = new Set<string>();
+  const selectedModels = new Map<string, Model>();
+
+  const collectQualityFromProps = (props?: Array<{ quality?: { guid: string } }>) => {
+    for (const prop of props ?? []) {
+      if (prop.quality?.guid) usedQualityGuids.add(prop.quality.guid);
+    }
+  };
+
+  for (const typeGuid of usedTypeGuids) {
+    const type = typeByGuid.get(typeGuid);
+    if (!type) continue;
+    if (type.folder) usedFolderNames.add(type.folder);
+    for (const connector of type.connectors ?? []) {
+      if (connector.port?.guid) usedPortGuids.add(connector.port.guid);
+      collectQualityFromProps(connector.props);
+    }
+    collectQualityFromProps(type.props);
+    for (const author of type.authors ?? []) if (author.guid) usedAuthorGuids.add(author.guid);
+    for (const concept of type.concepts ?? []) if (concept.guid) usedConceptGuids.add(concept.guid);
+    const selectedModel = selectBestModel(type.models ?? [], resolvedTagGuids);
+    if (selectedModel) {
+      selectedModels.set(typeGuid, selectedModel);
+      if (selectedModel.file?.guid) usedFileGuids.add(selectedModel.file.guid);
+      for (const tag of selectedModel.tags ?? []) if (tag.guid) usedTagGuids.add(tag.guid);
+    }
+  }
+
+  for (const piece of design.pieces ?? []) collectQualityFromProps(piece.props);
+  for (const concept of design.concepts ?? []) if (concept.guid) usedConceptGuids.add(concept.guid);
+  for (const author of design.authors ?? []) if (author.guid) usedAuthorGuids.add(author.guid);
+  for (const portGuid of [...usedPortGuids]) {
+    const port = (kit.ports ?? []).find((candidate) => candidate.guid === portGuid);
+    for (const compatible of port?.compatiblePorts ?? []) if (compatible.guid) usedPortGuids.add(compatible.guid);
+  }
+  for (const tagGuid of resolvedTagGuids) usedTagGuids.add(tagGuid);
+
+  return {
+    guid: kit.guid,
+    name: kit.name,
+    version: kit.version,
+    description: kit.description,
+    icon: kit.icon,
+    image: kit.image,
+    preview: kit.preview,
+    remote: kit.remote,
+    homepage: kit.homepage,
+    license: kit.license,
+    types: (kit.types ?? [])
+      .filter((type) => usedTypeGuids.has(type.guid))
+      .map((type) => ({
+        ...type,
+        models: selectedModels.has(type.guid) ? [selectedModels.get(type.guid)!] : [],
+      })),
+    designs: (kit.designs ?? []).filter((candidate) => usedDesignGuids.has(candidate.guid)),
+    ports: (kit.ports ?? []).filter((port) => usedPortGuids.has(port.guid)),
+    files: (kit.files ?? []).filter((file) => usedFileGuids.has(file.guid)),
+    tags: (kit.tags ?? []).filter((tag) => usedTagGuids.has(tag.guid)),
+    concepts: (kit.concepts ?? []).filter((concept) => usedConceptGuids.has(concept.guid)),
+    qualities: (kit.qualities ?? []).filter((quality) => usedQualityGuids.has(quality.guid)),
+    folders: (kit.folders ?? []).filter((folder) => usedFolderNames.has(folder.name)),
+    authors: (kit.authors ?? []).filter((author) => usedAuthorGuids.has(author.guid)),
+    attributes: kit.attributes,
+    createdAt: kit.createdAt,
+    updatedAt: kit.updatedAt,
+  };
 };
 
 // #region 🔖Design Family Helpers
@@ -12054,7 +13012,26 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   const ElementsBundle = await import("@elements/ui");
   const { buildControlTree, Action: UiAction } = ElementsBundle;
   type ControlDef = import("@elements/ui").ControlDef;
-  const { DragDesign, DragDiffDesign, DragOffset, DragPieces, InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted, ModelSelectionCases } = await import("@semio/assets");
+  const {
+    DragDesign,
+    DragDiffDesign,
+    DragOffset,
+    DragPieces,
+    InvalidKit,
+    InvalidKitValidation,
+    MetabolismKit,
+    MetabolismKitDiff,
+    MetabolismKitDiffed,
+    MetabolismKitDiffInverted,
+    ModelSelectionCases,
+    NakaginCapsuleTowerFilteredKit,
+    MetabolismMetaKit,
+    MetabolismShallowKit,
+    TambourMetaType,
+    TambourShallowType,
+    NakaginCapsuleTowerMetaDesign,
+    NakaginCapsuleTowerShallowDesign,
+  } = await import("@semio/assets");
   const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
   type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
   type KitJsonFileAdapter = import("@semio/studio").KitJsonFileAdapter;
@@ -12280,6 +13257,65 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       });
     });
   });
+
+  // #region 🔖Kit Filter Tests
+  // [👤semio📚js🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/KitFilterTests)
+  // Tests for filterKitWithDesign MUST verify correct subset extraction.
+
+  describe("Kit/Filter/Design", () => {
+    const kit = MetabolismKit as Kit;
+    const expected = NakaginCapsuleTowerFilteredKit as any;
+    const nakaginDesign = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
+
+    it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
+      expect(nakaginDesign).toBeDefined();
+      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+
+      expect(filtered.designs?.length).toBe(expected.designs.length);
+      expect(filtered.types?.length).toBe(expected.types.length);
+      expect(filtered.files?.length).toBe(expected.files.length);
+      expect(filtered.ports?.length).toBe(expected.ports.length);
+      expect(filtered.qualities?.length).toBe(expected.qualities.length);
+      expect(filtered.authors?.length).toBe(expected.authors.length);
+
+      const filteredDesign = filtered.designs?.find((d) => d.guid === nakaginDesign!.guid);
+      expect(filteredDesign).toBeDefined();
+      expect(filteredDesign!.pieces?.length).toBe(nakaginDesign!.pieces?.length);
+
+      for (const expectedType of expected.types) {
+        const filteredType = filtered.types?.find((t: any) => t.guid === expectedType.guid);
+        expect(filteredType).toBeDefined();
+        expect(filteredType!.models?.length ?? 0).toBe(expectedType.models?.length ?? 0);
+      }
+
+      for (const piece of filteredDesign!.pieces ?? []) {
+        if (piece.type?.guid) {
+          expect(filtered.types?.some((t) => t.guid === piece.type!.guid)).toBe(true);
+        }
+      }
+
+      for (const type of filtered.types ?? []) {
+        expect((type.models ?? []).length).toBeLessThanOrEqual(1);
+        for (const model of type.models ?? []) {
+          expect(filtered.files?.some((f) => f.guid === model.file.guid)).toBe(true);
+        }
+        for (const connector of type.connectors ?? []) {
+          if (connector.port?.guid) {
+            expect(filtered.ports?.some((p) => p.guid === connector.port!.guid)).toBe(true);
+          }
+        }
+      }
+    });
+
+    it("preserves kit metadata", () => {
+      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      expect(filtered.guid).toBe(kit.guid);
+      expect(filtered.name).toBe(kit.name);
+      expect(filtered.version).toBe(kit.version);
+    });
+  });
+
+  // #endregion 🔖Kit Filter Tests
 
   describe("Flatten", () => {
     const kit = MetabolismKit as Kit;
@@ -13784,6 +14820,149 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
   });
   // #endregion 🔖SketchpadStore Auto Save Tests
+
+  // #region 🔖Meta/Shallow Tests
+  // [👤semio📚js💻index🔖metashallowtests](repo://p/u/semio/b/l/js/f/index.ts/s/MetaShallowTests)
+  // Tests for Meta and Shallow schema parsing, conversion functions, and roundtrips.
+  describe("Meta/Shallow", () => {
+    describe("Kit/Meta", () => {
+      it("parses metabolism.meta.kit.semio.json with KitMetaSchema", () => {
+        const parsed = KitMetaSchema.parse(MetabolismMetaKit);
+        expect(parsed.name).toBe("Metabolism");
+        expect(parsed.guid).toBe("f042c2a4-3ba5-44b0-b22c-0ae8f568aacc");
+        expect((parsed as any).types).toBeUndefined();
+        expect((parsed as any).designs).toBeUndefined();
+        expect((parsed as any).files).toBeUndefined();
+      });
+      it("toKitMeta strips collections from full kit", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const meta = toKitMeta(kit);
+        expect(meta.name).toBe("Metabolism");
+        expect((meta as any).types).toBeUndefined();
+        expect((meta as any).designs).toBeUndefined();
+        expect((meta as any).files).toBeUndefined();
+      });
+      it("roundtrips KitMeta through serialize/deserialize", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const meta = toKitMeta(kit);
+        const serialized = serializeKitMeta(meta);
+        const deserialized = deserializeKitMeta(serialized);
+        expect(deserialized.name).toBe(meta.name);
+        expect(deserialized.guid).toBe(meta.guid);
+      });
+    });
+
+    describe("Kit/Shallow", () => {
+      it("parses metabolism.shallow.kit.semio.json with KitShallowSchema", () => {
+        const parsed = KitShallowSchema.parse(MetabolismShallowKit);
+        expect(parsed.name).toBe("Metabolism");
+        expect(parsed.types).toBeDefined();
+        expect(parsed.types!.length).toBeGreaterThan(0);
+        // Shallow types should be meta (no nested collections like models)
+        const firstType = parsed.types![0] as any;
+        expect(firstType.models).toBeUndefined();
+        expect(firstType.connectors).toBeUndefined();
+      });
+      it("toKitShallow converts full kit to shallow with meta children", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const shallow = toKitShallow(kit);
+        expect(shallow.name).toBe("Metabolism");
+        expect(shallow.types).toBeDefined();
+        expect(shallow.types!.length).toBeGreaterThan(0);
+        const firstType = shallow.types![0] as any;
+        expect(firstType.models).toBeUndefined();
+        expect(firstType.connectors).toBeUndefined();
+      });
+      it("roundtrips KitShallow through serialize/deserialize", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const shallow = toKitShallow(kit);
+        const serialized = serializeKitShallow(shallow);
+        const deserialized = deserializeKitShallow(serialized);
+        expect(deserialized.name).toBe(shallow.name);
+        expect(deserialized.types!.length).toBe(shallow.types!.length);
+      });
+    });
+
+    describe("Type/Meta", () => {
+      it("parses tambour.meta.type.semio.json with TypeMetaSchema", () => {
+        const parsed = TypeMetaSchema.parse(TambourMetaType);
+        expect(parsed.name).toBe("Tambour");
+        expect(parsed.guid).toBe("2a6bb3e8-4adb-44a3-bc87-3314b77b40f7");
+        expect((parsed as any).models).toBeUndefined();
+        expect((parsed as any).connectors).toBeUndefined();
+        expect((parsed as any).props).toBeUndefined();
+      });
+      it("toTypeMeta strips collections from full type", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const tambour = kit.types!.find((t: Type) => t.name === "Tambour")!;
+        const meta = toTypeMeta(tambour);
+        expect(meta.name).toBe("Tambour");
+        expect((meta as any).models).toBeUndefined();
+        expect((meta as any).connectors).toBeUndefined();
+      });
+    });
+
+    describe("Type/Shallow", () => {
+      it("parses tambour.shallow.type.semio.json with TypeShallowSchema", () => {
+        const parsed = TypeShallowSchema.parse(TambourShallowType);
+        expect(parsed.name).toBe("Tambour");
+        if (parsed.models) {
+          const firstModel = parsed.models[0] as any;
+          expect(firstModel.tags).toBeUndefined();
+        }
+      });
+      it("toTypeShallow converts full type to shallow with meta children", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const tambour = kit.types!.find((t: Type) => t.name === "Tambour")!;
+        const shallow = toTypeShallow(tambour);
+        expect(shallow.name).toBe("Tambour");
+        if (shallow.models) {
+          const firstModel = shallow.models[0] as any;
+          expect(firstModel.tags).toBeUndefined();
+        }
+      });
+    });
+
+    describe("Design/Meta", () => {
+      it("parses nakagin-capsule-tower.meta.design.semio.json with DesignMetaSchema", () => {
+        const parsed = DesignMetaSchema.parse(NakaginCapsuleTowerMetaDesign);
+        expect(parsed.name).toBe("Nakagin Capsule Tower");
+        expect(parsed.guid).toBe("9a890dd4-0a9c-48ac-920a-9e62666465ef");
+        expect((parsed as any).pieces).toBeUndefined();
+        expect((parsed as any).connections).toBeUndefined();
+      });
+      it("toDesignMeta strips collections from full design", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+        const meta = toDesignMeta(nct);
+        expect(meta.name).toBe("Nakagin Capsule Tower");
+        expect((meta as any).pieces).toBeUndefined();
+        expect((meta as any).connections).toBeUndefined();
+      });
+    });
+
+    describe("Design/Shallow", () => {
+      it("parses nakagin-capsule-tower.shallow.design.semio.json with DesignShallowSchema", () => {
+        const parsed = DesignShallowSchema.parse(NakaginCapsuleTowerShallowDesign);
+        expect(parsed.name).toBe("Nakagin Capsule Tower");
+        if (parsed.pieces) {
+          const firstPiece = parsed.pieces[0] as any;
+          expect(firstPiece.attributes).toBeUndefined();
+        }
+      });
+      it("toDesignShallow converts full design to shallow with meta children", () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+        const shallow = toDesignShallow(nct);
+        expect(shallow.name).toBe("Nakagin Capsule Tower");
+        if (shallow.pieces) {
+          const firstPiece = shallow.pieces[0] as any;
+          expect(firstPiece.attributes).toBeUndefined();
+        }
+      });
+    });
+  });
+  // #endregion 🔖Meta/Shallow Tests
 } // end vitest guard
 // #endregion 🔖Tests
 

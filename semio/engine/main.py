@@ -23,12 +23,15 @@ from __future__ import annotations
 
 import abc
 import argparse
+import base64
 import contextlib
 import copy
 import datetime
 import difflib
 import enum
 import functools
+import html as htmlmodule
+import importlib.util as _ilu
 import io
 import json
 import logging
@@ -54,8 +57,7 @@ import starlette.applications
 import starlette_graphene3
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
-
-import importlib.util as _ilu
+from mcp.types import CallToolResult, ImageContent, TextContent
 
 _semio_core_path = str(pathlib.Path(__file__).parent.parent / "py" / "main.py")
 _semio_core_spec = _ilu.spec_from_file_location("semio_core", _semio_core_path)
@@ -146,10 +148,17 @@ from semio_core import (
     changeKeys,
     changeToDict,
     changeValues,
+    authorToMeta,
+    connectionToMeta,
+    connectorToMeta,
+    conceptToMeta,
     createClusteredDesignDict,
     decode,
+    designToMeta,
+    designToShallow,
     encode,
     expandDesignPiecesDict,
+    fileToMeta,
     findAttributeValueDict,
     findPieceTypeInDesignDict,
     findReplaceableTypesForPieceInDesignDict,
@@ -157,6 +166,7 @@ from semio_core import (
     findSameFamilyDesignPiecesDict,
     findUsedConnectorsByPieceInDesignDict,
     flattenDesignDict,
+    folderToMeta,
     getClusterableGroupsDict,
     getDesignChange,
     getDesignChildrenDict,
@@ -170,17 +180,118 @@ from semio_core import (
     getTypeFamilyDict,
     getTypeSiblingsDict,
     inverseKitDiffDict,
+    kitToShallow,
     logger,
+    modelToMeta,
     normalizeAngle,
     parseValidationResult,
     piecesMetadataDict,
+    pieceToMeta,
     planeFromYAxis,
+    portToMeta,
+    qualityToMeta,
     replaceClusterWithDesignDict,
     sumQualityInDesignDict,
+    tagToMeta,
+    typeToMeta,
+    typeToShallow,
     validateKitDict,
 )
 
 # endregion Imports
+
+
+# region Shallow Diff Helpers
+
+def _shallowifyCollectionDiff(collDiff: dict, metaFn, nestedDiffHandler=None) -> dict:
+    """Convert added items in a collection diff to meta/shallow, and optionally process nested updated diffs."""
+    if not collDiff or not isinstance(collDiff, dict):
+        return collDiff
+    result = dict(collDiff)
+    if "added" in result:
+        result["added"] = [metaFn(item) for item in result["added"]]
+    if nestedDiffHandler and "updated" in result:
+        result["updated"] = [
+            {**entry, "diff": nestedDiffHandler(entry["diff"])} if "diff" in entry else entry
+            for entry in result["updated"]
+        ]
+    return result
+
+
+def _shallowifyTypeDiff(typeDiff: dict) -> dict:
+    """Convert full entities in a type diff to meta."""
+    if not typeDiff or not isinstance(typeDiff, dict):
+        return typeDiff
+    result = dict(typeDiff)
+    if "connectors" in result:
+        result["connectors"] = _shallowifyCollectionDiff(result["connectors"], connectorToMeta)
+    if "models" in result:
+        result["models"] = _shallowifyCollectionDiff(result["models"], modelToMeta)
+    return result
+
+
+def _shallowifyDesignDiff(designDiff: dict) -> dict:
+    """Convert full entities in a design diff to meta."""
+    if not designDiff or not isinstance(designDiff, dict):
+        return designDiff
+    result = dict(designDiff)
+    if "pieces" in result:
+        result["pieces"] = _shallowifyCollectionDiff(result["pieces"], pieceToMeta)
+    if "connections" in result:
+        result["connections"] = _shallowifyCollectionDiff(result["connections"], connectionToMeta)
+    return result
+
+
+def _shallowifyKitDiff(kitDiff: dict) -> dict:
+    """Convert full entities in a kit diff to shallow/meta."""
+    if not kitDiff or not isinstance(kitDiff, dict):
+        return kitDiff
+    result = dict(kitDiff)
+    if "types" in result:
+        result["types"] = _shallowifyCollectionDiff(result["types"], typeToShallow, _shallowifyTypeDiff)
+    if "designs" in result:
+        result["designs"] = _shallowifyCollectionDiff(result["designs"], designToShallow, _shallowifyDesignDiff)
+    for key, metaFn in [("tags", tagToMeta), ("concepts", conceptToMeta), ("ports", portToMeta),
+                        ("files", fileToMeta), ("folders", folderToMeta), ("qualities", qualityToMeta),
+                        ("authors", authorToMeta)]:
+        if key in result:
+            result[key] = _shallowifyCollectionDiff(result[key], metaFn)
+    return result
+
+
+def _shallowifyChange(changeDict: dict) -> dict:
+    """Convert full entities in a change dict (forward/backward diffs + before/after) to shallow."""
+    if not changeDict or not isinstance(changeDict, dict):
+        return changeDict
+    result = dict(changeDict)
+    if "forward" in result:
+        result["forward"] = _shallowifyKitDiff(result["forward"])
+    if "backward" in result:
+        result["backward"] = _shallowifyKitDiff(result["backward"])
+    if "before" in result:
+        result["before"] = kitToShallow(result["before"])
+    if "after" in result:
+        result["after"] = kitToShallow(result["after"])
+    return result
+
+
+def _shallowifyDesignChange(changeDict: dict) -> dict:
+    """Convert full entities in a design change dict to shallow."""
+    if not changeDict or not isinstance(changeDict, dict):
+        return changeDict
+    result = dict(changeDict)
+    if "forward" in result:
+        result["forward"] = _shallowifyDesignDiff(result["forward"])
+    if "backward" in result:
+        result["backward"] = _shallowifyDesignDiff(result["backward"])
+    if "before" in result:
+        result["before"] = designToShallow(result["before"])
+    if "after" in result:
+        result["after"] = designToShallow(result["after"])
+    return result
+
+
+# endregion Shallow Diff Helpers
 
 # region Store
 # [👤semio📚engine💻engine🔖store](repo://p/u/semio/b/l/engine/f/engine.py/s/Store)
@@ -1870,15 +1981,53 @@ def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
         raise ServerUnreachable(serverUrl)
 
 
+# region MCP Kit Path Resolution
+def _resolve_local_kit_path(path: str) -> pathlib.Path:
+    """Resolve a local kit path, including shorthand asset paths that omit the `semio` namespace folder.
+    [👤semio📚engine💻engine🔖mcp🔖kitpathresolution](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/Kit%20Path%20Resolution)
+    """
+    candidate = pathlib.Path(path).expanduser()
+    if candidate.exists():
+        return candidate.resolve()
+
+    parent = candidate.parent
+    name = candidate.name
+    stem = candidate.stem
+    suffix = candidate.suffix
+    fallback_candidates: list[pathlib.Path] = []
+
+    if name and parent.name != "semio":
+        fallback_candidates.append(parent / "semio" / name)
+        if suffix == "":
+            fallback_candidates.append(parent / "semio" / f"{name}.kit.json")
+            fallback_candidates.append(parent / "semio" / f"kit_{name}.json")
+            fallback_candidates.append(parent / "semio" / name / "kit.json")
+            fallback_candidates.append(parent / "semio" / name / "kit_metabolism.json")
+        elif suffix == ".json":
+            fallback_candidates.append(parent / "semio" / name)
+            fallback_candidates.append(parent / "semio" / f"{stem}.kit.json")
+            fallback_candidates.append(parent / "semio" / f"kit_{stem}.json")
+
+    for fallback_candidate in fallback_candidates:
+        if fallback_candidate.exists():
+            return fallback_candidate.resolve()
+
+    return candidate.resolve()
+
+
 def _load_kit_from_path(path: str) -> dict:
     """Load kit dict from path (JSON file or folder with .semio/kit.sqlite3 or kit JSON).
     [👤semio📚engine💻engine🔖mcp🛠️loadkitfrompath](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_path)
     """
-    p = pathlib.Path(path).resolve()
+    p = _resolve_local_kit_path(path)
     if p.is_file() and p.suffix == ".json":
         with open(p, "r", encoding="utf-8") as f:
             return json.load(f)
     if p.is_dir():
+        local_json_path = p / KIT_LOCAL_FOLDERNAME / "kit.json"
+        if local_json_path.exists():
+            with open(local_json_path, "r", encoding="utf-8") as f:
+                return json.load(f)
         sqlite_path = p / KIT_LOCAL_FOLDERNAME / KIT_LOCAL_FILENAME
         if sqlite_path.exists():
             store = StoreFactory(str(p))
@@ -1894,6 +2043,7 @@ def _load_kit_from_path(path: str) -> dict:
             with open(parent_json, "r", encoding="utf-8") as f:
                 return json.load(f)
     raise FileNotFoundError(f"Kit not found at path: {path}")
+# endregion MCP Kit Path Resolution
 
 
 def _session_id(ctx) -> int:
@@ -2089,7 +2239,7 @@ def start_working_in_local_kit(path: str, ctx: Context) -> dict:
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
         _mcp_session_kit_source[sid] = path
-        return {"ok": True, "mode": "local", "path": path}
+        return kitToShallow(kit)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2112,7 +2262,7 @@ def start_new_kit(name: str, version: str, ctx: Context) -> dict:
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
         _mcp_session_kit_source[sid] = "<memory>"
-        return {"ok": True, "name": name, "version": version}
+        return kitToShallow(kit)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2131,7 +2281,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> di
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "remote"
         _mcp_session_kit_source[sid] = f"{serverUrl}/api/kits/{encode(kitUri)}"
-        return {"ok": True, "mode": "remote", "serverUrl": serverUrl, "kitUri": kitUri}
+        return kitToShallow(kit)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2192,7 +2342,7 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️flattendesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/flatten_design)
     """
     try:
-        return flattenDesignDict(kit, design_guid)
+        return designToShallow(flattenDesignDict(kit, design_guid))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2203,7 +2353,7 @@ def get_kit_diff(before: dict, after: dict) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️getkitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_diff)
     """
     try:
-        return getKitDiffDict(before, after)
+        return _shallowifyKitDiff(getKitDiffDict(before, after))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2214,7 +2364,7 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️applykitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/apply_kit_diff)
     """
     try:
-        return applyKitDiffDict(base, diff)
+        return kitToShallow(applyKitDiffDict(base, diff))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2225,7 +2375,7 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️inversekitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/inverse_kit_diff)
     """
     try:
-        return inverseKitDiffDict(original, applied_diff)
+        return _shallowifyKitDiff(inverseKitDiffDict(original, applied_diff))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2236,7 +2386,7 @@ def get_kit_change(before: dict, after: dict) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️getkitchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_change)
     """
     try:
-        return changeToDict(getKitChange(before, after))
+        return _shallowifyChange(changeToDict(getKitChange(before, after)))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2247,7 +2397,7 @@ def get_design_change(before: dict, after: dict) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️getdesignchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_change)
     """
     try:
-        return changeToDict(getDesignChange(before, after))
+        return _shallowifyDesignChange(changeToDict(getDesignChange(before, after)))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2269,7 +2419,7 @@ def get_primitive_design(kit: dict, design_guid: str) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️getprimitivedesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_design)
     """
     try:
-        return getPrimitiveDesignDict(kit, design_guid)
+        return designToShallow(getPrimitiveDesignDict(kit, design_guid))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2280,7 +2430,7 @@ def get_design_family(kit: dict, design_guid: str) -> list:
     [👤semio📚engine💻engine🔖mcp🛠️getdesignfamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_family)
     """
     try:
-        return getDesignFamilyDict(kit, design_guid)
+        return [designToShallow(d) for d in getDesignFamilyDict(kit, design_guid)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2291,7 +2441,7 @@ def get_design_siblings(kit: dict, design_guid: str) -> list:
     [👤semio📚engine💻engine🔖mcp🛠️getdesignsiblings](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_siblings)
     """
     try:
-        return getDesignSiblingsDict(kit, design_guid)
+        return [designToShallow(d) for d in getDesignSiblingsDict(kit, design_guid)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2302,7 +2452,7 @@ def get_design_children(kit: dict, design_guid: str) -> list:
     [👤semio📚engine💻engine🔖mcp🛠️getdesignchildren](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_children)
     """
     try:
-        return getDesignChildrenDict(kit, design_guid)
+        return [designToShallow(d) for d in getDesignChildrenDict(kit, design_guid)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2335,7 +2485,7 @@ def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
     [👤semio📚engine💻engine🔖mcp🛠️findsamefamilydesignpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_same_family_design_pieces)
     """
     try:
-        return findSameFamilyDesignPiecesDict(kit, design_guid)
+        return [pieceToMeta(p) for p in findSameFamilyDesignPiecesDict(kit, design_guid)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2346,7 +2496,7 @@ def get_primitive_type(kit: dict, type_guid: str) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️getprimitivetype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_type)
     """
     try:
-        return getPrimitiveTypeDict(kit, type_guid)
+        return typeToShallow(getPrimitiveTypeDict(kit, type_guid))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2357,7 +2507,7 @@ def get_type_family(kit: dict, type_guid: str) -> list:
     [👤semio📚engine💻engine🔖mcp🛠️gettypefamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_family)
     """
     try:
-        return getTypeFamilyDict(kit, type_guid)
+        return [typeToShallow(t) for t in getTypeFamilyDict(kit, type_guid)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2368,7 +2518,7 @@ def get_type_siblings(kit: dict, type_guid: str) -> list:
     [👤semio📚engine💻engine🔖mcp🛠️gettypesiblings](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_siblings)
     """
     try:
-        return getTypeSiblingsDict(kit, type_guid)
+        return [typeToShallow(t) for t in getTypeSiblingsDict(kit, type_guid)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2379,7 +2529,7 @@ def get_type_children(kit: dict, type_guid: str) -> list:
     [👤semio📚engine💻engine🔖mcp🛠️gettypechildren](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_children)
     """
     try:
-        return getTypeChildrenDict(kit, type_guid)
+        return [typeToShallow(t) for t in getTypeChildrenDict(kit, type_guid)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2401,7 +2551,7 @@ def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> d
     [👤semio📚engine💻engine🔖mcp🛠️findpiecetypeindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_piece_type_in_design)
     """
     try:
-        return findPieceTypeInDesignDict(kit, design_guid, piece_guid)
+        return typeToShallow(findPieceTypeInDesignDict(kit, design_guid, piece_guid))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2412,7 +2562,7 @@ def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_g
     [👤semio📚engine💻engine🔖mcp🛠️findusedconnectorsbypieceindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_used_connectors_by_piece_in_design)
     """
     try:
-        return findUsedConnectorsByPieceInDesignDict(kit, design_guid, piece_guid)
+        return [connectorToMeta(c) for c in findUsedConnectorsByPieceInDesignDict(kit, design_guid, piece_guid)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2423,7 +2573,7 @@ def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piec
     [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpieceindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_piece_in_design)
     """
     try:
-        return findReplaceableTypesForPieceInDesignDict(kit, design_guid, piece_guid, variants)
+        return [typeToShallow(t) for t in findReplaceableTypesForPieceInDesignDict(kit, design_guid, piece_guid, variants)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2434,7 +2584,7 @@ def find_replaceable_types_for_pieces_in_design(kit: dict, design_guid: str, pie
     [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpiecesindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_pieces_in_design)
     """
     try:
-        return findReplaceableTypesForPiecesInDesignDict(kit, design_guid, piece_guids, variants)
+        return [typeToShallow(t) for t in findReplaceableTypesForPiecesInDesignDict(kit, design_guid, piece_guids, variants)]
     except Exception as e:
         return {"error": str(e)}
 
@@ -2446,7 +2596,12 @@ def create_clustered_design(original_design: dict, cluster_piece_ids: list[str],
     [👤semio📚engine💻engine🔖mcp🛠️createclustereddesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/create_clustered_design)
     """
     try:
-        return createClusteredDesignDict(original_design, cluster_piece_ids, design_name)
+        result = createClusteredDesignDict(original_design, cluster_piece_ids, design_name)
+        if "clusteredDesign" in result:
+            result["clusteredDesign"] = designToShallow(result["clusteredDesign"])
+        if "externalConnections" in result:
+            result["externalConnections"] = [connectionToMeta(c) for c in result["externalConnections"]]
+        return result
     except Exception as e:
         return {"error": str(e)}
 
@@ -2457,7 +2612,7 @@ def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[s
     [👤semio📚engine💻engine🔖mcp🛠️replaceclusterwithdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/replace_cluster_with_design)
     """
     try:
-        return replaceClusterWithDesignDict(original_design, cluster_piece_ids, clustered_design, external_connections)
+        return _shallowifyDesignDiff(replaceClusterWithDesignDict(original_design, cluster_piece_ids, clustered_design, external_connections))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2479,7 +2634,7 @@ def expand_design_pieces(design: dict, kit: dict) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️expanddesignpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/expand_design_pieces)
     """
     try:
-        return expandDesignPiecesDict(design, kit)
+        return designToShallow(expandDesignPiecesDict(design, kit))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2499,9 +2654,10 @@ def find_attribute_value(entity: dict, name: str, default_value: str = None) -> 
 
 @mcp.tool()
 def read_current_kit(ctx: Context) -> dict:
-    """Read the current session kit."""
+    """Read the current session kit as a shallow entity (no blobs, child collections as meta)."""
     try:
-        return _get_session_kit(ctx)
+        kit = _get_session_kit(ctx)
+        return kitToShallow(kit)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2535,7 +2691,7 @@ def start_new_design(
             "connections": [],
         }
         stored_design = _replace_design_in_session_kit(ctx, design)
-        return {"ok": True, "guid": stored_design["guid"], "name": stored_design["name"]}
+        return designToShallow(stored_design)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2545,7 +2701,7 @@ def add_current_design_author(guid: str, ctx: Context) -> dict:
     """Append a flat author reference to the current design."""
     try:
         design = _mutate_current_design(ctx, lambda current_design: current_design.setdefault("authors", []).append({"guid": guid}))
-        return {"ok": True, "authorCount": len(design.get("authors", []))}
+        return designToShallow(design)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2566,7 +2722,7 @@ def add_current_design_prop(guid: str, quality_guid: str, value: str, unit: str,
             )
 
         design = _mutate_current_design(ctx, mutate)
-        return {"ok": True, "propCount": len(design.get("props", []))}
+        return designToShallow(design)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2597,7 +2753,7 @@ def add_current_design_piece(
             )
 
         design = _mutate_current_design(ctx, mutate)
-        return {"ok": True, "pieceCount": len(design.get("pieces", []))}
+        return designToShallow(design)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2645,7 +2801,7 @@ def add_current_design_piece_with_plane(
             )
 
         design = _mutate_current_design(ctx, mutate)
-        return {"ok": True, "pieceCount": len(design.get("pieces", []))}
+        return designToShallow(design)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2696,7 +2852,7 @@ def add_current_design_connection(
             )
 
         design = _mutate_current_design(ctx, mutate)
-        return {"ok": True, "connectionCount": len(design.get("connections", []))}
+        return designToShallow(design)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2714,7 +2870,7 @@ def start_working_in_design(guid: str, ctx: Context) -> dict:
             return {"error": f"Design with guid {guid} not found in kit."}
         sid = _session_id(ctx)
         _mcp_session_designs[sid] = design
-        return {"ok": True, "guid": guid, "name": design.get("name", "")}
+        return designToShallow(design)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2724,7 +2880,7 @@ def _read_current_design(ctx: Context) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️readcurrentdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_design)
     """
     try:
-        return _get_session_design(ctx)
+        return designToShallow(_get_session_design(ctx))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2741,9 +2897,10 @@ def finish_working_in_design(ctx: Context) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️finishworkingindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_design)
     """
     try:
+        kit = _get_session_kit(ctx)
         sid = _session_id(ctx)
         _mcp_session_designs.pop(sid, None)
-        return {"ok": True}
+        return kitToShallow(kit)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2761,7 +2918,7 @@ def start_working_in_type(guid: str, ctx: Context) -> dict:
             return {"error": f"Type with guid {guid} not found in kit."}
         sid = _session_id(ctx)
         _mcp_session_types[sid] = t
-        return {"ok": True, "guid": guid, "name": t.get("name", "")}
+        return typeToShallow(t)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2771,7 +2928,7 @@ def _read_current_type(ctx: Context) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️readcurrenttype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_type)
     """
     try:
-        return _get_session_type(ctx)
+        return typeToShallow(_get_session_type(ctx))
     except Exception as e:
         return {"error": str(e)}
 
@@ -2788,9 +2945,10 @@ def finish_working_in_type(ctx: Context) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️finishworkingintype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_type)
     """
     try:
+        kit = _get_session_kit(ctx)
         sid = _session_id(ctx)
         _mcp_session_types.pop(sid, None)
-        return {"ok": True}
+        return kitToShallow(kit)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2801,13 +2959,15 @@ def finish_working_in_kit(ctx: Context) -> dict:
     [👤semio📚engine💻engine🔖mcp🛠️finishworkinginkit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_kit)
     """
     try:
+        kit = _get_session_kit(ctx)
+        shallow = kitToShallow(kit)
         sid = _session_id(ctx)
         _clear_session_kit(ctx)
         _mcp_session_designs.pop(sid, None)
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode.pop(sid, None)
         _mcp_session_kit_source.pop(sid, None)
-        return {"ok": True}
+        return shallow
     except Exception as e:
         return {"error": str(e)}
 
@@ -2824,6 +2984,9 @@ def start_transaction(ctx: Context) -> dict:
             started_at=datetime.datetime.now(datetime.UTC).isoformat(),
             changes=[],
         )
+        sid_check = _session_id(ctx)
+        if sid_check is not None and sid_check in _mcp_session_kits:
+            return kitToShallow(_mcp_session_kits[sid_check])
         return {"ok": True}
     except Exception as e:
         return {"error": str(e)}
@@ -2836,9 +2999,10 @@ def finalize_transaction(ctx: Context) -> dict:
         transaction = _get_active_transaction(sid)
         if transaction is None:
             return {"error": "No active transaction for this session."}
-        change_count = len(transaction.get("changes", []))
         _mcp_session_transactions.pop(sid, None)
-        return {"ok": True, "changeCount": change_count}
+        if sid is not None and sid in _mcp_session_kits:
+            return kitToShallow(_mcp_session_kits[sid])
+        return {"ok": True}
     except Exception as e:
         return {"error": str(e)}
 
@@ -2850,14 +3014,15 @@ def abort_transaction(ctx: Context) -> dict:
         transaction = _get_active_transaction(sid)
         if transaction is None:
             return {"error": "No active transaction for this session."}
-        rolled_back = len(transaction.get("changes", []))
         _mcp_session_transaction_rollback.add(sid)
         try:
             _rollback_session_transaction(sid)
         finally:
             _mcp_session_transaction_rollback.discard(sid)
             _mcp_session_transactions.pop(sid, None)
-        return {"ok": True, "rolledBackChangeCount": rolled_back}
+        if sid is not None and sid in _mcp_session_kits:
+            return kitToShallow(_mcp_session_kits[sid])
+        return {"ok": True}
     except Exception as e:
         return {"error": str(e)}
 
@@ -2886,6 +3051,432 @@ def sum_quality_in_design(design_guid: str, quality_guid: str, ctx: Context) -> 
         return {"result": sumQualityInDesignDict(kit, design_guid, quality_guid)}
     except Exception as e:
         return {"error": str(e)}
+
+
+# region MCP Selection Tools
+# [👤semio📚engine💻engine🔖mcp🔖mcpselectiontools](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Selection%20Tools)
+# Specs: Session-scoped selection state for pieces and connections, exposed via MCP tools.
+# Summary: Three MCP tools for reading, setting, and clearing the current piece/connection selection.
+
+_mcp_session_selection: dict[int, dict[str, list[str]]] = {}
+_mcp_session_camera: dict[int, dict[str, typing.Any]] = {}
+
+
+@mcp.tool()
+def read_current_selection(ctx: Context) -> dict:
+    """Read the current piece and connection selection for the session.
+    [👤semio📚engine💻engine🔖mcp🔖mcpselectiontools🛠️readcurrentselection](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Selection%20Tools/d/i/read_current_selection)
+    """
+    sid = _session_id(ctx)
+    selection = _mcp_session_selection.get(sid, {"pieceGuids": [], "connectionGuids": []})
+    return selection
+
+
+@mcp.tool()
+def set_current_selection(ctx: Context, piece_guids: list[str] | None = None, connection_guids: list[str] | None = None) -> dict:
+    """Set the current piece and connection selection for the session.
+    [👤semio📚engine💻engine🔖mcp🔖mcpselectiontools🛠️setcurrentselection](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Selection%20Tools/d/i/set_current_selection)
+    """
+    sid = _session_id(ctx)
+    selection = {
+        "pieceGuids": piece_guids or [],
+        "connectionGuids": connection_guids or [],
+    }
+    _mcp_session_selection[sid] = selection
+    return selection
+
+
+@mcp.tool()
+def clear_current_selection(ctx: Context) -> dict:
+    """Clear the current selection for the session.
+    [👤semio📚engine💻engine🔖mcp🔖mcpselectiontools🛠️clearcurrentselection](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Selection%20Tools/d/i/clear_current_selection)
+    """
+    sid = _session_id(ctx)
+    _mcp_session_selection.pop(sid, None)
+    return {"pieceGuids": [], "connectionGuids": []}
+
+
+# endregion MCP Selection Tools
+
+
+# region MCP App Tools
+# [👤semio📚engine💻engine🔖mcp🔖mcpapptools](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools)
+# Specs: MCP App Tools MUST expose eight user-facing intents as separate MCP tools.
+# All tools return CallToolResult with an SVG diagram image, text summary, and structuredContent.
+# Summary: Eight MCP tools returning rich visual SVG diagrams via CallToolResult.
+
+
+# region MCP App SVG Generation
+# Specs: Generate self-contained SVG diagrams from kit data for embedding in MCP tool results.
+# Summary: SVG diagram renderer for pieces (circles) and connections (lines) with diff/selection coloring.
+
+
+def _svg_status_color(status: str, is_selected: bool = False) -> str:
+    """Return SVG fill/stroke color for a diagram entity status.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🔖mcpappsvggeneration🛠️svgstatuscolor](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/s/MCP%20App%20SVG%20Generation/d/i/_svg_status_color)
+    """
+    if is_selected:
+        return "#6366f1"
+    if status == "removed":
+        return "#ef4444"
+    if status == "added":
+        return "#22c55e"
+    if status == "modified":
+        return "#f59e0b"
+    return "#a1a1aa"
+
+
+def _flatten_and_get_flat_design(kit: dict, design_guid: str) -> dict:
+    """Flatten a design and return the flat design dict with resolved piece centers.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🔖mcpappsvggeneration🛠️flattenandgetflatdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/s/MCP%20App%20SVG%20Generation/d/i/_flatten_and_get_flat_design)
+    """
+    design = None
+    for d in kit.get("designs", []):
+        if d.get("guid") == design_guid:
+            design = d
+            break
+    if design is None:
+        return {"pieces": [], "connections": []}
+    flatten_diff = flattenDesignDict(kit, design_guid)
+    center_updates = {}
+    for update in flatten_diff.get("pieces", {}).get("updated", []):
+        uid = update.get("id")
+        diff_data = update.get("diff", {})
+        if uid and diff_data.get("center"):
+            center_updates[uid] = diff_data["center"]
+    flat_pieces = []
+    for piece in design.get("pieces", []):
+        flat_piece = dict(piece)
+        if piece.get("guid") in center_updates:
+            flat_piece["center"] = center_updates[piece["guid"]]
+        elif flat_piece.get("center") is None:
+            flat_piece["center"] = {"u": 0, "v": 0}
+        flat_pieces.append(flat_piece)
+    return {
+        "pieces": flat_pieces,
+        "connections": design.get("connections", []),
+        "guid": design.get("guid"),
+        "name": design.get("name", ""),
+    }
+
+
+def _generate_diagram_svg(kit: dict, design_guid: str, selected_piece_guids: list[str], selected_connection_guids: list[str], design_diff: dict | None = None) -> str:
+    """Generate an SVG string representing a 2D diagram of the design.
+    Pieces are circles at (u, -v), connections are lines between piece centers.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🔖mcpappsvggeneration🛠️generatediagramsvg](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/s/MCP%20App%20SVG%20Generation/d/i/_generate_diagram_svg)
+    """
+    flat_design = _flatten_and_get_flat_design(kit, design_guid)
+    pieces = flat_design.get("pieces", [])
+    connections = flat_design.get("connections", [])
+
+    removed_piece_guids = set()
+    added_piece_guids = set()
+    modified_piece_guids = set()
+    removed_connection_guids = set()
+    added_connection_guids = set()
+    modified_connection_guids = set()
+    if design_diff:
+        removed_piece_guids = set(p.get("guid", "") for p in design_diff.get("pieces", {}).get("removed", []))
+        added_piece_guids = set(p.get("guid", "") for p in design_diff.get("pieces", {}).get("added", []))
+        modified_piece_guids = set(p.get("piece", {}).get("guid", "") for p in design_diff.get("pieces", {}).get("updated", []))
+        removed_connection_guids = set(c.get("guid", "") for c in design_diff.get("connections", {}).get("removed", []))
+        added_connection_guids = set(c.get("guid", "") for c in design_diff.get("connections", {}).get("added", []))
+        modified_connection_guids = set(c.get("connection", {}).get("guid", "") for c in design_diff.get("connections", {}).get("updated", []))
+
+    selected_piece_set = set(selected_piece_guids)
+    selected_connection_set = set(selected_connection_guids)
+
+    type_name_map: dict[str, str] = {}
+    for t in kit.get("types", []):
+        if t.get("guid"):
+            type_name_map[t["guid"]] = t.get("name", "")
+
+    point_map: dict[str, dict] = {}
+    for piece in pieces:
+        guid = piece.get("guid", "")
+        center = piece.get("center") or {"u": 0, "v": 0}
+        u = center.get("u", 0) or 0
+        v = center.get("v", 0) or 0
+        status = "default"
+        if guid in removed_piece_guids:
+            status = "removed"
+        elif guid in added_piece_guids:
+            status = "added"
+        elif guid in modified_piece_guids:
+            status = "modified"
+        type_guid = piece.get("type", {}).get("guid", "") if piece.get("type") else ""
+        type_name = type_name_map.get(type_guid, piece.get("type", {}).get("name", "") if piece.get("type") else "")
+        point_map[guid] = {"u": u, "v": v, "status": status, "name": type_name, "selected": guid in selected_piece_set}
+
+    line_list: list[dict] = []
+    for conn in connections:
+        guid = conn.get("guid", "")
+        source_guid = conn.get("connected", {}).get("piece", {}).get("guid", "")
+        target_guid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+        if source_guid not in point_map or target_guid not in point_map:
+            continue
+        status = "default"
+        if guid in removed_connection_guids:
+            status = "removed"
+        elif guid in added_connection_guids:
+            status = "added"
+        elif guid in modified_connection_guids:
+            status = "modified"
+        source = point_map[source_guid]
+        target = point_map[target_guid]
+        line_list.append(
+            {
+                "guid": guid,
+                "x1": source["u"],
+                "y1": -source["v"],
+                "x2": target["u"],
+                "y2": -target["v"],
+                "status": status,
+                "selected": guid in selected_connection_set,
+            }
+        )
+
+    points = list(point_map.values())
+    if points:
+        all_u = [p["u"] for p in points]
+        all_y = [-p["v"] for p in points]
+        min_u = min(all_u)
+        max_u = max(all_u)
+        min_y = min(all_y)
+        max_y = max(all_y)
+    else:
+        min_u, max_u, min_y, max_y = -1, 1, -1, 1
+
+    span_u = max(max_u - min_u, 1.0)
+    span_y = max(max_y - min_y, 1.0)
+    padding = 3.5
+    piece_radius = 1.75
+    stroke_width = 0.6
+
+    vb_x = min_u - padding
+    vb_y = min_y - padding
+    vb_w = span_u + padding * 2
+    vb_h = span_y + padding * 2
+
+    svg_width = max(400, min(800, int(vb_w * 40)))
+    svg_height = max(300, min(600, int(vb_h * 40)))
+
+    svg_parts: list[str] = []
+    svg_parts.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_width}" height="{svg_height}" viewBox="{vb_x:.4f} {vb_y:.4f} {vb_w:.4f} {vb_h:.4f}" style="background:#18181b;border-radius:8px">')
+
+    for line in line_list:
+        color = _svg_status_color(line["status"], line["selected"])
+        opacity = "1" if line["selected"] else ("0.8" if line["status"] != "default" else "0.45")
+        sw = stroke_width + 0.4 if line["selected"] else stroke_width
+        svg_parts.append(f'<line x1="{line["x1"]:.4f}" y1="{line["y1"]:.4f}" x2="{line["x2"]:.4f}" y2="{line["y2"]:.4f}" stroke="{color}" stroke-width="{sw:.2f}" stroke-opacity="{opacity}" stroke-linecap="round"/>')
+
+    for guid, point in point_map.items():
+        color = _svg_status_color(point["status"], point["selected"])
+        r = piece_radius + 0.75 if point["selected"] else piece_radius
+        x = point["u"]
+        y = -point["v"]
+        name = htmlmodule.escape(point["name"]) if point["name"] else ""
+        svg_parts.append(f'<circle cx="{x:.4f}" cy="{y:.4f}" r="{r:.2f}" fill="{color}"><title>{name}</title></circle>')
+        if point["selected"] and name:
+            svg_parts.append(f'<text x="{x:.4f}" y="{y - r - 0.8:.4f}" text-anchor="middle" font-size="1.4" fill="#e4e4e7" font-family="system-ui">{name}</text>')
+
+    svg_parts.append("</svg>")
+    return "\n".join(svg_parts)
+
+
+def _build_text_summary(mode: str, design_name: str, piece_count: int, connection_count: int, selected_piece_count: int, selected_connection_count: int) -> str:
+    """Build a concise text summary for a MCP app tool response.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🔖mcpappsvggeneration🛠️buildtextsummary](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/s/MCP%20App%20SVG%20Generation/d/i/_build_text_summary)
+    """
+    mode_labels = {
+        "show-design": "Design (2D+3D)",
+        "show-diagram": "Diagram (2D)",
+        "show-scene": "Scene (3D)",
+        "show-diff": "Diff (2D+3D)",
+        "show-diagram-diff": "Diagram Diff (2D)",
+        "select-pieces": "Piece Selection",
+        "select-connections": "Connection Selection",
+        "select-pieces-and-connections": "Piece & Connection Selection",
+    }
+    label = mode_labels.get(mode, mode)
+    parts = [f"**{label}**: {design_name}"]
+    parts.append(f"{piece_count} pieces, {connection_count} connections")
+    if selected_piece_count > 0 or selected_connection_count > 0:
+        sel_parts = []
+        if selected_piece_count > 0:
+            sel_parts.append(f"{selected_piece_count} pieces selected")
+        if selected_connection_count > 0:
+            sel_parts.append(f"{selected_connection_count} connections selected")
+        parts.append(", ".join(sel_parts))
+    return " · ".join(parts)
+
+
+# endregion MCP App SVG Generation
+
+
+def _build_app_response(mode: str, ctx: Context, design_diff: dict | None = None, capabilities: dict | None = None) -> CallToolResult:
+    """Build a CallToolResult with SVG diagram image, text summary, and structuredContent.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️buildappresponse](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_app_response)
+    """
+    kit = _get_session_kit(ctx)
+    sid = _session_id(ctx)
+    selection = _mcp_session_selection.get(sid, {"pieceGuids": [], "connectionGuids": []})
+
+    design_guid = None
+    design_entry = _mcp_session_designs.get(sid)
+    if design_entry is not None:
+        design_guid = design_entry.get("guid")
+
+    if design_guid is None:
+        designs = kit.get("designs", [])
+        if designs:
+            design_guid = designs[0].get("guid")
+
+    if design_guid is None:
+        return CallToolResult(
+            content=[TextContent(type="text", text="No design available. Call start_working_in_design first.")],
+            isError=True,
+        )
+
+    caps = capabilities or {
+        "pieceSelection": mode in ("select-pieces", "select-pieces-and-connections"),
+        "connectionSelection": mode in ("select-connections", "select-pieces-and-connections"),
+        "diff": mode in ("show-diff", "show-diagram-diff"),
+    }
+
+    selected_piece_guids = selection.get("pieceGuids", [])
+    selected_connection_guids = selection.get("connectionGuids", [])
+
+    structured_content = {
+        "mode": mode,
+        "designGuid": design_guid,
+        "selectedPieceGuids": selected_piece_guids,
+        "selectedConnectionGuids": selected_connection_guids,
+        "capabilities": caps,
+    }
+    if design_diff is not None:
+        structured_content["designDiff"] = design_diff
+
+    svg_str = _generate_diagram_svg(kit, design_guid, selected_piece_guids, selected_connection_guids, design_diff)
+    svg_b64 = base64.standard_b64encode(svg_str.encode("utf-8")).decode("ascii")
+
+    flat_design = _flatten_and_get_flat_design(kit, design_guid)
+    design_name = flat_design.get("name", design_guid)
+    piece_count = len(flat_design.get("pieces", []))
+    connection_count = len(flat_design.get("connections", []))
+
+    text_summary = _build_text_summary(mode, design_name, piece_count, connection_count, len(selected_piece_guids), len(selected_connection_guids))
+
+    content: list = [
+        TextContent(type="text", text=text_summary),
+        ImageContent(type="image", data=svg_b64, mimeType="image/svg+xml"),
+    ]
+
+    return CallToolResult(
+        content=content,
+        structuredContent=structured_content,
+    )
+
+
+@mcp.tool()
+def show_design(ctx: Context) -> CallToolResult:
+    """Show the current design in a combined 2D diagram + 3D scene split view.
+    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_design)
+    """
+    try:
+        return _build_app_response("show-design", ctx)
+    except Exception as e:
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
+
+
+@mcp.tool()
+def show_diagram(ctx: Context) -> CallToolResult:
+    """Show the current design as a 2D diagram only.
+    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiagram](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diagram)
+    """
+    try:
+        return _build_app_response("show-diagram", ctx)
+    except Exception as e:
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
+
+
+@mcp.tool()
+def show_scene(ctx: Context) -> CallToolResult:
+    """Show the current design as a 3D scene only (rendered as 2D diagram fallback).
+    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showscene](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_scene)
+    """
+    try:
+        return _build_app_response("show-scene", ctx)
+    except Exception as e:
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
+
+
+@mcp.tool()
+def show_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
+    """Show the current design diff in a combined 2D diagram + 3D scene split view.
+    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
+    Optionally pass a design_diff dict; otherwise the current session design is shown without diff.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diff)
+    """
+    try:
+        return _build_app_response("show-diff", ctx, design_diff=design_diff)
+    except Exception as e:
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
+
+
+@mcp.tool()
+def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
+    """Show the current design diff as a 2D diagram only.
+    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
+    Optionally pass a design_diff dict; otherwise the current session design is shown without diff.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiagramdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diagram_diff)
+    """
+    try:
+        return _build_app_response("show-diagram-diff", ctx, design_diff=design_diff)
+    except Exception as e:
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
+
+
+@mcp.tool()
+def select_pieces(ctx: Context) -> CallToolResult:
+    """Present a piece selection interface for the current design.
+    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_pieces)
+    """
+    try:
+        return _build_app_response("select-pieces", ctx)
+    except Exception as e:
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
+
+
+@mcp.tool()
+def select_connections(ctx: Context) -> CallToolResult:
+    """Present a connection selection interface for the current design.
+    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectconnections](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_connections)
+    """
+    try:
+        return _build_app_response("select-connections", ctx)
+    except Exception as e:
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
+
+
+@mcp.tool()
+def select_pieces_and_connections(ctx: Context) -> CallToolResult:
+    """Present a combined piece and connection selection interface for the current design.
+    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectpiecesandconnections](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_pieces_and_connections)
+    """
+    try:
+        return _build_app_response("select-pieces-and-connections", ctx)
+    except Exception as e:
+        return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
+
+
+# endregion MCP App Tools
 
 
 # endregion Mcp
@@ -3041,6 +3632,11 @@ def run(dev_mode: bool | None = None):
         logger.add(sys.stderr, level="INFO")
         logger.add(DEBUG_LOG_FILE, level="DEBUG", rotation="10 MB")
     if args.mcp_stdio:
+        import threading
+
+        engine_thread = threading.Thread(target=start_engine, daemon=True)
+        engine_thread.start()
+        logger.debug(f"[DEBUG] Engine HTTP server started in background on {HOST}:{PORT}")
         mcp.run()
         return
 

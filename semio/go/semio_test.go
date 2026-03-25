@@ -325,6 +325,121 @@ func TestDesignModel(t *testing.T) {
 	})
 }
 
+func TestKitFilterDesign(t *testing.T) {
+	var kit Kit
+	loadJSON(t, "kit_metabolism.json", &kit)
+
+	var expected Kit
+	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
+
+	nakaginDesign := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
+	if nakaginDesign == nil {
+		t.Fatal("Nakagin Capsule Tower design not found")
+	}
+
+	t.Run("filters kit to Nakagin Capsule Tower subset", func(t *testing.T) {
+		filtered := FilterKitWithDesign(&kit, nakaginDesign.Guid, nil)
+
+		if len(filtered.Designs) != len(expected.Designs) {
+			t.Fatalf("Expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
+		}
+		if len(filtered.Types) != len(expected.Types) {
+			t.Fatalf("Expected %d types, got %d", len(expected.Types), len(filtered.Types))
+		}
+		if len(filtered.Files) != len(expected.Files) {
+			t.Fatalf("Expected %d files, got %d", len(expected.Files), len(filtered.Files))
+		}
+		if len(filtered.Ports) != len(expected.Ports) {
+			t.Fatalf("Expected %d ports, got %d", len(expected.Ports), len(filtered.Ports))
+		}
+		if len(filtered.Qualities) != len(expected.Qualities) {
+			t.Fatalf("Expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
+		}
+		if len(filtered.Authors) != len(expected.Authors) {
+			t.Fatalf("Expected %d authors, got %d", len(expected.Authors), len(filtered.Authors))
+		}
+
+		filteredDesign := findDesignByName(filtered.Designs, "Nakagin Capsule Tower", nil)
+		if filteredDesign == nil {
+			t.Fatal("Filtered Nakagin Capsule Tower design not found")
+		}
+		if len(filteredDesign.Pieces) != len(nakaginDesign.Pieces) {
+			t.Fatalf("Expected %d pieces, got %d", len(nakaginDesign.Pieces), len(filteredDesign.Pieces))
+		}
+
+		for _, expectedType := range expected.Types {
+			matches := 0
+			for _, filteredType := range filtered.Types {
+				if filteredType.Guid == expectedType.Guid {
+					matches++
+					if len(filteredType.Models) != len(expectedType.Models) {
+						t.Fatalf("Expected type %s to have %d models, got %d", expectedType.Guid, len(expectedType.Models), len(filteredType.Models))
+					}
+				}
+			}
+			if matches != 1 {
+				t.Fatalf("Expected filtered type %s exactly once, got %d", expectedType.Guid, matches)
+			}
+		}
+
+		for _, piece := range filteredDesign.Pieces {
+			if piece.Type == nil {
+				continue
+			}
+			found := false
+			for _, filteredType := range filtered.Types {
+				if filteredType.Guid == piece.Type.Guid {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Fatalf("Missing filtered type %s for piece", piece.Type.Guid)
+			}
+		}
+
+		for _, filteredType := range filtered.Types {
+			if len(filteredType.Models) > 1 {
+				t.Fatalf("Type %s has %d models, expected at most 1", filteredType.Guid, len(filteredType.Models))
+			}
+			for _, model := range filteredType.Models {
+				foundFile := false
+				for _, file := range filtered.Files {
+					if file.Guid == model.File.Guid {
+						foundFile = true
+						break
+					}
+				}
+				if !foundFile {
+					t.Fatalf("Missing filtered file %s for type %s", model.File.Guid, filteredType.Guid)
+				}
+			}
+			for _, connector := range filteredType.Connectors {
+				if connector.Port == nil {
+					continue
+				}
+				foundPort := false
+				for _, port := range filtered.Ports {
+					if port.Guid == connector.Port.Guid {
+						foundPort = true
+						break
+					}
+				}
+				if !foundPort {
+					t.Fatalf("Missing filtered port %s for type %s", connector.Port.Guid, filteredType.Guid)
+				}
+			}
+		}
+	})
+
+	t.Run("preserves kit metadata", func(t *testing.T) {
+		filtered := FilterKitWithDesign(&kit, nakaginDesign.Guid, nil)
+		if filtered.Guid != kit.Guid || filtered.Name != kit.Name || filtered.Version != kit.Version {
+			t.Fatalf("Filtered kit metadata mismatch")
+		}
+	})
+}
+
 func TestFlatten(t *testing.T) {
 	var kit Kit
 	loadJSON(t, "kit_metabolism.json", &kit)
@@ -638,4 +753,155 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 			t.Errorf("mismatch for key %s: got %#v, expected %#v", key, got, expected)
 		}
 	}
+}
+
+func TestMetaShallow(t *testing.T) {
+	t.Run("KitMeta from conversion", func(t *testing.T) {
+		var kit Kit
+		loadJSON(t, "kit_metabolism.json", &kit)
+		meta := ToKitMeta(kit)
+		if meta.Guid != kit.Guid {
+			t.Errorf("KitMeta.Guid = %q, want %q", meta.Guid, kit.Guid)
+		}
+		if meta.Name != kit.Name {
+			t.Errorf("KitMeta.Name = %q, want %q", meta.Name, kit.Name)
+		}
+		if meta.Version != kit.Version {
+			t.Errorf("KitMeta.Version = %q, want %q", meta.Version, kit.Version)
+		}
+	})
+
+	t.Run("KitShallow from conversion", func(t *testing.T) {
+		var kit Kit
+		loadJSON(t, "kit_metabolism.json", &kit)
+		shallow := ToKitShallow(kit)
+		if shallow.Guid != kit.Guid {
+			t.Errorf("KitShallow.Guid = %q, want %q", shallow.Guid, kit.Guid)
+		}
+		if len(shallow.Types) != len(kit.Types) {
+			t.Errorf("KitShallow.Types len = %d, want %d", len(shallow.Types), len(kit.Types))
+		}
+		if len(shallow.Designs) != len(kit.Designs) {
+			t.Errorf("KitShallow.Designs len = %d, want %d", len(shallow.Designs), len(kit.Designs))
+		}
+		if len(shallow.Authors) != len(kit.Authors) {
+			t.Errorf("KitShallow.Authors len = %d, want %d", len(shallow.Authors), len(kit.Authors))
+		}
+		if len(shallow.Files) != len(kit.Files) {
+			t.Errorf("KitShallow.Files len = %d, want %d", len(shallow.Files), len(kit.Files))
+		}
+		for i, tm := range shallow.Types {
+			if tm.Guid != kit.Types[i].Guid {
+				t.Errorf("KitShallow.Types[%d].Guid = %q, want %q", i, tm.Guid, kit.Types[i].Guid)
+			}
+		}
+	})
+
+	t.Run("TypeMeta from JSON", func(t *testing.T) {
+		var meta TypeMeta
+		loadJSON(t, "tambour.meta.type.semio.json", &meta)
+		if meta.Guid == "" {
+			t.Error("TypeMeta.Guid is empty")
+		}
+		if meta.Name != "Tambour" {
+			t.Errorf("TypeMeta.Name = %q, want %q", meta.Name, "Tambour")
+		}
+	})
+
+	t.Run("TypeShallow from JSON", func(t *testing.T) {
+		var shallow TypeShallow
+		loadJSON(t, "tambour.shallow.type.semio.json", &shallow)
+		if shallow.Guid == "" {
+			t.Error("TypeShallow.Guid is empty")
+		}
+		if shallow.Name != "Tambour" {
+			t.Errorf("TypeShallow.Name = %q, want %q", shallow.Name, "Tambour")
+		}
+		if len(shallow.Connectors) == 0 {
+			t.Error("TypeShallow.Connectors is empty")
+		}
+		if len(shallow.Models) == 0 {
+			t.Error("TypeShallow.Models is empty")
+		}
+		if len(shallow.Props) == 0 {
+			t.Error("TypeShallow.Props is empty")
+		}
+	})
+
+	t.Run("DesignMeta from JSON", func(t *testing.T) {
+		var meta DesignMeta
+		loadJSON(t, "nakagin-capsule-tower.meta.design.semio.json", &meta)
+		if meta.Guid == "" {
+			t.Error("DesignMeta.Guid is empty")
+		}
+		if meta.Name != "Nakagin Capsule Tower" {
+			t.Errorf("DesignMeta.Name = %q, want %q", meta.Name, "Nakagin Capsule Tower")
+		}
+	})
+
+	t.Run("DesignShallow from JSON", func(t *testing.T) {
+		var shallow DesignShallow
+		loadJSON(t, "nakagin-capsule-tower.shallow.design.semio.json", &shallow)
+		if shallow.Guid == "" {
+			t.Error("DesignShallow.Guid is empty")
+		}
+		if shallow.Name != "Nakagin Capsule Tower" {
+			t.Errorf("DesignShallow.Name = %q, want %q", shallow.Name, "Nakagin Capsule Tower")
+		}
+		if len(shallow.Pieces) == 0 {
+			t.Error("DesignShallow.Pieces is empty")
+		}
+		if len(shallow.Connections) == 0 {
+			t.Error("DesignShallow.Connections is empty")
+		}
+		if len(shallow.Layers) == 0 {
+			t.Error("DesignShallow.Layers is empty")
+		}
+	})
+
+	t.Run("KitMeta from JSON", func(t *testing.T) {
+		var meta KitMeta
+		loadJSON(t, "metabolism.meta.kit.semio.json", &meta)
+		if meta.Guid == "" {
+			t.Error("KitMeta.Guid is empty")
+		}
+		if meta.Name != "Metabolism" {
+			t.Errorf("KitMeta.Name = %q, want %q", meta.Name, "Metabolism")
+		}
+		if meta.Version == "" {
+			t.Error("KitMeta.Version is empty")
+		}
+	})
+
+	t.Run("KitShallow from JSON", func(t *testing.T) {
+		var shallow KitShallow
+		loadJSON(t, "metabolism.shallow.kit.semio.json", &shallow)
+		if shallow.Guid == "" {
+			t.Error("KitShallow.Guid is empty")
+		}
+		if shallow.Name != "Metabolism" {
+			t.Errorf("KitShallow.Name = %q, want %q", shallow.Name, "Metabolism")
+		}
+		if len(shallow.Types) == 0 {
+			t.Error("KitShallow.Types is empty")
+		}
+		if len(shallow.Designs) == 0 {
+			t.Error("KitShallow.Designs is empty")
+		}
+		if len(shallow.Authors) == 0 {
+			t.Error("KitShallow.Authors is empty")
+		}
+		if len(shallow.Files) == 0 {
+			t.Error("KitShallow.Files is empty")
+		}
+		if len(shallow.Ports) == 0 {
+			t.Error("KitShallow.Ports is empty")
+		}
+		if len(shallow.Tags) == 0 {
+			t.Error("KitShallow.Tags is empty")
+		}
+		if len(shallow.Qualities) == 0 {
+			t.Error("KitShallow.Qualities is empty")
+		}
+	})
 }

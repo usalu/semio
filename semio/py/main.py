@@ -11122,6 +11122,135 @@ class KitData:
     def to_dict(self) -> dict:
         return self._data
 
+    def filter_kit_with_design(self, design_guid: str, tags: typing.Optional[list[str]] = None) -> "KitData":
+        kit = self._data
+        design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
+        if design is None:
+            return KitData({"guid": kit.get("guid"), "name": kit.get("name", ""), "version": kit.get("version", "")})
+
+        used_type_guids: set[str] = set()
+        used_design_guids: set[str] = {design_guid}
+        for piece in design.get("pieces", []):
+            piece_kind_guid = piece.get("type", {}).get("guid")
+            if piece_kind_guid:
+                used_type_guids.add(piece_kind_guid)
+            child_design_guid = piece.get("design", {}).get("guid")
+            if child_design_guid:
+                used_design_guids.add(child_design_guid)
+
+        type_by_guid = {type_item.get("guid"): type_item for type_item in kit.get("types", [])}
+
+        def collect_ancestors(type_guid: str) -> None:
+            parent_guid = (type_by_guid.get(type_guid) or {}).get("parent", {}).get("guid")
+            if parent_guid and parent_guid not in used_type_guids:
+                used_type_guids.add(parent_guid)
+                collect_ancestors(parent_guid)
+
+        for type_guid in list(used_type_guids):
+            collect_ancestors(type_guid)
+
+        resolved_tag_guids: list[str] = []
+        for tag_value in tags or []:
+            by_guid = next((tag for tag in kit.get("tags", []) if tag.get("guid") == tag_value), None)
+            if by_guid is not None:
+                resolved_tag_guids.append(by_guid["guid"])
+                continue
+            resolved_tag_guids.extend(tag["guid"] for tag in kit.get("tags", []) if tag.get("name") == tag_value)
+
+        used_port_guids: set[str] = set()
+        used_file_guids: set[str] = set()
+        used_tag_guids: set[str] = set()
+        used_concept_guids: set[str] = set()
+        used_quality_guids: set[str] = set()
+        used_author_guids: set[str] = set()
+        used_folder_names: set[str] = set()
+        selected_models: dict[str, dict] = {}
+
+        def collect_quality_from_props(props: typing.Optional[list[dict]]) -> None:
+            for prop in props or []:
+                quality_guid = prop.get("quality", {}).get("guid")
+                if quality_guid:
+                    used_quality_guids.add(quality_guid)
+
+        def select_best_model(models: list[dict]) -> typing.Optional[dict]:
+            if not models:
+                return None
+            if not resolved_tag_guids:
+                return next((model for model in models if not model.get("tags")), models[0])
+            filtered = [model for model in models if all(selected in {tag.get("guid") for tag in model.get("tags", [])} for selected in resolved_tag_guids)]
+            if not filtered:
+                return None
+
+            def score(model: dict) -> float:
+                model_tags = {tag.get("guid") for tag in model.get("tags", [])}
+                selected = set(resolved_tag_guids)
+                union = model_tags | selected
+                return 0.0 if not union else len(model_tags & selected) / len(union)
+
+            return max(filtered, key=score)
+
+        for type_guid in used_type_guids:
+            type_item = type_by_guid.get(type_guid)
+            if not type_item:
+                continue
+            if type_item.get("folder"):
+                used_folder_names.add(type_item["folder"])
+            for connector in type_item.get("connectors", []):
+                port_guid = connector.get("port", {}).get("guid")
+                if port_guid:
+                    used_port_guids.add(port_guid)
+                collect_quality_from_props(connector.get("props"))
+            collect_quality_from_props(type_item.get("props"))
+            for author in type_item.get("authors", []):
+                if author.get("guid"):
+                    used_author_guids.add(author["guid"])
+            for concept in type_item.get("concepts", []):
+                if concept.get("guid"):
+                    used_concept_guids.add(concept["guid"])
+            selected_model = select_best_model(type_item.get("models", []))
+            if selected_model:
+                selected_models[type_guid] = selected_model
+                file_guid = selected_model.get("file", {}).get("guid")
+                if file_guid:
+                    used_file_guids.add(file_guid)
+                for tag in selected_model.get("tags", []):
+                    if tag.get("guid"):
+                        used_tag_guids.add(tag["guid"])
+
+        for piece in design.get("pieces", []):
+            collect_quality_from_props(piece.get("props"))
+        for concept in design.get("concepts", []):
+            if concept.get("guid"):
+                used_concept_guids.add(concept["guid"])
+        for author in design.get("authors", []):
+            if author.get("guid"):
+                used_author_guids.add(author["guid"])
+        for port_guid in list(used_port_guids):
+            port = next((candidate for candidate in kit.get("ports", []) if candidate.get("guid") == port_guid), None)
+            for compatible in (port or {}).get("compatiblePorts", []):
+                if compatible.get("guid"):
+                    used_port_guids.add(compatible["guid"])
+        used_tag_guids.update(resolved_tag_guids)
+
+        filtered = {key: value for key, value in kit.items() if key not in {"types", "designs", "ports", "files", "tags", "concepts", "qualities", "authors", "folders"}}
+        filtered["types"] = []
+        for type_item in kit.get("types", []):
+            if type_item.get("guid") not in used_type_guids:
+                continue
+            filtered_type = dict(type_item)
+            selected_model = selected_models.get(type_item["guid"])
+            filtered_type["models"] = [selected_model] if selected_model else []
+            filtered["types"].append(filtered_type)
+        filtered["designs"] = [candidate for candidate in kit.get("designs", []) if candidate.get("guid") in used_design_guids]
+        filtered["ports"] = [port for port in kit.get("ports", []) if port.get("guid") in used_port_guids]
+        filtered["files"] = [file for file in kit.get("files", []) if file.get("guid") in used_file_guids]
+        filtered["tags"] = [tag for tag in kit.get("tags", []) if tag.get("guid") in used_tag_guids]
+        filtered["concepts"] = [concept for concept in kit.get("concepts", []) if concept.get("guid") in used_concept_guids]
+        filtered["qualities"] = [quality for quality in kit.get("qualities", []) if quality.get("guid") in used_quality_guids]
+        filtered["authors"] = [author for author in kit.get("authors", []) if author.get("guid") in used_author_guids]
+        filtered["folders"] = [folder for folder in kit.get("folders", []) if folder.get("name") in used_folder_names]
+        return KitData(filtered)
+
 
 def _parse_connector_from_sqlite(row: dict) -> dict:
     """_parse_connector_from_sqlite performs the _parse_connector_from_sqlite operation.
@@ -13870,6 +13999,656 @@ def computeChildPlane(
 # endregion Spatial Math
 
 
+# region Meta And Shallow Types
+# [👤semio📚py💻main🔖metaandshallowtypes](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types)
+# Meta And Shallow Types MUST provide lightweight entity representations.
+
+# region 🔖Sub-entity Meta Types
+
+AttributeMeta = typing.TypedDict(
+    "AttributeMeta",
+    {"guid": str, "name": str, "value": str, "definition": typing.NotRequired[str]},
+)
+"""AttributeMeta is identical to Attribute (no list fields to omit)."""
+
+TagMeta = typing.TypedDict(
+    "TagMeta",
+    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str], "order": typing.NotRequired[int]},
+)
+"""TagMeta is identical to Tag (no list fields to omit)."""
+
+ConceptMeta = typing.TypedDict(
+    "ConceptMeta",
+    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str], "order": typing.NotRequired[int]},
+)
+"""ConceptMeta is identical to Concept (no list fields to omit)."""
+
+StatMeta = typing.TypedDict(
+    "StatMeta",
+    {
+        "guid": str,
+        "key": str,
+        "unit": typing.NotRequired[str],
+        "min": typing.NotRequired[float],
+        "minExcluded": typing.NotRequired[bool],
+        "max": typing.NotRequired[float],
+        "maxExcluded": typing.NotRequired[bool],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""StatMeta is identical to Stat (no list fields to omit)."""
+
+PropMeta = typing.TypedDict(
+    "PropMeta",
+    {"guid": str, "key": str, "value": str, "unit": typing.NotRequired[str]},
+)
+"""PropMeta is Prop without attributes."""
+
+AuthorMeta = typing.TypedDict(
+    "AuthorMeta",
+    {"guid": str, "name": str, "email": typing.NotRequired[str]},
+)
+"""AuthorMeta is Author without attributes."""
+
+FileMeta = typing.TypedDict(
+    "FileMeta",
+    {
+        "guid": str,
+        "name": str,
+        "remote": typing.NotRequired[str],
+        "folder": typing.NotRequired[dict],
+        "size": typing.NotRequired[int],
+        "hash": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""FileMeta is File without blob."""
+
+FolderMeta = typing.TypedDict(
+    "FolderMeta",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""FolderMeta is Folder without attributes."""
+
+QualityMeta = typing.TypedDict(
+    "QualityMeta",
+    {
+        "guid": str,
+        "key": str,
+        "name": str,
+        "kind": typing.NotRequired[int],
+        "defaultValue": typing.NotRequired[float],
+        "formula": typing.NotRequired[str],
+        "defaultSiUnit": typing.NotRequired[str],
+        "defaultImperialUnit": typing.NotRequired[str],
+        "min": typing.NotRequired[float],
+        "minExcluded": typing.NotRequired[bool],
+        "max": typing.NotRequired[float],
+        "maxExcluded": typing.NotRequired[bool],
+        "canScale": typing.NotRequired[bool],
+        "uri": typing.NotRequired[str],
+    },
+)
+"""QualityMeta is Quality without benchmarks and attributes."""
+
+PortMeta = typing.TypedDict(
+    "PortMeta",
+    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str]},
+)
+"""PortMeta is Port without attributes."""
+
+ModelMeta = typing.TypedDict(
+    "ModelMeta",
+    {"guid": str, "file": typing.NotRequired[dict], "name": typing.NotRequired[str], "description": typing.NotRequired[str]},
+)
+"""ModelMeta is Model without tags and attributes."""
+
+ConnectorMeta = typing.TypedDict(
+    "ConnectorMeta",
+    {
+        "guid": str,
+        "point": dict,
+        "direction": dict,
+        "t": float,
+        "name": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+        "mandatory": typing.NotRequired[bool],
+        "port": typing.NotRequired[dict],
+    },
+)
+"""ConnectorMeta is Connector without props and attributes."""
+
+LayerMeta = typing.TypedDict(
+    "LayerMeta",
+    {
+        "guid": str,
+        "name": str,
+        "isHidden": typing.NotRequired[bool],
+        "isLocked": typing.NotRequired[bool],
+        "color": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
+)
+"""LayerMeta is Layer without attributes."""
+
+PieceMeta = typing.TypedDict(
+    "PieceMeta",
+    {
+        "guid": str,
+        "name": typing.NotRequired[str],
+        "type": typing.NotRequired[dict],
+        "designPiece": typing.NotRequired[dict],
+        "plane": typing.NotRequired[dict],
+        "center": typing.NotRequired[dict],
+        "scale": typing.NotRequired[float],
+        "mirrorPlane": typing.NotRequired[dict],
+        "isHidden": typing.NotRequired[bool],
+        "isLocked": typing.NotRequired[bool],
+        "color": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
+)
+"""PieceMeta is Piece without props and attributes."""
+
+GroupMeta = typing.TypedDict(
+    "GroupMeta",
+    {"guid": str, "name": typing.NotRequired[str], "color": typing.NotRequired[str], "description": typing.NotRequired[str]},
+)
+"""GroupMeta is Group without pieces and attributes."""
+
+ConnectionMeta = typing.TypedDict(
+    "ConnectionMeta",
+    {
+        "guid": str,
+        "connected": dict,
+        "connecting": dict,
+        "gap": typing.NotRequired[float],
+        "shift": typing.NotRequired[float],
+        "rise": typing.NotRequired[float],
+        "rotation": typing.NotRequired[float],
+        "turn": typing.NotRequired[float],
+        "tilt": typing.NotRequired[float],
+        "u": typing.NotRequired[float],
+        "v": typing.NotRequired[float],
+        "description": typing.NotRequired[str],
+    },
+)
+"""ConnectionMeta is Connection without attributes."""
+
+# endregion 🔖Sub-entity Meta Types
+
+# region 🔖Main Entity Meta Types
+
+TypeMeta = typing.TypedDict(
+    "TypeMeta",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "folder": typing.NotRequired[str],
+        "unit": typing.NotRequired[str],
+        "stock": typing.NotRequired[int],
+        "isAbstract": typing.NotRequired[bool],
+        "virtual": typing.NotRequired[bool],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""TypeMeta is Type with only scalar fields."""
+
+DesignMeta = typing.TypedDict(
+    "DesignMeta",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "variant": typing.NotRequired[str],
+        "view": typing.NotRequired[str],
+        "unit": typing.NotRequired[str],
+        "folder": typing.NotRequired[str],
+        "isAbstract": typing.NotRequired[bool],
+        "activeLayer": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""DesignMeta is Design with only scalar fields."""
+
+KitMeta = typing.TypedDict(
+    "KitMeta",
+    {
+        "guid": str,
+        "name": str,
+        "version": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "preview": typing.NotRequired[str],
+        "remote": typing.NotRequired[str],
+        "homepage": typing.NotRequired[str],
+        "license": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""KitMeta is Kit with only scalar fields."""
+
+# endregion 🔖Main Entity Meta Types
+
+# region 🔖Shallow Types
+
+TypeShallow = typing.TypedDict(
+    "TypeShallow",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "folder": typing.NotRequired[str],
+        "unit": typing.NotRequired[str],
+        "stock": typing.NotRequired[int],
+        "isAbstract": typing.NotRequired[bool],
+        "virtual": typing.NotRequired[bool],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+        "concepts": typing.NotRequired[list[ConceptMeta]],
+        "authors": typing.NotRequired[list[AuthorMeta]],
+        "props": typing.NotRequired[list[PropMeta]],
+        "models": typing.NotRequired[list[ModelMeta]],
+        "connectors": typing.NotRequired[list[ConnectorMeta]],
+        "attributes": typing.NotRequired[list[AttributeMeta]],
+    },
+)
+"""TypeShallow is Type with list fields replaced by Meta item lists."""
+
+DesignShallow = typing.TypedDict(
+    "DesignShallow",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "variant": typing.NotRequired[str],
+        "view": typing.NotRequired[str],
+        "unit": typing.NotRequired[str],
+        "folder": typing.NotRequired[str],
+        "isAbstract": typing.NotRequired[bool],
+        "activeLayer": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+        "concepts": typing.NotRequired[list[ConceptMeta]],
+        "authors": typing.NotRequired[list[AuthorMeta]],
+        "props": typing.NotRequired[list[PropMeta]],
+        "pieces": typing.NotRequired[list[PieceMeta]],
+        "connections": typing.NotRequired[list[ConnectionMeta]],
+        "layers": typing.NotRequired[list[LayerMeta]],
+        "groups": typing.NotRequired[list[GroupMeta]],
+        "stats": typing.NotRequired[list[StatMeta]],
+        "attributes": typing.NotRequired[list[AttributeMeta]],
+    },
+)
+"""DesignShallow is Design with list fields replaced by Meta item lists."""
+
+KitShallow = typing.TypedDict(
+    "KitShallow",
+    {
+        "guid": str,
+        "name": str,
+        "version": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "preview": typing.NotRequired[str],
+        "remote": typing.NotRequired[str],
+        "homepage": typing.NotRequired[str],
+        "license": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+        "concepts": typing.NotRequired[list[ConceptMeta]],
+        "tags": typing.NotRequired[list[TagMeta]],
+        "types": typing.NotRequired[list[TypeMeta]],
+        "designs": typing.NotRequired[list[DesignMeta]],
+        "ports": typing.NotRequired[list[PortMeta]],
+        "qualities": typing.NotRequired[list[QualityMeta]],
+        "files": typing.NotRequired[list[FileMeta]],
+        "folders": typing.NotRequired[list[FolderMeta]],
+        "authors": typing.NotRequired[list[AuthorMeta]],
+        "attributes": typing.NotRequired[list[AttributeMeta]],
+    },
+)
+"""KitShallow is Kit with list fields replaced by Meta item lists."""
+
+# endregion 🔖Shallow Types
+
+# region 🔖Meta And Shallow Conversion Functions
+
+
+def _strip_none(d: dict) -> dict:
+    """Remove keys with None values from a dict.
+    _strip_none MUST remove keys with None values.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️stripnone](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/_strip_none)
+    """
+    return {k: v for k, v in d.items() if v is not None}
+
+
+def _extract_scalar_fields(d: dict, keys: list[str]) -> dict:
+    """Extract only specified keys from a dict, skipping missing keys.
+    _extract_scalar_fields MUST return only the specified scalar fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️extractscalarfields](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/_extract_scalar_fields)
+    """
+    return {k: d[k] for k in keys if k in d}
+
+
+_ATTRIBUTE_META_KEYS = ["guid", "name", "value", "definition"]
+_TAG_META_KEYS = ["guid", "name", "description", "icon", "order"]
+_CONCEPT_META_KEYS = ["guid", "name", "description", "icon", "order"]
+_STAT_META_KEYS = ["guid", "key", "unit", "min", "minExcluded", "max", "maxExcluded", "createdAt", "updatedAt"]
+_PROP_META_KEYS = ["guid", "key", "value", "unit"]
+_AUTHOR_META_KEYS = ["guid", "name", "email"]
+_FILE_META_KEYS = ["guid", "name", "remote", "folder", "size", "hash", "createdAt", "updatedAt"]
+_FOLDER_META_KEYS = ["guid", "name", "parent", "description", "createdAt", "updatedAt"]
+_QUALITY_META_KEYS = ["guid", "key", "name", "kind", "defaultValue", "formula", "defaultSiUnit", "defaultImperialUnit", "min", "minExcluded", "max", "maxExcluded", "canScale", "uri"]
+_PORT_META_KEYS = ["guid", "name", "description", "icon"]
+_MODEL_META_KEYS = ["guid", "file", "name", "description"]
+_CONNECTOR_META_KEYS = ["guid", "point", "direction", "t", "name", "description", "mandatory", "port"]
+_LAYER_META_KEYS = ["guid", "name", "isHidden", "isLocked", "color", "description"]
+_PIECE_META_KEYS = ["guid", "name", "type", "designPiece", "plane", "center", "scale", "mirrorPlane", "isHidden", "isLocked", "color", "description"]
+_GROUP_META_KEYS = ["guid", "name", "color", "description"]
+_CONNECTION_META_KEYS = ["guid", "connected", "connecting", "gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v", "description"]
+
+_TYPE_META_KEYS = ["guid", "name", "parent", "description", "icon", "image", "folder", "unit", "stock", "isAbstract", "virtual", "createdAt", "updatedAt"]
+_DESIGN_META_KEYS = ["guid", "name", "parent", "description", "icon", "image", "variant", "view", "unit", "folder", "isAbstract", "activeLayer", "createdAt", "updatedAt"]
+_KIT_META_KEYS = ["guid", "name", "version", "description", "icon", "image", "preview", "remote", "homepage", "license", "createdAt", "updatedAt"]
+
+
+def attributeToMeta(d: dict) -> AttributeMeta:
+    """Convert an attribute dict to AttributeMeta.
+    attributeToMeta MUST extract only AttributeMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️attributetometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/attributeToMeta)
+    """
+    return _extract_scalar_fields(d, _ATTRIBUTE_META_KEYS)
+
+
+def tagToMeta(d: dict) -> TagMeta:
+    """Convert a tag dict to TagMeta.
+    tagToMeta MUST extract only TagMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️tagtometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/tagToMeta)
+    """
+    return _extract_scalar_fields(d, _TAG_META_KEYS)
+
+
+def conceptToMeta(d: dict) -> ConceptMeta:
+    """Convert a concept dict to ConceptMeta.
+    conceptToMeta MUST extract only ConceptMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️concepttometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/conceptToMeta)
+    """
+    return _extract_scalar_fields(d, _CONCEPT_META_KEYS)
+
+
+def statToMeta(d: dict) -> StatMeta:
+    """Convert a stat dict to StatMeta.
+    statToMeta MUST extract only StatMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️stattometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/statToMeta)
+    """
+    return _extract_scalar_fields(d, _STAT_META_KEYS)
+
+
+def propToMeta(d: dict) -> PropMeta:
+    """Convert a prop dict to PropMeta (without attributes).
+    propToMeta MUST extract only PropMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️proptometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/propToMeta)
+    """
+    return _extract_scalar_fields(d, _PROP_META_KEYS)
+
+
+def authorToMeta(d: dict) -> AuthorMeta:
+    """Convert an author dict to AuthorMeta (without attributes).
+    authorToMeta MUST extract only AuthorMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️authortometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/authorToMeta)
+    """
+    return _extract_scalar_fields(d, _AUTHOR_META_KEYS)
+
+
+def fileToMeta(d: dict) -> FileMeta:
+    """Convert a file dict to FileMeta (without blob).
+    fileToMeta MUST extract only FileMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️filetometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/fileToMeta)
+    """
+    return _extract_scalar_fields(d, _FILE_META_KEYS)
+
+
+def folderToMeta(d: dict) -> FolderMeta:
+    """Convert a folder dict to FolderMeta (without attributes).
+    folderToMeta MUST extract only FolderMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️foldertometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/folderToMeta)
+    """
+    return _extract_scalar_fields(d, _FOLDER_META_KEYS)
+
+
+def qualityToMeta(d: dict) -> QualityMeta:
+    """Convert a quality dict to QualityMeta (without benchmarks and attributes).
+    qualityToMeta MUST extract only QualityMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️qualitytometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/qualityToMeta)
+    """
+    return _extract_scalar_fields(d, _QUALITY_META_KEYS)
+
+
+def portToMeta(d: dict) -> PortMeta:
+    """Convert a port dict to PortMeta (without attributes).
+    portToMeta MUST extract only PortMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️porttometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/portToMeta)
+    """
+    return _extract_scalar_fields(d, _PORT_META_KEYS)
+
+
+def modelToMeta(d: dict) -> ModelMeta:
+    """Convert a model dict to ModelMeta (without tags and attributes).
+    modelToMeta MUST extract only ModelMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️modeltometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/modelToMeta)
+    """
+    return _extract_scalar_fields(d, _MODEL_META_KEYS)
+
+
+def connectorToMeta(d: dict) -> ConnectorMeta:
+    """Convert a connector dict to ConnectorMeta (without props and attributes).
+    connectorToMeta MUST extract only ConnectorMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️connectortometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/connectorToMeta)
+    """
+    return _extract_scalar_fields(d, _CONNECTOR_META_KEYS)
+
+
+def layerToMeta(d: dict) -> LayerMeta:
+    """Convert a layer dict to LayerMeta (without attributes).
+    layerToMeta MUST extract only LayerMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️layertometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/layerToMeta)
+    """
+    return _extract_scalar_fields(d, _LAYER_META_KEYS)
+
+
+def pieceToMeta(d: dict) -> PieceMeta:
+    """Convert a piece dict to PieceMeta (without props and attributes).
+    pieceToMeta MUST extract only PieceMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️piecetometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/pieceToMeta)
+    """
+    return _extract_scalar_fields(d, _PIECE_META_KEYS)
+
+
+def groupToMeta(d: dict) -> GroupMeta:
+    """Convert a group dict to GroupMeta (without pieces and attributes).
+    groupToMeta MUST extract only GroupMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️grouptometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/groupToMeta)
+    """
+    return _extract_scalar_fields(d, _GROUP_META_KEYS)
+
+
+def connectionToMeta(d: dict) -> ConnectionMeta:
+    """Convert a connection dict to ConnectionMeta (without attributes).
+    connectionToMeta MUST extract only ConnectionMeta fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️connectiontometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/connectionToMeta)
+    """
+    return _extract_scalar_fields(d, _CONNECTION_META_KEYS)
+
+
+def typeToMeta(d: dict) -> TypeMeta:
+    """Convert a type dict to TypeMeta (scalar fields only).
+    typeToMeta MUST extract only TypeMeta scalar fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️typetometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/typeToMeta)
+    """
+    return _extract_scalar_fields(d, _TYPE_META_KEYS)
+
+
+def designToMeta(d: dict) -> DesignMeta:
+    """Convert a design dict to DesignMeta (scalar fields only).
+    designToMeta MUST extract only DesignMeta scalar fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️designtometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/designToMeta)
+    """
+    return _extract_scalar_fields(d, _DESIGN_META_KEYS)
+
+
+def kitToMeta(d: dict) -> KitMeta:
+    """Convert a kit dict to KitMeta (scalar fields only).
+    kitToMeta MUST extract only KitMeta scalar fields.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️kittometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/kitToMeta)
+    """
+    return _extract_scalar_fields(d, _KIT_META_KEYS)
+
+
+def _convert_list(items: list | None, converter: typing.Callable) -> list | None:
+    """Convert a list of dicts using a converter function, returning None for empty/missing lists.
+    _convert_list MUST return None for empty or missing lists.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️convertlist](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/_convert_list)
+    """
+    if not items:
+        return None
+    return [converter(item) for item in items]
+
+
+def typeToShallow(d: dict) -> TypeShallow:
+    """Convert a type dict to TypeShallow (list fields replaced by Meta items).
+    typeToShallow MUST convert list fields to Meta item lists.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️typetoshallow](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/typeToShallow)
+    """
+    result = _extract_scalar_fields(d, _TYPE_META_KEYS)
+    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
+    if concepts is not None:
+        result["concepts"] = concepts
+    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
+    if authors is not None:
+        result["authors"] = authors
+    props = _convert_list(d.get("props"), propToMeta)
+    if props is not None:
+        result["props"] = props
+    models = _convert_list(d.get("models"), modelToMeta)
+    if models is not None:
+        result["models"] = models
+    connectors = _convert_list(d.get("connectors"), connectorToMeta)
+    if connectors is not None:
+        result["connectors"] = connectors
+    attributes = _convert_list(d.get("attributes"), attributeToMeta)
+    if attributes is not None:
+        result["attributes"] = attributes
+    return result
+
+
+def designToShallow(d: dict) -> DesignShallow:
+    """Convert a design dict to DesignShallow (list fields replaced by Meta items).
+    designToShallow MUST convert list fields to Meta item lists.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️designtoshallow](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/designToShallow)
+    """
+    result = _extract_scalar_fields(d, _DESIGN_META_KEYS)
+    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
+    if concepts is not None:
+        result["concepts"] = concepts
+    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
+    if authors is not None:
+        result["authors"] = authors
+    props = _convert_list(d.get("props"), propToMeta)
+    if props is not None:
+        result["props"] = props
+    pieces = _convert_list(d.get("pieces"), pieceToMeta)
+    if pieces is not None:
+        result["pieces"] = pieces
+    connections = _convert_list(d.get("connections"), connectionToMeta)
+    if connections is not None:
+        result["connections"] = connections
+    layers = _convert_list(d.get("layers"), layerToMeta)
+    if layers is not None:
+        result["layers"] = layers
+    groups = _convert_list(d.get("groups"), groupToMeta)
+    if groups is not None:
+        result["groups"] = groups
+    stats = _convert_list(d.get("stats"), statToMeta)
+    if stats is not None:
+        result["stats"] = stats
+    attributes = _convert_list(d.get("attributes"), attributeToMeta)
+    if attributes is not None:
+        result["attributes"] = attributes
+    return result
+
+
+def kitToShallow(d: dict) -> KitShallow:
+    """Convert a kit dict to KitShallow (list fields replaced by Meta items).
+    kitToShallow MUST convert list fields to Meta item lists.
+    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️kittoshallow](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/kitToShallow)
+    """
+    result = _extract_scalar_fields(d, _KIT_META_KEYS)
+    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
+    if concepts is not None:
+        result["concepts"] = concepts
+    tags = _convert_list(d.get("tags"), tagToMeta)
+    if tags is not None:
+        result["tags"] = tags
+    types = _convert_list(d.get("types"), typeToMeta)
+    if types is not None:
+        result["types"] = types
+    designs = _convert_list(d.get("designs"), designToMeta)
+    if designs is not None:
+        result["designs"] = designs
+    ports = _convert_list(d.get("ports"), portToMeta)
+    if ports is not None:
+        result["ports"] = ports
+    qualities = _convert_list(d.get("qualities"), qualityToMeta)
+    if qualities is not None:
+        result["qualities"] = qualities
+    files = _convert_list(d.get("files"), fileToMeta)
+    if files is not None:
+        result["files"] = files
+    folders = _convert_list(d.get("folders"), folderToMeta)
+    if folders is not None:
+        result["folders"] = folders
+    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
+    if authors is not None:
+        result["authors"] = authors
+    attributes = _convert_list(d.get("attributes"), attributeToMeta)
+    if attributes is not None:
+        result["attributes"] = attributes
+    return result
+
+
+# endregion 🔖Meta And Shallow Conversion Functions
+
+# endregion Meta And Shallow Types
+
+
 # region Test
 # [👤semio📚py💻main🔖test](repo://p/u/semio/b/l/py/f/main.py/s/Test)
 # Tests for the semio py module.
@@ -14194,6 +14973,54 @@ class TestDesignModel:
             assert selected_guid == case.get("expectedGuid"), f"Case {case.get('name')} failed"
 
 
+class TestKitFilterDesign:
+    def test_nakagin_capsule_tower_filter_produces_expected_subset(self):
+        kit_dict = _test_load_json("kit_metabolism.json")
+        expected = _test_load_json("nakagin-capsule-tower.filtered.kit.semio.json")
+        design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
+
+        filtered = KitData(kit_dict).filter_kit_with_design(design["guid"]).to_dict()
+
+        assert len(filtered.get("designs", [])) == len(expected.get("designs", []))
+        assert len(filtered.get("types", [])) == len(expected.get("types", []))
+        assert len(filtered.get("files", [])) == len(expected.get("files", []))
+        assert len(filtered.get("ports", [])) == len(expected.get("ports", []))
+        assert len(filtered.get("qualities", [])) == len(expected.get("qualities", []))
+        assert len(filtered.get("authors", [])) == len(expected.get("authors", []))
+
+        filtered_design = next(d for d in filtered.get("designs", []) if d.get("guid") == design["guid"])
+        assert len(filtered_design.get("pieces", [])) == len(design.get("pieces", []))
+
+        for expected_type in expected.get("types", []):
+            filtered_type = next((t for t in filtered.get("types", []) if t.get("guid") == expected_type.get("guid")), None)
+            assert filtered_type is not None
+            assert len(filtered_type.get("models", [])) == len(expected_type.get("models", []))
+
+        for piece in filtered_design.get("pieces", []):
+            piece_kind_guid = piece.get("type", {}).get("guid")
+            if piece_kind_guid:
+                assert any(t.get("guid") == piece_kind_guid for t in filtered.get("types", []))
+
+        for kind in filtered.get("types", []):
+            assert len(kind.get("models", [])) <= 1
+            for model in kind.get("models", []):
+                assert any(file.get("guid") == model.get("file", {}).get("guid") for file in filtered.get("files", []))
+            for connector in kind.get("connectors", []):
+                connector_guid = connector.get("port", {}).get("guid")
+                if connector_guid:
+                    assert any(port.get("guid") == connector_guid for port in filtered.get("ports", []))
+
+    def test_nakagin_capsule_tower_filter_preserves_metadata(self):
+        kit_dict = _test_load_json("kit_metabolism.json")
+        design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
+
+        filtered = KitData(kit_dict).filter_kit_with_design(design["guid"]).to_dict()
+
+        assert filtered.get("guid") == kit_dict.get("guid")
+        assert filtered.get("name") == kit_dict.get("name")
+        assert filtered.get("version") == kit_dict.get("version")
+
+
 class TestDesignQualitySum:
     class TestNakaginCapsuleTower:
         def test_sum_effective_floor_area(self):
@@ -14440,6 +15267,154 @@ class TestGetGeometricInsightsForModel:
         insights = get_geometric_insights_for_model(data)
         assert isinstance(insights, GeometricInsights)
         assert insights.face_count is not None and insights.face_count > 0
+
+
+class TestTypeMeta:
+    """Tests for TypeMeta deserialization from JSON."""
+
+    def test_type_meta(self):
+        data = _test_load_json("tambour.meta.type.semio.json")
+        assert "guid" in data
+        assert "name" in data
+        assert data["name"] == "Tambour"
+        meta: TypeMeta = data
+        assert meta["guid"] == data["guid"]
+        assert meta["name"] == "Tambour"
+        assert "connectors" not in meta
+        assert "models" not in meta
+        assert "props" not in meta
+        assert "attributes" not in meta
+
+
+class TestTypeShallow:
+    """Tests for TypeShallow deserialization from JSON."""
+
+    def test_type_shallow(self):
+        data = _test_load_json("tambour.shallow.type.semio.json")
+        assert "guid" in data
+        shallow: TypeShallow = data
+        assert "connectors" in shallow
+        assert isinstance(shallow["connectors"], list)
+        assert len(shallow["connectors"]) > 0
+        first_connector = shallow["connectors"][0]
+        assert "guid" in first_connector
+        assert "point" in first_connector
+        assert "direction" in first_connector
+        assert "attributes" not in first_connector
+        assert "props" not in first_connector
+
+
+class TestDesignMeta:
+    """Tests for DesignMeta deserialization from JSON."""
+
+    def test_design_meta(self):
+        data = _test_load_json("nakagin-capsule-tower.meta.design.semio.json")
+        assert "guid" in data
+        assert "name" in data
+        assert data["name"] == "Nakagin Capsule Tower"
+        meta: DesignMeta = data
+        assert meta["guid"] == data["guid"]
+        assert "pieces" not in meta
+        assert "connections" not in meta
+        assert "layers" not in meta
+
+
+class TestDesignShallow:
+    """Tests for DesignShallow deserialization from JSON."""
+
+    def test_design_shallow(self):
+        data = _test_load_json("nakagin-capsule-tower.shallow.design.semio.json")
+        assert "guid" in data
+        assert "name" in data
+        shallow: DesignShallow = data
+        assert "pieces" in shallow
+        assert isinstance(shallow["pieces"], list)
+        assert len(shallow["pieces"]) > 0
+        first_piece = shallow["pieces"][0]
+        assert "guid" in first_piece
+        assert "attributes" not in first_piece
+        if "connections" in shallow:
+            assert isinstance(shallow["connections"], list)
+            if len(shallow["connections"]) > 0:
+                first_conn = shallow["connections"][0]
+                assert "guid" in first_conn
+                assert "connected" in first_conn
+                assert "connecting" in first_conn
+
+
+class TestKitMeta:
+    """Tests for KitMeta deserialization from JSON."""
+
+    def test_kit_meta(self):
+        data = _test_load_json("metabolism.meta.kit.semio.json")
+        assert "guid" in data
+        assert "name" in data
+        assert data["name"] == "Metabolism"
+        meta: KitMeta = data
+        assert meta["guid"] == data["guid"]
+        assert "types" not in meta
+        assert "designs" not in meta
+        assert "files" not in meta
+        assert "folders" not in meta
+
+
+class TestKitShallow:
+    """Tests for KitShallow deserialization from JSON."""
+
+    def test_kit_shallow(self):
+        data = _test_load_json("metabolism.shallow.kit.semio.json")
+        assert "guid" in data
+        assert "name" not in data or isinstance(data.get("name"), str)
+        shallow: KitShallow = data
+        assert "types" in shallow
+        assert isinstance(shallow["types"], list)
+        assert len(shallow["types"]) > 0
+        first_type = shallow["types"][0]
+        assert "guid" in first_type
+        assert "name" in first_type
+        assert "connectors" not in first_type
+        assert "models" not in first_type
+
+
+class TestKitToMetaShallow:
+    """Tests for converting a full kit dict to meta and shallow representations."""
+
+    def test_kit_to_meta_shallow(self):
+        kit_dict = _test_load_json("kit_metabolism.json")
+        expected_meta = _test_load_json("metabolism.meta.kit.semio.json")
+        expected_shallow = _test_load_json("metabolism.shallow.kit.semio.json")
+
+        computed_meta = kitToMeta(kit_dict)
+        assert computed_meta["guid"] == expected_meta["guid"]
+        assert computed_meta["name"] == expected_meta.get("name", computed_meta["name"])
+        for key in expected_meta:
+            if key in computed_meta:
+                assert computed_meta[key] == expected_meta[key], f"KitMeta mismatch for key '{key}': {computed_meta[key]!r} != {expected_meta[key]!r}"
+
+        computed_shallow = kitToShallow(kit_dict)
+        assert computed_shallow["guid"] == expected_shallow["guid"]
+        assert "types" in computed_shallow
+        assert isinstance(computed_shallow["types"], list)
+
+        expected_type_guids = {t["guid"] for t in expected_shallow.get("types", [])}
+        computed_type_guids = {t["guid"] for t in computed_shallow.get("types", [])}
+        assert expected_type_guids == computed_type_guids, "TypeMeta guids in shallow kit must match"
+
+        for t in computed_shallow.get("types", []):
+            assert "connectors" not in t, "TypeMeta in shallow kit must not have connectors"
+            assert "models" not in t, "TypeMeta in shallow kit must not have models"
+
+        expected_type_meta = _test_load_json("tambour.meta.type.semio.json")
+        computed_type_meta = typeToMeta(next(t for t in kit_dict["types"] if t["guid"] == expected_type_meta["guid"]))
+        for key in expected_type_meta:
+            if key in computed_type_meta:
+                assert computed_type_meta[key] == expected_type_meta[key], f"TypeMeta mismatch for key '{key}'"
+
+        expected_design_meta = _test_load_json("nakagin-capsule-tower.meta.design.semio.json")
+        computed_design_meta = designToMeta(next(d for d in kit_dict["designs"] if d["guid"] == expected_design_meta["guid"]))
+        for key in expected_design_meta:
+            if key in computed_design_meta:
+                assert computed_design_meta[key] == expected_design_meta[key], f"DesignMeta mismatch for key '{key}'"
 
 
 # endregion Test

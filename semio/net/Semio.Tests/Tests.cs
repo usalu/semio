@@ -372,6 +372,68 @@ public class Tests
         }
     }
 
+    public class KitFilterDesign
+    {
+        [Fact]
+        public void Nakagin_Capsule_Tower_Filter_Produces_Expected_Subset()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var expected = Tests.LoadAsset<Kit>("nakagin-capsule-tower.filtered.kit.semio.json");
+            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+
+            var filtered = Kit.FilterKitWithDesign(kit, design.Guid);
+
+            Assert.Equal(expected.Designs?.Count ?? 0, filtered.Designs?.Count ?? 0);
+            Assert.Equal(expected.Types?.Count ?? 0, filtered.Types?.Count ?? 0);
+            Assert.Equal(expected.Files?.Count ?? 0, filtered.Files?.Count ?? 0);
+            Assert.Equal(expected.Ports?.Count ?? 0, filtered.Ports?.Count ?? 0);
+            Assert.Equal(expected.Qualities?.Count ?? 0, filtered.Qualities?.Count ?? 0);
+            Assert.Equal(expected.Authors?.Count ?? 0, filtered.Authors?.Count ?? 0);
+
+            var filteredDesign = filtered.Designs!.FirstOrDefault(d => d.Guid == design.Guid);
+            Assert.NotNull(filteredDesign);
+            Assert.Equal(design.Pieces?.Count ?? 0, filteredDesign!.Pieces?.Count ?? 0);
+
+            foreach (var expectedType in expected.Types ?? new List<Type>())
+            {
+                var filteredType = filtered.Types!.FirstOrDefault(t => t.Guid == expectedType.Guid);
+                Assert.NotNull(filteredType);
+                Assert.Equal(expectedType.Models?.Count ?? 0, filteredType!.Models?.Count ?? 0);
+            }
+
+            foreach (var piece in filteredDesign.Pieces ?? new List<Piece>())
+            {
+                if (piece.Type?.Guid == null) continue;
+                Assert.Contains(filtered.Types!, t => t.Guid == piece.Type.Guid);
+            }
+
+            foreach (var kind in filtered.Types ?? new List<Type>())
+            {
+                Assert.True((kind.Models?.Count ?? 0) <= 1, $"Type {kind.Guid} has more than one model");
+                foreach (var model in kind.Models ?? new List<Model>())
+                    Assert.Contains(filtered.Files ?? new List<File>(), file => file.Guid == model.File.Guid);
+                foreach (var connector in kind.Connectors ?? new List<Connector>())
+                {
+                    if (connector.Port?.Guid == null) continue;
+                    Assert.Contains(filtered.Ports ?? new List<Port>(), port => port.Guid == connector.Port.Guid);
+                }
+            }
+        }
+
+        [Fact]
+        public void Nakagin_Capsule_Tower_Filter_Preserves_Metadata()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+
+            var filtered = Kit.FilterKitWithDesign(kit, design.Guid);
+
+            Assert.Equal(kit.Guid, filtered.Guid);
+            Assert.Equal(kit.Name, filtered.Name);
+            Assert.Equal(kit.Version, filtered.Version);
+        }
+    }
+
     public class DesignQualitySum
     {
         [Fact]
@@ -488,6 +550,205 @@ public class Tests
             var reportsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../reports/export-design-model"));
             Directory.CreateDirectory(reportsDir);
             System.IO.File.WriteAllBytes(Path.Combine(reportsDir, "net.gltf"), result);
+        }
+    }
+
+    public class MetaShallow
+    {
+        [Fact]
+        public void Type_Meta_From_Asset()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var type = kit.Types.First();
+            var meta = type.ToMeta();
+
+            Assert.Equal(type.Guid, meta.Guid);
+            Assert.Equal(type.Name, meta.Name);
+            Assert.Equal(type.Parent?.Guid, meta.Parent?.Guid);
+            Assert.Equal(type.IsAbstract, meta.IsAbstract);
+            Assert.Equal(type.Folder, meta.Folder);
+            Assert.Equal(type.Description, meta.Description);
+            Assert.Equal(type.Icon, meta.Icon);
+            Assert.Equal(type.Image, meta.Image);
+            Assert.Equal(type.Stock, meta.Stock);
+            Assert.Equal(type.Virtual, meta.Virtual);
+            Assert.Equal(type.Uri, meta.Uri);
+            Assert.Equal(type.Unit, meta.Unit);
+            Assert.Equal(type.CreatedAt, meta.CreatedAt);
+            Assert.Equal(type.UpdatedAt, meta.UpdatedAt);
+        }
+
+        [Fact]
+        public void Type_Shallow_From_Asset()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var type = kit.Types.First();
+            var shallow = type.ToShallow();
+
+            Assert.Equal(type.Guid, shallow.Guid);
+            Assert.Equal(type.Name, shallow.Name);
+            Assert.Equal(type.Models.Count, shallow.Models.Count);
+            Assert.Equal(type.Connectors.Count, shallow.Connectors.Count);
+            Assert.Equal(type.Props.Count, shallow.Props.Count);
+            Assert.Equal(type.Authors.Count, shallow.Authors.Count);
+            Assert.Equal(type.Concepts.Count, shallow.Concepts.Count);
+            Assert.Equal(type.Attributes.Count, shallow.Attributes.Count);
+
+            for (int i = 0; i < type.Models.Count; i++)
+            {
+                Assert.Equal(type.Models[i].Guid, shallow.Models[i].Guid);
+                Assert.Equal(type.Models[i].Name, shallow.Models[i].Name);
+            }
+            for (int i = 0; i < type.Connectors.Count; i++)
+            {
+                Assert.Equal(type.Connectors[i].Guid, shallow.Connectors[i].Guid);
+                Assert.Equal(type.Connectors[i].Name, shallow.Connectors[i].Name);
+            }
+        }
+
+        [Fact]
+        public void Design_Meta_From_Asset()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = kit.Designs.First(d => d.Parent == null);
+            var meta = design.ToMeta();
+
+            Assert.Equal(design.Guid, meta.Guid);
+            Assert.Equal(design.Name, meta.Name);
+            Assert.Equal(design.Parent?.Guid, meta.Parent?.Guid);
+            Assert.Equal(design.IsAbstract, meta.IsAbstract);
+            Assert.Equal(design.Folder, meta.Folder);
+            Assert.Equal(design.Description, meta.Description);
+            Assert.Equal(design.Icon, meta.Icon);
+            Assert.Equal(design.Image, meta.Image);
+            Assert.Equal(design.Unit, meta.Unit);
+            Assert.Equal(design.CanScale, meta.CanScale);
+            Assert.Equal(design.CanMirror, meta.CanMirror);
+            Assert.Equal(design.CreatedAt, meta.CreatedAt);
+            Assert.Equal(design.UpdatedAt, meta.UpdatedAt);
+        }
+
+        [Fact]
+        public void Design_Shallow_From_Asset()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var design = kit.Designs.First(d => d.Parent == null);
+            var shallow = design.ToShallow();
+
+            Assert.Equal(design.Guid, shallow.Guid);
+            Assert.Equal(design.Name, shallow.Name);
+            Assert.Equal(design.Pieces.Count, shallow.Pieces.Count);
+            Assert.Equal(design.Connections.Count, shallow.Connections.Count);
+            Assert.Equal(design.Stats.Count, shallow.Stats.Count);
+            Assert.Equal(design.Props.Count, shallow.Props.Count);
+            Assert.Equal(design.Layers.Count, shallow.Layers.Count);
+            Assert.Equal(design.Groups.Count, shallow.Groups.Count);
+            Assert.Equal(design.Attributes.Count, shallow.Attributes.Count);
+            Assert.Equal(design.Authors.Count, shallow.Authors.Count);
+            Assert.Equal(design.Concepts.Count, shallow.Concepts.Count);
+
+            for (int i = 0; i < design.Pieces.Count; i++)
+            {
+                Assert.Equal(design.Pieces[i].Guid, shallow.Pieces[i].Guid);
+                Assert.Equal(design.Pieces[i].Name, shallow.Pieces[i].Name);
+            }
+        }
+
+        [Fact]
+        public void Kit_Meta_From_Asset()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var meta = kit.ToMeta();
+
+            Assert.Equal(kit.Guid, meta.Guid);
+            Assert.Equal(kit.Name, meta.Name);
+            Assert.Equal(kit.Version, meta.Version);
+            Assert.Equal(kit.Description, meta.Description);
+            Assert.Equal(kit.Icon, meta.Icon);
+            Assert.Equal(kit.Image, meta.Image);
+            Assert.Equal(kit.Remote, meta.Remote);
+            Assert.Equal(kit.Homepage, meta.Homepage);
+            Assert.Equal(kit.License, meta.License);
+            Assert.Equal(kit.Preview, meta.Preview);
+            Assert.Equal(kit.CreatedAt, meta.CreatedAt);
+            Assert.Equal(kit.UpdatedAt, meta.UpdatedAt);
+        }
+
+        [Fact]
+        public void Kit_Shallow_From_Asset()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var shallow = kit.ToShallow();
+
+            Assert.Equal(kit.Guid, shallow.Guid);
+            Assert.Equal(kit.Name, shallow.Name);
+            Assert.Equal(kit.Types.Count, shallow.Types.Count);
+            Assert.Equal(kit.Designs.Count, shallow.Designs.Count);
+            Assert.Equal(kit.Tags.Count, shallow.Tags.Count);
+            Assert.Equal(kit.Concepts.Count, shallow.Concepts.Count);
+            Assert.Equal(kit.Ports.Count, shallow.Ports.Count);
+            Assert.Equal(kit.Qualities.Count, shallow.Qualities.Count);
+            Assert.Equal(kit.Files.Count, shallow.Files.Count);
+            Assert.Equal(kit.Folders.Count, shallow.Folders.Count);
+            Assert.Equal(kit.Authors.Count, shallow.Authors.Count);
+            Assert.Equal(kit.Attributes.Count, shallow.Attributes.Count);
+
+            for (int i = 0; i < kit.Types.Count; i++)
+            {
+                Assert.Equal(kit.Types[i].Guid, shallow.Types[i].Guid);
+                Assert.Equal(kit.Types[i].Name, shallow.Types[i].Name);
+            }
+        }
+
+        [Fact]
+        public void Kit_To_Meta_To_Shallow()
+        {
+            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+
+            var meta = kit.ToMeta();
+            Assert.NotNull(meta);
+            Assert.Equal(kit.Name, meta.Name);
+
+            var shallow = kit.ToShallow();
+            Assert.NotNull(shallow);
+            Assert.Equal(kit.Name, shallow.Name);
+            Assert.Equal(kit.Types.Count, shallow.Types.Count);
+            Assert.Equal(kit.Designs.Count, shallow.Designs.Count);
+
+            var metaJson = Utility.Serialize(meta);
+            var shallowJson = Utility.Serialize(shallow);
+            Assert.NotNull(metaJson);
+            Assert.NotNull(shallowJson);
+
+            var metaDeserialized = Utility.Deserialize<KitMeta>(metaJson);
+            Assert.NotNull(metaDeserialized);
+            Assert.Equal(meta.Name, metaDeserialized!.Name);
+            Assert.Equal(meta.Version, metaDeserialized.Version);
+
+            var shallowDeserialized = Utility.Deserialize<KitShallow>(shallowJson);
+            Assert.NotNull(shallowDeserialized);
+            Assert.Equal(shallow.Name, shallowDeserialized!.Name);
+            Assert.Equal(shallow.Types.Count, shallowDeserialized.Types.Count);
+
+            foreach (var type in kit.Types)
+            {
+                var typeMeta = type.ToMeta();
+                var typeShallow = type.ToShallow();
+                Assert.Equal(type.Guid, typeMeta.Guid);
+                Assert.Equal(type.Guid, typeShallow.Guid);
+                Assert.Equal(type.Models.Count, typeShallow.Models.Count);
+                Assert.Equal(type.Connectors.Count, typeShallow.Connectors.Count);
+            }
+
+            foreach (var design in kit.Designs)
+            {
+                var designMeta = design.ToMeta();
+                var designShallow = design.ToShallow();
+                Assert.Equal(design.Guid, designMeta.Guid);
+                Assert.Equal(design.Guid, designShallow.Guid);
+                Assert.Equal(design.Pieces.Count, designShallow.Pieces.Count);
+                Assert.Equal(design.Connections.Count, designShallow.Connections.Count);
+            }
         }
     }
 

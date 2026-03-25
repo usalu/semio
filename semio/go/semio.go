@@ -554,6 +554,14 @@ type AttributesDiff struct {
 	Added []Attribute `json:"added,omitempty"`
 }
 
+// AttributeMeta represents the scalar-only projection of an Attribute (no arrays).
+type AttributeMeta struct {
+	Guid       string  `json:"guid"`
+	Key        string  `json:"key"`
+	Value      *string `json:"value,omitempty"`
+	Definition *string `json:"definition,omitempty"`
+}
+
 // #endregion 🔖Attribute
 
 // #region 🔖Location
@@ -615,6 +623,15 @@ type AuthorsDiff struct {
 	Added []Author `json:"added,omitempty"`
 }
 
+// AuthorMeta represents the scalar-only projection of an Author (no Attributes array).
+type AuthorMeta struct {
+	Guid      string  `json:"guid"`
+	Name      string  `json:"name"`
+	Email     *string `json:"email,omitempty"`
+	CreatedAt string  `json:"createdAt,omitempty"`
+	UpdatedAt string  `json:"updatedAt,omitempty"`
+}
+
 // #endregion 🔖Author
 
 // #region 🔖File
@@ -661,6 +678,19 @@ type FilesDiff struct {
 	Added []File `json:"added,omitempty"`
 }
 
+// FileMeta represents the scalar-only projection of a File (no Blob, no Attributes).
+type FileMeta struct {
+	Guid        string    `json:"guid"`
+	Name        string    `json:"name"`
+	Remote      *string   `json:"remote,omitempty"`
+	Folder      *FolderId `json:"folder,omitempty"`
+	Size        *int64    `json:"size,omitempty"`
+	Hash        *string   `json:"hash,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	CreatedAt   string    `json:"createdAt,omitempty"`
+	UpdatedAt   string    `json:"updatedAt,omitempty"`
+}
+
 // #endregion 🔖File
 
 // #region 🔖Folder
@@ -697,6 +727,16 @@ type FoldersDiff struct {
 		Diff   FolderDiff `json:"diff"`
 	} `json:"updated,omitempty"`
 	Added []Folder `json:"added,omitempty"`
+}
+
+// FolderMeta represents the scalar-only projection of a Folder (no Attributes).
+type FolderMeta struct {
+	Guid        string    `json:"guid"`
+	Name        string    `json:"name"`
+	Parent      *FolderId `json:"parent,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	CreatedAt   string    `json:"createdAt,omitempty"`
+	UpdatedAt   string    `json:"updatedAt,omitempty"`
 }
 
 // #endregion 🔖Folder
@@ -816,6 +856,27 @@ type QualitiesDiff struct {
 	Added []Quality `json:"added,omitempty"`
 }
 
+// QualityMeta represents the scalar-only projection of a Quality (no Benchmarks, no Attributes).
+type QualityMeta struct {
+	Guid                string      `json:"guid"`
+	Key                 string      `json:"key"`
+	Name                string      `json:"name"`
+	Kind                QualityKind `json:"kind,omitempty"`
+	Default             *float64    `json:"default,omitempty"`
+	Formula             *string     `json:"formula,omitempty"`
+	DefaultSiUnit       *string     `json:"defaultSiUnit,omitempty"`
+	DefaultImperialUnit *string     `json:"defaultImperialUnit,omitempty"`
+	Unit                *string     `json:"unit,omitempty"`
+	Min                 *float64    `json:"min,omitempty"`
+	MinExcluded         *bool       `json:"minExcluded,omitempty"`
+	Max                 *float64    `json:"max,omitempty"`
+	MaxExcluded         *bool       `json:"maxExcluded,omitempty"`
+	CanScale            *bool       `json:"canScale,omitempty"`
+	Definition          *string     `json:"definition,omitempty"`
+	CreatedAt           string      `json:"createdAt,omitempty"`
+	UpdatedAt           string      `json:"updatedAt,omitempty"`
+}
+
 // #endregion 🔖Quality
 
 // #region 🔖Port
@@ -888,6 +949,16 @@ type PortsDiff struct {
 	Added []Port `json:"added,omitempty"`
 }
 
+// PortMeta represents the scalar-only projection of a Port (no CompatiblePorts, no Attributes).
+type PortMeta struct {
+	Guid        string  `json:"guid"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
+	CreatedAt   string  `json:"createdAt,omitempty"`
+	UpdatedAt   string  `json:"updatedAt,omitempty"`
+}
+
 // #endregion 🔖Port
 
 // #region 🔖Prop
@@ -922,6 +993,14 @@ type PropsDiff struct {
 		Diff PropDiff `json:"diff"`
 	} `json:"updated,omitempty"`
 	Added []Prop `json:"added,omitempty"`
+}
+
+// PropMeta represents the scalar-only projection of a Prop (no Attributes).
+type PropMeta struct {
+	Guid    string    `json:"guid"`
+	Quality QualityId `json:"quality"`
+	Value   string    `json:"value"`
+	Unit    *string   `json:"unit,omitempty"`
 }
 
 // #endregion 🔖Prop
@@ -994,6 +1073,16 @@ type TagsDiff struct {
 	Added []Tag `json:"added,omitempty"`
 }
 
+// TagMeta represents the scalar-only projection of a Tag (no Attributes).
+type TagMeta struct {
+	Guid        string  `json:"guid"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
+	CreatedAt   string  `json:"createdAt,omitempty"`
+	UpdatedAt   string  `json:"updatedAt,omitempty"`
+}
+
 // #endregion 🔖Tag
 
 // #region 🔖Concept
@@ -1064,6 +1153,16 @@ type ConceptsDiff struct {
 	Added []Concept `json:"added,omitempty"`
 }
 
+// ConceptMeta represents the scalar-only projection of a Concept (no Attributes).
+type ConceptMeta struct {
+	Guid        string  `json:"guid"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
+	CreatedAt   string  `json:"createdAt,omitempty"`
+	UpdatedAt   string  `json:"updatedAt,omitempty"`
+}
+
 // #endregion 🔖Concept
 
 // #region 🔖Model
@@ -1100,6 +1199,14 @@ type ModelsDiff struct {
 		Diff  ModelDiff `json:"diff"`
 	} `json:"updated,omitempty"`
 	Added []Model `json:"added,omitempty"`
+}
+
+// ModelMeta represents the scalar-only projection of a Model (no Tags, no Attributes).
+type ModelMeta struct {
+	Guid        string  `json:"guid"`
+	File        FileId  `json:"file"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 // #endregion 🔖Model
@@ -1162,6 +1269,18 @@ type ConnectorsDiff struct {
 		Diff      ConnectorDiff `json:"diff"`
 	} `json:"updated,omitempty"`
 	Added []Connector `json:"added,omitempty"`
+}
+
+// ConnectorMeta represents the scalar-only projection of a Connector (no Props, no Attributes).
+type ConnectorMeta struct {
+	Guid        string  `json:"guid"`
+	Name        *string `json:"name,omitempty"`
+	Point       Point   `json:"point"`
+	Direction   Vector  `json:"direction"`
+	T           float64 `json:"t"`
+	Mandatory   *bool   `json:"mandatory,omitempty"`
+	Port        *PortId `json:"port,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 // #endregion 🔖Connector
@@ -1260,6 +1379,48 @@ type TypesDiff struct {
 	Added []Type `json:"added,omitempty"`
 }
 
+// TypeMeta represents the scalar-only projection of a Type (no slices).
+type TypeMeta struct {
+	Guid        string      `json:"guid"`
+	Name        string      `json:"name"`
+	Parent      *TypeId     `json:"parent,omitempty"`
+	IsAbstract  *bool       `json:"isAbstract,omitempty"`
+	Virtual     *bool       `json:"virtual,omitempty"`
+	Unit        *string     `json:"unit,omitempty"`
+	Stock       *int        `json:"stock,omitempty"`
+	Location    *LocationId `json:"location,omitempty"`
+	Folder      *string     `json:"folder,omitempty"`
+	Icon        *string     `json:"icon,omitempty"`
+	Image       *string     `json:"image,omitempty"`
+	Description *string     `json:"description,omitempty"`
+	CreatedAt   string      `json:"createdAt,omitempty"`
+	UpdatedAt   string      `json:"updatedAt,omitempty"`
+}
+
+// TypeShallow represents a Type with slice fields replaced by Meta item slices.
+type TypeShallow struct {
+	Guid        string          `json:"guid"`
+	Name        string          `json:"name"`
+	Parent      *TypeId         `json:"parent,omitempty"`
+	IsAbstract  *bool           `json:"isAbstract,omitempty"`
+	Virtual     *bool           `json:"virtual,omitempty"`
+	Unit        *string         `json:"unit,omitempty"`
+	Stock       *int            `json:"stock,omitempty"`
+	Location    *LocationId     `json:"location,omitempty"`
+	Folder      *string         `json:"folder,omitempty"`
+	Models      []ModelMeta     `json:"models,omitempty"`
+	Connectors  []ConnectorMeta `json:"connectors,omitempty"`
+	Props       []PropMeta      `json:"props,omitempty"`
+	Authors     []AuthorId      `json:"authors,omitempty"`
+	Concepts    []ConceptId     `json:"concepts,omitempty"`
+	Icon        *string         `json:"icon,omitempty"`
+	Image       *string         `json:"image,omitempty"`
+	Description *string         `json:"description,omitempty"`
+	Attributes  []AttributeMeta `json:"attributes,omitempty"`
+	CreatedAt   string          `json:"createdAt,omitempty"`
+	UpdatedAt   string          `json:"updatedAt,omitempty"`
+}
+
 // #endregion 🔖Type
 
 // #region 🔖Layer
@@ -1298,6 +1459,16 @@ type LayersDiff struct {
 		Diff  LayerDiff `json:"diff"`
 	} `json:"updated,omitempty"`
 	Added []Layer `json:"added,omitempty"`
+}
+
+// LayerMeta represents the scalar-only projection of a Layer (no Attributes).
+type LayerMeta struct {
+	Guid        string  `json:"guid"`
+	Path        string  `json:"path"`
+	IsHidden    *bool   `json:"isHidden,omitempty"`
+	IsLocked    *bool   `json:"isLocked,omitempty"`
+	Color       *string `json:"color,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 // #endregion 🔖Layer
@@ -1369,6 +1540,22 @@ type PiecesDiff struct {
 	Added []Piece `json:"added,omitempty"`
 }
 
+// PieceMeta represents the scalar-only projection of a Piece (no Props, no Attributes).
+type PieceMeta struct {
+	Guid        string    `json:"guid"`
+	Name        *string   `json:"name,omitempty"`
+	Type        *TypeId   `json:"type,omitempty"`
+	Design      *DesignId `json:"design,omitempty"`
+	Plane       *Plane    `json:"plane,omitempty"`
+	Center      *Coord    `json:"center,omitempty"`
+	Scale       *float64  `json:"scale,omitempty"`
+	MirrorPlane *Plane    `json:"mirrorPlane,omitempty"`
+	IsHidden    *bool     `json:"isHidden,omitempty"`
+	IsLocked    *bool     `json:"isLocked,omitempty"`
+	Color       *string   `json:"color,omitempty"`
+	Description *string   `json:"description,omitempty"`
+}
+
 // #endregion 🔖Piece
 
 // #region 🔖Group
@@ -1405,6 +1592,14 @@ type GroupsDiff struct {
 		Diff  GroupDiff `json:"diff"`
 	} `json:"updated,omitempty"`
 	Added []Group `json:"added,omitempty"`
+}
+
+// GroupMeta represents the scalar-only projection of a Group (no Pieces, no Attributes).
+type GroupMeta struct {
+	Guid        string  `json:"guid"`
+	Name        *string `json:"name,omitempty"`
+	Color       *string `json:"color,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 // #endregion 🔖Group
@@ -1481,6 +1676,22 @@ type ConnectionsDiff struct {
 	Added []Connection `json:"added,omitempty"`
 }
 
+// ConnectionMeta represents the scalar-only projection of a Connection (no Attributes).
+type ConnectionMeta struct {
+	Guid        string  `json:"guid"`
+	Connected   Side    `json:"connected"`
+	Connecting  Side    `json:"connecting"`
+	Gap         float64 `json:"gap"`
+	Shift       float64 `json:"shift"`
+	Rise        float64 `json:"rise"`
+	Rotation    float64 `json:"rotation"`
+	Turn        float64 `json:"turn"`
+	Tilt        float64 `json:"tilt"`
+	U           float64 `json:"u"`
+	V           float64 `json:"v"`
+	Description *string `json:"description,omitempty"`
+}
+
 // #endregion 🔖Connection
 
 // #region 🔖Stat
@@ -1517,6 +1728,15 @@ type StatsDiff struct {
 		Diff StatDiff `json:"diff"`
 	} `json:"updated,omitempty"`
 	Added []Stat `json:"added,omitempty"`
+}
+
+// StatMeta represents the scalar-only projection of a Stat (no Attributes).
+type StatMeta struct {
+	Guid    string    `json:"guid"`
+	Quality QualityId `json:"quality"`
+	Min     *float64  `json:"min,omitempty"`
+	Max     *float64  `json:"max,omitempty"`
+	Unit    *string   `json:"unit,omitempty"`
 }
 
 // #endregion 🔖Stat
@@ -1601,6 +1821,55 @@ type DesignsDiff struct {
 	Added []Design `json:"added,omitempty"`
 }
 
+// DesignMeta represents the scalar-only projection of a Design (no slices).
+type DesignMeta struct {
+	Guid        string      `json:"guid"`
+	Name        string      `json:"name"`
+	Parent      *DesignId   `json:"parent,omitempty"`
+	IsAbstract  *bool       `json:"isAbstract,omitempty"`
+	Unit        *string     `json:"unit,omitempty"`
+	Folder      *string     `json:"folder,omitempty"`
+	CanScale    *bool       `json:"canScale,omitempty"`
+	CanMirror   *bool       `json:"canMirror,omitempty"`
+	View        *Camera     `json:"view,omitempty"`
+	ActiveLayer *LayerId    `json:"activeLayer,omitempty"`
+	Location    *LocationId `json:"location,omitempty"`
+	Icon        *string     `json:"icon,omitempty"`
+	Image       *string     `json:"image,omitempty"`
+	Description *string     `json:"description,omitempty"`
+	CreatedAt   string      `json:"createdAt,omitempty"`
+	UpdatedAt   string      `json:"updatedAt,omitempty"`
+}
+
+// DesignShallow represents a Design with slice fields replaced by Meta item slices.
+type DesignShallow struct {
+	Guid        string           `json:"guid"`
+	Name        string           `json:"name"`
+	Parent      *DesignId        `json:"parent,omitempty"`
+	IsAbstract  *bool            `json:"isAbstract,omitempty"`
+	Unit        *string          `json:"unit,omitempty"`
+	Folder      *string          `json:"folder,omitempty"`
+	CanScale    *bool            `json:"canScale,omitempty"`
+	CanMirror   *bool            `json:"canMirror,omitempty"`
+	View        *Camera          `json:"view,omitempty"`
+	Pieces      []PieceMeta      `json:"pieces,omitempty"`
+	Connections []ConnectionMeta `json:"connections,omitempty"`
+	Stats       []StatMeta       `json:"stats,omitempty"`
+	Props       []PropMeta       `json:"props,omitempty"`
+	Layers      []LayerMeta      `json:"layers,omitempty"`
+	ActiveLayer *LayerId         `json:"activeLayer,omitempty"`
+	Groups      []GroupMeta      `json:"groups,omitempty"`
+	Location    *LocationId      `json:"location,omitempty"`
+	Authors     []AuthorId       `json:"authors,omitempty"`
+	Concepts    []ConceptId      `json:"concepts,omitempty"`
+	Icon        *string          `json:"icon,omitempty"`
+	Image       *string          `json:"image,omitempty"`
+	Description *string          `json:"description,omitempty"`
+	Attributes  []AttributeMeta  `json:"attributes,omitempty"`
+	CreatedAt   string           `json:"createdAt,omitempty"`
+	UpdatedAt   string           `json:"updatedAt,omitempty"`
+}
+
 // #endregion 🔖Design
 
 // #region 🔖Kit
@@ -1669,6 +1938,246 @@ type KitsDiff struct {
 	} `json:"updated,omitempty"`
 	Added []Kit `json:"added,omitempty"`
 }
+
+// KitMeta represents the scalar-only projection of a Kit (no slices).
+type KitMeta struct {
+	Guid        string  `json:"guid"`
+	Name        string  `json:"name"`
+	Version     string  `json:"version"`
+	Remote      *string `json:"remote,omitempty"`
+	Homepage    *string `json:"homepage,omitempty"`
+	License     *string `json:"license,omitempty"`
+	Preview     *string `json:"preview,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
+	Image       *string `json:"image,omitempty"`
+	Description *string `json:"description,omitempty"`
+	CreatedAt   string  `json:"createdAt,omitempty"`
+	UpdatedAt   string  `json:"updatedAt,omitempty"`
+}
+
+// KitShallow represents a Kit with slice fields replaced by Meta item slices.
+type KitShallow struct {
+	Guid        string          `json:"guid"`
+	Name        string          `json:"name"`
+	Version     string          `json:"version"`
+	Types       []TypeMeta      `json:"types,omitempty"`
+	Designs     []DesignMeta    `json:"designs,omitempty"`
+	Tags        []TagMeta       `json:"tags,omitempty"`
+	Concepts    []ConceptMeta   `json:"concepts,omitempty"`
+	Ports       []PortMeta      `json:"ports,omitempty"`
+	Qualities   []QualityMeta   `json:"qualities,omitempty"`
+	Files       []FileMeta      `json:"files,omitempty"`
+	Folders     []FolderMeta    `json:"folders,omitempty"`
+	Authors     []AuthorMeta    `json:"authors,omitempty"`
+	Remote      *string         `json:"remote,omitempty"`
+	Homepage    *string         `json:"homepage,omitempty"`
+	License     *string         `json:"license,omitempty"`
+	Preview     *string         `json:"preview,omitempty"`
+	Icon        *string         `json:"icon,omitempty"`
+	Image       *string         `json:"image,omitempty"`
+	Description *string         `json:"description,omitempty"`
+	Attributes  []AttributeMeta `json:"attributes,omitempty"`
+	CreatedAt   string          `json:"createdAt,omitempty"`
+	UpdatedAt   string          `json:"updatedAt,omitempty"`
+}
+
+// #region 🔖Meta/Shallow Conversions
+
+// ToAttributeMeta converts an Attribute to its Meta projection.
+func ToAttributeMeta(a Attribute) AttributeMeta {
+	return AttributeMeta{Guid: a.Guid, Key: a.Key, Value: a.Value, Definition: a.Definition}
+}
+
+// ToAuthorMeta converts an Author to its Meta projection.
+func ToAuthorMeta(a Author) AuthorMeta {
+	return AuthorMeta{Guid: a.Guid, Name: a.Name, Email: a.Email, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
+}
+
+// ToFileMeta converts a File to its Meta projection.
+func ToFileMeta(f File) FileMeta {
+	return FileMeta{Guid: f.Guid, Name: f.Name, Remote: f.Remote, Folder: f.Folder, Size: f.Size, Hash: f.Hash, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+}
+
+// ToFolderMeta converts a Folder to its Meta projection.
+func ToFolderMeta(f Folder) FolderMeta {
+	return FolderMeta{Guid: f.Guid, Name: f.Name, Parent: f.Parent, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+}
+
+// ToQualityMeta converts a Quality to its Meta projection.
+func ToQualityMeta(q Quality) QualityMeta {
+	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Kind: q.Kind, Default: q.Default, Formula: q.Formula, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, MinExcluded: q.MinExcluded, Max: q.Max, MaxExcluded: q.MaxExcluded, CanScale: q.CanScale, Definition: q.Definition, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
+}
+
+// ToPortMeta converts a Port to its Meta projection.
+func ToPortMeta(p Port) PortMeta {
+	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
+}
+
+// ToPropMeta converts a Prop to its Meta projection.
+func ToPropMeta(p Prop) PropMeta {
+	return PropMeta{Guid: p.Guid, Quality: p.Quality, Value: p.Value, Unit: p.Unit}
+}
+
+// ToTagMeta converts a Tag to its Meta projection.
+func ToTagMeta(t Tag) TagMeta {
+	return TagMeta{Guid: t.Guid, Name: t.Name, Description: t.Description, Icon: t.Icon, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// ToConceptMeta converts a Concept to its Meta projection.
+func ToConceptMeta(c Concept) ConceptMeta {
+	return ConceptMeta{Guid: c.Guid, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
+}
+
+// ToModelMeta converts a Model to its Meta projection.
+func ToModelMeta(m Model) ModelMeta {
+	return ModelMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
+}
+
+// ToConnectorMeta converts a Connector to its Meta projection.
+func ToConnectorMeta(c Connector) ConnectorMeta {
+	return ConnectorMeta{Guid: c.Guid, Name: c.Name, Point: c.Point, Direction: c.Direction, T: c.T, Mandatory: c.Mandatory, Port: c.Port, Description: c.Description}
+}
+
+// ToLayerMeta converts a Layer to its Meta projection.
+func ToLayerMeta(l Layer) LayerMeta {
+	return LayerMeta{Guid: l.Guid, Path: l.Path, IsHidden: l.IsHidden, IsLocked: l.IsLocked, Color: l.Color, Description: l.Description}
+}
+
+// ToPieceMeta converts a Piece to its Meta projection.
+func ToPieceMeta(p Piece) PieceMeta {
+	return PieceMeta{Guid: p.Guid, Name: p.Name, Type: p.Type, Design: p.Design, Plane: p.Plane, Center: p.Center, Scale: p.Scale, MirrorPlane: p.MirrorPlane, IsHidden: p.IsHidden, IsLocked: p.IsLocked, Color: p.Color, Description: p.Description}
+}
+
+// ToGroupMeta converts a Group to its Meta projection.
+func ToGroupMeta(g Group) GroupMeta {
+	return GroupMeta{Guid: g.Guid, Name: g.Name, Color: g.Color, Description: g.Description}
+}
+
+// ToConnectionMeta converts a Connection to its Meta projection.
+func ToConnectionMeta(c Connection) ConnectionMeta {
+	return ConnectionMeta{Guid: c.Guid, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
+}
+
+// ToStatMeta converts a Stat to its Meta projection.
+func ToStatMeta(s Stat) StatMeta {
+	return StatMeta{Guid: s.Guid, Quality: s.Quality, Min: s.Min, Max: s.Max, Unit: s.Unit}
+}
+
+// ToTypeMeta converts a Type to its Meta projection.
+func ToTypeMeta(t Type) TypeMeta {
+	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// ToTypeShallow converts a Type to its Shallow projection.
+func ToTypeShallow(t Type) TypeShallow {
+	models := make([]ModelMeta, len(t.Models))
+	for i, m := range t.Models {
+		models[i] = ToModelMeta(m)
+	}
+	connectors := make([]ConnectorMeta, len(t.Connectors))
+	for i, c := range t.Connectors {
+		connectors[i] = ToConnectorMeta(c)
+	}
+	props := make([]PropMeta, len(t.Props))
+	for i, p := range t.Props {
+		props[i] = ToPropMeta(p)
+	}
+	attributes := make([]AttributeMeta, len(t.Attributes))
+	for i, a := range t.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// ToDesignMeta converts a Design to its Meta projection.
+func ToDesignMeta(d Design) DesignMeta {
+	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+}
+
+// ToDesignShallow converts a Design to its Shallow projection.
+func ToDesignShallow(d Design) DesignShallow {
+	pieces := make([]PieceMeta, len(d.Pieces))
+	for i, p := range d.Pieces {
+		pieces[i] = ToPieceMeta(p)
+	}
+	connections := make([]ConnectionMeta, len(d.Connections))
+	for i, c := range d.Connections {
+		connections[i] = ToConnectionMeta(c)
+	}
+	stats := make([]StatMeta, len(d.Stats))
+	for i, s := range d.Stats {
+		stats[i] = ToStatMeta(s)
+	}
+	props := make([]PropMeta, len(d.Props))
+	for i, p := range d.Props {
+		props[i] = ToPropMeta(p)
+	}
+	layers := make([]LayerMeta, len(d.Layers))
+	for i, l := range d.Layers {
+		layers[i] = ToLayerMeta(l)
+	}
+	groups := make([]GroupMeta, len(d.Groups))
+	for i, g := range d.Groups {
+		groups[i] = ToGroupMeta(g)
+	}
+	attributes := make([]AttributeMeta, len(d.Attributes))
+	for i, a := range d.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+}
+
+// ToKitMeta converts a Kit to its Meta projection.
+func ToKitMeta(k Kit) KitMeta {
+	return KitMeta{Guid: k.Guid, Name: k.Name, Version: k.Version, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+}
+
+// ToKitShallow converts a Kit to its Shallow projection.
+func ToKitShallow(k Kit) KitShallow {
+	types := make([]TypeMeta, len(k.Types))
+	for i, t := range k.Types {
+		types[i] = ToTypeMeta(t)
+	}
+	designs := make([]DesignMeta, len(k.Designs))
+	for i, d := range k.Designs {
+		designs[i] = ToDesignMeta(d)
+	}
+	tags := make([]TagMeta, len(k.Tags))
+	for i, t := range k.Tags {
+		tags[i] = ToTagMeta(t)
+	}
+	concepts := make([]ConceptMeta, len(k.Concepts))
+	for i, c := range k.Concepts {
+		concepts[i] = ToConceptMeta(c)
+	}
+	ports := make([]PortMeta, len(k.Ports))
+	for i, p := range k.Ports {
+		ports[i] = ToPortMeta(p)
+	}
+	qualities := make([]QualityMeta, len(k.Qualities))
+	for i, q := range k.Qualities {
+		qualities[i] = ToQualityMeta(q)
+	}
+	files := make([]FileMeta, len(k.Files))
+	for i, f := range k.Files {
+		files[i] = ToFileMeta(f)
+	}
+	folders := make([]FolderMeta, len(k.Folders))
+	for i, f := range k.Folders {
+		folders[i] = ToFolderMeta(f)
+	}
+	authors := make([]AuthorMeta, len(k.Authors))
+	for i, a := range k.Authors {
+		authors[i] = ToAuthorMeta(a)
+	}
+	attributes := make([]AttributeMeta, len(k.Attributes))
+	for i, a := range k.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Ports: ports, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+}
+
+// #endregion 🔖Meta/Shallow Conversions
 
 // Change represents a reversible entity change with forward and backward diffs.
 // [👤semio📚go💻semio🔖kit✂️change](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/Change)
@@ -7208,6 +7717,315 @@ func FilterDesignsWithoutParent(designs []Design) []Design {
 		}
 	}
 	return result
+}
+
+func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model {
+	if len(models) == 0 {
+		return nil
+	}
+	if len(selectedTagGuids) == 0 {
+		for i := range models {
+			if len(models[i].Tags) == 0 {
+				return &models[i]
+			}
+		}
+		return &models[0]
+	}
+
+	filtered := make([]Model, 0)
+	for _, model := range models {
+		matches := true
+		for _, selectedTagGuid := range selectedTagGuids {
+			found := false
+			for _, tag := range model.Tags {
+				if tag.Guid == selectedTagGuid {
+					found = true
+					break
+				}
+			}
+			if !found {
+				matches = false
+				break
+			}
+		}
+		if matches {
+			filtered = append(filtered, model)
+		}
+	}
+	if len(filtered) == 0 {
+		return nil
+	}
+
+	bestIndex := 0
+	bestScore := -1.0
+	for i, model := range filtered {
+		tagSet := make(map[string]bool)
+		selectedSet := make(map[string]bool)
+		for _, tag := range model.Tags {
+			tagSet[tag.Guid] = true
+		}
+		for _, selectedTagGuid := range selectedTagGuids {
+			selectedSet[selectedTagGuid] = true
+		}
+		intersection := 0
+		union := len(tagSet)
+		for guid := range tagSet {
+			if selectedSet[guid] {
+				intersection++
+			}
+		}
+		for guid := range selectedSet {
+			if !tagSet[guid] {
+				union++
+			}
+		}
+		score := 0.0
+		if union > 0 {
+			score = float64(intersection) / float64(union)
+		}
+		if score > bestScore {
+			bestScore = score
+			bestIndex = i
+		}
+	}
+	return &filtered[bestIndex]
+}
+
+// FilterKitWithDesign MUST return a minimal kit containing only entities related to the given design.
+// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
+// files not used by selected models, and keeps at most one model per type according to the optional tags.
+// [👤semio📚go💻semio🔖kitoperations🛠️filterkitwithdesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/FilterKitWithDesign)
+func FilterKitWithDesign(kit *Kit, designGuid string, tags []string) Kit {
+	var design *Design
+	for i := range kit.Designs {
+		if kit.Designs[i].Guid == designGuid {
+			design = &kit.Designs[i]
+			break
+		}
+	}
+	if design == nil {
+		return Kit{Guid: kit.Guid, Name: kit.Name, Version: kit.Version}
+	}
+
+	usedTypeGuids := map[string]bool{}
+	usedDesignGuids := map[string]bool{designGuid: true}
+	for _, piece := range design.Pieces {
+		if piece.Type != nil && piece.Type.Guid != "" {
+			usedTypeGuids[piece.Type.Guid] = true
+		}
+		if piece.Design != nil && piece.Design.Guid != "" {
+			usedDesignGuids[piece.Design.Guid] = true
+		}
+	}
+
+	typeByGuid := map[string]Type{}
+	for _, typeItem := range kit.Types {
+		typeByGuid[typeItem.Guid] = typeItem
+	}
+	var collectAncestors func(string)
+	collectAncestors = func(typeGuid string) {
+		typeItem, ok := typeByGuid[typeGuid]
+		if !ok || typeItem.Parent == nil || typeItem.Parent.Guid == "" || usedTypeGuids[typeItem.Parent.Guid] {
+			return
+		}
+		usedTypeGuids[typeItem.Parent.Guid] = true
+		collectAncestors(typeItem.Parent.Guid)
+	}
+	for typeGuid := range usedTypeGuids {
+		collectAncestors(typeGuid)
+	}
+
+	resolvedTagGuids := make([]string, 0)
+	for _, tagValue := range tags {
+		found := false
+		for _, tag := range kit.Tags {
+			if tag.Guid == tagValue {
+				resolvedTagGuids = append(resolvedTagGuids, tag.Guid)
+				found = true
+				break
+			}
+		}
+		if found {
+			continue
+		}
+		for _, tag := range kit.Tags {
+			if tag.Name == tagValue {
+				resolvedTagGuids = append(resolvedTagGuids, tag.Guid)
+			}
+		}
+	}
+
+	usedPortGuids := map[string]bool{}
+	usedFileGuids := map[string]bool{}
+	usedTagGuids := map[string]bool{}
+	usedConceptGuids := map[string]bool{}
+	usedQualityGuids := map[string]bool{}
+	usedAuthorGuids := map[string]bool{}
+	usedFolderNames := map[string]bool{}
+	selectedModels := map[string]Model{}
+
+	collectQualityFromProps := func(props []Prop) {
+		for _, prop := range props {
+			if prop.Quality.Guid != "" {
+				usedQualityGuids[prop.Quality.Guid] = true
+			}
+		}
+	}
+
+	for typeGuid := range usedTypeGuids {
+		typeItem, ok := typeByGuid[typeGuid]
+		if !ok {
+			continue
+		}
+		if typeItem.Folder != nil && *typeItem.Folder != "" {
+			usedFolderNames[*typeItem.Folder] = true
+		}
+		for _, connector := range typeItem.Connectors {
+			if connector.Port != nil && connector.Port.Guid != "" {
+				usedPortGuids[connector.Port.Guid] = true
+			}
+			collectQualityFromProps(connector.Props)
+		}
+		collectQualityFromProps(typeItem.Props)
+		for _, author := range typeItem.Authors {
+			if author.Guid != "" {
+				usedAuthorGuids[author.Guid] = true
+			}
+		}
+		for _, concept := range typeItem.Concepts {
+			if concept.Guid != "" {
+				usedConceptGuids[concept.Guid] = true
+			}
+		}
+		if bestModel := selectBestModelForFilter(typeItem.Models, resolvedTagGuids); bestModel != nil {
+			selectedModels[typeGuid] = *bestModel
+			if bestModel.File.Guid != "" {
+				usedFileGuids[bestModel.File.Guid] = true
+			}
+			for _, tag := range bestModel.Tags {
+				if tag.Guid != "" {
+					usedTagGuids[tag.Guid] = true
+				}
+			}
+		}
+	}
+
+	for _, piece := range design.Pieces {
+		collectQualityFromProps(piece.Props)
+	}
+	for _, concept := range design.Concepts {
+		if concept.Guid != "" {
+			usedConceptGuids[concept.Guid] = true
+		}
+	}
+	for _, author := range design.Authors {
+		if author.Guid != "" {
+			usedAuthorGuids[author.Guid] = true
+		}
+	}
+	for portGuid := range usedPortGuids {
+		for _, port := range kit.Ports {
+			if port.Guid != portGuid {
+				continue
+			}
+			for _, compatible := range port.CompatiblePorts {
+				if compatible.Guid != "" {
+					usedPortGuids[compatible.Guid] = true
+				}
+			}
+		}
+	}
+	for _, tagGuid := range resolvedTagGuids {
+		usedTagGuids[tagGuid] = true
+	}
+
+	filteredTypes := make([]Type, 0)
+	for _, typeItem := range kit.Types {
+		if !usedTypeGuids[typeItem.Guid] {
+			continue
+		}
+		filteredType := typeItem
+		if selectedModel, ok := selectedModels[typeItem.Guid]; ok {
+			filteredType.Models = []Model{selectedModel}
+		} else {
+			filteredType.Models = []Model{}
+		}
+		filteredTypes = append(filteredTypes, filteredType)
+	}
+
+	filteredDesigns := make([]Design, 0)
+	for _, designItem := range kit.Designs {
+		if usedDesignGuids[designItem.Guid] {
+			filteredDesigns = append(filteredDesigns, designItem)
+		}
+	}
+	filteredPorts := make([]Port, 0)
+	for _, port := range kit.Ports {
+		if usedPortGuids[port.Guid] {
+			filteredPorts = append(filteredPorts, port)
+		}
+	}
+	filteredFiles := make([]File, 0)
+	for _, file := range kit.Files {
+		if usedFileGuids[file.Guid] {
+			filteredFiles = append(filteredFiles, file)
+		}
+	}
+	filteredTags := make([]Tag, 0)
+	for _, tag := range kit.Tags {
+		if usedTagGuids[tag.Guid] {
+			filteredTags = append(filteredTags, tag)
+		}
+	}
+	filteredConcepts := make([]Concept, 0)
+	for _, concept := range kit.Concepts {
+		if usedConceptGuids[concept.Guid] {
+			filteredConcepts = append(filteredConcepts, concept)
+		}
+	}
+	filteredQualities := make([]Quality, 0)
+	for _, quality := range kit.Qualities {
+		if usedQualityGuids[quality.Guid] {
+			filteredQualities = append(filteredQualities, quality)
+		}
+	}
+	filteredAuthors := make([]Author, 0)
+	for _, author := range kit.Authors {
+		if usedAuthorGuids[author.Guid] {
+			filteredAuthors = append(filteredAuthors, author)
+		}
+	}
+	filteredFolders := make([]Folder, 0)
+	for _, folder := range kit.Folders {
+		if usedFolderNames[folder.Name] {
+			filteredFolders = append(filteredFolders, folder)
+		}
+	}
+
+	return Kit{
+		Guid:        kit.Guid,
+		Name:        kit.Name,
+		Version:     kit.Version,
+		Description: kit.Description,
+		Icon:        kit.Icon,
+		Image:       kit.Image,
+		Preview:     kit.Preview,
+		Remote:      kit.Remote,
+		Homepage:    kit.Homepage,
+		License:     kit.License,
+		Types:       filteredTypes,
+		Designs:     filteredDesigns,
+		Ports:       filteredPorts,
+		Files:       filteredFiles,
+		Tags:        filteredTags,
+		Concepts:    filteredConcepts,
+		Qualities:   filteredQualities,
+		Folders:     filteredFolders,
+		Authors:     filteredAuthors,
+		Attributes:  kit.Attributes,
+		CreatedAt:   kit.CreatedAt,
+		UpdatedAt:   kit.UpdatedAt,
+	}
 }
 
 // #endregion 🔖Kit Operations

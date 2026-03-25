@@ -1,0 +1,13 @@
+{
+  "title": "Fix Mcp App Tools to Return Rich Svg Diagram Instead of Json",
+  "status": "closed",
+  "description": "MCP app tools like show_design return raw JSON instead of rich visual content. Fixed to return CallToolResult with SVG diagram ImageContent, text summary, and proper structuredContent.",
+  "summary": "Fixed MCP app tools to return rich visual content instead of raw JSON. Tools now return proper CallToolResult with: (1) SVG diagram as ImageContent showing pieces as circles and connections as lines with diff/selection coloring and type name tooltips, (2) text summary with mode/design/piece/connection counts, (3) structuredContent at the MCP protocol level. Added 3 selection tools (read/set/clear_current_selection) and 8 app tools (show_design, show_diagram, show_scene, show_diff, show_diagram_diff, select_pieces, select_connections, select_pieces_and_connections). Also started HTTP engine server in background during MCP stdio mode for future interactive app serving. Updated tool surface test. All 142 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1066"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪12d8f5c24851422f98a188e680d1289e"
+  ]
+}

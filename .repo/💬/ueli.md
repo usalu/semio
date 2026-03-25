@@ -100,8 +100,22 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+There are exactly five kind of kits:
 
-Add a new
+- FileKit (JSON)
+- FolderKit (local folder with files and .semio/kit.db sqlite file)
+- ArchiveKit (zip file of FolderKit)
+- RemoteKit (url)
+- TemporaryKit (InMemory)
+  The current implementations are messy and inconsistent.
+  You MUST refactor everything to support exactly those kits and nothing else.
+  You MUST implement it for all programming languages.
+  You MUST test every kind of kit Kit/File, KitFolder, Kit/Archive, Kit/Remote, Kit/Temporary.
+
+Make sure that all programming languages have a *Meta and *Shallow same as they have a _Diff equivalent. A shallow is the same as the normal but for all child collections it only has the Meta information. E.g. A shallow kit has only meta and types meta, designs meta, etc. All meta only has all non-heavy properties (e.g. no file blobs) and no child collections.
+You MUST implement it everywhere. Extend the semio assets with metabolism.shallow.kit.semio.json, nakagin-capsule-tower.shallow.design.semio.json, tambour.shallow.type.semio.json.
+You MUST extend all tests with Kit/Shallow, Design/Shallow, TypeShallow
+Same for meta. All languages, all assets with .meta and all tests with _/Meta
 
 Replace the keys with semantic keys:
 e.g. "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Wohnen und Aufenthalt.Wohnzimmerfläche.Wohnfläche"
@@ -202,6 +216,14 @@ MUST work for both kind of kits. Extend the engine with a way to authenticate wi
 ## 👤semio⌨️engine🤖mcp
 
 semio engine mcp:
+This should not happen:
+{
+"error": "Kit not found at path: /workspaces/semio/semio/assets/metabolism"
+}
+
+semio engine mcp:
+Make sure that all return values from mcp commands never return full entities but always shallow entities.
+
 Remove all mcp tools but the start*, finish*, sum_qu\* one.
 Introduce a transaction mechanism that is stateful session-scoped. There can be only one active transaction. A transaction is global (e.g. it is no problem to do kit changes, then design, then type, then kit, etc). start_transaction, finalize_transaction, abort_transaction that keeps a stack of kit changes (they have forward and backward diff) and on abort_transaction undo all operations by unwinding all backwards diffs.
 

@@ -43,6 +43,8 @@ _engine_spec.loader.exec_module(engine)
 # region Constants
 ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets" / "semio"
 KIT_METABOLISM_PATH = ASSETS_DIR / "kit_metabolism.json"
+KIT_METABOLISM_FOLDER_PATH = ASSETS_DIR / "metabolism"
+ASSETS_SHORTHAND_METABOLISM_PATH = ASSETS_DIR.parent / "metabolism"
 
 # endregion Constants
 
@@ -234,12 +236,23 @@ class TestMcp:
             "add_current_design_piece",
             "add_current_design_piece_with_plane",
             "add_current_design_prop",
+            "clear_current_selection",
             "finish_working_in_design",
             "finish_working_in_kit",
             "finish_working_in_type",
             "read_current_design",
             "read_current_kit",
+            "read_current_selection",
             "read_current_type",
+            "select_connections",
+            "select_pieces",
+            "select_pieces_and_connections",
+            "set_current_selection",
+            "show_design",
+            "show_diagram",
+            "show_diagram_diff",
+            "show_diff",
+            "show_scene",
             "start_new_design",
             "start_new_kit",
             "start_transaction",
@@ -553,20 +566,37 @@ class TestMcp:
         assert abs(result.get("result") - 41.0) < 0.001
 
     def test_start_working_in_local_kit_loads_from_path(self):
-        """start_working_in_local_kit loads kit from metabolism JSON path."""
+        """start_working_in_local_kit loads kit from metabolism JSON path and returns shallow kit."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
-        assert result.get("ok") is True
-        assert "kit_metabolism" in result.get("path", "")
+        assert "error" not in result
+        assert "name" in result
         assert id(mock_ctx.session) in engine._mcp_session_kits
 
     def test_start_working_in_local_kit_loads_from_folder(self):
-        """start_working_in_local_kit loads kit from folder containing kit_metabolism.json."""
+        """start_working_in_local_kit loads kit from folder containing kit_metabolism.json and returns shallow kit."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(ASSETS_DIR), mock_ctx)
-        assert result.get("ok") is True
+        assert "error" not in result
+        assert "name" in result
         kit = engine._mcp_session_kits[id(mock_ctx.session)]
         assert "designs" in kit
+
+    def test_start_working_in_local_kit_loads_from_shorthand_assets_folder(self):
+        """start_working_in_local_kit resolves /assets/<kit-name> to /assets/semio/<kit-name> for local bundled kits."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        result = engine.start_working_in_local_kit(str(ASSETS_SHORTHAND_METABOLISM_PATH), mock_ctx)
+        assert "error" not in result
+        assert result.get("name") == "Metabolism"
+        assert engine._mcp_session_kit_source[id(mock_ctx.session)] == str(ASSETS_SHORTHAND_METABOLISM_PATH)
+
+    def test_load_kit_from_path_resolves_shorthand_assets_folder_to_sqlite_kit(self):
+        """_load_kit_from_path resolves bundled shorthand asset folders to the nested sqlite-backed local kit."""
+        kit = engine._load_kit_from_path(str(ASSETS_SHORTHAND_METABOLISM_PATH))
+        direct_kit = engine._load_kit_from_path(str(KIT_METABOLISM_FOLDER_PATH))
+        assert kit.get("name") == "Metabolism"
+        assert kit.get("guid") == direct_kit.get("guid")
+        assert len(kit.get("designs", [])) == len(direct_kit.get("designs", []))
 
     def test_start_working_in_local_kit_clears_design_and_type(self):
         """start_working_in_local_kit clears any previously set design and type."""
@@ -588,14 +618,15 @@ class TestMcp:
         assert abs(result.get("result") - 2349.53) < 0.01
 
     def test_start_working_in_design(self, kitMetabolismJson: dict):
-        """start_working_in_design selects a design by GUID from the session kit."""
+        """start_working_in_design selects a design by GUID and returns shallow design."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         result = engine.start_working_in_design(design["guid"], mock_ctx)
-        assert result.get("ok") is True
+        assert "error" not in result
         assert result.get("guid") == design["guid"]
+        assert result.get("name") == "Nakagin Capsule Tower"
         assert sid in engine._mcp_session_designs
         assert engine._mcp_session_designs[sid]["guid"] == design["guid"]
 
@@ -624,7 +655,7 @@ class TestMcp:
         assert "error" in result
 
     def test_finish_working_in_design(self, kitMetabolismJson: dict):
-        """finish_working_in_design clears the current design from session."""
+        """finish_working_in_design clears the current design and returns shallow kit."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -632,18 +663,20 @@ class TestMcp:
         engine.start_working_in_design(design["guid"], mock_ctx)
         assert sid in engine._mcp_session_designs
         result = engine.finish_working_in_design(mock_ctx)
-        assert result.get("ok") is True
+        assert "error" not in result
+        assert "name" in result
         assert sid not in engine._mcp_session_designs
 
     def test_start_working_in_type(self, kitMetabolismJson: dict):
-        """start_working_in_type selects a type by GUID from the session kit."""
+        """start_working_in_type selects a type by GUID and returns shallow type."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         t = kitMetabolismJson.get("types", [])[0]
         result = engine.start_working_in_type(t["guid"], mock_ctx)
-        assert result.get("ok") is True
+        assert "error" not in result
         assert result.get("guid") == t["guid"]
+        assert result.get("name") == t["name"]
         assert sid in engine._mcp_session_types
         assert engine._mcp_session_types[sid]["guid"] == t["guid"]
 
@@ -671,7 +704,7 @@ class TestMcp:
         assert "error" in result
 
     def test_finish_working_in_type(self, kitMetabolismJson: dict):
-        """finish_working_in_type clears the current type from session."""
+        """finish_working_in_type clears the current type and returns shallow kit."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -679,11 +712,12 @@ class TestMcp:
         engine.start_working_in_type(t["guid"], mock_ctx)
         assert sid in engine._mcp_session_types
         result = engine.finish_working_in_type(mock_ctx)
-        assert result.get("ok") is True
+        assert "error" not in result
+        assert "name" in result
         assert sid not in engine._mcp_session_types
 
     def test_finish_working_in_kit(self, kitMetabolismJson: dict):
-        """finish_working_in_kit clears kit, design, and type from session."""
+        """finish_working_in_kit returns shallow kit and clears kit, design, type from session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -692,7 +726,8 @@ class TestMcp:
         t = kitMetabolismJson.get("types", [])[0]
         engine.start_working_in_type(t["guid"], mock_ctx)
         result = engine.finish_working_in_kit(mock_ctx)
-        assert result.get("ok") is True
+        assert "error" not in result
+        assert "name" in result
         assert sid not in engine._mcp_session_kits
         assert sid not in engine._mcp_session_designs
         assert sid not in engine._mcp_session_types
@@ -703,7 +738,7 @@ class TestMcp:
         try:
             first = engine.start_transaction(mock_ctx)
             second = engine.start_transaction(mock_ctx)
-            assert first.get("ok") is True
+            assert "error" not in first
             assert "error" in second
         finally:
             engine._mcp_session_transactions.pop(sid, None)
@@ -712,9 +747,9 @@ class TestMcp:
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         started = engine.start_transaction(mock_ctx)
-        assert started.get("ok") is True
+        assert "error" not in started
         result = engine.finalize_transaction(mock_ctx)
-        assert result.get("ok") is True
+        assert "error" not in result
         assert sid not in engine._mcp_session_transactions
 
     def test_abort_transaction_unwinds_recorded_kit_changes(self):
@@ -724,12 +759,14 @@ class TestMcp:
         changed_kit = {"name": "Changed", "version": "1.0.0", "designs": [], "types": []}
         engine._mcp_session_kits[sid] = initial_kit
         started = engine.start_transaction(mock_ctx)
-        assert started.get("ok") is True
+        assert "error" not in started
+        assert started.get("name") == "Initial"
         engine._set_session_kit(mock_ctx, changed_kit)
         engine._clear_session_kit(mock_ctx)
         assert sid not in engine._mcp_session_kits
         result = engine.abort_transaction(mock_ctx)
-        assert result.get("ok") is True
+        assert "error" not in result
+        assert result.get("name") == "Initial"
         assert sid not in engine._mcp_session_transactions
         assert sid in engine._mcp_session_kits
         assert engine._mcp_session_kits[sid].get("name") == "Initial"
@@ -744,10 +781,11 @@ class TestMcp:
         expected_design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
 
         started_kit = engine.start_new_kit("Temporary Kit", "1.0.0", mock_ctx)
-        assert started_kit.get("ok") is True
+        assert "error" not in started_kit
+        assert started_kit.get("name") == "Temporary Kit"
 
         started_transaction = engine.start_transaction(mock_ctx)
-        assert started_transaction.get("ok") is True
+        assert "error" not in started_transaction
         aborted_design = engine.start_new_design(
             "aborted-design",
             "Aborted Draft",
@@ -759,22 +797,24 @@ class TestMcp:
             "2025-01-01T00:00:00.000Z",
             mock_ctx,
         )
-        assert aborted_design.get("ok") is True
+        assert "error" not in aborted_design
+        assert aborted_design.get("guid") == "aborted-design"
         aborted_piece = engine.add_current_design_piece(
             "aborted-piece",
             "x",
             "aborted-kind",
             mock_ctx,
         )
-        assert aborted_piece.get("ok") is True
+        assert "error" not in aborted_piece
         aborted = engine.transaction_abort(mock_ctx)
-        assert aborted.get("ok") is True
+        assert "error" not in aborted
+        assert aborted.get("name") == "Temporary Kit"
         current_kit_after_abort = engine.read_current_kit(mock_ctx)
-        assert current_kit_after_abort.get("designs") == []
+        assert current_kit_after_abort.get("designs") in ([], None)
         assert "error" in engine.read_current_design(mock_ctx)
 
         started_transaction = engine.start_transaction(mock_ctx)
-        assert started_transaction.get("ok") is True
+        assert "error" not in started_transaction
         created_design = engine.start_new_design(
             expected_design["guid"],
             expected_design["name"],
@@ -786,11 +826,12 @@ class TestMcp:
             expected_design["updatedAt"],
             mock_ctx,
         )
-        assert created_design.get("ok") is True
+        assert "error" not in created_design
+        assert created_design.get("guid") == expected_design["guid"]
 
         for author in expected_design.get("authors", []):
             result = engine.add_current_design_author(author["guid"], mock_ctx)
-            assert result.get("ok") is True
+            assert "error" not in result
 
         for prop in expected_design.get("props", []):
             result = engine.add_current_design_prop(
@@ -800,7 +841,7 @@ class TestMcp:
                 prop["unit"],
                 mock_ctx,
             )
-            assert result.get("ok") is True
+            assert "error" not in result
 
         for piece in expected_design.get("pieces", []):
             if "plane" in piece and "center" in piece:
@@ -835,7 +876,7 @@ class TestMcp:
                     is_hidden=piece["isHidden"],
                     is_locked=piece["isLocked"],
                 )
-            assert result.get("ok") is True
+            assert "error" not in result
 
         for connection in expected_design.get("connections", []):
             result = engine.add_current_design_connection(
@@ -855,12 +896,14 @@ class TestMcp:
                 tilt=connection["tilt"],
                 turn=connection["turn"],
             )
-            assert result.get("ok") is True
+            assert "error" not in result
 
         finalized = engine.transaction_finalize(mock_ctx)
-        assert finalized.get("ok") is True
+        assert "error" not in finalized
         current_design = engine.read_current_design(mock_ctx)
-        assert current_design == expected_design
+        expected_shallow = engine.designToShallow(expected_design)
+        expected_shallow.pop("layers", None)
+        assert current_design == expected_shallow
 
 
 # endregion MCP Tests
@@ -1416,10 +1459,9 @@ class TestMcpRemoteKit:
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert result["ok"] is True
-            assert result["mode"] == "remote"
-            assert result["serverUrl"] == "https://server.com"
-            assert result["kitUri"] == "my-kit"
+            assert "error" not in result
+            assert result["name"] == "RemoteKit"
+            assert result["version"] == "1.0.0"
             sid = id(mock_ctx.session)
             assert sid in engine._mcp_session_kits
             assert engine._mcp_session_kit_mode[sid] == "remote"
@@ -1463,11 +1505,11 @@ class TestMcpRemoteKit:
             assert engine._mcp_session_kit_mode[sid] == "remote"
 
     def test_start_working_in_local_kit_sets_mode_local(self):
-        """start_working_in_local_kit sets session mode to local."""
+        """start_working_in_local_kit sets session mode to local and returns shallow kit."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
-        assert result.get("ok") is True
-        assert result.get("mode") == "local"
+        assert "error" not in result
+        assert "name" in result
         sid = id(mock_ctx.session)
         assert engine._mcp_session_kit_mode[sid] == "local"
 
@@ -1501,7 +1543,8 @@ class TestMcpRemoteKit:
         engine._mcp_session_kit_mode[sid] = "remote"
         engine._mcp_session_kit_source[sid] = "https://server.com/api/kits/test"
         result = engine.finish_working_in_kit(mock_ctx)
-        assert result["ok"] is True
+        assert "error" not in result
+        assert "name" in result
         assert sid not in engine._mcp_session_kit_mode
         assert sid not in engine._mcp_session_kit_source
 
@@ -1526,34 +1569,39 @@ class TestMcpRemoteKit:
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             engine.start_working_in_remote_kit("https://server.com", "remote-kit", mock_ctx)
 
-        # start_working_in_design works for remote kits
+        # start_working_in_design works for remote kits and returns shallow design
         result = engine.start_working_in_design("d1", mock_ctx)
-        assert result["ok"] is True
+        assert "error" not in result
         assert result["guid"] == "d1"
+        assert result["name"] == "Design1"
 
         # read_current_design works
         design = engine.read_current_design(mock_ctx)
         assert design["guid"] == "d1"
 
-        # finish_working_in_design works
+        # finish_working_in_design returns shallow kit
         result = engine.finish_working_in_design(mock_ctx)
-        assert result["ok"] is True
+        assert "error" not in result
+        assert result["name"] == "RemoteKit"
 
-        # start_working_in_type works for remote kits
+        # start_working_in_type works for remote kits and returns shallow type
         result = engine.start_working_in_type("t1", mock_ctx)
-        assert result["ok"] is True
+        assert "error" not in result
+        assert result["guid"] == "t1"
 
         # read_current_type works
         t = engine.read_current_type(mock_ctx)
         assert t["guid"] == "t1"
 
-        # finish_working_in_type works
+        # finish_working_in_type returns shallow kit
         result = engine.finish_working_in_type(mock_ctx)
-        assert result["ok"] is True
+        assert "error" not in result
+        assert result["name"] == "RemoteKit"
 
-        # finish_working_in_kit clears everything
+        # finish_working_in_kit returns shallow kit then clears everything
         result = engine.finish_working_in_kit(mock_ctx)
-        assert result["ok"] is True
+        assert "error" not in result
+        assert result["name"] == "RemoteKit"
 
 
 # endregion MCP Remote Kit Tests

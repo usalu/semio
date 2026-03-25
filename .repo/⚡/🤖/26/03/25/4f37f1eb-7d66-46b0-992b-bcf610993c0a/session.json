@@ -1,0 +1,849 @@
+{
+  "id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+  "uri": "repo://session/4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+  "client": "copilot-chat",
+  "second": "2026-03-25T01:01:36Z",
+  "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-03-25T01:01:36Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:01:36.388Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "source": "new",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-03-25T01:01:36Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:01:36.541Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "prompt": "semio:\nThere are exactly five kind of kits:\n- FileKit (JSON)\n- FolderKit (local folder with files and .semio/kit.db sqlite file)\n- ArchiveKit (zip file of FolderKit)\n- RemoteKit (url)\n- TemporaryKit (InMemory)\nThe current implementations are messy and inconsistent.\nYou MUST refactor everything to support exactly those kits and nothing else.\nYou MUST implement it for all programming languages.\nYou MUST test every kind of kit Kit/File, KitFolder, Kit/Archive, Kit/Remote, Kit/Temporary.",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-25T01:01:49Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:01:49.325Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "kit kind file folder archive remote temporary"
+          },
+          "tool_use_id": "toolu_vrtx_01EQTAuBrzitSRZLmWgTHPr4__vscode-1774398922724",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-25T01:02:05Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:05.191Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "kit kind file folder archive remote temporary"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_vrtx_01EQTAuBrzitSRZLmWgTHPr4__vscode-1774398922724",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-25T01:02:12Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:12.861Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "kit kind type file folder archive remote temporary"
+          },
+          "tool_use_id": "toolu_vrtx_019VA6xJfwv1J3izxhjKcue2__vscode-1774398922725",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-25T01:02:32Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:32.627Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "kit kind type file folder archive remote temporary"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_vrtx_019VA6xJfwv1J3izxhjKcue2__vscode-1774398922725",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-25T01:02:42Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:42.587Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "mcp_repo_ticket_open",
+          "tool_input": {
+            "title": "Refactor Kit Kinds Across All Languages",
+            "prompt": "Refactor all kit implementations across all programming languages to support exactly five kit kinds: FileKit (JSON), FolderKit (local folder with .semio/kit.db sqlite), ArchiveKit (zip of FolderKit), RemoteKit (url), TemporaryKit (InMemory). Remove inconsistencies and test all kinds.",
+            "llm": "opus-4-6",
+            "client": "copilot-chat",
+            "no_github": true
+          },
+          "tool_use_id": "toolu_vrtx_01Vq4eQgrLxAmY33CgkDymev__vscode-1774398922726",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-25T01:02:48Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:48.464Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "goal kit"
+          },
+          "tool_use_id": "toolu_vrtx_01HuAShjeyux7EuYPNxXUbtE__vscode-1774398922727",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-25T01:02:49Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:49.789Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "goal kit"
+          },
+          "tool_response": "- [🎯Goals](repo://goals)\n  - [🎯aioptimizedrepo](repo://goal/🎯aioptimizedrepo) - `AI-optimized Repo` - `open` - `AI-optimized Repo goal`\n    - [🎯aioptimizedrepo🎯consistentrepohistory](repo://goal/🎯aioptimizedrepo🎯consistentrepohistory) - `Consistent Repo History` - `open` - `Goal for Consistent Repo History`\n      - [🎯aioptimizedrepo🎯consistentrepohistory🎫extendinteractionwitheventkind](repo://ticket/🎯aioptimizedrepo🎯consistentrepohistory🎫extendinteractionwitheventkind) - `Extend Interaction With Event Kind` - `closed` - `a long while ago` - `Extended Interaction struct with Kind field mapping to EventKind constants. Set Kind on all 5 interaction creation points (ticket.open, ticket.close, ticket.reopen, goal.open, goal.close). Created new close interactions for FinishTicket and GoalClose. Updated GraphQL schema, SQLite schema, and SQLite export. Extended lifecycle test to verify Kind on all interaction types. All tests pass.`\n    - [🎯aioptimizedrepo🎯repoclient](repo://goal/🎯aioptimizedrepo🎯repoclient) - `Repo Client` - `open` - `Goal for Repo Client`\n      - [🎯aioptimizedrepo🎯repoclient🎯repobinary](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary) - `Repo Binary` - `open` - `Goal for Repo Binary`\n        - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli) - `Repo CLI` - `open` - `Goal for Repo CLI`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters) - `Repo CLI Filters` - `open` - `Goal for Repo CLI Filters`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters🎫completegithubsyncmechanism](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters🎫completegithubsyncmechanism) - `Complete GitHub Sync Mechanism` - `closed` - `a long while ago` - `Enhanced the sync github mechanism to ensure full parity between local data and GitHub. Updated the sync logic for both goals and tickets to reconcile titles, descriptions (prompts), and statuses (including reopening closed issues). Implemented parent-child linking for tickets and deeper goals using GitHub Sub-issues. Added helper functions for body updates and extended metadata fetching.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters🎫fixfullprojecttreerenderinginclitree](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters🎫fixfullprojecttreerenderinginclitree) - `Fix Full Project Tree Rendering In Cli Tree` - `closed` - `a long while ago` - `Fixed full tree hierarchy rendering by adding folders root category, ensuring bundle-root path inclusion, forcing tree section inclusion, and restructuring policy tree to policy-\u003eentitykind-\u003estatute. Extended existing tree tests and validated with targeted go test runs.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters🎫addblevequerytoalllistandtreecommands](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters🎫addblevequerytoalllistandtreecommands) - `Add Bleve Query to All List and Tree Commands` - `closed` - `a long while ago` - `Added --query bleve full-text search (fuzziness=2) to all list/tree commands. Created statute list/tree and commit list commands with StreamStatutes/StreamCommits functions. Converted goal tree from GraphQL to streaming with query support. Added --query flag to top-level tree command via bindTreeFlags. All 27 query subtests pass, 4 fuzzy match tests pass, 6 empty-query tests pass, statute/commit command tests pass. Pre-existing test failures (TestInteractionUnmarshalAuthorShapes, TestFixtureBreachsByLanguage, TestUriToId) are unrelated.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters🎫treetextshortids](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters🎫treetextshortids) - `Tree Text Short IDs` - `closed` - `a long while ago` - `Fixed renderTreeNodeText to temporarily clear parentId before calling renderEntityHuman so tree text output shows only the own ID segment instead of full hierarchical chains. Added tests for nested goal short IDs and parentId restoration.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫implementgoalopencommand](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫implementgoalopencommand) - `Implement Goal Open Command` - `closed` - `a long while ago` - `Bulk close`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫implementgoalopencommandwithrequiredarguments](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫implementgoalopencommandwithrequiredarguments) - `Implement Goal Open Command with Required Arguments` - `closed` - `a long while ago` - `Bulk close`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫addgoalandticketchangecommands](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫addgoalandticketchangecommands) - `Add goal and ticket change commands` - `closed` - `a long while ago` - `Implemented goal change and ticket change commands`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫ensurecommandparity](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫ensurecommandparity) - `Ensure Command Parity` - `closed` - `a long while ago` - `Implemented complete parity for Repo CLI and MCP commands, including ticket progress, goal management, and codebase export. Added strict ticket tracking via log appending and a new Repo policy for verifying command parity.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫extendrepocliwithgoalcommands](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫extendrepocliwithgoalcommands) - `Extend Repo CLI with Goal Commands` - `closed` - `a long while ago` - `Bulk close`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫universalfilteringsystemforrepocommands](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫universalfilteringsystemforrepocommands) - `Universal Filtering System for Repo Commands` - `closed` - `a long while ago` - `Implemented universal filtering system across repo CLI, GraphQL API, and VSCode extension. Added --only-\u003ckind\u003e flags to complement --no-\u003ckind\u003e flags. Added --filter, --regex, --match-case, --match-whole-word flags to all list and tree commands. Extended file kind filtering to non-file commands (bundles, tickets, goals, contributors, policies) by checking associated files. Updated GraphQL schema with FilterInput type and FileKind enum. Refactored VSCode extension filter UI with file kind toggles and show all/none/default actions.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫extendgithubsyncforhierarchicalgoals](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫extendgithubsyncforhierarchicalgoals) - `Extend Github Sync for Hierarchical Goals` - `closed` - `a long while ago` - `Implemented three-tier hierarchical GitHub sync: root goals as milestones, first-gen children as issues with milestone, deeper goals as sub-issues without milestone. Fixed milestone lookup bug (gh CLI needs title not number). Migrated all existing goals, cleaned non-root goal.json files, deleted orphaned milestones.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫fixgorelativedatescomplete](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫fixgorelativedatescomplete) - `Fix Go Relative Dates Complete` - `closed` - `a long while ago` - `Bulk close`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫escapemultilinepropertiesinlistoutput](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫escapemultilinepropertiesinlistoutput) - `Escape Multiline Properties in List Output` - `closed` - `a long while ago` - `Fixed multiline properties in CLI list output by escaping newlines (\\n, \\r\\n, \\r) to spaces in collectEntityProps's appendNonEmpty helper. This ensures all property values (summaries, descriptions, prompts, commit messages) are single-line strings when rendered between backtick delimiters in markdown output and in human-readable output. Added test TestCollectEntityProps_MultilineEscaped covering tickets, goals, policies, and commits with multiline content.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫consistentclierrormessagesandtests](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫consistentclierrormessagesandtests) - `Consistent Cli Error Messages and Tests` - `closed` - `a long while ago` - `Fixed inconsistent CLI error messages: added status guards to FinishTicket, GoalClose, GoalReopen; extended wrong-args tests for all commands (todo, section delete/extract/integrate, goal change, top-level move/extract/integrate); added TestCliWrongArgs_ErrorMessages with 36 error message verification cases; added wrong-lifecycle checks to E2E ticket/goal lifecycle tests; extended TestCliJsonErrorsToStderr from 4 to 22 cases`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫flatteninteractionsystem](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫flatteninteractionsystem) - `Flatten Interaction System` - `closed` - `a long while ago` - `Bulk close`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫introduceinteractionasproperresource](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫introduceinteractionasproperresource) - `Introduce Interaction as Proper Resource` - `closed` - `a long while ago` - `Introduced InteractionResource as a proper first-class resource. Added InteractionResource struct with source metadata, ListInteractions/StreamInteractions aggregation functions, interaction list/tree CLI commands, interactions GraphQL query, and interactions field on Goal type. Updated schema.graphql accordingly. All tests pass.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫refactorurisystem](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫refactorurisystem) - `Refactor URI System` - `closed` - `a long while ago` - `Bulk close`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫refactorjsonresourcereferencestosemiorepoidsystem](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫refactorjsonresourcereferencestosemiorepoidsystem) - `Refactor JSON Resource References to Semio Repo ID System` - `closed` - `a long while ago` - `Refactored all .repo JSON files to use repo ID system (emoji-prefixed flat IDs). Migration script converted 1498 references across all ticket.json and goal.json files. Updated Go CLI with MarshalJSON/UnmarshalJSON boundary conversion for Ticket and Goal structs, added goalPathToSemioID/semioIDToGoalPath/contributorGithubToSemioID/semioIDToContributorGithub conversion functions, fixed Goal.GetID() for hierarchical format. All 15 relevant tests pass including 7 new round-trip tests. Fixed pre-existing hhmmss compile error in logHook.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫refactorurimechanismtorepoprotocol](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎫refactorurimechanismtorepoprotocol) - `Refactor Uri Mechanism To Repo Protocol` - `closed` - `a long while ago` - `Refactored all entity URIs from old hierarchical abbreviated format (repo://p/u/semio, repo://y/25/m/02/d/04/tk/slug, etc.) to flat emoji-based format repo://{{entity-kind}}/{{id}} (e.g., repo://definition/👤semio📚go💻semio🛠️inverseConnectorDiff). Go CLI (main.go): - Rewrote IdToUri to detect entity kind from emoji prefix and build repo://kind/id URIs - Rewrote UriToId to extract ID from repo://kind/id format - Rewrote GetArtifactURI to use IdToUri - Updated all entity GetURI() methods - Updated all MCP resource templates and handlers - Updated all tree node URIs in BuildMonorepoTree - Fixed DetectEntityKindFromId: singular/plural disambiguation via singularOrPlural helper, contributor emoji ordering before file checks - Added path to definition tree node Data for VS Code navigation - Removed dead ticketNodeToData URI parsing code Go tests (main_test.go): - Updated ~50 TestArtifactIDAndURI cases, ~22 TestIdToUri cases, ~22 TestUriToId cases, 11 TestIdUriRoundTrip cases - Updated TestSectionHeaderIdAndUri, TestDefinitionHeaderIdAndUri, TestGetArtifactURI_Sessions/Session - Updated TestSessionIdToUri, TestSessionUriToId, TestSessionGetURI, TestToolGoalUri - Updated TestFormatHeader*, TestRenderMonorepoTree, TestRenderGoalTree, TestRenderSectionTree - All URI-related tests pass TypeScript (extension.ts): - Updated navigateToUri to use tree node cache Data (path, sha, github, slug, startLine, endLine) instead of parsing emoji IDs as filesystem paths - Simplified section/definition navigation to use node.Data.startLine/path directly - Removed dead findSectionByPath function - Added URI encoding for external URLs (GitHub contributor/checkpoint links) SPECS (SPECS.md): - Added URI Format specification section documenting the repo://kind/id format - Updated GetURI spec to reference new format`\n        - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp) - `Repo MCP` - `open` - `Goal for Repo MCP`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp🎯repomcptools](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp🎯repomcptools) - `Repo MCP Tools` - `open` - `Goal for Repo MCP Tools`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp🎯repomcptools🎫removelistandtreemcptoolsexceptmaintree](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp🎯repomcptools🎫removelistandtreemcptoolsexceptmaintree) - `Remove List and Tree MCP Tools Except Main Tree` - `closed` - `a long while ago` - `Removed all 15 granular list/tree MCP tools (policy_list, policy_tree, ticket_list, draft_list, goal_list, contributor_list, project_list, project_tree, folder_list, folder_tree, file_list, file_tree, section_list, section_tree, definition_list) and their handler functions. Added a single unified 'tree' MCP tool that delegates to the existing monorepo tree infrastructure with query filtering. Updated canonical commands list in repoPolicy. All MCP schema tests pass (29 tools).`\n        - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms) - `Repo Mechanisms` - `open` - `Goal for Repo Mechanisms`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repocommitmechanism](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repocommitmechanism) - `Repo Commit Mechanism` - `open` - `Goal for Repo Commit Mechanism`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repodraftmechanism](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repodraftmechanism) - `Repo Draft Mechanism` - `open` - `Goal for Repo Draft Mechanism`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repodraftmechanism🎫adddraftcreatefromtitlesupport](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repodraftmechanism🎫adddraftcreatefromtitlesupport) - `Add Draft Create From Title Support` - `closed` - `a long while ago` - `Changed draft creation to accept a title (consistent with tickets/goals) instead of a raw slug. Added VSCode commands for draft create/delete.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism) - `Repo Goal Mechanism` - `open` - `Goal for Repo Goal Mechanism`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫goalmechanismrefactoring](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫goalmechanismrefactoring) - `Goal Mechanism Refactoring` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫fixgoaltreegraphqlquery](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫fixgoaltreegraphqlquery) - `Fix Goal Tree Graphql Query` - `closed` - `a long while ago` - `Fixed the 'goal tree' command which failed with \"Cannot query field 'data' on type 'Ticket'\". The root cause was that the GraphQL query used a nested 'data { goal parent }' structure, but the Ticket type had no 'data' field. Added 'goal' and 'parent' fields to both the GraphQL schema and the Go ticketType resolver, updated the query to use direct fields, and fixed the formatGoalTree parser. Also added tests for 'goal list', 'goal tree', 'ticket list', 'ticket tree', and 'contributor list' to TestCliE2E_MiscCommands_NoSideEffects in main_test.go.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫fixgoaltreehierarchyandsorting](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫fixgoaltreehierarchyandsorting) - `Fix Goal Tree Hierarchy and Sorting` - `closed` - `a long while ago` - `Fixed goal tree to display parent-child hierarchy from slash-separated goal IDs and sort by due date then creation date. Added createdAt field to Goal GraphQL schema. Rewrote formatGoalTree to build goal hierarchy, sort goals, and render nested tree with proper connectors.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫refactorgoalhierarchyandfixtests](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫refactorgoalhierarchyandfixtests) - `Refactor Goal Hierarchy and Fix Tests` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫improvegoaltreedisplayinformation](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repogoalmechanism🎫improvegoaltreedisplayinformation) - `Improve Goal Tree Display Information` - `closed` - `a long while ago` - `Improved goal tree display to show more information: status, createdAt (relative time), due date, and full description. Updated both text and markdown templates. Added 'description' field to all three GraphQL query variants in the goal tree command. Fixed backwards-compatible parsing of the old 'started'/'finished' flat fields in Interaction JSON unmarshalling so that 'createdAt' resolves correctly for goals with legacy interaction format. Added Status and CreatedAt to the goal tree view model.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism) - `Repo Ticket Mechanism` - `open` - `Goal for Repo Ticket Mechanism`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketfilesonly](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketfilesonly) - `Restrict ticket files and aggregate stats` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketschemaredesign](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketschemaredesign) - `Redesign ticket schema with files-only and git-derived fields` - `closed` - `a long while ago` - `Finalize ticket schema persistence to sessions-only and validate open/reopen/close runtime behavior.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketscriptsemantics](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketscriptsemantics) - `Rename log workflow to ticket+interactions` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketreopenapi](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketreopenapi) - `Add reopenTicket function to ticket API` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketsummaryonfinish](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketsummaryonfinish) - `Require summary only when finishing tickets` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketdebugreport](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketdebugreport) - `Ticket Debug Report` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫contributorsfromticketsfiles](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫contributorsfromticketsfiles) - `CONTRIBUTORS-FROM-TICKETS-FILES` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketcreatewithfiles](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketcreatewithfiles) - `TICKET-CREATE-WITH-FILES` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketdifffilesscope](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketdifffilesscope) - `TICKET-DIFF-FILES-SCOPE` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketiterationfilefilter](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketiterationfilefilter) - `TICKET-ITERATION-FILE-FILTER` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketiterationfilefilter](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketiterationfilefilter) - `TICKET-ITERATION-FILE-FILTER` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketmechanismrefactor](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketmechanismrefactor) - `TICKET-MECHANISM-REFACTOR` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫simplifytickets](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫simplifytickets) - `SIMPLIFY-TICKETS` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫lineonlyticketranges](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫lineonlyticketranges) - `LINE-ONLY-TICKET-RANGES` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫extendticketuienumandlabels](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫extendticketuienumandlabels) - `Extend Ticket UI Enum and Labels` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refineticketsystemandlabels](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refineticketsystemandlabels) - `Refine Ticket System and Labels` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫addcontinueandnoticketkeywords](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫addcontinueandnoticketkeywords) - `Add Continue and Noticket Keywords` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫semanticticketdiffing](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫semanticticketdiffing) - `Semantic Ticket Diffing` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫simplifyticketmarkdown](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫simplifyticketmarkdown) - `Simplify Ticket Markdown` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketplanfileiterationsupport](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫ticketplanfileiterationsupport) - `Ticket Plan File Iteration Support` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫derivecontributionsfromtickets](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫derivecontributionsfromtickets) - `Derive Contributions From Tickets` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫extendticketmechanismwithgoalsandsubissues](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫extendticketmechanismwithgoalsandsubissues) - `Extend Ticket Mechanism With Goals And Subissues` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫integrategoalsandsubtickets](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫integrategoalsandsubtickets) - `Integrate Goals And Subtickets` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refactorticketplanmechanism](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refactorticketplanmechanism) - `Refactor Ticket Plan Mechanism` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refactorticketopenargumentsandextenduienum](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refactorticketopenargumentsandextenduienum) - `Refactor Ticket Open Arguments and Extend UI Enum` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refineticketstructure](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refineticketstructure) - `Refine Ticket Structure` - `closed` - `a long while ago` - `Refactored ticket structure: removed progress command and deduplicated JSON storage`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫updateticketiterationdatestostartedandfinished](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫updateticketiterationdatestostartedandfinished) - `Update Ticket Iteration Dates to Started and Finished` - `closed` - `a long while ago`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫updateticketiterationtoincludestartedandfinisheddates](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫updateticketiterationtoincludestartedandfinisheddates) - `Update Ticket Iteration to Include Started and Finished Dates` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫fixcodebasesectionsandtickets](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫fixcodebasesectionsandtickets) - `Fix Codebase Sections and Tickets` - `closed` - `a long while ago` - `Fixed empty sections and tickets in explorer. Updated normalizeSectionTree to handle both GraphQL and raw CLI JSON structures. Tickets failure likely due to missing Repo fields in previous optimization, but TicketsProvider fetches independently via TicketsDocument.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫introduceimportantmdforcompulsoryactionsinticketmechanism](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫introduceimportantmdforcompulsoryactionsinticketmechanism) - `Introduce Important Md For Compulsory Actions In Ticket Mechanism` - `closed` - `a long while ago` - `Added deletion of important.md file when closing a ticket after successful validation. The file is now automatically cleaned up after confirming it's empty (ignoring whitespace).`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫migrateticketstonewformat](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫migrateticketstonewformat) - `Migrate Tickets To New Format` - `closed` - `a long while ago` - `Successfully migrated all tickets to the new format. Merged plan.md, log.md, and summary.md into a single ticket.md file. Updated ticket.json structure to match the new schema. Verified migration on 394 tickets.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫renamegoalandticketfoldersontitlechange](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫renamegoalandticketfoldersontitlechange) - `Rename Goal And Ticket Folders On Title Change` - `closed` - `a long while ago` - `Added folder renaming when titles change for both tickets and goals. Three areas were fixed: 1. MCP ticketReopen handler: now reads the 'title' parameter and calls UpdateTicketTitle (which renames the folder) before reopening. 2. MCP ticketClose handler: now reads the 'title' parameter and calls UpdateTicketTitle before closing. 3. Goals (GoalReopen and GoalUpdate): added new UpdateGoalTitle() helper that slugifies the new title, renames the goal folder, and updates goal.ID. Both GoalReopen and GoalUpdate now use this helper instead of directly setting goal.Title. Also fixed a pre-existing test bug in nogithub_test.go where ReopenTicket was called with missing goal/parent arguments.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫forgivingllmparsingonticketopen](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫forgivingllmparsingonticketopen) - `Forgiving LLM Parsing on Ticket Open` - `closed` - `a long while ago` - `The LLM and UI parsing during ticket open, reopen, and progress is now robust against different string formats (e.g., dots vs hyphens) by slugifying both the input and the allowed list candidates before performing substring matches.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫expandgoaltreeandreassigntickets](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫expandgoaltreeandreassigntickets) - `Expand Goal Tree and Reassign Tickets` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫fixticketmarkdowntemplatesectionorder](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫fixticketmarkdowntemplatesectionorder) - `Fix Ticket Markdown Template Section Order` - `closed` - `a long while ago` - `Changed ticket.md template section order to: # Ticket, ## Summary, ## Changes, ## Log, ## Todos, ## Plan. Updated updateTicketSummaryFile to use a new replaceSectionContent helper that inserts content between the target heading and the next heading, preserving all subsequent sections. Fixed pre-existing Go build errors for todoType/locationType forward declarations.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refactorticketstoragefornestedtickets](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refactorticketstoragefornestedtickets) - `Refactor Ticket Storage for Nested Tickets` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫addallflagtoticketclose](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫addallflagtoticketclose) - `Add All Flag To Ticket Close` - `closed` - `a long while ago` - `Implemented --all flag for bulk ticket closing. Bypasses GitHub interaction and compulsory action checks for bulk operations. Fixed ImportantPath resolution in ReadTicket.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫closegithubissueswithticketlabeloncloseall](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫closegithubissueswithticketlabeloncloseall) - `Close GitHub Issues with Ticket Label on Close All` - `closed` - `a long while ago` - `Added ghListOpenIssuesWithLabel function and modified TicketClose to close all open GitHub issues with 'ticket' label when --all flag is used`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫fixgoaltreeshowingclosedticketsasopen](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫fixgoaltreeshowingclosedticketsasopen) - `Fix Goal Tree Showing Closed Tickets as Open` - `closed` - `a long while ago` - `Fixed case-sensitive status comparison in formatGoalTree function. The GraphQL API returns status in uppercase (CLOSED) but the comparison was checking for lowercase (closed). Used strings.ToLower() for case-insensitive comparison.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫fixparentgoalsandtickets](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫fixparentgoalsandtickets) - `Fix Parent Goals and Tickets` - `closed` - `a long while ago` - `Assigned parent goals to all tickets using a temporary script.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫linkticketissuestoprojectandassigntocreator](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫linkticketissuestoprojectandassigntocreator) - `Link Ticket Issues to Project and Assign to Creator` - `closed` - `a long while ago` - `Implemented ghAssignIssueToCurrentUser function that automatically assigns newly created ticket issues to the current GitHub user. The function uses gh api user --jq .login to get the current user and gh issue edit --add-assignee to assign the issue. Project linking was already implemented but requires read:project OAuth scope.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refactorgoalandtickethierarchytousefoldernesting](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫refactorgoalandtickethierarchytousefoldernesting) - `Refactor Goal and Ticket Hierarchy to use Folder Nesting` - `closed` - `a long while ago` - `Refactored hierarchy to use folder nesting, implemented bulk 'ticket close --all', updated CLI with issue/milestone flags, fixed 'goal tree' display, and bulk closed legacy tickets.`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫testticketassignment](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫testticketassignment) - `Test Ticket Assignment` - `closed` - `a long while ago` - `Test completed - assignment works correctly`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫requiregoalonticketcreation](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫requiregoalonticketcreation) - `Require Goal on Ticket Creation` - `closed` - `a long while ago` - `Bulk close`\n            - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫removeticketmdfrommechanism](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism🎫removeticketmdfrommechanism) - `Remove Ticket Md from Mechanism` - `closed` - `a long while ago` - `Removed ticket.md from ticket mechanism. Deleted TicketPath, GetTicketFilePath, buildTicketMarkdown, updateTicketSummaryFile, ProgressTicket, TicketProgressInput, ticket_progress policy. Updated resolvers to FolderPath. Updated VS Code extension. Updated docs and tests.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎫localcacheandqueryforsemiorepocli](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎫localcacheandqueryforsemiorepocli) - `Local Cache and Query for Semio Repo CLI` - `closed` - `a long while ago` - `Extended tests for cache index (TestCacheIndexAndTreeQuery). Granular cache: when file changes, only file/folder/bundle/project docs updated via getChangedPathsFromGit+expandPathsWithAncestors. Parent docs include child names. Incremental update when index exists and dirty paths present.`\n          - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎫fixvirtualroottests](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎫fixvirtualroottests) - `Fix Virtual Root Tests` - `closed` - `a long while ago` - `Fixed fixture files with correct emoji-based IDs, fixed interactionKindEmoji missing edited case, fixed minute emoji in TestAllSpecIDExamples, reverted incorrect 🌱root in TestFileHeaderId. All core tests pass.`\n        - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎫fixmcpservergraphql](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎫fixmcpservergraphql) - `Fix Mcp Server Graphql` - `closed` - `a long while ago` - `Fixed MCP server GraphQL errors: added uri field to goalType, converted all MCP tool handlers from broken GraphQL mutations to direct Tool* calls, fixed 9 resource handler queries with wrong field names, fixed project detection for non-@ dirs, fixed emojiText U+FE0E, fixed ParseSections API compatibility, added 22 new MCP tool tests, updated dev docs`\n        - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎫interactionformatsystemstringclienttopleveldatescreatedfinished](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎫interactionformatsystemstringclienttopleveldatescreatedfinished) - `Interaction format: system string, client top-level, dates.created/finished` - `closed` - `a long while ago` - `Interaction format migrated: system string, client top-level, dates.created/finished. InteractionDates.Started→Created, removed legacy system object unmarshaling, GraphQL schema updated, all ticket.json and goal.json migrated.`\n        - [🎯aioptimizedrepo🎯repoclient🎯repobinary🎫refactorinteractionstopureevents](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repobinary🎫refactorinteractionstopureevents) - `Refactor Interactions to Pure Events` - `closed` - `a long while ago` - `Refactored interactions from duration-based (dates.created/dates.finished) to pure moment-based events (date). Removed InteractionDates/TicketDates structs. Updated all lifecycle functions, GraphQL schema, VS Code extension. Migrated 641 ticket JSONs and 54 goal JSONs. All tests pass.`\n      - [🎯aioptimizedrepo🎯repoclient🎯repovscodeextension](repo://goal/🎯aioptimizedrepo🎯repoclient🎯repovscodeextension) - `Repo VSCode Extension` - `open` - `Goal for Repo VSCode Extension`\n        - [🎯aioptimizedrepo🎯repoclient🎯repovscodeextension🎫fixprojectsandgoalsloading](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repovscodeextension🎫fixprojectsandgoalsloading) - `Fix Projects And Goals Loading` - `closed` - `a long while ago` - `Fixed VS Code Projects/Goals loading by making repo CLI interaction author parsing backward-compatible for legacy ticket JSON author objects, with regression tests and docs updates.`\n        - [🎯aioptimizedrepo🎯repoclient🎯repovscodeextension🎫refactorvscodeextensionsidebar](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repovscodeextension🎫refactorvscodeextensionsidebar) - `Refactor Vscode Extension Sidebar` - `closed` - `a long while ago` - `Refactored vscode extension sidebar into Monorepo+Filter views with emoji labels, copy-to-clipboard, contributor children, filter none/all toggles. Removed Todos. All 63 tests passing.`\n        - [🎯aioptimizedrepo🎯repoclient🎯repovscodeextension🎫refactorvscodeextensionsidebartree](repo://ticket/🎯aioptimizedrepo🎯repoclient🎯repovscodeextension🎫refactorvscodeextensionsidebartree) - `Refactor Vscode Extension Sidebar Tree` - `closed` - `a long while ago` - `Refactored VS Code sidebar tree: use actual kind emoji from GraphQL for project/bundle icons, nested recursive section rendering, file-save triggers refresh, per-item refresh buttons, expanded filter categories (Projects/Goals/Files/Policies/Contributors/Commits), statutes with priority icons and autofixable indicators, nodeId includes emoji prefix, 68 tests passing`\n      - [🎯aioptimizedrepo🎯repoclient🎫fixgithubsyncissuelinking](repo://ticket/🎯aioptimizedrepo🎯repoclient🎫fixgithubsyncissuelinking) - `Fix Github Sync Issue Linking` - `closed` - `a long while ago` - `Enforced goal issue linkage in GitHub sync and documented the behavior.`\n      - [🎯aioptimizedrepo🎯repoclient🎫urinavigationsystem](repo://ticket/🎯aioptimizedrepo🎯repoclient🎫urinavigationsystem) - `Uri Navigation System` - `closed` - `a long while ago` - `Implemented comprehensive repo:// URI navigation system in VS Code extension. Extended parseUri regex to handle collection URIs (authority-only, no path). Rewrote navigateToUri to handle all 30+ URI types: repo, projects/project, bundles/bundle, folders/folder, files/file, sections/section, definitions/definition, tickets/ticket, goals/goal, drafts/draft, todos/todo, policies/policy, statutes/statute, contributors/contributor, commits/commit. Added TextDocumentContentProvider for repo:// scheme to enable URI resolution in VS Code. Extended parseUri test suite from 10 to 32 tests. Extended Navigation Commands test suite from 6 to 25 tests. All 158 tests passing.`\n    - [🎯aioptimizedrepo🎯singlefilerepo](repo://goal/🎯aioptimizedrepo🎯singlefilerepo) - `Single File Repo` - `open` - `Goal for Single File Repo`\n      - [🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections](repo://goal/🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections) - `Consistent Sections` - `open` - `Goal for Consistent Sections`\n        - [🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections🎫fixvscodequeriesviolations](repo://ticket/🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections🎫fixvscodequeriesviolations) - `Fix Vscode Queries Breachs` - `closed` - `a long while ago` - `Added //#region 🔖Queries section wrapping all 11 exported const definitions with section summary comment. Added individual summary comments before each definition: RepoStructureDocument, RepoCommitsDocument, FolderContentDocument, BundlesDocument, TicketsDocument, PoliciesDocument, ContributorsDocument, AnalyzeDocument, FixDocument, FileContentDocument, GoalsDocument. Fixes 12 orphan-definition and 11 missing-summary breachs.`\n    - [🎯aioptimizedrepo🎫addswe15llmsupporteverywhere](repo://ticket/🎯aioptimizedrepo🎫addswe15llmsupporteverywhere) - `Add SWE-1.5 LLM Support Everywhere` - `closed` - `a long while ago` - `Successfully added swe-1-5 LLM support everywhere in the codebase. The swe-1-5 model was already included in the VSCode extension and documentation, but was missing from the Go repo's AllowedLLMs list. Added swe-1-5 to the AllowedLLMs array in ./repo/cli/main.go, which automatically enables the --swe-1-5 flag for all relevant CLI commands (ticket open, ticket reopen, goal open, goal reopen). The change has been tested and confirmed working.`\n    - [🎯aioptimizedrepo🎫exposereporesources](repo://ticket/🎯aioptimizedrepo🎫exposereporesources) - `Expose Repo Resources` - `closed` - `a long while ago` - `Exposed repository entities as MCP resources to allow LLMs to read codebase structure and metadata directly via the repo server.`\n    - [🎯aioptimizedrepo🎫addmilestoneandissuelinkingflags](repo://ticket/🎯aioptimizedrepo🎫addmilestoneandissuelinkingflags) - `Add Milestone and Issue Linking Flags` - `closed` - `a long while ago` - `Added --milestone flag to goal open command and --issue flag to ticket open command. These flags allow linking to existing GitHub milestones/issues instead of creating new ones. Updated structs, CLI parsing, MCP tools, GraphQL schema, and tests.`\n    - [🎯aioptimizedrepo🎫repofolderlayoutrefactortoemojis](repo://ticket/🎯aioptimizedrepo🎫repofolderlayoutrefactortoemojis) - `Repo Folder Layout Refactor to Emojis` - `closed` - `a long while ago` - `Refactored all folder path references in the repo codebase to use the new emoji-based layout: - 'tickets' → '🎫' with 2-digit year format (YY/MM/DD/SLUG) - 'drafts' → '✍️' - 'goals' → '🎯' - 'contributors' → '👤' - 'prompt/templates' → '💬/📋' Key changes: 1. Updated GetTicketsDir, GetDraftsPath, GetRepoGoalsDir, contributor path functions to use emoji folder names 2. Changed FormatDate to return 2-digit year (year % 100) 3. Updated GetTicketPath to use PadNumber(year, 2) 4. Updated ListTickets/StreamTickets year filtering to use PadNumber 5. Changed ticket URI format from %04d to %02d for year 6. Updated ISO date formatting to use 2000+year for full year 7. Removed legacy path fallback in delete ticket 8. Updated prompt template path to use 💬/📋 9. Updated vscode extension paths (tickets, goals, drafts) and removed legacy fallbacks 10. Updated CLAUDE.md, AGENTS.md, README.md documentation 11. Updated all test expectations in main_test.go All relevant tests pass: ContributorDiscovery, TicketsNonEmpty, TicketTitleValidation, FilterTicketWorkspaceFiles, TicketListCommand, TicketOpenContinueKeyword, GoalCreate, GoalHierarchy, GoalList, GoalArtifactID, IdToUri, UriToId, LifecycleCommands, TicketLifecycle_NoGithub, CLI E2E Ticket/Goal Lifecycle, ToolTicketLifecycle, ToolDraftLifecycle.`\n    - [🎯aioptimizedrepo🎫updateentityidspecs](repo://ticket/🎯aioptimizedrepo🎫updateentityidspecs) - `Update Entity Id Requirements` - `closed` - `a long while ago` - `Updated all entity ID generation to match new hierarchical requirements. Added PropagateParentIDs, goalArtifactID helper, fixed GetArtifactID for goals/tickets/commits/line/range, excluded bundle root folders from tree, updated 6 stale tests, added 20+ comprehensive entity ID tests.`\n    - [🎯aioptimizedrepo🎫hidenomanagementflagfromdocumentation](repo://ticket/🎯aioptimizedrepo🎫hidenomanagementflagfromdocumentation) - `Hide No-Management Flag from Documentation` - `closed` - `a long while ago` - `Hidden --no-management from all CLI help output using MarkHidden on 8 cobra flag registrations (ticket open/close/reopen/change and goal open/close/reopen/change). Removed noManagement from MCP ticket_open tool parameter list. Feature remains fully functional for users who know it.`\n    - [🎯aioptimizedrepo🎫removepreflightfromsemiorepoandmonoreposetup](repo://ticket/🎯aioptimizedrepo🎫removepreflightfromsemiorepoandmonoreposetup) - `Remove Preflight From repo and Monorepo Setup` - `closed` - `a long while ago` - `Successfully removed all preflight-related functionality from repo and monorepo setup: 1. ✅ Removed preflight script from root package.json 2. ✅ Updated all package.json scripts that used preflight to use nx directly (test, build, publish:test, publish) 3. ✅ Removed entire preflight section from .vscode/tasks.json (16 individual preflight tasks) 4. ✅ Removed preflight scripts from individual package.json files (semio/rs, semio/sketchpad) 5. ✅ Updated documentation to remove preflight references: - README.md build instructions and automation commands description - semio/js/README.md preflight section - semio/DOCS.md preflight section - repo/DOCS.md preflight command documentation The monorepo now uses nx directly for all orchestration instead of going through a preflight layer. All scripts and tasks have been updated accordingly.`\n  - [🎯r2602](repo://goal/🎯r2602) - `r26-02` - `open` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`\n    - [🎯r2602🎯runningsketchpad](repo://goal/🎯r2602🎯runningsketchpad) - `Running Sketchpad` - `open` - `Running sketchpad infrastructure and apps with MVP functionality.`\n      - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps](repo://goal/🎯r2602🎯runningsketchpad🎯runningsketchpadapps) - `Apps` - `open` - `Apps within sketchpad`\n        - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp](repo://goal/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp) - `Kit App` - `open` - `Kit App`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫completekitpersistence](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫completekitpersistence) - `Complete Kit Persistence` - `closed` - `a long while ago` - `Migrated sqlite schema to new format`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitdifftest](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitdifftest) - `kit-diff-test` - `closed` - `a long while ago`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitzipkitfix](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitzipkitfix) - `kit-zip-kit-fix` - `closed` - `a long while ago`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitperformancefix](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitperformancefix) - `kit-performance-fix` - `closed` - `a long while ago`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitsnapshotoptimization](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitsnapshotoptimization) - `\u003e-` - `closed` - `a long while ago`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitserializationfixes](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitserializationfixes) - `Fix Kit Serialization for Vitest Tests` - `closed` - `a long while ago`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitdifftests](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫kitdifftests) - `Fix kit diff tests and regenerate assets` - `closed` - `a long while ago`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫consolidatemetabolismscripts](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫consolidatemetabolismscripts) - `Consolidate three Metabolism scripts into single update-metabolism.tsx` - `closed` - `a long while ago`\n          - [🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫crosslanguagekitroundtripimplementation](repo://ticket/🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp🎫crosslanguagekitroundtripimplementation) - `Cross Language Kit Roundtrip Implementation` - `closed` - `a long while ago`\n    - [🎯r2602🎫unifieditemrenderingacrosscommands](repo://ticket/🎯r2602🎫unifieditemrenderingacrosscommands) - `Unified Item Rendering Across Commands` - `closed` - `a long while ago` - `Unified item rendering across all CLI commands. All entity types now render identically via collectEntityProps/renderEntityHuman/renderEntityMarkdownLink regardless of command origin (tree, list, goal tree, section tree, ticket list, monorepo tree). Fixed double-dash bug in goal tree markdown and missing indentation in section tree markdown. Removed legacy template system (TemplateManager, defaultTemplates, tmplColor/tmplColorStatus/tmplTimeAgo/tmplTimeLeft/tmplTruncate/tmplTernary). Added comprehensive identity tests ensuring rendering consistency across all code paths.`\n  - [🎯r2603](repo://goal/🎯r2603) - `r26-03` - `open` - `r26-03 release cycle`\n    - [🎯r2603🎫cachetreebuildforcliperformance](repo://ticket/🎯r2603🎫cachetreebuildforcliperformance) - `Cache Tree Build for CLI Performance` - `closed` - `a long while ago` - `Implemented tree caching with gzip JSON disk cache, in-memory fuzzy search replacing Bleve, git command timeouts, and ToolGoalList/ToolTicketList/ToolPolicyList parity fixes. Tree returns in under 5s on warm cache. All test regressions fixed.`\n    - [🎯r2603🎫fixillegalguidsingrasshoppercomponents](repo://ticket/🎯r2603🎫fixillegalguidsingrasshoppercomponents) - `Fix Illegal GUIDs in Grasshopper Components` - `closed` - `a long while ago` - `Replaced the illegal GUID \"B8F4C762-692F-4696-9EBD-243G21CE98GD\" (containing non-hex 'G' characters) in ApplyKitDiffComponent with a proper generated GUID \"B7104D9E-E2BD-4FBE-9D04-A4527B978AEE\". No other illegal GUIDs were found in the file.`\n  - [🎯testgoaljsonlifecycletest1774242220517535468](repo://goal/🎯testgoaljsonlifecycletest1774242220517535468) - `Test Goal json LifecycleTest 1774242220517535468` - `open` - `Test Goal Description`\n    - [🎯testgoaljsonlifecycletest1774242220517535468🎫testlifecyclejson](repo://ticket/🎯testgoaljsonlifecycletest1774242220517535468🎫testlifecyclejson) - `Test Lifecycle json` - `open` - `opened a long while ago` - `Test Prompt`\n  - [🎯testgoallifecycletest1774230250821055356](repo://goal/🎯testgoallifecycletest1774230250821055356) - `Test Goal LifecycleTest 1774230250821055356` - `open` - `Test Goal Description`\n    - [🎯testgoallifecycletest1774230250821055356🎫fixdesktopwhitescreenfromplaywrightcorebundleerrors](repo://ticket/🎯testgoallifecycletest1774230250821055356🎫fixdesktopwhitescreenfromplaywrightcorebundleerrors) - `Fix Desktop White Screen From Playwright Core Bundle Errors` - `closed` - `a long while ago` - `Fixed desktop white screen caused by playwright-core being pulled into Vite dependency optimization. The desktop renderer vite config scans ../sketchpad/index.ts for dependencies, which imports @playwright/test. Vite dep optimizer tried to bundle playwright-core which failed on missing chromium-bidi, causing an infinite optimization loop crashing Electron with ERR_INSUFFICIENT_RESOURCES. Added @playwright/test, playwright, and playwright-core to optimizeDeps.exclude in vite.renderer.config.ts.`\n    - [🎯testgoallifecycletest1774230250821055356🎫testlifecycledefault](repo://ticket/🎯testgoallifecycletest1774230250821055356🎫testlifecycledefault) - `Test Lifecycle default` - `open` - `opened a long while ago` - `Test Prompt`\n  - [🎫addstatusfiltertolisttreecommands](repo://ticket/🎫addstatusfiltertolisttreecommands) - `Add Status Filter to List/Tree Commands` - `closed` - `a long while ago` - `Added status filter flags (--open, --closed, --status) to all list and tree commands (ticket, goal, bundle). For bundles, 'open' filters to bundles that have at least one open ticket. Also added 'bundle' field to Goal struct with --bundle flag in goal open command and GraphQL schema support.`\n  - [🎫syncgithubcommand](repo://ticket/🎫syncgithubcommand) - `Sync Github Command` - `closed` - `a long while ago` - `Fix sync github label synchronization by reconciling GitHub repository @ labels with local project and bundle labels and verify full coverage.`\n  - [🎯🎯aioptimizedrepo20261231🎯repoclient20260215🎯repovscodeextension20260215🎫lazyloadtreeitemsinvscodeextension](repo://ticket/🎯🎯aioptimizedrepo20261231🎯repoclient20260215🎯repovscodeextension20260215🎫lazyloadtreeitemsinvscodeextension) - `Lazy Load Tree Items in VS Code Extension` - `closed` - `a long while ago` - `Bulk close`\n  - [🎯🎯repovscodeextension🎫fixextensiontreedataloading](repo://ticket/🎯🎯repovscodeextension🎫fixextensiontreedataloading) - `Fix Extension Tree Data Loading` - `closed` - `a long while ago` - `Fixed Goals, Tickets, and Contributors not loading in the VS Code extension tree view by correctly awaiting GraphQL queries using .toPromise() in repo/vscode/extension.ts. Updated documentation in AGENTS.md.`\n  - [🎯🎯fixvscodeviewsmissing🎫fixvscodeviewsmissing](repo://ticket/🎯🎯fixvscodeviewsmissing🎫fixvscodeviewsmissing) - `Fix Vscode Views Missing` - `closed` - `a long while ago` - `Fixed GraphQL schema mismatches between Go binary and VS Code extension. Updated schema.graphql to match binary (Goal.ui→client, Interaction system/dates types, ContributorBundle lines removal, hierarchical TicketYear), updated queries.ts, and regenerated codegen.`\n  - [🎯🎯entityids🎯testcoverage🎫refactorentityidsandtestcoverage](repo://ticket/🎯🎯entityids🎯testcoverage🎫refactorentityidsandtestcoverage) - `Refactor Entity IDs and Test Coverage` - `closed` - `a long while ago` - `Refactored entity IDs and extended test coverage: Added EntityKinds/ResourceKinds/DiffableKinds/RelatedToFileKinds constants, renamed TreeNodeStatuteNode to TreeNodeStatute, added TreeNodeTodo/TreeNodeBreach, updated treeNodeKindToEntityKind mapping, fixed TestGoalListIDs type assertion, added 12 new test functions covering all spec ID patterns. All 79+ tests pass with 0 failures.`\n  - [🎯🎯semiorepo🎯specs🎫refactorentityidsandtestcoverage](repo://ticket/🎯🎯semiorepo🎯specs🎫refactorentityidsandtestcoverage) - `Refactor Entity Ids and Test Coverage` - `closed` - `a long while ago` - `Removed @ from project URIs and aligned ID/URI tests.`\n  - [🎯🎯testgoal🎫fixticketeventlogging](repo://ticket/🎯🎯testgoal🎫fixticketeventlogging) - `Fix Ticket Event Logging` - `closed` - `a long while ago` - `Fixed three issues: (1) Rebuilt stale CLI binary resolving agent.tool.searching.ended dispatch error that blocked PostToolUse hooks. (2) Removed ghost-prompt stub in trackHookInOpenTicket so prompts only come from agent.prompt.submitting hooks; saves session metadata before returning. (3) Isolated TestTicketOpenContinueKeyword with tmpDir to prevent real-filesystem interference. All tests pass.`\n  - [🎯🎯r26021🎫refactorurisystem](repo://ticket/🎯🎯r26021🎫refactorurisystem) - `Refactor Uri System` - `closed` - `a long while ago` - `Completed URI system refactoring`\n  - [🎯🎯addblobtofile🎫fixblobencodingtoalwaysuseapplicationoctetstream](repo://ticket/🎯🎯addblobtofile🎫fixblobencodingtoalwaysuseapplicationoctetstream) - `Fix Blob Encoding to Always Use application/octet-stream` - `open` - `opened a long while ago` - `Fix blob encoding across Go, C#, Python, and TypeScript implementations to always use application/octet-stream as the mediatype instead of the file's mime field. Also fix TypeScript importKit/exportKit to use kit.files[i].blob instead of a separate Map. Reconvert JSON assets to use the corrected encoding.`\n  - [🎯🎯testgoaljsonlifecycletest1773348901476808286🎫codadesktopmcpeventsystemandofflinemode](repo://ticket/🎯🎯testgoaljsonlifecycletest1773348901476808286🎫codadesktopmcpeventsystemandofflinemode) - `Coda Desktop MCP Event System and Offline Mode` - `closed` - `a long while ago` - `Implemented complete event system connecting coda desktop (Electron) and coda MCP sidecar. Python sidecar: added 6 missing methods, fixed return shapes for 5 methods. Electron main: event forwarding, connection tracking, MCP response wrapping, removed duplicate handlers. Preload: event/connection listener bridges. Renderer: EventsPage with filtering, connection indicator, manual input for translate/validate/fix per target, offline error handling.`\n  - [🎯🎯testgoaljsonlifecycletest1773348901476808286🎫codadesktopwelcomescreenoncurrentcodebase](repo://ticket/🎯🎯testgoaljsonlifecycletest1773348901476808286🎫codadesktopwelcomescreenoncurrentcodebase) - `Coda Desktop Welcome Screen on Current Codebase` - `closed` - `a long while ago` - `Fixed uncaught ENOENT exception when sidecar binary (coda) is not found. Added sidecar.on('error') handler in startSidecar() to gracefully handle spawn failures instead of crashing the Electron app with an uncaught exception dialog.`\n  - [🎯🎯testgoaljsonlifecycletest1773348901476808286🎫codadesktopwelcomescreenwithprojectoptions](repo://ticket/🎯🎯testgoaljsonlifecycletest1773348901476808286🎫codadesktopwelcomescreenwithprojectoptions) - `Coda Desktop Welcome Screen with Project Options` - `closed` - `a long while ago` - `Added a welcome screen to the Coda desktop app showing two options on startup: Create New Project (form with name + folder picker that scaffolds .coda/project.json) and Open Existing Project (folder picker validating .coda/project.json). Added IPC handlers in main.ts, window.dialog/window.project bridges in preload.ts, and WelcomePage component plus projectPath state in renderer.tsx.`\n  - [🎯🎯testgoaljsonlifecycletest1773348901476808286🎫fixcodasidecarstartupcommand](repo://ticket/🎯🎯testgoaljsonlifecycletest1773348901476808286🎫fixcodasidecarstartupcommand) - `Fix Coda Sidecar Startup Command` - `closed` - `a long while ago` - `Fixed sidecar startup: changed SIDECAR_CMD from coda (non-existent binary) to uv with args run --active coda.py --sidecar. Set cwd to coda/engine/ resolved via app.getAppPath(). Used currentProjectPath instead of process.env.CODA_PROJECT in startSidecar(). Added sidecar.on error handler to prevent uncaught ENOENT crashes.`\n  - [🎯🎯testgoaljsonlifecycletest1773348901476808286🎫fixvscodeextensionbuild](repo://ticket/🎯🎯testgoaljsonlifecycletest1773348901476808286🎫fixvscodeextensionbuild) - `Fix VS Code Extension Build` - `open` - `opened a long while ago` - `Get it working and building`\n  - [🎯🎯testgoaljsonlifecycletest1773348901476808286🎫implementcodapropertykindsystem](repo://ticket/🎯🎯testgoaljsonlifecycletest1773348901476808286🎫implementcodapropertykindsystem) - `Implement Coda Property Kind System` - `closed` - `a long while ago` - `Implemented canonical Coda property kind system with number/object/array/level/category and kind-specific measure kinds. Added runtime normalization in coda.py so legacy type-based configs map to canonical kind + measure_kinds recursively. Updated target/property resources and sidecar target API to return normalized properties. Refactored coda.json to define property_kinds and canonical property definitions, added measure entries with measure kind metadata, and fixed invalid Berlin target rule structure so the config is parseable.`\n",
+          "tool_use_id": "toolu_vrtx_01HuAShjeyux7EuYPNxXUbtE__vscode-1774398922727",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-25T01:02:53Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:53.179Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/chat-session-resources/b645ccdd-6385-4ca0-b7f2-4d759bd7aa50/toolu_vrtx_01HuAShjeyux7EuYPNxXUbtE__vscode-1774398922727/content.txt",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_use_id": "toolu_vrtx_01QqVMYVPPBhiAp1QmaS3MsR__vscode-1774398922728",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-25T01:02:53Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:53.654Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/chat-session-resources/b645ccdd-6385-4ca0-b7f2-4d759bd7aa50/toolu_vrtx_01HuAShjeyux7EuYPNxXUbtE__vscode-1774398922727/content.txt",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_vrtx_01QqVMYVPPBhiAp1QmaS3MsR__vscode-1774398922728",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-25T01:02:58Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:58.401Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 100,
+            "query": "Kit|KitKind|kit_kind|KitType|kit_type",
+            "isRegexp": true,
+            "includePattern": "**/*.{py,go,rs,ts,js,cs}"
+          },
+          "tool_use_id": "toolu_vrtx_01Nhm6JGpTo1KZUMXqRoUhDd__vscode-1774398922729",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-25T01:02:58Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:02:58.808Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 100,
+            "query": "Kit|KitKind|kit_kind|KitType|kit_type",
+            "isRegexp": true,
+            "includePattern": "**/*.{py,go,rs,ts,js,cs}"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_vrtx_01Nhm6JGpTo1KZUMXqRoUhDd__vscode-1774398922729",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.plan.updating.starting",
+        "second": "2026-03-25T01:03:04Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:03:04.913Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "manage_todo_list",
+          "tool_input": {
+            "todoList": [
+              {
+                "id": 1,
+                "title": "Explore existing kit code across languages",
+                "status": "in-progress"
+              },
+              {
+                "id": 2,
+                "title": "Define Kit kinds enum/schema",
+                "status": "not-started"
+              },
+              {
+                "id": 3,
+                "title": "Implement Kit kinds in TypeScript/JS",
+                "status": "not-started"
+              },
+              {
+                "id": 4,
+                "title": "Implement Kit kinds in Python",
+                "status": "not-started"
+              },
+              {
+                "id": 5,
+                "title": "Implement Kit kinds in Go",
+                "status": "not-started"
+              },
+              {
+                "id": 6,
+                "title": "Implement Kit kinds in Rust",
+                "status": "not-started"
+              },
+              {
+                "id": 7,
+                "title": "Implement Kit kinds in C#/.NET",
+                "status": "not-started"
+              },
+              {
+                "id": 8,
+                "title": "Add tests for all Kit kinds",
+                "status": "not-started"
+              },
+              {
+                "id": 9,
+                "title": "Run all tests and verify",
+                "status": "not-started"
+              }
+            ]
+          },
+          "tool_use_id": "toolu_vrtx_012AjLLFoR6XXHh4EVihGXS6__vscode-1774398922730",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.plan.updating.ended",
+        "second": "2026-03-25T01:03:05Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:03:05.057Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "manage_todo_list",
+          "tool_input": {
+            "todoList": [
+              {
+                "id": 1,
+                "title": "Explore existing kit code across languages",
+                "status": "in-progress"
+              },
+              {
+                "id": 2,
+                "title": "Define Kit kinds enum/schema",
+                "status": "not-started"
+              },
+              {
+                "id": 3,
+                "title": "Implement Kit kinds in TypeScript/JS",
+                "status": "not-started"
+              },
+              {
+                "id": 4,
+                "title": "Implement Kit kinds in Python",
+                "status": "not-started"
+              },
+              {
+                "id": 5,
+                "title": "Implement Kit kinds in Go",
+                "status": "not-started"
+              },
+              {
+                "id": 6,
+                "title": "Implement Kit kinds in Rust",
+                "status": "not-started"
+              },
+              {
+                "id": 7,
+                "title": "Implement Kit kinds in C#/.NET",
+                "status": "not-started"
+              },
+              {
+                "id": 8,
+                "title": "Add tests for all Kit kinds",
+                "status": "not-started"
+              },
+              {
+                "id": 9,
+                "title": "Run all tests and verify",
+                "status": "not-started"
+              }
+            ]
+          },
+          "tool_response": "Successfully wrote todo list\n\nWarning: Did you mean to update so many todos at the same time? Consider working on them one by one.",
+          "tool_use_id": "toolu_vrtx_012AjLLFoR6XXHh4EVihGXS6__vscode-1774398922730",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-25T01:03:17Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:03:17.030Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "runSubagent",
+          "tool_input": {
+            "prompt": "I need you to comprehensively explore the semio monorepo to find ALL existing kit-related code across ALL programming languages (TypeScript/JavaScript, Python, Go, Rust, C#/.NET). \n\nSpecifically, I need to understand:\n\n1. The core Kit data model/schema - where is it defined? What does it look like?\n2. Any existing Kit \"kind\" or \"type\" enums\n3. All files that deal with Kit storage/persistence (JSON files, SQLite databases, zip archives, remote URLs, in-memory)\n4. The directory structure for each language library (semio/js, semio/py, semio/go, semio/rs, semio/net)\n5. Any existing test files for kits\n6. The JSON schema for kits (semio/jsonschema/)\n7. The GraphQL schema related to kits (semio/graphql/)\n8. The studio.ts file's Kit store implementations\n9. Any \"concepts.json\" or \"config.json\" at root that might define kit kinds\n\nSearch for: Kit, KitKind, kit_kind, FileKit, FolderKit, ArchiveKit, RemoteKit, TemporaryKit, kit.json, kit.db, KitStore, KitSchema, KitDiff\n\nFor each file found, tell me:\n- Full path\n- What kit-related code it contains\n- The current structure/approach\n\nBe thorough - check semio/js/js.ts, semio/py/*.py, semio/go/*.go, semio/rs/src/*.rs, semio/net/*.cs, semio/studio/studio.ts, semio/graphql/schema.graphql, semio/jsonschema/*, concepts.json, config.json\n\nReturn ALL findings in a structured format.",
+            "description": "Explore all kit code across languages",
+            "agentName": "Explore"
+          },
+          "tool_use_id": "toolu_vrtx_01PR8V5dgirbMbX24tXBsMzH__vscode-1774398922731",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-25T01:05:29Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:05:29.586Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "runSubagent",
+          "tool_input": {
+            "prompt": "I need you to comprehensively explore the semio monorepo to find ALL existing kit-related code across ALL programming languages (TypeScript/JavaScript, Python, Go, Rust, C#/.NET). \n\nSpecifically, I need to understand:\n\n1. The core Kit data model/schema - where is it defined? What does it look like?\n2. Any existing Kit \"kind\" or \"type\" enums\n3. All files that deal with Kit storage/persistence (JSON files, SQLite databases, zip archives, remote URLs, in-memory)\n4. The directory structure for each language library (semio/js, semio/py, semio/go, semio/rs, semio/net)\n5. Any existing test files for kits\n6. The JSON schema for kits (semio/jsonschema/)\n7. The GraphQL schema related to kits (semio/graphql/)\n8. The studio.ts file's Kit store implementations\n9. Any \"concepts.json\" or \"config.json\" at root that might define kit kinds\n\nSearch for: Kit, KitKind, kit_kind, FileKit, FolderKit, ArchiveKit, RemoteKit, TemporaryKit, kit.json, kit.db, KitStore, KitSchema, KitDiff\n\nFor each file found, tell me:\n- Full path\n- What kit-related code it contains\n- The current structure/approach\n\nBe thorough - check semio/js/js.ts, semio/py/*.py, semio/go/*.go, semio/rs/src/*.rs, semio/net/*.cs, semio/studio/studio.ts, semio/graphql/schema.graphql, semio/jsonschema/*, concepts.json, config.json\n\nReturn ALL findings in a structured format.",
+            "description": "Explore all kit code across languages",
+            "agentName": "Explore"
+          },
+          "tool_response": "## Comprehensive Kit Exploration - Complete Findings\n\nI've completed a thorough exploration of ALL kit-related code across the semio monorepo. Here's the structured summary:\n\n---\n\n## 1. **Core Kit Definition**\n\n### ✅ Five Kit Kinds (Definitive)\n- **FileKit** → JSON file (`.kit.json`)\n- **FolderKit** → Local folder with `.semio/kit.db` SQLite + files\n- **ArchiveKit** → ZIP of FolderKit structure\n- **RemoteKit** → URL-based endpoint\n- **TemporaryKit** → In-memory session\n\n---\n\n## 2. **Kit Data Model** (All Languages)\n\n### Core Properties\n- `guid` (GUID string) | `name` | `version` | `description` | `icon` | `image` | `preview`\n- `remote` | `homepage` | `license` | `createdAt` | `updatedAt`\n\n### Collections (Mandatory)\n- `types[]` | `designs[]` | `ports[]` | `qualities[]` | `files[]` | `folders[]`\n- `authors[]` | `attributes[]` | `concepts[]` | `tags[]`\n\n---\n\n## 3. **Schema Definitions**\n\n| Source | Location | Purpose |\n|--------|----------|---------|\n| **JSON Schema** | [semio/jsonschema/kit.json](semio/jsonschema/kit.json) | Validation + IPC |\n| **SQLite Schema** | [semio/sqlite/schema.sql](semio/sqlite/schema.sql) | 20+ tables, GUID-based, no legacy support |\n| **GraphQL Schema** | [semio/graphql/schema.graphql](semio/graphql/schema.graphql) | Relay-based Kit queries |\n| **Concepts** | [concepts.json](concepts.json) | Kit concept enums |\n| **Config** | [config.json](config.json) | Kit count \u0026 size limits |\n\n---\n\n## 4. **Language-Specific Implementations**\n\n### TypeScript/JavaScript (`semio/js/` + `semio/studio/`)\n**Two Store Implementations**:\n1. **JsonFileKitStore** - Load from JSON, in-memory edit, save back to JSON\n   - Methods: `apply()`, `replace()`, `save()`, `reload()`, `undo()`, `redo()`, `transact()`\n   - Adapter: `KitJsonFileAdapter` (read/write)\n\n2. **FolderKitStore** - Load from folder with SQLite `.semio/kit.db`\n   - Uses SQL.js for binary SQLite persistence\n   - Adapter: `KitFolderAdapter` (folder I/O)\n   \n**Key Utilities**: \n- `getKitDiff()` | `applyKitDiff()` | `inverseKitDiff()` \n- `KitSchema` (Zod validation)\n- Sync interfaces: `SyncMap\u003cV\u003e`, `SyncArray\u003cV\u003e`, `SyncDoc`\n\n### Python (`semio/engine/main.py`)\n**DatabaseStore** class:\n- Operations: `KITS`, `KIT`, `DESIGNS`, `DESIGN`, `TYPES`, `TYPE`\n- **Shallow helpers**: `_shallowifyKitDiff()`, `_shallowifyTypeDiff()`, `_shallowifyDesignDiff()`\n- SQLite JSON serialization (URI-encoded kit storage)\n- Transaction tracking with forward/backward diffs\n\n### Go (`semio/go/semio.go` + `kit_sqlite.go`)\n**Functions**:\n- `KitFromSqlite(dbPath)` - Parse SQLite → Kit\n- `KitToSqlite(kit, dbPath, schemaSQL)` - Persist Kit → SQLite\n\n**Entity IDs**: `KitId`, `TypeId`, `DesignId`, `PieceId`, `FileId`, etc. (all GUID-based)\n\n**Deep Equality**: `DeepEqual()` via JSON marshaling\n\n### Rust (`semio/rs/lib.rs`)\n**Kit Struct**: GUID + name + all collections with Option\u003cT\u003e\n- Serde serialization/deserialization\n- `QualityKind` enum (Integer, Float, Boolean)\n- UUID v7 generation\n- JSON-based `deep_equal()` with numeric approximation\n\n### C#/.NET (`semio/net/Semio/`)\n- File: [Semio.cs](semio/net/Semio/Semio.cs)\n- **Status**: Minimal implementation (needs investigation)\n\n---\n\n## 5. **SQLite Schema Highlights**\n\n**Core Tables** (20+):\n- `kit` - Metadata (GUID PK, composite unique with kit_guid)\n- `type` - Type definitions\n- `design` - Design definitions\n- `piece` - Design pieces\n- `connection` - Piece connections\n- `file` | `folder` - Storage hierarchy\n- `port` | `quality` | `author` | `attribute` | `concept` | `tag`\n- `model` | `connector` | `prop` - Type sub-entities\n- `layer` | `group` | `stat` - Design sub-entities\n\n**Key principle**: GUID-based PKs, no backwards compatibility, composite constraints where needed.\n\n---\n\n## 6. **Test Assets**\n\n**Location**: `semio/assets/semio/`\n\n**Inventory**:\n- ✅ `kit_metabolism.json` - Full kit example\n- ✅ `kit_metabolism_diffed.json` - With applied diffs\n- ✅ `metabolism/.semio/kit.json` - SQLite export\n- ✅ `kit_invalid.json` - Validation test\n- ❌ **MISSING**: `metabolism.shallow.kit.semio.json`, `*.meta.kit.semio.json`\n\n---\n\n## 7. **Kit Store Interface (UndoableKitStore)**\n\n```typescript\ngetSnapshot(): KitStoreSnapshot\nsubscribe(listener: () =\u003e void): () =\u003e void\ntransact\u003cT\u003e(label: string, run: () =\u003e T): T\napply(diff: KitDiff, meta?: { origin?: string }): void\nreplace(next: Kit, meta?: { origin?: string }): void\nasync save(): Promise\u003cvoid\u003e\nasync reload(): Promise\u003cvoid\u003e\ndispose(): void\ncanUndo() | canRedo() | undo() | redo()\n```\n\n---\n\n## 8. **Critical TODO Items** (from ueli.md)\n\n1. ⚠️ **Shallow variants** - All languages need `*Shallow` + `*Meta` (metadata-only, no heavy blobs)\n2. ⚠️ **Complete test coverage** - All five kit kinds must pass in all languages\n3. ⚠️ **Asset files** - Create shallow kit/design/type examples\n4. ⚠️ **C#/.NET** - Needs full platform implementation\n5. ⚠️ **Icon semantics** - Replace lucide imports with `@semio/assets` semantic icons\n\n---\n\n## 9. **Directory Map**\n\n| Component | Path | Status |\n|-----------|------|--------|\n| Core types | `semio/js/index.ts` | ✅ |\n| Store implementations | `semio/studio/studio.ts` | ✅ (2 stores) |\n| Python engine | `semio/engine/main.py` | ✅ |\n| Go types | `semio/go/semio.go` | ✅ |\n| Go SQLite | `semio/go/kit_sqlite.go` | ✅ |\n| Rust types | `semio/rs/lib.rs` | ✅ |\n| .NET types | `semio/net/Semio/Semio.cs` | ⚠️ |\n| JSON Schema | `semio/jsonschema/kit.json` | ✅ |\n| SQLite Schema | `semio/sqlite/schema.sql` | ✅ |\n| GraphQL | `semio/graphql/schema.graphql` | ✅ |\n\n---\n\n**Summary saved to session memory** for reference. All kit-related code has been comprehensively documented with file paths for direct access.",
+          "tool_use_id": "toolu_vrtx_01PR8V5dgirbMbX24tXBsMzH__vscode-1774398922731",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-25T01:05:42Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:05:42.616Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "runSubagent",
+          "tool_input": {
+            "agentName": "Explore",
+            "description": "Read core kit files in detail",
+            "prompt": "Thoroughly read the following files and return their COMPLETE contents or at least the kit-related sections. I need the actual code, not just descriptions:\n\n1. `semio/js/index.ts` - The core TypeScript Kit types/schemas (read ALL of it)\n2. `semio/js/js.ts` - If exists, read all kit-related code\n3. `semio/studio/studio.ts` - Read the full file, but especially the KitStore interfaces and implementations  \n4. `semio/py/py.py` or `semio/py/*.py` - list files in semio/py/ first, then read the main Python kit module\n5. `semio/go/semio.go` - Read all Kit struct definitions (at least first 500 lines)\n6. `semio/go/kit_sqlite.go` - If it exists, read it\n7. `semio/rs/src/lib.rs` or `semio/rs/lib.rs` - Read the Rust Kit struct\n8. `semio/net/Semio/Semio.cs` - Read the .NET Kit class\n9. `semio/jsonschema/kit.json` - Read the JSON schema\n10. `semio/sqlite/schema.sql` - Read the SQLite schema \n11. `concepts.json` - Read the concepts\n12. `config.json` - Read the config\n\nAlso list contents of:\n- `semio/js/` directory\n- `semio/py/` directory  \n- `semio/go/` directory\n- `semio/rs/` directory (and src/ if exists)\n- `semio/net/` directory (and subdirs)\n- `semio/assets/semio/` directory\n\nReturn the actual source code for each file (or the kit-related portions for very large files). I need to understand the data structures."
+          },
+          "tool_use_id": "toolu_vrtx_01B74C1mjn3uNpV5sjzPYmBA__vscode-1774398922768",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-25T01:07:03Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:07:03.525Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "runSubagent",
+          "tool_input": {
+            "agentName": "Explore",
+            "description": "Read core kit files in detail",
+            "prompt": "Thoroughly read the following files and return their COMPLETE contents or at least the kit-related sections. I need the actual code, not just descriptions:\n\n1. `semio/js/index.ts` - The core TypeScript Kit types/schemas (read ALL of it)\n2. `semio/js/js.ts` - If exists, read all kit-related code\n3. `semio/studio/studio.ts` - Read the full file, but especially the KitStore interfaces and implementations  \n4. `semio/py/py.py` or `semio/py/*.py` - list files in semio/py/ first, then read the main Python kit module\n5. `semio/go/semio.go` - Read all Kit struct definitions (at least first 500 lines)\n6. `semio/go/kit_sqlite.go` - If it exists, read it\n7. `semio/rs/src/lib.rs` or `semio/rs/lib.rs` - Read the Rust Kit struct\n8. `semio/net/Semio/Semio.cs` - Read the .NET Kit class\n9. `semio/jsonschema/kit.json` - Read the JSON schema\n10. `semio/sqlite/schema.sql` - Read the SQLite schema \n11. `concepts.json` - Read the concepts\n12. `config.json` - Read the config\n\nAlso list contents of:\n- `semio/js/` directory\n- `semio/py/` directory  \n- `semio/go/` directory\n- `semio/rs/` directory (and src/ if exists)\n- `semio/net/` directory (and subdirs)\n- `semio/assets/semio/` directory\n\nReturn the actual source code for each file (or the kit-related portions for very large files). I need to understand the data structures."
+          },
+          "tool_response": "## Complete Kit Data Structure Reference\n\nI've now thoroughly analyzed the Kit architecture across all supported languages. Here's the comprehensive breakdown:\n\n---\n\n## **1. Core Kit Structure**\n\nThe **Kit** is the central entity representing a \"Kit-of-Parts\" system. Here are the actual struct/type definitions from each language:\n\n### **Go** ([semio/go/semio.go](semio/go/semio.go#L1881-L1910))\n```go\ntype Kit struct {\n    Guid        string\n    Name        string\n    Version     string\n    Types       []Type           // Component type definitions\n    Designs     []Design         // Design compositions\n    Tags        []Tag\n    Concepts    []Concept\n    Ports       []Port           // Connector port definitions\n    Qualities   []Quality        // Measurable properties\n    Files       []File\n    Folders     []Folder\n    Authors     []Author\n    Remote, Homepage, License, Preview, Icon, Image, Description *string\n    Attributes  []Attribute      // Key-value metadata\n    CreatedAt   string\n    UpdatedAt   string\n}\n```\n\n### **Rust** ([semio/rs/lib.rs](semio/rs/lib.rs#L1172-L1198))\n```rust\npub struct Kit {\n    pub guid: Guid,\n    pub name: String,\n    pub version: Option\u003cString\u003e,\n    pub description: Option\u003cString\u003e,\n    pub icon: Option\u003cString\u003e,\n    pub image: Option\u003cString\u003e,\n    pub preview: Option\u003cString\u003e,\n    pub remote: Option\u003cString\u003e,\n    pub homepage: Option\u003cString\u003e,\n    pub license: Option\u003cString\u003e,\n    pub concepts: Option\u003cVec\u003cConcept\u003e\u003e,\n    pub tags: Option\u003cVec\u003cTag\u003e\u003e,\n    pub types: Option\u003cVec\u003cType\u003e\u003e,\n    pub designs: Option\u003cVec\u003cDesign\u003e\u003e,\n    pub ports: Option\u003cVec\u003cPort\u003e\u003e,\n    pub qualities: Option\u003cVec\u003cQuality\u003e\u003e,\n    pub files: Option\u003cVec\u003cFile\u003e\u003e,\n    pub folders: Option\u003cVec\u003cFolder\u003e\u003e,\n    pub authors: Option\u003cVec\u003cAuthor\u003e\u003e,\n    pub attributes: Option\u003cVec\u003cAttribute\u003e\u003e,\n    pub created_at: Option\u003cString\u003e,\n    pub updated_at: Option\u003cString\u003e,\n}\n```\n\n### **TypeScript** ([semio/js/index.ts](semio/js/index.ts#L7223))\nUses Zod validation schema with same structure, plus projections:\n- `KitMeta`: Scalar-only fields (no arrays)\n- `KitShallow`: Nested entities as Meta-level items for shallow APIs\n\n### **C#/.NET** ([semio/net/Semio/Semio.cs](semio/net/Semio/Semio.cs#L1-L300))\nUses classes with similar structure; includes constants for limits and encoding utilities.\n\n### **Python** ([semio/py/main.py](semio/py/main.py#L1-L300))\nUses Pydantic dataclasses with field validators and GraphQL schema support.\n\n---\n\n## **2. Key Child Entities**\n\n### **Types** (Component Type Definitions)\nDefined starting at [semio/go/semio.go](semio/go/semio.go#L1360)\n```go\ntype Type struct {\n    Guid        string\n    Name        string\n    Parent      *TypeId          // Hierarchical inheritance\n    IsAbstract  *bool\n    Virtual     *bool\n    Unit        *string\n    Stock       *int\n    Models      []Model          // 3D representations\n    Connectors  []Connector      // Connection points with spatial position\n    Props       []Prop           // Property values\n    Authors     []AuthorId\n    Concepts    []ConceptId\n    Icon        *string\n    Image       *string\n    Description *string\n    Attributes  []Attribute\n}\n```\n\n### **Designs** (Design Compositions)\nCollections of placed pieces with connections:\n```go\ntype Design struct {\n    Guid        string\n    Name        string\n    Pieces      []Piece          // Placed component instances\n    Connections []Connection     // Between pieces\n    CanScale    *bool\n    CanMirror   *bool\n    Props       []Prop\n    // ... metadata fields\n}\n```\n\n### **Connectors** (3D Connection Points)\n```go\ntype Connector struct {\n    Guid      string\n    Name      *string\n    Point     Point            // 3D position {X, Y, Z}\n    Direction Vector           // 3D direction {X, Y, Z}\n    T         float64          // Parameter along curve\n    Mandatory *bool\n    Port      *PortId          // Port type\n    Props     []Prop\n}\n```\n\n### **Qualities** (Measurable Properties)\n```go\ntype Quality struct {\n    Guid          string\n    Key           string\n    Name          string\n    Kind          QualityKind   // Bitfield: General, Type, Design, Piece, Connection, Connector\n    Default       *float64\n    Formula       *string\n    DefaultSiUnit *string\n    DefaultImperialUnit *string\n    Min, Max      *float64\n    MinExcluded, MaxExcluded *bool\n    CanScale      *bool\n    Benchmarks    []Benchmark   // Threshold values\n}\n```\n\n### **Ports** (Connector Compatibility)\n```go\ntype Port struct {\n    Guid            string\n    Name            string\n    Description     *string\n    Icon            *string\n    CompatiblePorts []PortId     // Defines which ports connect\n}\n```\n\n---\n\n## **3. Entity Identification**\n\nAll entities use GUID-based IDs:\n```go\ntype KitId struct { Guid string }\ntype TypeId struct { Guid string }\ntype DesignId struct { Guid string }\n// ... etc for all 20+ entity types\n```\n\nTypeScript has equivalent type aliases:\n```typescript\nexport type KitId = { guid: Guid };\nexport type TypeId = { guid: Guid };\n// Guid = UUID v7\n```\n\n---\n\n## **4. Database Schema**\n\n[semio/sqlite/schema.sql](semio/sqlite/schema.sql) provides:\n- Kit table: root entity with metadata\n- Type/Design/Connector/Port tables: with foreign keys to kit(guid)\n- Quality/Benchmark tables: measurable properties\n- File/Folder tables: asset organization\n- Author, Tag, Concept tables: classification\n- Fully normalized GUID-based relationships\n\n---\n\n## **5. Persistence \u0026 Serialization**\n\n- **Go**: [semio/go/kit_sqlite.go](semio/go/kit_sqlite.go) - SQLite zip-based import/export\n- **TypeScript/Studio**: [semio/studio/studio.ts](semio/studio/studio.ts) - CRDT (Yjs) with IndexedDB persistence\n- **JSON Schema**: [semio/jsonschema/kit.json](semio/jsonschema/kit.json) - Specification validation\n\n---\n\n## **6. Directory Listing**\n\n- **[semio/js/](semio/js/)**: TypeScript definitions (index.ts, package.json)\n- **[semio/py/](semio/py/)**: Python implementation (main.py, pyproject.toml)\n- **[semio/go/](semio/go/)**: Go library (semio.go, kit_sqlite.go)\n- **[semio/rs/](semio/rs/)**: Rust crate (lib.rs, Cargo.toml)\n- **[semio/net/](semio/net/)**: C#/.NET (Semio.cs, Semio.csproj)\n- **[semio/sqlite/](semio/sqlite/)**: Schema (schema.sql)\n- **[semio/jsonschema/](semio/jsonschema/)**: JSON Schema (kit.json)\n\n---\n\n## **7. Key Constants \u0026 Limits**\n\nFrom [semio/py/main.py](semio/py/main.py#L56-L83):\n```python\nNAME_LENGTH_LIMIT = 64\nATTRIBUTES_MAX = 64\nQUALITIES_MAX = 1024\nTYPES_MAX = 256\nPIECES_MAX = 512\nDESIGNS_MAX = 128\nKITS_MAX = 64\nTOLERANCE = 1e-5\nVERSION = \"4.3.0-beta\"\nRELEASE = \"r25.07-1\"\n```\n\nAll the complete source code for Kit-related code across TypeScript, Python, Go, Rust, C#/.NET, GraphQL schema, SQLite schema, and JSON schema is now available above. The architecture emphasizes **GUID-based relationships**, **strongly-typed hierarchies**, and **diff-based synchronization** for collaborative editing.",
+          "tool_use_id": "toolu_vrtx_01B74C1mjn3uNpV5sjzPYmBA__vscode-1774398922768",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-25T01:07:09Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:07:09.235Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "list_dir",
+          "tool_input": {
+            "path": "/workspaces/semio/semio/js"
+          },
+          "tool_use_id": "toolu_vrtx_01PCfDk7AGedRdhCznMy1Xjr__vscode-1774398922803",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-25T01:07:09Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:07:09.393Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "list_dir",
+          "tool_input": {
+            "path": "/workspaces/semio/semio/js"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_vrtx_01PCfDk7AGedRdhCznMy1Xjr__vscode-1774398922803",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-25T01:07:14Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:07:14.285Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "wc -l /workspaces/semio/semio/js/index.ts /workspaces/semio/semio/studio/studio.ts /workspaces/semio/semio/py/main.py /workspaces/semio/semio/go/semio.go /workspaces/semio/semio/rs/lib.rs /workspaces/semio/semio/net/Semio/Semio.cs 2\u003e/dev/null",
+            "explanation": "Count lines in all kit-related source files",
+            "goal": "Understand file sizes",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_vrtx_01TThEzbDSLooSAvdew2LRH4__vscode-1774398922804",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-25T01:07:15Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:07:15.514Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "wc -l /workspaces/semio/semio/js/index.ts /workspaces/semio/semio/studio/studio.ts /workspaces/semio/semio/py/main.py /workspaces/semio/semio/go/semio.go /workspaces/semio/semio/rs/lib.rs /workspaces/semio/semio/net/Semio/Semio.cs 2\u003e/dev/null",
+            "explanation": "Count lines in all kit-related source files",
+            "goal": "Understand file sizes",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` wc -l /workspaces/semio/semio/js/index.ts /workspaces/semio/semio/studio/studio.ts /workspaces/semio/semio/py/main.py /workspaces/semio/semio/go/semio.go /workspaces/semio/semio/rs/lib.rs /workspaces/semio/semio/net/Semio/Semio.cs 2\u003e/dev/null`, and this is the output of running that command instead:\n  15067 /workspaces/semio/semio/js/index.ts\n    910 /workspaces/semio/semio/studio/studio.ts\n  15513 /workspaces/semio/semio/py/main.py\n  10968 /workspaces/semio/semio/go/semio.go\n  10026 /workspaces/semio/semio/rs/lib.rs\n  12793 /workspaces/semio/semio/net/Semio/Semio.cs\n  65277 total\n",
+          "tool_use_id": "toolu_vrtx_01TThEzbDSLooSAvdew2LRH4__vscode-1774398922804",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-25T01:07:19Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:07:19.513Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "query": "FileKit|FolderKit|ArchiveKit|RemoteKit|TemporaryKit|KitKind|kit_kind",
+            "isRegexp": true
+          },
+          "tool_use_id": "toolu_vrtx_01BwNRW41DUv69iG8CeyRbe2__vscode-1774398922805",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76680d50c923c4d12e68c10859c5b2898c30b64c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-25T01:07:19Z",
+        "session": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T01:07:19.865Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "4f37f1eb-7d66-46b0-992b-bcf610993c0a",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/4f37f1eb-7d66-46b0-992b-bcf610993c0a.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "query": "FileKit|FolderKit|ArchiveKit|RemoteKit|TemporaryKit|KitKind|kit_kind",
+            "isRegexp": true
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_vrtx_01BwNRW41DUv69iG8CeyRbe2__vscode-1774398922805",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    }
+  ],
+  "plan": {
+    "steps": [
+      {
+        "id": "",
+        "name": "Explore existing kit code across languages",
+        "status": "in-progress",
+        "ideated": "2026-03-25T01:03:05Z",
+        "started": "2026-03-25T01:03:05Z"
+      },
+      {
+        "id": "",
+        "name": "Define Kit kinds enum/schema",
+        "status": "not-started",
+        "ideated": "2026-03-25T01:03:05Z"
+      },
+      {
+        "id": "",
+        "name": "Implement Kit kinds in TypeScript/JS",
+        "status": "not-started",
+        "ideated": "2026-03-25T01:03:05Z"
+      },
+      {
+        "id": "",
+        "name": "Implement Kit kinds in Python",
+        "status": "not-started",
+        "ideated": "2026-03-25T01:03:05Z"
+      },
+      {
+        "id": "",
+        "name": "Implement Kit kinds in Go",
+        "status": "not-started",
+        "ideated": "2026-03-25T01:03:05Z"
+      },
+      {
+        "id": "",
+        "name": "Implement Kit kinds in Rust",
+        "status": "not-started",
+        "ideated": "2026-03-25T01:03:05Z"
+      },
+      {
+        "id": "",
+        "name": "Implement Kit kinds in C#/.NET",
+        "status": "not-started",
+        "ideated": "2026-03-25T01:03:05Z"
+      },
+      {
+        "id": "",
+        "name": "Add tests for all Kit kinds",
+        "status": "not-started",
+        "ideated": "2026-03-25T01:03:05Z"
+      },
+      {
+        "id": "",
+        "name": "Run all tests and verify",
+        "status": "not-started",
+        "ideated": "2026-03-25T01:03:05Z"
+      }
+    ]
+  }
+}
