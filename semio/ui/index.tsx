@@ -1852,8 +1852,8 @@ if (import.meta.vitest) {
 // AlgorithmContext which provides kit, design, diff, selection, vec, and output state.
 // Summary: Standardized algorithm IPO shell using typed WindowKind-based windows.
 
-import { TreeRow, TreeSection, UI, WindowKind, cn, createDefaultLayout, type FooterItem, type SidePanelTabConfig, type UIAppConfig, type UIWindowKindDefinition } from "@elements/ui";
-import { AlertCircleIcon, DetailsIcon, PieceIcon } from "@semio/assets/icons";
+import { TreeRow, TreeSection, UI, WindowKind, cn, createDefaultLayout, type FooterItem, type SidePanelTabConfig, type UIAppConfig, type UIToolbarItem, type UIWindowKindDefinition } from "@elements/ui";
+import { AlertCircleIcon, CloseIcon, DetailsIcon, DiagramIcon, PieceIcon } from "@semio/assets/icons";
 
 /**
  * Context value for algorithm state shared across windows.
@@ -2089,7 +2089,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
             <TreeRow id="algorithm.details.output.diff.updated">
               <div className="flex items-center justify-between w-full px-2 py-0.5">
                 <span className="text-xs text-muted-foreground">updated</span>
-                <span className="text-xs font-mono text-warning">{(ctx.designDiff.pieces?.updated as any[])?.length ?? 0}</span>
+                <span className="text-xs font-mono text-warning">{ctx.designDiff.pieces?.updated?.length ?? 0}</span>
               </div>
             </TreeRow>
           </>
@@ -2179,6 +2179,27 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
     [id, context.selectedPieceGuids.length, pieceCount, context.error],
   );
 
+  const toolbarItems: UIToolbarItem[] = React.useMemo(() => {
+    const items: UIToolbarItem[] = [
+      {
+        id: `${id}.toolbar.algorithm`,
+        icon: <DiagramIcon size={14} />,
+        label,
+        order: 0,
+      },
+    ];
+    if (context.onSelectedPieceGuidsChange) {
+      items.push({
+        id: `${id}.toolbar.clear-selection`,
+        icon: <CloseIcon size={14} />,
+        label: "Clear selection",
+        order: 10,
+        onClick: () => context.onSelectedPieceGuidsChange?.([]),
+      });
+    }
+    return items;
+  }, [context.onSelectedPieceGuidsChange, id, label]);
+
   const apps: UIAppConfig[] = React.useMemo(
     () => [
       {
@@ -2187,10 +2208,11 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
         windowKinds,
         defaultLayout: layout,
         rightPanelTabs,
+        toolbarItems,
         footerItems,
       },
     ],
-    [id, label, windowKinds, layout, rightPanelTabs, footerItems],
+    [id, label, windowKinds, layout, rightPanelTabs, toolbarItems, footerItems],
   );
 
   return (

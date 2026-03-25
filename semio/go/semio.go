@@ -7836,11 +7836,15 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 	return &filtered[bestIndex]
 }
 
-// FilterKitWithDesign MUST return a minimal kit containing only entities related to the given design.
-// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
-// files not used by selected models, and keeps at most one model per type according to the optional tags.
-// [👤semio📚go💻semio🔖kitoperations🛠️filterkitwithdesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/FilterKitWithDesign)
-func FilterKitWithDesign(kit *Kit, designGuid string, tags []string) Kit {
+// #region 🔖Filter
+// [👤semio📚go💻semio🔖kit🔖filter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter)
+// Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
+
+// FilterKitWithDesign filters a kit to only include entities related to a specific design.
+// Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
+// files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/FilterKitWithDesign)
+func FilterKitWithDesign(kit Kit, designGuid string, tags []string) Kit {
 	var design *Design
 	for i := range kit.Designs {
 		if kit.Designs[i].Guid == designGuid {
@@ -7852,46 +7856,46 @@ func FilterKitWithDesign(kit *Kit, designGuid string, tags []string) Kit {
 		return Kit{Guid: kit.Guid, Name: kit.Name, Version: kit.Version}
 	}
 
-	usedTypeGuids := map[string]bool{}
-	usedDesignGuids := map[string]bool{designGuid: true}
-	for _, piece := range design.Pieces {
-		if piece.Type != nil && piece.Type.Guid != "" {
+	pieces := design.Pieces
+
+	usedTypeGuids := make(map[string]bool)
+	usedDesignGuids := make(map[string]bool)
+	usedDesignGuids[designGuid] = true
+
+	for _, piece := range pieces {
+		if piece.Type != nil {
 			usedTypeGuids[piece.Type.Guid] = true
 		}
-		if piece.Design != nil && piece.Design.Guid != "" {
+		if piece.Design != nil {
 			usedDesignGuids[piece.Design.Guid] = true
 		}
 	}
 
-	typeByGuid := map[string]Type{}
-	for _, typeItem := range kit.Types {
-		typeByGuid[typeItem.Guid] = typeItem
+	typeByGuid := make(map[string]*Type)
+	for i := range kit.Types {
+		typeByGuid[kit.Types[i].Guid] = &kit.Types[i]
 	}
-	var collectAncestors func(string)
-	collectAncestors = func(typeGuid string) {
-		typeItem, ok := typeByGuid[typeGuid]
-		if !ok || typeItem.Parent == nil || typeItem.Parent.Guid == "" || usedTypeGuids[typeItem.Parent.Guid] {
-			return
+
+	var collectTypeAncestors func(typeGuid string)
+	collectTypeAncestors = func(typeGuid string) {
+		if t, ok := typeByGuid[typeGuid]; ok && t.Parent != nil && t.Parent.Guid != "" {
+			if !usedTypeGuids[t.Parent.Guid] {
+				usedTypeGuids[t.Parent.Guid] = true
+				collectTypeAncestors(t.Parent.Guid)
+			}
 		}
-		usedTypeGuids[typeItem.Parent.Guid] = true
-		collectAncestors(typeItem.Parent.Guid)
 	}
 	for typeGuid := range usedTypeGuids {
-		collectAncestors(typeGuid)
+		collectTypeAncestors(typeGuid)
 	}
 
 	resolvedTagGuids := make([]string, 0)
 	for _, tagValue := range tags {
-		found := false
 		for _, tag := range kit.Tags {
 			if tag.Guid == tagValue {
 				resolvedTagGuids = append(resolvedTagGuids, tag.Guid)
-				found = true
 				break
 			}
-		}
-		if found {
-			continue
 		}
 		for _, tag := range kit.Tags {
 			if tag.Name == tagValue {
@@ -7900,14 +7904,13 @@ func FilterKitWithDesign(kit *Kit, designGuid string, tags []string) Kit {
 		}
 	}
 
-	usedPortGuids := map[string]bool{}
-	usedFileGuids := map[string]bool{}
-	usedTagGuids := map[string]bool{}
-	usedConceptGuids := map[string]bool{}
-	usedQualityGuids := map[string]bool{}
-	usedAuthorGuids := map[string]bool{}
-	usedFolderNames := map[string]bool{}
-	selectedModels := map[string]Model{}
+	usedPortGuids := make(map[string]bool)
+	usedFileGuids := make(map[string]bool)
+	usedTagGuids := make(map[string]bool)
+	usedConceptGuids := make(map[string]bool)
+	usedQualityGuids := make(map[string]bool)
+	usedAuthorGuids := make(map[string]bool)
+	usedFolderNames := make(map[string]bool)
 
 	collectQualityFromProps := func(props []Prop) {
 		for _, prop := range props {
@@ -7917,137 +7920,70 @@ func FilterKitWithDesign(kit *Kit, designGuid string, tags []string) Kit {
 		}
 	}
 
+	selectedModels := make(map[string]*Model)
 	for typeGuid := range usedTypeGuids {
-		typeItem, ok := typeByGuid[typeGuid]
+		t, ok := typeByGuid[typeGuid]
 		if !ok {
 			continue
 		}
-		if typeItem.Folder != nil && *typeItem.Folder != "" {
-			usedFolderNames[*typeItem.Folder] = true
+		if t.Folder != nil && *t.Folder != "" {
+			usedFolderNames[*t.Folder] = true
 		}
-		for _, connector := range typeItem.Connectors {
-			if connector.Port != nil && connector.Port.Guid != "" {
+		for _, connector := range t.Connectors {
+			if connector.Port != nil {
 				usedPortGuids[connector.Port.Guid] = true
 			}
 			collectQualityFromProps(connector.Props)
 		}
-		collectQualityFromProps(typeItem.Props)
-		for _, author := range typeItem.Authors {
-			if author.Guid != "" {
-				usedAuthorGuids[author.Guid] = true
-			}
+		collectQualityFromProps(t.Props)
+		for _, authorId := range t.Authors {
+			usedAuthorGuids[authorId.Guid] = true
 		}
-		for _, concept := range typeItem.Concepts {
-			if concept.Guid != "" {
-				usedConceptGuids[concept.Guid] = true
-			}
+		for _, conceptId := range t.Concepts {
+			usedConceptGuids[conceptId.Guid] = true
 		}
-		if bestModel := selectBestModelForFilter(typeItem.Models, resolvedTagGuids); bestModel != nil {
-			selectedModels[typeGuid] = *bestModel
-			if bestModel.File.Guid != "" {
-				usedFileGuids[bestModel.File.Guid] = true
-			}
-			for _, tag := range bestModel.Tags {
-				if tag.Guid != "" {
-					usedTagGuids[tag.Guid] = true
+
+		if len(t.Models) > 0 {
+			best := selectBestModelLike(t.Models, resolvedTagGuids)
+			if best != nil {
+				selectedModels[typeGuid] = best
+				usedFileGuids[best.File.Guid] = true
+				for _, tagId := range best.Tags {
+					usedTagGuids[tagId.Guid] = true
 				}
 			}
 		}
 	}
 
-	for _, piece := range design.Pieces {
+	for _, piece := range pieces {
 		collectQualityFromProps(piece.Props)
 	}
-	for _, concept := range design.Concepts {
-		if concept.Guid != "" {
-			usedConceptGuids[concept.Guid] = true
-		}
+	for _, conceptId := range design.Concepts {
+		usedConceptGuids[conceptId.Guid] = true
 	}
-	for _, author := range design.Authors {
-		if author.Guid != "" {
-			usedAuthorGuids[author.Guid] = true
-		}
+	for _, authorId := range design.Authors {
+		usedAuthorGuids[authorId.Guid] = true
 	}
+
+	portSnapshot := make([]string, 0)
 	for portGuid := range usedPortGuids {
+		portSnapshot = append(portSnapshot, portGuid)
+	}
+	for _, portGuid := range portSnapshot {
 		for _, port := range kit.Ports {
-			if port.Guid != portGuid {
-				continue
-			}
-			for _, compatible := range port.CompatiblePorts {
-				if compatible.Guid != "" {
-					usedPortGuids[compatible.Guid] = true
+			if port.Guid == portGuid {
+				for _, compat := range port.CompatiblePorts {
+					usedPortGuids[compat.Guid] = true
 				}
 			}
 		}
 	}
+
 	for _, tagGuid := range resolvedTagGuids {
 		usedTagGuids[tagGuid] = true
 	}
 
-	filteredTypes := make([]Type, 0)
-	for _, typeItem := range kit.Types {
-		if !usedTypeGuids[typeItem.Guid] {
-			continue
-		}
-		filteredType := typeItem
-		if selectedModel, ok := selectedModels[typeItem.Guid]; ok {
-			filteredType.Models = []Model{selectedModel}
-		} else {
-			filteredType.Models = []Model{}
-		}
-		filteredTypes = append(filteredTypes, filteredType)
-	}
-
-	filteredDesigns := make([]Design, 0)
-	for _, designItem := range kit.Designs {
-		if usedDesignGuids[designItem.Guid] {
-			filteredDesigns = append(filteredDesigns, designItem)
-		}
-	}
-	filteredPorts := make([]Port, 0)
-	for _, port := range kit.Ports {
-		if usedPortGuids[port.Guid] {
-			filteredPorts = append(filteredPorts, port)
-		}
-	}
-	filteredFiles := make([]File, 0)
-	for _, file := range kit.Files {
-		if usedFileGuids[file.Guid] {
-			filteredFiles = append(filteredFiles, file)
-		}
-	}
-	filteredTags := make([]Tag, 0)
-	for _, tag := range kit.Tags {
-		if usedTagGuids[tag.Guid] {
-			filteredTags = append(filteredTags, tag)
-		}
-	}
-	filteredConcepts := make([]Concept, 0)
-	for _, concept := range kit.Concepts {
-		if usedConceptGuids[concept.Guid] {
-			filteredConcepts = append(filteredConcepts, concept)
-		}
-	}
-	filteredQualities := make([]Quality, 0)
-	for _, quality := range kit.Qualities {
-		if usedQualityGuids[quality.Guid] {
-			filteredQualities = append(filteredQualities, quality)
-		}
-	}
-	filteredAuthors := make([]Author, 0)
-	for _, author := range kit.Authors {
-		if usedAuthorGuids[author.Guid] {
-			filteredAuthors = append(filteredAuthors, author)
-		}
-	}
-	filteredFolders := make([]Folder, 0)
-	for _, folder := range kit.Folders {
-		if usedFolderNames[folder.Name] {
-			filteredFolders = append(filteredFolders, folder)
-		}
-	}
-
-	return Kit{
+	result := Kit{
 		Guid:        kit.Guid,
 		Name:        kit.Name,
 		Version:     kit.Version,
@@ -8058,20 +7994,152 @@ func FilterKitWithDesign(kit *Kit, designGuid string, tags []string) Kit {
 		Remote:      kit.Remote,
 		Homepage:    kit.Homepage,
 		License:     kit.License,
-		Types:       filteredTypes,
-		Designs:     filteredDesigns,
-		Ports:       filteredPorts,
-		Files:       filteredFiles,
-		Tags:        filteredTags,
-		Concepts:    filteredConcepts,
-		Qualities:   filteredQualities,
-		Folders:     filteredFolders,
-		Authors:     filteredAuthors,
 		Attributes:  kit.Attributes,
 		CreatedAt:   kit.CreatedAt,
 		UpdatedAt:   kit.UpdatedAt,
 	}
+
+	for _, t := range kit.Types {
+		if !usedTypeGuids[t.Guid] {
+			continue
+		}
+		filteredType := t
+		if model, ok := selectedModels[t.Guid]; ok {
+			filteredType.Models = []Model{*model}
+		} else {
+			filteredType.Models = []Model{}
+		}
+		result.Types = append(result.Types, filteredType)
+	}
+
+	for _, d := range kit.Designs {
+		if usedDesignGuids[d.Guid] {
+			result.Designs = append(result.Designs, d)
+		}
+	}
+	for _, p := range kit.Ports {
+		if usedPortGuids[p.Guid] {
+			result.Ports = append(result.Ports, p)
+		}
+	}
+	for _, f := range kit.Files {
+		if usedFileGuids[f.Guid] {
+			result.Files = append(result.Files, f)
+		}
+	}
+	for _, t := range kit.Tags {
+		if usedTagGuids[t.Guid] {
+			result.Tags = append(result.Tags, t)
+		}
+	}
+	for _, c := range kit.Concepts {
+		if usedConceptGuids[c.Guid] {
+			result.Concepts = append(result.Concepts, c)
+		}
+	}
+	for _, q := range kit.Qualities {
+		if usedQualityGuids[q.Guid] {
+			result.Qualities = append(result.Qualities, q)
+		}
+	}
+	for _, a := range kit.Authors {
+		if usedAuthorGuids[a.Guid] {
+			result.Authors = append(result.Authors, a)
+		}
+	}
+	for _, f := range kit.Folders {
+		if usedFolderNames[f.Name] {
+			result.Folders = append(result.Folders, f)
+		}
+	}
+
+	return result
 }
+
+// selectBestModelLike selects the best model based on tag matching using Jaccard similarity.
+// Helper for FilterKitWithDesign.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️selectbestmodellike](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/selectBestModelLike)
+func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
+	if len(models) == 0 {
+		return nil
+	}
+	if len(selectedTagGuids) == 0 {
+		for _, m := range models {
+			if len(m.Tags) == 0 {
+				return &m
+			}
+		}
+		return &models[0]
+	}
+
+	var filtered []Model
+	for _, m := range models {
+		modelTagGuids := make(map[string]bool)
+		for _, tag := range m.Tags {
+			modelTagGuids[tag.Guid] = true
+		}
+		allSelected := true
+		for _, guid := range selectedTagGuids {
+			if !modelTagGuids[guid] {
+				allSelected = false
+				break
+			}
+		}
+		if allSelected {
+			filtered = append(filtered, m)
+		}
+	}
+
+	if len(filtered) == 0 {
+		return nil
+	}
+
+	best := filtered[0]
+	bestScore := jaccardTagGuidsGo(best.Tags, selectedTagGuids)
+	for _, m := range filtered[1:] {
+		score := jaccardTagGuidsGo(m.Tags, selectedTagGuids)
+		if score > bestScore {
+			best = m
+			bestScore = score
+		}
+	}
+	return &best
+}
+
+// jaccardTagGuidsGo computes Jaccard similarity between model tags and selected tags.
+// Helper for FilterKitWithDesign.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️jaccardtagguidsgo](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/jaccardTagGuidsGo)
+func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
+	modelTagSet := make(map[string]bool)
+	for _, tag := range modelTags {
+		modelTagSet[tag.Guid] = true
+	}
+	selectedSet := make(map[string]bool)
+	for _, guid := range selectedTagGuids {
+		selectedSet[guid] = true
+	}
+
+	intersection := 0
+	union := 0
+	for guid := range selectedSet {
+		if modelTagSet[guid] {
+			intersection++
+		}
+		union++
+	}
+	for guid := range modelTagSet {
+		if !selectedSet[guid] {
+			union++
+		}
+	}
+
+	if union == 0 {
+		return 0
+	}
+	return float64(intersection) / float64(union)
+}
+
+// #endregion 🔖Filter
 
 // #endregion 🔖Kit Operations
 

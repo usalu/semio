@@ -1021,9 +1021,13 @@ class TestMcp:
     def test_app_tools_require_kit_and_design(self):
         """All app tools return error when kit or design is not set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = id(mock_ctx.session)
+        # Ensure clean state
+        engine._mcp_session_kits.pop(sid, None)
+        engine._mcp_session_designs.pop(sid, None)
         for tool_fn in (engine.show_design, engine.show_diagram, engine.show_scene, engine.select_pieces, engine.select_connections, engine.select_pieces_and_connections):
             result = tool_fn(mock_ctx)
-            assert "error" in result
+            assert "error" in result, f"{tool_fn.__name__} should require kit+design"
 
     def test_app_tools_selection_reflects_session_state(self, kitMetabolismJson: dict):
         """App tools include current session selection in structuredContent."""

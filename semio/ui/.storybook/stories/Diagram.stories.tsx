@@ -1,12 +1,12 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Diagram.stories.tsx
 // Specs: One component per stories file with real semio design data for representative variants.
-// Summary: Showcases the semio design Diagram with Nakagin Capsule Tower data.
+// Summary: Diagram stories: default, controlled, features off, Design-only, Diff, PieceSelection, ConnectionSelection.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
 import { getDesignDiff, type Connection, type Design, type Piece } from "@semio/js";
-import { SemioDiagram as Diagram } from "@semio/ui";
+import { ConnectionSelection as DiagramConnectionSelection, PieceSelection as DiagramPieceSelection, SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismKit from "../../../assets/semio/kit_metabolism.json";
@@ -91,6 +91,63 @@ const meta: Meta<typeof Diagram> = {
 export default meta;
 
 type Story = StoryObj<typeof Diagram>;
+type PieceSelectionStory = StoryObj<typeof DiagramPieceSelection>;
+type ConnectionSelectionStory = StoryObj<typeof DiagramConnectionSelection>;
+
+const diagramFrame = (node: React.ReactNode) => <div className="h-72 w-72 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">{node}</div>;
+
+// #region 🔖DesignDiffSelectionVariants
+
+/** Renders the flat design only: no diff overlay, selection off. */
+export const Design: Story = {
+  args: {
+    kit: metabolismKit,
+    designGuid: nakaginCapsuleTowerDesignGuid,
+    diffEnabled: false,
+    selectionEnabled: false,
+    title: "Design",
+  },
+  render: (args) => diagramFrame(<Diagram {...args} />),
+};
+
+/** Shows added/removed/modified pieces and connections from `previewDiff`. */
+export const Diff: Story = {
+  args: {
+    kit: metabolismKit,
+    designGuid: nakaginCapsuleTowerDesignGuid,
+    designDiff: previewDiff,
+    diffEnabled: true,
+    selectionEnabled: false,
+    title: "Diff",
+  },
+  render: (args) => diagramFrame(<Diagram {...args} />),
+};
+
+/** Constrained `PieceSelection` wrapper: only pieces are selectable. */
+export const PieceSelection: PieceSelectionStory = {
+  args: {
+    kit: metabolismKit,
+    designGuid: nakaginCapsuleTowerDesignGuid,
+    title: "Piece Selection",
+    defaultSelection: { pieceGuids: [modifiedPiece.guid] },
+    onPieceClick: (piece) => console.info("Piece clicked", piece.guid),
+  },
+  render: (args) => diagramFrame(<DiagramPieceSelection {...args} />),
+};
+
+/** Constrained `ConnectionSelection` wrapper: only connections are selectable. */
+export const ConnectionSelection: ConnectionSelectionStory = {
+  args: {
+    kit: metabolismKit,
+    designGuid: nakaginCapsuleTowerDesignGuid,
+    title: "Connection Selection",
+    defaultSelection: { connectionGuids: [modifiedConnection.guid] },
+    onConnectionClick: (connection) => console.info("Connection clicked", connection.guid),
+  },
+  render: (args) => diagramFrame(<DiagramConnectionSelection {...args} />),
+};
+
+// #endregion 🔖DesignDiffSelectionVariants
 
 export const NakaginCapsuleTower: Story = {
   args: {
@@ -105,11 +162,7 @@ export const NakaginCapsuleTower: Story = {
     onPieceClick: (piece) => console.info("Piece clicked", piece.guid),
     onConnectionClick: (connection) => console.info("Connection clicked", connection.guid),
   },
-  render: (args) => (
-    <div className="h-72 w-72 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">
-      <Diagram {...args} />
-    </div>
-  ),
+  render: (args) => diagramFrame(<Diagram {...args} />),
 };
 
 export const Controlled: Story = {
@@ -127,11 +180,7 @@ export const Controlled: Story = {
     const [zoom, setZoom] = React.useState(1);
     const [pan, setPan] = React.useState({ x: 0, y: 0 });
 
-    return (
-      <div className="h-72 w-72 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">
-        <Diagram {...args} onPanChange={setPan} onSelectionChange={setSelection} onZoomChange={setZoom} pan={pan} selection={selection} zoom={zoom} />
-      </div>
-    );
+    return diagramFrame(<Diagram {...args} onPanChange={setPan} onSelectionChange={setSelection} onZoomChange={setZoom} pan={pan} selection={selection} zoom={zoom} />);
   },
 };
 
@@ -150,43 +199,5 @@ export const FeaturesDisabled: Story = {
     zoomEnabled: false,
     title: "Features Disabled",
   },
-  render: (args) => (
-    <div className="h-72 w-72 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">
-      <Diagram {...args} />
-    </div>
-  ),
-};
-
-export const PiecesOnlySelection: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    title: "Pieces Only Selection",
-    connectionSelectionEnabled: false,
-    defaultSelection: {
-      pieceGuids: [modifiedPiece.guid],
-    },
-  },
-  render: (args) => (
-    <div className="h-72 w-72 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">
-      <Diagram {...args} />
-    </div>
-  ),
-};
-
-export const ConnectionsOnlySelection: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    title: "Connections Only Selection",
-    pieceSelectionEnabled: false,
-    defaultSelection: {
-      connectionGuids: [modifiedConnection.guid],
-    },
-  },
-  render: (args) => (
-    <div className="h-72 w-72 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">
-      <Diagram {...args} />
-    </div>
-  ),
+  render: (args) => diagramFrame(<Diagram {...args} />),
 };

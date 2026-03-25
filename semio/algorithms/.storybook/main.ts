@@ -79,6 +79,13 @@ const config: StorybookConfig = {
       }),
     );
 
+    config.optimizeDeps = config.optimizeDeps || {};
+    config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
+    config.optimizeDeps.esbuildOptions = {
+      ...config.optimizeDeps.esbuildOptions,
+      target: "es2020",
+    };
+
     config.mode = "development";
     config.define = {
       ...config.define,

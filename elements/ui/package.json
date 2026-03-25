@@ -6,20 +6,20 @@
   "description": "elements · ui",
   "type": "module",
   "exports": {
-    ".": "./index.ts",
+    ".": "./index.tsx",
     "./components.json": "./components.json",
-    "./elements": "./elements.tsx",
+    "./elements": "./index.tsx",
     "./globals.css": "./globals.css",
     "./theme.css": "./theme.css",
-    "./tailwind.config": "./tailwind.config.ts",
-    "./postcss.config": "./postcss.config.ts",
-    "./eslint.config": "./eslint.config.ts"
+    "./tailwind.config": "./index.tsx",
+    "./postcss.config": "./index.tsx",
+    "./eslint.config": "./index.tsx"
   },
   "scripts": {
     "dev": "storybook dev -p 6006 --exact-port --host 0.0.0.0 --no-open --debug",
     "build": "storybook build",
-    "lint": "eslint --max-warnings 0 --config eslint.config.ts .",
-    "test": "vitest run --config vitest.config.ts --passWithNoTests"
+    "lint": "eslint --max-warnings 0 --config index.tsx .",
+    "test": "vitest run --config index.tsx --passWithNoTests"
   },
   "targets": {
     "lint": {

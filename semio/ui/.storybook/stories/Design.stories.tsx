@@ -13,11 +13,9 @@ import metabolismKit from "../../../assets/semio/kit_metabolism.json";
 
 // #region 🔖Design
 
-const flatDesignGuid = "79fa8945-b47d-4896-965f-f921067cbae2";
-const flatDesign = (metabolismKit.designs ?? []).find((d) => d.guid === flatDesignGuid)!;
-const firstPieceGuid = (flatDesign.pieces ?? [])[0]?.guid ?? "";
-
 const nakaginDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const nakaginDesign = (metabolismKit.designs ?? []).find((d) => d.guid === nakaginDesignGuid)!;
+const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
 
 const meta: Meta<typeof DesignView> = {
   title: "semio/Design",
@@ -32,16 +30,16 @@ export default meta;
 
 type Story = StoryObj<typeof DesignView>;
 
-export const FlatDesignSplitView: Story = {
+export const NakaginCapsuleTowerSplitView: Story = {
   args: {
     kit: metabolismKit,
-    designGuid: flatDesignGuid,
-    title: "Flat Design (Split View)",
+    designGuid: nakaginDesignGuid,
+    title: "Nakagin Capsule Tower (Split View)",
     onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.guid),
     onConnectionClick: (connection: Connection) => console.info("Connection clicked", connection.guid),
   },
   render: (args) => (
-    <div className="h-96 w-[48rem] rounded-md border border-border bg-card text-foreground shadow-sm">
+    <div className="h-96 w-3xl rounded-md border border-border bg-card text-foreground shadow-sm">
       <DesignView {...args} />
     </div>
   ),
@@ -64,12 +62,12 @@ export const DiagramOnly: Story = {
 export const CustomRatio: Story = {
   args: {
     kit: metabolismKit,
-    designGuid: flatDesignGuid,
+    designGuid: nakaginDesignGuid,
     sceneRatio: 0.7,
-    title: "Custom Ratio (70% Scene)",
+    title: "Nakagin Capsule Tower (70% Scene)",
   },
   render: (args) => (
-    <div className="h-96 w-[48rem] rounded-md border border-border bg-card text-foreground shadow-sm">
+    <div className="h-96 w-3xl rounded-md border border-border bg-card text-foreground shadow-sm">
       <DesignView {...args} />
     </div>
   ),
@@ -78,12 +76,12 @@ export const CustomRatio: Story = {
 export const WithSelection: Story = {
   args: {
     kit: metabolismKit,
-    designGuid: flatDesignGuid,
+    designGuid: nakaginDesignGuid,
     defaultSelection: { pieceGuids: [firstPieceGuid], connectionGuids: [] },
-    title: "Design With Selection",
+    title: "Nakagin Capsule Tower With Selection",
   },
   render: (args) => (
-    <div className="h-96 w-[48rem] rounded-md border border-border bg-card text-foreground shadow-sm">
+    <div className="h-96 w-3xl rounded-md border border-border bg-card text-foreground shadow-sm">
       <DesignView {...args} />
     </div>
   ),
@@ -92,13 +90,13 @@ export const WithSelection: Story = {
 export const NoGridNoGizmo: Story = {
   args: {
     kit: metabolismKit,
-    designGuid: flatDesignGuid,
+    designGuid: nakaginDesignGuid,
     showGrid: false,
     showGizmo: false,
-    title: "Design Without Grid And Gizmo",
+    title: "Nakagin Capsule Tower Without Grid And Gizmo",
   },
   render: (args) => (
-    <div className="h-96 w-[48rem] rounded-md border border-border bg-card text-foreground shadow-sm">
+    <div className="h-96 w-3xl rounded-md border border-border bg-card text-foreground shadow-sm">
       <DesignView {...args} />
     </div>
   ),

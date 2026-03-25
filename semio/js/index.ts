@@ -8278,6 +8278,123 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 
 // #endregion 🔖Type Family Helpers
 
+// #region 🔖Filter
+// [👤semio📚js💻semio🔖kit🔖filter](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter)
+// Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
+
+/**
+ * Filters a kit to only include entities related to a specific design.
+ * Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
+ * files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨filterkitwithdesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/filterKitWithDesign)
+ **/
+export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[]): Kit => {
+  const design = findDesignInKit(kit, designGuid);
+  const pieces = design.pieces ?? [];
+  const connections = design.connections ?? [];
+
+  const usedTypeGuids = new Set<string>();
+  const usedDesignGuids = new Set<string>([designGuid]);
+
+  for (const piece of pieces) {
+    if (piece.type?.guid) usedTypeGuids.add(piece.type.guid);
+    if (piece.design?.guid) usedDesignGuids.add(piece.design.guid);
+  }
+
+  const allTypes = kit.types ?? [];
+  const typeByGuid = new Map(allTypes.map(t => [t.guid, t]));
+
+  const collectTypeAncestors = (typeGuid: string) => {
+    const t = typeByGuid.get(typeGuid);
+    if (t?.parent?.guid && !usedTypeGuids.has(t.parent.guid)) {
+      usedTypeGuids.add(t.parent.guid);
+      collectTypeAncestors(t.parent.guid);
+    }
+  };
+  for (const guid of usedTypeGuids) collectTypeAncestors(guid);
+
+  const resolvedTagGuids: string[] = [];
+  for (const tagValue of tags ?? []) {
+    const byGuid = kit.tags?.find(t => t.guid === tagValue);
+    if (byGuid) {
+      resolvedTagGuids.push(byGuid.guid);
+      continue;
+    }
+    const byName = kit.tags?.find(t => t.name === tagValue);
+    if (byName) resolvedTagGuids.push(byName.guid);
+  }
+
+  const usedPortGuids = new Set<string>();
+  const usedFileGuids = new Set<string>();
+  const usedTagGuids = new Set<string>();
+  const usedConceptGuids = new Set<string>();
+  const usedQualityGuids = new Set<string>();
+  const usedAuthorGuids = new Set<string>();
+  const usedFolderNames = new Set<string>();
+
+  const collectQualityFromProps = (props: Prop[]) => {
+    for (const prop of props) {
+      if (prop.quality?.guid) usedQualityGuids.add(prop.quality.guid);
+    }
+  };
+
+  const selectedModels = new Map<string, Model>();
+  for (const typeGuid of usedTypeGuids) {
+    const t = typeByGuid.get(typeGuid);
+    if (!t) continue;
+    if (t.folder) usedFolderNames.add(t.folder);
+    for (const connector of t.connectors ?? []) {
+      if (connector.port?.guid) usedPortGuids.add(connector.port.guid);
+      collectQualityFromProps(connector.props ?? []);
+    }
+    collectQualityFromProps(t.props ?? []);
+    for (const authorId of t.authors ?? []) usedAuthorGuids.add(authorId.guid);
+    for (const conceptId of t.concepts ?? []) usedConceptGuids.add(conceptId.guid);
+
+    const models = t.models ?? [];
+    if (models.length > 0) {
+      const best = selectBestModel(models, resolvedTagGuids);
+      if (best) {
+        selectedModels.set(typeGuid, best);
+        usedFileGuids.add(best.file.guid);
+        for (const tagId of best.tags ?? []) usedTagGuids.add(tagId.guid);
+      }
+    }
+  }
+
+  for (const piece of pieces) collectQualityFromProps(piece.props ?? []);
+  for (const conceptId of design.concepts ?? []) usedConceptGuids.add(conceptId.guid);
+  for (const authorId of design.authors ?? []) usedAuthorGuids.add(authorId.guid);
+
+  const portSnapshot = Array.from(usedPortGuids);
+  for (const portGuid of portSnapshot) {
+    const port = kit.ports?.find(p => p.guid === portGuid);
+    if (port) {
+      for (const compat of port.compatiblePorts ?? []) usedPortGuids.add(compat.guid);
+    }
+  }
+
+  for (const tagGuid of resolvedTagGuids) usedTagGuids.add(tagGuid);
+
+  return {
+    ...kit,
+    types: allTypes.filter(t => usedTypeGuids.has(t.guid)).map(t => ({
+      ...t,
+      models: selectedModels.has(t.guid) ? [selectedModels.get(t.guid)!] : []
+    })),
+    designs: (kit.designs ?? []).filter(d => usedDesignGuids.has(d.guid)),
+    ports: (kit.ports ?? []).filter(p => usedPortGuids.has(p.guid)),
+    files: (kit.files ?? []).filter(f => usedFileGuids.has(f.guid)),
+    tags: (kit.tags ?? []).filter(t => usedTagGuids.has(t.guid)),
+    concepts: (kit.concepts ?? []).filter(c => usedConceptGuids.has(c.guid)),
+    qualities: (kit.qualities ?? []).filter(q => usedQualityGuids.has(q.guid)),
+    authors: (kit.authors ?? []).filter(a => usedAuthorGuids.has(a.guid)),
+    folders: (kit.folders ?? []).filter(f => usedFolderNames.has(f.name)),
+  };
+};
+
+// #endregion 🔖Filter
+
 /**
  * Searches for matching PortInKit entry.
  * MUST return the matching element or undefined.

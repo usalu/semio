@@ -1,8 +1,8 @@
 {
   "title": "Refine UI Component With Window Kinds and Golden Layout",
-  "status": "open",
+  "status": "closed",
   "description": "Refine UI component to use window kinds with golden-layout, move domain-neutral types",
-  "summary": "Refined the UI composite component. Apps now use UIWindowConfig with UIWindowKindDefinition entries rendered by golden-layout. Moved WindowKind enum, createDefaultLayout, parseWindowLayout, stringifyWindowLayout, deduplicateWindowLayout, UIWindowControl, UIWindowKindDefinition from sketchpad/shared.ts to elements/ui/elements.tsx. Sketchpad shared.ts now re-exports these from elements.tsx. UICanvas component dynamically imports golden-layout and registers each window kind. Updated storybook stories to use the new UIAppConfig with windowConfig.",
+  "summary": "Refactored elements/ui so each UI app now owns windowKinds and an abstract defaultLayout composed of rows, columns, stacks, and window nodes. Golden Layout is now confined to the internal canvas adapter, legacy stored Golden Layout configs are parsed into the abstract layout model, UI stories were updated to the new app API, AlgorithmApp now emits the new UI app shape, and elements/ui test, lint, and Storybook build all pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/904"
   },
