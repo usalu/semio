@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import abc
 import base64
+import copy
 import dataclasses
 import datetime
 import enum
@@ -36,6 +37,9 @@ import tempfile
 import time
 import typing
 import urllib
+import urllib.error
+import urllib.parse
+import urllib.request
 import uuid
 import zipfile
 
@@ -6291,6 +6295,173 @@ class Kit(
 
     # endregion Kit Query Helpers
 
+    # region Filter
+    # [👤semio📚py💻semio🔖domain🔖kit🔖filter](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter)
+    # Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
+
+    @staticmethod
+    def _select_best_model_filter(models: list, resolved_tag_guids: list[str]):
+        """Selects the best model based on tag matching using Jaccard similarity.
+        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️selectbestmodelfilter](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/_select_best_model_filter)
+        """
+        if not models:
+            return None
+        if not resolved_tag_guids:
+            for m in models:
+                if not getattr(m, "tags", None):
+                    return m
+            return models[0]
+        filtered = []
+        for m in models:
+            model_tag_guids = {t.guid for t in (getattr(m, "tags", None) or [])}
+            if all(g in model_tag_guids for g in resolved_tag_guids):
+                filtered.append(m)
+        if not filtered:
+            return None
+        def jaccard(m):
+            model_tag_guids = {t.guid for t in (getattr(m, "tags", None) or [])}
+            sel = set(resolved_tag_guids)
+            union = model_tag_guids | sel
+            if not union:
+                return 0.0
+            return len(model_tag_guids & sel) / len(union)
+        return max(filtered, key=jaccard)
+
+    def filter_kit_with_design(self: "Kit", design_guid: str, tags: typing.Optional[list[str]] = None) -> "Kit":
+        """Filters a kit to only include entities related to a specific design.
+        Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
+        files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
+        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/filter_kit_with_design)
+        """
+        design = self.find_design_by_guid(design_guid)
+        pieces = design.pieces or []
+
+        used_type_guids: set[str] = set()
+        used_design_guids: set[str] = {design_guid}
+
+        for piece in pieces:
+            if piece.type and piece.type.guid:
+                used_type_guids.add(piece.type.guid)
+            if piece.design and piece.design.guid:
+                used_design_guids.add(piece.design.guid)
+
+        all_types = self.types or []
+        type_by_guid = {t.guid: t for t in all_types}
+
+        def collect_type_ancestors(type_guid: str):
+            t = type_by_guid.get(type_guid)
+            if t and t.parent and t.parent.guid and t.parent.guid not in used_type_guids:
+                used_type_guids.add(t.parent.guid)
+                collect_type_ancestors(t.parent.guid)
+
+        for guid in list(used_type_guids):
+            collect_type_ancestors(guid)
+
+        all_tags = list(getattr(self, "tags_", None) or []) if hasattr(self, "tags_") else []
+        resolved_tag_guids: list[str] = []
+        for tag_value in (tags or []):
+            found = False
+            for tag in all_tags:
+                if tag.guid == tag_value:
+                    resolved_tag_guids.append(tag.guid)
+                    found = True
+                    break
+            if not found:
+                for tag in all_tags:
+                    if tag.name == tag_value:
+                        resolved_tag_guids.append(tag.guid)
+
+        used_port_guids: set[str] = set()
+        used_file_guids: set[str] = set()
+        used_tag_guids: set[str] = set()
+        used_concept_guids: set[str] = set()
+        used_quality_guids: set[str] = set()
+        used_author_guids: set[str] = set()
+        used_folder_names: set[str] = set()
+
+        def collect_quality_from_props(props):
+            for prop in (props or []):
+                if hasattr(prop, "quality") and prop.quality and hasattr(prop.quality, "guid"):
+                    used_quality_guids.add(prop.quality.guid)
+
+        selected_models: dict[str, typing.Any] = {}
+        for type_guid in used_type_guids:
+            t = type_by_guid.get(type_guid)
+            if not t:
+                continue
+            if getattr(t, "folder", None):
+                used_folder_names.add(t.folder)
+            for connector in (t.connectors or []):
+                if connector.port and connector.port.guid:
+                    used_port_guids.add(connector.port.guid)
+                collect_quality_from_props(getattr(connector, "props", None))
+            collect_quality_from_props(getattr(t, "props", None))
+            for author_id in (getattr(t, "authors", None) or []):
+                if hasattr(author_id, "guid"):
+                    used_author_guids.add(author_id.guid)
+            for concept_id in (getattr(t, "concepts", None) or []):
+                if hasattr(concept_id, "guid"):
+                    used_concept_guids.add(concept_id.guid)
+
+            models = getattr(t, "models", None) or []
+            if models:
+                best = Kit._select_best_model_filter(models, resolved_tag_guids)
+                if best:
+                    selected_models[type_guid] = best
+                    if hasattr(best, "file") and best.file and hasattr(best.file, "guid"):
+                        used_file_guids.add(best.file.guid)
+                    for tag_id in (getattr(best, "tags", None) or []):
+                        used_tag_guids.add(tag_id.guid)
+
+        for piece in pieces:
+            collect_quality_from_props(getattr(piece, "props", None))
+
+        for concept_id in (getattr(design, "concepts", None) or []):
+            if hasattr(concept_id, "guid"):
+                used_concept_guids.add(concept_id.guid)
+        for author_id in (getattr(design, "authors", None) or []):
+            if hasattr(author_id, "guid"):
+                used_author_guids.add(author_id.guid)
+
+        port_snapshot = list(used_port_guids)
+        for port_guid in port_snapshot:
+            for port in (self.ports or []):
+                if port.guid == port_guid:
+                    for compat in (getattr(port, "compatiblePorts", None) or getattr(port, "compatible_ports", None) or []):
+                        if hasattr(compat, "guid"):
+                            used_port_guids.add(compat.guid)
+
+        for tag_guid in resolved_tag_guids:
+            used_tag_guids.add(tag_guid)
+
+        import copy
+        result = copy.copy(self)
+        result.types = []
+        for t in all_types:
+            if t.guid not in used_type_guids:
+                continue
+            t_copy = copy.copy(t)
+            if t.guid in selected_models:
+                t_copy.models = [selected_models[t.guid]]
+            else:
+                t_copy.models = []
+            result.types.append(t_copy)
+
+        result.designs = [d for d in (self.designs or []) if d.guid in used_design_guids]
+        result.ports = [p for p in (self.ports or []) if p.guid in used_port_guids]
+        result.files_ = [f for f in (self.files_ or []) if f.guid in used_file_guids]
+        result.qualities = [q for q in (self.qualities or []) if q.guid in used_quality_guids]
+        result.authors_ = [a for a in (self.authors_ or []) if a.guid in used_author_guids]
+        result.folders_ = [f for f in (self.folders_ or []) if f.name in used_folder_names]
+        if hasattr(self, "tags_") and self.tags_ is not None:
+            result.tags_ = [t for t in self.tags_ if t.guid in used_tag_guids]
+        if hasattr(self, "concepts_") and self.concepts_ is not None:
+            result.concepts_ = [c for c in self.concepts_ if c.guid in used_concept_guids]
+
+        return result
+
+    # endregion Filter
+
 
 # endregion Kit
 
@@ -11500,13 +11671,392 @@ def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
     return file_dict.get("name", "")
 
 
+# region Kit Workflow Helpers
+
+
+def _kit_to_dict(kit: KitData | dict) -> dict:
+    """Return the underlying kit dictionary.
+    _kit_to_dict MUST normalize KitData and dict inputs for shared workflow helpers.
+    """
+    return kit.to_dict() if isinstance(kit, KitData) else kit
+
+
+def _kit_without_file_blobs(kit: KitData | dict) -> dict:
+    """Return a deep copy of a kit dictionary without embedded file blobs.
+    _kit_without_file_blobs MUST remove file blob payloads before SQLite and archive persistence.
+    """
+    kit_copy = copy.deepcopy(_kit_to_dict(kit))
+    for file_entry in kit_copy.get("files", []):
+        file_entry.pop("blob", None)
+    return kit_copy
+
+
+def _decode_kit_file_blob(blob: str) -> bytes:
+    """Decode a kit file blob into raw bytes.
+    _decode_kit_file_blob MUST support data URLs and raw base64 payloads.
+    """
+    encoded = blob.split(",", 1)[1] if blob.startswith("data:") else blob
+    return base64.b64decode(encoded)
+
+
+def _attach_file_blobs_to_kit(kit_dict: dict, files: dict[str, bytes]) -> dict:
+    """Attach file blobs from asset bytes to a kit dictionary.
+    _attach_file_blobs_to_kit MUST populate file blobs using canonical kit file paths.
+    """
+    for file_entry in kit_dict.get("files", []):
+        file_path = _build_file_path(kit_dict, file_entry)
+        if file_path in files:
+            encoded = base64.b64encode(files[file_path]).decode("ascii")
+            file_entry["blob"] = f"data:application/octet-stream;base64,{encoded}"
+    return kit_dict
+
+
+def _collect_kit_asset_files(kit: KitData | dict, files: typing.Optional[dict[str, bytes]] = None) -> dict[str, bytes]:
+    """Collect asset bytes for the current kit file entries.
+    _collect_kit_asset_files MUST prefer embedded blobs and fall back to provided file bytes.
+    """
+    data = _kit_to_dict(kit)
+    existing_files = files or {}
+    collected: dict[str, bytes] = {}
+    for file_entry in data.get("files", []):
+        file_path = _build_file_path(data, file_entry)
+        blob = file_entry.get("blob")
+        if blob:
+            collected[file_path] = _decode_kit_file_blob(blob)
+        elif file_path in existing_files:
+            collected[file_path] = existing_files[file_path]
+    return collected
+
+
+def _merge_sqlite_entity(parsed: dict, payload_entity: typing.Optional[dict]) -> dict:
+    """Merge a structured SQLite entity with payload metadata.
+    _merge_sqlite_entity MUST keep SQLite fields authoritative while preserving unsupported payload fields.
+    """
+    if payload_entity is None:
+        return parsed
+    merged = copy.deepcopy(payload_entity)
+    for key, value in parsed.items():
+        if key in {"connectors", "models", "pieces", "connections"} or value is not None or key not in merged:
+            merged[key] = value
+    return merged
+
+
+def _read_kit_from_sqlite(db_path: str) -> dict:
+    """Read a kit dictionary from the folder SQLite database.
+    _read_kit_from_sqlite MUST rebuild types and designs using the existing SQLite parsing helpers.
+    """
+    import sqlite3
+
+    if not os.path.exists(db_path):
+        raise FileNotFoundError(f"File not found: {db_path}")
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        cursor = conn.cursor()
+        payload_dict: dict = {}
+        try:
+            payload_row = cursor.execute("SELECT data FROM kit_payload WHERE id = 1").fetchone()
+            if payload_row and payload_row["data"]:
+                payload_dict = json.loads(payload_row["data"])
+        except sqlite3.OperationalError:
+            payload_dict = {}
+
+        kit_row = cursor.execute("SELECT * FROM kit LIMIT 1").fetchone()
+        if kit_row is None:
+            if payload_dict:
+                return payload_dict
+            raise ValueError(f"Invalid kit database: no kit row found in {db_path}")
+
+        payload_types_by_guid = {item.get("guid"): item for item in payload_dict.get("types", []) if item.get("guid")}
+        payload_designs_by_guid = {item.get("guid"): item for item in payload_dict.get("designs", []) if item.get("guid")}
+
+        connectors_by_type: dict[str, list[dict]] = {}
+        for row in cursor.execute("SELECT * FROM connector ORDER BY guid").fetchall():
+            connector = _parse_connector_from_sqlite(dict(row))
+            connector["port"] = {"guid": connector["port"]} if connector.get("port") else None
+            connectors_by_type.setdefault(row["type_guid"], []).append(connector)
+
+        models_by_type: dict[str, list[dict]] = {}
+        for row in cursor.execute("SELECT * FROM model ORDER BY guid").fetchall():
+            model = _parse_model_from_sqlite(dict(row))
+            model["file"] = {"guid": model["file"]} if model.get("file") else None
+            models_by_type.setdefault(row["type_guid"], []).append(model)
+
+        types: list[dict] = []
+        for row in cursor.execute("SELECT * FROM type ORDER BY row_id, name, guid").fetchall():
+            type_dict = _parse_type_from_sqlite(
+                dict(row),
+                connectors_by_type.get(row["guid"], []),
+                models_by_type.get(row["guid"], []),
+            )
+            if type_dict.get("parent"):
+                type_dict["parent"] = {"guid": type_dict["parent"]}
+            if type_dict.get("location"):
+                type_dict["location"] = {"guid": type_dict["location"]}
+            types.append(_merge_sqlite_entity(type_dict, payload_types_by_guid.get(type_dict.get("guid"))))
+
+        pieces_by_design: dict[str, list[dict]] = {}
+        for row in cursor.execute("SELECT * FROM piece ORDER BY guid").fetchall():
+            piece = _parse_piece_from_sqlite(dict(row))
+            if piece.get("type"):
+                piece["type"] = {"guid": piece["type"]}
+            if piece.get("design"):
+                piece["design"] = {"guid": piece["design"]}
+            pieces_by_design.setdefault(row["design_guid"], []).append(piece)
+
+        connections_by_design: dict[str, list[dict]] = {}
+        for row in cursor.execute("SELECT * FROM connection ORDER BY guid").fetchall():
+            connection = _parse_connection_from_sqlite(dict(row))
+            for side in ["connected", "connecting"]:
+                for key in ["piece", "designPiece", "connector"]:
+                    ref = connection.get(side, {}).get(key)
+                    if ref:
+                        connection[side][key] = {"guid": ref}
+            connections_by_design.setdefault(row["design_guid"], []).append(connection)
+
+        designs: list[dict] = []
+        for row in cursor.execute("SELECT * FROM design ORDER BY row_id, name, guid").fetchall():
+            design_dict = _parse_design_from_sqlite(
+                dict(row),
+                pieces_by_design.get(row["guid"], []),
+                connections_by_design.get(row["guid"], []),
+            )
+            if design_dict.get("parent"):
+                design_dict["parent"] = {"guid": design_dict["parent"]}
+            if design_dict.get("location"):
+                design_dict["location"] = {"guid": design_dict["location"]}
+            if design_dict.get("activeLayer"):
+                design_dict["activeLayer"] = {"guid": design_dict["activeLayer"]}
+            designs.append(_merge_sqlite_entity(design_dict, payload_designs_by_guid.get(design_dict.get("guid"))))
+
+        seen_type_guids = {item.get("guid") for item in types}
+        for payload_type in payload_dict.get("types", []):
+            if payload_type.get("guid") not in seen_type_guids:
+                types.append(copy.deepcopy(payload_type))
+
+        seen_design_guids = {item.get("guid") for item in designs}
+        for payload_design in payload_dict.get("designs", []):
+            if payload_design.get("guid") not in seen_design_guids:
+                designs.append(copy.deepcopy(payload_design))
+
+        result = {
+            key: copy.deepcopy(value)
+            for key, value in payload_dict.items()
+            if key not in {"types", "designs"}
+        }
+        result.update(
+            {
+                "guid": kit_row["guid"],
+                "name": kit_row["name"],
+                "version": kit_row["version"],
+                "description": kit_row["description"],
+                "icon": kit_row["icon"],
+                "image": kit_row["image"],
+                "preview": kit_row["preview"],
+                "remote": kit_row["remote"],
+                "homepage": kit_row["homepage"],
+                "license": kit_row["license"],
+                "types": types,
+                "designs": designs,
+            }
+        )
+        return result
+    finally:
+        conn.close()
+
+
+def import_file_kit(path: str) -> KitData:
+    """Import a JSON file kit.
+    import_file_kit MUST deserialize a JSON kit file into KitData.
+    """
+    with open(path, "r", encoding="utf-8") as handle:
+        return KitData(json.load(handle))
+
+
+def export_file_kit(kit: KitData | dict, path: str) -> None:
+    """Export a JSON file kit.
+    export_file_kit MUST persist the in-memory kit dictionary as JSON.
+    """
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(_kit_to_dict(kit), handle, ensure_ascii=False)
+
+
+def import_folder_kit(folder_path: str) -> tuple[KitData, dict[str, bytes]]:
+    """Import a folder kit backed by .semio/kit.db.
+    import_folder_kit MUST rebuild the kit from SQLite and load asset files from the folder tree.
+    """
+    db_path = os.path.join(folder_path, KIT_LOCAL_SUFFIX)
+    kit_dict = _read_kit_from_sqlite(db_path)
+    files: dict[str, bytes] = {}
+    for file_entry in kit_dict.get("files", []):
+        relative_path = _build_file_path(kit_dict, file_entry)
+        asset_path = os.path.join(folder_path, relative_path)
+        if os.path.isfile(asset_path):
+            with open(asset_path, "rb") as handle:
+                files[relative_path] = handle.read()
+    _attach_file_blobs_to_kit(kit_dict, files)
+    return KitData(kit_dict), files
+
+
+def export_folder_kit(kit: KitData | dict, files: dict[str, bytes], folder_path: str) -> None:
+    """Export a folder kit backed by .semio/kit.db.
+    export_folder_kit MUST write the SQLite kit database and synchronize asset files into the folder tree.
+    """
+    data = _kit_to_dict(kit)
+    asset_files = _collect_kit_asset_files(data, files)
+    os.makedirs(folder_path, exist_ok=True)
+    for entry_name in os.listdir(folder_path):
+        if entry_name == KIT_LOCAL_FOLDERNAME:
+            continue
+        entry_path = os.path.join(folder_path, entry_name)
+        if os.path.isdir(entry_path):
+            shutil.rmtree(entry_path)
+        else:
+            os.remove(entry_path)
+
+    db_folder = os.path.join(folder_path, KIT_LOCAL_FOLDERNAME)
+    os.makedirs(db_folder, exist_ok=True)
+    db_path = os.path.join(db_folder, KIT_LOCAL_FILENAME)
+    if os.path.exists(db_path):
+        os.remove(db_path)
+    _write_kit_to_sqlite(data, db_path)
+
+    for relative_path, content in asset_files.items():
+        asset_path = os.path.join(folder_path, relative_path)
+        os.makedirs(os.path.dirname(asset_path), exist_ok=True)
+        with open(asset_path, "wb") as handle:
+            handle.write(content)
+
+
+def _read_remote_kit_bytes(uri: str) -> tuple[str, bytes, str]:
+    """Read remote kit bytes and detect JSON or ZIP format.
+    _read_remote_kit_bytes MUST support HTTP(S) JSON and ZIP responses using urllib.request only.
+    """
+    parsed = urllib.parse.urlparse(uri)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise RemoteKitUriNotValid(uri)
+    server_url = f"{parsed.scheme}://{parsed.netloc}"
+    try:
+        with urllib.request.urlopen(uri) as response:
+            body = response.read()
+            content_type = response.headers.get_content_type()
+    except urllib.error.URLError as error:
+        raise ServerUnreachable(server_url) from error
+
+    is_zip = body.startswith(b"PK\x03\x04") or uri.lower().endswith(".zip") or content_type == "application/zip"
+    return ("archive" if is_zip else "file"), body, content_type
+
+
+def import_remote_kit(uri: str) -> tuple[KitData, dict[str, bytes]]:
+    """Import a remote kit from JSON or ZIP.
+    import_remote_kit MUST support remote JSON and ZIP kit payloads over HTTP(S).
+    """
+    remote_kind, body, _ = _read_remote_kit_bytes(uri)
+    if remote_kind == "archive":
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
+            handle.write(body)
+            archive_path = handle.name
+        try:
+            return import_kit(archive_path)
+        finally:
+            if os.path.exists(archive_path):
+                os.remove(archive_path)
+
+    kit_dict = json.loads(body.decode("utf-8"))
+    files = _collect_kit_asset_files(kit_dict)
+    return KitData(kit_dict), files
+
+
+def edit_temporary_kit(kit: KitData | dict, diff: dict) -> KitData:
+    """Edit an in-memory temporary kit with a diff.
+    edit_temporary_kit MUST applyKitDiffDict and return the updated KitData instance.
+    """
+    return KitData(applyKitDiffDict(_kit_to_dict(kit), diff))
+
+
+def edit_file_kit(path: str, diff: dict) -> KitData:
+    """Edit a JSON file kit in place.
+    edit_file_kit MUST import, apply the diff, persist the JSON file, and return the updated kit.
+    """
+    updated = edit_temporary_kit(import_file_kit(path), diff)
+    export_file_kit(updated, path)
+    return updated
+
+
+def edit_folder_kit(folder_path: str, diff: dict) -> KitData:
+    """Edit a folder kit in place.
+    edit_folder_kit MUST import, apply the diff, persist the SQLite database and asset files, and return the updated kit.
+    """
+    kit, files = import_folder_kit(folder_path)
+    updated = edit_temporary_kit(kit, diff)
+    export_folder_kit(updated, _collect_kit_asset_files(updated, files), folder_path)
+    return updated
+
+
+def edit_archive_kit(path: str, diff: dict) -> KitData:
+    """Edit an archive kit in place.
+    edit_archive_kit MUST import, apply the diff, persist the archive, and return the updated kit.
+    """
+    kit, files = import_kit(path)
+    updated = edit_temporary_kit(kit, diff)
+    export_kit(updated, _collect_kit_asset_files(updated, files), path)
+    return updated
+
+
+def _write_remote_kit_bytes(uri: str, body: bytes, content_type: str) -> None:
+    """Write remote kit bytes back to their source URI.
+    _write_remote_kit_bytes MUST persist edited remote kit content using HTTP PUT.
+    """
+    parsed = urllib.parse.urlparse(uri)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise RemoteKitUriNotValid(uri)
+    server_url = f"{parsed.scheme}://{parsed.netloc}"
+    request = urllib.request.Request(uri, data=body, method="PUT", headers={"Content-Type": content_type})
+    try:
+        with urllib.request.urlopen(request):
+            pass
+    except urllib.error.URLError as error:
+        raise ServerUnreachable(server_url) from error
+
+
+def edit_remote_kit(uri: str, diff: dict) -> KitData:
+    """Edit a remote JSON or ZIP kit in place.
+    edit_remote_kit MUST import, apply the diff, persist the edited remote representation, and return the updated kit.
+    """
+    remote_kind, _, content_type = _read_remote_kit_bytes(uri)
+    kit, files = import_remote_kit(uri)
+    updated = edit_temporary_kit(kit, diff)
+
+    if remote_kind == "archive":
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
+            archive_path = handle.name
+        try:
+            export_kit(updated, _collect_kit_asset_files(updated, files), archive_path)
+            with open(archive_path, "rb") as handle:
+                body = handle.read()
+        finally:
+            if os.path.exists(archive_path):
+                os.remove(archive_path)
+        _write_remote_kit_bytes(uri, body, "application/zip")
+        return updated
+
+    body = json.dumps(_kit_to_dict(updated), ensure_ascii=False).encode("utf-8")
+    _write_remote_kit_bytes(uri, body, content_type or "application/json")
+    return updated
+
+
+# endregion Kit Workflow Helpers
+
+
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
     """📦Import a kit from a .zip file (containing kit.json and actual files).
     import_kit MUST read kit.json from zip and populate blob from actual files.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️importkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/import_kit)
     """
-    import base64
-
     if not os.path.exists(path):
         raise FileNotFoundError(f"File not found: {path}")
 
@@ -11528,13 +12078,7 @@ def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
         raise ValueError(f"Invalid kit: kit.json not found in {path}")
 
     kit_dict = json.loads(kit_json_data)
-
-    for file_entry in kit_dict.get("files", []):
-        file_path = _build_file_path(kit_dict, file_entry)
-        if file_path in files:
-            encoded = base64.b64encode(files[file_path]).decode("ascii")
-            file_entry["blob"] = f"data:application/octet-stream;base64,{encoded}"
-
+    _attach_file_blobs_to_kit(kit_dict, files)
     return KitData(kit_dict), files
 
 
@@ -11700,6 +12244,13 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS kit_payload (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            data TEXT NOT NULL
+        )
+    """)
+
     now = datetime.now().isoformat()
     kit_guid = data.get("guid", str(uuid.uuid4()))
 
@@ -11746,6 +12297,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
                 t.get("image", ""),
                 now,
                 now,
+                kit_guid,
             ),
         )
 
@@ -11768,7 +12320,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
                     direction.get("z", 0.0),
                     c.get("t", 0.0),
                     1 if c.get("mandatory") else 0,
-                    c.get("port"),
+                    _getGuidFromRef(c.get("port")),
                     c.get("description"),
                     type_guid,
                 ),
@@ -11782,7 +12334,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
             """,
                 (
                     m.get("guid", str(uuid.uuid4())),
-                    m.get("file", ""),
+                    _getGuidFromRef(m.get("file")) or "",
                     m.get("name"),
                     m.get("description"),
                     type_guid,
@@ -11918,6 +12470,11 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
                     design_guid,
                 ),
             )
+
+    cursor.execute(
+        "INSERT INTO kit_payload (id, data) VALUES (1, ?)",
+        (json.dumps(_kit_without_file_blobs(data), ensure_ascii=False),),
+    )
 
     conn.commit()
     conn.close()
@@ -14729,6 +15286,131 @@ def _test_load_kit(filename: str) -> dict:
     return data
 
 
+def _test_build_workflow_kit() -> dict:
+    """Build a compact kit fixture for workflow roundtrip tests."""
+    asset_blob = "data:text/plain;base64," + base64.b64encode(b"workflow asset payload").decode("ascii")
+    return {
+        "guid": "11111111-1111-1111-1111-111111111111",
+        "name": "Workflow Kit",
+        "version": "1.0.0",
+        "description": "Kit workflow fixture.",
+        "types": [
+            {
+                "guid": "22222222-2222-2222-2222-222222222222",
+                "name": "Workflow Type",
+                "connectors": [],
+                "models": [
+                    {
+                        "guid": "33333333-3333-3333-3333-333333333333",
+                        "name": "Workflow Model",
+                        "file": {"guid": "44444444-4444-4444-4444-444444444444"},
+                    }
+                ],
+            }
+        ],
+        "designs": [
+            {
+                "guid": "55555555-5555-5555-5555-555555555555",
+                "name": "Workflow Design",
+                "pieces": [
+                    {
+                        "guid": "66666666-6666-6666-6666-666666666666",
+                        "id": "Piece-1",
+                        "type": {"guid": "22222222-2222-2222-2222-222222222222"},
+                    }
+                ],
+                "connections": [],
+            }
+        ],
+        "files": [
+            {
+                "guid": "44444444-4444-4444-4444-444444444444",
+                "name": "asset.txt",
+                "folder": {"guid": "77777777-7777-7777-7777-777777777777"},
+                "blob": asset_blob,
+            }
+        ],
+        "folders": [
+            {
+                "guid": "77777777-7777-7777-7777-777777777777",
+                "name": "assets",
+            }
+        ],
+        "ports": [],
+        "qualities": [],
+        "concepts": [],
+        "tags": [],
+        "authors": [],
+        "attributes": [],
+    }
+
+
+def _test_build_workflow_diff(updated_name: str, updated_asset_name: str) -> dict:
+    """Build a compact diff for workflow edit tests."""
+    return {
+        "name": updated_name,
+        "files": {
+            "updated": [
+                {
+                    "file": {"guid": "44444444-4444-4444-4444-444444444444"},
+                    "diff": {"name": updated_asset_name},
+                }
+            ]
+        },
+    }
+
+
+def _test_build_workflow_archive_bytes(kit_dict: dict, files: dict[str, bytes]) -> bytes:
+    """Build archive bytes for remote ZIP workflow tests."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        archive_path = os.path.join(tmpdir, "workflow.zip")
+        export_kit(KitData(kit_dict), files, archive_path)
+        with open(archive_path, "rb") as handle:
+            return handle.read()
+
+
+def _test_remote_kit_server(json_body: bytes, zip_body: bytes):
+    """Create a disposable HTTP server for remote kit workflow tests."""
+    import http.server
+    import threading
+
+    class _WorkflowHandler(http.server.BaseHTTPRequestHandler):
+        store = {
+            "/workflow.json": {"content_type": "application/json", "body": json_body},
+            "/workflow.zip": {"content_type": "application/zip", "body": zip_body},
+        }
+
+        def do_GET(self):
+            item = self.store.get(self.path)
+            if item is None:
+                self.send_error(404)
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", item["content_type"])
+            self.send_header("Content-Length", str(len(item["body"])))
+            self.end_headers()
+            self.wfile.write(item["body"])
+
+        def do_PUT(self):
+            item = self.store.get(self.path)
+            if item is None:
+                self.send_error(404)
+                return
+            length = int(self.headers.get("Content-Length", "0"))
+            item["body"] = self.rfile.read(length)
+            item["content_type"] = self.headers.get("Content-Type", item["content_type"])
+            self.send_response(204)
+            self.end_headers()
+
+        def log_message(self, format: str, *args: typing.Any) -> None:
+            return
+
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), _WorkflowHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server, thread
+
+
 def _test_is_close(a, b):
     return abs(a - b) < TEST_TOLERANCE
 
@@ -14924,6 +15606,116 @@ class TestRoundtrip:
 
             assert areKitsDictEqual(kit_dict, kit2.to_dict()), "ZIP -> JSON: roundtrip kit should be equal"
             assert len(files2) == len(files), f"Expected {len(files)} files, got {len(files2)}"
+
+    class TestKitWorkflows:
+        def test_file_kit_import_export_edit_roundtrip(self):
+            kit_dict = _test_build_workflow_kit()
+            diff = _test_build_workflow_diff("Workflow File Edited", "asset-file.txt")
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                kit_path = os.path.join(tmpdir, "workflow.json")
+                export_file_kit(KitData(kit_dict), kit_path)
+
+                imported = import_file_kit(kit_path)
+                assert areKitsDictEqual(kit_dict, imported.to_dict())
+
+                edited = edit_file_kit(kit_path, diff)
+                roundtrip = import_file_kit(kit_path)
+
+            assert edited.name == "Workflow File Edited"
+            assert roundtrip.name == "Workflow File Edited"
+            assert roundtrip.to_dict()["files"][0]["name"] == "asset-file.txt"
+
+        def test_folder_kit_import_export_edit_roundtrip(self):
+            kit_dict = _test_build_workflow_kit()
+            files = _collect_kit_asset_files(kit_dict)
+            diff = _test_build_workflow_diff("Workflow Folder Edited", "asset-folder.txt")
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                export_folder_kit(KitData(kit_dict), files, tmpdir)
+                assert os.path.exists(os.path.join(tmpdir, KIT_LOCAL_SUFFIX))
+
+                imported, imported_files = import_folder_kit(tmpdir)
+                assert areKitsDictEqual(kit_dict, imported.to_dict())
+                assert imported_files == files
+
+                edited = edit_folder_kit(tmpdir, diff)
+                roundtrip, roundtrip_files = import_folder_kit(tmpdir)
+
+                assert not os.path.exists(os.path.join(tmpdir, "assets", "asset.txt"))
+                assert os.path.exists(os.path.join(tmpdir, "assets", "asset-folder.txt"))
+
+            assert edited.name == "Workflow Folder Edited"
+            assert roundtrip.name == "Workflow Folder Edited"
+            assert roundtrip.to_dict()["files"][0]["name"] == "asset-folder.txt"
+            assert list(roundtrip_files.keys()) == ["assets/asset-folder.txt"]
+
+        def test_archive_kit_import_export_edit_roundtrip(self):
+            kit_dict = _test_build_workflow_kit()
+            files = _collect_kit_asset_files(kit_dict)
+            diff = _test_build_workflow_diff("Workflow Archive Edited", "asset-archive.txt")
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                archive_path = os.path.join(tmpdir, "workflow.zip")
+                export_kit(KitData(kit_dict), files, archive_path)
+
+                imported, imported_files = import_kit(archive_path)
+                assert areKitsDictEqual(kit_dict, imported.to_dict())
+                assert imported_files == files
+
+                edited = edit_archive_kit(archive_path, diff)
+                roundtrip, roundtrip_files = import_kit(archive_path)
+
+            assert edited.name == "Workflow Archive Edited"
+            assert roundtrip.name == "Workflow Archive Edited"
+            assert roundtrip.to_dict()["files"][0]["name"] == "asset-archive.txt"
+            assert list(roundtrip_files.keys()) == ["assets/asset-archive.txt"]
+
+        def test_remote_kit_import_json_and_zip_then_edit(self):
+            kit_dict = _test_build_workflow_kit()
+            files = _collect_kit_asset_files(kit_dict)
+            json_body = json.dumps(kit_dict, ensure_ascii=False).encode("utf-8")
+            zip_body = _test_build_workflow_archive_bytes(kit_dict, files)
+            server, thread = _test_remote_kit_server(json_body, zip_body)
+
+            try:
+                base_uri = f"http://127.0.0.1:{server.server_port}"
+                json_uri = f"{base_uri}/workflow.json"
+                zip_uri = f"{base_uri}/workflow.zip"
+
+                imported_json, imported_json_files = import_remote_kit(json_uri)
+                assert areKitsDictEqual(kit_dict, imported_json.to_dict())
+                assert imported_json_files == files
+
+                imported_zip, imported_zip_files = import_remote_kit(zip_uri)
+                assert areKitsDictEqual(kit_dict, imported_zip.to_dict())
+                assert imported_zip_files == files
+
+                edited_json = edit_remote_kit(json_uri, _test_build_workflow_diff("Workflow Remote Json Edited", "asset-remote-json.txt"))
+                edited_zip = edit_remote_kit(zip_uri, _test_build_workflow_diff("Workflow Remote Zip Edited", "asset-remote-zip.txt"))
+
+                roundtrip_json, json_files = import_remote_kit(json_uri)
+                roundtrip_zip, zip_files = import_remote_kit(zip_uri)
+            finally:
+                server.shutdown()
+                thread.join()
+
+            assert edited_json.name == "Workflow Remote Json Edited"
+            assert roundtrip_json.name == "Workflow Remote Json Edited"
+            assert roundtrip_json.to_dict()["files"][0]["name"] == "asset-remote-json.txt"
+            assert list(json_files.keys()) == ["assets/asset-remote-json.txt"]
+
+            assert edited_zip.name == "Workflow Remote Zip Edited"
+            assert roundtrip_zip.name == "Workflow Remote Zip Edited"
+            assert roundtrip_zip.to_dict()["files"][0]["name"] == "asset-remote-zip.txt"
+            assert list(zip_files.keys()) == ["assets/asset-remote-zip.txt"]
+
+        def test_temporary_kit_edit_via_diff(self):
+            kit_dict = _test_build_workflow_kit()
+            edited = edit_temporary_kit(KitData(kit_dict), _test_build_workflow_diff("Workflow Temp Edited", "asset-temp.txt"))
+
+            assert edited.name == "Workflow Temp Edited"
+            assert edited.to_dict()["files"][0]["name"] == "asset-temp.txt"
 
 
 class TestFlatten:

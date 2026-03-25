@@ -108,6 +108,7 @@ import type {
   EdgeProps,
   EdgeTypes,
   FuseResult,
+  LayoutNode,
   MiniMapNodeProps,
   Node,
   NodeProps,
@@ -118,6 +119,7 @@ import type {
   SimulationLinkDatum,
   SimulationNodeDatum,
   ThreeEvent,
+  UIWindowKindDefinition,
 } from "@semio/ui";
 import {
   Action,
@@ -185,6 +187,7 @@ import {
   Input,
   InteractionProvider,
   Layout as LayoutComponent,
+  layoutNodeToGoldenLayoutConfig,
   LevelProvider,
   Line,
   MemoryRouter,
@@ -343,7 +346,8 @@ import {
 } from "../assets/icons";
 import { createSyncDocFactory, isSyncArray, isSyncMap, type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent } from "../studio/studio";
 export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
-export { createDefaultLayout, deduplicateWindowLayout, parseWindowLayout, stringifyWindowLayout, WindowKind };
+export { createDefaultLayout, deduplicateWindowLayout, layoutNodeToGoldenLayoutConfig, parseWindowLayout, stringifyWindowLayout, WindowKind };
+export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
 export { Canvas, HorizontalWindows, VerticalWindows };
 export { SectionSpecificity, Window };
 
@@ -1656,8 +1660,8 @@ export interface WindowConfig {
  * App-level window configuration with window kinds and default layout.
  **/
 export interface AppWindowConfig {
-  windowKinds: WindowKindDefinition[];
-  defaultLayout?: any;
+  windowKinds: UIWindowKindDefinition[];
+  defaultLayout?: LayoutNode;
 }
 
 // parseWindowLayout, deduplicateWindowLayout, stringifyWindowLayout, createDefaultLayout
@@ -24680,7 +24684,7 @@ export const LayoutCanvas: FC<{
           return normalized;
         };
 
-        const rawConfig = parseWindowLayout(layoutState) || parseWindowLayout(windowConfig.defaultLayout);
+        const rawConfig = parseWindowLayout(layoutState) || (windowConfig.defaultLayout ? layoutNodeToGoldenLayoutConfig(windowConfig.defaultLayout) : undefined);
         if (!rawConfig) {
           console.error("[LayoutCanvas] No layout config provided!");
           return;
@@ -29539,40 +29543,7 @@ function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesig
   const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
   const hasScope = kitGuid !== "" && designGuid !== "";
   const canSet = useWildcardFallback ? canSetFromSnapshot || hasScope : canSetFromSnapshot;
-  const setter = useMemo(
-    () => (next: T) => {
-      if (canSet) {
-        actor.send(createSendEvent(kitGuid, designGuid, next) as Parameters<typeof actor.send>[0]);
-      }
-    },
-    [actor, kitGuid, designGuid, canSet, createSendEvent],
-  );
-  return useMemo(() => createField(value, setter, canSet), [value, setter, canSet]);
-}
-
-/**
- * Returns a reactive field for a Design app selection property.
- *MUST create a Field wrapping the selection value and setter.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappselectionfield](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppSelectionField)
- **/
-export function useDesignAppSelectionField(): Field<DesignAppSelection> {
-  return useDesignAppField<DesignAppSelection, { type: "DESIGN.SET_SELECTION"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }>({
-    createGranularSelector: createDesignSelectionSelector,
-    fallback: EMPTY_SELECTION,
-    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: {} as DesignAppSelection }),
-    createSendEvent: (kitGuid, designGuid, selection) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection }),
-  });
-}
-
-/**
- * Returns a hook result for the current Design app selection.
- *MUST provide the current selection, a setter, and a canSet flag.
- * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappselection](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppSelection)
- **/
-export function useDesignAppSelection(): HookResult<DesignAppSelection> {
-  return fieldToHookResult(useDesignAppSelectionField());
-}
-
+  const defaultLayout: LayoutNode = useMemo(() => createDefaultLayout([KitAppWindowKind.Table, KitAppWindowKind.Diagram], "row", [50, 50], ["table", "diagram"]), []);
 /**
  * Returns a reactive field for the Design app fullscreen window.
  *MUST create a Field wrapping the fullscreen value and setter.

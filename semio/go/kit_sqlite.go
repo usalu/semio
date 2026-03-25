@@ -26,10 +26,12 @@ package semio
 
 import (
 	"archive/zip"
+	"bytes"
 	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -672,5 +674,254 @@ func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL strin
 
 	return nil
 }
+
+// #region 🔖Kit Workflow Operations
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations)
+// Kit workflow operations MUST provide direct import, export, and edit flows for file, folder, archive, remote, and temporary kit kinds.
+
+// ImportFileKit reads a JSON file kit from disk.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️importfilekit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/ImportFileKit)
+func ImportFileKit(path string) (*Kit, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	kit, err := DeserializeKit(data)
+	if err != nil {
+		return nil, err
+	}
+	return &kit, nil
+}
+
+// ExportFileKit writes a JSON file kit to disk.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️exportfilekit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/ExportFileKit)
+func ExportFileKit(kit Kit, path string) error {
+	data, err := SerializeKit(kit)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0o644)
+}
+
+// ImportArchiveKit reads an archive kit from a zip file.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️importarchivekit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/ImportArchiveKit)
+func ImportArchiveKit(path string) (*Kit, map[string][]byte, error) {
+	return KitFromZip(path)
+}
+
+// ExportArchiveKit writes an archive kit to a zip file.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️exportarchivekit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/ExportArchiveKit)
+func ExportArchiveKit(kit *Kit, files map[string][]byte, path string) error {
+	return KitToZip(kit, ensureKitFiles(kit, files), path, "")
+}
+
+// ImportFolderKit reads a folder kit from a local folder containing .semio/kit.db and asset files.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️importfolderkit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/ImportFolderKit)
+func ImportFolderKit(folderPath string) (*Kit, map[string][]byte, error) {
+	dbPath := filepath.Join(folderPath, ".semio", "kit.db")
+	kit, err := KitFromSqlite(dbPath)
+	if err != nil {
+		return nil, nil, err
+	}
+	files := map[string][]byte{}
+	err = filepath.WalkDir(folderPath, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() {
+			if path == filepath.Join(folderPath, ".semio") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		relPath, err := filepath.Rel(folderPath, path)
+		if err != nil {
+			return err
+		}
+		relPath = filepath.ToSlash(relPath)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		files[relPath] = data
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	hydrateKitFiles(kit, files)
+	return kit, files, nil
+}
+
+// ExportFolderKit writes a folder kit to a local folder containing .semio/kit.db and asset files.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️exportfolderkit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/ExportFolderKit)
+func ExportFolderKit(kit *Kit, files map[string][]byte, folderPath string) error {
+	semioPath := filepath.Join(folderPath, ".semio")
+	if err := os.MkdirAll(semioPath, 0o755); err != nil {
+		return err
+	}
+	dbPath := filepath.Join(semioPath, "kit.db")
+	if err := os.RemoveAll(dbPath); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if err := KitToSqlite(kit, dbPath, mustReadKitSchemaSQL()); err != nil {
+		return err
+	}
+	for name, data := range ensureKitFiles(kit, files) {
+		fullPath := filepath.Join(folderPath, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(fullPath, data, 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ImportRemoteKit reads a remote kit from HTTP(S), supporting both JSON and ZIP sources.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️importremotekit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/ImportRemoteKit)
+func ImportRemoteKit(rawURL string) (*Kit, map[string][]byte, error) {
+	response, err := http.Get(rawURL)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return nil, nil, fmt.Errorf("failed to fetch remote kit %s: %s", rawURL, response.Status)
+	}
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	contentType := strings.ToLower(response.Header.Get("Content-Type"))
+	trimmed := bytes.TrimSpace(body)
+	if strings.HasSuffix(strings.ToLower(rawURL), ".zip") || strings.Contains(contentType, "zip") || strings.Contains(contentType, "octet-stream") || bytes.HasPrefix(body, []byte("PK\x03\x04")) {
+		tmpFile, err := os.CreateTemp("", "semio-remote-*.zip")
+		if err != nil {
+			return nil, nil, err
+		}
+		defer os.Remove(tmpFile.Name())
+		if _, err := tmpFile.Write(body); err != nil {
+			tmpFile.Close()
+			return nil, nil, err
+		}
+		if err := tmpFile.Close(); err != nil {
+			return nil, nil, err
+		}
+		return KitFromZip(tmpFile.Name())
+	}
+	if len(trimmed) > 0 && trimmed[0] == '{' {
+		kit, err := DeserializeKit(body)
+		if err != nil {
+			return nil, nil, err
+		}
+		return &kit, map[string][]byte{}, nil
+	}
+	return nil, nil, fmt.Errorf("remote kit %s is neither JSON nor ZIP", rawURL)
+}
+
+// EditTemporaryKit applies a diff to an in-memory kit value and returns the edited kit.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️edittemporarykit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/EditTemporaryKit)
+func EditTemporaryKit(kit Kit, diff KitDiff) Kit {
+	return ApplyKitDiff(kit, diff)
+}
+
+// EditFileKit edits a file kit in place and returns the edited kit.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️editfilekit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/EditFileKit)
+func EditFileKit(path string, diff KitDiff) (*Kit, error) {
+	kit, err := ImportFileKit(path)
+	if err != nil {
+		return nil, err
+	}
+	edited := EditTemporaryKit(*kit, diff)
+	if err := ExportFileKit(edited, path); err != nil {
+		return nil, err
+	}
+	return &edited, nil
+}
+
+// EditFolderKit edits a folder kit in place and returns the edited kit.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️editfolderkit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/EditFolderKit)
+func EditFolderKit(folderPath string, diff KitDiff) (*Kit, error) {
+	kit, files, err := ImportFolderKit(folderPath)
+	if err != nil {
+		return nil, err
+	}
+	edited := EditTemporaryKit(*kit, diff)
+	if err := ExportFolderKit(&edited, files, folderPath); err != nil {
+		return nil, err
+	}
+	return &edited, nil
+}
+
+// EditArchiveKit edits an archive kit in place and returns the edited kit.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️editarchivekit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/EditArchiveKit)
+func EditArchiveKit(path string, diff KitDiff) (*Kit, error) {
+	kit, files, err := ImportArchiveKit(path)
+	if err != nil {
+		return nil, err
+	}
+	edited := EditTemporaryKit(*kit, diff)
+	if err := ExportArchiveKit(&edited, files, path); err != nil {
+		return nil, err
+	}
+	return &edited, nil
+}
+
+// EditRemoteKit imports a remote kit and applies a diff in memory.
+// [👤semio📚go💻kitsqlite🔖kitworkflowoperations🛠️editremotekit](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/Kit%20Workflow%20Operations/d/i/EditRemoteKit)
+func EditRemoteKit(rawURL string, diff KitDiff) (*Kit, error) {
+	kit, _, err := ImportRemoteKit(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	edited := EditTemporaryKit(*kit, diff)
+	return &edited, nil
+}
+
+func ensureKitFiles(kit *Kit, files map[string][]byte) map[string][]byte {
+	if files != nil {
+		return files
+	}
+	collected := map[string][]byte{}
+	for i := range kit.Files {
+		if kit.Files[i].Blob == nil {
+			continue
+		}
+		data, err := blobDecode(*kit.Files[i].Blob)
+		if err != nil {
+			continue
+		}
+		collected[buildFilePath(kit, &kit.Files[i])] = data
+	}
+	return collected
+}
+
+func hydrateKitFiles(kit *Kit, files map[string][]byte) {
+	for i := range kit.Files {
+		filePath := buildFilePath(kit, &kit.Files[i])
+		if data, ok := files[filePath]; ok {
+			encoded := blobEncode(data, kit.Files[i].Name)
+			kit.Files[i].Blob = &encoded
+		}
+	}
+}
+
+func mustReadKitSchemaSQL() string {
+	candidatePaths := []string{
+		"../sqlite/schema.sql",
+		"../../sqlite/schema.sql",
+		"sqlite/schema.sql",
+	}
+	for _, candidate := range candidatePaths {
+		if data, err := os.ReadFile(candidate); err == nil {
+			return string(data)
+		}
+	}
+	panic("failed to locate sqlite/schema.sql for kit workflow operations")
+}
+
+// #endregion 🔖Kit Workflow Operations
 
 // #endregion 🔖SQLite Kit Operations

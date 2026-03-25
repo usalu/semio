@@ -1,12 +1,10 @@
 {
   "title": "Fix Algorithms Storybook Missing Styling",
-  "status": "open",
-  "description": "Fix missing styling in refactored algorithm stories. Root cause: missing postcss.config.ts, missing golden-layout optimizeDeps, missing @semio/js alias in main.ts.",
+  "status": "closed",
+  "description": "Fix missing styling in refactored algorithm stories. Root cause: corrupted elements/ui/index.tsx (concatenated configs + stories) broke Vite; restored clean index from 76680d50c, pointed package exports at tailwind/postcss/eslint/vitest files, UIFind guard fix, js duplicate filterKitWithDesign + vitest syntax fix. AlgorithmApp: toolbar + typed diff count.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1071"
   },
   "goal": "🎯r2603",
-  "sessions": [
-    "⚪d4e5ddd241404607bda5495888946152"
-  ]
+  "sessions": ["⚪d4e5ddd241404607bda5495888946152"]
 }

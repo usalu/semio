@@ -18,6 +18,9 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const repoRootPath = resolve(__dirname, "../../..");
+const elementsUiEntryPath = resolve(__dirname, "../../../elements/ui/elements.tsx");
+const algorithmsEntryPath = resolve(__dirname, "../index.ts");
 
 function getAbsolutePath(value: string): string {
   try {
@@ -45,9 +48,14 @@ const config: StorybookConfig = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      "@semio/ui": resolve(__dirname, "../../ui"),
-      "@elements/ui": resolve(__dirname, "../../../elements/ui"),
-      "@semio/algorithms": resolve(__dirname, ".."),
+      "@elements/ui": elementsUiEntryPath,
+      "@elements/ui/elements": elementsUiEntryPath,
+      "@semio/algorithms": algorithmsEntryPath,
+    };
+    config.server = config.server || {};
+    config.server.fs = {
+      ...(config.server.fs || {}),
+      allow: Array.from(new Set([...(config.server.fs?.allow || []), repoRootPath])),
     };
 
     config.plugins = config.plugins || [];
@@ -80,7 +88,7 @@ const config: StorybookConfig = {
     );
 
     config.optimizeDeps = config.optimizeDeps || {};
-    config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
+    config.optimizeDeps.exclude = Array.from(new Set([...(config.optimizeDeps.exclude || []), "@semio/ui", "@elements/ui", "@elements/ui/elements"]));
     config.optimizeDeps.esbuildOptions = {
       ...config.optimizeDeps.esbuildOptions,
       target: "es2020",

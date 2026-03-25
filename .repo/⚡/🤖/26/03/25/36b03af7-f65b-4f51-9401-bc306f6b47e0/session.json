@@ -33,6 +33,36 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "ff301ca23c75e0a9fa71881394371f06e0184a76",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-25T02:06:15Z",
+        "session": "36b03af7-f65b-4f51-9401-bc306f6b47e0"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "36b03af7-f65b-4f51-9401-bc306f6b47e0",
+          "generation_id": "",
+          "model": "default",
+          "session_id": "36b03af7-f65b-4f51-9401-bc306f6b47e0",
+          "reason": "user_close",
+          "duration_ms": 1395861,
+          "is_background_agent": false,
+          "final_status": "none",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2.6.21",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": null
+        }
+      },
+      "response": {}
     }
   ]
 }

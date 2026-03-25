@@ -22,8 +22,6 @@
 
 // #endregion 🔖Header
 
-import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
 import {
   applyDesignDiff,
   findDesignInKit,
@@ -35,21 +33,23 @@ import {
   type Connection,
   type Design,
   type DesignDiff,
+  type File as SemioFile,
   type Kit,
   type Piece,
   type Plane,
-  type File as SemioFile,
   type Type as SemioKind,
 } from "@semio/js";
+import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
+import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 // #region 🔖Exports
 
-// Re-export all ui primitives from @elements/ui.
+// Re-export the runtime-safe ui primitives from @elements/ui/elements.
 
-export * from "@elements/ui";
+export * from "@elements/ui/elements";
 
 // #endregion 🔖Exports
 
@@ -1852,8 +1852,8 @@ if (import.meta.vitest) {
 // AlgorithmContext which provides kit, design, diff, selection, vec, and output state.
 // Summary: Standardized algorithm IPO shell using typed WindowKind-based windows.
 
-import { TreeRow, TreeSection, UI, WindowKind, cn, createDefaultLayout, type FooterItem, type SidePanelTabConfig, type UIAppConfig, type UIToolbarItem, type UIWindowKindDefinition } from "@elements/ui";
-import { AlertCircleIcon, CloseIcon, DetailsIcon, DiagramIcon, PieceIcon } from "@semio/assets/icons";
+import { WindowKind, createDefaultLayout, type UIAppConfig, type UIWindowKindDefinition, type SidePanelTabConfig, type FooterItem, type UIToolbarItem, UI, TreeSection, TreeRow, cn } from "@elements/ui/elements";
+import { DetailsIcon, PieceIcon, AlertCircleIcon } from "@semio/assets/icons";
 
 /**
  * Context value for algorithm state shared across windows.
@@ -2089,7 +2089,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
             <TreeRow id="algorithm.details.output.diff.updated">
               <div className="flex items-center justify-between w-full px-2 py-0.5">
                 <span className="text-xs text-muted-foreground">updated</span>
-                <span className="text-xs font-mono text-warning">{ctx.designDiff.pieces?.updated?.length ?? 0}</span>
+                <span className="text-xs font-mono text-warning">{(ctx.designDiff.pieces?.updated as any[])?.length ?? 0}</span>
               </div>
             </TreeRow>
           </>
@@ -2179,27 +2179,6 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
     [id, context.selectedPieceGuids.length, pieceCount, context.error],
   );
 
-  const toolbarItems: UIToolbarItem[] = React.useMemo(() => {
-    const items: UIToolbarItem[] = [
-      {
-        id: `${id}.toolbar.algorithm`,
-        icon: <DiagramIcon size={14} />,
-        label,
-        order: 0,
-      },
-    ];
-    if (context.onSelectedPieceGuidsChange) {
-      items.push({
-        id: `${id}.toolbar.clear-selection`,
-        icon: <CloseIcon size={14} />,
-        label: "Clear selection",
-        order: 10,
-        onClick: () => context.onSelectedPieceGuidsChange?.([]),
-      });
-    }
-    return items;
-  }, [context.onSelectedPieceGuidsChange, id, label]);
-
   const apps: UIAppConfig[] = React.useMemo(
     () => [
       {
@@ -2208,11 +2187,10 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
         windowKinds,
         defaultLayout: layout,
         rightPanelTabs,
-        toolbarItems,
         footerItems,
       },
     ],
-    [id, label, windowKinds, layout, rightPanelTabs, toolbarItems, footerItems],
+    [id, label, windowKinds, layout, rightPanelTabs, footerItems],
   );
 
   return (

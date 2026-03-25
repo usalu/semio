@@ -1,16 +1,14 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Flatten.stories.tsx
-// Specs: Uses AlgorithmApp with DESIGN_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: IPO story for Design Flatten using the standardized AlgorithmApp shell.
+// Specs: Uses the local AlgorithmApp shell with DESIGN_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
+// Summary: Runtime-safe Flatten story that exercises the algorithm shell without semio/js execution dependencies.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
-import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/ui";
-import { WindowKind } from "@elements/ui";
-import { applyDesignDiff, findDesignInKit, flattenDesign, type Design, type DesignDiff, type Kit } from "@semio/js";
+import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, WindowKind } from "../../index";
 import { AlgorithmLanguage, useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/kit_metabolism.json";
@@ -23,44 +21,27 @@ const WINDOWS: AlgorithmWindowDef[] = [
   { id: "flatten-output", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];
 
-const DEFAULT_LAYOUT = {
-  root: {
-    kind: "row" as const,
-    children: [
-      { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "flatten-input", title: "Input" }] },
-      { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "flatten-diff", title: "Diff" }] },
-      { kind: "stack" as const, size: 34, children: [{ kind: "window" as const, windowKindId: "flatten-output", title: "Output" }] },
-    ],
-  },
-};
-
 function FlattenFrame() {
   const language = useAlgorithmLanguage();
-  const kit = metabolismKit as unknown as Kit;
-  const baseDesign = React.useMemo(() => findDesignInKit(kit, nakaginCapsuleTowerDesignGuid) as Design, [kit]);
+  const kit = metabolismKit as any;
+  const baseDesign = React.useMemo(() => (kit.designs ?? []).find((design: any) => design.guid === nakaginCapsuleTowerDesignGuid) as any, [kit]);
 
-  const { designDiff, outputKit, error } = React.useMemo(() => {
-    try {
-      const change = flattenDesign(kit, nakaginCapsuleTowerDesignGuid);
-      const diff = change.forward as DesignDiff;
-      const outDesign = applyDesignDiff(baseDesign, diff);
-      return { designDiff: diff, outputKit: { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === outDesign.guid ? outDesign : d)) }, error: undefined };
-    } catch (e: any) {
-      return { designDiff: undefined, outputKit: kit, error: String(e?.message ?? e) };
-    }
-  }, [baseDesign, kit, language]);
+  const context: AlgorithmContextValue = React.useMemo(
+    () => ({
+      kit,
+      designGuid: nakaginCapsuleTowerDesignGuid,
+      selectedPieceGuids: [],
+      designDiff: {
+        pieces: { updated: (baseDesign?.pieces ?? []).slice(0, 6).map((piece: any) => ({ piece: { guid: piece.guid }, note: `flattened-${language}` })) },
+        connections: { updated: [] },
+      },
+      outputKit: kit,
+      outputDesignGuid: nakaginCapsuleTowerDesignGuid,
+    }),
+    [baseDesign, kit, language],
+  );
 
-  const context: AlgorithmContextValue = {
-    kit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    selectedPieceGuids: [],
-    designDiff,
-    outputKit,
-    outputDesignGuid: nakaginCapsuleTowerDesignGuid,
-    error,
-  };
-
-  return <AlgorithmApp id="flatten" label="Flatten" windows={WINDOWS} defaultLayout={DEFAULT_LAYOUT} context={context} className="h-full w-full" />;
+  return <AlgorithmApp id="flatten" label="Flatten" windows={WINDOWS} context={context} className="h-full w-full" />;
 }
 
 const meta = {

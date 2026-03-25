@@ -24,6 +24,10 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
 namespace Semio.Tests;
 
@@ -88,6 +92,241 @@ public class Tests
     {
         if (c1 == null || c2 == null) return c1 == c2;
         return Math.Abs(c1.U - c2.U) < Tolerance && Math.Abs(c1.V - c2.V) < Tolerance;
+    }
+
+    private static Kit CreateWorkflowKit()
+    {
+        var blob = $"data:text/plain;base64,{Convert.ToBase64String(Encoding.UTF8.GetBytes("hello workflow"))}";
+        return new Kit
+        {
+            Guid = "workflow-kit-guid",
+            Name = "Workflow Kit",
+            Version = "1.0.0",
+            CreatedAt = "2026-01-01T00:00:00Z",
+            UpdatedAt = "2026-01-01T00:00:00Z",
+            Folders = new List<Folder>
+            {
+                new() { Guid = "folder-guid", Name = "docs", CreatedAt = "2026-01-01T00:00:00Z", UpdatedAt = "2026-01-01T00:00:00Z" }
+            },
+            Files = new List<File>
+            {
+                new()
+                {
+                    Guid = "file-guid",
+                    Name = "readme.txt",
+                    Folder = new FolderId { Guid = "folder-guid" },
+                    Size = Encoding.UTF8.GetByteCount("hello workflow"),
+                    Blob = blob,
+                    CreatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind),
+                    UpdatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind),
+                }
+            },
+            Types = new List<Type>
+            {
+                new() { Guid = "type-guid", Name = "Wall", CreatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind), UpdatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind) }
+            }
+        };
+    }
+
+    public class KitKindTests
+    {
+        [Fact]
+        public void KitKind_Has_Exactly_Five_Values()
+        {
+            var values = Enum.GetValues(typeof(KitKind)).Cast<KitKind>().ToList();
+            Assert.Equal(5, values.Count);
+            Assert.Contains(KitKind.File, values);
+            Assert.Contains(KitKind.Folder, values);
+            Assert.Contains(KitKind.Archive, values);
+            Assert.Contains(KitKind.Remote, values);
+            Assert.Contains(KitKind.Temporary, values);
+        }
+
+        [Theory]
+        [InlineData(KitKind.File, "\"file\"")]
+        [InlineData(KitKind.Folder, "\"folder\"")]
+        [InlineData(KitKind.Archive, "\"archive\"")]
+        [InlineData(KitKind.Remote, "\"remote\"")]
+        [InlineData(KitKind.Temporary, "\"temporary\"")]
+        public void KitKind_Serializes_To_Lowercase(KitKind kind, string expectedJson)
+        {
+            var json = JsonConvert.SerializeObject(kind);
+            Assert.Equal(expectedJson, json);
+        }
+
+        [Theory]
+        [InlineData("\"file\"", KitKind.File)]
+        [InlineData("\"folder\"", KitKind.Folder)]
+        [InlineData("\"archive\"", KitKind.Archive)]
+        [InlineData("\"remote\"", KitKind.Remote)]
+        [InlineData("\"temporary\"", KitKind.Temporary)]
+        public void KitKind_Deserializes_From_Lowercase(string json, KitKind expectedKind)
+        {
+            var kind = JsonConvert.DeserializeObject<KitKind>(json);
+            Assert.Equal(expectedKind, kind);
+        }
+
+        [Fact]
+        public void KitKind_Json_Roundtrip()
+        {
+            foreach (var kind in Enum.GetValues(typeof(KitKind)).Cast<KitKind>())
+            {
+                var json = JsonConvert.SerializeObject(kind);
+                var deserialized = JsonConvert.DeserializeObject<KitKind>(json);
+                Assert.Equal(kind, deserialized);
+            }
+        }
+
+        [Fact]
+        public void AllKitKinds_Contains_All_Values()
+        {
+            var expected = Enum.GetValues(typeof(KitKind)).Cast<KitKind>().ToArray();
+            Assert.Equal(expected, KitKinds.All);
+        }
+    }
+
+    public class KitWorkflow
+    {
+        [Fact]
+        public void File_Kit_Import_Export_Edit_Roundtrip()
+        {
+            var kit = CreateWorkflowKit();
+            var diff = new KitDiff { Name = "Workflow Kit Edited" };
+            var path = Path.Combine(Path.GetTempPath(), $"workflow-{Guid.NewGuid():N}.kit.json");
+            try
+            {
+                FileKit.Export(kit, path);
+                var imported = FileKit.Import(path);
+                Assert.Equal(kit.Name, imported.Name);
+
+                var edited = FileKit.Edit(path, diff);
+                Assert.Equal("Workflow Kit Edited", edited.Name);
+                Assert.Equal("Workflow Kit Edited", FileKit.Import(path).Name);
+            }
+            finally
+            {
+                if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+            }
+        }
+
+        [Fact]
+        public void Folder_Kit_Import_Export_Edit_Roundtrip()
+        {
+            var kit = CreateWorkflowKit();
+            var diff = new KitDiff { Name = "Workflow Kit Edited" };
+            var folderPath = Path.Combine(Path.GetTempPath(), $"workflow-folder-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(folderPath);
+            try
+            {
+                FolderKit.Export(kit, folderPath);
+                var imported = FolderKit.Import(folderPath);
+                Assert.Equal(kit.Name, imported.Kit.Name);
+                Assert.Equal("hello workflow", Encoding.UTF8.GetString(imported.Files["docs/readme.txt"]));
+
+                var edited = FolderKit.Edit(folderPath, diff);
+                Assert.Equal("Workflow Kit Edited", edited.Name);
+                Assert.Equal("Workflow Kit Edited", FolderKit.Import(folderPath).Kit.Name);
+            }
+            finally
+            {
+                if (Directory.Exists(folderPath)) Directory.Delete(folderPath, true);
+            }
+        }
+
+        [Fact]
+        public void Archive_Kit_Import_Export_Edit_Roundtrip()
+        {
+            var kit = CreateWorkflowKit();
+            var diff = new KitDiff { Name = "Workflow Kit Edited" };
+            var path = Path.Combine(Path.GetTempPath(), $"workflow-{Guid.NewGuid():N}.zip");
+            try
+            {
+                ArchiveKit.Export(kit, path);
+                var imported = ArchiveKit.Import(path);
+                Assert.Equal(kit.Name, imported.Kit.Name);
+                Assert.Equal("hello workflow", Encoding.UTF8.GetString(imported.Files["docs/readme.txt"]));
+
+                var edited = ArchiveKit.Edit(path, diff);
+                Assert.Equal("Workflow Kit Edited", edited.Name);
+                Assert.Equal("Workflow Kit Edited", ArchiveKit.Import(path).Kit.Name);
+            }
+            finally
+            {
+                if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+            }
+        }
+
+        [Fact]
+        public void Remote_Kit_Imports_Json_And_Zip_Then_Edits()
+        {
+            static (string Url, Action Dispose) StartServer(byte[] body, string contentType)
+            {
+                var listener = new TcpListener(IPAddress.Loopback, 0);
+                listener.Start();
+                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+                var running = true;
+                var task = Task.Run(() =>
+                {
+                    while (running)
+                    {
+                        try
+                        {
+                            using var client = listener.AcceptTcpClient();
+                            using var stream = client.GetStream();
+                            using var reader = new StreamReader(stream, Encoding.ASCII, false, 1024, true);
+                            string? line;
+                            while (!string.IsNullOrEmpty(line = reader.ReadLine())) { }
+                            var header = $"HTTP/1.1 200 OK\r\nContent-Type: {contentType}\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n";
+                            var headerBytes = Encoding.ASCII.GetBytes(header);
+                            stream.Write(headerBytes, 0, headerBytes.Length);
+                            stream.Write(body, 0, body.Length);
+                        }
+                        catch
+                        {
+                            if (running) throw;
+                        }
+                    }
+                });
+                return ($"http://127.0.0.1:{port}", () => { running = false; listener.Stop(); try { task.Wait(); } catch { } });
+            }
+
+            var kit = CreateWorkflowKit();
+            var diff = new KitDiff { Name = "Workflow Kit Edited" };
+            var zipPath = Path.Combine(Path.GetTempPath(), $"workflow-remote-{Guid.NewGuid():N}.zip");
+            ArchiveKit.Export(kit, zipPath);
+            var zipBytes = System.IO.File.ReadAllBytes(zipPath);
+            var jsonBytes = Encoding.UTF8.GetBytes(Utility.Serialize(kit));
+
+            var (jsonUrl, disposeJson) = StartServer(jsonBytes, "application/json");
+            var (zipUrl, disposeZip) = StartServer(zipBytes, "application/zip");
+            try
+            {
+                var importedJson = RemoteKit.Import(jsonUrl + "/workflow.kit.json");
+                Assert.Equal(kit.Name, importedJson.Kit.Name);
+
+                var importedZip = RemoteKit.Import(zipUrl + "/workflow.zip");
+                Assert.Equal(kit.Name, importedZip.Kit.Name);
+                Assert.Equal("hello workflow", Encoding.UTF8.GetString(importedZip.Files["docs/readme.txt"]));
+
+                var edited = RemoteKit.Edit(jsonUrl + "/workflow.kit.json", diff);
+                Assert.Equal("Workflow Kit Edited", edited.Name);
+            }
+            finally
+            {
+                disposeJson();
+                disposeZip();
+                if (System.IO.File.Exists(zipPath)) System.IO.File.Delete(zipPath);
+            }
+        }
+
+        [Fact]
+        public void Temporary_Kit_Edit_Applies_Diff_Without_Mutating_Source()
+        {
+            var kit = CreateWorkflowKit();
+            var edited = TemporaryKit.Edit(kit, new KitDiff { Name = "Workflow Kit Edited" });
+            Assert.Equal("Workflow Kit Edited", edited.Name);
+            Assert.Equal("Workflow Kit", kit.Name);
+        }
     }
 
     public class Roundtrip

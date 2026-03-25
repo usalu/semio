@@ -18,6 +18,10 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const repoRootPath = resolve(__dirname, "../../..");
+const semioUiEntryPath = resolve(__dirname, "../index.tsx");
+const elementsUiEntryPath = resolve(__dirname, "../../../elements/ui/elements.tsx");
+const semioJsEntryPath = resolve(__dirname, "../../js/index.ts");
 
 function getAbsolutePath(value: string): string {
   try {
@@ -45,9 +49,15 @@ const config: StorybookConfig = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      "@semio/ui": resolve(__dirname, ".."),
-      "@elements/ui": resolve(__dirname, "../../../elements/ui"),
-      "@semio/js": resolve(__dirname, "../../js"),
+      "@semio/ui": semioUiEntryPath,
+      "@elements/ui": elementsUiEntryPath,
+      "@elements/ui/elements": elementsUiEntryPath,
+      "@semio/js": semioJsEntryPath,
+    };
+    config.server = config.server || {};
+    config.server.fs = {
+      ...(config.server.fs || {}),
+      allow: Array.from(new Set([...(config.server.fs?.allow || []), repoRootPath])),
     };
 
     config.plugins = config.plugins || [];

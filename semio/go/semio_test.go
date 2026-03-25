@@ -22,9 +22,12 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -338,7 +341,7 @@ func TestKitFilterDesign(t *testing.T) {
 	}
 
 	t.Run("filters kit to Nakagin Capsule Tower subset", func(t *testing.T) {
-		filtered := FilterKitWithDesign(&kit, nakaginDesign.Guid, nil)
+		filtered := FilterKitWithDesign(kit, nakaginDesign.Guid, nil)
 
 		if len(filtered.Designs) != len(expected.Designs) {
 			t.Fatalf("Expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
@@ -433,7 +436,7 @@ func TestKitFilterDesign(t *testing.T) {
 	})
 
 	t.Run("preserves kit metadata", func(t *testing.T) {
-		filtered := FilterKitWithDesign(&kit, nakaginDesign.Guid, nil)
+		filtered := FilterKitWithDesign(kit, nakaginDesign.Guid, nil)
 		if filtered.Guid != kit.Guid || filtered.Name != kit.Name || filtered.Version != kit.Version {
 			t.Fatalf("Filtered kit metadata mismatch")
 		}
@@ -977,7 +980,7 @@ func TestKitKind(t *testing.T) {
 		}
 		tmpDir := t.TempDir()
 		dbPath := filepath.Join(tmpDir, "kit.db")
-		schemaPath := filepath.Join(AssetsPath, "..", "sqlite", "schema.sql")
+		schemaPath := "../sqlite/schema.sql"
 		schemaBytes, err := os.ReadFile(schemaPath)
 		if err != nil {
 			t.Fatalf("Failed to read schema: %v", err)
@@ -1012,7 +1015,7 @@ func TestKitKind(t *testing.T) {
 		}
 		tmpDir := t.TempDir()
 		zipPath := filepath.Join(tmpDir, "kit.zip")
-		schemaPath := filepath.Join(AssetsPath, "..", "sqlite", "schema.sql")
+		schemaPath := "../sqlite/schema.sql"
 		schemaBytes, err := os.ReadFile(schemaPath)
 		if err != nil {
 			t.Fatalf("Failed to read schema: %v", err)
@@ -1080,5 +1083,277 @@ func TestKitKind(t *testing.T) {
 		}
 	})
 }
+
+func TestKitWorkflowKinds(t *testing.T) {
+	assetBlob := blobEncode([]byte("hello workflow"), "readme.txt")
+	assetSize := int64(len("hello workflow"))
+	kit := Kit{
+		Guid:      "workflow-kit-guid",
+		Name:      "Workflow Kit",
+		Version:   "1.0.0",
+		CreatedAt: "2026-01-01T00:00:00.000Z",
+		UpdatedAt: "2026-01-01T00:00:00.000Z",
+		Folders: []Folder{{
+			Guid:      "folder-guid",
+			Name:      "docs",
+			CreatedAt: "2026-01-01T00:00:00.000Z",
+			UpdatedAt: "2026-01-01T00:00:00.000Z",
+		}},
+		Files: []File{{
+			Guid:      "file-guid",
+			Name:      "readme.txt",
+			Folder:    &FolderId{Guid: "folder-guid"},
+			Size:      &assetSize,
+			Blob:      &assetBlob,
+			CreatedAt: "2026-01-01T00:00:00.000Z",
+			UpdatedAt: "2026-01-01T00:00:00.000Z",
+		}},
+		Types: []Type{{
+			Guid:      "type-guid",
+			Name:      "Wall",
+			CreatedAt: "2026-01-01T00:00:00.000Z",
+			UpdatedAt: "2026-01-01T00:00:00.000Z",
+		}},
+	}
+	updatedName := "Workflow Kit Edited"
+	diff := KitDiff{Name: &updatedName}
+
+	t.Run("Kit/File workflow imports, exports and edits", func(t *testing.T) {
+		filePath := filepath.Join(t.TempDir(), "workflow.kit.json")
+		if err := ExportFileKit(kit, filePath); err != nil {
+			t.Fatalf("ExportFileKit: %v", err)
+		}
+		loaded, err := ImportFileKit(filePath)
+		if err != nil {
+			t.Fatalf("ImportFileKit: %v", err)
+		}
+		if loaded.Name != kit.Name {
+			t.Fatalf("loaded.Name = %q, want %q", loaded.Name, kit.Name)
+		}
+		edited, err := EditFileKit(filePath, diff)
+		if err != nil {
+			t.Fatalf("EditFileKit: %v", err)
+		}
+		if edited.Name != updatedName {
+			t.Fatalf("edited.Name = %q, want %q", edited.Name, updatedName)
+		}
+		reloaded, err := ImportFileKit(filePath)
+		if err != nil {
+			t.Fatalf("ImportFileKit(reload): %v", err)
+		}
+		if reloaded.Name != updatedName {
+			t.Fatalf("reloaded.Name = %q, want %q", reloaded.Name, updatedName)
+		}
+	})
+
+	t.Run("Kit/Folder workflow imports, exports and edits", func(t *testing.T) {
+		folderPath := filepath.Join(t.TempDir(), "folder-kit")
+		if err := ExportFolderKit(&kit, nil, folderPath); err != nil {
+			t.Fatalf("ExportFolderKit: %v", err)
+		}
+		loaded, files, err := ImportFolderKit(folderPath)
+		if err != nil {
+			t.Fatalf("ImportFolderKit: %v", err)
+		}
+		if loaded.Name != kit.Name {
+			t.Fatalf("loaded.Name = %q, want %q", loaded.Name, kit.Name)
+		}
+		if string(files["docs/readme.txt"]) != "hello workflow" {
+			t.Fatalf("folder asset mismatch: %q", string(files["docs/readme.txt"]))
+		}
+		edited, err := EditFolderKit(folderPath, diff)
+		if err != nil {
+			t.Fatalf("EditFolderKit: %v", err)
+		}
+		if edited.Name != updatedName {
+			t.Fatalf("edited.Name = %q, want %q", edited.Name, updatedName)
+		}
+		reloaded, _, err := ImportFolderKit(folderPath)
+		if err != nil {
+			t.Fatalf("ImportFolderKit(reload): %v", err)
+		}
+		if reloaded.Name != updatedName {
+			t.Fatalf("reloaded.Name = %q, want %q", reloaded.Name, updatedName)
+		}
+	})
+
+	t.Run("Kit/Archive workflow imports, exports and edits", func(t *testing.T) {
+		archivePath := filepath.Join(t.TempDir(), "workflow.zip")
+		if err := ExportArchiveKit(&kit, nil, archivePath); err != nil {
+			t.Fatalf("ExportArchiveKit: %v", err)
+		}
+		loaded, files, err := ImportArchiveKit(archivePath)
+		if err != nil {
+			t.Fatalf("ImportArchiveKit: %v", err)
+		}
+		if loaded.Name != kit.Name {
+			t.Fatalf("loaded.Name = %q, want %q", loaded.Name, kit.Name)
+		}
+		if string(files["docs/readme.txt"]) != "hello workflow" {
+			t.Fatalf("archive asset mismatch: %q", string(files["docs/readme.txt"]))
+		}
+		edited, err := EditArchiveKit(archivePath, diff)
+		if err != nil {
+			t.Fatalf("EditArchiveKit: %v", err)
+		}
+		if edited.Name != updatedName {
+			t.Fatalf("edited.Name = %q, want %q", edited.Name, updatedName)
+		}
+		reloaded, _, err := ImportArchiveKit(archivePath)
+		if err != nil {
+			t.Fatalf("ImportArchiveKit(reload): %v", err)
+		}
+		if reloaded.Name != updatedName {
+			t.Fatalf("reloaded.Name = %q, want %q", reloaded.Name, updatedName)
+		}
+	})
+
+	t.Run("Kit/Remote workflow imports JSON and archive sources", func(t *testing.T) {
+		archivePath := filepath.Join(t.TempDir(), "remote.zip")
+		if err := ExportArchiveKit(&kit, nil, archivePath); err != nil {
+			t.Fatalf("ExportArchiveKit: %v", err)
+		}
+		archiveBytes, err := os.ReadFile(archivePath)
+		if err != nil {
+			t.Fatalf("os.ReadFile(archivePath): %v", err)
+		}
+		jsonBytes, err := SerializeKit(kit)
+		if err != nil {
+			t.Fatalf("SerializeKit: %v", err)
+		}
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasSuffix(r.URL.Path, ".zip") {
+				w.Header().Set("Content-Type", "application/zip")
+				_, _ = w.Write(archiveBytes)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write(jsonBytes)
+		}))
+		defer server.Close()
+
+		jsonKit, _, err := ImportRemoteKit(server.URL + "/workflow.kit.json")
+		if err != nil {
+			t.Fatalf("ImportRemoteKit(json): %v", err)
+		}
+		if jsonKit.Name != kit.Name {
+			t.Fatalf("jsonKit.Name = %q, want %q", jsonKit.Name, kit.Name)
+		}
+
+		archiveKit, archiveFiles, err := ImportRemoteKit(server.URL + "/workflow.zip")
+		if err != nil {
+			t.Fatalf("ImportRemoteKit(zip): %v", err)
+		}
+		if archiveKit.Name != kit.Name {
+			t.Fatalf("archiveKit.Name = %q, want %q", archiveKit.Name, kit.Name)
+		}
+		if string(archiveFiles["docs/readme.txt"]) != "hello workflow" {
+			t.Fatalf("remote archive asset mismatch: %q", string(archiveFiles["docs/readme.txt"]))
+		}
+
+		edited, err := EditRemoteKit(server.URL+"/workflow.kit.json", diff)
+		if err != nil {
+			t.Fatalf("EditRemoteKit: %v", err)
+		}
+		if edited.Name != updatedName {
+			t.Fatalf("edited.Name = %q, want %q", edited.Name, updatedName)
+		}
+	})
+
+	t.Run("Kit/Temporary workflow edits in memory without mutating source", func(t *testing.T) {
+		edited := EditTemporaryKit(kit, diff)
+		if edited.Name != updatedName {
+			t.Fatalf("edited.Name = %q, want %q", edited.Name, updatedName)
+		}
+		if kit.Name != "Workflow Kit" {
+			t.Fatalf("kit.Name = %q, want %q", kit.Name, "Workflow Kit")
+		}
+	})
+}
+
+// #region 🔖Kit Filter Tests
+// [👤semio📚go🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/go/f/semio_test.go/s/KitFilterTests)
+// Tests for FilterKitWithDesign MUST verify correct subset extraction.
+
+func TestFilterKitWithDesign(t *testing.T) {
+	var kit Kit
+	loadJSON(t, "kit_metabolism.json", &kit)
+	designGuid := "9a890dd4-0a9c-48ac-920a-9e62666465ef"
+	var expected Kit
+	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
+
+	t.Run("filters kit to only contain entities related to Nakagin Capsule Tower design", func(t *testing.T) {
+		filtered := FilterKitWithDesign(kit, designGuid, nil)
+
+		if len(filtered.Designs) != len(expected.Designs) {
+			t.Errorf("expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
+		}
+		if len(filtered.Types) != len(expected.Types) {
+			t.Errorf("expected %d types, got %d", len(expected.Types), len(filtered.Types))
+		}
+		if len(filtered.Files) != len(expected.Files) {
+			t.Errorf("expected %d files, got %d", len(expected.Files), len(filtered.Files))
+		}
+		if len(filtered.Ports) != len(expected.Ports) {
+			t.Errorf("expected %d ports, got %d", len(expected.Ports), len(filtered.Ports))
+		}
+		if len(filtered.Qualities) != len(expected.Qualities) {
+			t.Errorf("expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
+		}
+		if len(filtered.Authors) != len(expected.Authors) {
+			t.Errorf("expected %d authors, got %d", len(expected.Authors), len(filtered.Authors))
+		}
+
+		// Find the Nakagin design in filtered kit
+		var filteredDesign *Design
+		for i := range filtered.Designs {
+			if filtered.Designs[i].Guid == designGuid {
+				filteredDesign = &filtered.Designs[i]
+				break
+			}
+		}
+		if filteredDesign == nil {
+			t.Fatal("Nakagin Capsule Tower design not found in filtered kit")
+		}
+
+		// Find original design for comparison
+		var originalDesign *Design
+		for i := range kit.Designs {
+			if kit.Designs[i].Guid == designGuid {
+				originalDesign = &kit.Designs[i]
+				break
+			}
+		}
+		if originalDesign == nil {
+			t.Fatal("Nakagin Capsule Tower design not found in original kit")
+		}
+
+		if len(filteredDesign.Pieces) != len(originalDesign.Pieces) {
+			t.Errorf("expected %d pieces, got %d", len(originalDesign.Pieces), len(filteredDesign.Pieces))
+		}
+
+		// Verify each type has at most one model
+		for _, typeItem := range filtered.Types {
+			if len(typeItem.Models) > 1 {
+				t.Errorf("type %s has %d models, expected at most 1", typeItem.Guid, len(typeItem.Models))
+			}
+		}
+	})
+
+	t.Run("preserves kit metadata", func(t *testing.T) {
+		filtered := FilterKitWithDesign(kit, designGuid, nil)
+		if filtered.Guid != kit.Guid {
+			t.Errorf("expected guid %s, got %s", kit.Guid, filtered.Guid)
+		}
+		if filtered.Name != kit.Name {
+			t.Errorf("expected name %s, got %s", kit.Name, filtered.Name)
+		}
+		if filtered.Version != kit.Version {
+			t.Errorf("expected version %s, got %s", kit.Version, filtered.Version)
+		}
+	})
+}
+
+// #endregion 🔖Kit Filter Tests
 
 // #endregion 🔖KitKind Tests

@@ -8278,123 +8278,6 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 
 // #endregion 🔖Type Family Helpers
 
-// #region 🔖Filter
-// [👤semio📚js💻semio🔖kit🔖filter](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter)
-// Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
-
-/**
- * Filters a kit to only include entities related to a specific design.
- * Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
- * files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
- * [👤semio📚js💻semio🔖kit🔖filter🪨filterkitwithdesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/filterKitWithDesign)
- **/
-export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[]): Kit => {
-  const design = findDesignInKit(kit, designGuid);
-  const pieces = design.pieces ?? [];
-  const connections = design.connections ?? [];
-
-  const usedTypeGuids = new Set<string>();
-  const usedDesignGuids = new Set<string>([designGuid]);
-
-  for (const piece of pieces) {
-    if (piece.type?.guid) usedTypeGuids.add(piece.type.guid);
-    if (piece.design?.guid) usedDesignGuids.add(piece.design.guid);
-  }
-
-  const allTypes = kit.types ?? [];
-  const typeByGuid = new Map(allTypes.map(t => [t.guid, t]));
-
-  const collectTypeAncestors = (typeGuid: string) => {
-    const t = typeByGuid.get(typeGuid);
-    if (t?.parent?.guid && !usedTypeGuids.has(t.parent.guid)) {
-      usedTypeGuids.add(t.parent.guid);
-      collectTypeAncestors(t.parent.guid);
-    }
-  };
-  for (const guid of usedTypeGuids) collectTypeAncestors(guid);
-
-  const resolvedTagGuids: string[] = [];
-  for (const tagValue of tags ?? []) {
-    const byGuid = kit.tags?.find(t => t.guid === tagValue);
-    if (byGuid) {
-      resolvedTagGuids.push(byGuid.guid);
-      continue;
-    }
-    const byName = kit.tags?.find(t => t.name === tagValue);
-    if (byName) resolvedTagGuids.push(byName.guid);
-  }
-
-  const usedPortGuids = new Set<string>();
-  const usedFileGuids = new Set<string>();
-  const usedTagGuids = new Set<string>();
-  const usedConceptGuids = new Set<string>();
-  const usedQualityGuids = new Set<string>();
-  const usedAuthorGuids = new Set<string>();
-  const usedFolderNames = new Set<string>();
-
-  const collectQualityFromProps = (props: Prop[]) => {
-    for (const prop of props) {
-      if (prop.quality?.guid) usedQualityGuids.add(prop.quality.guid);
-    }
-  };
-
-  const selectedModels = new Map<string, Model>();
-  for (const typeGuid of usedTypeGuids) {
-    const t = typeByGuid.get(typeGuid);
-    if (!t) continue;
-    if (t.folder) usedFolderNames.add(t.folder);
-    for (const connector of t.connectors ?? []) {
-      if (connector.port?.guid) usedPortGuids.add(connector.port.guid);
-      collectQualityFromProps(connector.props ?? []);
-    }
-    collectQualityFromProps(t.props ?? []);
-    for (const authorId of t.authors ?? []) usedAuthorGuids.add(authorId.guid);
-    for (const conceptId of t.concepts ?? []) usedConceptGuids.add(conceptId.guid);
-
-    const models = t.models ?? [];
-    if (models.length > 0) {
-      const best = selectBestModel(models, resolvedTagGuids);
-      if (best) {
-        selectedModels.set(typeGuid, best);
-        usedFileGuids.add(best.file.guid);
-        for (const tagId of best.tags ?? []) usedTagGuids.add(tagId.guid);
-      }
-    }
-  }
-
-  for (const piece of pieces) collectQualityFromProps(piece.props ?? []);
-  for (const conceptId of design.concepts ?? []) usedConceptGuids.add(conceptId.guid);
-  for (const authorId of design.authors ?? []) usedAuthorGuids.add(authorId.guid);
-
-  const portSnapshot = Array.from(usedPortGuids);
-  for (const portGuid of portSnapshot) {
-    const port = kit.ports?.find(p => p.guid === portGuid);
-    if (port) {
-      for (const compat of port.compatiblePorts ?? []) usedPortGuids.add(compat.guid);
-    }
-  }
-
-  for (const tagGuid of resolvedTagGuids) usedTagGuids.add(tagGuid);
-
-  return {
-    ...kit,
-    types: allTypes.filter(t => usedTypeGuids.has(t.guid)).map(t => ({
-      ...t,
-      models: selectedModels.has(t.guid) ? [selectedModels.get(t.guid)!] : []
-    })),
-    designs: (kit.designs ?? []).filter(d => usedDesignGuids.has(d.guid)),
-    ports: (kit.ports ?? []).filter(p => usedPortGuids.has(p.guid)),
-    files: (kit.files ?? []).filter(f => usedFileGuids.has(f.guid)),
-    tags: (kit.tags ?? []).filter(t => usedTagGuids.has(t.guid)),
-    concepts: (kit.concepts ?? []).filter(c => usedConceptGuids.has(c.guid)),
-    qualities: (kit.qualities ?? []).filter(q => usedQualityGuids.has(q.guid)),
-    authors: (kit.authors ?? []).filter(a => usedAuthorGuids.has(a.guid)),
-    folders: (kit.folders ?? []).filter(f => usedFolderNames.has(f.name)),
-  };
-};
-
-// #endregion 🔖Filter
-
 /**
  * Searches for matching PortInKit entry.
  * MUST return the matching element or undefined.
@@ -8888,6 +8771,8 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
  **/
 export interface KitImportResult {
   kit: Kit;
+  kind?: KitKind;
+  files?: Record<string, Uint8Array>;
 }
 
 // [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨cachedsqljs](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/cachedSqlJs)
@@ -8948,31 +8833,63 @@ const buildFilePath = (kit: Kit, file: File): string => {
   return file.name;
 };
 
-/**
- * Imports Kit from external source.
- * MUST load and return the imported data.
- * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨importkit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/importKit)
- **/
-export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨bytestoutf8](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/bytesToUtf8)
+const bytesToUtf8 = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
+
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨collectkitfiles](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/collectKitFiles)
+const collectKitFiles = (kit: Kit): Record<string, Uint8Array> => {
+  const files: Record<string, Uint8Array> = {};
+  for (const file of kit.files || []) {
+    if (!file.blob) continue;
+    const base64 = file.blob.startsWith("data:") ? file.blob.slice(file.blob.indexOf(",") + 1) : file.blob;
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    files[buildFilePath(kit, file)] = bytes;
+  }
+  return files;
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨importfilekit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/importFileKit)
+export const importFileKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
+  let json: string;
+  if (source instanceof Blob) {
+    json = await source.text();
+  } else if (typeof source === "string") {
+    const trimmed = source.trim();
+    if (trimmed.startsWith("{")) {
+      json = trimmed;
+    } else {
+      const response = await fetch(source);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file kit from ${source}: ${response.statusText}`);
+      }
+      json = await response.text();
+    }
+  } else if (source instanceof Buffer) {
+    json = bytesToUtf8(new Uint8Array(source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength)));
+  } else {
+    json = bytesToUtf8(new Uint8Array(source));
+  }
+  return { kind: "file", kit: deserializeKit(json), files: {} };
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨exportfilekit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/exportFileKit)
+export const exportFileKit = (kit: Kit): string => serializeKit(kit);
+
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨importarchivekit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/importArchiveKit)
+export const importArchiveKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
   const JSZip = (await import("jszip")).default;
 
   let arrayBuffer: ArrayBuffer;
   if (source instanceof Blob) {
     arrayBuffer = await source.arrayBuffer();
   } else if (typeof source === "string") {
-    if (source.startsWith("blob:")) {
-      const response = await fetch(source);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch kit from blob URL: ${response.statusText}`);
-      }
-      arrayBuffer = await response.arrayBuffer();
-    } else {
-      const response = await fetch(source);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch kit from ${source}: ${response.statusText}`);
-      }
-      arrayBuffer = await response.arrayBuffer();
+    const response = await fetch(source);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch archive kit from ${source}: ${response.statusText}`);
     }
+    arrayBuffer = await response.arrayBuffer();
   } else if (source instanceof Buffer) {
     arrayBuffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength) as ArrayBuffer;
   } else {
@@ -8998,6 +8915,7 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
     kit = deserializeKit(kitJson);
   }
 
+  const importedFiles: Record<string, Uint8Array> = {};
   const zipEntries = new Map<string, any>();
   for (const [path, zipEntry] of Object.entries(zip.files)) {
     if (!(zipEntry as any).dir && !path.startsWith(".semio/") && path !== "kit.json") {
@@ -9012,6 +8930,7 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
       if (zipEntry) {
         const arrayBuf = await (zipEntry as any).async("arraybuffer");
         const bytes = new Uint8Array(arrayBuf);
+        importedFiles[filePath] = bytes;
         let binary = "";
         for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
         const ext = file.name.split(".").pop()?.toLowerCase() || "";
@@ -9037,7 +8956,52 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
     }
   }
 
-  return { kit };
+  return { kind: "archive", kit, files: importedFiles };
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨importremotekit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/importRemoteKit)
+export const importRemoteKit = async (url: string): Promise<KitImportResult> => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch remote kit from ${url}: ${response.statusText}`);
+  }
+  const contentType = response.headers.get("content-type")?.toLowerCase() || "";
+  if (url.endsWith(".zip") || contentType.includes("zip") || contentType.includes("octet-stream")) {
+    const archive = await importArchiveKit(await response.blob());
+    return { ...archive, kind: "remote" };
+  }
+  const text = await response.text();
+  if (text.trim().startsWith("{")) {
+    const result = await importFileKit(text);
+    return { ...result, kind: "remote" };
+  }
+  const archive = await importArchiveKit(new Blob([text]));
+  return { ...archive, kind: "remote" };
+};
+
+// [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨edittemporarykit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/editTemporaryKit)
+export const editTemporaryKit = (kit: Kit, diff: KitDiff): Kit => applyKitDiff(kit, diff);
+
+/**
+ * Imports Kit from external source.
+ * MUST load and return the imported data.
+ * [👤semio📚js💻semio🔖kit🔖kitimport🔖export🪨importkit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Kit%20Import/Export/d/i/importKit)
+ **/
+export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
+  if (typeof source === "string") {
+    const trimmed = source.trim();
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("blob:")) {
+      return importRemoteKit(source);
+    }
+    if (trimmed.startsWith("{")) {
+      return importFileKit(source);
+    }
+  }
+  try {
+    return await importArchiveKit(source);
+  } catch {
+    return importFileKit(source);
+  }
 };
 
 /**
@@ -9059,17 +9023,8 @@ export const exportKit = async (kit: Kit): Promise<Blob> => {
   const zip = new JSZip();
   zip.file(".semio/kit.db", dbData);
 
-  if (kit.files) {
-    for (const file of kit.files) {
-      if (file.blob) {
-        const filePath = buildFilePath(kit, file);
-        const base64 = file.blob.startsWith("data:") ? file.blob.slice(file.blob.indexOf(",") + 1) : file.blob;
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        zip.file(filePath, bytes);
-      }
-    }
+  for (const [filePath, bytes] of Object.entries(collectKitFiles(kit))) {
+    zip.file(filePath, bytes);
   }
 
   return await zip.generateAsync({ type: "blob" });
@@ -13166,6 +13121,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     MetabolismKitDiff,
     MetabolismKitDiffed,
     MetabolismKitDiffInverted,
+    MetabolismKitFilteredNakaginCapsuleTower,
     ModelSelectionCases,
     NakaginCapsuleTowerFilteredKit,
     MetabolismMetaKit,
@@ -13173,9 +13129,12 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     TambourMetaType,
     TambourShallowType,
     NakaginCapsuleTowerMetaDesign,
-    NakaginCapsuleTowerShallowDesign,
+    NakaginCapsuleTowerShallowDesign
   } = await import("@semio/assets");
-  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
+  const {
+    createFolderKitStore,
+    createJsonFileKitStore
+  } = await import("@semio/studio");
   type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
   type KitJsonFileAdapter = import("@semio/studio").KitJsonFileAdapter;
 
@@ -13510,6 +13469,22 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(restored.name).toBe(kit.name);
     });
 
+    it("Kit/File: imports, exports and edits with file kit helpers", async () => {
+      const kit: Kit = {
+        guid: "file-kit-helper-guid",
+        name: "FileKit Helper Test",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const exported = exportFileKit(kit);
+      const imported = await importFileKit(exported);
+      expect(imported.kind).toBe("file");
+      expect(imported.kit.guid).toBe(kit.guid);
+      const edited = editTemporaryKit(imported.kit, { name: "FileKit Helper Edited" });
+      expect(edited.name).toBe("FileKit Helper Edited");
+      expect(imported.kit.name).toBe("FileKit Helper Test");
+    });
+
     it("Kit/Folder: roundtrips through SQLite via FolderKitStore adapter", async () => {
       const kit: Kit = {
         guid: "folder-kit-guid",
@@ -13563,6 +13538,48 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(restored.remote).toBe(kit.remote);
     });
 
+    it("Kit/Remote: imports remote JSON and archive sources", async () => {
+      const remoteJsonKit: Kit = {
+        guid: "remote-json-kit-guid",
+        name: "Remote JSON Kit",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const remoteArchiveKit: Kit = {
+        guid: "remote-archive-kit-guid",
+        name: "Remote Archive Kit",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const archiveBlob = await exportKit(remoteArchiveKit);
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn(async (input: string | URL | Request) => {
+        const url = String(input);
+        if (url.endsWith(".kit.json")) {
+          return new Response(exportFileKit(remoteJsonKit), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return new Response(await archiveBlob.arrayBuffer(), {
+          status: 200,
+          headers: { "content-type": "application/zip" },
+        });
+      }) as typeof fetch;
+
+      try {
+        const importedJson = await importRemoteKit("https://example.com/remote.kit.json");
+        expect(importedJson.kind).toBe("remote");
+        expect(importedJson.kit.guid).toBe(remoteJsonKit.guid);
+
+        const importedArchive = await importRemoteKit("https://example.com/remote.kit.zip");
+        expect(importedArchive.kind).toBe("remote");
+        expect(importedArchive.kit.guid).toBe(remoteArchiveKit.guid);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
     it("Kit/Temporary: InMemoryKitStore roundtrip without persistence", () => {
       const kit: Kit = {
         guid: "temp-kit-guid",
@@ -13577,9 +13594,86 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       store.undo();
       expect(store.getSnapshot().kit.name).toBe("TemporaryKit Test");
     });
+
+    it("Kit/Temporary: editTemporaryKit applies a diff without mutating the source", () => {
+      const kit: Kit = {
+        guid: "temp-edit-kit-guid",
+        name: "Temporary Editable Kit",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const edited = editTemporaryKit(kit, { name: "Temporary Editable Kit Edited" });
+      expect(edited.name).toBe("Temporary Editable Kit Edited");
+      expect(kit.name).toBe("Temporary Editable Kit");
+    });
   });
 
   // #endregion 🔖KitKind Tests
+
+  // #region 🔖Kit Filter Tests
+  // [👤semio📚js🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/KitFilterTests)
+  // Tests for filterKitWithDesign MUST verify correct subset extraction.
+
+  describe("Kit/Filter/Design", () => {
+    const kit = MetabolismKit as Kit;
+    const expected = MetabolismKitFilteredNakaginCapsuleTower as any;
+    const nakaginDesign = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
+
+    it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
+      expect(nakaginDesign).toBeDefined();
+      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+
+      expect(filtered.designs?.length).toBe(expected.designs.length);
+      expect(filtered.types?.length).toBe(expected.types.length);
+      expect(filtered.files?.length).toBe(expected.files.length);
+      expect(filtered.ports?.length).toBe(expected.ports.length);
+      expect(filtered.qualities?.length).toBe(expected.qualities.length);
+      expect(filtered.authors?.length).toBe(expected.authors.length);
+
+      const filteredDesign = filtered.designs?.find((d) => d.guid === nakaginDesign!.guid);
+      expect(filteredDesign).toBeDefined();
+      expect(filteredDesign!.pieces?.length).toBe(nakaginDesign!.pieces?.length);
+
+      for (const expectedType of expected.types) {
+        const filteredType = filtered.types?.find((t: any) => t.guid === expectedType.guid);
+        expect(filteredType).toBeDefined();
+        expect(filteredType!.models?.length ?? 0).toBe(expectedType.models?.length ?? 0);
+      }
+
+      for (const piece of filteredDesign!.pieces ?? []) {
+        if (piece.type?.guid) {
+          expect(filtered.types?.some((t) => t.guid === piece.type!.guid)).toBe(true);
+        }
+      }
+
+      for (const type of filtered.types ?? []) {
+        for (const model of type.models ?? []) {
+          expect(filtered.files?.some((f) => f.guid === model.file.guid)).toBe(true);
+        }
+        for (const connector of type.connectors ?? []) {
+          if (connector.port?.guid) {
+            expect(filtered.ports?.some((p) => p.guid === connector.port!.guid)).toBe(true);
+          }
+        }
+      }
+    });
+
+    it("preserves kit metadata", () => {
+      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      expect(filtered.guid).toBe(kit.guid);
+      expect(filtered.name).toBe(kit.name);
+      expect(filtered.version).toBe(kit.version);
+    });
+
+    it("each type has at most one model", () => {
+      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      for (const type of filtered.types ?? []) {
+        expect((type.models ?? []).length).toBeLessThanOrEqual(1);
+      }
+    });
+  });
+
+  // #endregion 🔖Kit Filter Tests
 
   describe("Flatten", () => {
     const kit = MetabolismKit as Kit;

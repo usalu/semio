@@ -35,8 +35,10 @@ using System.IO.Compression;
 using Microsoft.Data.Sqlite;
 using FluentValidation;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using System.Runtime.Serialization;
 using QuikGraph;
 using QuikGraph.Algorithms;
 using QuikGraph.Algorithms.ConnectedComponents;
@@ -6055,6 +6057,45 @@ text {
 // [👤semio📚net🛅semio💻semio🔖entitying🔖kit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit)
 // Implementations MUST collect types and designs into a reusable library.
 
+#region 🔖KitKind
+// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitkind](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/KitKind)
+// KitKind discriminates the five persistence/transport forms of a Kit.
+
+/// <summary>
+/// Discriminator for the five kit persistence/transport forms.
+/// </summary>
+/// <remarks>
+/// Specs: Exactly five kit kinds exist:
+/// - File: Self-contained JSON file
+/// - Folder: Local folder with .semio/kit.db SQLite and asset files
+/// - Archive: ZIP file packaging a FolderKit structure
+/// - Remote: URL-addressable kit served over HTTP(S)
+/// - Temporary: In-memory ephemeral kit (no persistence)
+/// </remarks>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum KitKind
+{
+    [EnumMember(Value = "file")]
+    File,
+    [EnumMember(Value = "folder")]
+    Folder,
+    [EnumMember(Value = "archive")]
+    Archive,
+    [EnumMember(Value = "remote")]
+    Remote,
+    [EnumMember(Value = "temporary")]
+    Temporary
+}
+
+/// <summary>Helpers for KitKind.</summary>
+public static class KitKinds
+{
+    /// <summary>All valid KitKind values.</summary>
+    public static readonly KitKind[] All = (KitKind[])Enum.GetValues(typeof(KitKind));
+}
+
+#endregion 🔖KitKind
+
 public class KitDiff : Entity<KitDiff>
 {
     private readonly HashSet<string> _setProperties = new();
@@ -10744,6 +10785,208 @@ public static class ZipRoundtrip
 
 #endregion 🔖ZipRoundtrip
 
+#region 🔖FileKit
+// [👤semio📚net🛅semio💻semio🔖entitying🔖filekit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/FileKit)
+// Callers MUST use FileKit for JSON file kit import, export, and edit operations.
+
+public static class FileKit
+{
+    public static Kit Import(string path)
+    {
+        var json = System.IO.File.ReadAllText(path);
+        return Utility.Deserialize<Kit>(json)!;
+    }
+
+    public static void Export(Kit kit, string path)
+    {
+        System.IO.File.WriteAllText(path, Utility.Serialize(kit));
+    }
+
+    public static Kit Edit(string path, KitDiff diff)
+    {
+        var edited = TemporaryKit.Edit(Import(path), diff);
+        Export(edited, path);
+        return edited;
+    }
+}
+
+#endregion 🔖FileKit
+
+#region 🔖FolderKit
+// [👤semio📚net🛅semio💻semio🔖entitying🔖folderkit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/FolderKit)
+// Callers MUST use FolderKit for local folder kit import, export, and edit operations.
+
+public static class FolderKit
+{
+    private static string BuildFolderPath(Kit kit, string folderGuid)
+    {
+        foreach (var folder in kit.Folders ?? new List<Folder>())
+        {
+            if (folder.Guid != folderGuid) continue;
+            if (folder.Parent != null && !string.IsNullOrEmpty(folder.Parent.Guid))
+            {
+                var parentPath = BuildFolderPath(kit, folder.Parent.Guid);
+                if (!string.IsNullOrEmpty(parentPath)) return $"{parentPath}/{folder.Name}";
+            }
+            return folder.Name;
+        }
+        return "";
+    }
+
+    private static string BuildFilePath(Kit kit, File file)
+    {
+        if (file.Folder != null && !string.IsNullOrEmpty(file.Folder.Guid))
+        {
+            var folderPath = BuildFolderPath(kit, file.Folder.Guid);
+            if (!string.IsNullOrEmpty(folderPath)) return $"{folderPath}/{file.Name}";
+        }
+        return file.Name;
+    }
+
+    private static Dictionary<string, byte[]> CollectKitFiles(Kit kit)
+    {
+        var files = new Dictionary<string, byte[]>();
+        foreach (var file in kit.Files ?? new List<File>())
+        {
+            if (string.IsNullOrEmpty(file.Blob)) continue;
+            var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
+                ? file.Blob[(file.Blob.IndexOf(',') + 1)..]
+                : file.Blob;
+            files[BuildFilePath(kit, file)] = Convert.FromBase64String(blobData);
+        }
+        return files;
+    }
+
+    private static void HydrateKitFiles(Kit kit, Dictionary<string, byte[]> files)
+    {
+        foreach (var file in kit.Files ?? new List<File>())
+        {
+            var path = BuildFilePath(kit, file);
+            if (files.TryGetValue(path, out var bytes))
+                file.Blob = $"data:application/octet-stream;base64,{Convert.ToBase64String(bytes)}";
+        }
+    }
+
+    public static KitImportResult Import(string folderPath)
+    {
+        var kit = KitSqlite.LoadKit(folderPath);
+        var files = new Dictionary<string, byte[]>();
+        foreach (var file in Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories))
+        {
+            var relativePath = file.Substring(folderPath.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
+            if (relativePath.StartsWith(".semio/")) continue;
+            files[relativePath] = System.IO.File.ReadAllBytes(file);
+        }
+        HydrateKitFiles(kit, files);
+        return new KitImportResult { Kit = kit, Files = files };
+    }
+
+    public static void Export(Kit kit, string folderPath)
+    {
+        Directory.CreateDirectory(folderPath);
+        var dbPath = Path.Combine(folderPath, ".semio", "kit.db");
+        if (System.IO.File.Exists(dbPath))
+        {
+            SqliteConnection.ClearAllPools();
+            System.IO.File.Delete(dbPath);
+        }
+        KitSqlite.SaveKit(folderPath, kit);
+        foreach (var entry in CollectKitFiles(kit))
+        {
+            var fullPath = Path.Combine(folderPath, entry.Key.Replace("/", Path.DirectorySeparatorChar.ToString()));
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+            System.IO.File.WriteAllBytes(fullPath, entry.Value);
+        }
+    }
+
+    public static Kit Edit(string folderPath, KitDiff diff)
+    {
+        var imported = Import(folderPath);
+        var edited = TemporaryKit.Edit(imported.Kit, diff);
+        Export(edited, folderPath);
+        return edited;
+    }
+}
+
+#endregion 🔖FolderKit
+
+#region 🔖ArchiveKit
+// [👤semio📚net🛅semio💻semio🔖entitying🔖archivekit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/ArchiveKit)
+// Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
+
+public static class ArchiveKit
+{
+    public static KitImportResult Import(string zipPath) => ZipRoundtrip.ImportKit(zipPath);
+
+    public static void Export(Kit kit, string zipPath) => ZipRoundtrip.ExportKit(kit, zipPath);
+
+    public static Kit Edit(string zipPath, KitDiff diff)
+    {
+        var imported = Import(zipPath);
+        var edited = TemporaryKit.Edit(imported.Kit, diff);
+        Export(edited, zipPath);
+        return edited;
+    }
+}
+
+#endregion 🔖ArchiveKit
+
+#region 🔖RemoteKit
+// [👤semio📚net🛅semio💻semio🔖entitying🔖remotekit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/RemoteKit)
+// Callers MUST use RemoteKit for HTTP-based JSON and ZIP kit import and in-memory edits.
+
+public static class RemoteKit
+{
+    public static KitImportResult Import(string url)
+    {
+        using var client = new HttpClient();
+        using var response = client.GetAsync(url).GetAwaiter().GetResult();
+        response.EnsureSuccessStatusCode();
+        var contentType = response.Content.Headers.ContentType?.MediaType?.ToLowerInvariant() ?? "";
+        var bytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+
+        if (url.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) || contentType.Contains("zip") || contentType.Contains("octet-stream") || (bytes.Length >= 4 && bytes[0] == (byte)'P' && bytes[1] == (byte)'K'))
+        {
+            var tempPath = Path.Combine(Path.GetTempPath(), $"semio-remote-{Guid.NewGuid():N}.zip");
+            try
+            {
+                System.IO.File.WriteAllBytes(tempPath, bytes);
+                return ArchiveKit.Import(tempPath);
+            }
+            finally
+            {
+                if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath);
+            }
+        }
+
+        var json = Encoding.UTF8.GetString(bytes);
+        return new KitImportResult { Kit = Utility.Deserialize<Kit>(json)! };
+    }
+
+    public static Kit Edit(string url, KitDiff diff)
+    {
+        var imported = Import(url);
+        return TemporaryKit.Edit(imported.Kit, diff);
+    }
+}
+
+#endregion 🔖RemoteKit
+
+#region 🔖TemporaryKit
+// [👤semio📚net🛅semio💻semio🔖entitying🔖temporarykit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/TemporaryKit)
+// Callers MUST use TemporaryKit for in-memory kit edits without persistence.
+
+public static class TemporaryKit
+{
+    public static Kit Edit(Kit kit, KitDiff diff)
+    {
+        var clone = Utility.Deserialize<Kit>(Utility.Serialize(kit))!;
+        return SemioDiff.ApplyKitDiff(clone, diff);
+    }
+}
+
+#endregion 🔖TemporaryKit
+
 #region 🔖KitImporter
 // [👤semio📚net🛅semio💻semio🔖entitying🔖kitimporter](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitImporter)
 // Callers MUST use ImportFromZip for high-level kit import.
@@ -10752,7 +10995,7 @@ public static class KitImporter
 {
     public static KitImportResult ImportFromZip(string zipPath)
     {
-        return ZipRoundtrip.ImportKit(zipPath);
+        return ArchiveKit.Import(zipPath);
     }
 }
 
@@ -10766,7 +11009,7 @@ public static class KitExporter
 {
     public static void ExportToZip(Kit kit, string zipPath)
     {
-        ZipRoundtrip.ExportKit(kit, zipPath);
+        ArchiveKit.Export(kit, zipPath);
     }
 }
 

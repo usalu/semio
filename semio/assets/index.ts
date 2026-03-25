@@ -36,6 +36,7 @@ export { default as DragOffset } from "./semio/drag/offset.json";
 export { default as DragDiffDesign } from "./semio/drag/diff_design.json";
 export { default as DragDiffDesignFree } from "./semio/drag/diff_design_free.json";
 export { default as ModelSelectionCases } from "./semio/model_selection.json";
+export { default as MetabolismKitFilteredNakaginCapsuleTower } from "./semio/nakagin-capsule-tower.filtered.kit.semio.json";
 export { default as NakaginCapsuleTowerFilteredKit } from "./semio/nakagin-capsule-tower.filtered.kit.semio.json";
 export { default as MetabolismMetaKit } from "./semio/metabolism.meta.kit.semio.json";
 export { default as MetabolismShallowKit } from "./semio/metabolism.shallow.kit.semio.json";

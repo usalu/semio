@@ -8710,6 +8710,379 @@ pub mod zip_roundtrip {
 
 // #endregion 🔖Zip Import/Export
 
+// #region 🔖Kit Workflow
+// [👤semio📚rs💻semio🔖kitworkflow](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow)
+// Kit Workflow MUST provide cohesive file, folder, archive, remote, and temporary kit operations.
+
+#[cfg(not(target_arch = "wasm32"))]
+const KIT_FOLDER_METADATA_DIRECTORY: &str = ".semio";
+
+#[cfg(not(target_arch = "wasm32"))]
+const KIT_FOLDER_DATABASE_FILENAME: &str = "kit.db";
+
+#[cfg(not(target_arch = "wasm32"))]
+fn io_semio_error(context: &str, error: impl std::fmt::Display) -> SemioError {
+    SemioError::Database {
+        message: format!("{}: {}", context, error),
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn build_folder_database_path(folder_path: &str) -> std::path::PathBuf {
+    std::path::Path::new(folder_path)
+        .join(KIT_FOLDER_METADATA_DIRECTORY)
+        .join(KIT_FOLDER_DATABASE_FILENAME)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn decode_blob_bytes(file: &File) -> Result<Option<Vec<u8>>> {
+    let Some(blob) = file.blob.as_ref() else {
+        return Ok(None);
+    };
+    let encoded = blob
+        .split_once(",")
+        .map(|(_, data)| data)
+        .unwrap_or(blob.as_str());
+    let decoded = base64::engine::general_purpose::STANDARD
+        .decode(encoded)
+        .map_err(|error| SemioError::Serialization {
+            message: format!("Failed to decode file blob for {}: {}", file.guid, error),
+        })?;
+    Ok(Some(decoded))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn hydrate_kit_file_blobs(kit: &mut Kit, files: &HashMap<String, Vec<u8>>) {
+    let file_paths: Vec<String> = kit
+        .files
+        .as_ref()
+        .map(|kit_files| kit_files.iter().map(|file| zip_roundtrip::build_file_path(kit, file)).collect())
+        .unwrap_or_default();
+
+    if let Some(kit_files) = kit.files.as_mut() {
+        for (index, file) in kit_files.iter_mut().enumerate() {
+            if let Some(data) = files.get(&file_paths[index]) {
+                let mime = mime_from_filename(&file.name);
+                file.blob = Some(format!(
+                    "data:{};base64,{}",
+                    mime,
+                    base64::engine::general_purpose::STANDARD.encode(data)
+                ));
+            }
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn resolve_exported_file_bytes(
+    kit: &Kit,
+    files: &HashMap<String, Vec<u8>>,
+) -> Result<HashMap<String, Vec<u8>>> {
+    let mut resolved = files.clone();
+
+    for file in kit.files.as_ref().into_iter().flatten() {
+        let path = zip_roundtrip::build_file_path(kit, file);
+        if resolved.contains_key(&path) {
+            continue;
+        }
+        if let Some(bytes) = decode_blob_bytes(file)? {
+            resolved.insert(path, bytes);
+        }
+    }
+
+    Ok(resolved)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn remap_kit_file_bytes(
+    before_kit: &Kit,
+    after_kit: &Kit,
+    before_files: &HashMap<String, Vec<u8>>,
+) -> Result<HashMap<String, Vec<u8>>> {
+    let mut before_paths_by_guid = HashMap::new();
+    if let Some(before_files_meta) = &before_kit.files {
+        for file in before_files_meta {
+            before_paths_by_guid.insert(file.guid.clone(), zip_roundtrip::build_file_path(before_kit, file));
+        }
+    }
+
+    let mut after_files = HashMap::new();
+    if let Some(after_files_meta) = &after_kit.files {
+        for file in after_files_meta {
+            let new_path = zip_roundtrip::build_file_path(after_kit, file);
+            if let Some(old_path) = before_paths_by_guid.get(&file.guid) {
+                if let Some(bytes) = before_files.get(old_path) {
+                    after_files.insert(new_path, bytes.clone());
+                    continue;
+                }
+            }
+            if let Some(bytes) = decode_blob_bytes(file)? {
+                after_files.insert(new_path, bytes);
+            }
+        }
+    }
+
+    Ok(after_files)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn remove_stale_folder_assets(
+    folder_path: &str,
+    previous_files: &HashMap<String, Vec<u8>>,
+    next_files: &HashMap<String, Vec<u8>>,
+) -> Result<()> {
+    let root_path = std::path::Path::new(folder_path);
+
+    for old_path in previous_files.keys() {
+        if next_files.contains_key(old_path) {
+            continue;
+        }
+
+        let asset_path = root_path.join(old_path);
+        if asset_path.exists() {
+            std::fs::remove_file(&asset_path)
+                .map_err(|error| io_semio_error("Failed to remove stale folder asset", error))?;
+        }
+
+        let mut current = asset_path.parent();
+        while let Some(directory) = current {
+            if directory == root_path {
+                break;
+            }
+            match std::fs::remove_dir(directory) {
+                Ok(()) => current = directory.parent(),
+                Err(error) if error.kind() == std::io::ErrorKind::DirectoryNotEmpty => break,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                    current = directory.parent()
+                }
+                Err(error) => {
+                    return Err(io_semio_error(
+                        "Failed to remove empty folder asset directory",
+                        error,
+                    ))
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn import_kit_from_zip_bytes(zip_bytes: &[u8]) -> Result<zip_roundtrip::KitImportResult> {
+    use std::io::Write;
+
+    let mut temp_file = tempfile::NamedTempFile::new()
+        .map_err(|error| io_semio_error("Failed to create temporary zip file", error))?;
+    temp_file
+        .write_all(zip_bytes)
+        .map_err(|error| io_semio_error("Failed to write temporary zip file", error))?;
+
+    let temp_path = temp_file.path().to_str().ok_or(SemioError::InvalidOperation {
+        message: "Temporary zip path is not valid UTF-8".to_string(),
+    })?;
+
+    zip_roundtrip::import_kit_from_zip(temp_path)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn is_zip_payload(url: &str, content_type: Option<&str>, bytes: &[u8]) -> bool {
+    let lower_url = url.to_lowercase();
+    lower_url.ends_with(".zip")
+        || content_type
+            .map(|value| value.to_ascii_lowercase().contains("zip"))
+            .unwrap_or(false)
+        || bytes.starts_with(b"PK\x03\x04")
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>import_file_kit holds the data fields for a import_file_kit record.</summary>
+/// import_file_kit MUST import a JSON file kit using deserialize_kit.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️importfilekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/import_file_kit)
+pub fn import_file_kit(path: &str) -> Result<Kit> {
+    let content = std::fs::read_to_string(path)
+        .map_err(|error| io_semio_error("Failed to read kit file", error))?;
+    deserialize_kit(&content)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>export_file_kit holds the data fields for a export_file_kit record.</summary>
+/// export_file_kit MUST export a JSON file kit using serialize_kit.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️exportfilekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/export_file_kit)
+pub fn export_file_kit(kit: &Kit, path: &str) -> Result<()> {
+    let json = serialize_kit(kit)?;
+    std::fs::write(path, json).map_err(|error| io_semio_error("Failed to write kit file", error))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>import_folder_kit holds the data fields for a import_folder_kit record.</summary>
+/// import_folder_kit MUST import a folder kit using sqlite metadata and filesystem asset files.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️importfolderkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/import_folder_kit)
+pub fn import_folder_kit(folder_path: &str) -> Result<zip_roundtrip::KitImportResult> {
+    let database_path = build_folder_database_path(folder_path);
+    let database_path_str = database_path.to_str().ok_or(SemioError::InvalidOperation {
+        message: "Folder kit database path is not valid UTF-8".to_string(),
+    })?;
+
+    let mut kit = sqlite::import_kit_from_sqlite(database_path_str)?;
+    let mut files = HashMap::new();
+
+    if let Some(kit_files) = &kit.files {
+        for file in kit_files {
+            let relative_path = zip_roundtrip::build_file_path(&kit, file);
+            let absolute_path = std::path::Path::new(folder_path).join(&relative_path);
+            match std::fs::read(&absolute_path) {
+                Ok(data) => {
+                    files.insert(relative_path, data);
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => {
+                    return Err(io_semio_error(
+                        "Failed to read folder kit asset file",
+                        error,
+                    ))
+                }
+            }
+        }
+    }
+
+    hydrate_kit_file_blobs(&mut kit, &files);
+
+    Ok(zip_roundtrip::KitImportResult { kit, files })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>export_folder_kit holds the data fields for a export_folder_kit record.</summary>
+/// export_folder_kit MUST export a folder kit using sqlite metadata and filesystem asset files.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️exportfolderkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/export_folder_kit)
+pub fn export_folder_kit(
+    kit: &Kit,
+    files: &HashMap<String, Vec<u8>>,
+    folder_path: &str,
+) -> Result<()> {
+    let root_path = std::path::Path::new(folder_path);
+    std::fs::create_dir_all(root_path)
+        .map_err(|error| io_semio_error("Failed to create folder kit root", error))?;
+
+    let metadata_path = root_path.join(KIT_FOLDER_METADATA_DIRECTORY);
+    std::fs::create_dir_all(&metadata_path)
+        .map_err(|error| io_semio_error("Failed to create folder kit metadata directory", error))?;
+
+    let database_path = metadata_path.join(KIT_FOLDER_DATABASE_FILENAME);
+    if database_path.exists() {
+        std::fs::remove_file(&database_path)
+            .map_err(|error| io_semio_error("Failed to replace existing folder kit database", error))?;
+    }
+    let database_path_str = database_path.to_str().ok_or(SemioError::InvalidOperation {
+        message: "Folder kit database path is not valid UTF-8".to_string(),
+    })?;
+    sqlite::export_kit_to_sqlite(kit, database_path_str)?;
+
+    let resolved_files = resolve_exported_file_bytes(kit, files)?;
+    for (relative_path, data) in resolved_files {
+        let asset_path = root_path.join(&relative_path);
+        if let Some(parent) = asset_path.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|error| io_semio_error("Failed to create folder kit asset directory", error))?;
+        }
+        std::fs::write(&asset_path, data)
+            .map_err(|error| io_semio_error("Failed to write folder kit asset file", error))?;
+    }
+
+    Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>import_remote_kit holds the data fields for a import_remote_kit record.</summary>
+/// import_remote_kit MUST import remote JSON kits and remote ZIP kits over HTTP(S).
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️importremotekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/import_remote_kit)
+pub fn import_remote_kit(url: &str) -> Result<zip_roundtrip::KitImportResult> {
+    let response = reqwest::blocking::get(url).map_err(|error| SemioError::Database {
+        message: format!("Failed to fetch remote kit {}: {}", url, error),
+    })?;
+    let content_type = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.to_string());
+    let response = response.error_for_status().map_err(|error| SemioError::Database {
+        message: format!("Remote kit request failed for {}: {}", url, error),
+    })?;
+    let bytes = response.bytes().map_err(|error| SemioError::Database {
+        message: format!("Failed to read remote kit body from {}: {}", url, error),
+    })?;
+
+    if is_zip_payload(url, content_type.as_deref(), bytes.as_ref()) {
+        return import_kit_from_zip_bytes(bytes.as_ref());
+    }
+
+    let json = String::from_utf8(bytes.to_vec()).map_err(|error| SemioError::Serialization {
+        message: format!("Failed to decode remote kit JSON from {}: {}", url, error),
+    })?;
+    let kit = deserialize_kit(&json)?;
+    Ok(zip_roundtrip::KitImportResult {
+        kit,
+        files: HashMap::new(),
+    })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>edit_temporary_kit holds the data fields for a edit_temporary_kit record.</summary>
+/// edit_temporary_kit MUST clone a kit and apply a diff in memory.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️edittemporarykit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_temporary_kit)
+pub fn edit_temporary_kit(kit: &Kit, diff: &KitDiff) -> Kit {
+    let mut edited = kit.clone();
+    apply_kit_diff(&mut edited, diff);
+    edited
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>edit_file_kit holds the data fields for a edit_file_kit record.</summary>
+/// edit_file_kit MUST import, edit, and persist a JSON file kit in place.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️editfilekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_file_kit)
+pub fn edit_file_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
+    let kit = import_file_kit(path)?;
+    let edited = edit_temporary_kit(&kit, diff);
+    export_file_kit(&edited, path)?;
+    Ok(edited)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>edit_folder_kit holds the data fields for a edit_folder_kit record.</summary>
+/// edit_folder_kit MUST import, edit, and persist a folder kit in place.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️editfolderkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_folder_kit)
+pub fn edit_folder_kit(folder_path: &str, diff: &KitDiff) -> Result<Kit> {
+    let imported = import_folder_kit(folder_path)?;
+    let edited = edit_temporary_kit(&imported.kit, diff);
+    let edited_files = remap_kit_file_bytes(&imported.kit, &edited, &imported.files)?;
+    remove_stale_folder_assets(folder_path, &imported.files, &edited_files)?;
+    export_folder_kit(&edited, &edited_files, folder_path)?;
+    Ok(edited)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>edit_archive_kit holds the data fields for a edit_archive_kit record.</summary>
+/// edit_archive_kit MUST import, edit, and persist a ZIP archive kit in place.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️editarchivekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_archive_kit)
+pub fn edit_archive_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
+    let imported = zip_roundtrip::import_kit_from_zip(path)?;
+    let edited = edit_temporary_kit(&imported.kit, diff);
+    let edited_files = remap_kit_file_bytes(&imported.kit, &edited, &imported.files)?;
+    zip_roundtrip::export_kit_to_zip(&edited, &edited_files, path)?;
+    Ok(edited)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+/// <summary>edit_remote_kit holds the data fields for a edit_remote_kit record.</summary>
+/// edit_remote_kit MUST import a remote kit and apply a temporary diff without persisting remotely.
+/// [👤semio📚rs💻semio🔖kitworkflow🛠️editremotekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_remote_kit)
+pub fn edit_remote_kit(url: &str, diff: &KitDiff) -> Result<Kit> {
+    let imported = import_remote_kit(url)?;
+    Ok(edit_temporary_kit(&imported.kit, diff))
+}
+
+// #endregion 🔖Kit Workflow
+
 // #region 🔖WASM Bindings
 // [👤semio📚rs💻semio🔖wasmbindings](repo://p/u/semio/b/l/rs/f/semio.rs/s/WASM%20Bindings)
 // WASM Bindings MUST provide the wasm bindings functionality.
@@ -9923,6 +10296,285 @@ mod tests {
     }
 
     // #endregion 🔖Meta And Shallow Tests
+
+    // #region 🔖Kit Workflow Tests
+    // [👤semio📚rs💻semio🔖tests🔖kitworkflowtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Kit%20Workflow%20Tests)
+    // Kit Workflow Tests MUST verify file, folder, archive, remote, and temporary kit workflows.
+
+    #[cfg(not(target_arch = "wasm32"))]
+    mod kit_workflow {
+        use super::*;
+        use base64::Engine;
+        use std::collections::HashMap;
+        use std::io::{BufRead, BufReader, Write};
+        use std::net::TcpListener;
+        use std::thread;
+
+        struct TestHttpRoute {
+            path: String,
+            content_type: String,
+            body: Vec<u8>,
+        }
+
+        fn workflow_kit_fixture() -> (Kit, HashMap<String, Vec<u8>>) {
+            let file_bytes = b"hello workflow".to_vec();
+            let blob = format!(
+                "data:text/plain;base64,{}",
+                base64::engine::general_purpose::STANDARD.encode(&file_bytes)
+            );
+            let folder_guid = "workflow-folder-guid".to_string();
+            let file_guid = "workflow-file-guid".to_string();
+
+            let kit = Kit {
+                guid: "workflow-kit-guid".to_string(),
+                name: "Workflow Kit".to_string(),
+                version: Some("1.0.0".to_string()),
+                description: Some("Fixture kit for workflow tests".to_string()),
+                icon: None,
+                image: None,
+                preview: None,
+                remote: None,
+                homepage: None,
+                license: None,
+                concepts: None,
+                tags: None,
+                types: None,
+                designs: None,
+                ports: None,
+                qualities: None,
+                files: Some(vec![File {
+                    guid: file_guid,
+                    name: "hello.txt".to_string(),
+                    folder: Some(FolderId {
+                        guid: folder_guid.clone(),
+                    }),
+                    size: Some(file_bytes.len() as i64),
+                    hash: Some("workflow-hash".to_string()),
+                    remote: None,
+                    blob: Some(blob),
+                    created_at: None,
+                    updated_at: None,
+                }]),
+                folders: Some(vec![Folder {
+                    guid: folder_guid,
+                    name: "assets".to_string(),
+                    parent: None,
+                    attributes: None,
+                    created_at: None,
+                    updated_at: None,
+                }]),
+                authors: None,
+                attributes: None,
+                created_at: None,
+                updated_at: None,
+            };
+
+            let file_path = zip_roundtrip::build_file_path(&kit, &kit.files.as_ref().unwrap()[0]);
+            let mut files = HashMap::new();
+            files.insert(file_path, file_bytes);
+
+            (kit, files)
+        }
+
+        fn workflow_diff() -> KitDiff {
+            KitDiff {
+                guid: "workflow-kit-guid".to_string(),
+                name: Some("Workflow Kit Edited".to_string()),
+                files: Some(CollectionDiff {
+                    added: None,
+                    removed: None,
+                    updated: Some(vec![DiffUpdate {
+                        key: "file".to_string(),
+                        guid: "workflow-file-guid".to_string(),
+                        diff: FileDiff {
+                            guid: "workflow-file-guid".to_string(),
+                            name: Some("renamed.txt".to_string()),
+                            ..Default::default()
+                        },
+                    }]),
+                }),
+                folders: Some(CollectionDiff {
+                    added: None,
+                    removed: None,
+                    updated: Some(vec![DiffUpdate {
+                        key: "folder".to_string(),
+                        guid: "workflow-folder-guid".to_string(),
+                        diff: FolderDiff {
+                            guid: "workflow-folder-guid".to_string(),
+                            name: Some("renamed-assets".to_string()),
+                            ..Default::default()
+                        },
+                    }]),
+                }),
+                ..Default::default()
+            }
+        }
+
+        fn workflow_expected_paths() -> (String, String) {
+            (
+                "assets/hello.txt".to_string(),
+                "renamed-assets/renamed.txt".to_string(),
+            )
+        }
+
+        fn spawn_test_http_server(routes: Vec<TestHttpRoute>) -> (String, thread::JoinHandle<()>) {
+            let listener = TcpListener::bind("127.0.0.1:0").expect("bind test http listener");
+            let address = listener.local_addr().expect("get test http listener address");
+            let handle = thread::spawn(move || {
+                for _ in 0..routes.len() {
+                    let (mut stream, _) = listener.accept().expect("accept test http connection");
+                    let mut request_line = String::new();
+                    {
+                        let mut reader = BufReader::new(stream.try_clone().expect("clone stream"));
+                        reader.read_line(&mut request_line).expect("read request line");
+                    }
+                    let request_path = request_line
+                        .split_whitespace()
+                        .nth(1)
+                        .expect("http request path");
+                    let route = routes
+                        .iter()
+                        .find(|route| route.path == request_path)
+                        .expect("route exists");
+
+                    let response = format!(
+                        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: {}\r\nConnection: close\r\n\r\n",
+                        route.body.len(),
+                        route.content_type
+                    );
+                    stream
+                        .write_all(response.as_bytes())
+                        .expect("write response headers");
+                    stream.write_all(&route.body).expect("write response body");
+                    stream.flush().expect("flush response");
+                }
+            });
+
+            (format!("http://{}", address), handle)
+        }
+
+        #[test]
+        fn file_workflow_roundtrips_and_persists_edits() {
+            let (kit, _) = workflow_kit_fixture();
+            let diff = workflow_diff();
+            let temp_dir = tempfile::tempdir().unwrap();
+            let path = temp_dir.path().join("workflow.kit.semio.json");
+            let path_str = path.to_str().unwrap();
+
+            export_file_kit(&kit, path_str).unwrap();
+            let imported = import_file_kit(path_str).unwrap();
+            assert!(are_kits_equal(&kit, &imported));
+
+            let edited = edit_file_kit(path_str, &diff).unwrap();
+            let persisted = import_file_kit(path_str).unwrap();
+            assert_eq!(edited.name, "Workflow Kit Edited");
+            assert!(are_kits_equal(&edited, &persisted));
+        }
+
+        #[test]
+        fn folder_workflow_roundtrips_and_moves_assets_on_edit() {
+            let (kit, files) = workflow_kit_fixture();
+            let diff = workflow_diff();
+            let (old_path, new_path) = workflow_expected_paths();
+            let temp_dir = tempfile::tempdir().unwrap();
+            let folder_path = temp_dir.path().join("workflow-folder-kit");
+            let folder_path_str = folder_path.to_str().unwrap();
+
+            export_folder_kit(&kit, &files, folder_path_str).unwrap();
+            let imported = import_folder_kit(folder_path_str).unwrap();
+            assert!(are_kits_equal(&kit, &imported.kit));
+            assert_eq!(imported.files, files);
+
+            let edited = edit_folder_kit(folder_path_str, &diff).unwrap();
+            let reloaded = import_folder_kit(folder_path_str).unwrap();
+            assert_eq!(edited.name, "Workflow Kit Edited");
+            assert!(are_kits_equal(&edited, &reloaded.kit));
+            assert!(!folder_path.join(old_path).exists());
+            assert!(folder_path.join(new_path).exists());
+        }
+
+        #[test]
+        fn archive_workflow_roundtrips_and_persists_edits() {
+            let (kit, files) = workflow_kit_fixture();
+            let diff = workflow_diff();
+            let temp_dir = tempfile::tempdir().unwrap();
+            let archive_path = temp_dir.path().join("workflow.semio.zip");
+            let archive_path_str = archive_path.to_str().unwrap();
+
+            zip_roundtrip::export_kit_to_zip(&kit, &files, archive_path_str).unwrap();
+            let imported = zip_roundtrip::import_kit_from_zip(archive_path_str).unwrap();
+            assert!(are_kits_equal(&kit, &imported.kit));
+            assert_eq!(imported.files, files);
+
+            let edited = edit_archive_kit(archive_path_str, &diff).unwrap();
+            let reloaded = zip_roundtrip::import_kit_from_zip(archive_path_str).unwrap();
+            assert_eq!(edited.name, "Workflow Kit Edited");
+            assert!(are_kits_equal(&edited, &reloaded.kit));
+            assert!(reloaded.files.contains_key("renamed-assets/renamed.txt"));
+            assert!(!reloaded.files.contains_key("assets/hello.txt"));
+        }
+
+        #[test]
+        fn remote_workflow_supports_json_and_zip_sources() {
+            let (kit, files) = workflow_kit_fixture();
+            let diff = workflow_diff();
+            let json_body = serialize_kit(&kit).unwrap().into_bytes();
+
+            let temp_dir = tempfile::tempdir().unwrap();
+            let archive_path = temp_dir.path().join("remote.semio.zip");
+            let archive_path_str = archive_path.to_str().unwrap();
+            zip_roundtrip::export_kit_to_zip(&kit, &files, archive_path_str).unwrap();
+            let zip_body = std::fs::read(archive_path_str).unwrap();
+
+            let (base_url, handle) = spawn_test_http_server(vec![
+                TestHttpRoute {
+                    path: "/kit.json".to_string(),
+                    content_type: "application/json".to_string(),
+                    body: json_body,
+                },
+                TestHttpRoute {
+                    path: "/kit.zip".to_string(),
+                    content_type: "application/zip".to_string(),
+                    body: zip_body,
+                },
+                TestHttpRoute {
+                    path: "/kit.json".to_string(),
+                    content_type: "application/json".to_string(),
+                    body: serialize_kit(&kit).unwrap().into_bytes(),
+                },
+            ]);
+
+            let json_import = import_remote_kit(&format!("{}/kit.json", base_url)).unwrap();
+            assert!(are_kits_equal(&kit, &json_import.kit));
+            assert!(json_import.files.is_empty());
+
+            let zip_import = import_remote_kit(&format!("{}/kit.zip", base_url)).unwrap();
+            assert!(are_kits_equal(&kit, &zip_import.kit));
+            assert_eq!(zip_import.files, files);
+
+            let edited = edit_remote_kit(&format!("{}/kit.json", base_url), &diff).unwrap();
+            assert_eq!(edited.name, "Workflow Kit Edited");
+            assert_eq!(edited.files.as_ref().unwrap()[0].name, "renamed.txt");
+
+            handle.join().unwrap();
+        }
+
+        #[test]
+        fn temporary_workflow_applies_diff_without_mutating_source() {
+            let (kit, _) = workflow_kit_fixture();
+            let diff = workflow_diff();
+
+            let edited = edit_temporary_kit(&kit, &diff);
+            assert_eq!(edited.name, "Workflow Kit Edited");
+            assert_eq!(edited.files.as_ref().unwrap()[0].name, "renamed.txt");
+            assert_eq!(edited.folders.as_ref().unwrap()[0].name, "renamed-assets");
+            assert_eq!(kit.name, "Workflow Kit");
+            assert_eq!(kit.files.as_ref().unwrap()[0].name, "hello.txt");
+            assert_eq!(kit.folders.as_ref().unwrap()[0].name, "assets");
+        }
+    }
+
+    // #endregion 🔖Kit Workflow Tests
 
     // #region 🔖KitKind Tests
     // [👤semio📚rs💻semio🔖tests🔖kitkindtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/KitKind%20Tests)
