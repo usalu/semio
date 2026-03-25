@@ -905,3 +905,180 @@ func TestMetaShallow(t *testing.T) {
 		}
 	})
 }
+
+// #region 🔖KitKind Tests
+// [👤semio📚go🥼semiotest🔖kitkindtests](repo://p/u/semio/b/l/go/f/semio_test.go/s/KitKindTests)
+// Tests for KitKind enum MUST verify the five kit kinds.
+
+func TestKitKind(t *testing.T) {
+	t.Run("Kit/AllKitKinds contains exactly five entries", func(t *testing.T) {
+		if len(AllKitKinds) != 5 {
+			t.Errorf("AllKitKinds has %d entries, want 5", len(AllKitKinds))
+		}
+	})
+
+	t.Run("Kit/AllKitKinds contains all five kinds", func(t *testing.T) {
+		expected := []KitKind{KitKindFile, KitKindFolder, KitKindArchive, KitKindRemote, KitKindTemporary}
+		for _, kind := range expected {
+			found := false
+			for _, k := range AllKitKinds {
+				if k == kind {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("AllKitKinds missing %q", kind)
+			}
+		}
+	})
+
+	t.Run("Kit/IsValidKitKind accepts valid kinds", func(t *testing.T) {
+		for _, kind := range AllKitKinds {
+			if !IsValidKitKind(kind) {
+				t.Errorf("IsValidKitKind(%q) = false, want true", kind)
+			}
+		}
+	})
+
+	t.Run("Kit/IsValidKitKind rejects invalid kinds", func(t *testing.T) {
+		invalids := []KitKind{"invalid", "json", "sqlite", ""}
+		for _, kind := range invalids {
+			if IsValidKitKind(kind) {
+				t.Errorf("IsValidKitKind(%q) = true, want false", kind)
+			}
+		}
+	})
+
+	t.Run("Kit/File: roundtrips through JSON serialize/deserialize", func(t *testing.T) {
+		kit := Kit{Guid: "file-kit-guid", Name: "FileKit Test", Version: "1.0"}
+		data, err := SerializeKit(kit)
+		if err != nil {
+			t.Fatal(err)
+		}
+		restored, err := DeserializeKit(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if restored.Guid != kit.Guid {
+			t.Errorf("Guid = %q, want %q", restored.Guid, kit.Guid)
+		}
+		if restored.Name != kit.Name {
+			t.Errorf("Name = %q, want %q", restored.Name, kit.Name)
+		}
+	})
+
+	t.Run("Kit/Folder: roundtrips through SQLite", func(t *testing.T) {
+		kit := Kit{
+			Guid:    "folder-kit-guid",
+			Name:    "FolderKit Test",
+			Version: "1.0",
+			Types:   []Type{{Guid: "t1", Name: "Wall"}},
+		}
+		tmpDir := t.TempDir()
+		dbPath := filepath.Join(tmpDir, "kit.db")
+		schemaPath := filepath.Join(AssetsPath, "..", "sqlite", "schema.sql")
+		schemaBytes, err := os.ReadFile(schemaPath)
+		if err != nil {
+			t.Fatalf("Failed to read schema: %v", err)
+		}
+		if err := KitToSqlite(&kit, dbPath, string(schemaBytes)); err != nil {
+			t.Fatalf("KitToSqlite: %v", err)
+		}
+		restored, err := KitFromSqlite(dbPath)
+		if err != nil {
+			t.Fatalf("KitFromSqlite: %v", err)
+		}
+		if restored.Guid != kit.Guid {
+			t.Errorf("Guid = %q, want %q", restored.Guid, kit.Guid)
+		}
+		if restored.Name != kit.Name {
+			t.Errorf("Name = %q, want %q", restored.Name, kit.Name)
+		}
+		if len(restored.Types) != 1 {
+			t.Fatalf("Types len = %d, want 1", len(restored.Types))
+		}
+		if restored.Types[0].Name != "Wall" {
+			t.Errorf("Types[0].Name = %q, want %q", restored.Types[0].Name, "Wall")
+		}
+	})
+
+	t.Run("Kit/Archive: roundtrips through zip export/import", func(t *testing.T) {
+		kit := Kit{
+			Guid:    "archive-kit-guid",
+			Name:    "ArchiveKit Test",
+			Version: "1.0",
+			Types:   []Type{{Guid: "at1", Name: "Beam"}},
+		}
+		tmpDir := t.TempDir()
+		zipPath := filepath.Join(tmpDir, "kit.zip")
+		schemaPath := filepath.Join(AssetsPath, "..", "sqlite", "schema.sql")
+		schemaBytes, err := os.ReadFile(schemaPath)
+		if err != nil {
+			t.Fatalf("Failed to read schema: %v", err)
+		}
+		if err := KitToZip(&kit, nil, zipPath, string(schemaBytes)); err != nil {
+			t.Fatalf("KitToZip: %v", err)
+		}
+		restored, _, err := KitFromZip(zipPath)
+		if err != nil {
+			t.Fatalf("KitFromZip: %v", err)
+		}
+		if restored.Guid != kit.Guid {
+			t.Errorf("Guid = %q, want %q", restored.Guid, kit.Guid)
+		}
+		if restored.Name != kit.Name {
+			t.Errorf("Name = %q, want %q", restored.Name, kit.Name)
+		}
+		if len(restored.Types) != 1 {
+			t.Fatalf("Types len = %d, want 1", len(restored.Types))
+		}
+		if restored.Types[0].Name != "Beam" {
+			t.Errorf("Types[0].Name = %q, want %q", restored.Types[0].Name, "Beam")
+		}
+	})
+
+	t.Run("Kit/Remote: validates remote URL field", func(t *testing.T) {
+		remote := "https://example.com/metabolism.kit.json"
+		kit := Kit{Guid: "remote-kit-guid", Name: "RemoteKit Test", Remote: &remote}
+		data, err := SerializeKit(kit)
+		if err != nil {
+			t.Fatal(err)
+		}
+		restored, err := DeserializeKit(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if restored.Remote == nil || *restored.Remote != remote {
+			t.Errorf("Remote = %v, want %q", restored.Remote, remote)
+		}
+	})
+
+	t.Run("Kit/Temporary: in-memory kit operations", func(t *testing.T) {
+		kit := Kit{Guid: "temp-kit-guid", Name: "TemporaryKit Test", Version: "1.0"}
+		kit.Name = "Modified Temporary"
+		if kit.Name != "Modified Temporary" {
+			t.Errorf("Name = %q, want %q", kit.Name, "Modified Temporary")
+		}
+		if !DeepEqual(kit, kit) {
+			t.Error("DeepEqual(kit, kit) = false, want true")
+		}
+	})
+
+	t.Run("Kit/KitKind string values match JSON enum", func(t *testing.T) {
+		expectedValues := map[KitKind]string{
+			KitKindFile:      "file",
+			KitKindFolder:    "folder",
+			KitKindArchive:   "archive",
+			KitKindRemote:    "remote",
+			KitKindTemporary: "temporary",
+		}
+		for kind, expected := range expectedValues {
+			if string(kind) != expected {
+				t.Errorf("KitKind %v = %q, want %q", kind, string(kind), expected)
+			}
+		}
+	})
+}
+
+// #endregion 🔖KitKind Tests

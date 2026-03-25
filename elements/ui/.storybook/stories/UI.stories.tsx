@@ -203,13 +203,11 @@ const editorApp: UIAppConfig = {
   id: "editor",
   label: "Editor",
   icon: <FileText size={16} />,
-  windowConfig: {
-    windowKinds: [
-      { id: "editor", label: "Editor", component: EditorWindow },
-      { id: "preview", label: "Preview", component: PreviewWindow },
-    ],
-    defaultLayout: createDefaultLayout(["editor", "preview"], "row", [60, 40]),
-  },
+  windowKinds: [
+    { id: "editor", label: "Editor", component: EditorWindow },
+    { id: "preview", label: "Preview", component: PreviewWindow },
+  ],
+  defaultLayout: createDefaultLayout(["editor", "preview"], "row", [60, 40]),
   leftPanelTabs: [
     { id: "explorer", icon: Layers, order: 0, content: <ExplorerTree /> },
     { id: "settings", icon: Settings, order: 1, content: <div className="p-2">Settings content.</div> },
@@ -228,10 +226,8 @@ const dashboardApp: UIAppConfig = {
   id: "dashboard",
   label: "Dashboard",
   icon: <BarChart size={16} />,
-  windowConfig: {
-    windowKinds: [{ id: "stats", label: "Statistics", component: StatsWindow }],
-    defaultLayout: createDefaultLayout(["stats"]),
-  },
+  windowKinds: [{ id: "stats", label: "Statistics", component: StatsWindow }],
+  defaultLayout: createDefaultLayout(["stats"]),
   leftPanelTabs: [{ id: "metrics", icon: BarChart, order: 0, content: <MetricsTree /> }],
   footerItems: [{ id: "last-updated", content: "Updated 2m ago", order: 0 }],
 };
@@ -349,10 +345,8 @@ export const WithSearch: Story = {
       {
         id: "minimal",
         label: "Minimal",
-        windowConfig: {
-          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Press Ctrl+P to search</div> }],
-          defaultLayout: createDefaultLayout(["main"]),
-        },
+        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Press Ctrl+P to search</div> }],
+        defaultLayout: createDefaultLayout(["main"]),
       },
     ],
     searchItems,
@@ -365,10 +359,8 @@ export const WithFind: Story = {
       {
         id: "code",
         label: "Code",
-        windowConfig: {
-          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Press Ctrl+F to find</div> }],
-          defaultLayout: createDefaultLayout(["main"]),
-        },
+        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Press Ctrl+F to find</div> }],
+        defaultLayout: createDefaultLayout(["main"]),
         findItems: editorFindItems,
         onFindSelect: (itemId) => console.log("Find selected:", itemId),
       },
@@ -382,10 +374,8 @@ export const WithTreePanels: Story = {
       {
         id: "tree-demo",
         label: "Tree Demo",
-        windowConfig: {
-          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Every panel has a tree</div> }],
-          defaultLayout: createDefaultLayout(["main"]),
-        },
+        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Every panel has a tree</div> }],
+        defaultLayout: createDefaultLayout(["main"]),
         leftPanelTabs: [{ id: "explorer", icon: Layers, order: 0, content: <ExplorerTree /> }],
         rightPanelTabs: [{ id: "properties", icon: Info, order: 0, content: <PropertiesTree /> }],
       },
@@ -445,14 +435,12 @@ export const ThreeColumnLayout: Story = {
       {
         id: "three-col",
         label: "Three Columns",
-        windowConfig: {
-          windowKinds: [
-            { id: "left", label: "Left", component: () => <div className="flex items-center justify-center h-full">Left</div> },
-            { id: "center", label: "Center", component: () => <div className="flex items-center justify-center h-full">Center</div> },
-            { id: "right", label: "Right", component: () => <div className="flex items-center justify-center h-full">Right</div> },
-          ],
-          defaultLayout: createDefaultLayout(["left", "center", "right"], "row", [25, 50, 25]),
-        },
+        windowKinds: [
+          { id: "left", label: "Left", component: () => <div className="flex items-center justify-center h-full">Left</div> },
+          { id: "center", label: "Center", component: () => <div className="flex items-center justify-center h-full">Center</div> },
+          { id: "right", label: "Right", component: () => <div className="flex items-center justify-center h-full">Right</div> },
+        ],
+        defaultLayout: createDefaultLayout(["left", "center", "right"], "row", [25, 50, 25]),
         leftPanelTabs: [{ id: "nav", icon: Layers, order: 0, content: <ExplorerTree /> }],
         rightPanelTabs: [{ id: "props", icon: Info, order: 0, content: <PropertiesTree /> }],
       },
@@ -481,10 +469,8 @@ export const MinimalApp: Story = {
       {
         id: "minimal",
         label: "Minimal",
-        windowConfig: {
-          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Minimal App</div> }],
-          defaultLayout: createDefaultLayout(["main"]),
-        },
+        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full">Minimal App</div> }],
+        defaultLayout: createDefaultLayout(["main"]),
       },
     ],
   },
@@ -547,10 +533,8 @@ export const MobileNoPanels: Story = {
       {
         id: "viewer",
         label: "Viewer",
-        windowConfig: {
-          windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full text-lg">Full Screen Canvas</div> }],
-          defaultLayout: createDefaultLayout(["main"]),
-        },
+        windowKinds: [{ id: "main", label: "Main", component: () => <div className="flex items-center justify-center h-full text-lg">Full Screen Canvas</div> }],
+        defaultLayout: createDefaultLayout(["main"]),
       },
     ],
     breadcrumbItems: [breadcrumbItems[0]],

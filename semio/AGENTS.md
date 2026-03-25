@@ -661,7 +661,7 @@ kit : !Kit{
 }
 ```
 
-## 📛 Concepts
+## 📛 Entities
 
 ### 📦 Kit [↑](#-concepts-)
 
@@ -834,3 +834,676 @@ Props define measurable characteristics of connectors using the quality system f
 
 A [`stat`](#-stat-) is a statistical measurement on a [`design`](#%EF%B8%8F-design-) that references a [`quality`](#-quality-) with **range** (min/max) and optional **unit** 📊
 Stats provide computed or measured performance data for entire designs using the quality framework 📈
+
+## Mathematical model
+
+We model the specification as a typed relational structure with geometric data.
+
+### 1. Primitive domains
+
+$$
+\Sigma := \text{the set of finite strings}, \qquad
+\mathbb{B} := \{\mathrm{true}, \mathrm{false}\}, \qquad
+\mathbb{R} := \text{the set of real numbers}.
+$$
+
+$$
+X \rightharpoonup Y
+\text{ denotes a partial function from } X \text{ to } Y.
+$$
+
+$$
+\operatorname{Point} := \mathbb{R}^3,
+\qquad
+\operatorname{Vector} := \mathbb{R}^3.
+$$
+
+A plane is an origin together with two non-collinear axes:
+
+$$
+\operatorname{Plane}
+:=
+\left\{
+(o,x,y)\in \operatorname{Point}\times\operatorname{Vector}\times\operatorname{Vector}
+\;\middle|\;
+x\neq 0,\; y\neq 0,\; x \not\parallel y
+\right\}.
+$$
+
+The third axis is derived from the specification's left-handed convention.
+
+Let $\bot$ denote an unspecified or default optional value.
+
+---
+
+### 2. Atomic entities
+
+An attribute is metadata:
+
+$$
+a = (key, value, unit, definition)
+$$
+
+with
+
+$$
+key \in \Sigma, \qquad
+value \in \Sigma \cup \{\top,\bot\}, \qquad
+unit \in \Sigma \cup \{\bot\}, \qquad
+definition \in \Sigma \cup \{\bot\}.
+$$
+
+Here, $value=\top$ means the attribute is present without an explicit value.
+
+A tag is
+
+$$
+t = (guid, name, description, icon, attributes).
+$$
+
+A concept is
+
+$$
+c = (guid, name, description, icon, attributes).
+$$
+
+A file is
+
+$$
+f = (guid, path, remoteUrl, description, attributes).
+$$
+
+An author is
+
+$$
+u = (name, email, attributes).
+$$
+
+A benchmark is
+
+$$
+b = (name, icon, min, minExcluded, max, maxExcluded, definition, attributes).
+$$
+
+A quality kind is a subset of the supported application targets:
+
+$$
+\operatorname{QualityKind}
+\subseteq
+\{\mathrm{General},\mathrm{Design},\mathrm{Type},\mathrm{Piece},\mathrm{Connection},\mathrm{Connector}\}.
+$$
+
+A quality is
+
+$$
+q =
+(
+key,
+name,
+kind,
+default,
+formula,
+defaultSiUnit,
+defaultImperialUnit,
+min,
+minExcluded,
+max,
+maxExcluded,
+canScale,
+benchmarks,
+definition,
+attributes
+).
+$$
+
+A prop is
+
+$$
+\pi = (key, value, unit, attributes),
+$$
+
+and a stat is
+
+$$
+s = (key, unit, min, minExcluded, max, maxExcluded).
+$$
+
+---
+
+### 3. Connectors, models, types
+
+A model is
+
+$$
+m = (guid, name, tags, file, description, attributes).
+$$
+
+Its tag similarity is the Jaccard index:
+
+$$
+\operatorname{sim}(m_1,m_2)
+=
+\frac{|tags(m_1)\cap tags(m_2)|}{|tags(m_1)\cup tags(m_2)|},
+$$
+
+when the denominator is nonzero.
+
+A connector is
+
+$$
+\kappa =
+(
+id,
+point,
+direction,
+t,
+mandatory,
+port,
+compatiblePorts,
+props,
+description,
+attributes
+),
+$$
+
+where
+
+$$
+point \in \operatorname{Point},
+\qquad
+direction \in \operatorname{Vector},
+\qquad
+t \in [0,1).
+$$
+
+Define the effective port of a connector by
+
+$$
+\operatorname{port}^{\ast}(\kappa)
+=
+\begin{cases}
+port(\kappa), & \text{if } port(\kappa)\neq \bot,\\
+\bot, & \text{otherwise.}
+\end{cases}
+$$
+
+Connector compatibility is symmetric by allowance from either side:
+
+$$
+\operatorname{compatible}(\kappa_1,\kappa_2)
+\iff
+\Bigl(
+compatiblePorts(\kappa_1)=\varnothing
+\Bigr)
+\lor
+\Bigl(
+compatiblePorts(\kappa_2)=\varnothing
+\Bigr)
+\lor
+\Bigl(
+\operatorname{port}^{\ast}(\kappa_2)\in compatiblePorts(\kappa_1)
+\Bigr)
+\lor
+\Bigl(
+\operatorname{port}^{\ast}(\kappa_1)\in compatiblePorts(\kappa_2)
+\Bigr).
+$$
+
+A type is
+
+$$
+\tau =
+(
+name,
+variant,
+models,
+connectors,
+props,
+isVirtual,
+canScale,
+canMirror,
+unit,
+availableCount,
+location,
+authors,
+concepts,
+icon,
+image,
+description,
+attributes,
+created,
+updated
+).
+$$
+
+---
+
+### 4. Pieces, connections, designs
+
+A piece is
+
+$$
+p =
+(
+id,
+ref,
+plane,
+center,
+scale,
+mirrorPlane,
+props,
+hidden,
+locked,
+color,
+description,
+attributes
+),
+$$
+
+where
+
+$$
+ref(p) \in \mathcal{T} \sqcup \mathcal{D}.
+$$
+
+That is, a piece instantiates either a type or a design.
+
+A piece is **fixed** iff its plane is defined:
+
+$$
+\operatorname{fixed}(p) \iff plane(p)\neq \bot.
+$$
+
+A piece is **linked** iff it is not fixed:
+
+$$
+\operatorname{linked}(p) \iff plane(p)=\bot.
+$$
+
+A side of a connection is
+
+$$
+\sigma = (piece, connector, designPiece^{\ast}),
+$$
+
+where $designPiece^{\ast}$ is optional.
+
+A connection is
+
+$$
+e =
+(
+\sigma_c,
+\sigma_g,
+gap,
+shift,
+rise,
+rotation,
+turn,
+tilt,
+x,
+y,
+description,
+attributes
+).
+$$
+
+The labels $\sigma_c$ and $\sigma_g$ may be read as `connected` and `connecting`, but the underlying relation is undirected.
+
+A layer is
+
+$$
+\lambda = (path, isHidden, isLocked, color, description, attributes).
+$$
+
+A group is
+
+$$
+g = (pieces, color, name, description, attributes).
+$$
+
+A design is
+
+$$
+d =
+(
+name,
+variant,
+view,
+P_d,
+E_d,
+S_d,
+\Pi_d,
+L_d,
+G_d,
+canScale,
+canMirror,
+unit,
+location,
+authors,
+concepts,
+icon,
+image,
+description,
+attributes,
+created,
+updated
+),
+$$
+
+where
+
+- $P_d$ is the finite set of pieces of $d$,
+- $E_d$ is the finite set of connections of $d$,
+- $S_d$ is the set of stats,
+- $\Pi_d$ is the set of props,
+- $L_d$ is the set of layers,
+- $G_d$ is the set of groups.
+
+A kit is the top-level aggregate
+
+$$
+K =
+(
+T_K,
+D_K,
+Q_K,
+F_K,
+A_K,
+C_K,
+\Gamma_K,
+Attr_K,
+description,
+metadata
+),
+$$
+
+where
+
+- $T_K$ is the set of types,
+- $D_K$ is the set of designs,
+- $Q_K$ is the set of qualities,
+- $F_K$ is the set of files,
+- $A_K$ is the set of authors,
+- $C_K$ is the set of concepts,
+- $\Gamma_K$ is the set of tags,
+- $Attr_K$ is the set of kit-level attributes.
+
+---
+
+### 5. Design graph
+
+Each design induces an undirected graph
+
+$$
+\mathcal{G}(d) = (P_d, \sim_d),
+$$
+
+where
+
+$$
+p \sim_d q
+\iff
+\exists e\in E_d
+\text{ such that } e \text{ joins } p \text{ and } q.
+$$
+
+Define **directly connected** by
+
+$$
+\operatorname{directlyConnected}_d(p,q) \iff p \sim_d q.
+$$
+
+Define **connected** as graph reachability:
+
+$$
+\operatorname{connected}_d(p,q)
+\iff
+\exists n\ge 0,\;
+\exists p_0,\dots,p_n\in P_d
+\text{ such that }
+p_0=p,\; p_n=q,\; p_i \sim_d p_{i+1}.
+$$
+
+This is an equivalence relation on $P_d$.
+
+A **component** of $d$ is an equivalence class of $\operatorname{connected}_d$.
+
+---
+
+### 6. Fixed roots, hierarchy, and placement forest
+
+Let the set of fixed pieces be
+
+$$
+F_d := \{p\in P_d \mid \operatorname{fixed}(p)\}.
+$$
+
+Assuming every non-fixed piece lies in a component containing at least one fixed piece, define the hierarchy of a piece as its shortest graph distance to a fixed piece:
+
+$$
+\operatorname{hierarchy}_d(p)
+:=
+\min_{f\in F_d}
+\operatorname{dist}_{\mathcal{G}(d)}(f,p).
+$$
+
+Hence:
+
+$$
+\operatorname{hierarchy}_d(p)=0 \iff \operatorname{fixed}(p).
+$$
+
+To obtain parent/child relations, choose a breadth-first spanning forest
+
+$$
+\mathcal{F}_d
+$$
+
+of $\mathcal{G}(d)$ rooted at the fixed pieces $F_d$.
+
+Then the **parent** relation is the predecessor relation in that forest:
+
+$$
+\operatorname{parent}_d : P_d \rightharpoonup P_d.
+$$
+
+It is defined exactly on non-root pieces.
+
+For every non-root piece $p$,
+
+$$
+\operatorname{hierarchy}_d(p)
+=
+\operatorname{hierarchy}_d(\operatorname{parent}_d(p)) + 1.
+$$
+
+---
+
+### 7. Path, ancestor, descendant, child, grandchild
+
+The path of a piece is the ordered list of all parent pieces, starting at the fixed root and excluding the piece itself.
+
+Formally, let $[]$ denote the empty list and let $\mathbin{+\!\!+}$ denote list concatenation. Then
+
+$$
+\operatorname{path}_d(p)
+=
+\begin{cases}
+[],
+& \text{if } \operatorname{parent}_d(p)=\bot,\\[4pt]
+\operatorname{path}_d(\operatorname{parent}_d(p))
+\mathbin{+\!\!+}
+[\operatorname{parent}_d(p)],
+& \text{otherwise.}
+\end{cases}
+$$
+
+So if $b$ is a fixed root, and
+
+$$
+\operatorname{parent}_d(f_0)=b,\quad
+\operatorname{parent}_d(f_1)=f_0,\quad
+\operatorname{parent}_d(f_2)=f_1,\quad
+\operatorname{parent}_d(c)=f_2,
+$$
+
+then
+
+$$
+\operatorname{path}_d(c) = [b,f_0,f_1,f_2].
+$$
+
+A piece $x$ is an **ancestor** of a piece $y$ iff $x$ occurs in the path of $y$:
+
+$$
+\operatorname{ancestor}_d(x,y)
+\iff
+x \in \operatorname{path}_d(y).
+$$
+
+A piece $y$ is a **descendant** of a piece $x$ iff $x$ is an ancestor of $y$:
+
+$$
+\operatorname{descendant}_d(y,x)
+\iff
+x \in \operatorname{path}_d(y).
+$$
+
+A piece $c$ is a **child** of a piece $p$ iff $p$ is the immediate parent of $c$:
+
+$$
+\operatorname{child}_d(c,p)
+\iff
+\operatorname{parent}_d(c)=p.
+$$
+
+A piece $g$ is a **grandchild** of a piece $p$ iff there exists a child $c$ of $p$ such that $g$ is a child of $c$:
+
+$$
+\operatorname{grandchild}_d(g,p)
+\iff
+\exists c\in P_d:
+\operatorname{child}_d(c,p)\land \operatorname{child}_d(g,c).
+$$
+
+More generally, the $n$-fold parent iterate defines strict ancestry:
+
+$$
+\operatorname{ancestor}_d(x,y)
+\iff
+\exists n\ge 1:\;
+\operatorname{parent}_d^{\,n}(y)=x.
+$$
+
+---
+
+### 8. Root, leaf, sibling
+
+A piece is a **root** iff it has no parent:
+
+$$
+\operatorname{root}_d(p) \iff \operatorname{parent}_d(p)=\bot.
+$$
+
+A piece is a **leaf** iff it has no children:
+
+$$
+\operatorname{leaf}_d(p)
+\iff
+\neg \exists c\in P_d:\operatorname{child}_d(c,p).
+$$
+
+Two distinct pieces are **siblings** iff they have the same parent:
+
+$$
+\operatorname{sibling}_d(p,q)
+\iff
+p\neq q
+\land
+\operatorname{parent}_d(p)=\operatorname{parent}_d(q)\neq \bot.
+$$
+
+---
+
+### 9. Direction convention for a connection
+
+Although a connection is semantically undirected, an orientation can be induced from hierarchy:
+
+$$
+\operatorname{lower}(e) :=
+\arg\min_{p\in \operatorname{ends}(e)}
+\operatorname{hierarchy}_d(p),
+\qquad
+\operatorname{higher}(e) :=
+\arg\max_{p\in \operatorname{ends}(e)}
+\operatorname{hierarchy}_d(p).
+$$
+
+Then the conventional direction is
+
+$$
+\operatorname{lower}(e) \to \operatorname{higher}(e).
+$$
+
+If both endpoints have the same hierarchy, the connection remains undirected for semantic purposes.
+
+---
+
+### 10. Proto / parent / child for types and designs
+
+The prose also uses `proto`, `parent`, and `child` for types and designs. Mathematically, this is modeled by optional partial parent maps:
+
+$$
+\operatorname{parent}^{\mathrm{type}} : \mathcal{T} \rightharpoonup \mathcal{T},
+\qquad
+\operatorname{parent}^{\mathrm{design}} : \mathcal{D} \rightharpoonup \mathcal{D}.
+$$
+
+Then:
+
+A type is **proto** iff
+
+$$
+\operatorname{parent}^{\mathrm{type}}(\tau)=\bot.
+$$
+
+A design is **proto** iff
+
+$$
+\operatorname{parent}^{\mathrm{design}}(d)=\bot.
+$$
+
+Subtype, subdesign, ancestor, descendant, child, and grandchild are defined from these parent maps exactly as above.
+
+---
+
+### 11. Summary
+
+The complete structure is therefore:
+
+$$
+K
+\text{ contains types and designs;}
+$$
+
+$$
+d \in D_K
+\text{ is an undirected graph of pieces and connections;}
+$$
+
+$$
+\operatorname{hierarchy}_d
+\text{ is induced by shortest distance to fixed pieces;}
+$$
+
+$$
+\operatorname{parent}_d
+\text{ is induced by a breadth-first placement forest;}
+$$
+
+$$
+\operatorname{path}_d,\operatorname{ancestor}_d,\operatorname{descendant}_d,
+\operatorname{child}_d,\operatorname{grandchild}_d
+\text{ are derived from } \operatorname{parent}_d.
+$$

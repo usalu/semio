@@ -15958,6 +15958,15 @@ func TestIsToolBlocked(t *testing.T) {
 		{"git checkout after semicolon blocked", "", "echo done; git checkout main", true},
 		{"git restore after semicolon blocked", "", "echo done; git restore --staged .", true},
 		{"grep for git reset not blocked", "bash", `grep -rn "git reset --hard" .`, false},
+		{"python subprocess git stash blocked", "run_in_terminal", `python3 -c "import subprocess; subprocess.run(['git', 'stash'])"`, true},
+		{"python os.system git checkout blocked", "run_in_terminal", `python3 -c "import os; os.system('git checkout main')"`, true},
+		{"node exec git stash blocked", "run_in_terminal", `node -e "require('child_process').exec('git stash')"`, true},
+		{"perl system git checkout blocked", "run_in_terminal", `perl -e "system('git checkout main')"`, true},
+		{"ruby system git stash blocked", "run_in_terminal", `ruby -e "system('git stash')"`, true},
+		{"fish git stash blocked", "run_in_terminal", `fish -c "git stash"`, true},
+		{"ksh git reset blocked", "run_in_terminal", `ksh -c "git reset --hard"`, true},
+		{"xargs git stash blocked", "run_in_terminal", "xargs git stash", true},
+		{"python git status allowed", "run_in_terminal", `python3 -c "import subprocess; subprocess.call(['git', 'status'])"`, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -16042,6 +16051,23 @@ func TestIsCommandSegmentBlocked(t *testing.T) {
 		{`bash -lc "git status"`, false},
 		{"GIT CHECKOUT branch", true},
 		{"", false},
+		// Script interpreters with inline git commands.
+		{`python -c "import subprocess; subprocess.run(['git', 'stash'])"`, true},
+		{`python3 -c "import os; os.system('git checkout main')"`, true},
+		{`python3 -c "import subprocess; subprocess.call(['git', 'status'])"`, false},
+		{`node -e "require('child_process').exec('git stash')"`, true},
+		{`node -e "require('child_process').exec('git status')"`, false},
+		{`perl -e "system('git checkout main')"`, true},
+		{`ruby -e "system('git stash')"`, true},
+		{`ruby -e "system('git status')"`, false},
+		// Additional shells.
+		{`fish -c "git stash"`, true},
+		{`ksh -c "git reset --hard"`, true},
+		{`dash -c "git checkout main"`, true},
+		// xargs forwarding git.
+		{"xargs git stash", true},
+		{"xargs git checkout", true},
+		{"xargs git status", false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.segment, func(t *testing.T) {

@@ -44617,6 +44617,32 @@ func splitCommandSegments(cmd string) []string {
 }
 
 // isCommandSegmentBlocked checks if a command segment is blocked.
+// blockedGitVerbs are git subcommands that modify repository state.
+var blockedGitVerbs = map[string]bool{
+	"add": true, "branch": true, "checkout": true, "cherry-pick": true, "clone": true,
+	"commit": true, "config": true, "fetch": true, "init": true, "merge": true,
+	"mv": true, "pull": true, "push": true, "rebase": true, "remote": true,
+	"reset": true, "restore": true, "revert": true, "rm": true, "stash": true,
+	"switch": true, "tag": true, "clean": true,
+}
+
+// blockedGitVerbPattern matches any blocked git verb in inline code strings (shell-style invocation).
+var blockedGitVerbPattern = regexp.MustCompile(`(?i)\bgit\s+(add|branch|checkout|cherry-pick|clone|commit|config|fetch|init|merge|mv|pull|push|rebase|remote|reset|restore|revert|rm|stash|switch|tag|clean)\b`)
+
+// blockedGitListPattern matches array/list-style git invocations like ['git', 'stash'] or ["git", "checkout"].
+var blockedGitListPattern = regexp.MustCompile(`(?i)['"]\s*git\s*['"]\s*,\s*['"]\s*(add|branch|checkout|cherry-pick|clone|commit|config|fetch|init|merge|mv|pull|push|rebase|remote|reset|restore|revert|rm|stash|switch|tag|clean)\s*['"]`)
+
+// containsBlockedGitInCode scans arbitrary inline code (e.g. python -c, node -e) for blocked git invocations.
+func containsBlockedGitInCode(code string) (bool, string) {
+	if m := blockedGitVerbPattern.FindString(code); m != "" {
+		return true, "blocked: " + strings.ToLower(strings.TrimSpace(m))
+	}
+	if m := blockedGitListPattern.FindString(code); m != "" {
+		return true, "blocked: git (list form) in inline code"
+	}
+	return false, ""
+}
+
 func isCommandSegmentBlocked(segment string) (bool, string) {
 	segment = strings.TrimSpace(segment)
 	if segment == "" {
@@ -44640,7 +44666,26 @@ func isCommandSegmentBlocked(segment string) (bool, string) {
 			tokens = tokens[1:]
 			continue
 		}
-		if first == "bash" || first == "sh" || first == "zsh" {
+		// Shell interpreters: scan full joined string for git invocations.
+		if first == "bash" || first == "sh" || first == "zsh" || first == "fish" ||
+			first == "ksh" || first == "csh" || first == "tcsh" || first == "dash" {
+			joined := strings.Join(tokens, " ")
+			if idx := strings.Index(joined, "git "); idx >= 0 {
+				return isCommandSegmentBlocked(joined[idx:])
+			}
+			return false, ""
+		}
+		// Script interpreters with inline code flags (-c, -e): scan inline code for git.
+		if first == "python" || first == "python3" || first == "python2" ||
+			first == "node" || first == "nodejs" ||
+			first == "perl" || first == "ruby" || first == "php" ||
+			first == "lua" || first == "tclsh" || first == "groovy" || first == "scala" {
+			// Extract the inline code argument (after -c or -e flag).
+			joined := strings.Join(tokens[1:], " ")
+			return containsBlockedGitInCode(joined)
+		}
+		// xargs can forward arguments to git directly.
+		if first == "xargs" {
 			joined := strings.Join(tokens, " ")
 			if idx := strings.Index(joined, "git "); idx >= 0 {
 				return isCommandSegmentBlocked(joined[idx:])
@@ -44668,15 +44713,8 @@ func isCommandSegmentBlocked(segment string) (bool, string) {
 	if verbIndex >= len(tokens) {
 		return false, ""
 	}
-	verb := tokens[verbIndex]
-	blockedVerbs := map[string]bool{
-		"add": true, "branch": true, "checkout": true, "cherry-pick": true, "clone": true,
-		"commit": true, "config": true, "fetch": true, "init": true, "merge": true,
-		"mv": true, "pull": true, "push": true, "rebase": true, "remote": true,
-		"reset": true, "restore": true, "revert": true, "rm": true, "stash": true,
-		"switch": true, "tag": true, "clean": true,
-	}
-	if !blockedVerbs[verb] {
+	verb := strings.Trim(tokens[verbIndex], `"'`)
+	if !blockedGitVerbs[verb] {
 		return false, ""
 	}
 	if verb == "clean" && !strings.Contains(lower, "-fd") && !strings.Contains(lower, "-df") {

@@ -313,6 +313,9 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 ## 🧰repo
 
 repo:
+
+Currently all tool calls that involve modifying git commands are blocked. Make sure to also check any program such as python, bash, etc to contain loc that contain those git commands in all kinds of syntaxes. We want to there is absolutely no way that this happens. Block all of them and return the reason why they a
+re blocked.
 Rename concepts to entities.
 
 Every technology has `Operations`. An operation has a name, involves entities, input, side-effects

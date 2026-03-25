@@ -1163,6 +1163,41 @@ pub struct Design {
 // [👤semio📚rs💻semio🔖modeltypeskit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit)
 // Model Types - Kit MUST provide the model types - kit functionality.
 
+// #region 🔖KitKind
+// [👤semio📚rs💻semio🔖modeltypeskit🔖kitkind](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/s/KitKind)
+// KitKind discriminates the five persistence/transport forms of a Kit.
+
+/// Discriminator for the five kit persistence/transport forms.
+///
+/// Specs: Exactly five kit kinds exist:
+/// - File: Self-contained JSON file (.kit.json)
+/// - Folder: Local folder with .semio/kit.db SQLite file and asset files
+/// - Archive: ZIP file packaging a FolderKit structure
+/// - Remote: URL-addressable kit served over HTTP(S)
+/// - Temporary: In-memory ephemeral kit (no persistence)
+/// [👤semio📚rs💻semio🔖modeltypeskit🔖kitkind🛠️kitkind](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/s/KitKind/d/i/KitKind)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum KitKind {
+    File,
+    Folder,
+    Archive,
+    Remote,
+    Temporary,
+}
+
+/// All valid KitKind values.
+/// [👤semio📚rs💻semio🔖modeltypeskit🔖kitkind🪨allkitkinds](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/s/KitKind/d/i/ALL_KIT_KINDS)
+pub const ALL_KIT_KINDS: [KitKind; 5] = [
+    KitKind::File,
+    KitKind::Folder,
+    KitKind::Archive,
+    KitKind::Remote,
+    KitKind::Temporary,
+];
+
+// #endregion 🔖KitKind
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 /// <summary>Kit holds the data fields for a Kit record.</summary>
 /// [👤semio📚rs💻semio🔖modeltypeskit🛠️kit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/d/i/Kit)
@@ -9888,6 +9923,105 @@ mod tests {
     }
 
     // #endregion 🔖Meta And Shallow Tests
+
+    // #region 🔖KitKind Tests
+    // [👤semio📚rs💻semio🔖tests🔖kitkindtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/KitKind%20Tests)
+    // KitKind Tests MUST verify serialization, deserialization and completeness.
+
+    #[test]
+    fn test_kit_kind_all_values_exist() {
+        assert_eq!(ALL_KIT_KINDS.len(), 5);
+        assert!(ALL_KIT_KINDS.contains(&KitKind::File));
+        assert!(ALL_KIT_KINDS.contains(&KitKind::Folder));
+        assert!(ALL_KIT_KINDS.contains(&KitKind::Archive));
+        assert!(ALL_KIT_KINDS.contains(&KitKind::Remote));
+        assert!(ALL_KIT_KINDS.contains(&KitKind::Temporary));
+    }
+
+    #[test]
+    fn test_kit_kind_serialization() {
+        assert_eq!(serde_json::to_string(&KitKind::File).unwrap(), "\"file\"");
+        assert_eq!(serde_json::to_string(&KitKind::Folder).unwrap(), "\"folder\"");
+        assert_eq!(serde_json::to_string(&KitKind::Archive).unwrap(), "\"archive\"");
+        assert_eq!(serde_json::to_string(&KitKind::Remote).unwrap(), "\"remote\"");
+        assert_eq!(serde_json::to_string(&KitKind::Temporary).unwrap(), "\"temporary\"");
+    }
+
+    #[test]
+    fn test_kit_kind_deserialization() {
+        assert_eq!(serde_json::from_str::<KitKind>("\"file\"").unwrap(), KitKind::File);
+        assert_eq!(serde_json::from_str::<KitKind>("\"folder\"").unwrap(), KitKind::Folder);
+        assert_eq!(serde_json::from_str::<KitKind>("\"archive\"").unwrap(), KitKind::Archive);
+        assert_eq!(serde_json::from_str::<KitKind>("\"remote\"").unwrap(), KitKind::Remote);
+        assert_eq!(serde_json::from_str::<KitKind>("\"temporary\"").unwrap(), KitKind::Temporary);
+    }
+
+    #[test]
+    fn test_kit_kind_file_roundtrip() {
+        let kit = Kit {
+            guid: "test-guid-file".to_string(),
+            name: "TestFileKit".to_string(),
+            version: Some("1.0.0".to_string()),
+            description: Some("A file kit".to_string()),
+            icon: None,
+            image: None,
+            preview: None,
+            remote: None,
+            homepage: None,
+            license: None,
+            concepts: None,
+            tags: None,
+            types: None,
+            designs: None,
+            ports: None,
+            qualities: None,
+            files: None,
+            folders: None,
+            authors: None,
+            attributes: None,
+            created_at: None,
+            updated_at: None,
+        };
+        let json = serde_json::to_string(&kit).unwrap();
+        let roundtripped: Kit = serde_json::from_str(&json).unwrap();
+        assert_eq!(kit, roundtripped);
+    }
+
+    #[test]
+    fn test_kit_kind_temporary_in_memory() {
+        let mut kit = Kit {
+            guid: "temp-guid".to_string(),
+            name: "TempKit".to_string(),
+            version: None,
+            description: None,
+            icon: None,
+            image: None,
+            preview: None,
+            remote: None,
+            homepage: None,
+            license: None,
+            concepts: None,
+            tags: None,
+            types: None,
+            designs: None,
+            ports: None,
+            qualities: None,
+            files: None,
+            folders: None,
+            authors: None,
+            attributes: None,
+            created_at: None,
+            updated_at: None,
+        };
+        let kind = KitKind::Temporary;
+        assert_eq!(kind, KitKind::Temporary);
+        kit.name = "ModifiedTempKit".to_string();
+        kit.description = Some("Modified in memory".to_string());
+        assert_eq!(kit.name, "ModifiedTempKit");
+        assert_eq!(kit.description, Some("Modified in memory".to_string()));
+    }
+
+    // #endregion 🔖KitKind Tests
 }
 
 // #endregion 🔖Tests

@@ -1,0 +1,12 @@
+{
+  "title": "Refactor Kit Kinds Across All Languages",
+  "status": "open",
+  "description": "Refactor all kit implementations across all programming languages (TypeScript, Python, Go, Rust, C#) to support exactly five kit kinds: FileKit (JSON), FolderKit (local folder with .semio/kit.db sqlite), ArchiveKit (zip of FolderKit), RemoteKit (url), TemporaryKit (InMemory). Add KitKind enum, conversion functions, and comprehensive tests for all five kinds in all languages.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1070"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪234e268873044137a1081f79c8542e55"
+  ]
+}

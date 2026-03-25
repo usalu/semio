@@ -21,24 +21,22 @@
 // #region 🔖Imports
 // [👤semio📚js💻semio🔖imports](repo://p/u/semio/b/l/js/f/semio.ts/s/Imports)
 // External dependency imports MUST be declared here.
+import {
+  Accessor as GltfAccessor,
+  Buffer as GltfBuffer,
+  Document as GltfDocument,
+  Material as GltfMaterial,
+  Mesh as GltfMesh,
+  Node as GltfNode,
+  Texture as GltfTexture,
+  NodeIO
+} from "@gltf-transform/core";
 import { default as adjectives } from "@semio/assets/lists/adjectives.json" with { type: "json" };
 import { default as animals } from "@semio/assets/lists/animals.json" with { type: "json" };
 import { ClassValue, clsx } from "clsx";
 import cytoscape from "cytoscape";
 import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
-import {
-  Document as GltfDocument,
-  NodeIO,
-  Accessor as GltfAccessor,
-  Primitive as GltfPrimitive,
-  Buffer as GltfBuffer,
-  Mesh as GltfMesh,
-  Node as GltfNode,
-  Scene as GltfScene,
-  Material as GltfMaterial,
-  Texture as GltfTexture,
-} from "@gltf-transform/core";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
@@ -7188,6 +7186,34 @@ export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord
 // [👤semio📚js💻semio🔖kit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit)
 // Kit entity types, schemas, and helpers MUST be defined here.
 
+// #region 🔖KitKind
+// [👤semio📚js💻semio🔖kit🔖kitkind](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/KitKind)
+// KitKind discriminates the five persistence/transport forms of a Kit.
+
+/**
+ * Zod schema for KitKind validation.
+ *
+ * Specs: Exactly five kit kinds exist:
+ * - file: Self-contained JSON file (.kit.json)
+ * - folder: Local folder with .semio/kit.db SQLite file and asset files
+ * - archive: ZIP file packaging a FolderKit structure
+ * - remote: URL-addressable kit served over HTTP(S)
+ * - temporary: In-memory ephemeral kit (no persistence)
+ * [👤semio📚js💻semio🔖kit🔖kitkind🪨kitkindschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/KitKind/d/i/KitKindSchema)
+ **/
+export const KitKindSchema = z.enum(["file", "folder", "archive", "remote", "temporary"]);
+/**
+ * Discriminator for the five kit persistence/transport forms.
+ * [👤semio📚js💻semio🔖kit🔖kitkind🛠️kitkind](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/KitKind/d/i/KitKind)
+ **/
+export type KitKind = z.infer<typeof KitKindSchema>;
+/**
+ * All valid KitKind values as a readonly tuple.
+ * [👤semio📚js💻semio🔖kit🔖kitkind🪨allkitkinds](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/KitKind/d/i/ALL_KIT_KINDS)
+ **/
+export const ALL_KIT_KINDS: readonly KitKind[] = KitKindSchema.options;
+// #endregion 🔖KitKind
+
 /**
  * Zod schema for Kit validation.
  * [👤semio📚js💻semio🔖kit🪨kitschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/KitSchema)
@@ -13316,6 +13342,127 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   });
 
   // #endregion 🔖Kit Filter Tests
+
+  // #region 🔖KitKind Tests
+  // [👤semio📚js🥼semiotest🔖kitkindtests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/KitKindTests)
+  // Tests for KitKind enum MUST verify the five kit kinds.
+
+  describe("KitKind", () => {
+    it("KitKindSchema accepts all five valid kinds", () => {
+      const kinds = ["file", "folder", "archive", "remote", "temporary"] as const;
+      for (const kind of kinds) {
+        expect(KitKindSchema.parse(kind)).toBe(kind);
+      }
+    });
+
+    it("KitKindSchema rejects invalid values", () => {
+      expect(() => KitKindSchema.parse("invalid")).toThrow();
+      expect(() => KitKindSchema.parse("")).toThrow();
+      expect(() => KitKindSchema.parse("json")).toThrow();
+      expect(() => KitKindSchema.parse("sqlite")).toThrow();
+    });
+
+    it("ALL_KIT_KINDS contains exactly five entries", () => {
+      expect(ALL_KIT_KINDS).toHaveLength(5);
+      expect(ALL_KIT_KINDS).toContain("file");
+      expect(ALL_KIT_KINDS).toContain("folder");
+      expect(ALL_KIT_KINDS).toContain("archive");
+      expect(ALL_KIT_KINDS).toContain("remote");
+      expect(ALL_KIT_KINDS).toContain("temporary");
+    });
+
+    it("KitKind type is assignable from literal strings", () => {
+      const file: KitKind = "file";
+      const folder: KitKind = "folder";
+      const archive: KitKind = "archive";
+      const remote: KitKind = "remote";
+      const temporary: KitKind = "temporary";
+      expect([file, folder, archive, remote, temporary]).toEqual(["file", "folder", "archive", "remote", "temporary"]);
+    });
+
+    it("Kit/File: roundtrips through JSON serialize/deserialize", () => {
+      const kit: Kit = {
+        guid: "file-kit-guid",
+        name: "FileKit Test",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const json = serializeKit(kit);
+      const restored = deserializeKit(json);
+      expect(restored.guid).toBe(kit.guid);
+      expect(restored.name).toBe(kit.name);
+    });
+
+    it("Kit/Folder: roundtrips through SQLite via FolderKitStore adapter", async () => {
+      const kit: Kit = {
+        guid: "folder-kit-guid",
+        name: "FolderKit Test",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        types: [{ guid: "t1", name: "Wall", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+      };
+      const SQL = await getSqlJs();
+      const db = new SQL.Database();
+      await kitToSqlite(kit, db);
+      const data = db.export();
+      db.close();
+      const db2 = new SQL.Database(new Uint8Array(data));
+      const restored = await sqliteToKit(db2);
+      db2.close();
+      expect(restored.guid).toBe(kit.guid);
+      expect(restored.name).toBe(kit.name);
+      expect(restored.types).toHaveLength(1);
+      expect(restored.types![0].name).toBe("Wall");
+    });
+
+    it("Kit/Archive: roundtrips through zip export/import", async () => {
+      const kit: Kit = {
+        guid: "archive-kit-guid",
+        name: "ArchiveKit Test",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        types: [{ guid: "at1", name: "Beam", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+      };
+      const blob = await exportKit(kit);
+      const result = await importKit(blob);
+      expect(result.kit.guid).toBe(kit.guid);
+      expect(result.kit.name).toBe(kit.name);
+      expect(result.kit.types).toHaveLength(1);
+      expect(result.kit.types![0].name).toBe("Beam");
+    });
+
+    it("Kit/Remote: validates remote URL field on kit", () => {
+      const kit: Kit = {
+        guid: "remote-kit-guid",
+        name: "RemoteKit Test",
+        remote: "https://example.com/metabolism.kit.json",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const parsed = KitSchema.parse(kit);
+      expect(parsed.remote).toBe("https://example.com/metabolism.kit.json");
+      const json = serializeKit(kit);
+      const restored = deserializeKit(json);
+      expect(restored.remote).toBe(kit.remote);
+    });
+
+    it("Kit/Temporary: InMemoryKitStore roundtrip without persistence", () => {
+      const kit: Kit = {
+        guid: "temp-kit-guid",
+        name: "TemporaryKit Test",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const store = new InMemoryKitStore(kit);
+      expect(store.getSnapshot().kit.guid).toBe("temp-kit-guid");
+      store.apply({ name: "Modified Temporary" });
+      expect(store.getSnapshot().kit.name).toBe("Modified Temporary");
+      store.undo();
+      expect(store.getSnapshot().kit.name).toBe("TemporaryKit Test");
+    });
+  });
+
+  // #endregion 🔖KitKind Tests
 
   describe("Flatten", () => {
     const kit = MetabolismKit as Kit;

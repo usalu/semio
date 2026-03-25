@@ -25,6 +25,7 @@ import abc
 import base64
 import dataclasses
 import datetime
+import enum
 import json
 import os
 import pathlib
@@ -5570,6 +5571,34 @@ class DesignIdInputNode(InputNode):
 # region Kit
 # [👤semio📚py💻semio🔖domain🔖kit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit)
 # Kit entity for packaging types, designs, qualities and metadata.
+
+
+# #region 🔖KitKind
+# [👤semio📚py💻semio🔖modeltypeskit🔖kitkind](repo://p/u/semio/b/l/py/f/semio.py/s/Model%20Types%20-%20Kit/s/KitKind)
+# KitKind discriminates the five persistence/transport forms of a Kit.
+
+
+class KitKind(str, enum.Enum):
+    """Discriminator for the five kit persistence/transport forms.
+
+    Specs: Exactly five kit kinds exist:
+    - FILE: Self-contained JSON file
+    - FOLDER: Local folder with .semio/kit.db SQLite and asset files
+    - ARCHIVE: ZIP file packaging a FolderKit structure
+    - REMOTE: URL-addressable kit served over HTTP(S)
+    - TEMPORARY: In-memory ephemeral kit (no persistence)
+    """
+
+    FILE = "file"
+    FOLDER = "folder"
+    ARCHIVE = "archive"
+    REMOTE = "remote"
+    TEMPORARY = "temporary"
+
+
+ALL_KIT_KINDS: list[KitKind] = list(KitKind)
+
+# #endregion 🔖KitKind
 
 
 class KitUriField(RealField, abc.ABC):
@@ -15415,6 +15444,39 @@ class TestKitToMetaShallow:
         for key in expected_design_meta:
             if key in computed_design_meta:
                 assert computed_design_meta[key] == expected_design_meta[key], f"DesignMeta mismatch for key '{key}'"
+
+
+class TestKitKind:
+    """Tests for the KitKind enum."""
+
+    def test_all_kit_kinds_has_five_values(self):
+        assert len(ALL_KIT_KINDS) == 5
+
+    def test_kit_kind_values(self):
+        assert KitKind.FILE.value == "file"
+        assert KitKind.FOLDER.value == "folder"
+        assert KitKind.ARCHIVE.value == "archive"
+        assert KitKind.REMOTE.value == "remote"
+        assert KitKind.TEMPORARY.value == "temporary"
+
+    def test_kit_kind_is_str(self):
+        for kind in KitKind:
+            assert isinstance(kind, str)
+            assert kind == kind.value
+
+    def test_kit_kind_file_roundtrip(self):
+        kit_dict = {"name": "FileTest", "uri": "file:///test.json", "types": [], "designs": []}
+        kit = Kit.parse(kit_dict)
+        assert kit.name == "FileTest"
+        assert kit.uri == "file:///test.json"
+        kit2 = Kit.parse({"name": kit.name, "uri": kit.uri})
+        assert kit2.name == kit.name
+        assert kit2.uri == kit.uri
+
+    def test_kit_kind_temporary_in_memory(self):
+        kit = Kit.parse({"name": "TempKit"})
+        assert kit.name == "TempKit"
+        assert kit.uri.startswith("memory://")
 
 
 # endregion Test

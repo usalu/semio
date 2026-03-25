@@ -1876,6 +1876,51 @@ type DesignShallow struct {
 // [👤semio📚go💻semio🔖kit](repo://p/u/semio/b/l/go/f/semio.go/s/Kit)
 // Kit MUST define the root kit container entity and its diff types.
 
+// #region 🔖KitKind
+// [👤semio📚go💻semio🔖kit🔖kitkind](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/KitKind)
+// KitKind discriminates the five persistence/transport forms of a Kit.
+
+// KitKind represents the persistence/transport form of a Kit.
+// Specs: Exactly five kit kinds exist:
+//   - KitKindFile: Self-contained JSON file (.kit.json)
+//   - KitKindFolder: Local folder with .semio/kit.db SQLite file and asset files
+//   - KitKindArchive: ZIP file packaging a FolderKit structure
+//   - KitKindRemote: URL-addressable kit served over HTTP(S)
+//   - KitKindTemporary: In-memory ephemeral kit (no persistence)
+//
+// [👤semio📚go💻semio🔖kit🔖kitkind🛠️kitkind](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/KitKind/d/i/KitKind)
+type KitKind string
+
+const (
+	// KitKindFile is a self-contained JSON file (.kit.json).
+	KitKindFile KitKind = "file"
+	// KitKindFolder is a local folder with .semio/kit.db SQLite file.
+	KitKindFolder KitKind = "folder"
+	// KitKindArchive is a ZIP file packaging a FolderKit structure.
+	KitKindArchive KitKind = "archive"
+	// KitKindRemote is a URL-addressable kit served over HTTP(S).
+	KitKindRemote KitKind = "remote"
+	// KitKindTemporary is an in-memory ephemeral kit (no persistence).
+	KitKindTemporary KitKind = "temporary"
+)
+
+// AllKitKinds contains all valid KitKind values.
+// [👤semio📚go💻semio🔖kit🔖kitkind🪨allkitkinds](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/KitKind/d/i/AllKitKinds)
+var AllKitKinds = []KitKind{KitKindFile, KitKindFolder, KitKindArchive, KitKindRemote, KitKindTemporary}
+
+// IsValidKitKind checks if a KitKind value is one of the five valid kinds.
+// [👤semio📚go💻semio🔖kit🔖kitkind🪨isvalidkitkind](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/KitKind/d/i/IsValidKitKind)
+func IsValidKitKind(kind KitKind) bool {
+	for _, k := range AllKitKinds {
+		if k == kind {
+			return true
+		}
+	}
+	return false
+}
+
+// #endregion 🔖KitKind
+
 // Kit represents the root container for all domain entities.
 // [👤semio📚go💻semio🔖kit✂️kit](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/Kit)
 type Kit struct {

@@ -93,11 +93,11 @@ import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import * as dagre from "dagre";
 import Fuse, { type FuseResult } from "fuse.js";
+import i18next from "i18next";
+import LanguageDetector from "i18next-browser-languagedetector";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
-import i18next from "i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next, useTranslation } from "react-i18next";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { Link, useNavigate } from "react-router";
@@ -142,7 +142,8 @@ export function setExpertiseProvider(fn: () => Expertise) {
 // UI bundles MUST keep translation resources in source code and MUST not rely on sketchpad-local JSON files.
 
 const elementUiTranslationBundles = {
-  de: { translation: JSON.parse(String.raw`{
+  de: {
+    translation: JSON.parse(String.raw`{
   "semio": {
     "label": {
       "normal": "",
@@ -4909,8 +4910,10 @@ const elementUiTranslationBundles = {
     }
   }
 }
-`) },
-  en: { translation: JSON.parse(String.raw`{
+`),
+  },
+  en: {
+    translation: JSON.parse(String.raw`{
   "semio": {
     "label": {
       "normal": "",
@@ -9652,7 +9655,8 @@ const elementUiTranslationBundles = {
     }
   }
 }
-`) },
+`),
+  },
 } as const;
 
 type ElementUiLocaleCode = keyof typeof elementUiTranslationBundles;
@@ -9662,11 +9666,7 @@ function normalizeElementUiLocale(language?: string): ElementUiLocaleCode {
 }
 
 function resolveRequestedElementUiLocale(): ElementUiLocaleCode {
-  return normalizeElementUiLocale(
-    i18next.resolvedLanguage
-      || i18next.language
-      || (typeof navigator !== "undefined" ? navigator.language : undefined),
-  );
+  return normalizeElementUiLocale(i18next.resolvedLanguage || i18next.language || (typeof navigator !== "undefined" ? navigator.language : undefined));
 }
 
 function registerElementUiTranslationBundles() {
@@ -9688,9 +9688,7 @@ function initializeElementUiI18n() {
     return i18next;
   }
 
-  i18next
-    .use(LanguageDetector)
-    .use(initReactI18next);
+  i18next.use(LanguageDetector).use(initReactI18next);
 
   void i18next.init({
     resources: elementUiTranslationBundles,
@@ -18982,7 +18980,7 @@ export interface UIWindowControl {
 
 /**
  * Definition of a window kind with label, icon, component, and controls.
- * Each window kind can be registered with golden-layout.
+ * Each app registers the window kinds it can render.
  **/
 export interface UIWindowKindDefinition {
   id: string;
@@ -18998,71 +18996,170 @@ export interface UIWindowKindDefinition {
 }
 
 /**
- * App-level window configuration with window kinds and default golden-layout config.
+ * A single window entry in the abstract UI layout tree.
  **/
-export interface UIWindowConfig {
-  windowKinds: UIWindowKindDefinition[];
-  defaultLayout?: any;
+export interface UIWindowLayoutWindowNode {
+  kind: "window";
+  windowKindId: string;
+  title?: string;
 }
 
 /**
- * Creates a default golden-layout configuration from window IDs and direction.
- * MUST generate a golden-layout config with one stack per window ID.
+ * A tab stack in the abstract UI layout tree.
  **/
-export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): any {
+export interface UIWindowLayoutStackNode {
+  kind: "stack";
+  size?: number;
+  children: UIWindowLayoutWindowNode[];
+}
+
+/**
+ * A row or column branch in the abstract UI layout tree.
+ **/
+export interface UIWindowLayoutAxisNode {
+  kind: "row" | "column";
+  size?: number;
+  children: Array<UIWindowLayoutAxisNode | UIWindowLayoutStackNode>;
+}
+
+/**
+ * Root layout wrapper owned by an app instead of the Golden Layout runtime.
+ **/
+export interface UIWindowLayout {
+  root: UIWindowLayoutAxisNode | UIWindowLayoutStackNode;
+}
+
+/**
+ * Union of supported abstract UI layout nodes.
+ **/
+export type UIWindowLayoutNode = UIWindowLayout["root"];
+
+function isWindowLayoutWindowNode(value: unknown): value is UIWindowLayoutWindowNode {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<UIWindowLayoutWindowNode>;
+  return candidate.kind === "window" && typeof candidate.windowKindId === "string";
+}
+
+function isWindowLayoutStackNode(value: unknown): value is UIWindowLayoutStackNode {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<UIWindowLayoutStackNode>;
+  return candidate.kind === "stack" && Array.isArray(candidate.children) && candidate.children.every(isWindowLayoutWindowNode);
+}
+
+function isWindowLayoutAxisNode(value: unknown): value is UIWindowLayoutAxisNode {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<UIWindowLayoutAxisNode>;
+  return (candidate.kind === "row" || candidate.kind === "column") && Array.isArray(candidate.children) && candidate.children.every((child) => isWindowLayoutAxisNode(child) || isWindowLayoutStackNode(child));
+}
+
+function isWindowLayout(value: unknown): value is UIWindowLayout {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<UIWindowLayout>;
+  return isWindowLayoutAxisNode(candidate.root) || isWindowLayoutStackNode(candidate.root);
+}
+
+/**
+ * Creates a single abstract window node.
+ **/
+export function createWindowLayout(windowKindId: string, title?: string): UIWindowLayoutWindowNode {
+  return { kind: "window", windowKindId, ...(title ? { title } : {}) };
+}
+
+/**
+ * Creates an abstract stack layout from window kind IDs.
+ **/
+export function createStackLayout(windowKindIds: string[], titles?: string[]): UIWindowLayout {
   return {
     root: {
-      type: direction === "row" ? "row" : "column",
-      content: windowIds.map((id, index) => ({
-        type: "stack",
-        content: [
-          {
-            type: "component",
-            componentName: id,
-            title: titles?.[index] ?? id,
-            componentState: {},
-          },
-        ],
-        ...(sizes?.[index] !== undefined ? { size: `${sizes[index]}%` } : {}),
+      kind: "stack",
+      children: windowKindIds.map((windowKindId, index) => createWindowLayout(windowKindId, titles?.[index])),
+    },
+  };
+}
+
+/**
+ * Creates a default abstract layout from window kind IDs and direction.
+ * MUST generate one stack per window kind so apps own the layout structure.
+ **/
+export function createDefaultLayout(windowIds: string[], direction: "row" | "column" = "row", sizes?: number[], titles?: string[]): UIWindowLayout {
+  return {
+    root: {
+      kind: direction,
+      children: windowIds.map((id, index) => ({
+        kind: "stack",
+        ...(sizes?.[index] !== undefined ? { size: sizes[index] } : {}),
+        children: [createWindowLayout(id, titles?.[index] ?? id)],
       })),
     },
   };
 }
 
 /**
- * Creates a single-stack golden-layout configuration where all windows appear as tabs.
- * Used for mobile layouts where side-by-side windows are not practical.
+ * Creates a single stack where all windows appear as tabs.
+ * Used for compact layouts where side-by-side windows are not practical.
  **/
-export function createTabStackLayout(windowIds: string[], titles?: string[]): any {
-  return {
-    root: {
-      type: "stack",
-      content: windowIds.map((id, index) => ({
-        type: "component",
-        componentName: id,
-        title: titles?.[index] ?? id,
-        componentState: {},
-      })),
-    },
-  };
+export function createTabStackLayout(windowIds: string[], titles?: string[]): UIWindowLayout {
+  return createStackLayout(windowIds, titles);
+}
+
+function convertLegacyGoldenNodeToWindowLayoutNode(value: unknown): UIWindowLayoutNode | UIWindowLayoutWindowNode | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const node = value as Record<string, unknown>;
+
+  if (node.type === "component") {
+    const componentName = typeof node.componentName === "string" ? node.componentName : undefined;
+    if (!componentName) return undefined;
+    return createWindowLayout(componentName, typeof node.title === "string" ? node.title : componentName);
+  }
+
+  if (node.type === "stack") {
+    const children = Array.isArray(node.content) ? node.content.map(convertLegacyGoldenNodeToWindowLayoutNode).filter(isWindowLayoutWindowNode) : [];
+    if (children.length === 0) return undefined;
+    return {
+      kind: "stack",
+      ...(typeof node.size === "string" ? { size: Number.parseFloat(node.size) } : typeof node.size === "number" ? { size: node.size } : {}),
+      children,
+    };
+  }
+
+  if (node.type === "row" || node.type === "column") {
+    const children = Array.isArray(node.content)
+      ? node.content.map(convertLegacyGoldenNodeToWindowLayoutNode).filter((child): child is UIWindowLayoutAxisNode | UIWindowLayoutStackNode => isWindowLayoutAxisNode(child) || isWindowLayoutStackNode(child))
+      : [];
+    if (children.length === 0) return undefined;
+    return {
+      kind: node.type,
+      ...(typeof node.size === "string" ? { size: Number.parseFloat(node.size) } : typeof node.size === "number" ? { size: node.size } : {}),
+      children,
+    };
+  }
+
+  return undefined;
 }
 
 /**
  * Parses a window layout from a string, object, or undefined input.
  * MUST return undefined for null, empty, or unparseable inputs.
  **/
-export function parseWindowLayout(layout: unknown): any | undefined {
+export function parseWindowLayout(layout: unknown): UIWindowLayout | undefined {
   if (layout === undefined || layout === null) return undefined;
   if (typeof layout === "string") {
     const trimmed = layout.trim();
     if (!trimmed) return undefined;
     try {
-      return JSON.parse(trimmed);
+      return parseWindowLayout(JSON.parse(trimmed));
     } catch {
       return undefined;
     }
   }
-  if (typeof layout === "object") return layout;
+  if (isWindowLayout(layout)) return layout;
+  if (typeof layout === "object") {
+    const candidate = layout as Record<string, unknown>;
+    const legacyRoot = convertLegacyGoldenNodeToWindowLayoutNode(candidate.root);
+    if (legacyRoot && (isWindowLayoutAxisNode(legacyRoot) || isWindowLayoutStackNode(legacyRoot))) {
+      return { root: legacyRoot };
+    }
+  }
   return undefined;
 }
 
@@ -19071,9 +19168,10 @@ export function parseWindowLayout(layout: unknown): any | undefined {
  * MUST return undefined when serialization fails.
  **/
 export function stringifyWindowLayout(layout: unknown): string | undefined {
-  if (layout === undefined || layout === null) return undefined;
+  const parsedLayout = parseWindowLayout(layout);
+  if (!parsedLayout) return undefined;
   try {
-    return JSON.stringify(layout);
+    return JSON.stringify(parsedLayout);
   } catch {
     return undefined;
   }
@@ -19082,36 +19180,58 @@ export function stringifyWindowLayout(layout: unknown): string | undefined {
 /**
  * Removes duplicate and disallowed window components from a layout.
  **/
-export function deduplicateWindowLayout(layout: any, allowedWindowIds: string[]): any | undefined {
-  if (!layout || typeof layout !== "object") return layout;
+export function deduplicateWindowLayout(layout: unknown, allowedWindowIds: string[]): UIWindowLayout | undefined {
+  const parsedLayout = parseWindowLayout(layout);
+  if (!parsedLayout) return undefined;
+
   const seenComponents = new Set<string>();
-  const deduplicateContent = (content: any[]): any[] => {
-    if (!Array.isArray(content)) return content;
-    return content
-      .map((item) => {
-        if (!item || typeof item !== "object") return item;
-        if (item.type === "component") {
-          const componentName = item.componentName;
-          if (seenComponents.has(componentName) || !allowedWindowIds.includes(componentName)) return null;
-          seenComponents.add(componentName);
-          return item;
-        }
-        if (item.content && Array.isArray(item.content)) {
-          const deduped = deduplicateContent(item.content);
-          if (deduped.length === 0) return null;
-          return { ...item, content: deduped };
-        }
-        return item;
-      })
-      .filter((item) => item !== null);
+
+  const deduplicateNode = (node: UIWindowLayoutNode): UIWindowLayoutNode | undefined => {
+    if (node.kind === "stack") {
+      const children = node.children.filter((child) => {
+        if (seenComponents.has(child.windowKindId) || !allowedWindowIds.includes(child.windowKindId)) return false;
+        seenComponents.add(child.windowKindId);
+        return true;
+      });
+
+      if (children.length === 0) return undefined;
+      return { ...node, children };
+    }
+
+    const children = node.children.map((child) => deduplicateNode(child)).filter((child): child is UIWindowLayoutAxisNode | UIWindowLayoutStackNode => Boolean(child));
+
+    if (children.length === 0) return undefined;
+    return { ...node, children };
   };
-  const root = layout.root;
-  if (!root || typeof root !== "object") return layout;
-  if (root.content && Array.isArray(root.content)) {
-    const dedupedContent = deduplicateContent(root.content);
-    return { ...layout, root: { ...root, content: dedupedContent } };
+
+  const deduplicatedRoot = deduplicateNode(parsedLayout.root);
+  if (!deduplicatedRoot || isWindowLayoutWindowNode(deduplicatedRoot)) return undefined;
+  return { root: deduplicatedRoot };
+}
+
+function convertWindowLayoutNodeToGoldenConfig(node: UIWindowLayoutNode): Record<string, unknown> {
+  if (node.kind === "stack") {
+    return {
+      type: "stack",
+      ...(node.size !== undefined ? { size: `${node.size}%` } : {}),
+      content: node.children.map((child) => ({
+        type: "component",
+        componentName: child.windowKindId,
+        title: child.title ?? child.windowKindId,
+        componentState: {},
+      })),
+    };
   }
-  return layout;
+
+  return {
+    type: node.kind,
+    ...(node.size !== undefined ? { size: `${node.size}%` } : {}),
+    content: node.children.map((child) => convertWindowLayoutNodeToGoldenConfig(child)),
+  };
+}
+
+function convertWindowLayoutToGoldenConfig(layout: UIWindowLayout): Record<string, unknown> {
+  return { root: convertWindowLayoutNodeToGoldenConfig(layout.root) };
 }
 
 /**
@@ -19152,11 +19272,12 @@ interface UICanvasPortal {
  * Uses portals instead of createRoot so that parent React context flows into golden-layout windows.
  **/
 const UICanvas: React.FC<{
-  windowConfig: UIWindowConfig;
-  layoutState?: any;
-  onLayoutChange?: (config: any) => void;
+  windowKinds: UIWindowKindDefinition[];
+  defaultLayout: UIWindowLayout;
+  layoutState?: unknown;
+  onLayoutChange?: (layout: UIWindowLayout) => void;
   onActiveWindowChange?: (windowId: string) => void;
-}> = ({ windowConfig, layoutState, onLayoutChange, onActiveWindowChange }) => {
+}> = ({ windowKinds, defaultLayout, layoutState, onLayoutChange, onActiveWindowChange }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const layoutRef = React.useRef<any>(null);
   const [portals, setPortals] = React.useState<UICanvasPortal[]>([]);
@@ -19173,39 +19294,18 @@ const UICanvas: React.FC<{
           return;
         }
 
-        const normalizeLayoutConfig = (config: any): any => {
-          if (Array.isArray(config)) return config.map(normalizeLayoutConfig);
-          const normalized: any = {};
-          for (const [key, value] of Object.entries(config)) {
-            const unitKey = `${key}Unit`;
-            if (unitKey in config) {
-              const unit = (config as any)[unitKey];
-              normalized[key] = typeof value === "number" ? `${value}${unit}` : typeof value === "string" ? `${parseFloat(value) || 1}${unit}` : `1${unit}`;
-            } else if ((key === "size" || key === "width" || key === "height") && typeof value === "number") {
-              normalized[key] = `${value}%`;
-            } else if (key === "content" && Array.isArray(value)) {
-              normalized[key] = value.map(normalizeLayoutConfig);
-            } else if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-              normalized[key] = normalizeLayoutConfig(value);
-            } else {
-              normalized[key] = value;
-            }
-          }
-          return normalized;
-        };
-
-        const rawConfig = parseWindowLayout(layoutState) || parseWindowLayout(windowConfig.defaultLayout);
-        if (!rawConfig) {
+        const rawLayout = parseWindowLayout(layoutState) ?? defaultLayout;
+        const config = convertWindowLayoutToGoldenConfig(rawLayout);
+        if (!config) {
           console.error("[UICanvas] No layout config");
           return;
         }
-        const config = normalizeLayoutConfig(rawConfig);
 
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
         let portalCounter = 0;
 
-        windowConfig.windowKinds.forEach((windowKind) => {
+        windowKinds.forEach((windowKind) => {
           layout.registerComponent(windowKind.id, (container: any) => {
             const element = container.getElement();
             let domElement: HTMLElement;
@@ -19235,7 +19335,8 @@ const UICanvas: React.FC<{
         layout.on("stateChanged", () => {
           if (!onLayoutChange || !isInitialized) return;
           try {
-            onLayoutChange(layout.toConfig());
+            const nextLayout = parseWindowLayout(layout.toConfig());
+            if (nextLayout) onLayoutChange(nextLayout);
           } catch (error: any) {
             if (!error?.message?.includes("not yet initialised")) {
               console.warn("[UICanvas] Failed to get layout config:", error);
@@ -19273,7 +19374,7 @@ const UICanvas: React.FC<{
     };
 
     loadGoldenLayout();
-  }, [windowConfig, layoutState, onLayoutChange, onActiveWindowChange]);
+  }, [windowKinds, defaultLayout, layoutState, onLayoutChange, onActiveWindowChange]);
 
   return (
     <>
@@ -19614,7 +19715,8 @@ export interface UIAppConfig {
   id: string;
   label: string;
   icon?: React.ReactNode;
-  windowConfig: UIWindowConfig;
+  windowKinds: UIWindowKindDefinition[];
+  defaultLayout: UIWindowLayout;
   leftPanelTabs?: SidePanelTabConfig[];
   rightPanelTabs?: SidePanelTabConfig[];
   toolbarContent?: React.ReactNode;
@@ -19868,16 +19970,14 @@ export const UI: React.FC<UIProps> = ({ apps, defaultAppId, breadcrumbItems = []
           }
           canvas={
             <UICanvas
-              windowConfig={
+              windowKinds={activeApp.windowKinds}
+              defaultLayout={
                 resolvedMobile
-                  ? {
-                      ...activeApp.windowConfig,
-                      defaultLayout: createTabStackLayout(
-                        activeApp.windowConfig.windowKinds.map((wk) => wk.id),
-                        activeApp.windowConfig.windowKinds.map((wk) => wk.label ?? wk.id),
-                      ),
-                    }
-                  : activeApp.windowConfig
+                  ? createTabStackLayout(
+                      activeApp.windowKinds.map((windowKind) => windowKind.id),
+                      activeApp.windowKinds.map((windowKind) => windowKind.label ?? windowKind.id),
+                    )
+                  : activeApp.defaultLayout
               }
             />
           }
@@ -19948,7 +20048,7 @@ export { BrowserRouter, Link, MemoryRouter, Outlet, Route, Routes, useLocation, 
 // #endregion 🔖Routing
 
 // #region 🔖I18n
-export { i18next, LanguageDetector, initReactI18next, useTranslation };
+export { i18next, initReactI18next, LanguageDetector, useTranslation };
 // #endregion 🔖I18n
 
 // #region 🔖Hotkeys
