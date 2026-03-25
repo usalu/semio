@@ -1,11 +1,3 @@
 @import "../../elements/ui/globals.css";
-
-@layer base {
-  :root {
-    --color-new: var(--success-border);
-    --color-modified: var(--warning-border);
-    --color-removed: var(--destructive-border);
-    --color-changed-selected: var(--accent);
-    --color-changed-hovered: var(--accent-secondary);
-  }
-}
+@source "./";
+@source "../../elements/ui/";

@@ -1,0 +1,40 @@
+{
+  "id": "a9cb4a46-d50c-44c5-9436-22ebf797bbe1",
+  "uri": "repo://session/a9cb4a46-d50c-44c5-9436-22ebf797bbe1",
+  "client": "cursor-chat",
+  "second": "2026-03-27T11:27:30Z",
+  "checkpoint": "572d61201dda59df5862c6323f0702a0dfc350aa",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "572d61201dda59df5862c6323f0702a0dfc350aa",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-27T11:27:30Z",
+        "session": "a9cb4a46-d50c-44c5-9436-22ebf797bbe1"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "a9cb4a46-d50c-44c5-9436-22ebf797bbe1",
+          "generation_id": "",
+          "model": "default",
+          "session_id": "a9cb4a46-d50c-44c5-9436-22ebf797bbe1",
+          "reason": "window_close",
+          "duration_ms": 68063733,
+          "is_background_agent": false,
+          "final_status": "none",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2.6.21",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": null
+        }
+      },
+      "response": {}
+    }
+  ]
+}

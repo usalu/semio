@@ -745,12 +745,12 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(queryCommand(factory, &config))
 	root.AddCommand(exportCommand(factory, &config))
 	root.AddCommand(hookCommand(factory, &config))
-	root.AddCommand(configureCommand(factory, &config))
 	root.AddCommand(mermaidCommand(factory, &config))
 	root.AddCommand(technologyCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
 	root.AddCommand(analyzeCommand(factory, &config))
 	root.AddCommand(entityEmojisCommand(&config))
+	root.AddCommand(configureCommand(factory, &config))
 	root.AddCommand(benchmarkCmd)
 	root.AddCommand(updateCmd)
 	return root, &config
@@ -8820,6 +8820,7 @@ var AllowedClients = []string{
 	"antigravity",
 	"antigravity-chat",
 	"droid",
+	"kiro-cli",
 }
 
 // NormalizeLLMSlug MUST be idempotent for already-normalized values.
@@ -11194,7 +11195,6 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 type VersionControlProvider interface {
 	Kind() string
 	RepoURL() (string, error)
-	Configure(repoRoot string) error
 
 	Checkpoint(repoRoot string, description string) (id string, err error)
 
@@ -11248,7 +11248,6 @@ type ManagementLabel struct {
 // [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️managementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementProvider)
 type ManagementProvider interface {
 	Kind() string
-	Configure(repoRoot string) error
 	CreateIssue(title, body string, milestone *int) (string, error)
 	CloseIssue(issueURL string) error
 	ReopenIssue(issueURL string) error
@@ -11287,15 +11286,12 @@ type ManagementProvider interface {
 // [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️sandboxprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/SandboxProvider)
 type SandboxProvider interface {
 	Kind() string
-	Configure(repoRoot string) error
 }
 
-// EditorHookMapping holds the data fields for an editor hook mapping record.
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️editorhookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/EditorHookMapping)
-type EditorHookMapping struct {
-	Client     string
-	ConfigPath string
-}
+// EditorHookMapping is a compatibility alias for editor hook configuration metadata.
+// It intentionally aliases `ClientHookMapping` so editor providers can define only the fields they need
+// (Client, ConfigPath) while keeping the richer mapping used by `configure`.
+type EditorHookMapping = ClientHookMapping
 
 // EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
 // [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️editorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/EditorProvider)
@@ -11324,11 +11320,6 @@ type GitHubManagementProvider struct{}
 // Kind holds the data fields for a Kind record.
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Kind)
 func (p *GitHubManagementProvider) Kind() string { return "github" }
-
-// Configure MUST perform the Configure operation.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Configure)
-// Configure performs the Configure operation.
-func (p *GitHubManagementProvider) Configure(repoRoot string) error { return nil }
 
 // CreateIssue MUST perform the CreateIssue operation.
 // CreateIssue holds the data fields for a CreateIssue record.
@@ -12412,6 +12403,53 @@ func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "antigravity-chat", ConfigPath: ""}
 }
 
+// KiroEditorProvider holds the data fields for a kiro editor provider record.
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️kiroeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/KiroEditorProvider)
+type KiroEditorProvider struct{}
+
+// Kind MUST perform the Kind operation.
+func (p *KiroEditorProvider) Kind() string { return "kiro-cli" }
+
+// Configure MUST perform the Configure operation.
+func (p *KiroEditorProvider) Configure(repoRoot string) error {
+	content, err := p.GenerateHookConfig(repoRoot)
+	if err != nil {
+		return err
+	}
+	mapping := p.HookMapping()
+	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(targetPath, []byte(content), 0644)
+}
+
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
+func (p *KiroEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveKiroEvent(nativeEvent, toolKind)
+}
+
+// FormatHookOutput MUST perform the FormatHookOutput operation.
+func (p *KiroEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
+func (p *KiroEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return ""
+}
+
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
+func (p *KiroEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
+	return generateKiroConfig(repoRoot)
+}
+
+// HookMapping MUST perform the HookMapping operation.
+func (p *KiroEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "kiro-cli", ConfigPath: ".kiro/agents/repo.json"}
+}
+
 // #endregion 🔖Editor Providers
 
 // #region 🔖Provider Registry
@@ -12431,6 +12469,7 @@ func AllEditorProviders() []EditorProvider {
 		&DroidEditorProvider{},
 		&CodexEditorProvider{},
 		&AntigravityEditorProvider{},
+		&KiroEditorProvider{},
 	}
 }
 
@@ -30788,6 +30827,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"CLAUDE_CODE":      &graphql.EnumValueConfig{Value: "claude-code"},
 			"CODEX":            &graphql.EnumValueConfig{Value: "codex"},
 			"DROID":            &graphql.EnumValueConfig{Value: "droid"},
+			"KIRO_CLI":         &graphql.EnumValueConfig{Value: "kiro-cli"},
 		},
 	})
 
@@ -34587,29 +34627,29 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddPrompt(
 		mcp.NewPrompt("enhance",
-			mcp.WithPromptDescription("Enhance the implementation by adding more features and enhance the existing tests to cover the new features."),
-			mcp.WithArgument("prompt", mcp.ArgumentDescription("The prompt to enhance the implementation with."), mcp.RequiredArgument()),
+			mcp.WithPromptDescription("Add new features to the implementation and extend the existing tests to cover them."),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("Description of the features to add."), mcp.RequiredArgument()),
 		),
 		handleEnhancePrompt,
 	)
 	s.AddPrompt(
 		mcp.NewPrompt("refactor",
-			mcp.WithPromptDescription("Refactor the implementation and dont stop until all tests pass."),
-			mcp.WithArgument("prompt", mcp.ArgumentDescription("The prompt to refactor the implementation with."), mcp.RequiredArgument()),
+			mcp.WithPromptDescription("Refactor the implementation without removing functionality. All tests must pass after the refactor."),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("Description of the refactoring to apply."), mcp.RequiredArgument()),
 		),
 		handleRefactorPrompt,
 	)
 	s.AddPrompt(
 		mcp.NewPrompt("test",
-			mcp.WithPromptDescription("Extend the current tests by testing more features."),
-			mcp.WithArgument("prompt", mcp.ArgumentDescription("The prompt to extend the tests with."), mcp.RequiredArgument()),
+			mcp.WithPromptDescription("Extend the test suite to cover additional features or edge cases."),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("Description of what to test."), mcp.RequiredArgument()),
 		),
 		handleTestPrompt,
 	)
 	s.AddPrompt(
 		mcp.NewPrompt("comply",
-			mcp.WithPromptDescription("Get the implementation to comply the a set of tests. Dont remove any functionality from the tests."),
-			mcp.WithArgument("prompt", mcp.ArgumentDescription("The prompt to comply the implementation with."), mcp.RequiredArgument()),
+			mcp.WithPromptDescription("Update the implementation to make all tests pass without removing any test functionality."),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("Description of the compliance requirement."), mcp.RequiredArgument()),
 		),
 		handleComplyPrompt,
 	)
@@ -34707,76 +34747,75 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_open",
-			mcp.WithDescription("Open a new ticket"),
-			mcp.WithString("goal", mcp.Description("Goal ID")),
-			mcp.WithString("title", mcp.Description("Ticket title")),
-			mcp.WithString("prompt", mcp.Description("Ticket prompt/description")),
-			mcp.WithString("client", mcp.Description("Client used for this ticket")),
-			mcp.WithString("llm", mcp.Description("LLM used for this ticket")),
-			mcp.WithBoolean("no-issue", mcp.Description("Skip GitHub issue creation")),
-			mcp.WithString("draft", mcp.Description("Optional draft slug to seed ticket workspace")),
-			mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets")),
-			mcp.WithString("issue", mcp.Description("Link to existing GitHub issue URL instead of creating new one")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
+			mcp.WithDescription("Open a new ticket to track a task or bug fix. Returns the ticket path for use with ticket_close and ticket_reopen."),
+			mcp.WithString("title", mcp.Required(), mcp.Description("Titleized short title (e.g. 'Fix Mcp Descriptions'). Must NOT be a slug or all-caps.")),
+			mcp.WithString("prompt", mcp.Required(), mcp.Description("Full description of the task.")),
+			mcp.WithString("goal", mcp.Description("Goal slug to associate the ticket with.")),
+			mcp.WithString("client", mcp.Description("Agent client used for this ticket.")),
+			mcp.WithString("llm", mcp.Description("LLM used for this ticket.")),
+			mcp.WithBoolean("no_management", mcp.Description("Skip GitHub issue creation and management.")),
+			mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
+			mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets.")),
+			mcp.WithString("issue", mcp.Description("Existing GitHub issue URL to link instead of creating a new one.")),
 		),
 		ticketOpen,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_close",
-			mcp.WithDescription("Close a ticket"),
-			mcp.WithString("path", mcp.Description("Ticket path")),
-			mcp.WithString("summary", mcp.Description("Summary of the ticket work")),
-			mcp.WithArray("files", mcp.Description("Files to include"), mcp.WithStringItems()),
-			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
+			mcp.WithDescription("Close a ticket and record the work summary. When path is omitted, closes the latest open ticket."),
+			mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the work done.")),
+			mcp.WithArray("files", mcp.Description("Files created, updated, or removed during the ticket."), mcp.WithStringItems()),
+			mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to close the latest open ticket.")),
+			mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
+			mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
 		),
 		ticketClose,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_reopen",
-			mcp.WithDescription("Reopen a closed ticket"),
-			mcp.WithString("path", mcp.Description("Ticket path")),
-			mcp.WithString("prompt", mcp.Description("New prompt/description for the ticket")),
-			mcp.WithString("llm", mcp.Description("LLM used for this ticket")),
-			mcp.WithString("client", mcp.Description("Client used for this ticket")),
-			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
-			mcp.WithString("draft", mcp.Description("Optional draft slug to seed ticket workspace")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation")),
+			mcp.WithDescription("Reopen a closed ticket to continue work on it. When path is omitted, reopens the latest closed ticket."),
+			mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to reopen the latest closed ticket.")),
+			mcp.WithString("prompt", mcp.Description("Updated or additional task description.")),
+			mcp.WithString("llm", mcp.Description("LLM to use for the reopened ticket.")),
+			mcp.WithString("client", mcp.Description("Agent client to use for the reopened ticket.")),
+			mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
+			mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
+			mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
 		),
 		ticketReopen,
 	)
 	s.AddTool(
 		mcp.NewTool("section_move",
-			mcp.WithDescription("Rename a section in a file"),
-			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
-			mcp.WithString("old_name", mcp.Required(), mcp.Description("Old section name")),
-			mcp.WithString("new_name", mcp.Required(), mcp.Description("New section name")),
+			mcp.WithDescription("Rename a section within a file."),
+			mcp.WithString("file", mcp.Required(), mcp.Description("Path to the file containing the section.")),
+			mcp.WithString("old_name", mcp.Required(), mcp.Description("Current name of the section.")),
+			mcp.WithString("new_name", mcp.Required(), mcp.Description("New name for the section.")),
 		),
 		sectionMove,
 	)
 	s.AddTool(
 		mcp.NewTool("file_integrate",
-			mcp.WithDescription("Integrate source code into a target file section"),
-			mcp.WithString("source", mcp.Required(), mcp.Description("Source file path")),
-			mcp.WithString("target_section", mcp.Required(), mcp.Description("Target section name")),
-			mcp.WithString("target_file", mcp.Required(), mcp.Description("Target file path")),
-			mcp.WithString("target_parent_section", mcp.Description("Optional target parent section name")),
+			mcp.WithDescription("Integrate source code from a file into a named section of a target file."),
+			mcp.WithString("source", mcp.Required(), mcp.Description("Path to the source file.")),
+			mcp.WithString("target_section", mcp.Required(), mcp.Description("Name of the section in the target file to integrate into.")),
+			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file.")),
+			mcp.WithString("target_parent_section", mcp.Description("Name of the parent section in the target file.")),
 		),
 		sectionIntegrate,
 	)
 	s.AddTool(
 		mcp.NewTool("section_extract",
-			mcp.WithDescription("Extract a section from a source file into a target file"),
-			mcp.WithString("source_file", mcp.Required(), mcp.Description("Source file path")),
-			mcp.WithString("source_section", mcp.Required(), mcp.Description("Source section name")),
-			mcp.WithString("target_file", mcp.Required(), mcp.Description("Target file path")),
+			mcp.WithDescription("Extract a named section from a source file into a separate target file."),
+			mcp.WithString("source_file", mcp.Required(), mcp.Description("Path to the source file.")),
+			mcp.WithString("source_section", mcp.Required(), mcp.Description("Name of the section to extract.")),
+			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file where the section will be written.")),
 		),
 		sectionExtract,
 	)
 	s.AddTool(
 		mcp.NewTool("search",
-			mcp.WithDescription("Search inside the monorepo for relevant information (technologies, bundles, folders, files, sections, definitions, goals, tickets, policies, statutes, contributors, checkpoints)."),
-			mcp.WithString("query", mcp.Description("A list of keywords.")),
+			mcp.WithDescription("Search the monorepo for relevant information across technologies, bundles, folders, files, sections, definitions, goals, tickets, policies, statutes, contributors, and checkpoints."),
+			mcp.WithString("query", mcp.Description("Space-separated keywords to search for.")),
 		),
 		mcpTree,
 	)
@@ -35176,18 +35215,17 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 // ticketOpen MUST perform the ticketOpen operation.
 func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	goal, _, _ := getStringArg(args, "goal")
 	title, _, _ := getStringArg(args, "title")
 	prompt, _, _ := getStringArg(args, "prompt")
+	goal, _, _ := getStringArg(args, "goal")
 	client, _, _ := getStringArg(args, "client")
 	llm, _, _ := getStringArg(args, "llm")
-	noIssue, _, _ := getBoolArg(args, "no-issue")
+	noManagement, _, _ := getBoolArg(args, "no_management")
 	draft, _, _ := getStringArg(args, "draft")
 	parent, _, _ := getStringArg(args, "parent")
 	issue, _, _ := getStringArg(args, "issue")
-	noManagement, _, _ := getBoolArg(args, "noManagement")
 
-	result := ToolTicketOpen(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
+	result := ToolTicketOpen(title, prompt, llm, client, draft, noManagement, goal, parent, noManagement, issue)
 	return toolResultToMCP(result)
 }
 
@@ -35216,6 +35254,68 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return toolResultToMCP(result)
 }
 
+// parseTicketPath parses a ticket path string (e.g. "26/03/27/SLUG") into year, month, day, slug.
+// Normalizes 4-digit years to 2-digit (2026 → 26).
+// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️parseticketpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/parseTicketPath)
+func parseTicketPath(path string) (int, int, int, string, error) {
+	parts := strings.Split(strings.TrimSpace(path), "/")
+	if len(parts) < 4 {
+		return 0, 0, 0, "", fmt.Errorf("invalid ticket path %q: expected format YY/MM/DD/SLUG (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS')", path)
+	}
+	year, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid year in ticket path %q", path)
+	}
+	if year >= 2000 {
+		year = year % 100
+	}
+	month, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid month in ticket path %q", path)
+	}
+	day, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid day in ticket path %q", path)
+	}
+	slug := strings.Join(parts[3:], "/")
+	if slug == "" {
+		return 0, 0, 0, "", fmt.Errorf("missing slug in ticket path %q", path)
+	}
+	return year, month, day, slug, nil
+}
+
+// resolveTicketForClose resolves a ticket for closing: by path or latest open ticket.
+// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️resolveticketforclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/resolveTicketForClose)
+func resolveTicketForClose(path string) (int, int, int, string, error) {
+	if path != "" {
+		return parseTicketPath(path)
+	}
+	ticket, err := latestOpenTicket()
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("no path provided and failed to find latest open ticket: %w", err)
+	}
+	if ticket == nil {
+		return 0, 0, 0, "", fmt.Errorf("no path provided and no open tickets found")
+	}
+	return ticket.Year, ticket.Month, ticket.Day, ticket.Slug, nil
+}
+
+// resolveTicketForReopen resolves a ticket for reopening: by path or latest closed ticket.
+// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️resolveticketforreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/resolveTicketForReopen)
+func resolveTicketForReopen(path string) (int, int, int, string, error) {
+	if path != "" {
+		return parseTicketPath(path)
+	}
+	ticket, err := LatestTicket()
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("no path provided and failed to find latest ticket: %w", err)
+	}
+	if ticket == nil {
+		return 0, 0, 0, "", fmt.Errorf("no path provided and no tickets found")
+	}
+	return ticket.Year, ticket.Month, ticket.Day, ticket.Slug, nil
+}
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketClose)
 // ticketClose holds the data fields for a ticketClose record.
 // ticketClose MUST perform the ticketClose operation.
@@ -35225,27 +35325,11 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	summary, _, _ := getStringArg(args, "summary")
 	filesSlice, _, _ := getStringSliceArg(args, "files")
 	title, _, _ := getStringArg(args, "title")
-	noManagement, _, _ := getBoolArg(args, "noManagement")
+	noManagement, _, _ := getBoolArg(args, "no_management")
 
-	year := 0
-	month := 0
-	day := 0
-	slug := ""
-
-	if path != "" {
-		parts := strings.Split(path, "/")
-		if len(parts) >= 4 {
-			if y, err := strconv.Atoi(parts[0]); err == nil {
-				year = y
-			}
-			if m, err := strconv.Atoi(parts[1]); err == nil {
-				month = m
-			}
-			if d, err := strconv.Atoi(parts[2]); err == nil {
-				day = d
-			}
-			slug = strings.Join(parts[3:], "/")
-		}
+	year, month, day, slug, err := resolveTicketForClose(path)
+	if err != nil {
+		return nil, err
 	}
 
 	result := ToolTicketClose(year, month, day, slug, summary, filesSlice, title, noManagement)
@@ -35263,32 +35347,14 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	llm, _, _ := getStringArg(args, "llm")
 	title, _, _ := getStringArg(args, "title")
 	draft, _, _ := getStringArg(args, "draft")
-	goal, _, _ := getStringArg(args, "goal")
-	parent, _, _ := getStringArg(args, "parent")
-	noManagement, _, _ := getBoolArg(args, "noManagement")
+	noManagement, _, _ := getBoolArg(args, "no_management")
 
-	year := 0
-	month := 0
-	day := 0
-	slug := ""
-
-	if path != "" {
-		parts := strings.Split(path, "/")
-		if len(parts) >= 4 {
-			if y, err := strconv.Atoi(parts[0]); err == nil {
-				year = y
-			}
-			if m, err := strconv.Atoi(parts[1]); err == nil {
-				month = m
-			}
-			if d, err := strconv.Atoi(parts[2]); err == nil {
-				day = d
-			}
-			slug = strings.Join(parts[3:], "/")
-		}
+	year, month, day, slug, err := resolveTicketForReopen(path)
+	if err != nil {
+		return nil, err
 	}
 
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, goal, parent, noManagement)
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, "", "", noManagement)
 	return toolResultToMCP(result)
 }
 
@@ -39418,7 +39484,8 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
   copilot-chat:    SessionStart, Stop, SubagentStart, SubagentStop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse
   cursor-chat:     sessionStart, sessionEnd, stop, subagentStart, subagentStop, beforeSubmitPrompt, preCompact, preToolUse, postToolUse, beforeReadFile, afterFileEdit, beforeShellExecution, afterShellExecution, beforeMCPExecution, afterMCPExecution
   windsurf-chat:   pre_user_prompt, post_cascade_response, post_setup_worktree, pre_mcp_tool_use, post_mcp_tool_use, pre_read_code, post_read_code, pre_write_code, post_write_code, pre_run_command, post_run_command
-  claude-code/droid/codex/antigravity: SessionStart, SessionEnd, SubagentStart, SubagentStop, Stop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse, PostToolUseFailure, TaskCompleted, Notification`,
+  claude-code/droid/codex/antigravity: SessionStart, SessionEnd, SubagentStart, SubagentStop, Stop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse, PostToolUseFailure, TaskCompleted, Notification
+  kiro-cli:        agentSpawn, userPromptSubmit, preToolUse, postToolUse, stop`,
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			eventStr := args[0]
@@ -39893,6 +39960,46 @@ func generateDroidConfig(repoRoot string) (string, error) {
 			"PreToolUse":       fmt.Sprintf("%s hook PreToolUse droid", c),
 			"PostToolUse":      fmt.Sprintf("%s hook PostToolUse droid", c),
 			"Notification":     fmt.Sprintf("%s hook Notification droid", c),
+		},
+	}
+	out, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out) + "\n", nil
+}
+
+// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatekiroconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateKiroConfig)
+// generateKiroConfig holds the data fields for a generateKiroConfig record.
+// generateKiroConfig MUST perform the generateKiroConfig operation.
+func generateKiroConfig(repoRoot string) (string, error) {
+	c := "./repo/cli/cli"
+	hook := func(cmd string) map[string]interface{} {
+		return map[string]interface{}{"command": cmd}
+	}
+	config := map[string]interface{}{
+		"name":           "repo",
+		"description":    "Interacts with the semio monorepo via repo CLI hooks and MCP tools",
+		"prompt":         "file://../../AGENTS.md",
+		"includeMcpJson": true,
+		"tools":          []string{"*"},
+		"allowedTools":   []string{"@repo", "@semio", "@coda"},
+		"hooks": map[string]interface{}{
+			"agentSpawn": []map[string]interface{}{
+				hook(fmt.Sprintf("%s hook agentSpawn kiro-cli", c)),
+			},
+			"userPromptSubmit": []map[string]interface{}{
+				hook(fmt.Sprintf("%s hook userPromptSubmit kiro-cli", c)),
+			},
+			"preToolUse": []map[string]interface{}{
+				hook(fmt.Sprintf("%s hook preToolUse kiro-cli", c)),
+			},
+			"postToolUse": []map[string]interface{}{
+				hook(fmt.Sprintf("%s hook postToolUse kiro-cli", c)),
+			},
+			"stop": []map[string]interface{}{
+				hook(fmt.Sprintf("%s hook stop kiro-cli", c)),
+			},
 		},
 	}
 	out, err := json.MarshalIndent(config, "", "  ")
@@ -44029,6 +44136,26 @@ func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent,
 	}
 }
 
+// resolveKiroEvent maps a Kiro native event to a neutral HookEvent.
+// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvekirovent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveKiroEvent)
+// resolveKiroEvent MUST perform the resolveKiroEvent operation.
+func resolveKiroEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
+	switch nativeEvent {
+	case "agentSpawn":
+		return HookAgentStarted, "", nil
+	case "userPromptSubmit":
+		return HookAgentPromptSubmitting, "", nil
+	case "preToolUse":
+		return resolvePreToolUse(kind), "", nil
+	case "postToolUse":
+		return resolvePostToolUse(kind), "", nil
+	case "stop":
+		return HookAgentEnded, "", nil
+	default:
+		return "", "", fmt.Errorf("unknown native event %q for kiro-cli", nativeEvent)
+	}
+}
+
 // formatVSCodeHookOutput formats a hook output for VS Code.
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️formatvscodehookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/formatVSCodeHookOutput)
 // formatVSCodeHookOutput MUST perform the formatVSCodeHookOutput operation.
@@ -44626,6 +44753,11 @@ var blockedGitVerbs = map[string]bool{
 	"switch": true, "tag": true, "clean": true,
 }
 
+// blockedKillLsofPortPattern matches kill commands that use lsof to select a TCP port PID.
+// This is intentionally denied because in containerized environments the matched PID can be critical (e.g. PID 1),
+// causing the entire devcontainer to terminate and stopping all running work.
+var blockedKillLsofPortPattern = regexp.MustCompile(`(?i)\bkill\b[\s\S]*\$\(\s*lsof\b[\s\S]*-t[\s\S]*-i\s*:\s*\d+[\s\S]*\)`)
+
 // blockedGitVerbPattern matches any blocked git verb in inline code strings (shell-style invocation).
 var blockedGitVerbPattern = regexp.MustCompile(`(?i)\bgit\s+(add|branch|checkout|cherry-pick|clone|commit|config|fetch|init|merge|mv|pull|push|rebase|remote|reset|restore|revert|rm|stash|switch|tag|clean)\b`)
 
@@ -44649,6 +44781,9 @@ func isCommandSegmentBlocked(segment string) (bool, string) {
 		return false, ""
 	}
 	lower := strings.ToLower(segment)
+	if blockedKillLsofPortPattern.MatchString(lower) {
+		return true, "blocked: kill $(lsof -t -i:PORT); this can match PID 1 in containers and terminate the devcontainer, stopping all running work"
+	}
 	allowedPrefixes := []string{"grep ", "rg ", "ripgrep ", "echo ", "printf ", "ls ", "pwd", "cat ", "sed ", "awk "}
 	for _, prefix := range allowedPrefixes {
 		if strings.HasPrefix(lower, prefix) {
@@ -45241,6 +45376,9 @@ func writeHookArtifacts(ctx HookContext, result HookResult) {
 	SetRootDir(repoRoot)
 	now := time.Now().UTC()
 	sessionID := extractSessionIDFromInput(ctx.Input)
+	if sessionID == "" && ctx.Client == "kiro-cli" {
+		sessionID = fmt.Sprintf("kiro-%d", os.Getppid())
+	}
 	if sessionID == "" {
 		sessionID = "unknown"
 	}
@@ -45364,17 +45502,22 @@ func classifyTool(toolName string) ToolKind {
 	switch toolName {
 	case "manage_todo_list", "Task", "task", "todo_tool", "TodoWrite":
 		return ToolKindPlan
-	case "read_file", "grep_search", "rg", "ripgrep", "file_search", "semantic_search", "list_dir", "list_code_usages", "get_errors", "Read", "fetch_webpage", "open_simple_browser", "Grep", "Glob":
+	case "read_file", "grep_search", "rg", "ripgrep", "file_search", "semantic_search", "list_dir", "list_code_usages", "get_errors", "Read", "fetch_webpage", "open_simple_browser", "Grep", "Glob",
+		"fs_read", "code", "grep", "glob", "web_search", "web_fetch":
 		return ToolKindCodeSearch
-	case "replace_string_in_file", "create_file", "multi_replace_string_in_file", "Edit", "Write", "editfile":
+	case "replace_string_in_file", "create_file", "multi_replace_string_in_file", "Edit", "Write", "editfile",
+		"fs_write":
 		return ToolKindCodeEdit
-	case "run_in_terminal", "get_terminal_output", "Bash", "terminal":
+	case "run_in_terminal", "get_terminal_output", "Bash", "terminal",
+		"execute_bash":
 		return ToolKindTerminal
 	case "runTests", "run_tests":
 		return ToolKindTest
 	case "run_task", "create_and_run_task":
 		return ToolKindBuild
 	case "tool_search_tool_regex":
+		return ToolKindGeneric
+	case "use_subagent", "use_aws":
 		return ToolKindGeneric
 	default:
 		return ToolKindGeneric

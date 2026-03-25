@@ -27,6 +27,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -246,7 +247,7 @@ func TestRoundtrip(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 
 		var kit Kit
-		loadJSON(t, "kit_metabolism.json", &kit)
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 		data, err := SerializeKit(kit)
 		if err != nil {
@@ -296,7 +297,7 @@ func TestRoundtrip(t *testing.T) {
 func TestDesignModel(t *testing.T) {
 	t.Run("Model selection cases from shared semio assets", func(t *testing.T) {
 		var payload modelSelectionAsset
-		loadJSON(t, "model_selection.json", &payload)
+		loadJSON(t, "model.selection.semio.json", &payload)
 		for _, testCase := range payload.Cases {
 			models := make([]Model, 0, len(testCase.Models))
 			for _, model := range testCase.Models {
@@ -330,7 +331,7 @@ func TestDesignModel(t *testing.T) {
 
 func TestKitFilterDesign(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 	var expected Kit
 	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
@@ -341,7 +342,7 @@ func TestKitFilterDesign(t *testing.T) {
 	}
 
 	t.Run("filters kit to Nakagin Capsule Tower subset", func(t *testing.T) {
-		filtered := FilterKitWithDesign(kit, nakaginDesign.Guid, nil)
+		filtered := FilterKit(kit, KitFilter{DesignGuid: nakaginDesign.Guid})
 
 		if len(filtered.Designs) != len(expected.Designs) {
 			t.Fatalf("Expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
@@ -436,7 +437,7 @@ func TestKitFilterDesign(t *testing.T) {
 	})
 
 	t.Run("preserves kit metadata", func(t *testing.T) {
-		filtered := FilterKitWithDesign(kit, nakaginDesign.Guid, nil)
+		filtered := FilterKit(kit, KitFilter{DesignGuid: nakaginDesign.Guid})
 		if filtered.Guid != kit.Guid || filtered.Name != kit.Name || filtered.Version != kit.Version {
 			t.Fatalf("Filtered kit metadata mismatch")
 		}
@@ -445,7 +446,7 @@ func TestKitFilterDesign(t *testing.T) {
 
 func TestFlatten(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
 		t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
@@ -479,17 +480,17 @@ func TestChange(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 		t.Run("Kit + Change.Forward = DiffedKit & DiffedKit + Change.Backward = Kit", func(t *testing.T) {
 			var kitOriginal Kit
-			loadJSON(t, "kit_metabolism.json", &kitOriginal)
+			loadJSON(t, "metabolism.kit.semio.json", &kitOriginal)
 			kitOriginal.Designs = FilterDesignsWithoutParent(kitOriginal.Designs)
 
 			var kitDiff KitDiff
-			loadJSON(t, "diff_kit_metabolism.json", &kitDiff)
+			loadJSON(t, "metabolism.kit.diff.semio.json", &kitDiff)
 
 			var kitDiffInverted KitDiff
-			loadJSON(t, "diff_kit_metabolism_inverted.json", &kitDiffInverted)
+			loadJSON(t, "metabolism.kit.diff.inverted.semio.json", &kitDiffInverted)
 
 			var kitDiffed Kit
-			loadJSON(t, "kit_metabolism_diffed.json", &kitDiffed)
+			loadJSON(t, "metabolism.kit.diffed.semio.json", &kitDiffed)
 
 			change := GetKitChange(kitOriginal, kitDiffed, nil, nil)
 
@@ -514,11 +515,256 @@ func TestChange(t *testing.T) {
 	})
 }
 
+func TestDelete(t *testing.T) {
+	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
+		t.Run("Delete Third Tambour And First Small Tower Connection", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+			var design *Design
+			for i := range kit.Designs {
+				if kit.Designs[i].Name == "Nakagin Capsule Tower" {
+					design = &kit.Designs[i]
+					break
+				}
+			}
+			if design == nil {
+				t.Fatal("Design 'nakagin capsule tower' not found")
+			}
+
+			// Load selection
+			type Selection struct {
+				Pieces      []PieceId      `json:"pieces"`
+				Connections []ConnectionId `json:"connections"`
+			}
+			var selection Selection
+			loadJSON(t, "nakagin-capsule-tower.deleted.selection.semio.json", &selection)
+
+			pieceGuids := make([]string, len(selection.Pieces))
+			for i, p := range selection.Pieces {
+				pieceGuids[i] = p.Guid
+			}
+			connectionGuids := make([]string, len(selection.Connections))
+			for i, c := range selection.Connections {
+				connectionGuids[i] = c.Guid
+			}
+
+			// Load expected diff
+			var expectedDiff DesignDiff
+			loadJSON(t, "nakagin-capsule-tower.deleted.design.diff.semio.json", &expectedDiff)
+
+			// Compute diff
+			computedDiff := DeletePiecesAndConnectionsInDesign(&kit, *design, pieceGuids, connectionGuids)
+
+			// Verify removed pieces
+			if computedDiff.Pieces == nil {
+				t.Fatal("No pieces diff in computed result")
+			}
+			if expectedDiff.Pieces == nil {
+				t.Fatal("No pieces diff in expected result")
+			}
+			if len(computedDiff.Pieces.Removed) != len(expectedDiff.Pieces.Removed) {
+				t.Fatalf("Removed pieces count mismatch: %d vs %d",
+					len(computedDiff.Pieces.Removed), len(expectedDiff.Pieces.Removed))
+			}
+			for i, c := range computedDiff.Pieces.Removed {
+				if c.Guid != expectedDiff.Pieces.Removed[i].Guid {
+					t.Errorf("Removed piece guid mismatch at %d: %s vs %s", i, c.Guid, expectedDiff.Pieces.Removed[i].Guid)
+				}
+			}
+
+			// Verify updated (fixed) pieces
+			if len(computedDiff.Pieces.Updated) != len(expectedDiff.Pieces.Updated) {
+				t.Fatalf("Updated pieces count mismatch: %d vs %d",
+					len(computedDiff.Pieces.Updated), len(expectedDiff.Pieces.Updated))
+			}
+			computedGuids := make([]string, len(computedDiff.Pieces.Updated))
+			for i, u := range computedDiff.Pieces.Updated {
+				computedGuids[i] = u.Piece.Guid
+			}
+			expectedGuids := make([]string, len(expectedDiff.Pieces.Updated))
+			for i, u := range expectedDiff.Pieces.Updated {
+				expectedGuids[i] = u.Piece.Guid
+			}
+			sort.Strings(computedGuids)
+			sort.Strings(expectedGuids)
+			for i := range computedGuids {
+				if computedGuids[i] != expectedGuids[i] {
+					t.Errorf("Updated piece guid mismatch at %d: %s vs %s", i, computedGuids[i], expectedGuids[i])
+				}
+			}
+			// Verify updated pieces have both plane and center matching expected
+			expectedUpdatedMap := make(map[string]PieceDiff)
+			for _, u := range expectedDiff.Pieces.Updated {
+				expectedUpdatedMap[u.Piece.Guid] = u.Diff
+			}
+			for _, u := range computedDiff.Pieces.Updated {
+				if u.Diff.Plane == nil {
+					t.Errorf("Updated piece %s missing plane", u.Piece.Guid)
+				}
+				if u.Diff.Center == nil {
+					t.Errorf("Updated piece %s missing center", u.Piece.Guid)
+				}
+				exp, ok := expectedUpdatedMap[u.Piece.Guid]
+				if !ok {
+					t.Errorf("Unexpected updated piece %s", u.Piece.Guid)
+					continue
+				}
+				if u.Diff.Plane != nil && exp.Plane != nil {
+					tolerance := 0.001
+					if u.Diff.Plane.Origin != nil && exp.Plane.Origin != nil {
+						if math.Abs(*u.Diff.Plane.Origin.X-*exp.Plane.Origin.X) > tolerance {
+							t.Errorf("Updated piece %s plane origin x: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.X, *exp.Plane.Origin.X)
+						}
+						if math.Abs(*u.Diff.Plane.Origin.Y-*exp.Plane.Origin.Y) > tolerance {
+							t.Errorf("Updated piece %s plane origin y: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.Y, *exp.Plane.Origin.Y)
+						}
+						if math.Abs(*u.Diff.Plane.Origin.Z-*exp.Plane.Origin.Z) > tolerance {
+							t.Errorf("Updated piece %s plane origin z: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.Z, *exp.Plane.Origin.Z)
+						}
+					}
+				}
+				if u.Diff.Center != nil && exp.Center != nil {
+					tolerance := 0.001
+					if math.Abs(*u.Diff.Center.U-*exp.Center.U) > tolerance {
+						t.Errorf("Updated piece %s center U: got %f, expected %f", u.Piece.Guid, *u.Diff.Center.U, *exp.Center.U)
+					}
+					if math.Abs(*u.Diff.Center.V-*exp.Center.V) > tolerance {
+						t.Errorf("Updated piece %s center V: got %f, expected %f", u.Piece.Guid, *u.Diff.Center.V, *exp.Center.V)
+					}
+				}
+			}
+
+			// Verify removed connections
+			if computedDiff.Connections == nil {
+				t.Fatal("No connections diff in computed result")
+			}
+			if expectedDiff.Connections == nil {
+				t.Fatal("No connections diff in expected result")
+			}
+			if len(computedDiff.Connections.Removed) != len(expectedDiff.Connections.Removed) {
+				t.Fatalf("Removed connections count mismatch: %d vs %d",
+					len(computedDiff.Connections.Removed), len(expectedDiff.Connections.Removed))
+			}
+			computedConnGuids := make([]string, len(computedDiff.Connections.Removed))
+			for i, r := range computedDiff.Connections.Removed {
+				computedConnGuids[i] = r.Guid
+			}
+			expectedConnGuids := make([]string, len(expectedDiff.Connections.Removed))
+			for i, r := range expectedDiff.Connections.Removed {
+				expectedConnGuids[i] = r.Guid
+			}
+			sort.Strings(computedConnGuids)
+			sort.Strings(expectedConnGuids)
+			for i := range computedConnGuids {
+				if computedConnGuids[i] != expectedConnGuids[i] {
+					t.Errorf("Removed connection guid mismatch at %d: %s vs %s", i, computedConnGuids[i], expectedConnGuids[i])
+				}
+			}
+		})
+	})
+}
+
+func TestDrag(t *testing.T) {
+	t.Run("Design + Pieces + Offset = DiffDesign", func(t *testing.T) {
+		var design Design
+		loadJSON(t, "drag/design.semio.json", &design)
+		var pieces Design
+		loadJSON(t, "drag/pieces.semio.json", &pieces)
+		var offset Coord
+		loadJSON(t, "drag/offset.semio.json", &offset)
+		type expectedPieceUpdate struct {
+			Piece struct {
+				Guid string `json:"guid"`
+			} `json:"piece"`
+			Diff struct {
+				Center *Coord `json:"center"`
+			} `json:"diff"`
+		}
+		type expectedConnUpdate struct {
+			Connection struct {
+				Guid string `json:"guid"`
+			} `json:"connection"`
+			Diff struct {
+				U *float64 `json:"u"`
+				V *float64 `json:"v"`
+			} `json:"diff"`
+		}
+		type expectedDiffDesign struct {
+			Pieces      *struct{ Updated []expectedPieceUpdate } `json:"pieces"`
+			Connections *struct{ Updated []expectedConnUpdate }  `json:"connections"`
+		}
+		var expected expectedDiffDesign
+		loadJSON(t, "drag/diff.design.semio.json", &expected)
+		computed := DragPiecesInDesign(design, pieces, offset)
+		if expected.Pieces == nil {
+			if computed.Pieces != nil && len(computed.Pieces.Updated) > 0 {
+				t.Fatalf("Expected no piece updates, got %d", len(computed.Pieces.Updated))
+			}
+		} else {
+			if computed.Pieces == nil {
+				t.Fatalf("Expected %d piece updates, got nil", len(expected.Pieces.Updated))
+			}
+			if len(computed.Pieces.Updated) != len(expected.Pieces.Updated) {
+				t.Fatalf("Expected %d piece updates, got %d", len(expected.Pieces.Updated), len(computed.Pieces.Updated))
+			}
+			expectedMap := make(map[string]*Coord)
+			for _, u := range expected.Pieces.Updated {
+				expectedMap[u.Piece.Guid] = u.Diff.Center
+			}
+			for _, u := range computed.Pieces.Updated {
+				ec, ok := expectedMap[u.Piece.Guid]
+				if !ok {
+					t.Errorf("Unexpected piece update for %s", u.Piece.Guid)
+					continue
+				}
+				if u.Diff.Center == nil {
+					t.Errorf("Piece %s has nil center diff", u.Piece.Guid)
+					continue
+				}
+				if !floatEqual(*u.Diff.Center.U, ec.U, 0.001) || !floatEqual(*u.Diff.Center.V, ec.V, 0.001) {
+					t.Errorf("Piece %s center mismatch: got (%f,%f), want (%f,%f)", u.Piece.Guid, *u.Diff.Center.U, *u.Diff.Center.V, ec.U, ec.V)
+				}
+			}
+		}
+		if expected.Connections == nil {
+			if computed.Connections != nil && len(computed.Connections.Updated) > 0 {
+				t.Fatalf("Expected no connection updates, got %d", len(computed.Connections.Updated))
+			}
+		} else {
+			if computed.Connections == nil {
+				t.Fatalf("Expected %d connection updates, got nil", len(expected.Connections.Updated))
+			}
+			if len(computed.Connections.Updated) != len(expected.Connections.Updated) {
+				t.Fatalf("Expected %d connection updates, got %d", len(expected.Connections.Updated), len(computed.Connections.Updated))
+			}
+			expectedConnMap := make(map[string][2]float64)
+			for _, u := range expected.Connections.Updated {
+				expectedConnMap[u.Connection.Guid] = [2]float64{*u.Diff.U, *u.Diff.V}
+			}
+			for _, u := range computed.Connections.Updated {
+				ev, ok := expectedConnMap[u.Connection.Guid]
+				if !ok {
+					t.Errorf("Unexpected connection update for %s", u.Connection.Guid)
+					continue
+				}
+				if u.Diff.U == nil || u.Diff.V == nil {
+					t.Errorf("Connection %s has nil u/v diff", u.Connection.Guid)
+					continue
+				}
+				if !floatEqual(*u.Diff.U, ev[0], 0.001) || !floatEqual(*u.Diff.V, ev[1], 0.001) {
+					t.Errorf("Connection %s uv mismatch: got (%f,%f), want (%f,%f)", u.Connection.Guid, *u.Diff.U, *u.Diff.V, ev[0], ev[1])
+				}
+			}
+		}
+	})
+}
+
 func TestValidation(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 		t.Run("Metabolism Kit -> Validate = Empty report", func(t *testing.T) {
 			var validKit Kit
-			loadJSON(t, "kit_metabolism.json", &validKit)
+			loadJSON(t, "metabolism.kit.semio.json", &validKit)
 			validResult := ValidateKit(validKit)
 			if HasErrors(validResult) {
 				t.Errorf("Valid kit should not have errors, got %d problems", len(validResult.Problems))
@@ -529,12 +775,12 @@ func TestValidation(t *testing.T) {
 	t.Run("Invalid", func(t *testing.T) {
 		t.Run("Invalid Kit -> Validate = Invalid Report", func(t *testing.T) {
 			var invalidKit Kit
-			loadJSON(t, "kit_invalid.json", &invalidKit)
+			loadJSON(t, "invalid.kit.semio.json", &invalidKit)
 			result := ValidateKit(invalidKit)
 			serializedResult := ToValidationResult(result)
 
 			var expected ValidationResultSerialized
-			loadJSON(t, "validation.json", &expected)
+			loadJSON(t, "validation.semio.json", &expected)
 
 			if !AreValidationResultsEqual(serializedResult, expected) {
 				t.Errorf("Validation mismatch. Got %d problems, expected %d",
@@ -548,7 +794,7 @@ func TestDesignQualitySum(t *testing.T) {
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
 		t.Run("Sum Effective Floor Area", func(t *testing.T) {
 			var kit Kit
-			loadJSON(t, "kit_metabolism.json", &kit)
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
 			var designGuid string
 			for _, d := range kit.Designs {
 				if d.Name == "Nakagin Capsule Tower" && d.Parent == nil {
@@ -579,7 +825,7 @@ func TestDesignQualitySum(t *testing.T) {
 
 func TestExportDesignModel(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 	if design == nil {
@@ -663,7 +909,7 @@ func TestExportDesignModel(t *testing.T) {
 
 func TestExportDesignModelSceneGraphReport(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 	if design == nil {
 		t.Fatal("Nakagin Capsule Tower design not found")
@@ -728,7 +974,7 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 		t.Fatalf("failed to write go model-kpi report: %v", err)
 	}
 
-	canonicalPath := filepath.Join(AssetsPath, "model-kpi-nakagin.json")
+	canonicalPath := filepath.Join(AssetsPath, "nakagin.kpi.model.semio.json")
 	canonicalData, err := os.ReadFile(canonicalPath)
 	if err != nil {
 		t.Fatalf("failed to read canonical model-kpi asset: %v", err)
@@ -761,7 +1007,7 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 func TestMetaShallow(t *testing.T) {
 	t.Run("KitMeta from conversion", func(t *testing.T) {
 		var kit Kit
-		loadJSON(t, "kit_metabolism.json", &kit)
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
 		meta := ToKitMeta(kit)
 		if meta.Guid != kit.Guid {
 			t.Errorf("KitMeta.Guid = %q, want %q", meta.Guid, kit.Guid)
@@ -776,7 +1022,7 @@ func TestMetaShallow(t *testing.T) {
 
 	t.Run("KitShallow from conversion", func(t *testing.T) {
 		var kit Kit
-		loadJSON(t, "kit_metabolism.json", &kit)
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
 		shallow := ToKitShallow(kit)
 		if shallow.Guid != kit.Guid {
 			t.Errorf("KitShallow.Guid = %q, want %q", shallow.Guid, kit.Guid)
@@ -1273,17 +1519,17 @@ func TestKitWorkflowKinds(t *testing.T) {
 
 // #region 🔖Kit Filter Tests
 // [👤semio📚go🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/go/f/semio_test.go/s/KitFilterTests)
-// Tests for FilterKitWithDesign MUST verify correct subset extraction.
+// Tests for FilterKit MUST verify correct subset extraction.
 
-func TestFilterKitWithDesign(t *testing.T) {
+func TestFilterKit(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 	designGuid := "9a890dd4-0a9c-48ac-920a-9e62666465ef"
 	var expected Kit
 	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
 
 	t.Run("filters kit to only contain entities related to Nakagin Capsule Tower design", func(t *testing.T) {
-		filtered := FilterKitWithDesign(kit, designGuid, nil)
+		filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
 
 		if len(filtered.Designs) != len(expected.Designs) {
 			t.Errorf("expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
@@ -1341,7 +1587,7 @@ func TestFilterKitWithDesign(t *testing.T) {
 	})
 
 	t.Run("preserves kit metadata", func(t *testing.T) {
-		filtered := FilterKitWithDesign(kit, designGuid, nil)
+		filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
 		if filtered.Guid != kit.Guid {
 			t.Errorf("expected guid %s, got %s", kit.Guid, filtered.Guid)
 		}
@@ -1352,8 +1598,298 @@ func TestFilterKitWithDesign(t *testing.T) {
 			t.Errorf("expected version %s, got %s", kit.Version, filtered.Version)
 		}
 	})
+
+	t.Run("glob filters types by name include", func(t *testing.T) {
+		filtered := FilterKit(kit, KitFilter{Types: &GlobFilter{Include: []string{"Capsule*"}}})
+		if len(filtered.Types) == 0 {
+			t.Fatal("expected at least one type matching Capsule*")
+		}
+		for _, ty := range filtered.Types {
+			if !GlobMatch(ty.Name, "Capsule*") {
+				t.Errorf("type %s should not be included", ty.Name)
+			}
+		}
+	})
+
+	t.Run("glob filters types by name exclude", func(t *testing.T) {
+		totalTypes := len(kit.Types)
+		filtered := FilterKit(kit, KitFilter{Types: &GlobFilter{Exclude: []string{"Capsule*"}}})
+		if len(filtered.Types) >= totalTypes {
+			t.Errorf("expected fewer types after excluding Capsule*")
+		}
+		for _, ty := range filtered.Types {
+			if GlobMatch(ty.Name, "Capsule*") {
+				t.Errorf("type %s should have been excluded", ty.Name)
+			}
+		}
+	})
+
+	t.Run("glob filters designs by name include", func(t *testing.T) {
+		filtered := FilterKit(kit, KitFilter{Designs: &GlobFilter{Include: []string{"Nakagin*"}}})
+		if len(filtered.Designs) == 0 {
+			t.Fatal("expected at least one design matching Nakagin*")
+		}
+		for _, d := range filtered.Designs {
+			if !GlobMatch(d.Name, "Nakagin*") {
+				t.Errorf("design %s should not be included", d.Name)
+			}
+		}
+	})
+
+	t.Run("empty filter returns kit unchanged", func(t *testing.T) {
+		filtered := FilterKit(kit, KitFilter{})
+		if len(filtered.Types) != len(kit.Types) {
+			t.Errorf("expected %d types, got %d", len(kit.Types), len(filtered.Types))
+		}
+		if len(filtered.Designs) != len(kit.Designs) {
+			t.Errorf("expected %d designs, got %d", len(kit.Designs), len(filtered.Designs))
+		}
+	})
+
+	t.Run("combines designGuid with glob filters", func(t *testing.T) {
+		designFiltered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
+		combinedFiltered := FilterKit(kit, KitFilter{DesignGuid: designGuid, Types: &GlobFilter{Exclude: []string{"Capsule*"}}})
+		if len(combinedFiltered.Types) >= len(designFiltered.Types) {
+			t.Errorf("expected fewer types with combined filter")
+		}
+		for _, ty := range combinedFiltered.Types {
+			if GlobMatch(ty.Name, "Capsule*") {
+				t.Errorf("type %s should have been excluded", ty.Name)
+			}
+		}
+	})
 }
 
 // #endregion 🔖Kit Filter Tests
+
+// #region 🔖Hash Tests
+
+func TestHashKit(t *testing.T) {
+	kitJSON, err := os.ReadFile(filepath.Join(AssetsPath, "metabolism.kit.semio.json"))
+	if err != nil {
+		t.Fatalf("failed to read metabolism kit: %v", err)
+	}
+	var kit Kit
+	if err := json.Unmarshal(kitJSON, &kit); err != nil {
+		t.Fatalf("failed to unmarshal metabolism kit: %v", err)
+	}
+
+	t.Run("hashKit produces a 64-char lowercase hex string", func(t *testing.T) {
+		h := HashKit(kit)
+		if len(h) != 64 {
+			t.Errorf("expected 64-char hash, got %d chars: %s", len(h), h)
+		}
+		for _, c := range h {
+			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+				t.Errorf("hash contains non-hex char: %c", c)
+			}
+		}
+	})
+
+	t.Run("hashKit is deterministic", func(t *testing.T) {
+		h1 := HashKit(kit)
+		h2 := HashKit(kit)
+		if h1 != h2 {
+			t.Errorf("expected same hash, got %s and %s", h1, h2)
+		}
+	})
+
+	t.Run("hashKit of metabolism kit matches expected hash", func(t *testing.T) {
+		h := HashKit(kit)
+		expected := "4a8b056c2e80616afd25addb1bc31204da9879714c78ef2ec213df691a043160"
+		if h != expected {
+			t.Errorf("expected %s, got %s", expected, h)
+		}
+	})
+
+	t.Run("different kits produce different hashes", func(t *testing.T) {
+		kit2 := kit
+		kit2.Name = "Different Name"
+		h1 := HashKit(kit)
+		h2 := HashKit(kit2)
+		if h1 == h2 {
+			t.Errorf("expected different hashes for different kits, both got %s", h1)
+		}
+	})
+
+	t.Run("hashDesign produces a 64-char lowercase hex string", func(t *testing.T) {
+		var nct *Design
+		for i := range kit.Designs {
+			if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
+				nct = &kit.Designs[i]
+				break
+			}
+		}
+		if nct == nil {
+			t.Fatal("Nakagin Capsule Tower design not found")
+		}
+		h := HashDesign(*nct)
+		if len(h) != 64 {
+			t.Errorf("expected 64-char hash, got %d chars: %s", len(h), h)
+		}
+	})
+
+	t.Run("hashType produces a 64-char lowercase hex string", func(t *testing.T) {
+		if len(kit.Types) == 0 {
+			t.Fatal("no types in kit")
+		}
+		h := HashType(kit.Types[0])
+		if len(h) != 64 {
+			t.Errorf("expected 64-char hash, got %d chars: %s", len(h), h)
+		}
+	})
+}
+
+func TestHashKitDiff(t *testing.T) {
+	t.Run("hashKitDiff matches expected canonical value", func(t *testing.T) {
+		// Create KitDiff with name="updated" and description=null
+		raw := []byte(`{"name":"updated","description":null}`)
+		var d KitDiff
+		if err := json.Unmarshal(raw, &d); err != nil {
+			t.Fatalf("failed to unmarshal KitDiff: %v", err)
+		}
+		h := HashKitDiff(d)
+		expected := "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
+		if h != expected {
+			t.Errorf("expected %s, got %s", expected, h)
+		}
+	})
+
+	t.Run("hashKitDiff is deterministic", func(t *testing.T) {
+		raw := []byte(`{"name":"updated","description":null}`)
+		var d KitDiff
+		if err := json.Unmarshal(raw, &d); err != nil {
+			t.Fatalf("failed to unmarshal KitDiff: %v", err)
+		}
+		h1 := HashKitDiff(d)
+		h2 := HashKitDiff(d)
+		if h1 != h2 {
+			t.Errorf("expected same hash, got %s and %s", h1, h2)
+		}
+	})
+
+	t.Run("hashKitDiff produces different hashes for different diffs", func(t *testing.T) {
+		raw1 := []byte(`{"name":"updated","description":null}`)
+		raw2 := []byte(`{"name":"other"}`)
+		var d1, d2 KitDiff
+		json.Unmarshal(raw1, &d1)
+		json.Unmarshal(raw2, &d2)
+		h1 := HashKitDiff(d1)
+		h2 := HashKitDiff(d2)
+		if h1 == h2 {
+			t.Errorf("expected different hashes, both got %s", h1)
+		}
+	})
+
+	t.Run("hashKitDiff empty diff produces valid hash", func(t *testing.T) {
+		d := KitDiff{}
+		h := HashKitDiff(d)
+		if len(h) != 64 {
+			t.Errorf("expected 64-char hash, got %d chars: %s", len(h), h)
+		}
+	})
+
+	t.Run("hashAttributeDiff is deterministic", func(t *testing.T) {
+		key := "newKey"
+		val := "newValue"
+		d := AttributeDiff{Key: &key, Value: &val}
+		h1 := HashAttributeDiff(d)
+		h2 := HashAttributeDiff(d)
+		if h1 != h2 {
+			t.Errorf("expected same hash, got %s and %s", h1, h2)
+		}
+	})
+
+	t.Run("hashCoordDiff is deterministic", func(t *testing.T) {
+		u := 1.0
+		v := 2.0
+		d := CoordDiff{U: &u, V: &v}
+		h1 := HashCoordDiff(d)
+		h2 := HashCoordDiff(d)
+		if h1 != h2 {
+			t.Errorf("expected same hash, got %s and %s", h1, h2)
+		}
+	})
+}
+
+// #endregion 🔖Hash Tests
+
+// #region 🔖DesignWithDiff Tests
+
+func TestDesignWithDiff(t *testing.T) {
+	var kit Kit
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+	var design *Design
+	for i := range kit.Designs {
+		if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
+			design = &kit.Designs[i]
+			break
+		}
+	}
+	if design == nil {
+		t.Fatal("Nakagin Capsule Tower design not found")
+	}
+
+	var diff DesignDiff
+	loadJSON(t, "nakgin-capsule-tower.diff.design.semio.json", &diff)
+
+	var expected Design
+	loadJSON(t, "nakagin-capsule-tower.with-diff.design.semio.json", &expected)
+
+	computed := DesignWithDiff(*design, diff)
+
+	if len(computed.Pieces) != len(expected.Pieces) {
+		t.Errorf("pieces count: got %d, want %d", len(computed.Pieces), len(expected.Pieces))
+	}
+	if len(computed.Connections) != len(expected.Connections) {
+		t.Errorf("connections count: got %d, want %d", len(computed.Connections), len(expected.Connections))
+	}
+
+	getStatus := func(attrs []Attribute) string {
+		for _, a := range attrs {
+			if a.Key == "semio.diffStatus" && a.Value != nil {
+				return *a.Value
+			}
+		}
+		return ""
+	}
+
+	counts := map[string]int{}
+	for _, p := range computed.Pieces {
+		counts[getStatus(p.Attributes)]++
+	}
+	if counts["unchanged"] != 163 {
+		t.Errorf("unchanged pieces: got %d, want 163", counts["unchanged"])
+	}
+	if counts["modified"] != 7 {
+		t.Errorf("modified pieces: got %d, want 7", counts["modified"])
+	}
+	if counts["removed"] != 10 {
+		t.Errorf("removed pieces: got %d, want 10", counts["removed"])
+	}
+	if counts["added"] != 5 {
+		t.Errorf("added pieces: got %d, want 5", counts["added"])
+	}
+
+	connCounts := map[string]int{}
+	for _, c := range computed.Connections {
+		connCounts[getStatus(c.Attributes)]++
+	}
+	if connCounts["unchanged"] != 168 {
+		t.Errorf("unchanged connections: got %d, want 168", connCounts["unchanged"])
+	}
+	if connCounts["modified"] != 1 {
+		t.Errorf("modified connections: got %d, want 1", connCounts["modified"])
+	}
+	if connCounts["removed"] != 10 {
+		t.Errorf("removed connections: got %d, want 10", connCounts["removed"])
+	}
+	if connCounts["added"] != 4 {
+		t.Errorf("added connections: got %d, want 4", connCounts["added"])
+	}
+}
+
+// #endregion 🔖DesignWithDiff Tests
 
 // #endregion 🔖KitKind Tests

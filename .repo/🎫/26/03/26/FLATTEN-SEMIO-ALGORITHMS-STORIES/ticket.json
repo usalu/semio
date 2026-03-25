@@ -1,0 +1,13 @@
+{
+  "title": "Flatten Semio Algorithms Stories",
+  "status": "closed",
+  "description": "The stories in semio/algorithms should be flat and not inside Design/ folder in Storybook titles.",
+  "summary": "Flattened Storybook story titles in semio/algorithms to remove the 'Design/' folder nesting.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1107"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪5b6215a8de464863bb08163be9e66e71"
+  ]
+}

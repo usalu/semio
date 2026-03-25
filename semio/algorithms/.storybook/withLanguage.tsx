@@ -13,6 +13,7 @@ export enum AlgorithmLanguage {
   PYTHON = "python",
   RUST = "rust",
   GO = "go",
+  CSHARP = "csharp",
 }
 
 export type AlgorithmLanguageValue = (typeof AlgorithmLanguage)[keyof typeof AlgorithmLanguage];

@@ -1,0 +1,31 @@
+{
+  "id": "unknown",
+  "uri": "repo://session/unknown",
+  "second": "2026-03-30T22:47:42Z",
+  "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.starting",
+        "second": "2026-03-30T22:47:42Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "9f7fe6084ea2a4eccc2fd12cf7634adc769b1801",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-03-30T22:47:42Z",
+        "session": "unknown"
+      },
+      "response": {}
+    }
+  ]
+}

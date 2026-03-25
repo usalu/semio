@@ -27,6 +27,8 @@ import copy
 import dataclasses
 import datetime
 import enum
+import fnmatch
+import hashlib
 import json
 import os
 import pathlib
@@ -6318,6 +6320,7 @@ class Kit(
                 filtered.append(m)
         if not filtered:
             return None
+
         def jaccard(m):
             model_tag_guids = {t.guid for t in (getattr(m, "tags", None) or [])}
             sel = set(resolved_tag_guids)
@@ -6325,13 +6328,83 @@ class Kit(
             if not union:
                 return 0.0
             return len(model_tag_guids & sel) / len(union)
+
         return max(filtered, key=jaccard)
 
-    def filter_kit_with_design(self: "Kit", design_guid: str, tags: typing.Optional[list[str]] = None) -> "Kit":
+    @staticmethod
+    def _matches_glob_filter(name: str, glob_filter: typing.Optional[dict] = None) -> bool:
+        """Checks if a name passes a glob filter with include/exclude patterns.
+        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️matchesglobfilter](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/_matches_glob_filter)
+        """
+        if glob_filter is None:
+            return True
+        include = glob_filter.get("include") or []
+        exclude = glob_filter.get("exclude") or []
+        if include and not any(fnmatch.fnmatch(name.lower(), p.lower()) for p in include):
+            return False
+        if any(fnmatch.fnmatch(name.lower(), p.lower()) for p in exclude):
+            return False
+        return True
+
+    def filter_kit(self: "Kit", filter_spec: dict) -> "Kit":
+        """General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.
+        When design_guid is set, first performs transitive design-scoped subset extraction.
+        Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
+        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/filter_kit)
+        """
+        design_guid = filter_spec.get("design_guid")
+        model_tags = filter_spec.get("model_tags")
+
+        if design_guid:
+            base = self._filter_kit_by_design(design_guid, model_tags)
+        else:
+            base = self
+
+        glob_keys = [
+            "designs",
+            "types",
+            "ports",
+            "files",
+            "tags",
+            "concepts",
+            "qualities",
+            "authors",
+            "folders",
+        ]
+        has_glob_filters = any(filter_spec.get(k) is not None for k in glob_keys)
+        if not has_glob_filters:
+            return base
+
+        result = copy.copy(base)
+
+        if filter_spec.get("types") is not None:
+            result.types = [t for t in (base.types or []) if Kit._matches_glob_filter(t.name, filter_spec["types"])]
+        if filter_spec.get("designs") is not None:
+            result.designs = [d for d in (base.designs or []) if Kit._matches_glob_filter(d.name, filter_spec["designs"])]
+        if filter_spec.get("ports") is not None:
+            result.ports = [p for p in (base.ports or []) if Kit._matches_glob_filter(p.name, filter_spec["ports"])]
+        if filter_spec.get("files") is not None:
+            result.files_ = [f for f in (base.files_ or []) if Kit._matches_glob_filter(f.name, filter_spec["files"])]
+        if filter_spec.get("tags") is not None:
+            if hasattr(base, "tags_") and base.tags_ is not None:
+                result.tags_ = [t for t in base.tags_ if Kit._matches_glob_filter(t.name, filter_spec["tags"])]
+        if filter_spec.get("concepts") is not None:
+            if hasattr(base, "concepts_") and base.concepts_ is not None:
+                result.concepts_ = [c for c in base.concepts_ if Kit._matches_glob_filter(c.name, filter_spec["concepts"])]
+        if filter_spec.get("qualities") is not None:
+            result.qualities = [q for q in (base.qualities or []) if Kit._matches_glob_filter(q.name, filter_spec["qualities"])]
+        if filter_spec.get("authors") is not None:
+            result.authors_ = [a for a in (base.authors_ or []) if Kit._matches_glob_filter(a.name, filter_spec["authors"])]
+        if filter_spec.get("folders") is not None:
+            result.folders_ = [f for f in (base.folders_ or []) if Kit._matches_glob_filter(f.name, filter_spec["folders"])]
+
+        return result
+
+    def _filter_kit_by_design(self: "Kit", design_guid: str, tags: typing.Optional[list[str]] = None) -> "Kit":
         """Filters a kit to only include entities related to a specific design.
         Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
         files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
-        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/filter_kit_with_design)
+        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/_filter_kit_by_design)
         """
         design = self.find_design_by_guid(design_guid)
         pieces = design.pieces or []
@@ -6359,7 +6432,7 @@ class Kit(
 
         all_tags = list(getattr(self, "tags_", None) or []) if hasattr(self, "tags_") else []
         resolved_tag_guids: list[str] = []
-        for tag_value in (tags or []):
+        for tag_value in tags or []:
             found = False
             for tag in all_tags:
                 if tag.guid == tag_value:
@@ -6380,7 +6453,7 @@ class Kit(
         used_folder_names: set[str] = set()
 
         def collect_quality_from_props(props):
-            for prop in (props or []):
+            for prop in props or []:
                 if hasattr(prop, "quality") and prop.quality and hasattr(prop.quality, "guid"):
                     used_quality_guids.add(prop.quality.guid)
 
@@ -6391,15 +6464,15 @@ class Kit(
                 continue
             if getattr(t, "folder", None):
                 used_folder_names.add(t.folder)
-            for connector in (t.connectors or []):
+            for connector in t.connectors or []:
                 if connector.port and connector.port.guid:
                     used_port_guids.add(connector.port.guid)
                 collect_quality_from_props(getattr(connector, "props", None))
             collect_quality_from_props(getattr(t, "props", None))
-            for author_id in (getattr(t, "authors", None) or []):
+            for author_id in getattr(t, "authors", None) or []:
                 if hasattr(author_id, "guid"):
                     used_author_guids.add(author_id.guid)
-            for concept_id in (getattr(t, "concepts", None) or []):
+            for concept_id in getattr(t, "concepts", None) or []:
                 if hasattr(concept_id, "guid"):
                     used_concept_guids.add(concept_id.guid)
 
@@ -6410,24 +6483,24 @@ class Kit(
                     selected_models[type_guid] = best
                     if hasattr(best, "file") and best.file and hasattr(best.file, "guid"):
                         used_file_guids.add(best.file.guid)
-                    for tag_id in (getattr(best, "tags", None) or []):
+                    for tag_id in getattr(best, "tags", None) or []:
                         used_tag_guids.add(tag_id.guid)
 
         for piece in pieces:
             collect_quality_from_props(getattr(piece, "props", None))
 
-        for concept_id in (getattr(design, "concepts", None) or []):
+        for concept_id in getattr(design, "concepts", None) or []:
             if hasattr(concept_id, "guid"):
                 used_concept_guids.add(concept_id.guid)
-        for author_id in (getattr(design, "authors", None) or []):
+        for author_id in getattr(design, "authors", None) or []:
             if hasattr(author_id, "guid"):
                 used_author_guids.add(author_id.guid)
 
         port_snapshot = list(used_port_guids)
         for port_guid in port_snapshot:
-            for port in (self.ports or []):
+            for port in self.ports or []:
                 if port.guid == port_guid:
-                    for compat in (getattr(port, "compatiblePorts", None) or getattr(port, "compatible_ports", None) or []):
+                    for compat in getattr(port, "compatiblePorts", None) or getattr(port, "compatible_ports", None) or []:
                         if hasattr(compat, "guid"):
                             used_port_guids.add(compat.guid)
 
@@ -6435,6 +6508,7 @@ class Kit(
             used_tag_guids.add(tag_guid)
 
         import copy
+
         result = copy.copy(self)
         result.types = []
         for t in all_types:
@@ -7709,17 +7783,25 @@ def buildPieceGraph(design: Design | dict) -> networkx.Graph:
 
 def findFixedPieces(design: Design | dict) -> list[str]:
     """Find all pieces that are fixed in the design hierarchy.
-    findFixedPieces MUST return pieces that have no incoming connections.
+    findFixedPieces MUST return pieces that have both plane and center defined.
     [👤semio📚py💻semio🔖domain🔖validation🔖graphoperations🛠️findfixedpieces](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Graph%20Operations/d/i/findFixedPieces)
     """
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
     result = []
     for p in pieces:
         if isinstance(p, dict):
-            if p.get("plane") is not None:
+            hasPlane = p.get("plane") is not None
+            hasCenter = p.get("center") is not None
+            if hasPlane != hasCenter:
+                raise ValueError(f"Piece {p.get('guid')} has inconsistent plane and center")
+            if hasPlane:
                 result.append(p["guid"])
         else:
-            if p.plane is not None:
+            hasPlane = p.plane is not None
+            hasCenter = p.center is not None
+            if hasPlane != hasCenter:
+                raise ValueError(f"Piece {p.guid} has inconsistent plane and center")
+            if hasPlane:
                 result.append(p.guid)
     return result
 
@@ -8025,13 +8107,14 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         return {}
     pieceMap = {p["guid"]: dict(p) for p in pieces}
     piecePlanes: dict[str, dict] = {}
+    piecePaths: dict[str, str] = {}
     G = buildPieceGraph(design)
     components = list(networkx.connected_components(G))
     for component in components:
         rootNode = None
         for nodeId in component:
             piece = pieceMap.get(nodeId)
-            if piece and piece.get("plane") is not None:
+            if piece and piece.get("plane") is not None and piece.get("center") is not None:
                 rootNode = nodeId
                 break
         if rootNode is None and component:
@@ -8039,7 +8122,8 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         if rootNode is None:
             continue
         rootPiece = pieceMap[rootNode]
-        if rootPiece.get("plane"):
+        piecePaths[rootNode] = rootNode
+        if rootPiece.get("plane") and rootPiece.get("center") is not None:
             piecePlanes[rootNode] = rootPiece["plane"]
         else:
             piecePlanes[rootNode] = {
@@ -8098,6 +8182,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 "v": round(childV / TOLERANCE) * TOLERANCE,
             }
             pieceMap[childId]["center"] = childCenter
+            piecePaths[childId] = piecePaths.get(parentId, parentId) + "," + childId
     updatedPieces = []
     for piece in pieces:
         newPiece = dict(piece)
@@ -8118,7 +8203,8 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 for p in updatedPieces
                 if p["guid"] in piecePlanes
             ]
-        }
+        },
+        "_piecePaths": piecePaths,
     }
 
 
@@ -8244,21 +8330,24 @@ def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
 
 def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
     """Returns metadata for all pieces in a design.
-    Each entry contains plane, center, fixedPieceId, parentPieceId, and depth.
+    Each entry contains plane, center, fixedPieceId, parentPieceId, depth, and path.
     [👤semio📚py💻semio🔖domain🔖kitoperations🛠️piecesmetadatadict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/d/i/piecesMetadataDict)
     """
     design = _findDesignInKitDict(kit, design_guid)
     flatten_diff = flattenDesignDict(kit, design_guid)
+    piece_paths = flatten_diff.pop("_piecePaths", {})
     flat_design = _applyDesignDiffDict(design, flatten_diff)
     result = {}
     for p in flat_design.get("pieces", []):
         guid = p.get("guid", "")
+        path_raw = piece_paths.get(guid, guid)
         result[guid] = {
             "plane": p.get("plane"),
             "center": p.get("center", {"u": 0, "v": 0}),
             "fixedPieceId": findAttributeValueDict(p, "semio.fixedPieceId", guid) or guid,
             "parentPieceId": findAttributeValueDict(p, "semio.parentPieceId", None),
             "depth": int(findAttributeValueDict(p, "semio.depth", "0") or "0"),
+            "path": [s for s in path_raw.split(",") if s],
         }
     return result
 
@@ -9829,6 +9918,74 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
     return result
 
 
+def designWithDiffDict(base: dict, diff: dict) -> dict:
+    """Create a mixed design keeping old entities with diff status annotations.
+    designWithDiffDict MUST maintain all old pieces and connections (same parameters),
+    annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
+    keep deleted entities in place marked as removed, and append added entities marked as added.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️designwithdiffdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/designWithDiffDict)
+    """
+    import copy
+
+    def status_attr(status: str) -> dict:
+        return {
+            "guid": f"semio.diffStatus.{status}",
+            "key": "semio.diffStatus",
+            "value": status,
+        }
+
+    pieces_diff = diff.get("pieces", {})
+    removed_piece_guids = {r["guid"] for r in pieces_diff.get("removed", [])}
+    updated_piece_guids = {u.get("piece", {}).get("guid") for u in pieces_diff.get("updated", [])}
+
+    conns_diff = diff.get("connections", {})
+    removed_conn_guids = {r["guid"] for r in conns_diff.get("removed", [])}
+    updated_conn_guids = {u.get("connection", {}).get("guid") for u in conns_diff.get("updated", [])}
+
+    result_pieces = []
+    for p in base.get("pieces", []):
+        pc = copy.deepcopy(p)
+        attrs = pc.get("attributes", []) or []
+        if pc["guid"] in removed_piece_guids:
+            attrs.append(status_attr("removed"))
+        elif pc["guid"] in updated_piece_guids:
+            attrs.append(status_attr("modified"))
+        else:
+            attrs.append(status_attr("unchanged"))
+        pc["attributes"] = attrs
+        result_pieces.append(pc)
+    for added in pieces_diff.get("added", []):
+        ac = copy.deepcopy(added)
+        attrs = ac.get("attributes", []) or []
+        attrs.append(status_attr("added"))
+        ac["attributes"] = attrs
+        result_pieces.append(ac)
+
+    result_conns = []
+    for c in base.get("connections", []):
+        cc = copy.deepcopy(c)
+        attrs = cc.get("attributes", []) or []
+        if cc["guid"] in removed_conn_guids:
+            attrs.append(status_attr("removed"))
+        elif cc["guid"] in updated_conn_guids:
+            attrs.append(status_attr("modified"))
+        else:
+            attrs.append(status_attr("unchanged"))
+        cc["attributes"] = attrs
+        result_conns.append(cc)
+    for added in conns_diff.get("added", []):
+        ac = copy.deepcopy(added)
+        attrs = ac.get("attributes", []) or []
+        attrs.append(status_attr("added"))
+        ac["attributes"] = attrs
+        result_conns.append(ac)
+
+    result = copy.deepcopy(base)
+    result["pieces"] = result_pieces
+    result["connections"] = result_conns
+    return result
+
+
 def _getPieceDiff(before: dict, after: dict) -> dict:
     """Get diff between two piece dicts.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getpiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getPieceDiff)
@@ -11142,6 +11299,96 @@ class KitChange(Change):
     pass
 
 
+def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGuids: list[str]) -> dict:
+    """Deletes pieces and connections from a design dict, returning a DesignDiff dict.
+    Removes stale connections referencing deleted pieces.
+    Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️deletepiecesandconnectionsindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/deletePiecesAndConnectionsInDesignDict)
+    """
+    deletedPieceSet = set(pieceGuids)
+    connections = design.get("connections", [])
+
+    # Find stale connections: connections referencing any deleted piece
+    staleConnectionGuids = set()
+    for conn in connections:
+        connectedGuid = conn.get("connected", {}).get("piece", {}).get("guid", "")
+        connectingGuid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+        if connectedGuid in deletedPieceSet or connectingGuid in deletedPieceSet:
+            staleConnectionGuids.add(conn["guid"])
+
+    # All removed connections = explicit + stale
+    allRemovedConnectionGuids = set(connectionGuids) | staleConnectionGuids
+
+    # Find pieces that become fixed
+    fixedPieceGuids: list[str] = []
+    for connGuid in allRemovedConnectionGuids:
+        conn = next((c for c in connections if c["guid"] == connGuid), None)
+        if conn is None:
+            continue
+        connectingGuid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+        if connectingGuid in deletedPieceSet:
+            continue
+        # Check if this piece has another parent connection not in the removed set
+        hasOtherParent = any(c.get("connecting", {}).get("piece", {}).get("guid", "") == connectingGuid and c["guid"] not in allRemovedConnectionGuids for c in connections)
+        if not hasOtherParent and connectingGuid not in fixedPieceGuids:
+            fixedPieceGuids.append(connectingGuid)
+
+    flatPlane = {
+        "origin": {"x": 0, "y": 0, "z": 0},
+        "xAxis": {"x": 1, "y": 0, "z": 0},
+        "yAxis": {"x": 0, "y": 1, "z": 0},
+    }
+    zeroCenter = {"u": 0, "v": 0}
+
+    # Flatten the design to get absolute plane and center for each piece
+    flatResult = flattenDesignDict(kit, design.get("guid", ""))
+    flatPieceMap: dict[str, dict] = {}
+    for piece in design.get("pieces", []):
+        if piece.get("plane"):
+            flatPieceMap[piece["guid"]] = {
+                "plane": piece["plane"],
+                "center": piece.get("center"),
+            }
+    for update in flatResult.get("pieces", {}).get("updated", []):
+        guid = update.get("piece", {}).get("guid", update.get("id", ""))
+        existing = flatPieceMap.get(guid, {})
+        diff = update.get("diff", {})
+        if diff.get("plane"):
+            existing["plane"] = diff["plane"]
+        if diff.get("center"):
+            existing["center"] = diff["center"]
+        flatPieceMap[guid] = existing
+
+    diff: dict = {}
+
+    piecesRemoved = [{"guid": g} for g in pieceGuids]
+    piecesUpdated = []
+    for g in fixedPieceGuids:
+        flat = flatPieceMap.get(g, {})
+        piecesUpdated.append(
+            {
+                "piece": {"guid": g},
+                "diff": {
+                    "plane": flat.get("plane", flatPlane),
+                    "center": flat.get("center", zeroCenter),
+                },
+            }
+        )
+    if piecesRemoved or piecesUpdated:
+        piecesDiff: dict = {}
+        if piecesRemoved:
+            piecesDiff["removed"] = piecesRemoved
+        if piecesUpdated:
+            piecesDiff["updated"] = piecesUpdated
+        diff["pieces"] = piecesDiff
+
+    connectionsRemoved = [{"guid": g} for g in sorted(allRemovedConnectionGuids)]
+    if connectionsRemoved:
+        diff["connections"] = {"removed": connectionsRemoved}
+
+    return diff
+
+
 def getDesignChange(
     before: dict,
     after: dict,
@@ -11322,11 +11569,77 @@ class KitData:
     def to_dict(self) -> dict:
         return self._data
 
-    def filter_kit_with_design(self, design_guid: str, tags: typing.Optional[list[str]] = None) -> "KitData":
+    def filter_kit(self, filter_spec: dict) -> "KitData":
+        """General-purpose kit filter with glob support.
+        [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️kitdata🛠️filterkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/KitData/filter_kit)
+        """
+        design_guid = filter_spec.get("design_guid")
+        tags = filter_spec.get("model_tags")
+
+        if design_guid:
+            base = self._filter_kit_by_design(design_guid, tags)
+        else:
+            base = self
+
+        base_data = base._data if isinstance(base, KitData) else base
+        glob_keys = [
+            "designs",
+            "types",
+            "ports",
+            "files",
+            "tags",
+            "concepts",
+            "qualities",
+            "authors",
+            "folders",
+        ]
+        has_glob_filters = any(filter_spec.get(k) is not None for k in glob_keys)
+        if not has_glob_filters:
+            return KitData(base_data) if base is self else base
+
+        import fnmatch as _fnmatch
+
+        def _matches(name: str, glob_filter: typing.Optional[dict]) -> bool:
+            if glob_filter is None:
+                return True
+            include = glob_filter.get("include") or []
+            exclude = glob_filter.get("exclude") or []
+            if include and not any(_fnmatch.fnmatch(name.lower(), p.lower()) for p in include):
+                return False
+            if any(_fnmatch.fnmatch(name.lower(), p.lower()) for p in exclude):
+                return False
+            return True
+
+        filtered = dict(base_data)
+        entity_key_map = {
+            "types": "name",
+            "designs": "name",
+            "ports": "name",
+            "files": "name",
+            "tags": "name",
+            "concepts": "name",
+            "qualities": "name",
+            "authors": "name",
+            "folders": "name",
+        }
+        for entity_key, name_key in entity_key_map.items():
+            spec = filter_spec.get(entity_key)
+            if spec is not None:
+                filtered[entity_key] = [e for e in filtered.get(entity_key, []) if _matches(e.get(name_key, ""), spec)]
+
+        return KitData(filtered)
+
+    def _filter_kit_by_design(self, design_guid: str, tags: typing.Optional[list[str]] = None) -> "KitData":
         kit = self._data
         design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
         if design is None:
-            return KitData({"guid": kit.get("guid"), "name": kit.get("name", ""), "version": kit.get("version", "")})
+            return KitData(
+                {
+                    "guid": kit.get("guid"),
+                    "name": kit.get("name", ""),
+                    "version": kit.get("version", ""),
+                }
+            )
 
         used_type_guids: set[str] = set()
         used_design_guids: set[str] = {design_guid}
@@ -11351,7 +11664,10 @@ class KitData:
 
         resolved_tag_guids: list[str] = []
         for tag_value in tags or []:
-            by_guid = next((tag for tag in kit.get("tags", []) if tag.get("guid") == tag_value), None)
+            by_guid = next(
+                (tag for tag in kit.get("tags", []) if tag.get("guid") == tag_value),
+                None,
+            )
             if by_guid is not None:
                 resolved_tag_guids.append(by_guid["guid"])
                 continue
@@ -11426,13 +11742,31 @@ class KitData:
             if author.get("guid"):
                 used_author_guids.add(author["guid"])
         for port_guid in list(used_port_guids):
-            port = next((candidate for candidate in kit.get("ports", []) if candidate.get("guid") == port_guid), None)
+            port = next(
+                (candidate for candidate in kit.get("ports", []) if candidate.get("guid") == port_guid),
+                None,
+            )
             for compatible in (port or {}).get("compatiblePorts", []):
                 if compatible.get("guid"):
                     used_port_guids.add(compatible["guid"])
         used_tag_guids.update(resolved_tag_guids)
 
-        filtered = {key: value for key, value in kit.items() if key not in {"types", "designs", "ports", "files", "tags", "concepts", "qualities", "authors", "folders"}}
+        filtered = {
+            key: value
+            for key, value in kit.items()
+            if key
+            not in {
+                "types",
+                "designs",
+                "ports",
+                "files",
+                "tags",
+                "concepts",
+                "qualities",
+                "authors",
+                "folders",
+            }
+        }
         filtered["types"] = []
         for type_item in kit.get("types", []):
             if type_item.get("guid") not in used_type_guids:
@@ -11778,9 +12112,18 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
             connectors_by_type.setdefault(row["type_guid"], []).append(connector)
 
         models_by_type: dict[str, list[dict]] = {}
+        model_tags_by_model: dict[str, list[dict]] = {}
+        try:
+            for row in cursor.execute("SELECT * FROM model_tag ORDER BY model_guid").fetchall():
+                r = dict(row)
+                model_tags_by_model.setdefault(r["model_guid"], []).append({"guid": r["tag_guid"]})
+        except sqlite3.OperationalError:
+            pass
+
         for row in cursor.execute("SELECT * FROM model ORDER BY guid").fetchall():
             model = _parse_model_from_sqlite(dict(row))
             model["file"] = {"guid": model["file"]} if model.get("file") else None
+            model["tags"] = model_tags_by_model.get(row["guid"], [])
             models_by_type.setdefault(row["type_guid"], []).append(model)
 
         types: list[dict] = []
@@ -11840,11 +12183,37 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
             if payload_design.get("guid") not in seen_design_guids:
                 designs.append(copy.deepcopy(payload_design))
 
-        result = {
-            key: copy.deepcopy(value)
-            for key, value in payload_dict.items()
-            if key not in {"types", "designs"}
-        }
+        folders: list[dict] = []
+        try:
+            for row in cursor.execute("SELECT * FROM folder ORDER BY guid").fetchall():
+                r = dict(row)
+                folder_dict: dict = {"guid": r.get("guid"), "name": r.get("name")}
+                if r.get("parent_guid"):
+                    folder_dict["parent"] = {"guid": r["parent_guid"]}
+                folders.append(folder_dict)
+        except sqlite3.OperationalError:
+            pass
+
+        files: list[dict] = []
+        try:
+            for row in cursor.execute("SELECT * FROM file ORDER BY guid").fetchall():
+                r = dict(row)
+                file_dict: dict = {"guid": r.get("guid"), "name": r.get("name")}
+                if r.get("mime"):
+                    file_dict["mime"] = r["mime"]
+                if r.get("size"):
+                    file_dict["size"] = r["size"]
+                if r.get("hash"):
+                    file_dict["hash"] = r["hash"]
+                if r.get("remote_url"):
+                    file_dict["remote"] = r["remote_url"]
+                if r.get("folder_guid"):
+                    file_dict["folder"] = {"guid": r["folder_guid"]}
+                files.append(file_dict)
+        except sqlite3.OperationalError:
+            pass
+
+        result = {key: copy.deepcopy(value) for key, value in payload_dict.items() if key not in {"types", "designs", "folders", "files"}}
         result.update(
             {
                 "guid": kit_row["guid"],
@@ -11859,6 +12228,8 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
                 "license": kit_row["license"],
                 "types": types,
                 "designs": designs,
+                "folders": folders,
+                "files": files,
             }
         )
         return result
@@ -12922,7 +13293,7 @@ def export_design_model(
             piece_guid = piece.get("guid")
             if piece_guid is None:
                 continue
-            if piece.get("plane") is not None:
+            if piece.get("plane") is not None and piece.get("center") is not None:
                 piece_planes[piece_guid] = piece.get("plane")
                 visited.add(piece_guid)
                 queue.append(piece_guid)
@@ -13127,7 +13498,7 @@ def export_design_model(
 
     queue: list[str] = []
     for p in pieces:
-        if p.plane is not None:
+        if p.plane is not None and p.center is not None:
             piece_planes[p.id_] = p.plane
             visited.add(p.id_)
             queue.append(p.id_)
@@ -13527,7 +13898,12 @@ def _export_ifc_from_dict(
         ifc_type = _get_layer_ifc_type(layer)
         if ifc_type == "IfcBuilding":
             building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name=layer_path)
-            _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
+            _ifc_api.run(
+                "aggregate.assign_object",
+                ifc,
+                relating_object=site,
+                products=[building],
+            )
             ifc_buildings[layer_path] = building
             if default_building is None:
                 default_building = building
@@ -13535,10 +13911,20 @@ def _export_ifc_from_dict(
             parts = layer_path.rsplit("/", 1)
             parent_path = parts[0] if len(parts) > 1 else ""
             storey_name = parts[-1] if len(parts) > 1 else layer_path
-            storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name=storey_name)
+            storey = _ifc_api.run(
+                "root.create_entity",
+                ifc,
+                ifc_class="IfcBuildingStorey",
+                name=storey_name,
+            )
             parent_building = ifc_buildings.get(parent_path)
             if parent_building is not None:
-                _ifc_api.run("aggregate.assign_object", ifc, relating_object=parent_building, products=[storey])
+                _ifc_api.run(
+                    "aggregate.assign_object",
+                    ifc,
+                    relating_object=parent_building,
+                    products=[storey],
+                )
             ifc_storeys[layer_path] = storey
             try:
                 storey_number = int(storey_name)
@@ -13551,10 +13937,20 @@ def _export_ifc_from_dict(
     # Fallback: create default building and storey if no layers define them
     if default_building is None:
         default_building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
-        _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[default_building])
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=site,
+            products=[default_building],
+        )
     if default_storey is None:
         default_storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
-        _ifc_api.run("aggregate.assign_object", ifc, relating_object=default_building, products=[default_storey])
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=default_building,
+            products=[default_storey],
+        )
     # endregion Step 1
 
     # region Step 2: Piece-to-storey mapping from piece names
@@ -13739,7 +14135,12 @@ def _export_ifc_from_dict(
             _ifc_api.run("geometry.edit_object_placement", ifc, product=occurrence, matrix=mat)
 
         # Assign piece to the correct storey based on its floor number
-        _ifc_api.run("spatial.assign_container", ifc, relating_structure=_piece_storey(piece_name), products=[occurrence])
+        _ifc_api.run(
+            "spatial.assign_container",
+            ifc,
+            relating_structure=_piece_storey(piece_name),
+            products=[occurrence],
+        )
 
         # Piece-level pset for piece attributes
         piece_props: dict[str, typing.Any] = {}
@@ -13966,7 +14367,12 @@ def _export_ifc_from_entities(
         ifc_type_val = _get_layer_ifc_type_entity(layer)
         if ifc_type_val == "IfcBuilding":
             building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name=layer_name)
-            _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
+            _ifc_api.run(
+                "aggregate.assign_object",
+                ifc,
+                relating_object=site,
+                products=[building],
+            )
             ifc_buildings[layer_name] = building
             if default_building is None:
                 default_building = building
@@ -13974,10 +14380,20 @@ def _export_ifc_from_entities(
             parts = layer_name.rsplit("/", 1)
             parent_name = parts[0] if len(parts) > 1 else ""
             storey_label = parts[-1] if len(parts) > 1 else layer_name
-            storey_ent = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name=storey_label)
+            storey_ent = _ifc_api.run(
+                "root.create_entity",
+                ifc,
+                ifc_class="IfcBuildingStorey",
+                name=storey_label,
+            )
             parent_building = ifc_buildings.get(parent_name)
             if parent_building is not None:
-                _ifc_api.run("aggregate.assign_object", ifc, relating_object=parent_building, products=[storey_ent])
+                _ifc_api.run(
+                    "aggregate.assign_object",
+                    ifc,
+                    relating_object=parent_building,
+                    products=[storey_ent],
+                )
             ifc_storeys[layer_name] = storey_ent
             try:
                 storey_by_number[int(storey_label)] = storey_ent
@@ -13988,10 +14404,20 @@ def _export_ifc_from_entities(
 
     if default_building is None:
         default_building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
-        _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[default_building])
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=site,
+            products=[default_building],
+        )
     if default_storey is None:
         default_storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
-        _ifc_api.run("aggregate.assign_object", ifc, relating_object=default_building, products=[default_storey])
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=default_building,
+            products=[default_storey],
+        )
     # endregion Step 1
 
     # region Step 2: Piece-to-storey mapping
@@ -14086,7 +14512,12 @@ def _export_ifc_from_entities(
             _ifc_api.run("geometry.edit_object_placement", ifc, product=occurrence, matrix=mat)
 
         # Assign piece to the correct storey based on its floor number
-        _ifc_api.run("spatial.assign_container", ifc, relating_structure=_piece_storey_entity(piece_name), products=[occurrence])
+        _ifc_api.run(
+            "spatial.assign_container",
+            ifc,
+            relating_structure=_piece_storey_entity(piece_name),
+            products=[occurrence],
+        )
         ifc_occurrences[piece.id_] = occurrence
 
         # Connectors as ports
@@ -14599,13 +15030,25 @@ AttributeMeta = typing.TypedDict(
 
 TagMeta = typing.TypedDict(
     "TagMeta",
-    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str], "order": typing.NotRequired[int]},
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "order": typing.NotRequired[int],
+    },
 )
 """TagMeta is identical to Tag (no list fields to omit)."""
 
 ConceptMeta = typing.TypedDict(
     "ConceptMeta",
-    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str], "order": typing.NotRequired[int]},
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "order": typing.NotRequired[int],
+    },
 )
 """ConceptMeta is identical to Concept (no list fields to omit)."""
 
@@ -14688,13 +15131,23 @@ QualityMeta = typing.TypedDict(
 
 PortMeta = typing.TypedDict(
     "PortMeta",
-    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str]},
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+    },
 )
 """PortMeta is Port without attributes."""
 
 ModelMeta = typing.TypedDict(
     "ModelMeta",
-    {"guid": str, "file": typing.NotRequired[dict], "name": typing.NotRequired[str], "description": typing.NotRequired[str]},
+    {
+        "guid": str,
+        "file": typing.NotRequired[dict],
+        "name": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
 )
 """ModelMeta is Model without tags and attributes."""
 
@@ -14747,7 +15200,12 @@ PieceMeta = typing.TypedDict(
 
 GroupMeta = typing.TypedDict(
     "GroupMeta",
-    {"guid": str, "name": typing.NotRequired[str], "color": typing.NotRequired[str], "description": typing.NotRequired[str]},
+    {
+        "guid": str,
+        "name": typing.NotRequired[str],
+        "color": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
 )
 """GroupMeta is Group without pieces and attributes."""
 
@@ -14947,23 +15405,134 @@ def _extract_scalar_fields(d: dict, keys: list[str]) -> dict:
 _ATTRIBUTE_META_KEYS = ["guid", "name", "value", "definition"]
 _TAG_META_KEYS = ["guid", "name", "description", "icon", "order"]
 _CONCEPT_META_KEYS = ["guid", "name", "description", "icon", "order"]
-_STAT_META_KEYS = ["guid", "key", "unit", "min", "minExcluded", "max", "maxExcluded", "createdAt", "updatedAt"]
+_STAT_META_KEYS = [
+    "guid",
+    "key",
+    "unit",
+    "min",
+    "minExcluded",
+    "max",
+    "maxExcluded",
+    "createdAt",
+    "updatedAt",
+]
 _PROP_META_KEYS = ["guid", "key", "value", "unit"]
 _AUTHOR_META_KEYS = ["guid", "name", "email"]
-_FILE_META_KEYS = ["guid", "name", "remote", "folder", "size", "hash", "createdAt", "updatedAt"]
+_FILE_META_KEYS = [
+    "guid",
+    "name",
+    "remote",
+    "folder",
+    "size",
+    "hash",
+    "createdAt",
+    "updatedAt",
+]
 _FOLDER_META_KEYS = ["guid", "name", "parent", "description", "createdAt", "updatedAt"]
-_QUALITY_META_KEYS = ["guid", "key", "name", "kind", "defaultValue", "formula", "defaultSiUnit", "defaultImperialUnit", "min", "minExcluded", "max", "maxExcluded", "canScale", "uri"]
+_QUALITY_META_KEYS = [
+    "guid",
+    "key",
+    "name",
+    "kind",
+    "defaultValue",
+    "formula",
+    "defaultSiUnit",
+    "defaultImperialUnit",
+    "min",
+    "minExcluded",
+    "max",
+    "maxExcluded",
+    "canScale",
+    "uri",
+]
 _PORT_META_KEYS = ["guid", "name", "description", "icon"]
 _MODEL_META_KEYS = ["guid", "file", "name", "description"]
-_CONNECTOR_META_KEYS = ["guid", "point", "direction", "t", "name", "description", "mandatory", "port"]
+_CONNECTOR_META_KEYS = [
+    "guid",
+    "point",
+    "direction",
+    "t",
+    "name",
+    "description",
+    "mandatory",
+    "port",
+]
 _LAYER_META_KEYS = ["guid", "name", "isHidden", "isLocked", "color", "description"]
-_PIECE_META_KEYS = ["guid", "name", "type", "designPiece", "plane", "center", "scale", "mirrorPlane", "isHidden", "isLocked", "color", "description"]
+_PIECE_META_KEYS = [
+    "guid",
+    "name",
+    "type",
+    "designPiece",
+    "plane",
+    "center",
+    "scale",
+    "mirrorPlane",
+    "isHidden",
+    "isLocked",
+    "color",
+    "description",
+]
 _GROUP_META_KEYS = ["guid", "name", "color", "description"]
-_CONNECTION_META_KEYS = ["guid", "connected", "connecting", "gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v", "description"]
+_CONNECTION_META_KEYS = [
+    "guid",
+    "connected",
+    "connecting",
+    "gap",
+    "shift",
+    "rise",
+    "rotation",
+    "turn",
+    "tilt",
+    "u",
+    "v",
+    "description",
+]
 
-_TYPE_META_KEYS = ["guid", "name", "parent", "description", "icon", "image", "folder", "unit", "stock", "isAbstract", "virtual", "createdAt", "updatedAt"]
-_DESIGN_META_KEYS = ["guid", "name", "parent", "description", "icon", "image", "variant", "view", "unit", "folder", "isAbstract", "activeLayer", "createdAt", "updatedAt"]
-_KIT_META_KEYS = ["guid", "name", "version", "description", "icon", "image", "preview", "remote", "homepage", "license", "createdAt", "updatedAt"]
+_TYPE_META_KEYS = [
+    "guid",
+    "name",
+    "parent",
+    "description",
+    "icon",
+    "image",
+    "folder",
+    "unit",
+    "stock",
+    "isAbstract",
+    "virtual",
+    "createdAt",
+    "updatedAt",
+]
+_DESIGN_META_KEYS = [
+    "guid",
+    "name",
+    "parent",
+    "description",
+    "icon",
+    "image",
+    "variant",
+    "view",
+    "unit",
+    "folder",
+    "isAbstract",
+    "activeLayer",
+    "createdAt",
+    "updatedAt",
+]
+_KIT_META_KEYS = [
+    "guid",
+    "name",
+    "version",
+    "description",
+    "icon",
+    "image",
+    "preview",
+    "remote",
+    "homepage",
+    "license",
+    "createdAt",
+    "updatedAt",
+]
 
 
 def attributeToMeta(d: dict) -> AttributeMeta:
@@ -15235,6 +15804,1486 @@ def kitToShallow(d: dict) -> KitShallow:
 # endregion Meta And Shallow Types
 
 
+# region Hash
+# [👤semio📚py💻main🔖hash](repo://p/u/semio/b/l/py/f/main.py/s/Hash)
+# Merkle hash functions for all semio entities.
+
+
+# region 🔖HashWriter
+def _format_number_for_hash(n) -> str:
+    """Format number to match JavaScript Number.toString() behavior.
+    Integers (including floats with no fractional part) are formatted without decimal point.
+    """
+    if isinstance(n, int):
+        return str(n)
+    if isinstance(n, float) and n.is_integer():
+        return str(int(n))
+    return str(n)
+
+
+def _ref_guid(ref) -> str:
+    """Extract guid from a reference (dict with 'guid' key or plain string)."""
+    if isinstance(ref, dict):
+        return ref["guid"]
+    return ref
+
+
+class HashWriter:
+    """Feeds structured data into a SHA-256 hasher for deterministic hashing.
+    Uses length-prefixed strings and type tags for unambiguous encoding.
+    """
+
+    def __init__(self):
+        self._parts = bytearray()
+
+    def writeString(self, s: str):
+        b = s.encode("utf-8")
+        self._parts.extend(struct.pack(">I", len(b)))
+        self._parts.extend(b)
+
+    def writeNumber(self, n):
+        self.writeString(_format_number_for_hash(n))
+
+    def writeBool(self, b: bool):
+        self._parts.append(1 if b else 0)
+
+    def writeHash(self, h: str):
+        self.writeString(h)
+
+    def writeHashList(self, hashes: list[str]):
+        sorted_hashes = sorted(hashes)
+        self._parts.extend(struct.pack(">I", len(sorted_hashes)))
+        for h in sorted_hashes:
+            self.writeString(h)
+
+    def writeGuidList(self, guids: list[str]):
+        sorted_guids = sorted(guids)
+        self._parts.extend(struct.pack(">I", len(sorted_guids)))
+        for g in sorted_guids:
+            self.writeString(g)
+
+    def digest(self) -> str:
+        return hashlib.sha256(bytes(self._parts)).hexdigest()
+
+
+# endregion 🔖HashWriter
+
+
+# region 🔖Hash Value Types
+def hash_coord(c: dict) -> str:
+    """Computes SHA-256 hash of a Coord value."""
+    w = HashWriter()
+    w.writeString("Coord")
+    w.writeString("u")
+    w.writeNumber(c["u"])
+    w.writeString("v")
+    w.writeNumber(c["v"])
+    return w.digest()
+
+
+def hash_vec(v: dict) -> str:
+    """Computes SHA-256 hash of a Vec value."""
+    w = HashWriter()
+    w.writeString("Vec")
+    w.writeString("u")
+    w.writeNumber(v["u"])
+    w.writeString("v")
+    w.writeNumber(v["v"])
+    return w.digest()
+
+
+def hash_point(p: dict) -> str:
+    """Computes SHA-256 hash of a Point value."""
+    w = HashWriter()
+    w.writeString("Point")
+    w.writeString("x")
+    w.writeNumber(p["x"])
+    w.writeString("y")
+    w.writeNumber(p["y"])
+    w.writeString("z")
+    w.writeNumber(p["z"])
+    return w.digest()
+
+
+def hash_vector(v: dict) -> str:
+    """Computes SHA-256 hash of a Vector value."""
+    w = HashWriter()
+    w.writeString("Vector")
+    w.writeString("x")
+    w.writeNumber(v["x"])
+    w.writeString("y")
+    w.writeNumber(v["y"])
+    w.writeString("z")
+    w.writeNumber(v["z"])
+    return w.digest()
+
+
+def hash_plane(p: dict) -> str:
+    """Computes SHA-256 hash of a Plane value."""
+    w = HashWriter()
+    w.writeString("Plane")
+    w.writeString("origin")
+    w.writeHash(hash_point(p["origin"]))
+    w.writeString("xAxis")
+    w.writeHash(hash_vector(p["xAxis"]))
+    w.writeString("yAxis")
+    w.writeHash(hash_vector(p["yAxis"]))
+    return w.digest()
+
+
+def hash_camera(c: dict) -> str:
+    """Computes SHA-256 hash of a Camera value."""
+    w = HashWriter()
+    w.writeString("Camera")
+    w.writeString("forward")
+    w.writeHash(hash_vector(c["forward"]))
+    w.writeString("position")
+    w.writeHash(hash_point(c["position"]))
+    w.writeString("up")
+    w.writeHash(hash_vector(c["up"]))
+    return w.digest()
+
+
+# endregion 🔖Hash Value Types
+
+
+# region 🔖Hash Entities
+def hash_attribute(a: dict) -> str:
+    """Computes SHA-256 hash of an Attribute entity."""
+    w = HashWriter()
+    w.writeString("Attribute")
+    if a.get("definition") is not None:
+        w.writeString("definition")
+        w.writeString(a["definition"])
+    w.writeString("guid")
+    w.writeString(a["guid"])
+    w.writeString("key")
+    w.writeString(a["key"])
+    if a.get("value") is not None:
+        w.writeString("value")
+        w.writeString(a["value"])
+    return w.digest()
+
+
+def hash_location(l: dict) -> str:
+    """Computes SHA-256 hash of a Location entity."""
+    w = HashWriter()
+    w.writeString("Location")
+    if l.get("altitude") is not None:
+        w.writeString("altitude")
+        w.writeNumber(l["altitude"])
+    attrs = l.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    w.writeString("guid")
+    w.writeString(l["guid"])
+    w.writeString("latitude")
+    w.writeNumber(l["latitude"])
+    w.writeString("longitude")
+    w.writeNumber(l["longitude"])
+    return w.digest()
+
+
+def hash_author(a: dict) -> str:
+    """Computes SHA-256 hash of an Author entity."""
+    w = HashWriter()
+    w.writeString("Author")
+    attrs = a.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(at) for at in attrs])
+    email = a.get("email")
+    if email is not None and email != "":
+        w.writeString("email")
+        w.writeString(email)
+    w.writeString("guid")
+    w.writeString(a["guid"])
+    w.writeString("name")
+    w.writeString(a["name"])
+    return w.digest()
+
+
+def hash_file(f: dict) -> str:
+    """Computes SHA-256 hash of a File entity."""
+    w = HashWriter()
+    w.writeString("File")
+    if f.get("blob") is not None:
+        w.writeString("blob")
+        w.writeString(f["blob"])
+    if f.get("folder") is not None:
+        w.writeString("folder")
+        w.writeString(_ref_guid(f["folder"]))
+    w.writeString("guid")
+    w.writeString(f["guid"])
+    if f.get("hash") is not None:
+        w.writeString("hash")
+        w.writeString(f["hash"])
+    w.writeString("name")
+    w.writeString(f["name"])
+    if f.get("remote") is not None:
+        w.writeString("remote")
+        w.writeString(f["remote"])
+    if f.get("size") is not None:
+        w.writeString("size")
+        w.writeNumber(f["size"])
+    return w.digest()
+
+
+def hash_folder(f: dict) -> str:
+    """Computes SHA-256 hash of a Folder entity."""
+    w = HashWriter()
+    w.writeString("Folder")
+    attrs = f.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if f.get("description") is not None:
+        w.writeString("description")
+        w.writeString(f["description"])
+    w.writeString("guid")
+    w.writeString(f["guid"])
+    w.writeString("name")
+    w.writeString(f["name"])
+    if f.get("parent") is not None:
+        w.writeString("parent")
+        w.writeString(_ref_guid(f["parent"]))
+    return w.digest()
+
+
+def hash_benchmark(b: dict) -> str:
+    """Computes SHA-256 hash of a Benchmark entity."""
+    w = HashWriter()
+    w.writeString("Benchmark")
+    attrs = b.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    w.writeString("guid")
+    w.writeString(b["guid"])
+    if b.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(b["icon"])
+    if b.get("max") is not None:
+        w.writeString("max")
+        w.writeNumber(b["max"])
+    if b.get("maxExcluded") is not None:
+        w.writeString("maxExcluded")
+        w.writeBool(b["maxExcluded"])
+    if b.get("min") is not None:
+        w.writeString("min")
+        w.writeNumber(b["min"])
+    if b.get("minExcluded") is not None:
+        w.writeString("minExcluded")
+        w.writeBool(b["minExcluded"])
+    w.writeString("name")
+    w.writeString(b["name"])
+    return w.digest()
+
+
+def hash_quality(q: dict) -> str:
+    """Computes SHA-256 hash of a Quality entity."""
+    w = HashWriter()
+    w.writeString("Quality")
+    benchmarks = q.get("benchmarks")
+    if benchmarks and len(benchmarks) > 0:
+        w.writeString("benchmarks")
+        w.writeHashList([hash_benchmark(b) for b in benchmarks])
+    if q.get("canScale") is not None:
+        w.writeString("canScale")
+        w.writeBool(q["canScale"])
+    if q.get("defaultImperialUnit") is not None:
+        w.writeString("defaultImperialUnit")
+        w.writeString(q["defaultImperialUnit"])
+    if q.get("defaultSiUnit") is not None:
+        w.writeString("defaultSiUnit")
+        w.writeString(q["defaultSiUnit"])
+    if q.get("defaultValue") is not None:
+        w.writeString("defaultValue")
+        w.writeNumber(q["defaultValue"])
+    if q.get("description") is not None:
+        w.writeString("description")
+        w.writeString(q["description"])
+    if q.get("formula") is not None:
+        w.writeString("formula")
+        w.writeString(q["formula"])
+    w.writeString("guid")
+    w.writeString(q["guid"])
+    if q.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(q["icon"])
+    if q.get("image") is not None:
+        w.writeString("image")
+        w.writeString(q["image"])
+    if q.get("isMaxExcluded") is not None:
+        w.writeString("isMaxExcluded")
+        w.writeBool(q["isMaxExcluded"])
+    if q.get("isMinExcluded") is not None:
+        w.writeString("isMinExcluded")
+        w.writeBool(q["isMinExcluded"])
+    w.writeString("key")
+    w.writeString(q["key"])
+    if q.get("kind") is not None:
+        w.writeString("kind")
+        w.writeNumber(q["kind"])
+    if q.get("max") is not None:
+        w.writeString("max")
+        w.writeNumber(q["max"])
+    if q.get("min") is not None:
+        w.writeString("min")
+        w.writeNumber(q["min"])
+    w.writeString("name")
+    w.writeString(q["name"])
+    if q.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(q["unit"])
+    if q.get("uri") is not None:
+        w.writeString("uri")
+        w.writeString(q["uri"])
+    return w.digest()
+
+
+def hash_port(p: dict) -> str:
+    """Computes SHA-256 hash of a Port entity."""
+    w = HashWriter()
+    w.writeString("Port")
+    attrs = p.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    compat = p.get("compatiblePorts")
+    if compat and len(compat) > 0:
+        w.writeString("compatiblePorts")
+        w.writeGuidList([_ref_guid(cp) for cp in compat])
+    if p.get("description") is not None:
+        w.writeString("description")
+        w.writeString(p["description"])
+    w.writeString("guid")
+    w.writeString(p["guid"])
+    if p.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(p["icon"])
+    w.writeString("name")
+    w.writeString(p["name"])
+    return w.digest()
+
+
+def hash_prop(p: dict) -> str:
+    """Computes SHA-256 hash of a Prop entity."""
+    w = HashWriter()
+    w.writeString("Prop")
+    attrs = p.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    w.writeString("guid")
+    w.writeString(p["guid"])
+    w.writeString("quality")
+    w.writeString(_ref_guid(p["quality"]))
+    if p.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(p["unit"])
+    w.writeString("value")
+    w.writeString(p["value"])
+    return w.digest()
+
+
+def hash_tag(t: dict) -> str:
+    """Computes SHA-256 hash of a Tag entity."""
+    w = HashWriter()
+    w.writeString("Tag")
+    attrs = t.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if t.get("description") is not None:
+        w.writeString("description")
+        w.writeString(t["description"])
+    w.writeString("guid")
+    w.writeString(t["guid"])
+    if t.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(t["icon"])
+    w.writeString("name")
+    w.writeString(t["name"])
+    return w.digest()
+
+
+def hash_concept(c: dict) -> str:
+    """Computes SHA-256 hash of a Concept entity."""
+    w = HashWriter()
+    w.writeString("Concept")
+    attrs = c.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if c.get("description") is not None:
+        w.writeString("description")
+        w.writeString(c["description"])
+    w.writeString("guid")
+    w.writeString(c["guid"])
+    if c.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(c["icon"])
+    w.writeString("name")
+    w.writeString(c["name"])
+    return w.digest()
+
+
+def hash_model(m: dict) -> str:
+    """Computes SHA-256 hash of a Model entity."""
+    w = HashWriter()
+    w.writeString("Model")
+    attrs = m.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if m.get("description") is not None:
+        w.writeString("description")
+        w.writeString(m["description"])
+    w.writeString("file")
+    w.writeString(_ref_guid(m["file"]))
+    w.writeString("guid")
+    w.writeString(m["guid"])
+    if m.get("name") is not None:
+        w.writeString("name")
+        w.writeString(m["name"])
+    tags = m.get("tags")
+    if tags and len(tags) > 0:
+        w.writeString("tags")
+        w.writeGuidList([_ref_guid(t) for t in tags])
+    return w.digest()
+
+
+def hash_connector(c: dict) -> str:
+    """Computes SHA-256 hash of a Connector entity."""
+    w = HashWriter()
+    w.writeString("Connector")
+    attrs = c.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if c.get("description") is not None:
+        w.writeString("description")
+        w.writeString(c["description"])
+    w.writeString("direction")
+    w.writeHash(hash_vector(c["direction"]))
+    w.writeString("guid")
+    w.writeString(c["guid"])
+    if c.get("mandatory") is not None:
+        w.writeString("mandatory")
+        w.writeBool(c["mandatory"])
+    if c.get("name") is not None:
+        w.writeString("name")
+        w.writeString(c["name"])
+    w.writeString("point")
+    w.writeHash(hash_point(c["point"]))
+    if c.get("port") is not None:
+        w.writeString("port")
+        w.writeString(_ref_guid(c["port"]))
+    props = c.get("props")
+    if props and len(props) > 0:
+        w.writeString("props")
+        w.writeHashList([hash_prop(p) for p in props])
+    w.writeString("t")
+    w.writeNumber(c["t"])
+    return w.digest()
+
+
+def hash_type(t: dict) -> str:
+    """Computes SHA-256 hash of a Type entity."""
+    w = HashWriter()
+    w.writeString("Type")
+    attrs = t.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    authors = t.get("authors")
+    if authors and len(authors) > 0:
+        w.writeString("authors")
+        w.writeGuidList([_ref_guid(a) for a in authors])
+    concepts = t.get("concepts")
+    if concepts and len(concepts) > 0:
+        w.writeString("concepts")
+        w.writeGuidList([_ref_guid(c) for c in concepts])
+    connectors = t.get("connectors")
+    if connectors and len(connectors) > 0:
+        w.writeString("connectors")
+        w.writeHashList([hash_connector(c) for c in connectors])
+    if t.get("description") is not None:
+        w.writeString("description")
+        w.writeString(t["description"])
+    if t.get("folder") is not None:
+        w.writeString("folder")
+        w.writeString(t["folder"])
+    w.writeString("guid")
+    w.writeString(t["guid"])
+    if t.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(t["icon"])
+    if t.get("image") is not None:
+        w.writeString("image")
+        w.writeString(t["image"])
+    if t.get("isAbstract") is not None:
+        w.writeString("isAbstract")
+        w.writeBool(t["isAbstract"])
+    if t.get("location") is not None:
+        w.writeString("location")
+        w.writeString(_ref_guid(t["location"]))
+    models = t.get("models")
+    if models and len(models) > 0:
+        w.writeString("models")
+        w.writeHashList([hash_model(m) for m in models])
+    w.writeString("name")
+    w.writeString(t["name"])
+    if t.get("parent") is not None:
+        w.writeString("parent")
+        w.writeString(_ref_guid(t["parent"]))
+    props = t.get("props")
+    if props and len(props) > 0:
+        w.writeString("props")
+        w.writeHashList([hash_prop(p) for p in props])
+    if t.get("stock") is not None:
+        w.writeString("stock")
+        w.writeNumber(t["stock"])
+    if t.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(t["unit"])
+    if t.get("virtual") is not None:
+        w.writeString("virtual")
+        w.writeBool(t["virtual"])
+    return w.digest()
+
+
+def hash_layer(l: dict) -> str:
+    """Computes SHA-256 hash of a Layer entity."""
+    w = HashWriter()
+    w.writeString("Layer")
+    attrs = l.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if l.get("color") is not None:
+        w.writeString("color")
+        w.writeString(l["color"])
+    if l.get("description") is not None:
+        w.writeString("description")
+        w.writeString(l["description"])
+    w.writeString("guid")
+    w.writeString(l["guid"])
+    if l.get("isHidden") is not None:
+        w.writeString("isHidden")
+        w.writeBool(l["isHidden"])
+    if l.get("isLocked") is not None:
+        w.writeString("isLocked")
+        w.writeBool(l["isLocked"])
+    w.writeString("path")
+    w.writeString(l["path"])
+    return w.digest()
+
+
+def hash_stat(s: dict) -> str:
+    """Computes SHA-256 hash of a Stat entity."""
+    w = HashWriter()
+    w.writeString("Stat")
+    w.writeString("guid")
+    w.writeString(s["guid"])
+    if s.get("max") is not None:
+        w.writeString("max")
+        w.writeNumber(s["max"])
+    if s.get("maxExcluded") is not None:
+        w.writeString("maxExcluded")
+        w.writeBool(s["maxExcluded"])
+    if s.get("min") is not None:
+        w.writeString("min")
+        w.writeNumber(s["min"])
+    if s.get("minExcluded") is not None:
+        w.writeString("minExcluded")
+        w.writeBool(s["minExcluded"])
+    w.writeString("quality")
+    w.writeString(_ref_guid(s["quality"]))
+    if s.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(s["unit"])
+    return w.digest()
+
+
+def hash_group(g: dict) -> str:
+    """Computes SHA-256 hash of a Group entity."""
+    w = HashWriter()
+    w.writeString("Group")
+    attrs = g.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if g.get("color") is not None:
+        w.writeString("color")
+        w.writeString(g["color"])
+    if g.get("description") is not None:
+        w.writeString("description")
+        w.writeString(g["description"])
+    w.writeString("guid")
+    w.writeString(g["guid"])
+    if g.get("name") is not None:
+        w.writeString("name")
+        w.writeString(g["name"])
+    w.writeString("pieces")
+    w.writeGuidList([_ref_guid(p) for p in g["pieces"]])
+    return w.digest()
+
+
+def hash_side(s: dict) -> str:
+    """Computes SHA-256 hash of a Side value."""
+    w = HashWriter()
+    w.writeString("Side")
+    if s.get("connector") is not None:
+        w.writeString("connector")
+        w.writeString(_ref_guid(s["connector"]))
+    if s.get("designPiece") is not None:
+        w.writeString("designPiece")
+        w.writeString(_ref_guid(s["designPiece"]))
+    w.writeString("piece")
+    w.writeString(_ref_guid(s["piece"]))
+    return w.digest()
+
+
+def hash_connection(c: dict) -> str:
+    """Computes SHA-256 hash of a Connection entity."""
+    w = HashWriter()
+    w.writeString("Connection")
+    attrs = c.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    w.writeString("connected")
+    w.writeHash(hash_side(c["connected"]))
+    w.writeString("connecting")
+    w.writeHash(hash_side(c["connecting"]))
+    if c.get("description") is not None:
+        w.writeString("description")
+        w.writeString(c["description"])
+    if c.get("gap") is not None:
+        w.writeString("gap")
+        w.writeNumber(c["gap"])
+    w.writeString("guid")
+    w.writeString(c["guid"])
+    if c.get("rise") is not None:
+        w.writeString("rise")
+        w.writeNumber(c["rise"])
+    if c.get("rotation") is not None:
+        w.writeString("rotation")
+        w.writeNumber(c["rotation"])
+    if c.get("shift") is not None:
+        w.writeString("shift")
+        w.writeNumber(c["shift"])
+    if c.get("tilt") is not None:
+        w.writeString("tilt")
+        w.writeNumber(c["tilt"])
+    if c.get("turn") is not None:
+        w.writeString("turn")
+        w.writeNumber(c["turn"])
+    if c.get("u") is not None:
+        w.writeString("u")
+        w.writeNumber(c["u"])
+    if c.get("v") is not None:
+        w.writeString("v")
+        w.writeNumber(c["v"])
+    return w.digest()
+
+
+def hash_piece(p: dict) -> str:
+    """Computes SHA-256 hash of a Piece entity."""
+    w = HashWriter()
+    w.writeString("Piece")
+    attrs = p.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if p.get("center") is not None:
+        w.writeString("center")
+        w.writeHash(hash_coord(p["center"]))
+    if p.get("color") is not None:
+        w.writeString("color")
+        w.writeString(p["color"])
+    if p.get("description") is not None:
+        w.writeString("description")
+        w.writeString(p["description"])
+    if p.get("design") is not None:
+        w.writeString("design")
+        w.writeString(_ref_guid(p["design"]))
+    w.writeString("guid")
+    w.writeString(p["guid"])
+    if p.get("isHidden") is not None:
+        w.writeString("isHidden")
+        w.writeBool(p["isHidden"])
+    if p.get("isLocked") is not None:
+        w.writeString("isLocked")
+        w.writeBool(p["isLocked"])
+    if p.get("mirrorPlane") is not None:
+        w.writeString("mirrorPlane")
+        w.writeHash(hash_plane(p["mirrorPlane"]))
+    if p.get("name") is not None:
+        w.writeString("name")
+        w.writeString(p["name"])
+    if p.get("plane") is not None:
+        w.writeString("plane")
+        w.writeHash(hash_plane(p["plane"]))
+    if p.get("props") is not None and len(p["props"]) > 0:
+        w.writeString("props")
+        w.writeHashList([hash_prop(pr) for pr in p["props"]])
+    if p.get("scale") is not None:
+        w.writeString("scale")
+        w.writeNumber(p["scale"])
+    if p.get("type") is not None:
+        w.writeString("type")
+        w.writeString(_ref_guid(p["type"]))
+    return w.digest()
+
+
+def hash_design(d: dict) -> str:
+    """Computes SHA-256 hash of a Design entity (Merkle tree)."""
+    w = HashWriter()
+    w.writeString("Design")
+    if d.get("activeLayer") is not None:
+        w.writeString("activeLayer")
+        w.writeString(_ref_guid(d["activeLayer"]))
+    attrs = d.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    authors = d.get("authors")
+    if authors and len(authors) > 0:
+        w.writeString("authors")
+        w.writeGuidList([_ref_guid(a) for a in authors])
+    if d.get("canMirror") is not None:
+        w.writeString("canMirror")
+        w.writeBool(d["canMirror"])
+    if d.get("canScale") is not None:
+        w.writeString("canScale")
+        w.writeBool(d["canScale"])
+    concepts = d.get("concepts")
+    if concepts and len(concepts) > 0:
+        w.writeString("concepts")
+        w.writeGuidList([_ref_guid(c) for c in concepts])
+    connections = d.get("connections")
+    if connections and len(connections) > 0:
+        w.writeString("connections")
+        w.writeHashList([hash_connection(c) for c in connections])
+    if d.get("description") is not None:
+        w.writeString("description")
+        w.writeString(d["description"])
+    if d.get("folder") is not None:
+        w.writeString("folder")
+        w.writeString(d["folder"])
+    groups = d.get("groups")
+    if groups and len(groups) > 0:
+        w.writeString("groups")
+        w.writeHashList([hash_group(g) for g in groups])
+    w.writeString("guid")
+    w.writeString(d["guid"])
+    if d.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(d["icon"])
+    if d.get("image") is not None:
+        w.writeString("image")
+        w.writeString(d["image"])
+    if d.get("isAbstract") is not None:
+        w.writeString("isAbstract")
+        w.writeBool(d["isAbstract"])
+    layers = d.get("layers")
+    if layers and len(layers) > 0:
+        w.writeString("layers")
+        w.writeHashList([hash_layer(la) for la in layers])
+    if d.get("location") is not None:
+        w.writeString("location")
+        w.writeString(_ref_guid(d["location"]))
+    w.writeString("name")
+    w.writeString(d["name"])
+    if d.get("parent") is not None:
+        w.writeString("parent")
+        w.writeString(_ref_guid(d["parent"]))
+    pieces = d.get("pieces")
+    if pieces and len(pieces) > 0:
+        w.writeString("pieces")
+        w.writeHashList([hash_piece(p) for p in pieces])
+    props = d.get("props")
+    if props and len(props) > 0:
+        w.writeString("props")
+        w.writeHashList([hash_prop(p) for p in props])
+    stats = d.get("stats")
+    if stats and len(stats) > 0:
+        w.writeString("stats")
+        w.writeHashList([hash_stat(s) for s in stats])
+    if d.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(d["unit"])
+    return w.digest()
+
+
+def hash_kit(k: dict) -> str:
+    """Computes SHA-256 Merkle hash of a Kit entity."""
+    w = HashWriter()
+    w.writeString("Kit")
+    attrs = k.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    authors = k.get("authors")
+    if authors and len(authors) > 0:
+        w.writeString("authors")
+        w.writeHashList([hash_author(a) for a in authors])
+    concepts = k.get("concepts")
+    if concepts and len(concepts) > 0:
+        w.writeString("concepts")
+        w.writeHashList([hash_concept(c) for c in concepts])
+    if k.get("description") is not None:
+        w.writeString("description")
+        w.writeString(k["description"])
+    designs = k.get("designs")
+    if designs and len(designs) > 0:
+        w.writeString("designs")
+        w.writeHashList([hash_design(d) for d in designs])
+    files = k.get("files")
+    if files and len(files) > 0:
+        w.writeString("files")
+        w.writeHashList([hash_file(f) for f in files])
+    folders = k.get("folders")
+    if folders and len(folders) > 0:
+        w.writeString("folders")
+        w.writeHashList([hash_folder(f) for f in folders])
+    w.writeString("guid")
+    w.writeString(k["guid"])
+    if k.get("homepage") is not None:
+        w.writeString("homepage")
+        w.writeString(k["homepage"])
+    if k.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(k["icon"])
+    if k.get("image") is not None:
+        w.writeString("image")
+        w.writeString(k["image"])
+    if k.get("license") is not None:
+        w.writeString("license")
+        w.writeString(k["license"])
+    w.writeString("name")
+    w.writeString(k["name"])
+    if k.get("ports") is not None and len(k["ports"]) > 0:
+        w.writeString("ports")
+        w.writeHashList([hash_port(p) for p in k["ports"]])
+    if k.get("preview") is not None:
+        w.writeString("preview")
+        w.writeString(k["preview"])
+    qualities = k.get("qualities")
+    if qualities and len(qualities) > 0:
+        w.writeString("qualities")
+        w.writeHashList([hash_quality(q) for q in qualities])
+    if k.get("remote") is not None:
+        w.writeString("remote")
+        w.writeString(k["remote"])
+    tags = k.get("tags")
+    if tags and len(tags) > 0:
+        w.writeString("tags")
+        w.writeHashList([hash_tag(t) for t in tags])
+    types = k.get("types")
+    if types and len(types) > 0:
+        w.writeString("types")
+        w.writeHashList([hash_type(t) for t in types])
+    if k.get("version") is not None:
+        w.writeString("version")
+        w.writeString(k["version"])
+    return w.digest()
+
+
+# endregion 🔖Hash Entities
+
+# region 🔖Hash Diffs
+# Deterministic SHA-256 Merkle hash functions for all diff types.
+# Diffs are plain dicts; field presence in dict = field was changed.
+# If a field is present with None value → write field name + writeBool(false) as null marker.
+# If a field is absent from dict → skip it entirely.
+
+
+def _write_diff_string(w: HashWriter, key: str, d: dict):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeString(d[key])
+        else:
+            w.writeBool(False)
+
+
+def _write_diff_number(w: HashWriter, key: str, d: dict):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeNumber(d[key])
+        else:
+            w.writeBool(False)
+
+
+def _write_diff_bool(w: HashWriter, key: str, d: dict):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeBool(d[key])
+        else:
+            w.writeBool(False)
+
+
+def _write_diff_id(w: HashWriter, key: str, d: dict):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeString(_ref_guid(d[key]))
+        else:
+            w.writeBool(False)
+
+
+def _write_diff_id_array(w: HashWriter, key: str, d: dict):
+    if key in d:
+        val = d[key]
+        if val is not None and len(val) > 0:
+            w.writeString(key)
+            w.writeGuidList([_ref_guid(e) for e in val])
+        elif val is not None:
+            pass  # empty array = skip
+        else:
+            w.writeString(key)
+            w.writeBool(False)
+
+
+def _write_diff_hash(w: HashWriter, key: str, d: dict, hash_fn):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeHash(hash_fn(d[key]))
+        else:
+            w.writeBool(False)
+
+
+def _hash_collection_diff_generic(
+    tag: str,
+    update_tag: str,
+    entity_key_name: str,
+    hash_entity_fn,
+    hash_diff_fn,
+    d: dict,
+) -> str:
+    w = HashWriter()
+    w.writeString(tag)
+    added = d.get("added")
+    if added and len(added) > 0:
+        w.writeString("added")
+        w.writeHashList([hash_entity_fn(e) for e in added])
+    removed = d.get("removed")
+    if removed and len(removed) > 0:
+        w.writeString("removed")
+        w.writeGuidList([_ref_guid(r) for r in removed])
+    updated = d.get("updated")
+    if updated and len(updated) > 0:
+        w.writeString("updated")
+        keys = sorted([entity_key_name, "diff"])
+        update_hashes = []
+        for u in updated:
+            uw = HashWriter()
+            uw.writeString(update_tag)
+            for k in keys:
+                if k == "diff":
+                    uw.writeString("diff")
+                    uw.writeHash(hash_diff_fn(u["diff"]))
+                else:
+                    uw.writeString(k)
+                    uw.writeString(_ref_guid(u[entity_key_name]))
+            update_hashes.append(uw.digest())
+        w.writeHashList(update_hashes)
+    return w.digest()
+
+
+def hash_coord_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("CoordDiff")
+    _write_diff_number(w, "u", d)
+    _write_diff_number(w, "v", d)
+    return w.digest()
+
+
+def hash_point_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PointDiff")
+    _write_diff_number(w, "x", d)
+    _write_diff_number(w, "y", d)
+    _write_diff_number(w, "z", d)
+    return w.digest()
+
+
+def hash_vector_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("VectorDiff")
+    _write_diff_number(w, "x", d)
+    _write_diff_number(w, "y", d)
+    _write_diff_number(w, "z", d)
+    return w.digest()
+
+
+def hash_plane_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PlaneDiff")
+    _write_diff_hash(w, "origin", d, hash_point_diff)
+    _write_diff_hash(w, "xAxis", d, hash_vector_diff)
+    _write_diff_hash(w, "yAxis", d, hash_vector_diff)
+    return w.digest()
+
+
+def hash_camera_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("CameraDiff")
+    _write_diff_hash(w, "forward", d, hash_vector_diff)
+    _write_diff_hash(w, "position", d, hash_point_diff)
+    _write_diff_hash(w, "up", d, hash_vector_diff)
+    return w.digest()
+
+
+def hash_attribute_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("AttributeDiff")
+    _write_diff_string(w, "definition", d)
+    _write_diff_string(w, "key", d)
+    _write_diff_string(w, "value", d)
+    return w.digest()
+
+
+def hash_attributes_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "AttributesDiff",
+        "AttributeDiffUpdate",
+        "attribute",
+        hash_attribute,
+        hash_attribute_diff,
+        d,
+    )
+
+
+def hash_location_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("LocationDiff")
+    _write_diff_number(w, "altitude", d)
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_number(w, "latitude", d)
+    _write_diff_number(w, "longitude", d)
+    return w.digest()
+
+
+def hash_author_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("AuthorDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "email", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_authors_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("AuthorsDiff", "AuthorDiffUpdate", "author", hash_author, hash_author_diff, d)
+
+
+def hash_file_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("FileDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "blob", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_id(w, "folder", d)
+    _write_diff_string(w, "hash", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_string(w, "remote", d)
+    if "size" in d:
+        w.writeString("size")
+        if d["size"] is not None:
+            w.writeNumber(d["size"])
+        else:
+            w.writeBool(False)
+    return w.digest()
+
+
+def hash_files_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("FilesDiff", "FileDiffUpdate", "file", hash_file, hash_file_diff, d)
+
+
+def hash_folder_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("FolderDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_id(w, "parent", d)
+    return w.digest()
+
+
+def hash_folders_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("FoldersDiff", "FolderDiffUpdate", "folder", hash_folder, hash_folder_diff, d)
+
+
+def hash_benchmark_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("BenchmarkDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "definition", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_number(w, "max", d)
+    _write_diff_bool(w, "maxExcluded", d)
+    _write_diff_number(w, "min", d)
+    _write_diff_bool(w, "minExcluded", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_benchmarks_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "BenchmarksDiff",
+        "BenchmarkDiffUpdate",
+        "benchmark",
+        hash_benchmark,
+        hash_benchmark_diff,
+        d,
+    )
+
+
+def hash_quality_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("QualityDiff")
+    _write_diff_hash(w, "benchmarks", d, hash_benchmarks_diff)
+    _write_diff_bool(w, "canScale", d)
+    _write_diff_string(w, "defaultImperialUnit", d)
+    _write_diff_string(w, "defaultSiUnit", d)
+    _write_diff_number(w, "defaultValue", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "folder", d)
+    _write_diff_string(w, "formula", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "image", d)
+    _write_diff_bool(w, "isMaxExcluded", d)
+    _write_diff_bool(w, "isMinExcluded", d)
+    _write_diff_string(w, "key", d)
+    _write_diff_number(w, "kind", d)
+    _write_diff_number(w, "max", d)
+    _write_diff_number(w, "min", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_string(w, "unit", d)
+    _write_diff_string(w, "uri", d)
+    return w.digest()
+
+
+def hash_qualities_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "QualitiesDiff",
+        "QualityDiffUpdate",
+        "quality",
+        hash_quality,
+        hash_quality_diff,
+        d,
+    )
+
+
+def hash_port_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PortDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_id_array(w, "compatiblePorts", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_ports_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("PortsDiff", "PortDiffUpdate", "port", hash_port, hash_port_diff, d)
+
+
+def hash_prop_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PropDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_id(w, "quality", d)
+    _write_diff_string(w, "unit", d)
+    _write_diff_string(w, "value", d)
+    return w.digest()
+
+
+def hash_props_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("PropsDiff", "PropDiffUpdate", "prop", hash_prop, hash_prop_diff, d)
+
+
+def hash_tag_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("TagDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_tags_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("TagsDiff", "TagDiffUpdate", "tag", hash_tag, hash_tag_diff, d)
+
+
+def hash_concept_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("ConceptDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_concepts_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "ConceptsDiff",
+        "ConceptDiffUpdate",
+        "concept",
+        hash_concept,
+        hash_concept_diff,
+        d,
+    )
+
+
+def hash_model_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("ModelDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_id(w, "file", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_id_array(w, "tags", d)
+    return w.digest()
+
+
+def hash_models_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("ModelsDiff", "ModelDiffUpdate", "model", hash_model, hash_model_diff, d)
+
+
+def hash_connector_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("ConnectorDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_hash(w, "direction", d, hash_vector_diff)
+    _write_diff_bool(w, "mandatory", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_hash(w, "point", d, hash_point_diff)
+    _write_diff_id(w, "port", d)
+    _write_diff_hash(w, "props", d, hash_props_diff)
+    _write_diff_number(w, "t", d)
+    return w.digest()
+
+
+def hash_connectors_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "ConnectorsDiff",
+        "ConnectorDiffUpdate",
+        "connector",
+        hash_connector,
+        hash_connector_diff,
+        d,
+    )
+
+
+def hash_type_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("TypeDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_id_array(w, "authors", d)
+    _write_diff_id_array(w, "concepts", d)
+    _write_diff_hash(w, "connectors", d, hash_connectors_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "folder", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "image", d)
+    _write_diff_bool(w, "isAbstract", d)
+    _write_diff_id(w, "location", d)
+    _write_diff_hash(w, "models", d, hash_models_diff)
+    _write_diff_string(w, "name", d)
+    _write_diff_id(w, "parent", d)
+    _write_diff_hash(w, "props", d, hash_props_diff)
+    _write_diff_number(w, "stock", d)
+    _write_diff_string(w, "unit", d)
+    _write_diff_bool(w, "virtual", d)
+    return w.digest()
+
+
+def hash_types_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("TypesDiff", "TypeDiffUpdate", "type", hash_type, hash_type_diff, d)
+
+
+def hash_side_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("SideDiff")
+    _write_diff_id(w, "connector", d)
+    _write_diff_id(w, "designPiece", d)
+    _write_diff_id(w, "piece", d)
+    return w.digest()
+
+
+def hash_layer_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("LayerDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "color", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_bool(w, "isHidden", d)
+    _write_diff_bool(w, "isLocked", d)
+    _write_diff_string(w, "path", d)
+    return w.digest()
+
+
+def hash_layers_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("LayersDiff", "LayerDiffUpdate", "layer", hash_layer, hash_layer_diff, d)
+
+
+def hash_group_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("GroupDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "color", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_id_array(w, "pieces", d)
+    return w.digest()
+
+
+def hash_groups_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("GroupsDiff", "GroupDiffUpdate", "group", hash_group, hash_group_diff, d)
+
+
+def hash_stat_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("StatDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_number(w, "max", d)
+    _write_diff_number(w, "min", d)
+    _write_diff_id(w, "quality", d)
+    _write_diff_string(w, "unit", d)
+    return w.digest()
+
+
+def hash_stats_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("StatsDiff", "StatDiffUpdate", "stat", hash_stat, hash_stat_diff, d)
+
+
+def hash_connection_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("ConnectionDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_hash(w, "connected", d, hash_side_diff)
+    _write_diff_hash(w, "connecting", d, hash_side_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_number(w, "gap", d)
+    _write_diff_number(w, "rise", d)
+    _write_diff_number(w, "rotation", d)
+    _write_diff_number(w, "shift", d)
+    _write_diff_number(w, "tilt", d)
+    _write_diff_number(w, "turn", d)
+    _write_diff_number(w, "u", d)
+    _write_diff_number(w, "v", d)
+    return w.digest()
+
+
+def hash_connections_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "ConnectionsDiff",
+        "ConnectionDiffUpdate",
+        "connection",
+        hash_connection,
+        hash_connection_diff,
+        d,
+    )
+
+
+def hash_piece_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PieceDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_hash(w, "center", d, hash_coord)
+    _write_diff_string(w, "color", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_id(w, "design", d)
+    _write_diff_bool(w, "isHidden", d)
+    _write_diff_bool(w, "isLocked", d)
+    _write_diff_hash(w, "mirrorPlane", d, hash_plane)
+    _write_diff_string(w, "name", d)
+    _write_diff_hash(w, "plane", d, hash_plane_diff)
+    _write_diff_hash(w, "props", d, hash_props_diff)
+    _write_diff_number(w, "scale", d)
+    _write_diff_id(w, "type", d)
+    return w.digest()
+
+
+def hash_pieces_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("PiecesDiff", "PieceDiffUpdate", "piece", hash_piece, hash_piece_diff, d)
+
+
+def hash_design_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("DesignDiff")
+    _write_diff_id(w, "activeLayer", d)
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_hash(w, "authors", d, hash_authors_diff)
+    _write_diff_bool(w, "canMirror", d)
+    _write_diff_bool(w, "canScale", d)
+    _write_diff_id_array(w, "concepts", d)
+    _write_diff_hash(w, "connections", d, hash_connections_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "folder", d)
+    _write_diff_hash(w, "groups", d, hash_groups_diff)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "image", d)
+    _write_diff_bool(w, "isAbstract", d)
+    _write_diff_hash(w, "layers", d, hash_layers_diff)
+    _write_diff_id(w, "location", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_id(w, "parent", d)
+    _write_diff_hash(w, "pieces", d, hash_pieces_diff)
+    _write_diff_hash(w, "props", d, hash_props_diff)
+    _write_diff_hash(w, "stats", d, hash_stats_diff)
+    _write_diff_string(w, "unit", d)
+    return w.digest()
+
+
+def hash_designs_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("DesignsDiff", "DesignDiffUpdate", "design", hash_design, hash_design_diff, d)
+
+
+def hash_kit_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("KitDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_hash(w, "authors", d, hash_authors_diff)
+    _write_diff_hash(w, "concepts", d, hash_concepts_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_hash(w, "designs", d, hash_designs_diff)
+    _write_diff_hash(w, "files", d, hash_files_diff)
+    _write_diff_hash(w, "folders", d, hash_folders_diff)
+    _write_diff_string(w, "homepage", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "image", d)
+    _write_diff_string(w, "license", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_hash(w, "ports", d, hash_ports_diff)
+    _write_diff_string(w, "preview", d)
+    _write_diff_hash(w, "qualities", d, hash_qualities_diff)
+    _write_diff_string(w, "remote", d)
+    _write_diff_hash(w, "tags", d, hash_tags_diff)
+    _write_diff_hash(w, "types", d, hash_types_diff)
+    _write_diff_string(w, "version", d)
+    return w.digest()
+
+
+# endregion 🔖Hash Diffs
+
+# endregion Hash
+
+
 # region Test
 # [👤semio📚py💻main🔖test](repo://p/u/semio/b/l/py/f/main.py/s/Test)
 # Tests for the semio py module.
@@ -15258,7 +17307,24 @@ def _test_load_kit(filename: str) -> dict:
     data = _test_load_json(filename)
     if "guid" in data and "uri" not in data:
         data["uri"] = data["guid"]
-    for key in ["types", "designs", "files", "folders", "authors", "concepts", "models", "connectors", "pieces", "connections", "layers", "groups", "stats", "ports", "qualities", "attributes"]:
+    for key in [
+        "types",
+        "designs",
+        "files",
+        "folders",
+        "authors",
+        "concepts",
+        "models",
+        "connectors",
+        "pieces",
+        "connections",
+        "layers",
+        "groups",
+        "stats",
+        "ports",
+        "qualities",
+        "attributes",
+    ]:
         if key not in data or data[key] is None:
             data[key] = []
     for collection in ["types", "designs", "folders"]:
@@ -15279,7 +17345,7 @@ def _test_load_kit(filename: str) -> dict:
                     if "url" not in m or m["url"] is None:
                         m["url"] = ""
                     if "tags" in m and isinstance(m["tags"], list):
-                        new_tags = [tag["guid"] if isinstance(tag, dict) and "guid" in tag else tag for tag in m["tags"]]
+                        new_tags = [(tag["guid"] if isinstance(tag, dict) and "guid" in tag else tag) for tag in m["tags"]]
                         m["tags"] = new_tags
                     elif "tags" not in m:
                         m["tags"] = []
@@ -15462,7 +17528,7 @@ def _test_find_design(kit: dict, name: str, parent_name: str = None) -> dict:
 
 
 def _test_flatten(design_name, parent_name=None):
-    kit_dict = _test_load_json("kit_metabolism.json")
+    kit_dict = _test_load_json("metabolism.kit.semio.json")
     design = _test_find_design(kit_dict, design_name, parent_name)
 
     expected_design = next(
@@ -15511,7 +17577,13 @@ def _test_select_best_model_like_semio_ts(models: list[dict[str, typing.Any]], s
     filtered_models = [model for model in models if _test_contains_all_tags(model, selected_tag_guids)]
     if len(filtered_models) == 0:
         return None
-    indexed_scores = [_test_jaccard_tag_guids([t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])], selected_tag_guids) for model in filtered_models]
+    indexed_scores = [
+        _test_jaccard_tag_guids(
+            [t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])],
+            selected_tag_guids,
+        )
+        for model in filtered_models
+    ]
     max_score = max(indexed_scores)
     max_score_index = indexed_scores.index(max_score)
     return filtered_models[max_score_index]
@@ -15522,7 +17594,10 @@ def _test_create_glb_blob(vertices: list[tuple[float, float, float]], faces: lis
         padding = (-len(data)) % 4
         return data + fill * padding
 
-    position_bytes = struct.pack("<" + "f" * (len(vertices) * 3), *(value for vertex in vertices for value in vertex))
+    position_bytes = struct.pack(
+        "<" + "f" * (len(vertices) * 3),
+        *(value for vertex in vertices for value in vertex),
+    )
     index_values = [index for face in faces for index in face]
     index_bytes = struct.pack("<" + "H" * len(index_values), *index_values)
     position_bytes = _pad4(position_bytes, b"\x00")
@@ -15541,8 +17616,18 @@ def _test_create_glb_blob(vertices: list[tuple[float, float, float]], faces: lis
             "asset": {"version": "2.0"},
             "buffers": [{"byteLength": len(binary_chunk)}],
             "bufferViews": [
-                {"buffer": 0, "byteOffset": 0, "byteLength": position_length, "target": 34962},
-                {"buffer": 0, "byteOffset": position_length, "byteLength": index_length, "target": 34963},
+                {
+                    "buffer": 0,
+                    "byteOffset": 0,
+                    "byteLength": position_length,
+                    "target": 34962,
+                },
+                {
+                    "buffer": 0,
+                    "byteOffset": position_length,
+                    "byteLength": index_length,
+                    "target": 34963,
+                },
             ],
             "accessors": [
                 {
@@ -15584,7 +17669,7 @@ def _test_create_glb_blob(vertices: list[tuple[float, float, float]], faces: lis
 class TestRoundtrip:
     class TestMetabolism:
         def test_roundtrip(self):
-            kit_dict = _test_load_json("kit_metabolism.json")
+            kit_dict = _test_load_json("metabolism.kit.semio.json")
             serialized = json.dumps(kit_dict)
             deserialized = json.loads(serialized)
             assert areKitsDictEqual(kit_dict, deserialized), "JSON -> Memory -> JSON: serialized and deserialized kit should be equal"
@@ -15691,8 +17776,14 @@ class TestRoundtrip:
                 assert areKitsDictEqual(kit_dict, imported_zip.to_dict())
                 assert imported_zip_files == files
 
-                edited_json = edit_remote_kit(json_uri, _test_build_workflow_diff("Workflow Remote Json Edited", "asset-remote-json.txt"))
-                edited_zip = edit_remote_kit(zip_uri, _test_build_workflow_diff("Workflow Remote Zip Edited", "asset-remote-zip.txt"))
+                edited_json = edit_remote_kit(
+                    json_uri,
+                    _test_build_workflow_diff("Workflow Remote Json Edited", "asset-remote-json.txt"),
+                )
+                edited_zip = edit_remote_kit(
+                    zip_uri,
+                    _test_build_workflow_diff("Workflow Remote Zip Edited", "asset-remote-zip.txt"),
+                )
 
                 roundtrip_json, json_files = import_remote_kit(json_uri)
                 roundtrip_zip, zip_files = import_remote_kit(zip_uri)
@@ -15712,7 +17803,10 @@ class TestRoundtrip:
 
         def test_temporary_kit_edit_via_diff(self):
             kit_dict = _test_build_workflow_kit()
-            edited = edit_temporary_kit(KitData(kit_dict), _test_build_workflow_diff("Workflow Temp Edited", "asset-temp.txt"))
+            edited = edit_temporary_kit(
+                KitData(kit_dict),
+                _test_build_workflow_diff("Workflow Temp Edited", "asset-temp.txt"),
+            )
 
             assert edited.name == "Workflow Temp Edited"
             assert edited.to_dict()["files"][0]["name"] == "asset-temp.txt"
@@ -15743,11 +17837,11 @@ class TestFlatten:
 class TestChange:
     class TestMetabolism:
         def test_kit_change_forward_backward_inverse_behavior(self):
-            kit_original = _test_load_json("kit_metabolism.json")
+            kit_original = _test_load_json("metabolism.kit.semio.json")
             kit_original["designs"] = [d for d in kit_original.get("designs", []) if not d.get("parent")]
-            kit_diff = _test_load_json("diff_kit_metabolism.json")
-            kit_diff_inverted = _test_load_json("diff_kit_metabolism_inverted.json")
-            kit_diffed = _test_load_json("kit_metabolism_diffed.json")
+            kit_diff = _test_load_json("metabolism.kit.diff.semio.json")
+            kit_diff_inverted = _test_load_json("metabolism.kit.diff.inverted.semio.json")
+            kit_diffed = _test_load_json("metabolism.kit.diffed.semio.json")
 
             change = getKitChange(kit_original, kit_diffed)
             computed_diff = getKitDiffDict(kit_original, kit_diffed)
@@ -15762,24 +17856,103 @@ class TestChange:
             assert areKitsDictEqual(applied_inverse, kit_original)
 
 
+class TestDelete:
+    class TestNakaginCapsuleTower:
+        def test_delete_third_tambour_and_first_small_tower_connection(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower")
+            selection = _test_load_json("nakagin-capsule-tower.deleted.selection.semio.json")
+            expected_diff = _test_load_json("nakagin-capsule-tower.deleted.design.diff.semio.json")
+
+            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+
+            computed_diff = deletePiecesAndConnectionsInDesignDict(kit, design, piece_guids, connection_guids)
+
+            # Verify removed pieces
+            computed_removed = computed_diff.get("pieces", {}).get("removed", [])
+            expected_removed = expected_diff.get("pieces", {}).get("removed", [])
+            assert len(computed_removed) == len(expected_removed), f"Removed pieces count mismatch: {len(computed_removed)} vs {len(expected_removed)}"
+            for c, e in zip(computed_removed, expected_removed):
+                assert c["guid"] == e["guid"], f"Removed piece guid mismatch: {c['guid']} vs {e['guid']}"
+
+            # Verify updated (fixed) pieces
+            computed_updated = computed_diff.get("pieces", {}).get("updated", [])
+            expected_updated = expected_diff.get("pieces", {}).get("updated", [])
+            assert len(computed_updated) == len(expected_updated), f"Updated pieces count mismatch: {len(computed_updated)} vs {len(expected_updated)}"
+            computed_guids = sorted(u.get("piece", {}).get("guid", "") for u in computed_updated)
+            expected_guids = sorted(u.get("piece", {}).get("guid", "") for u in expected_updated)
+            assert computed_guids == expected_guids, f"Updated piece guids mismatch"
+            computed_sorted = sorted(computed_updated, key=lambda u: u.get("piece", {}).get("guid", ""))
+            expected_sorted = sorted(expected_updated, key=lambda u: u.get("piece", {}).get("guid", ""))
+            for cu, eu in zip(computed_sorted, expected_sorted):
+                cd = cu["diff"]
+                ed = eu["diff"]
+                assert abs(cd["plane"]["origin"]["x"] - ed["plane"]["origin"]["x"]) < 0.001
+                assert abs(cd["plane"]["origin"]["y"] - ed["plane"]["origin"]["y"]) < 0.001
+                assert abs(cd["plane"]["origin"]["z"] - ed["plane"]["origin"]["z"]) < 0.001
+                assert abs(cd["center"]["u"] - ed["center"]["u"]) < 0.001
+                assert abs(cd["center"]["v"] - ed["center"]["v"]) < 0.001
+
+            # Verify removed connections
+            computed_conn_removed = computed_diff.get("connections", {}).get("removed", [])
+            expected_conn_removed = expected_diff.get("connections", {}).get("removed", [])
+            assert len(computed_conn_removed) == len(expected_conn_removed), f"Removed connections count mismatch: {len(computed_conn_removed)} vs {len(expected_conn_removed)}"
+            computed_conn_guids = sorted(r["guid"] for r in computed_conn_removed)
+            expected_conn_guids = sorted(r["guid"] for r in expected_conn_removed)
+            assert computed_conn_guids == expected_conn_guids, "Removed connection guids mismatch"
+
+
+class TestDesignWithDiff:
+    class TestNakaginCapsuleTower:
+        def test_design_with_diff_preserves_old_entities_and_annotates_status(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+            diff = _test_load_json("nakgin-capsule-tower.diff.design.semio.json")
+            expected = _test_load_json("nakagin-capsule-tower.with-diff.design.semio.json")
+
+            computed = designWithDiffDict(design, diff)
+
+            assert len(computed.get("pieces", [])) == len(expected.get("pieces", [])), f"Pieces count mismatch: {len(computed.get('pieces', []))} vs {len(expected.get('pieces', []))}"
+            assert len(computed.get("connections", [])) == len(expected.get("connections", [])), f"Connections count mismatch: {len(computed.get('connections', []))} vs {len(expected.get('connections', []))}"
+
+            def get_status(attrs):
+                for a in attrs or []:
+                    if a.get("key") == "semio.diffStatus":
+                        return a.get("value")
+                return None
+
+            piece_statuses = [get_status(p.get("attributes")) for p in computed.get("pieces", [])]
+            assert piece_statuses.count("unchanged") == 163
+            assert piece_statuses.count("modified") == 7
+            assert piece_statuses.count("removed") == 10
+            assert piece_statuses.count("added") == 5
+
+            conn_statuses = [get_status(c.get("attributes")) for c in computed.get("connections", [])]
+            assert conn_statuses.count("unchanged") == 168
+            assert conn_statuses.count("modified") == 1
+            assert conn_statuses.count("removed") == 10
+            assert conn_statuses.count("added") == 4
+
+
 class TestValidation:
     class TestMetabolism:
         def test_metabolism_kit_validate_empty_report(self):
-            valid_kit = _test_load_json("kit_metabolism.json")
+            valid_kit = _test_load_json("metabolism.kit.semio.json")
             valid_result = validateKitDict(valid_kit)
             assert not valid_result.hasErrors()
 
     class TestInvalid:
         def test_invalid_kit_validate_invalid_report(self):
-            invalid_kit = _test_load_json("kit_invalid.json")
+            invalid_kit = _test_load_json("invalid.kit.semio.json")
             result = validateKitDict(invalid_kit)
-            expected = parseValidationResult(json.dumps(_test_load_json("validation.json")))
+            expected = parseValidationResult(json.dumps(_test_load_json("validation.semio.json")))
             assert areValidationResultsEqual(result, expected)
 
 
 class TestDesignModel:
     def test_model_selection_from_shared_semio_assets(self):
-        payload = _test_load_json("model_selection.json")
+        payload = _test_load_json("model.selection.semio.json")
         for case in payload.get("cases", []):
             models = [
                 {
@@ -15796,11 +17969,11 @@ class TestDesignModel:
 
 class TestKitFilterDesign:
     def test_nakagin_capsule_tower_filter_produces_expected_subset(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         expected = _test_load_json("nakagin-capsule-tower.filtered.kit.semio.json")
         design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
 
-        filtered = KitData(kit_dict).filter_kit_with_design(design["guid"]).to_dict()
+        filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
 
         assert len(filtered.get("designs", [])) == len(expected.get("designs", []))
         assert len(filtered.get("types", [])) == len(expected.get("types", []))
@@ -15813,7 +17986,10 @@ class TestKitFilterDesign:
         assert len(filtered_design.get("pieces", [])) == len(design.get("pieces", []))
 
         for expected_type in expected.get("types", []):
-            filtered_type = next((t for t in filtered.get("types", []) if t.get("guid") == expected_type.get("guid")), None)
+            filtered_type = next(
+                (t for t in filtered.get("types", []) if t.get("guid") == expected_type.get("guid")),
+                None,
+            )
             assert filtered_type is not None
             assert len(filtered_type.get("models", [])) == len(expected_type.get("models", []))
 
@@ -15832,20 +18008,52 @@ class TestKitFilterDesign:
                     assert any(port.get("guid") == connector_guid for port in filtered.get("ports", []))
 
     def test_nakagin_capsule_tower_filter_preserves_metadata(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
 
-        filtered = KitData(kit_dict).filter_kit_with_design(design["guid"]).to_dict()
+        filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
 
         assert filtered.get("guid") == kit_dict.get("guid")
         assert filtered.get("name") == kit_dict.get("name")
         assert filtered.get("version") == kit_dict.get("version")
 
+    def test_glob_filters_types_by_name_include(self):
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        filtered = KitData(kit_dict).filter_kit({"types": {"include": ["Capsule*"]}}).to_dict()
+        types = filtered.get("types", [])
+        assert len(types) > 0
+        for t in types:
+            assert fnmatch.fnmatch(t["name"].lower(), "capsule*")
+
+    def test_glob_filters_types_by_name_exclude(self):
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        total_types = len(kit_dict.get("types", []))
+        filtered = KitData(kit_dict).filter_kit({"types": {"exclude": ["Capsule*"]}}).to_dict()
+        types = filtered.get("types", [])
+        assert len(types) < total_types
+        for t in types:
+            assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
+
+    def test_empty_filter_returns_kit_unchanged(self):
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        filtered = KitData(kit_dict).filter_kit({}).to_dict()
+        assert len(filtered.get("types", [])) == len(kit_dict.get("types", []))
+        assert len(filtered.get("designs", [])) == len(kit_dict.get("designs", []))
+
+    def test_combines_design_guid_with_glob_filters(self):
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
+        design_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
+        combined_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"], "types": {"exclude": ["Capsule*"]}}).to_dict()
+        assert len(combined_filtered.get("types", [])) < len(design_filtered.get("types", []))
+        for t in combined_filtered.get("types", []):
+            assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
+
 
 class TestDesignQualitySum:
     class TestNakaginCapsuleTower:
         def test_sum_effective_floor_area(self):
-            kit_dict = _test_load_json("kit_metabolism.json")
+            kit_dict = _test_load_json("metabolism.kit.semio.json")
             design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
             quality = next(q for q in kit_dict.get("qualities", []) if q.get("name") == "effective floor area")
             result = sumQualityInDesignDict(kit_dict, design["guid"], quality["guid"])
@@ -15854,7 +18062,7 @@ class TestDesignQualitySum:
 
 class TestExportDesignModel:
     def test_export_glb_returns_valid_glb(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".glb")
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -15863,7 +18071,7 @@ class TestExportDesignModel:
         assert struct.unpack("<I", result[8:12])[0] == len(result)
 
     def test_export_gltf_returns_valid_json(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".gltf")
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -15872,12 +18080,12 @@ class TestExportDesignModel:
         assert "scenes" in parsed
 
     def test_export_invalid_format_raises(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         with pytest.raises(ValueError, match="Unsupported export format"):
             export_design_model(kit_dict, "Nakagin Capsule Tower", ".invalid")
 
     def test_export_scene_graph_report(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".gltf")
         parsed = json.loads(result.decode("utf-8"))
         assert "nodes" in parsed
@@ -15886,7 +18094,7 @@ class TestExportDesignModel:
         (REPORTS_EXPORT_DIR / "py.gltf").write_bytes(result)
 
     def test_export_ifc_returns_valid_ifc(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -15899,14 +18107,14 @@ class TestExportDesignModel:
         assert "IFCBUILDINGSTOREY" in ifc_text
 
     def test_export_ifc_contains_types_and_occurrences(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCBUILDINGELEMENTPROXYTYPE" in ifc_text
         assert "IFCBUILDINGELEMENTPROXY(" in ifc_text
 
     def test_export_ifc_contains_mesh_geometry(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCSHAPEREPRESENTATION" in ifc_text
@@ -15973,7 +18181,7 @@ class TestExportDesignModel:
         assert not any(abs(x) < 1e-6 and y > 0 and abs(z) < 1e-6 for x, y, z in coordinates)
 
     def test_export_ifc_contains_ports_and_connections(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCDISTRIBUTIONPORT" in ifc_text
@@ -15983,7 +18191,7 @@ class TestExportDesignModel:
     def test_export_ifc_roundtrip_with_ifcopenshell(self):
         import ifcopenshell
 
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         projects = ifc.by_type("IfcProject")
@@ -16012,7 +18220,7 @@ class TestExportDesignModel:
     def test_export_ifc_layer_spatial_hierarchy(self):
         import ifcopenshell
 
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         # IfcProject -> IfcSite -> IfcBuilding -> IfcBuildingStorey
@@ -16042,7 +18250,7 @@ class TestExportDesignModel:
         assert len(types_with_rep) > 0
 
     def test_export_ifc_report(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
         (REPORTS_EXPORT_DIR / "py.ifc").write_bytes(result)
@@ -16060,7 +18268,7 @@ class TestGetGeometricInsightsForModel:
         data = geometric_insights_to_report_dict(insights)
         (REPORTS_MODEL_KPI_DIR / "py.json").write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
 
-        canonical_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "model-kpi-nakagin.json")
+        canonical_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin.kpi.model.semio.json")
         with open(canonical_path, "r", encoding="utf-8") as f:
             canonical = json.load(f)
         for key, expected in canonical.items():
@@ -16201,7 +18409,7 @@ class TestKitToMetaShallow:
     """Tests for converting a full kit dict to meta and shallow representations."""
 
     def test_kit_to_meta_shallow(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         expected_meta = _test_load_json("metabolism.meta.kit.semio.json")
         expected_shallow = _test_load_json("metabolism.shallow.kit.semio.json")
 
@@ -16257,7 +18465,12 @@ class TestKitKind:
             assert kind == kind.value
 
     def test_kit_kind_file_roundtrip(self):
-        kit_dict = {"name": "FileTest", "uri": "file:///test.json", "types": [], "designs": []}
+        kit_dict = {
+            "name": "FileTest",
+            "uri": "file:///test.json",
+            "types": [],
+            "designs": [],
+        }
         kit = Kit.parse(kit_dict)
         assert kit.name == "FileTest"
         assert kit.uri == "file:///test.json"
@@ -16269,6 +18482,48 @@ class TestKitKind:
         kit = Kit.parse({"name": "TempKit"})
         assert kit.name == "TempKit"
         assert kit.uri.startswith("memory://")
+
+
+class TestHash:
+    """Tests for the Merkle hash functions."""
+
+    def test_metabolism_kit_hash(self):
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        result = hash_kit(kit_dict)
+        assert result == "4a8b056c2e80616afd25addb1bc31204da9879714c78ef2ec213df691a043160"
+
+    def test_kit_diff_canonical_hash(self):
+        d = {"name": "updated", "description": None}
+        result = hash_kit_diff(d)
+        assert result == "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
+
+    def test_kit_diff_deterministic(self):
+        d = {"name": "updated", "description": None}
+        h1 = hash_kit_diff(d)
+        h2 = hash_kit_diff(d)
+        assert h1 == h2
+
+    def test_kit_diff_different_inputs(self):
+        d1 = {"name": "updated", "description": None}
+        d2 = {"name": "other"}
+        assert hash_kit_diff(d1) != hash_kit_diff(d2)
+
+    def test_kit_diff_empty(self):
+        d = {}
+        result = hash_kit_diff(d)
+        assert len(result) == 64
+
+    def test_attribute_diff_deterministic(self):
+        d = {"key": "newKey", "value": "newValue"}
+        h1 = hash_attribute_diff(d)
+        h2 = hash_attribute_diff(d)
+        assert h1 == h2
+
+    def test_coord_diff_deterministic(self):
+        d = {"u": 1.0, "v": 2.0}
+        h1 = hash_coord_diff(d)
+        h2 = hash_coord_diff(d)
+        assert h1 == h2
 
 
 # endregion Test
@@ -16290,8 +18545,8 @@ def _bench(name: str, func):
 
 
 def benchmark_main():
-    kit_metabolism = _test_load_kit("kit_metabolism.json")
-    kit_invalid = _test_load_kit("kit_invalid.json")
+    kit_metabolism = _test_load_kit("metabolism.kit.semio.json")
+    kit_invalid = _test_load_kit("invalid.kit.semio.json")
 
     kit_obj = Kit.parse(kit_metabolism)
 
@@ -16306,8 +18561,8 @@ def benchmark_main():
 
     _bench("Roundtrip/Metabolism", test_roundtrip)
 
-    diff_forward = _test_load_json("diff_kit_metabolism.json")
-    diff_inverse = _test_load_json("diff_kit_metabolism_inverted.json")
+    diff_forward = _test_load_json("metabolism.kit.diff.semio.json")
+    diff_inverse = _test_load_json("metabolism.kit.diff.inverted.semio.json")
 
     def test_diff_metabolism():
         k2 = applyKitDiffDict(kit_metabolism, diff_forward)

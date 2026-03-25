@@ -1,0 +1,10 @@
+{
+  "title": "Show-Scene Must Win Mode Merge",
+  "status": "closed",
+  "description": "MCP design viewer sometimes renders diagram/design instead of SemioScene for show_scene. Root cause: mergeRichestDesignFromCandidates priority favored show-design over show-scene when same design guid exists. Fix: update mode/surface priority so show-scene wins over show-design, and add a unit test asserting merge outputs mode=show-scene and surface=scene in conflicting candidates. Verified: npm test in semio/ui passes.",
+  "summary": "Updated semio/ui merge logic so `show-scene` overrides `show-design` when both refer to the same design guid. Specifically: (1) in mergeRichestDesignFromCandidates, mode priority changed to prefer show-scene; (2) surface priority changed to prefer scene; (3) added unit test `mergeRichestDesignFromCandidates` asserting merged mode=show-scene and surface=scene in conflicting candidates. Verified: `cd semio/ui \u0026\u0026 npm test` passes.",
+  "goal": "🎯designapp",
+  "sessions": [
+    "⚪70914b124a0940bebed481a68860e93e"
+  ]
+}

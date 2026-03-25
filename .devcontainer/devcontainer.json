@@ -50,7 +50,8 @@
     4321,
     5678,
     6006,
-    6274
+    6274,
+    6277
   ],
   "portsAttributes": {
     "2507": {
@@ -75,6 +76,14 @@
     },
     "6006": {
       "label": "Storybook",
+      "onAutoForward": "notify"
+    },
+    "6274": {
+      "label": "MCP Inspector",
+      "onAutoForward": "notify"
+    },
+    "6277": {
+      "label": "MCP Inspector Proxy",
       "onAutoForward": "notify"
     }
   },
@@ -102,7 +111,7 @@
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
     "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
-    "SEMIO_GITKRAKEN_AUTO_START": "true",
+    "SEMIO_GITKRAKEN_AUTO_START": "false",
     "SEMIO_F3D_AUTO_START": "true",
     "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL": "",
     "LANG": "en_US.UTF-8",
@@ -158,7 +167,6 @@
         "ms-dotnettools.vscode-dotnet-runtime",
         "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
-        "ms-dotnettools.dotnet-interactive-vscode",
         // #endregion 🔖Extensions Dotnet
         // #region 🔖Extensions Python
         "ms-python.python",

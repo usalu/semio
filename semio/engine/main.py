@@ -37,10 +37,12 @@ import multiprocessing
 import os
 import pathlib
 import shutil
+import subprocess
 import signal
 import sqlite3
 import sys
 import typing
+import uuid
 import zipfile
 
 import fastapi
@@ -48,13 +50,19 @@ import fastapi.openapi
 import graphene
 import jinja2
 import lark
-import openai
 import pydantic
 import requests
 import starlette.applications
+import starlette.middleware.cors
 import starlette_graphene3
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
+from mcp.types import CallToolResult, EmbeddedResource, TextContent, TextResourceContents
+
+try:
+    import openai  # type: ignore
+except Exception:  # pragma: no cover
+    openai = None
 
 _semio_core_path = str(pathlib.Path(__file__).parent.parent / "py" / "main.py")
 _semio_core_spec = _ilu.spec_from_file_location("semio_core", _semio_core_path)
@@ -147,6 +155,7 @@ from semio_core import (
     changeValues,
     createClusteredDesignDict,
     decode,
+    deletePiecesAndConnectionsInDesignDict,
     encode,
     expandDesignPiecesDict,
     findAttributeValueDict,
@@ -1115,8 +1124,8 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
 
 
 try:
-    openaiClient = openai.Client()
-except openai.OpenAIError:
+    openaiClient = openai.Client() if openai is not None else None
+except Exception:
     openaiClient = None
 
 systemPrompt = """You are a kit-of-parts design assistant.
@@ -1474,6 +1483,217 @@ graphqlSchema = graphene.Schema(
 # Rest MUST expose kit, type, design, and assistant endpoints via FastAPI.
 
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
+
+rest.add_middleware(
+    starlette.middleware.cors.CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class NativeAlgorithmExecuteBody(pydantic.BaseModel):
+    """Request body for POST /api/native-algorithms/execute.
+    [👤semio📚engine💻engine🔖rest🛠️nativealgorithmexecutebody](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/NativeAlgorithmExecuteBody)
+    """
+
+    language: typing.Literal["python", "go", "rust"]
+    operation: typing.Literal["flatten", "delete"]
+    kit: dict[str, typing.Any]
+    design: dict[str, typing.Any]
+    designGuid: str
+    pieceGuids: list[str] = []
+    connectionGuids: list[str] = []
+
+
+def _semio_repo_root() -> pathlib.Path:
+    """Return the semio/ directory containing go, rs, py bundles.
+    [👤semio📚engine💻engine🔖rest🛠️semioreporoot](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_semio_repo_root)
+    """
+    return pathlib.Path(__file__).resolve().parent.parent
+
+
+def _python_native_flatten_to_design_change(kit: dict[str, typing.Any], design_guid: str) -> dict[str, typing.Any]:
+    """Map flattenDesignDict output to a DesignChange-shaped dict for the algorithms adapter.
+    [👤semio📚engine💻engine🔖rest🛠️pythonnativeflattentodesignchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_python_native_flatten_to_design_change)
+    """
+    raw = flattenDesignDict(kit, design_guid)
+    updates: list[dict[str, typing.Any]] = []
+    for u in raw.get("pieces", {}).get("updated", []):
+        pid = u.get("id")
+        diff = u.get("diff", {})
+        if pid:
+            updates.append({"piece": {"guid": pid}, "diff": diff})
+    forward: dict[str, typing.Any] = {}
+    if updates:
+        forward["pieces"] = {"updated": updates}
+    return {"forward": forward, "backward": {}}
+
+
+def _go_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
+    """Run semio/go/cmd/nativebridge and return parsed JSON result.
+    [👤semio📚engine💻engine🔖rest🛠️gonativebridge](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_go_native_bridge)
+    """
+    go_root = _semio_repo_root() / "go"
+    proc = subprocess.run(
+        ["go", "run", "./cmd/nativebridge"],
+        cwd=str(go_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=300,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "go native bridge failed")
+    out = json.loads(proc.stdout.decode("utf-8"))
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "go native bridge error"))
+    result = out.get("result")
+    if operation == "flatten":
+        return {"forward": result, "backward": {}}
+    return result
+
+
+def _rust_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
+    """Run semio/rs native_bridge and return parsed JSON result.
+    [👤semio📚engine💻engine🔖rest🛠️rustnativebridge](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_rust_native_bridge)
+    """
+    rs_root = _semio_repo_root() / "rs"
+    proc = subprocess.run(
+        ["cargo", "run", "-q", "--bin", "native_bridge"],
+        cwd=str(rs_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=600,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "rust native bridge failed")
+    out = json.loads(proc.stdout.decode("utf-8"))
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "rust native bridge error"))
+    return out.get("result")
+
+
+def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
+    """Dispatch native algorithm execution by language and operation.
+    [👤semio📚engine💻engine🔖rest🛠️dispatchnativealgorithm](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_dispatch_native_algorithm)
+    """
+    kit = body.kit
+    design = body.design
+    dg = body.designGuid
+    lang = body.language
+    op = body.operation
+    bridge_payload: dict[str, typing.Any] = {
+        "op": op,
+        "kit": kit,
+        "design": design,
+        "designGuid": dg,
+        "pieceGuids": list(body.pieceGuids),
+        "connectionGuids": list(body.connectionGuids),
+    }
+    if lang == "python":
+        if op == "flatten":
+            return _python_native_flatten_to_design_change(kit, dg)
+        return deletePiecesAndConnectionsInDesignDict(design, list(body.pieceGuids), list(body.connectionGuids))
+    if lang == "go":
+        return _go_native_bridge(bridge_payload, op)
+    if lang == "rust":
+        return _rust_native_bridge(bridge_payload, op)
+    raise RuntimeError(f"unsupported native language: {lang}")
+
+
+@rest.post("/native-algorithms/execute")
+async def native_algorithms_execute(body: NativeAlgorithmExecuteBody) -> fastapi.responses.JSONResponse:
+    """Execute flatten or delete in python, go, or rust native stacks (typescript runs in the browser).
+    [👤semio📚engine💻engine🔖rest🛠️nativealgorithmsexecute](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/native_algorithms_execute)
+    """
+    try:
+        result = _dispatch_native_algorithm(body)
+        return fastapi.responses.JSONResponse(content={"result": result})
+    except Exception as e:
+        return fastapi.responses.JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+def _build_design_viewer_html() -> str:
+    """Build the embeddable design viewer HTML from the built MCP App bundle.
+    Callers MUST use the returned HTML for the /app/design-viewer endpoint.
+    The MCP App is built from mcp-app.tsx which uses @semio/ui components exclusively.
+    [👤semio📚engine💻engine🔖rest🛠️builddesignviewerhtml](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_build_design_viewer_html)
+    """
+    app_html_path = os.path.join(os.path.dirname(__file__), "dist", "mcp-app.html")
+    if os.path.exists(app_html_path):
+        with open(app_html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return """<!doctype html><html><body><p>MCP App not built. Run: npm run build:mcp-app in semio/engine</p></body></html>"""
+
+
+def _build_kit_viewer_html() -> str:
+    """Build the embeddable kit viewer HTML (SemioKit-only MCP shell) from the same bundle as the design viewer.
+    Sets #root data-mcp-viewer to kit so mcp-app.tsx mounts McpKitViewer from @semio/ui.
+    Callers MUST use the returned HTML for the /app/kit-viewer endpoint and ui://semio/kit-viewer resource.
+    [👤semio📚engine💻engine🔖rest🛠️buildkitviewerhtml](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_build_kit_viewer_html)
+    """
+    html = _build_design_viewer_html()
+    if "MCP App not built" in html:
+        return html.replace("MCP App not built", "MCP kit app not built", 1)
+    return html.replace('data-mcp-viewer="design"', 'data-mcp-viewer="kit"', 1).replace("<title>semio design viewer</title>", "<title>semio kit viewer</title>", 1)
+
+
+@rest.get("/app/design-viewer")
+async def app_design_viewer() -> fastapi.Response:
+    """Return the embeddable design viewer HTML shell.
+    Callers MUST use this endpoint to embed the semio design viewer in an iframe.
+    [👤semio📚engine💻engine🔖rest🛠️appdesignviewer](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/app_design_viewer)
+    """
+    return fastapi.Response(
+        content=_build_design_viewer_html(),
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:;",
+        },
+    )
+
+
+@rest.get("/app/kit-viewer")
+async def app_kit_viewer() -> fastapi.Response:
+    """Return the embeddable kit viewer HTML shell (SemioKit from @semio/ui).
+    [👤semio📚engine💻engine🔖rest🛠️appkitviewer](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/app_kit_viewer)
+    """
+    return fastapi.Response(
+        content=_build_kit_viewer_html(),
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:;",
+        },
+    )
+
+
+@rest.get("/app/payload/{token}")
+async def app_payload(token: str) -> fastapi.responses.JSONResponse:
+    """Return the full MCP app payload by token. Used by MCP app iframes to bypass host truncation."""
+    payload = _mcp_app_payloads.get(token)
+    if payload is None:
+        return fastapi.responses.JSONResponse({"error": "Payload not found or expired"}, status_code=404)
+    return fastapi.responses.JSONResponse(payload, headers={"Access-Control-Allow-Origin": "*"})
+
+
+@rest.get("/app/files/{file_guid}")
+async def app_file(file_guid: str) -> fastapi.Response:
+    """Serve a kit file blob by guid. Used by MCP app iframes to load 3D models."""
+    blob = _mcp_app_file_blobs.get(file_guid)
+    if blob is None:
+        return fastapi.Response(content="File not found", status_code=404)
+    if blob.startswith("data:"):
+        parts = blob.split(",", 1)
+        header = parts[0]
+        encoded = parts[1] if len(parts) > 1 else ""
+        mime = header.split(":")[1].split(";")[0] if ":" in header else "application/octet-stream"
+        import base64
+        return fastapi.Response(content=base64.b64decode(encoded), media_type=mime, headers={"Access-Control-Allow-Origin": "*"})
+    import base64
+    return fastapi.Response(content=base64.b64decode(blob), media_type="application/octet-stream", headers={"Access-Control-Allow-Origin": "*"})
 
 
 @rest.get("/kits/{encodedKitUri}")
@@ -1834,16 +2054,44 @@ async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
 
 mcp = FastMCP("semio", stateless_http=False, json_response=True)
 
-# Session-scoped state. Keyed by session id for isolation.
-_mcp_session_kits: dict[int, dict[str, typing.Any]] = {}
-_mcp_session_designs: dict[int, dict[str, typing.Any]] = {}
-_mcp_session_types: dict[int, dict[str, typing.Any]] = {}
-_mcp_session_kit_mode: dict[int, str] = {}
-_mcp_session_kit_source: dict[int, str] = {}
-_mcp_session_transactions: dict[int, Transaction] = {}
-_mcp_session_transaction_rollback: set[int] = set()
-_mcp_session_selection: dict[int, dict[str, list[str]]] = {}
-_mcp_session_camera: dict[int, dict[str, typing.Any]] = {}
+_APP_RESOURCE_URI = "ui://semio/design-viewer"
+_APP_RESOURCE_META = {"ui": {"resourceUri": _APP_RESOURCE_URI}, "ui/resourceUri": _APP_RESOURCE_URI}
+_KIT_APP_RESOURCE_URI = "ui://semio/kit-viewer"
+_KIT_APP_RESOURCE_META = {"ui": {"resourceUri": _KIT_APP_RESOURCE_URI}, "ui/resourceUri": _KIT_APP_RESOURCE_URI}
+
+
+def _mcp_app_html_resource_meta() -> dict[str, typing.Any]:
+    """Resource _meta for MCP App HTML: hosts apply _meta.ui.csp to the sandbox (see .repo/✍️/mcp-app.md)."""
+    origins = [
+        f"http://127.0.0.1:{PORT}",
+        f"http://localhost:{PORT}",
+        f"http://[::1]:{PORT}",
+        f"ws://127.0.0.1:{PORT}",
+        f"ws://localhost:{PORT}",
+    ]
+    csp = {"connectDomains": origins, "resourceDomains": origins}
+    return {"ui": {"csp": csp}, "ui/csp": csp}
+
+
+# Session-scoped state. Keyed by `ctx.session` for isolation.
+#
+# Specs:
+# - Use plain dict/set instead of WeakKeyDictionary: MCP hosts (and our tests) may provide
+#   session identifiers that are not weakref-able (e.g., plain `object()`), and we must
+#   still isolate state correctly.
+_mcp_session_kits: dict[typing.Any, dict[str, typing.Any]] = {}
+_mcp_session_designs: dict[typing.Any, dict[str, typing.Any]] = {}
+_mcp_session_types: dict[typing.Any, dict[str, typing.Any]] = {}
+_mcp_session_kit_mode: dict[typing.Any, str] = {}
+_mcp_session_kit_source: dict[typing.Any, str] = {}
+_mcp_session_transactions: dict[typing.Any, Transaction] = {}
+_mcp_session_transaction_rollback: set[typing.Any] = set()
+_mcp_session_selection: dict[typing.Any, dict[str, list[str]]] = {}
+_mcp_session_camera: dict[typing.Any, dict[str, typing.Any]] = {}
+import collections
+_mcp_app_payloads: collections.OrderedDict[str, dict[str, typing.Any]] = collections.OrderedDict()
+_MCP_APP_PAYLOADS_MAX_SIZE = 100
+_mcp_app_file_blobs: dict[str, str] = {}
 
 
 def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
@@ -1872,7 +2120,7 @@ def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
 
 
 def _load_kit_from_path(path: str) -> dict:
-    """Load kit dict from path (JSON file or folder with .semio/kit.sqlite3 or kit JSON).
+    """Load kit dict from path (JSON file or folder with .semio/kit.db or kit JSON).
     [👤semio📚engine💻engine🔖mcp🛠️loadkitfrompath](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_path)
     """
     p = pathlib.Path(path).resolve()
@@ -1882,24 +2130,27 @@ def _load_kit_from_path(path: str) -> dict:
     if p.is_dir():
         sqlite_path = p / KIT_LOCAL_FOLDERNAME / KIT_LOCAL_FILENAME
         if sqlite_path.exists():
-            store = StoreFactory(str(p))
-            kit = store.get({"kind": "kit", "kitUri": str(p)})
-            return kit.model_dump() if hasattr(kit, "model_dump") else KitOutput.model_validate(kit).model_dump()
-        for name in ("kit_metabolism.json", "kit.json"):
+            kit, _files = _semio_core.import_folder_kit(str(p))
+            if hasattr(kit, "model_dump"):
+                return kit.model_dump()
+            if hasattr(kit, "to_dict"):
+                return kit.to_dict()
+            return KitOutput.model_validate(kit).model_dump()
+        for name in ("metabolism.kit.semio.json", "kit.json"):
             json_path = p / name
             if json_path.exists():
                 with open(json_path, "r", encoding="utf-8") as f:
                     return json.load(f)
-        parent_json = p.parent / "kit_metabolism.json"
+        parent_json = p.parent / "metabolism.kit.semio.json"
         if parent_json.exists():
             with open(parent_json, "r", encoding="utf-8") as f:
                 return json.load(f)
     raise FileNotFoundError(f"Kit not found at path: {path}")
 
 
-def _session_id(ctx) -> int:
-    """Get session id from context."""
-    return id(ctx.session) if ctx and hasattr(ctx, "session") else None
+def _session_id(ctx) -> typing.Any | None:
+    """Get session identifier from context for per-session isolation."""
+    return ctx.session if ctx and hasattr(ctx, "session") else None
 
 
 def _get_session_kit(ctx) -> dict[str, typing.Any]:
@@ -1916,11 +2167,69 @@ def _get_session_kit_mode(ctx) -> str:
     return _mcp_session_kit_mode.get(sid, "local")
 
 
+def _hydrate_design_from_kit_disk_if_shallow(design: dict[str, typing.Any], kit_source: str | None, design_guid: str) -> dict[str, typing.Any]:
+    """If the kit only lists design metadata (no pieces), load a sibling `*.design.semio.json` with the same guid.
+    [👤semio📚engine💻engine🔖mcp🛠️hydratedesignfromkitdiskifshallow](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_hydrate_design_from_kit_disk_if_shallow)
+    """
+    pieces = design.get("pieces") or []
+    if len(pieces) > 0:
+        return design
+    if not kit_source or kit_source in ("<memory>",):
+        return design
+    if kit_source.startswith(("http://", "https://")):
+        return design
+    try:
+        base = pathlib.Path(kit_source).resolve()
+        search_roots: list[pathlib.Path] = []
+        if base.is_file():
+            search_roots.append(base.parent)
+        elif base.is_dir():
+            search_roots.append(base)
+            search_roots.append(base.parent)
+        else:
+            return design
+        seen_dirs: set[pathlib.Path] = set()
+        best: dict[str, typing.Any] | None = None
+        best_piece_count = -1
+        for search_root in search_roots:
+            if not search_root.is_dir():
+                continue
+            rp = search_root.resolve()
+            if rp in seen_dirs:
+                continue
+            seen_dirs.add(rp)
+            for candidate in sorted(search_root.glob("*.design.semio.json")):
+                try:
+                    with open(candidate, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                except OSError:
+                    continue
+                if not isinstance(data, dict) or data.get("guid") != design_guid:
+                    continue
+                n = len(data.get("pieces") or [])
+                if n > best_piece_count:
+                    best_piece_count = n
+                    best = data
+        if best is not None:
+            return best
+    except OSError:
+        return design
+    return design
+
+
 def _get_session_design(ctx) -> dict[str, typing.Any]:
     """Get current design from session. Raises if start_working_in_design was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_designs:
         raise ValueError("Call start_working_in_design(guid) first to set the design for this session.")
+    design = _mcp_session_designs[sid]
+    guid = design.get("guid")
+    if not isinstance(guid, str) or not guid:
+        return design
+    kit_src = _mcp_session_kit_source.get(sid)
+    merged = _hydrate_design_from_kit_disk_if_shallow(design, kit_src, guid)
+    if merged is not design:
+        _mcp_session_designs[sid] = merged
     return _mcp_session_designs[sid]
 
 
@@ -1955,7 +2264,10 @@ def _sync_session_design_and_type(sid: int | None):
         if synced_design is None:
             _mcp_session_designs.pop(sid, None)
         else:
-            _mcp_session_designs[sid] = synced_design
+            cur_n = len((current_design.get("pieces") or []))
+            sync_n = len((synced_design.get("pieces") or []))
+            if sync_n >= cur_n:
+                _mcp_session_designs[sid] = synced_design
     current_type = _mcp_session_types.get(sid)
     if current_type is not None:
         type_guid = current_type.get("guid")
@@ -2076,11 +2388,11 @@ def _rollback_session_transaction(sid: int):
     _sync_session_design_and_type(sid)
 
 
-@mcp.tool()
-def start_working_in_local_kit(path: str, ctx: Context) -> dict:
-    """Start working in a local kit for this MCP session. MUST be called first.
-    Path: absolute path to kit folder (with .semio/kit.sqlite3) or JSON file, or folder containing kit_metabolism.json.
-    [👤semio📚engine💻engine🔖mcp🛠️startworkinginlocalkit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_local_kit)
+@mcp.tool(meta=_KIT_APP_RESOURCE_META)
+def start_working_in_local_kit(path: str, ctx: Context) -> CallToolResult:
+    """Load a local kit into the session. Must be called before any kit operations.
+
+    Accepts an absolute path to a kit folder containing .semio/kit.db, a JSON file, or a folder containing metabolism.kit.semio.json.
     """
     try:
         kit = _load_kit_from_path(path)
@@ -2090,14 +2402,14 @@ def start_working_in_local_kit(path: str, ctx: Context) -> dict:
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
         _mcp_session_kit_source[sid] = path
-        return {"ok": True, "mode": "local", "path": path}
+        return _build_kit_only_app_response(kit)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def start_new_kit(name: str, version: str, ctx: Context) -> dict:
-    """Start a new in-memory kit for this MCP session with flat top-level fields only."""
+@mcp.tool(meta=_KIT_APP_RESOURCE_META)
+def start_new_kit(name: str, version: str, ctx: Context) -> CallToolResult:
+    """Create a new in-memory kit for the session with the given name and version."""
     try:
         sid = _session_id(ctx)
         kit = {
@@ -2113,17 +2425,14 @@ def start_new_kit(name: str, version: str, ctx: Context) -> dict:
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
         _mcp_session_kit_source[sid] = "<memory>"
-        return {"ok": True, "name": name, "version": version}
+        return _build_kit_only_app_response(kit)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> dict:
-    """Start working in a remote kit for this MCP session. MUST be called first.
-    Requires prior login() to the server. Fetches the kit from the remote server.
-    [👤semio📚engine💻engine🔖mcp🛠️startworkinginremotekit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_remote_kit)
-    """
+@mcp.tool(meta=_KIT_APP_RESOURCE_META)
+def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> CallToolResult:
+    """Load a remote kit into the session. Requires a prior login call. Must be called before any kit operations."""
     try:
         kit = _load_kit_from_remote(serverUrl, kitUri)
         sid = _session_id(ctx)
@@ -2132,9 +2441,9 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> di
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "remote"
         _mcp_session_kit_source[sid] = f"{serverUrl}/api/kits/{encode(kitUri)}"
-        return {"ok": True, "mode": "remote", "serverUrl": serverUrl, "kitUri": kitUri}
+        return _build_kit_only_app_response(kit)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 # region MCP Auth Tools
@@ -2143,9 +2452,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> di
 
 
 def mcp_login(serverUrl: str, email: str, password: str) -> dict:
-    """🔐 Login to a remote semio server. Stores the auth token for subsequent remote kit operations.
-    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogin](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_login)
-    """
+    """Login to a remote semio server and store the auth token for subsequent remote kit operations."""
     try:
         return login(serverUrl, email, password)
     except Exception as e:
@@ -2153,9 +2460,7 @@ def mcp_login(serverUrl: str, email: str, password: str) -> dict:
 
 
 def mcp_logout(serverUrl: str) -> dict:
-    """🔓 Logout from a remote semio server. Removes the stored token.
-    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcplogout](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_logout)
-    """
+    """Logout from a remote semio server and remove the stored token."""
     try:
         return logout(serverUrl)
     except Exception as e:
@@ -2163,9 +2468,7 @@ def mcp_logout(serverUrl: str) -> dict:
 
 
 def mcp_auth_status(serverUrl: str) -> dict:
-    """📋 Get the auth status for a remote semio server.
-    [👤semio📚engine💻engine🔖mcp🔖mcpauthtools🛠️mcpauthstatus](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Auth%20Tools/d/i/mcp_auth_status)
-    """
+    """Get the authentication status for a remote semio server."""
     try:
         return getAuthStatus(serverUrl)
     except Exception as e:
@@ -2176,10 +2479,7 @@ def mcp_auth_status(serverUrl: str) -> dict:
 
 
 def validate_kit(kit: dict) -> dict:
-    """Validate a kit and return any validation problems.
-    Callers MUST provide a dict matching the Kit schema.
-    [👤semio📚engine💻engine🔖mcp🛠️validatekit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/validate_kit)
-    """
+    """Validate a kit dict and return any validation problems."""
     try:
         result = validateKitDict(kit)
         return result.model_dump() if hasattr(result, "model_dump") else {"problems": []}
@@ -2188,10 +2488,7 @@ def validate_kit(kit: dict) -> dict:
 
 
 def flatten_design(kit: dict, design_guid: str) -> dict:
-    """Flatten a design by computing absolute planes for all pieces.
-    Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️flattendesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/flatten_design)
-    """
+    """Flatten a design by computing absolute planes for all pieces."""
     try:
         return flattenDesignDict(kit, design_guid)
     except Exception as e:
@@ -2199,10 +2496,7 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
 
 
 def get_kit_diff(before: dict, after: dict) -> dict:
-    """Get the diff between two kit states.
-    Callers MUST provide two valid kit dicts for comparison.
-    [👤semio📚engine💻engine🔖mcp🛠️getkitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_diff)
-    """
+    """Compute the diff between two kit states."""
     try:
         return getKitDiffDict(before, after)
     except Exception as e:
@@ -2210,10 +2504,7 @@ def get_kit_diff(before: dict, after: dict) -> dict:
 
 
 def apply_kit_diff(base: dict, diff: dict) -> dict:
-    """Apply a diff to a kit.
-    Callers MUST provide a valid base kit dict and a compatible diff dict.
-    [👤semio📚engine💻engine🔖mcp🛠️applykitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/apply_kit_diff)
-    """
+    """Apply a diff to a kit dict."""
     try:
         return applyKitDiffDict(base, diff)
     except Exception as e:
@@ -2221,10 +2512,7 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
 
 
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
-    """Get the inverse of a diff (for undo operations).
-    Callers MUST provide the original kit dict and the applied diff dict.
-    [👤semio📚engine💻engine🔖mcp🛠️inversekitdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/inverse_kit_diff)
-    """
+    """Compute the inverse of a diff for undo operations."""
     try:
         return inverseKitDiffDict(original, applied_diff)
     except Exception as e:
@@ -2232,10 +2520,7 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
 
 
 def get_kit_change(before: dict, after: dict) -> dict:
-    """Get the change (forward and backward diffs) between two kit states for undo/redo.
-    Callers MUST provide two valid kit dicts for comparison.
-    [👤semio📚engine💻engine🔖mcp🛠️getkitchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_kit_change)
-    """
+    """Compute forward and backward diffs between two kit states for undo/redo."""
     try:
         return changeToDict(getKitChange(before, after))
     except Exception as e:
@@ -2243,10 +2528,7 @@ def get_kit_change(before: dict, after: dict) -> dict:
 
 
 def get_design_change(before: dict, after: dict) -> dict:
-    """Get the change (forward and backward diffs) between two design states for undo/redo.
-    Callers MUST provide two valid design dicts for comparison.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_change)
-    """
+    """Compute forward and backward diffs between two design states for undo/redo."""
     try:
         return changeToDict(getDesignChange(before, after))
     except Exception as e:
@@ -2254,10 +2536,7 @@ def get_design_change(before: dict, after: dict) -> dict:
 
 
 def pieces_metadata(kit: dict, design_guid: str) -> dict:
-    """Get metadata for all pieces in a design (plane, center, fixedPieceId, parentPieceId, depth).
-    Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️piecesmetadata](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/pieces_metadata)
-    """
+    """Get metadata for all pieces in a design including plane, center, fixedPieceId, parentPieceId, depth, and path."""
     try:
         return piecesMetadataDict(kit, design_guid)
     except Exception as e:
@@ -2265,10 +2544,7 @@ def pieces_metadata(kit: dict, design_guid: str) -> dict:
 
 
 def get_primitive_design(kit: dict, design_guid: str) -> dict:
-    """Get the root/primitive design of a design family.
-    Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getprimitivedesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_design)
-    """
+    """Get the root design of a design family."""
     try:
         return getPrimitiveDesignDict(kit, design_guid)
     except Exception as e:
@@ -2276,10 +2552,7 @@ def get_primitive_design(kit: dict, design_guid: str) -> dict:
 
 
 def get_design_family(kit: dict, design_guid: str) -> list:
-    """Get all designs in a design family tree.
-    Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignfamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_family)
-    """
+    """Get all designs in a design family tree."""
     try:
         return getDesignFamilyDict(kit, design_guid)
     except Exception as e:
@@ -2287,10 +2560,7 @@ def get_design_family(kit: dict, design_guid: str) -> list:
 
 
 def get_design_siblings(kit: dict, design_guid: str) -> list:
-    """Get all sibling designs (same parent, excluding self).
-    Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignsiblings](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_siblings)
-    """
+    """Get all sibling designs sharing the same parent, excluding the given design."""
     try:
         return getDesignSiblingsDict(kit, design_guid)
     except Exception as e:
@@ -2298,10 +2568,7 @@ def get_design_siblings(kit: dict, design_guid: str) -> list:
 
 
 def get_design_children(kit: dict, design_guid: str) -> list:
-    """Get all direct children of a design.
-    Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getdesignchildren](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_design_children)
-    """
+    """Get all direct child designs of a design."""
     try:
         return getDesignChildrenDict(kit, design_guid)
     except Exception as e:
@@ -2309,10 +2576,7 @@ def get_design_children(kit: dict, design_guid: str) -> list:
 
 
 def are_designs_in_same_family(kit: dict, design_guid_a: str, design_guid_b: str) -> dict:
-    """Check if two designs belong to the same family.
-    Callers MUST provide a valid kit dict and two existing design GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️aredesignsinsamefamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/are_designs_in_same_family)
-    """
+    """Check if two designs belong to the same family."""
     try:
         return {"result": areDesignsInSameFamilyDict(kit, design_guid_a, design_guid_b)}
     except Exception as e:
@@ -2320,10 +2584,7 @@ def are_designs_in_same_family(kit: dict, design_guid_a: str, design_guid_b: str
 
 
 def can_use_design_as_piece(kit: dict, container_design_guid: str, piece_design_guid: str) -> dict:
-    """Check if a design can be used as a piece in another design.
-    Callers MUST provide a valid kit dict and two existing design GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️canusedesignaspiece](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/can_use_design_as_piece)
-    """
+    """Check if a design can be used as a piece in another design without creating circular references."""
     try:
         return {"result": canUseDesignAsPieceDict(kit, container_design_guid, piece_design_guid)}
     except Exception as e:
@@ -2331,10 +2592,7 @@ def can_use_design_as_piece(kit: dict, container_design_guid: str, piece_design_
 
 
 def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
-    """Find pieces in a design that reference designs from the same family.
-    Callers MUST provide a valid kit dict and an existing design GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️findsamefamilydesignpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_same_family_design_pieces)
-    """
+    """Find pieces in a design that reference designs from the same family."""
     try:
         return findSameFamilyDesignPiecesDict(kit, design_guid)
     except Exception as e:
@@ -2342,10 +2600,7 @@ def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
 
 
 def get_primitive_type(kit: dict, type_guid: str) -> dict:
-    """Get the root/primitive type of a type family.
-    Callers MUST provide a valid kit dict and an existing type GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️getprimitivetype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_primitive_type)
-    """
+    """Get the root type of a type family."""
     try:
         return getPrimitiveTypeDict(kit, type_guid)
     except Exception as e:
@@ -2353,10 +2608,7 @@ def get_primitive_type(kit: dict, type_guid: str) -> dict:
 
 
 def get_type_family(kit: dict, type_guid: str) -> list:
-    """Get all types in a type family tree.
-    Callers MUST provide a valid kit dict and an existing type GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️gettypefamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_family)
-    """
+    """Get all types in a type family tree."""
     try:
         return getTypeFamilyDict(kit, type_guid)
     except Exception as e:
@@ -2364,10 +2616,7 @@ def get_type_family(kit: dict, type_guid: str) -> list:
 
 
 def get_type_siblings(kit: dict, type_guid: str) -> list:
-    """Get all sibling types (same parent, excluding self).
-    Callers MUST provide a valid kit dict and an existing type GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️gettypesiblings](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_siblings)
-    """
+    """Get all sibling types sharing the same parent, excluding the given type."""
     try:
         return getTypeSiblingsDict(kit, type_guid)
     except Exception as e:
@@ -2375,10 +2624,7 @@ def get_type_siblings(kit: dict, type_guid: str) -> list:
 
 
 def get_type_children(kit: dict, type_guid: str) -> list:
-    """Get all direct children of a type.
-    Callers MUST provide a valid kit dict and an existing type GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️gettypechildren](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_type_children)
-    """
+    """Get all direct child types of a type."""
     try:
         return getTypeChildrenDict(kit, type_guid)
     except Exception as e:
@@ -2386,10 +2632,7 @@ def get_type_children(kit: dict, type_guid: str) -> list:
 
 
 def are_types_in_same_family(kit: dict, type_guid_a: str, type_guid_b: str) -> dict:
-    """Check if two types belong to the same family.
-    Callers MUST provide a valid kit dict and two existing type GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️aretypesinsamefamily](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/are_types_in_same_family)
-    """
+    """Check if two types belong to the same family."""
     try:
         return {"result": areTypesInSameFamilyDict(kit, type_guid_a, type_guid_b)}
     except Exception as e:
@@ -2397,10 +2640,7 @@ def are_types_in_same_family(kit: dict, type_guid_a: str, type_guid_b: str) -> d
 
 
 def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> dict:
-    """Get the type of a piece in a design.
-    Callers MUST provide a valid kit dict, design GUID, and piece GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️findpiecetypeindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_piece_type_in_design)
-    """
+    """Get the type of a specific piece in a design."""
     try:
         return findPieceTypeInDesignDict(kit, design_guid, piece_guid)
     except Exception as e:
@@ -2408,10 +2648,7 @@ def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> d
 
 
 def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_guid: str) -> list:
-    """Get all connectors of a piece that are used in connections.
-    Callers MUST provide a valid kit dict, design GUID, and piece GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️findusedconnectorsbypieceindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_used_connectors_by_piece_in_design)
-    """
+    """Get all connectors of a piece that are used in connections."""
     try:
         return findUsedConnectorsByPieceInDesignDict(kit, design_guid, piece_guid)
     except Exception as e:
@@ -2419,10 +2656,7 @@ def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_g
 
 
 def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piece_guid: str, variants: list[str] = None) -> list:
-    """Find all types that can replace a piece while maintaining connection compatibility.
-    Callers MUST provide a valid kit dict, design GUID, and piece GUID. Optionally filter by variant parent GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpieceindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_piece_in_design)
-    """
+    """Find all types that can replace a piece while maintaining connection compatibility. Optionally filter by variant parent GUIDs."""
     try:
         return findReplaceableTypesForPieceInDesignDict(kit, design_guid, piece_guid, variants)
     except Exception as e:
@@ -2430,10 +2664,7 @@ def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piec
 
 
 def find_replaceable_types_for_pieces_in_design(kit: dict, design_guid: str, piece_guids: list[str], variants: list[str] = None) -> list:
-    """Find types that can replace multiple pieces while maintaining all external connections.
-    Callers MUST provide a valid kit dict, design GUID, and list of piece GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️findreplaceabletypesforpiecesindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_replaceable_types_for_pieces_in_design)
-    """
+    """Find types that can replace multiple pieces while maintaining all external connections."""
     try:
         return findReplaceableTypesForPiecesInDesignDict(kit, design_guid, piece_guids, variants)
     except Exception as e:
@@ -2441,11 +2672,7 @@ def find_replaceable_types_for_pieces_in_design(kit: dict, design_guid: str, pie
 
 
 def create_clustered_design(original_design: dict, cluster_piece_ids: list[str], design_name: str) -> dict:
-    """Create a new design from a subset of pieces (cluster).
-    Returns clusteredDesign and externalConnections.
-    Callers MUST provide a valid design dict, list of piece GUIDs, and a name for the new design.
-    [👤semio📚engine💻engine🔖mcp🛠️createclustereddesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/create_clustered_design)
-    """
+    """Create a new design from a subset of pieces. Returns the clustered design and external connections."""
     try:
         return createClusteredDesignDict(original_design, cluster_piece_ids, design_name)
     except Exception as e:
@@ -2453,10 +2680,7 @@ def create_clustered_design(original_design: dict, cluster_piece_ids: list[str],
 
 
 def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[str], clustered_design: dict, external_connections: list[dict]) -> dict:
-    """Get a DesignDiff that replaces clustered pieces with a design reference.
-    Callers MUST provide the original design, cluster piece IDs, the new clustered design, and external connections.
-    [👤semio📚engine💻engine🔖mcp🛠️replaceclusterwithdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/replace_cluster_with_design)
-    """
+    """Compute a design diff that replaces clustered pieces with a single design reference."""
     try:
         return replaceClusterWithDesignDict(original_design, cluster_piece_ids, clustered_design, external_connections)
     except Exception as e:
@@ -2464,10 +2688,7 @@ def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[s
 
 
 def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
-    """Get clusterable groups of selected pieces.
-    Callers MUST provide a valid design dict and list of selected piece GUIDs.
-    [👤semio📚engine💻engine🔖mcp🛠️getclusterablegroups](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/get_clusterable_groups)
-    """
+    """Get groups of selected pieces that can be clustered into new designs."""
     try:
         return getClusterableGroupsDict(design, selected_piece_ids)
     except Exception as e:
@@ -2475,10 +2696,7 @@ def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
 
 
 def expand_design_pieces(design: dict, kit: dict) -> dict:
-    """Recursively expand design references by inlining their pieces and connections.
-    Callers MUST provide a valid design dict and kit dict.
-    [👤semio📚engine💻engine🔖mcp🛠️expanddesignpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/expand_design_pieces)
-    """
+    """Recursively expand design references by inlining their pieces and connections."""
     try:
         return expandDesignPiecesDict(design, kit)
     except Exception as e:
@@ -2486,10 +2704,7 @@ def expand_design_pieces(design: dict, kit: dict) -> dict:
 
 
 def find_attribute_value(entity: dict, name: str, default_value: str = None) -> dict:
-    """Find an attribute value on an entity by key.
-    Callers MUST provide an entity dict (kit, type, design, piece, etc.) and attribute key name.
-    [👤semio📚engine💻engine🔖mcp🛠️findattributevalue](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/find_attribute_value)
-    """
+    """Find an attribute value on an entity by key name."""
     try:
         sentinel = ... if default_value is None else default_value
         result = findAttributeValueDict(entity, name, sentinel)
@@ -2519,7 +2734,7 @@ def start_new_design(
     updated_at: str,
     ctx: Context,
 ) -> dict:
-    """Create and select a new current design with flat metadata fields only."""
+    """Create and select a new design in the current kit with the given metadata."""
     try:
         design = {
             "guid": guid,
@@ -2543,7 +2758,7 @@ def start_new_design(
 
 @mcp.tool()
 def add_current_design_author(guid: str, ctx: Context) -> dict:
-    """Append a flat author reference to the current design."""
+    """Add an author reference to the current design by GUID."""
     try:
         design = _mutate_current_design(ctx, lambda current_design: current_design.setdefault("authors", []).append({"guid": guid}))
         return {"ok": True, "authorCount": len(design.get("authors", []))}
@@ -2553,7 +2768,7 @@ def add_current_design_author(guid: str, ctx: Context) -> dict:
 
 @mcp.tool()
 def add_current_design_prop(guid: str, quality_guid: str, value: str, unit: str, ctx: Context) -> dict:
-    """Append a flat prop entry to the current design."""
+    """Add a prop entry to the current design."""
     try:
 
         def mutate(current_design: dict):
@@ -2582,7 +2797,7 @@ def add_current_design_piece(
     is_hidden: bool = False,
     is_locked: bool = False,
 ) -> dict:
-    """Append a flat piece entry to the current design without placement fields."""
+    """Add a piece to the current design without placement fields."""
     try:
 
         def mutate(current_design: dict):
@@ -2624,7 +2839,7 @@ def add_current_design_piece_with_plane(
     is_hidden: bool = False,
     is_locked: bool = False,
 ) -> dict:
-    """Append a flat piece entry to the current design with explicit placement fields."""
+    """Add a piece to the current design with explicit placement plane and center."""
     try:
 
         def mutate(current_design: dict):
@@ -2669,7 +2884,7 @@ def add_current_design_connection(
     tilt: float = 0,
     turn: float = 0,
 ) -> dict:
-    """Append a flat connection entry to the current design without nested arguments."""
+    """Add a connection between two pieces in the current design."""
     try:
 
         def mutate(current_design: dict):
@@ -2702,28 +2917,23 @@ def add_current_design_connection(
         return {"error": str(e)}
 
 
-@mcp.tool()
-def start_working_in_design(guid: str, ctx: Context) -> dict:
-    """Start working in a design within the current kit.
-    Callers MUST have called start_working_in_local_kit first. Selects the design by GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️startworkingindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_design)
-    """
+@mcp.tool(meta=_APP_RESOURCE_META)
+def start_working_in_design(guid: str, ctx: Context) -> CallToolResult:
+    """Select a design by GUID within the current kit. Requires start_working_in_local_kit to have been called first."""
     try:
         kit = _get_session_kit(ctx)
         design = next((d for d in kit.get("designs", []) if d.get("guid") == guid), None)
         if design is None:
-            return {"error": f"Design with guid {guid} not found in kit."}
+            return _as_mcp_app_tool_result({"error": f"Design with guid {guid} not found in kit."}, is_error=True)
         sid = _session_id(ctx)
         _mcp_session_designs[sid] = design
-        return {"ok": True, "guid": guid, "name": design.get("name", "")}
+        return _build_app_response("show-design", ctx)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 def _read_current_design(ctx: Context) -> dict:
-    """Read the current design that was set via start_working_in_design.
-    [👤semio📚engine💻engine🔖mcp🛠️readcurrentdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_design)
-    """
+    """Read the current design set via start_working_in_design."""
     try:
         return _get_session_design(ctx)
     except Exception as e:
@@ -2738,9 +2948,7 @@ def read_current_design(ctx: Context) -> dict:
 
 @mcp.tool()
 def finish_working_in_design(ctx: Context) -> dict:
-    """Finish working in the current design. Clears the design from session state.
-    [👤semio📚engine💻engine🔖mcp🛠️finishworkingindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_design)
-    """
+    """Clear the current design from session state."""
     try:
         sid = _session_id(ctx)
         _mcp_session_designs.pop(sid, None)
@@ -2751,10 +2959,7 @@ def finish_working_in_design(ctx: Context) -> dict:
 
 @mcp.tool()
 def start_working_in_type(guid: str, ctx: Context) -> dict:
-    """Start working in a type within the current kit.
-    Callers MUST have called start_working_in_local_kit first. Selects the type by GUID.
-    [👤semio📚engine💻engine🔖mcp🛠️startworkingintype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_type)
-    """
+    """Select a type by GUID within the current kit. Requires start_working_in_local_kit to have been called first."""
     try:
         kit = _get_session_kit(ctx)
         t = next((t for t in kit.get("types", []) if t.get("guid") == guid), None)
@@ -2768,9 +2973,7 @@ def start_working_in_type(guid: str, ctx: Context) -> dict:
 
 
 def _read_current_type(ctx: Context) -> dict:
-    """Read the current type that was set via start_working_in_type.
-    [👤semio📚engine💻engine🔖mcp🛠️readcurrenttype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/read_current_type)
-    """
+    """Read the current type set via start_working_in_type."""
     try:
         return _get_session_type(ctx)
     except Exception as e:
@@ -2785,9 +2988,7 @@ def read_current_type(ctx: Context) -> dict:
 
 @mcp.tool()
 def finish_working_in_type(ctx: Context) -> dict:
-    """Finish working in the current type. Clears the type from session state.
-    [👤semio📚engine💻engine🔖mcp🛠️finishworkingintype](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_type)
-    """
+    """Clear the current type from session state."""
     try:
         sid = _session_id(ctx)
         _mcp_session_types.pop(sid, None)
@@ -2798,9 +2999,7 @@ def finish_working_in_type(ctx: Context) -> dict:
 
 @mcp.tool()
 def finish_working_in_kit(ctx: Context) -> dict:
-    """Finish working in the current kit. Clears kit, design, type, mode and source from session state.
-    [👤semio📚engine💻engine🔖mcp🛠️finishworkinginkit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/finish_working_in_kit)
-    """
+    """Clear the current kit, design, type, mode, and source from session state."""
     try:
         sid = _session_id(ctx)
         _clear_session_kit(ctx)
@@ -2877,11 +3076,7 @@ def transaction_abort(ctx: Context) -> dict:
 
 @mcp.tool()
 def sum_quality_in_design(design_guid: str, quality_guid: str, ctx: Context) -> dict:
-    """Sum up the values of a quality across all pieces in a design.
-    For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
-    Callers MUST have called start_working_in_local_kit first.
-    [👤semio📚engine💻engine🔖mcp🛠️sumqualityindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/sum_quality_in_design)
-    """
+    """Sum the values of a quality across all pieces in a design, using piece-level props with fallback to type-level props."""
     try:
         kit = _get_session_kit(ctx)
         return {"result": sumQualityInDesignDict(kit, design_guid, quality_guid)}
@@ -2908,10 +3103,7 @@ def _set_session_selection(ctx, selection: dict[str, list[str]]):
 
 @mcp.tool()
 def read_current_selection(ctx: Context) -> dict:
-    """Read the current piece/connection selection for this session.
-    Returns {pieceGuids: [...], connectionGuids: [...]}.
-    [👤semio📚engine💻engine🔖mcp🔖mcpselectiontools🛠️readcurrentselection](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Selection%20Tools/d/i/read_current_selection)
-    """
+    """Read the current piece and connection selection for this session. Returns pieceGuids and connectionGuids."""
     try:
         return _get_session_selection(ctx)
     except Exception as e:
@@ -2920,9 +3112,7 @@ def read_current_selection(ctx: Context) -> dict:
 
 @mcp.tool()
 def set_current_selection(ctx: Context, piece_guids: list[str] | None = None, connection_guids: list[str] | None = None) -> dict:
-    """Set the current piece/connection selection for this session.
-    [👤semio📚engine💻engine🔖mcp🔖mcpselectiontools🛠️setcurrentselection](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Selection%20Tools/d/i/set_current_selection)
-    """
+    """Set the current piece and connection selection for this session."""
     try:
         _set_session_selection(
             ctx,
@@ -2938,9 +3128,7 @@ def set_current_selection(ctx: Context, piece_guids: list[str] | None = None, co
 
 @mcp.tool()
 def clear_current_selection(ctx: Context) -> dict:
-    """Clear the current selection for this session.
-    [👤semio📚engine💻engine🔖mcp🔖mcpselectiontools🛠️clearcurrentselection](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20Selection%20Tools/d/i/clear_current_selection)
-    """
+    """Clear the current piece and connection selection for this session."""
     try:
         sid = _session_id(ctx)
         _mcp_session_selection.pop(sid, None)
@@ -2953,114 +3141,415 @@ def clear_current_selection(ctx: Context) -> dict:
 
 # region MCP App Tools
 # [👤semio📚engine💻engine🔖mcp🔖mcpapptools](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools)
-# MCP App Tools MUST expose 8 user-facing design visualization/selection intents as MCP tools.
-# All tools return structuredContent with mode and _meta with full kit/design payload for iframe rendering.
+# MCP App Tools MUST expose design visualization/selection intents as MCP tools.
+# Diagram and kit tools return CallToolResult with text content and structuredContent (MCP Apps template in .repo/✍️/mcp-app.md).
+# Kit-loading tools declare ui://semio/kit-viewer; diagram tools declare ui://semio/design-viewer.
+# Both nested (_meta.ui.resourceUri) and flat (_meta["ui/resourceUri"]) keys are required for
+# host compatibility, matching the registerAppTool normalization from @modelcontextprotocol/ext-apps/server.
 
-_APP_RESOURCE_URI = "semio://app/design-viewer"
 
-
-def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> dict:
-    """Build standardized app tool response with structuredContent and _meta.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️buildappresponse](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_app_response)
+def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = False) -> CallToolResult:
+    """Build tools/call result with full payload in text content and a fetchUrl fallback for hosts that truncate.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️asmcpapptoolresult](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_as_mcp_app_tool_result)
     """
+    token = uuid.uuid4().hex
+    _mcp_app_payloads[token] = payload
+    while len(_mcp_app_payloads) > _MCP_APP_PAYLOADS_MAX_SIZE:
+        _mcp_app_payloads.popitem(last=False)
+    # NOTE: MCP hosts often embed the design-viewer from a different origin/port than the engine
+    # (e.g. host UI at 127.0.0.1:6274, engine at 127.0.0.1:{PORT}). A relative URL would resolve
+    # against the host origin and may be blocked by the MCP App CSP. Therefore we always emit an
+    # absolute engine URL, which is declared in the MCP App CSP allowlist via _mcp_app_html_resource_meta().
+    fetch_url = f"http://127.0.0.1:{PORT}/api/app/payload/{token}"
+    payload["fetchUrl"] = fetch_url
+    text = json.dumps(payload)
+    hint: dict[str, typing.Any] = {"fetchUrl": fetch_url, "mode": payload.get("mode")}
+    if "points" in payload:
+        hint["points"] = []
+        hint["lines"] = []
+    return CallToolResult(
+        content=[
+            TextContent(type="text", text=json.dumps(hint)),
+            TextContent(type="text", text=text),
+            EmbeddedResource(
+                type="resource",
+                resource=TextResourceContents(
+                    uri="semio://mcp-app/tool-payload",
+                    mimeType="application/json",
+                    text=text,
+                ),
+            ),
+        ],
+        structuredContent=payload,
+        isError=is_error,
+    )
+
+
+def _build_kit_only_app_payload(kit: dict) -> dict[str, typing.Any]:
+    """Serializable kit viewer payload (diagram lists empty; kitArtifacts populated)."""
+    return {
+        "points": [],
+        "lines": [],
+        "capabilities": {"pieceSelection": False, "connectionSelection": False},
+        "kitArtifacts": _build_kit_artifact_data(kit),
+    }
+
+
+def _build_kit_only_app_response(kit: dict) -> CallToolResult:
+    """MCP Apps kit-viewer tool response with kit artifact data only (no diagram)."""
+    return _as_mcp_app_tool_result(_build_kit_only_app_payload(kit))
+
+
+def _build_kit_artifact_data(kit: dict) -> dict:
+    """Build a minimal kit artifact payload for UI selection (designs, types, connectors)."""
+    meta: dict = {
+        "name": kit.get("name") or "",
+        "version": kit.get("version") or "",
+    }
+    if kit.get("guid"):
+        meta["guid"] = kit.get("guid")
+    for key in ("description", "createdAt", "updatedAt", "homepage", "remote", "preview", "icon", "image", "license"):
+        value = kit.get(key)
+        if value:
+            meta[key] = value
+    designs = []
+    for d in kit.get("designs", []) or []:
+        guid = d.get("guid")
+        if not guid:
+            continue
+        design_payload = {"guid": guid, "name": d.get("name", ""), "variant": d.get("variant", ""), "view": d.get("view", "")}
+        parent = d.get("parent")
+        if isinstance(parent, dict) and parent.get("guid"):
+            design_payload["parent"] = {"guid": parent.get("guid")}
+        for key in ("description", "createdAt", "updatedAt", "unit", "icon", "image"):
+            value = d.get(key)
+            if value:
+                design_payload[key] = value
+        designs.append(design_payload)
+
+    types = []
+    ports = []
+    for t in kit.get("types", []) or []:
+        t_guid = t.get("guid")
+        if not t_guid:
+            continue
+        type_payload = {"guid": t_guid, "name": t.get("name", ""), "variant": t.get("variant", "")}
+        parent = t.get("parent")
+        if isinstance(parent, dict) and parent.get("guid"):
+            type_payload["parent"] = {"guid": parent.get("guid")}
+        for key in ("description", "createdAt", "updatedAt", "icon", "image"):
+            value = t.get(key)
+            if value:
+                type_payload[key] = value
+        types.append(type_payload)
+        for c in t.get("connectors", []) or []:
+            c_guid = c.get("guid")
+            if not c_guid:
+                continue
+            ports.append(
+                {
+                    "guid": c_guid,
+                    "typeGuid": t_guid,
+                    "id": c.get("id", ""),
+                    "port": c.get("port", ""),
+                    "name": c.get("name", "") or c.get("id", "") or c.get("port", "") or "port",
+                    "description": c.get("description", ""),
+                    "mandatory": bool(c.get("mandatory", False)),
+                }
+            )
+
+    meta["designs"] = designs
+    meta["types"] = types
+    meta["ports"] = ports
+    return meta
+
+
+def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = None) -> dict:
+    """Compute pre-rendered diagram points and lines from kit/design data.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️builddiagramdata](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_diagram_data)
+    """
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
+    if design is None:
+        return {"points": [], "lines": []}
+
+    # Flatten the design to get absolute piece positions
+    try:
+        flatten_result = flattenDesignDict(kit, design_guid)
+    except Exception:
+        flatten_result = {}
+
+    # Build piece center map from flatten result
+    piece_centers: dict[str, dict] = {}
+    for update in flatten_result.get("pieces", {}).get("updated", []):
+        pid = update.get("id")
+        center = update.get("diff", {}).get("center")
+        if pid and center:
+            piece_centers[pid] = center
+
+    # Build piece map with positions
+    pieces = design.get("pieces", [])
+    piece_map: dict[str, dict] = {}
+    for p in pieces:
+        guid = p.get("guid")
+        if not guid:
+            continue
+        center = piece_centers.get(guid, p.get("center") or {"u": 0, "v": 0})
+        piece_map[guid] = {"guid": guid, "id": p.get("id", ""), "center": center}
+
+    # Determine diff statuses
+    removed_piece_guids: set[str] = set()
+    added_piece_guids: set[str] = set()
+    modified_piece_guids: set[str] = set()
+    removed_conn_guids: set[str] = set()
+    added_conn_guids: set[str] = set()
+    modified_conn_guids: set[str] = set()
+
+    if design_diff:
+        for p in design_diff.get("pieces", {}).get("removed", []):
+            removed_piece_guids.add(p.get("guid", ""))
+        for p in design_diff.get("pieces", {}).get("added", []):
+            guid = p.get("guid", "")
+            added_piece_guids.add(guid)
+            # Include added pieces in the map with their centers
+            center = p.get("center") or {"u": 0, "v": 0}
+            piece_map[guid] = {"guid": guid, "id": p.get("id", ""), "center": center}
+        for p in design_diff.get("pieces", {}).get("updated", []):
+            modified_piece_guids.add(p.get("piece", {}).get("guid", ""))
+        for c in design_diff.get("connections", {}).get("removed", []):
+            removed_conn_guids.add(c.get("guid", ""))
+        for c in design_diff.get("connections", {}).get("added", []):
+            added_conn_guids.add(c.get("guid", ""))
+        for c in design_diff.get("connections", {}).get("updated", []):
+            modified_conn_guids.add(c.get("connection", {}).get("guid", ""))
+
+    # Build points
+    points = []
+    for guid, pdata in piece_map.items():
+        status = "default"
+        if guid in removed_piece_guids:
+            status = "removed"
+        elif guid in added_piece_guids:
+            status = "added"
+        elif guid in modified_piece_guids:
+            status = "modified"
+        center = pdata.get("center", {"u": 0, "v": 0})
+        points.append(
+            {
+                "guid": guid,
+                "id": pdata.get("id", ""),
+                "u": center.get("u", 0),
+                "v": center.get("v", 0),
+                "status": status,
+            }
+        )
+
+    # Build lines from connections
+    connections = design.get("connections", [])
+    # Also include added connections from diff
+    if design_diff:
+        for c in design_diff.get("connections", {}).get("added", []):
+            connections = list(connections) + [c]
+
+    lines = []
+    for c in connections:
+        guid = c.get("guid")
+        if not guid:
+            continue
+        source_guid = c.get("connected", {}).get("piece", {}).get("guid")
+        target_guid = c.get("connecting", {}).get("piece", {}).get("guid")
+        source = piece_map.get(source_guid)
+        target = piece_map.get(target_guid)
+        if not source or not target:
+            continue
+        source_center = source.get("center", {"u": 0, "v": 0})
+        target_center = target.get("center", {"u": 0, "v": 0})
+        status = "default"
+        if guid in removed_conn_guids:
+            status = "removed"
+        elif guid in added_conn_guids:
+            status = "added"
+        elif guid in modified_conn_guids:
+            status = "modified"
+        lines.append(
+            {
+                "guid": guid,
+                "sourceU": source_center.get("u", 0),
+                "sourceV": source_center.get("v", 0),
+                "targetU": target_center.get("u", 0),
+                "targetV": target_center.get("v", 0),
+                "status": status,
+            }
+        )
+
+    return {"points": points, "lines": lines}
+
+
+def _enrich_design(kit: dict, design: dict) -> dict:
+    """Enrich design pieces with flattened plane/center data from flattenDesignDict."""
+    design_guid = design.get("guid")
+    try:
+        flatten_result = flattenDesignDict(kit, design_guid)
+        flatten_by_guid: dict[str, dict] = {}
+        for update in flatten_result.get("pieces", {}).get("updated", []):
+            pid = update.get("id")
+            if pid:
+                flatten_by_guid[pid] = update.get("diff", {})
+        enriched_pieces = []
+        for p in design.get("pieces", []):
+            guid = p.get("guid")
+            flat = flatten_by_guid.get(guid) if guid else None
+            if flat:
+                ep = dict(p)
+                if flat.get("plane") and not ep.get("plane"):
+                    ep["plane"] = flat["plane"]
+                if flat.get("center") and not ep.get("center"):
+                    ep["center"] = flat["center"]
+                enriched_pieces.append(ep)
+            else:
+                enriched_pieces.append(p)
+        enriched_design = dict(design)
+        enriched_design["pieces"] = enriched_pieces
+        return enriched_design
+    except Exception:
+        return design
+
+
+def _strip_kit_blobs(kit: dict) -> dict:
+    """Deep copy kit and remove file blobs for UI transport."""
+    kit_for_ui = copy.deepcopy(kit)
+    for f in kit_for_ui.get("files", []):
+        f.pop("blob", None)
+    return kit_for_ui
+
+
+# Diagram-only modes: precomputed 2D geometry only.
+_DIAGRAM_MODES = {"show-diagram", "show-diagram-diff", "select-pieces", "select-connections", "select-pieces-and-connections"}
+# Split view: design+kit for scene plus points/lines for the diagram panel (start_working_in_design / show_design / show_scene).
+_SPLIT_SCENE_DIAGRAM_MODES = {"show-design", "show-scene"}
+
+
+def _mcp_app_surface_for_mode(mode: str) -> str:
+    """Stable viewer surface for MCP Apps: design = SemioDesign (scene+diagram); scene = SemioScene; diagram = SemioDiagram only."""
+    if mode in ("show-design", "show-diff"):
+        return "design"
+    if mode == "show-scene":
+        return "scene"
+    return "diagram"
+
+
+def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> dict[str, typing.Any]:
+    """Build mode-appropriate payload: diagram data for diagram modes, design/kit for scene/design modes."""
     kit = _get_session_kit(ctx)
     design = _get_session_design(ctx)
-    selection = _get_session_selection(ctx)
-    sid = _session_id(ctx)
-    camera = _mcp_session_camera.get(sid)
+    enriched_design = _enrich_design(kit, design)
+    kit_for_ui = _strip_kit_blobs(kit)
 
-    structured_content = {
+    payload: dict[str, typing.Any] = {
         "mode": mode,
-        "designGuid": design.get("guid"),
-        "selectedPieceGuids": selection.get("pieceGuids", []),
-        "selectedConnectionGuids": selection.get("connectionGuids", []),
-    }
-    meta = {
-        "appResource": _APP_RESOURCE_URI,
-        "kit": kit,
-        "designDiff": design_diff,
-        "camera": camera,
-        "capabilities": capabilities
-        or {
+        "surface": _mcp_app_surface_for_mode(mode),
+        "capabilities": capabilities or {
             "pieceSelection": mode in ("select-pieces", "select-pieces-and-connections"),
             "connectionSelection": mode in ("select-connections", "select-pieces-and-connections"),
-            "diff": mode in ("show-diff", "show-diagram-diff"),
         },
-    }
-    return {
-        "structuredContent": structured_content,
-        "_meta": meta,
+        "kitArtifacts": _build_kit_artifact_data(kit),
+        "design": enriched_design,
+        "kit": kit_for_ui,
     }
 
+    if mode in _DIAGRAM_MODES or mode in _SPLIT_SCENE_DIAGRAM_MODES:
+        diagram_data = _build_diagram_data(kit, design.get("guid"), design_diff)
+        payload["points"] = diagram_data["points"]
+        payload["lines"] = diagram_data["lines"]
 
-@mcp.tool()
-def show_design(ctx: Context) -> dict:
-    """Show the current design in a combined 2D diagram + 3D scene split view.
-    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_design)
+    if design_diff is not None:
+        payload["designDiff"] = design_diff
+
+    return payload
+
+
+def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> CallToolResult:
+    """MCP Apps design-viewer tool response with pre-computed diagram data and structuredContent.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️buildappresponse](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_app_response)
     """
+    return _as_mcp_app_tool_result(_build_app_payload(mode, ctx, design_diff=design_diff, capabilities=capabilities))
+
+
+@mcp.resource(
+    _APP_RESOURCE_URI,
+    name="semio design viewer",
+    description="Interactive SVG diagram viewer for semio designs. Renders piece-connection diagrams with pan, zoom, and selection support.",
+    mime_type="text/html;profile=mcp-app",
+    meta=_mcp_app_html_resource_meta(),
+)
+def design_viewer_resource() -> str:
+    """Serve the MCP App design viewer HTML built from @semio/ui.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️designviewerresource](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/design_viewer_resource)
+    """
+    return _build_design_viewer_html()
+
+
+@mcp.resource(
+    _KIT_APP_RESOURCE_URI,
+    name="semio kit viewer",
+    description="Kit artifact browser for semio kits. Renders SemioKit (designs, kinds, connectors) from @semio/ui.",
+    mime_type="text/html;profile=mcp-app",
+    meta=_mcp_app_html_resource_meta(),
+)
+def kit_viewer_resource() -> str:
+    """Serve the MCP kit viewer HTML (SemioKit-only shell) built from @semio/ui.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️kitviewerresource](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/kit_viewer_resource)
+    """
+    return _build_kit_viewer_html()
+
+
+@mcp.tool(meta=_APP_RESOURCE_META)
+def show_design(ctx: Context) -> CallToolResult:
+    """Show the current design in the split design viewer (scene + 2D diagram). Requires an active kit and design session."""
     try:
         return _build_app_response("show-design", ctx)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def show_diagram(ctx: Context) -> dict:
-    """Show the current design as a 2D diagram only.
-    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiagram](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diagram)
-    """
+@mcp.tool(meta=_APP_RESOURCE_META)
+def show_diagram(ctx: Context) -> CallToolResult:
+    """Show the current design as a 2D diagram only (no 3D scene panel). Requires an active kit and design session."""
     try:
         return _build_app_response("show-diagram", ctx)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def show_scene(ctx: Context) -> dict:
-    """Show the current design as a 3D scene only.
-    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showscene](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_scene)
-    """
+@mcp.tool(meta=_APP_RESOURCE_META)
+def show_scene(ctx: Context) -> CallToolResult:
+    """Show the current design in the 3D scene viewer. Requires an active kit and design session."""
     try:
         return _build_app_response("show-scene", ctx)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def show_diff(ctx: Context, design_diff: dict | None = None) -> dict:
-    """Show a diff of the current design in combined 2D + 3D split view.
-    If design_diff is omitted, an empty diff is used.
-    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diff)
-    """
+@mcp.tool(meta=_APP_RESOURCE_META)
+def show_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
+    """Show a diff of the current design in the split design viewer (scene + 2D diagram) with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
     try:
         return _build_app_response("show-diff", ctx, design_diff=design_diff)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> dict:
-    """Show a diff of the current design as a 2D diagram only.
-    If design_diff is omitted, an empty diff is used.
-    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiagramdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diagram_diff)
-    """
+@mcp.tool(meta=_APP_RESOURCE_META)
+def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
+    """Show a diff of the current design as a 2D diagram only with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
     try:
         return _build_app_response("show-diagram-diff", ctx, design_diff=design_diff)
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def select_pieces(ctx: Context) -> dict:
-    """Open a piece selection view where only pieces can be selected.
-    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_pieces)
-    """
+@mcp.tool(meta=_APP_RESOURCE_META)
+def select_pieces(ctx: Context) -> CallToolResult:
+    """Open a piece selection view where only pieces can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
             "select-pieces",
@@ -3068,19 +3557,15 @@ def select_pieces(ctx: Context) -> dict:
             capabilities={
                 "pieceSelection": True,
                 "connectionSelection": False,
-                "diff": False,
             },
         )
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def select_connections(ctx: Context) -> dict:
-    """Open a connection selection view where only connections can be selected.
-    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectconnections](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_connections)
-    """
+@mcp.tool(meta=_APP_RESOURCE_META)
+def select_connections(ctx: Context) -> CallToolResult:
+    """Open a connection selection view where only connections can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
             "select-connections",
@@ -3088,19 +3573,15 @@ def select_connections(ctx: Context) -> dict:
             capabilities={
                 "pieceSelection": False,
                 "connectionSelection": True,
-                "diff": False,
             },
         )
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool()
-def select_pieces_and_connections(ctx: Context) -> dict:
-    """Open a combined selection view where both pieces and connections can be selected.
-    Callers MUST have called start_working_in_local_kit and start_working_in_design first.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectpiecesandconnections](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_pieces_and_connections)
-    """
+@mcp.tool(meta=_APP_RESOURCE_META)
+def select_pieces_and_connections(ctx: Context) -> CallToolResult:
+    """Open a combined selection view where both pieces and connections can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
             "select-pieces-and-connections",
@@ -3108,11 +3589,10 @@ def select_pieces_and_connections(ctx: Context) -> dict:
             capabilities={
                 "pieceSelection": True,
                 "connectionSelection": True,
-                "diff": False,
             },
         )
     except Exception as e:
-        return {"error": str(e)}
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 # endregion MCP App Tools

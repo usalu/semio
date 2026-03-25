@@ -67,6 +67,10 @@ FONTCONFIG
 #endregion 🔖EmojiFonts
 #region 🔖Startup
 echo "Setting up semio development environment..."
+#region 🔖Ripgrep
+echo "Installing ripgrep..."
+sudo apt-get update && sudo apt-get install -y ripgrep
+#endregion 🔖Ripgrep
 #endregion 🔖Startup
 #region 🔖GitKrakenCliHelpers
 install_gitkraken_desktop() {
@@ -259,13 +263,6 @@ for bin in typescript-language-server pyright-langserver pyright; do
   src="$(npm bin -g 2>/dev/null)/$bin"
   [ -f "$src" ] && sudo ln -sf "$src" "/usr/local/bin/$bin" && echo "✅ Linked $bin" || echo "⚠️  Could not link $bin"
 done
-echo "Installing C# LSP server..."
-if dotnet tool install -g csharp-ls; then
-  sudo ln -sf "$HOME/.dotnet/tools/csharp-ls" /usr/local/bin/csharp-ls
-  echo "✅ csharp-ls installed."
-else
-  echo "⚠️  csharp-ls installation failed, but continuing..."
-fi
 #endregion 🔖KiroLsp
 #region 🔖Playwright
 echo "Installing Playwright browsers..."
@@ -316,7 +313,7 @@ cat << 'MCPCONFIG' > /home/vscode/.gemini/antigravity/mcp_config.json
         "--directory",
         "/workspaces/semio/semio/engine",
         "run",
-        "engine.py",
+        "main.py",
         "--mcp-stdio"
       ]
     },

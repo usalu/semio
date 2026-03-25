@@ -1,203 +1,121 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Diagram.stories.tsx
-// Specs: One component per stories file with real semio design data for representative variants.
-// Summary: Diagram stories: default, controlled, features off, Design-only, Diff, PieceSelection, ConnectionSelection.
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly (no kit/designGuid).
+// Summary: Diagram stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { getDesignDiff, type Connection, type Design, type Piece } from "@semio/js";
-import { ConnectionSelection as DiagramConnectionSelection, PieceSelection as DiagramPieceSelection, SemioDiagram as Diagram } from "@semio/ui";
+import { applyDesignDiff, flattenDesign, type Design, type Kit } from "@semio/js";
+import { SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
-import metabolismKit from "../../../assets/semio/kit_metabolism.json";
+import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
-const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const nakaginCapsuleTowerDesign = (metabolismKit.designs ?? []).find((design) => design.guid === nakaginCapsuleTowerDesignGuid) as Design;
-const connectionCounts = new Map<string, number>();
+// #region 🔖Data
 
-(nakaginCapsuleTowerDesign.connections ?? []).forEach((connection) => {
-  connectionCounts.set(connection.connected.piece.guid, (connectionCounts.get(connection.connected.piece.guid) ?? 0) + 1);
-  connectionCounts.set(connection.connecting.piece.guid, (connectionCounts.get(connection.connecting.piece.guid) ?? 0) + 1);
-});
+const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
+const flattenChange = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
+const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces });
+const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
+const designDiff = nakaginDiff as any;
 
-const removedPiece = (nakaginCapsuleTowerDesign.pieces ?? []).find((piece) => (connectionCounts.get(piece.guid) ?? 0) === 1) as Piece;
-const removedConnection = (nakaginCapsuleTowerDesign.connections ?? []).find((connection) => connection.connected.piece.guid === removedPiece.guid || connection.connecting.piece.guid === removedPiece.guid) as Connection;
-const modifiedPiece = (nakaginCapsuleTowerDesign.pieces ?? []).find((piece) => Boolean(piece.plane)) as Piece;
-const modifiedConnection = (nakaginCapsuleTowerDesign.connections ?? []).find((connection) => connection.guid !== removedConnection.guid) as Connection;
+// #endregion 🔖Data
 
-const diffPreviewDesign: Design = structuredClone(nakaginCapsuleTowerDesign);
-diffPreviewDesign.pieces = (diffPreviewDesign.pieces ?? []).filter((piece) => piece.guid !== removedPiece.guid);
-diffPreviewDesign.connections = (diffPreviewDesign.connections ?? []).filter((connection) => connection.guid !== removedConnection.guid);
-diffPreviewDesign.pieces = (diffPreviewDesign.pieces ?? []).map((piece) =>
-  piece.guid === modifiedPiece.guid
-    ? {
-        ...piece,
-        center: {
-          u: (piece.center?.u ?? 0) + 3,
-          v: (piece.center?.v ?? 0) + 2,
-        },
-      }
-    : piece,
-);
-diffPreviewDesign.connections = (diffPreviewDesign.connections ?? []).map((connection) =>
-  connection.guid === modifiedConnection.guid
-    ? {
-        ...connection,
-        u: (connection.u ?? 0) + 1.5,
-        v: (connection.v ?? 0) - 1,
-      }
-    : connection,
-);
-
-const addedPieceGuid = "11111111-2222-3333-4444-555555555555";
-const addedConnectionGuid = "66666666-7777-8888-9999-000000000000";
-const addedPiece: Piece = {
-  ...structuredClone(removedPiece),
-  guid: addedPieceGuid,
-  name: `${removedPiece.name}_added`,
-};
-const addedConnection: Connection = {
-  ...structuredClone(removedConnection),
-  guid: addedConnectionGuid,
-  connecting:
-    removedConnection.connecting.piece.guid === removedPiece.guid
-      ? {
-          ...removedConnection.connecting,
-          piece: { guid: addedPieceGuid },
-        }
-      : removedConnection.connecting,
-  connected:
-    removedConnection.connected.piece.guid === removedPiece.guid
-      ? {
-          ...removedConnection.connected,
-          piece: { guid: addedPieceGuid },
-        }
-      : removedConnection.connected,
-};
-diffPreviewDesign.pieces = [...(diffPreviewDesign.pieces ?? []), addedPiece];
-diffPreviewDesign.connections = [...(diffPreviewDesign.connections ?? []), addedConnection];
-
-const previewDiff = getDesignDiff(nakaginCapsuleTowerDesign, diffPreviewDesign);
+// #region 🔖Diagram
 
 const meta: Meta<typeof Diagram> = {
   title: "semio/Diagram",
   component: Diagram,
   tags: ["autodocs"],
-  parameters: {
-    layout: "centered",
-  },
+  parameters: { layout: "centered" },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof Diagram>;
-type PieceSelectionStory = StoryObj<typeof DiagramPieceSelection>;
-type ConnectionSelectionStory = StoryObj<typeof DiagramConnectionSelection>;
 
-const diagramFrame = (node: React.ReactNode) => <div className="h-72 w-72 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">{node}</div>;
+const frame = (node: React.ReactNode) => <div className="h-72 w-72 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">{node}</div>;
 
-// #region 🔖DesignDiffSelectionVariants
-
-/** Renders the flat design only: no diff overlay, selection off. */
-export const Design: Story = {
+export const Default: Story = {
   args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    diffEnabled: false,
-    selectionEnabled: false,
-    title: "Design",
+    design: nakaginDesign,
+    designDiff,
+    defaultSelection: {
+      pieceGuids: ["71e18c51-7752-46bb-917e-31874504b259", "0a23d9c7-b75b-4166-8730-351367df9f8a", "019daa00-0000-7000-b000-000000000001"],
+      connectionGuids: ["40be9d59-91e8-4d8c-87b5-c5da567a4f9c", "019daa00-0000-7000-b000-000000000011"],
+    },
+    title: "Diagram",
+    onPieceClick: (piece) => console.info("Piece clicked", piece.guid),
+    onConnectionClick: (connection) => console.info("Connection clicked", connection.guid),
   },
-  render: (args) => diagramFrame(<Diagram {...args} />),
+  render: (args) => frame(<Diagram {...args} />),
 };
 
-/** Shows added/removed/modified pieces and connections from `previewDiff`. */
 export const Diff: Story = {
   args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    designDiff: previewDiff,
+    design: nakaginDesign,
+    designDiff,
     diffEnabled: true,
     selectionEnabled: false,
     title: "Diff",
   },
-  render: (args) => diagramFrame(<Diagram {...args} />),
+  render: (args) => frame(<Diagram {...args} />),
 };
 
-/** Constrained `PieceSelection` wrapper: only pieces are selectable. */
-export const PieceSelection: PieceSelectionStory = {
+export const Selection: Story = {
   args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    title: "Piece Selection",
-    defaultSelection: { pieceGuids: [modifiedPiece.guid] },
-    onPieceClick: (piece) => console.info("Piece clicked", piece.guid),
-  },
-  render: (args) => diagramFrame(<DiagramPieceSelection {...args} />),
-};
-
-/** Constrained `ConnectionSelection` wrapper: only connections are selectable. */
-export const ConnectionSelection: ConnectionSelectionStory = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    title: "Connection Selection",
-    defaultSelection: { connectionGuids: [modifiedConnection.guid] },
-    onConnectionClick: (connection) => console.info("Connection clicked", connection.guid),
-  },
-  render: (args) => diagramFrame(<DiagramConnectionSelection {...args} />),
-};
-
-// #endregion 🔖DesignDiffSelectionVariants
-
-export const NakaginCapsuleTower: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    designDiff: previewDiff,
-    defaultSelection: {
-      pieceGuids: [removedPiece.guid, modifiedPiece.guid, addedPieceGuid],
-      connectionGuids: [removedConnection.guid, modifiedConnection.guid, addedConnectionGuid],
-    },
-    title: "Nakagin Capsule Tower Diagram",
+    design: nakaginDesign,
+    defaultSelection: { pieceGuids: [firstPieceGuid], connectionGuids: [] },
+    diffEnabled: false,
+    title: "Selection",
     onPieceClick: (piece) => console.info("Piece clicked", piece.guid),
     onConnectionClick: (connection) => console.info("Connection clicked", connection.guid),
   },
-  render: (args) => diagramFrame(<Diagram {...args} />),
-};
-
-export const Controlled: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    designDiff: previewDiff,
-    title: "Controlled Diagram",
-  },
-  render: (args) => {
-    const [selection, setSelection] = React.useState({
-      pieceGuids: [modifiedPiece.guid],
-      connectionGuids: [modifiedConnection.guid],
-    });
-    const [zoom, setZoom] = React.useState(1);
-    const [pan, setPan] = React.useState({ x: 0, y: 0 });
-
-    return diagramFrame(<Diagram {...args} onPanChange={setPan} onSelectionChange={setSelection} onZoomChange={setZoom} pan={pan} selection={selection} zoom={zoom} />);
-  },
+  render: (args) => frame(<Diagram {...args} />),
 };
 
 export const FeaturesDisabled: Story = {
   args: {
-    kit: metabolismKit,
-    designGuid: nakaginCapsuleTowerDesignGuid,
-    designDiff: previewDiff,
+    design: nakaginDesign,
+    designDiff,
     diffEnabled: false,
-    defaultSelection: {
-      pieceGuids: [removedPiece.guid, modifiedPiece.guid, addedPieceGuid],
-      connectionGuids: [removedConnection.guid, modifiedConnection.guid, addedConnectionGuid],
-    },
     selectionEnabled: false,
     panEnabled: false,
     zoomEnabled: false,
     title: "Features Disabled",
   },
-  render: (args) => diagramFrame(<Diagram {...args} />),
+  render: (args) => frame(<Diagram {...args} />),
 };
+
+export const ZoomToDesign: Story = {
+  args: {
+    design: nakaginDesign,
+    designDiff,
+    zoomTarget: "design",
+    title: "Zoom To Design",
+  },
+  render: (args) => frame(<Diagram {...args} />),
+};
+
+export const ZoomToDiff: Story = {
+  args: {
+    design: nakaginDesign,
+    designDiff,
+    zoomTarget: "diff",
+    title: "Zoom To Diff",
+  },
+  render: (args) => frame(<Diagram {...args} />),
+};
+
+export const ZoomNone: Story = {
+  args: {
+    design: nakaginDesign,
+    designDiff,
+    zoomTarget: "none",
+    title: "Zoom None",
+  },
+  render: (args) => frame(<Diagram {...args} />),
+};
+
+// #endregion 🔖Diagram

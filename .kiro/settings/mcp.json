@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "repo": {
+      "command": "./repo/cli/cli",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

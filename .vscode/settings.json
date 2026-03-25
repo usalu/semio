@@ -82,5 +82,7 @@
         "--mcp-stdio"
       ]
     }
-  }
+  },
+  "chat.subagents.allowInvocationsFromSubagents": false,
+  "python.terminal.activateEnvironment": false
 }

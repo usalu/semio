@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "uv run main.py",
     "build": "tsx ./build.ts",
+    "build:mcp-app": "npx vite build --config vite.mcp-app.config.ts",
     "test": "tsx ./test.ts"
   },
   "targets": {
@@ -18,7 +19,9 @@
     }
   },
   "devDependencies": {
-    "@semio/assets": "*"
+    "@semio/assets": "*",
+    "@semio/ui": "*",
+    "vite-plugin-singlefile": "*"
   },
   "author": {
     "name": "Ueli Saluz",

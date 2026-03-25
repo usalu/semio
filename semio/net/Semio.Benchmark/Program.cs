@@ -69,10 +69,10 @@ class Program
 
     static void Main(string[] args)
     {
-        var kitMetabolism = LoadAsset<Kit>("kit_metabolism.json");
-        var kitInvalid = LoadAsset<Kit>("kit_invalid.json");
-        var diffForward = LoadAsset<KitDiff>("diff_kit_metabolism.json");
-        var diffInverse = LoadAsset<KitDiff>("diff_kit_metabolism_inverted.json");
+        var kitMetabolism = LoadAsset<Kit>("metabolism.kit.semio.json");
+        var kitInvalid = LoadAsset<Kit>("invalid.kit.semio.json");
+        var diffForward = LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
+        var diffInverse = LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
 
         Bench("Roundtrip/Metabolism", () =>
         {

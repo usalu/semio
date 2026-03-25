@@ -1,0 +1,13 @@
+{
+  "title": "Fix Drag Story UI Issues With Preset",
+  "status": "closed",
+  "description": "Fix the Drag story where connections are not displayed in the input and the diff and output never loads due to the drag preset lacking a guid and failing the flatten operation.",
+  "summary": "Fixed the issue where connections were not displayed and outputs would not load. By removing the unnecessary flatten pass, which was failing due to the preset DragDesign not being present inside the kit and lacking a guid, the Drag baseDesign now loads correctly. Added a mock guid and name to the rawDesign so UI elements correctly identify it.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1199"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪8bb4154a6ec34e22867ee02cd90a9d9b"
+  ]
+}

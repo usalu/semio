@@ -184,6 +184,7 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
+  elementUiI18n as i18n,
   Input,
   InteractionProvider,
   Layout as LayoutComponent,
@@ -252,7 +253,6 @@ import {
   useCommandHotkey,
   useDraggable,
   useDroppable,
-  elementUiI18n as i18n,
   useFBX,
   useGLTF,
   useTranslatedHotkey as useHotkey,
@@ -345,14 +345,12 @@ import {
   WorkbenchIcon,
 } from "../assets/icons";
 import { createSyncDocFactory, isSyncArray, isSyncMap, type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent } from "../studio/studio";
-export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
-export { createDefaultLayout, deduplicateWindowLayout, layoutNodeToGoldenLayoutConfig, parseWindowLayout, stringifyWindowLayout, WindowKind };
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
-export { Canvas, HorizontalWindows, VerticalWindows };
-export { SectionSpecificity, Window };
+export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
+export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
-import { importKit as importKitArchive } from "@semio/js";
 import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+import { importKit as importKitArchive } from "@semio/js";
 // #endregion 🔖Imports
 
 // #region 🔖Shared
@@ -7777,6 +7775,7 @@ export type PieceMetadata = {
   fixedPieceId: string;
   parentPieceId: string | null;
   depth: number;
+  path: string[];
 };
 
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
@@ -24684,12 +24683,12 @@ export const LayoutCanvas: FC<{
           return normalized;
         };
 
-        const rawConfig = parseWindowLayout(layoutState) || (windowConfig.defaultLayout ? layoutNodeToGoldenLayoutConfig(windowConfig.defaultLayout) : undefined);
-        if (!rawConfig) {
+        const parsedLayout = parseWindowLayout(layoutState) ?? parseWindowLayout(windowConfig.defaultLayout);
+        if (!parsedLayout) {
           console.error("[LayoutCanvas] No layout config provided!");
           return;
         }
-        const config = normalizeLayoutConfig(rawConfig);
+        const config = normalizeLayoutConfig(layoutNodeToGoldenLayoutConfig(parsedLayout));
 
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
@@ -24769,8 +24768,8 @@ export const LayoutCanvas: FC<{
 
           try {
             if (isInitialized) {
-              const config = layout.toConfig();
-              onLayoutChange(config);
+              const nextLayout = parseWindowLayout(layout.toConfig());
+              onLayoutChange(nextLayout ?? layout.toConfig());
             }
           } catch (error: any) {
             if (error?.message?.includes("not yet initialised")) {
@@ -29544,6 +29543,30 @@ function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesig
   const hasScope = kitGuid !== "" && designGuid !== "";
   const canSet = useWildcardFallback ? canSetFromSnapshot || hasScope : canSetFromSnapshot;
   return useMemo(() => createField(value, (next: T) => actor.send(createSendEvent(kitGuid, designGuid, next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createSendEvent, kitGuid, designGuid, canSet]);
+}
+
+/**
+ * Returns a reactive field for the Design app selection state.
+ * MUST create a Field wrapping the current selection and setter.
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappselectionfield](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppSelectionField)
+ **/
+export function useDesignAppSelectionField(): Field<DesignAppSelection> {
+  return useDesignAppField<DesignAppSelection, { type: "DESIGN.SET_SELECTION"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }>({
+    createGranularSelector: createDesignSelectionSelector,
+    fallback: {},
+    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: {} }),
+    createSendEvent: (kitGuid, designGuid, selection) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection }),
+    useWildcardFallback: true,
+  });
+}
+
+/**
+ * Returns a hook result for the Design app selection state.
+ * MUST provide the current selection, a setter, and a canSet flag.
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappselection](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppSelection)
+ **/
+export function useDesignAppSelection(): HookResult<DesignAppSelection> {
+  return fieldToHookResult(useDesignAppSelectionField());
 }
 
 /**
@@ -35723,6 +35746,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       selChangeCountRef.current++;
       if (isDraggingNodeRef.current || isPanningRef.current) return;
       if (isSyncingSelectionRef.current) return;
+      if (!isLassoingRef.current) return;
 
       const selectedPieceGuids = nodes.filter((n) => n.id.startsWith("piece-")).map((n) => getPieceIdFromNode(n as DiagramNode));
 
@@ -36060,9 +36084,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     }
   }, [diagramId, isPanningRef, rfStoreApi]);
 
+  const lastPanTimeRef = useRef<number>(0);
   const pendingMoveEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onMoveEnd = useCallback(() => {
     isPanningRef.current = false;
+    lastPanTimeRef.current = Date.now();
     suppressEdgeRecomputeRef.current = false;
     (rfStoreApi as any).__suppressTransform = false;
     sceneFrameControlRef.current?.resume();
@@ -36174,6 +36200,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onPaneClick = useCallback(
     (e: React.MouseEvent) => {
+      if (Date.now() - lastPanTimeRef.current < 250) return;
       if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
       if (deselectAll) deselectAll();
     },
@@ -36262,8 +36289,13 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         ctrlKey: event.ctrlKey === true,
         metaKey: event.metaKey === true,
       });
-      if (compositionKind === "replace" && isNodeSelected) pendingSelectionRef.current = null;
-      else pendingSelectionRef.current = { pieceId, compositionKind };
+      
+      let updatedSelectedIds = currentSelectedIds;
+      if (!(compositionKind === "replace" && isNodeSelected)) {
+        updatedSelectedIds = applySelectionComposition(currentSelectedIds, [pieceId], compositionKind);
+        if (setSelection) setSelection({ ...(selectionRef.current || {}), pieces: updatedSelectedIds });
+      }
+      pendingSelectionRef.current = null;
 
       dragPositionRef.current = { x: node.position.x, y: node.position.y };
       dragStartPositionRef.current = { x: node.position.x, y: node.position.y };
@@ -36271,7 +36303,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       isDraggingRef.current = true;
       isDraggingNodeRef.current = true;
       suppressEdgeRecomputeRef.current = true;
-      const dragRoots = new Set(isNodeSelected && currentSelectedIds.length > 0 ? currentSelectedIds : [pieceId]);
+      const dragRoots = new Set(updatedSelectedIds.length > 0 ? updatedSelectedIds : [pieceId]);
       const descendants = getDownstreamDescendants(metadata, dragRoots);
       dragDescendantsRef.current = descendants;
       const offsets = new Map<string, { dx: number; dy: number }>();
@@ -36290,7 +36322,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragDescendantNodeIdsRef.current = descNodeIds;
       const diagramEl = document.querySelector(`[data-diagram-id="${diagramId}"]`);
       if (diagramEl) (diagramEl as HTMLElement).dataset.dragging = "true";
-      const selectedIds = new Set(isNodeSelected && currentSelectedIds.length > 0 ? currentSelectedIds : [pieceId]);
+      const selectedIds = new Set(dragRoots);
       const selected: DiagramNode[] = [];
       const nonSelected: DiagramNode[] = [];
       for (const n of nodes) {
@@ -36304,7 +36336,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       designStore?.setDraggingPieces(allDraggedIds);
       setTimeout(() => transaction?.start(), 0);
     },
-    [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId, designStore],
+    [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId, designStore, setSelection],
   );
 
   const isDraggingRef = useRef(false);
@@ -36847,7 +36879,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const savedDescendantOffsets = dragDescendantOffsetsRef.current;
       dragSelectedNodesRef.current = [];
       dragNonSelectedNodesRef.current = [];
-      const pendingSelection = pendingSelectionRef.current;
       const currentSelection = selectionRef.current;
       pendingSelectionRef.current = null;
       pendingPieceUpdatesRef.current = [];
@@ -36856,10 +36887,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragDescendantOffsetsRef.current = new Map();
       dragDescendantNodeIdsRef.current = new Map();
       designStore?.clearDraggingPieces();
-      if (pendingSelection) {
-        const { pieceId, compositionKind } = pendingSelection;
-        if (setSelection) setTimeout(() => setSelection({ ...(currentSelection || {}), pieces: applySelectionComposition(currentSelection?.pieces, [pieceId], compositionKind) }), 650);
-      }
       const finalX = node.position.x;
       const finalY = node.position.y;
       const draggedPieceId = getPieceIdFromNode(node);
@@ -37121,7 +37148,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               edgesFocusable={true}
               nodesDraggable={true}
               autoPanOnNodeDrag={false}
-              selectNodesOnDrag={false}
               minZoom={0.1}
               defaultZoom={1}
               maxZoom={12}
@@ -37756,7 +37782,7 @@ const ModelDesign: FC = () => {
       .map((piece) => ({
         guid: piece.guid,
         plane: piece.plane,
-        isTransformable: !piece.isLocked && piece.plane !== undefined,
+        isTransformable: !piece.isLocked && piece.plane !== undefined && piece.center !== undefined,
       }));
   }, [selection.pieces, flatDesign?.pieces]);
 
@@ -37844,6 +37870,8 @@ const DesignAppScene: FC = () => {
   const [fullscreenValue] = useDesignAppFullscreen();
   const fullscreen = fullscreenValue === DesignAppFullscreenWindow.Accessl;
   const [camera] = useDesignAppCamera();
+  const [activeTool] = useDesignAppActiveTool();
+  const selectionOnDrag = activeTool !== ToolKind.HAND;
   const [focusedPieceGuid] = useDesignAppFocusedPieceGuid();
   const [panelVisibility] = useDesignAppPanelVisibility();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
@@ -37981,6 +38009,7 @@ const DesignAppScene: FC = () => {
         orthographic={projection === "orthographic"}
         projection={projection}
         onProjectionChange={setProjection}
+        selectionOnDrag={selectionOnDrag}
       >
         <SceneContextBridge
           designScope={designScope}
@@ -49231,14 +49260,13 @@ export { FeedbackIcon };
 
 // --- Combined from index.tsx and index.ts ---
 
+import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
 import type { KitJsonFileAdapter } from "../studio/studio";
 import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-import type { BlobAssetStore, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
 import "./globals.css";
 
-export type { BlobAssetStore, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
-export { JsonFileKitStore, createJsonFileKitStore };
-export type { KitJsonFileAdapter };
+export { createJsonFileKitStore, JsonFileKitStore };
+export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
 
 appRegistry.register(designConfig);
 appRegistry.register(docsConfig);
@@ -49321,9 +49349,9 @@ if (typeof document !== "undefined" && document.getElementById("root") && !isVsc
 // #endregion 🔖Entrypoint
 
 // #region 🔖Tests
-if (typeof process !== "undefined" && process.release && process.release.name === "node") {
+if (typeof process !== "undefined" && process.release && process.release.name === "node" && typeof (globalThis as any).__vitest_worker__ === "undefined") {
   const { expect, test } = await import(/* @vite-ignore */ "@playwright" + "/test");
-  const MetabolismKitData = (await import(/* @vite-ignore */ "@semio/assets/semio/kit_metabolism.json", { assert: { type: "json" } })).default;
+  const MetabolismKitData = (await import(/* @vite-ignore */ "@semio/assets/semio/metabolism.kit.semio.json", { assert: { type: "json" } })).default;
   const { readFile } = await import(/* @vite-ignore */ "node" + ":fs/promises");
   const path = await import(/* @vite-ignore */ "node" + ":path");
   const { fileURLToPath } = await import(/* @vite-ignore */ "node" + ":url");
@@ -51886,6 +51914,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       const infiniteLoopErrors = errors.filter((e) => e.includes("Maximum update depth exceeded"));
       expect(infiniteLoopErrors).toHaveLength(0);
+      const missingDesignSelectionHookErrors = errors.filter((error) => error.includes("useDesignAppSelection is not defined"));
+      expect(missingDesignSelectionHookErrors).toHaveLength(0);
 
       const navbar = page.locator('[id="semio.sketchpad.navbar"]');
       await expect(navbar).toBeVisible({ timeout: 30000 });

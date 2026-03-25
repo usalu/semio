@@ -10,7 +10,6 @@
 
 // #region 🔖Imports
 
-import "@xyflow/react/dist/style.css";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
@@ -18,22 +17,52 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import * as React from "react";
-import * as ResizablePrimitive from "react-resizable-panels";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import * as THREE from "three";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TogglePrimitive from "@radix-ui/react-toggle";
+import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import * as dagre from "dagre";
 import Fuse, { type FuseResult } from "fuse.js";
-import LanguageDetector from "i18next-browser-languagedetector";
 import i18next from "i18next";
-import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
+import LanguageDetector from "i18next-browser-languagedetector";
+import * as React from "react";
+import * as ResizablePrimitive from "react-resizable-panels";
+import * as THREE from "three";
 
+import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Slot } from "@radix-ui/react-slot";
+import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
+import {
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  ConnectionMode,
+  getBezierPath,
+  Handle,
+  MiniMap,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
+} from "@xyflow/react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { ClassValue, clsx } from "clsx";
+import { Command as CommandPrimitive } from "cmdk";
+import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
+import type { LucideIcon } from "lucide-react";
 import {
   Plus as AddIcon,
   AlertCircle as AlertCircleIcon,
@@ -60,45 +89,15 @@ import {
   ArrowRight as NavigateForwardIcon,
   ArrowUp as NavigateUpIcon,
   Minus as RemoveIcon,
-  SearchIcon as SearchIcon,
+  SearchIcon,
   TriangleAlert as TriangleAlertIcon,
   GraduationCap as TutorialIcon,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import {
-  applyNodeChanges,
-  Background,
-  BackgroundVariant,
-  BaseEdge,
-  ConnectionMode,
-  getBezierPath,
-  Handle,
-  MiniMap,
-  Position,
-  ReactFlow,
-  ReactFlowProvider,
-  SelectionMode,
-  useInternalNode,
-  useReactFlow,
-  useStoreApi,
-  ViewportPortal,
-} from "@xyflow/react";
-import { CSS } from "@dnd-kit/utilities";
-import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
-import { ClassValue, clsx } from "clsx";
-import { Command as CommandPrimitive } from "cmdk";
-import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
-import { Link, useNavigate } from "react-router";
-import { Slot } from "@radix-ui/react-slot";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { createPortal } from "react-dom";
-import { cva, type VariantProps } from "class-variance-authority";
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { initReactI18next, useTranslation } from "react-i18next";
-import { twMerge } from "tailwind-merge";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useState } from "react";
+import { initReactI18next, useTranslation } from "react-i18next";
+import { Link, useNavigate } from "react-router";
+import { twMerge } from "tailwind-merge";
 // #endregion Imports
 
 // #region Utilities
@@ -10024,7 +10023,7 @@ export interface ElementBaseProps {
   id: string;
 }
 
-export interface ElementProps extends ElementBaseProps { }
+export interface ElementProps extends ElementBaseProps {}
 
 /**
  * Returns the Tailwind background class for a given level.
@@ -11016,12 +11015,12 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, classN
   const normalizedName = (name ?? "").trim();
   const initials = normalizedName
     ? normalizedName
-      .split(" ")
-      .slice(0, 2)
-      .map((word: string) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .substring(0, 2)
+        .split(" ")
+        .slice(0, 2)
+        .map((word: string) => word.charAt(0))
+        .join("")
+        .toUpperCase()
+        .substring(0, 2)
     : "";
   const isImageIcon = typeof icon === "string";
   const isReactIcon = icon && !isImageIcon;
@@ -14508,7 +14507,7 @@ interface TreeItemProps {
  * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.
  **/
 interface SortableTreeItemsProps {
-  items: { id: string;[key: string]: any }[];
+  items: { id: string; [key: string]: any }[];
   onReorder: (oldIndex: number, newIndex: number) => void;
   children: (item: any, index: number) => React.ReactNode;
 }
@@ -15003,7 +15002,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   onBranchChange,
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
-  const resolvedLabel = label ?? localizedLabel;
+  const resolvedLabel = label !== undefined ? label : localizedLabel;
   assertNoNestedTreeSections(children, "TreeItem");
   if (sortable && sortableId) {
     return (
@@ -15238,15 +15237,17 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
  * Leaf form row combining TreeItem and TreeContent into [Indent][Label][Control].
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treerow](repo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-ROW)
  **/
-export const TreeRow: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: (event: React.MouseEvent) => void; onDoubleClick?: (event: React.MouseEvent) => void; actions?: TreeSectionAction[] }> = ({
-  children,
-  className,
-  id,
-  onClick,
-  onDoubleClick,
-  actions,
-}) => (
-  <TreeItem className={className} id={id} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
+export const TreeRow: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+  /** When set (including explicit `null`), overrides useLabel(id) for the row title. Use `null` for content-only rows. */
+  label?: React.ReactNode;
+  onClick?: (event: React.MouseEvent) => void;
+  onDoubleClick?: (event: React.MouseEvent) => void;
+  actions?: TreeSectionAction[];
+}> = ({ children, className, id, label, onClick, onDoubleClick, actions }) => (
+  <TreeItem className={className} id={id} label={label} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
     {children}
   </TreeItem>
 );
@@ -16209,7 +16210,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
           </span>
         );
       }
-      const elementProps = itemContent.props as { className?: string;["data-slot"]?: string };
+      const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
       return React.cloneElement(itemContent as React.ReactElement<any>, {
         className: cn("cursor-selectable", elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
@@ -17738,6 +17739,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         deleteKeyCode={deleteKeyCode}
         panOnDrag={panOnDrag}
         panOnScroll={panOnScroll}
+        preventScrolling={true}
         selectionOnDrag={selectionOnDrag}
         selectionMode={selectionMode}
         zoomOnScroll={zoomOnScroll}
@@ -18191,13 +18193,14 @@ interface SceneInnerProps {
   onCameraChange?: (camera: Camera) => void;
   focusedItemId?: string;
   onFocusComplete?: () => void;
+  selectionOnDrag?: boolean;
 }
 
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨sceneinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneInner)
  * SceneInner holds the data fields for a SceneInner record.
  **/
-const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete }) => {
+const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete, selectionOnDrag = false }) => {
   const [gridColors, setGridColors] = React.useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -18390,11 +18393,19 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       <OrbitControls
         ref={controlsRef}
         enableDamping={false}
-        mouseButtons={{
-          LEFT: THREE.MOUSE.ROTATE,
-          MIDDLE: undefined,
-          RIGHT: undefined,
-        }}
+        mouseButtons={
+          selectionOnDrag
+            ? {
+                LEFT: undefined,
+                MIDDLE: THREE.MOUSE.ROTATE,
+                RIGHT: THREE.MOUSE.ROTATE,
+              }
+            : {
+                LEFT: THREE.MOUSE.ROTATE,
+                MIDDLE: undefined,
+                RIGHT: undefined,
+              }
+        }
         onEnd={handleEnd}
       />
       <ambientLight intensity={1} />
@@ -18424,6 +18435,7 @@ interface SceneProps {
   onFocusComplete?: () => void;
   projection?: "camera" | "orthographic";
   onProjectionChange?: (projection: "camera" | "orthographic") => void;
+  selectionOnDrag?: boolean;
 }
 
 /**
@@ -18445,6 +18457,7 @@ export const Scene: React.FC<SceneProps> = ({
   onFocusComplete,
   projection = "orthographic",
   onProjectionChange,
+  selectionOnDrag = false,
 }) => {
   const projectionOptions: ActionDropdownOption[] = [
     {
@@ -18475,7 +18488,7 @@ export const Scene: React.FC<SceneProps> = ({
         style={{ width: "100%", height: "100%" }}
       >
         <SceneFrameControl />
-        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
+        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete} selectionOnDrag={selectionOnDrag}>
           {children}
         </SceneInner>
       </ThreeCanvas>
@@ -18940,6 +18953,8 @@ export enum WindowKind {
   WORKBENCH = "workbench",
   VEC_INPUT = "vec-input",
   PIECES_SELECTION_INPUT = "pieces-selection-input",
+  SELECTION_INPUT = "selection-input",
+  DESIGN_INPUT = "design-input",
   DESIGN_DIFF_OUTPUT = "design-diff-output",
   DESIGN_OUTPUT = "design-output",
 }
@@ -19292,6 +19307,35 @@ interface UICanvasPortal {
   windowKind: UIWindowKindDefinition;
 }
 
+interface UICanvasAsyncLifecycle {
+  isDisposed: () => boolean;
+  registerCleanup: (cleanup: () => void) => void;
+  dispose: () => void;
+}
+
+function createUICanvasAsyncLifecycle(): UICanvasAsyncLifecycle {
+  let disposed = false;
+  let cleanup: (() => void) | undefined;
+
+  return {
+    isDisposed: () => disposed,
+    registerCleanup: (nextCleanup) => {
+      cleanup = nextCleanup;
+      if (disposed) {
+        cleanup();
+      }
+    },
+    dispose: () => {
+      disposed = true;
+      if (cleanup) {
+        const fn = cleanup;
+        cleanup = undefined;
+        fn();
+      }
+    },
+  };
+}
+
 /**
  * Golden-layout canvas that renders window kinds using React portals.
  * Dynamically imports golden-layout and registers each window kind as a component.
@@ -19311,9 +19355,12 @@ const UICanvas: React.FC<{
   React.useEffect(() => {
     if (!containerRef.current || layoutRef.current) return;
 
+    const lifecycle = createUICanvasAsyncLifecycle();
+
     const loadGoldenLayout = async () => {
       try {
         const goldenLayoutModule = await import("golden-layout");
+        if (lifecycle.isDisposed()) return;
         const GoldenLayout = (goldenLayoutModule as any).GoldenLayout;
         if (!GoldenLayout || typeof GoldenLayout !== "function") {
           console.error("[UICanvas] GoldenLayout is not a constructor");
@@ -19333,6 +19380,7 @@ const UICanvas: React.FC<{
 
         windowKinds.forEach((windowKind) => {
           layout.registerComponent(windowKind.id, (container: any) => {
+            if (lifecycle.isDisposed()) return;
             const element = container.getElement();
             let domElement: HTMLElement;
             if (element instanceof HTMLElement) {
@@ -19386,20 +19434,26 @@ const UICanvas: React.FC<{
         const handleResize = () => layout.updateSize();
         window.addEventListener("resize", handleResize);
 
-        return () => {
+        lifecycle.registerCleanup(() => {
+          if (layoutRef.current === layout) {
+            layoutRef.current = null;
+          }
           window.removeEventListener("resize", handleResize);
           setPortals([]);
           try {
             layout.destroy();
-          } catch { }
-          layoutRef.current = null;
-        };
+          } catch {}
+        });
       } catch (error) {
         console.error("[UICanvas] Failed to load GoldenLayout:", error);
       }
     };
 
-    loadGoldenLayout();
+    void loadGoldenLayout();
+
+    return () => {
+      lifecycle.dispose();
+    };
   }, [windowKinds, defaultLayout, layoutState, onLayoutChange, onActiveWindowChange]);
 
   return (
@@ -19552,6 +19606,16 @@ export interface UIFindContextValue {
 }
 
 const UIFindContext = React.createContext<UIFindContextValue | null>(null);
+const EMPTY_UI_FIND_ITEMS: UIFindItem[] = [];
+
+function areFindItemsShallowEqual(previousItems: UIFindItem[], nextItems: UIFindItem[]): boolean {
+  if (previousItems === nextItems) return true;
+  if (previousItems.length !== nextItems.length) return false;
+  for (let i = 0; i < nextItems.length; i++) {
+    if (previousItems[i] !== nextItems[i]) return false;
+  }
+  return true;
+}
 
 /**
  * Provider for per-app find functionality.
@@ -19562,7 +19626,9 @@ export const UIFindProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const onFindItemCallbackRef = React.useRef<((itemId: string) => void) | undefined>(undefined);
 
   const setFindItemsStable = React.useCallback((items: UIFindItem[]) => {
-    setFindItems(items);
+    setFindItems((previousItems) => {
+      return areFindItemsShallowEqual(previousItems, items) ? previousItems : items;
+    });
   }, []);
 
   const setOnFindItem = React.useCallback((callback: ((itemId: string) => void) | undefined) => {
@@ -20110,13 +20176,13 @@ export const UI: React.FC<UIProps> = ({
         panelVisibility,
         togglePanel,
         uri: uriProp,
-        navigate: onNavigate ?? (() => { }),
+        navigate: onNavigate ?? (() => {}),
         canGoBack: canGoBackProp,
-        goBack: onGoBack ?? (() => { }),
+        goBack: onGoBack ?? (() => {}),
         canGoForward: canGoForwardProp,
-        goForward: onGoForward ?? (() => { }),
+        goForward: onGoForward ?? (() => {}),
         canGoUp: canGoUpProp,
-        goUp: onGoUp ?? (() => { }),
+        goUp: onGoUp ?? (() => {}),
       }}
     >
       <UIFindProvider>
@@ -20130,31 +20196,31 @@ export const UI: React.FC<UIProps> = ({
           mobilePanel={
             resolvedMobile && hasMobilePanelTabs
               ? {
-                visible: mobilePanelVisible,
-                tabs: mobilePanelTabs,
-              }
+                  visible: mobilePanelVisible,
+                  tabs: mobilePanelTabs,
+                }
               : undefined
           }
           leftSidePanel={
             !resolvedMobile && hasLeftPanel
               ? {
-                position: "left" as const,
-                visible: panelVisibility.leftSidePanel,
-                size: leftPanelSize,
-                onSizeChange: setLeftPanelSize,
-                tabs: activeApp.leftPanelTabs!,
-              }
+                  position: "left" as const,
+                  visible: panelVisibility.leftSidePanel,
+                  size: leftPanelSize,
+                  onSizeChange: setLeftPanelSize,
+                  tabs: activeApp.leftPanelTabs!,
+                }
               : undefined
           }
           rightSidePanel={
             !resolvedMobile && hasRightPanel
               ? {
-                position: "right" as const,
-                visible: panelVisibility.rightSidePanel,
-                size: rightPanelSize,
-                onSizeChange: setRightPanelSize,
-                tabs: activeApp.rightPanelTabs!,
-              }
+                  position: "right" as const,
+                  visible: panelVisibility.rightSidePanel,
+                  size: rightPanelSize,
+                  onSizeChange: setRightPanelSize,
+                  tabs: activeApp.rightPanelTabs!,
+                }
               : undefined
           }
           canvas={
@@ -20163,9 +20229,9 @@ export const UI: React.FC<UIProps> = ({
               defaultLayout={
                 resolvedMobile
                   ? createTabStackLayout(
-                    activeApp.windowKinds.map((windowKind) => windowKind.id),
-                    activeApp.windowKinds.map((windowKind) => windowKind.label ?? windowKind.id),
-                  )
+                      activeApp.windowKinds.map((windowKind) => windowKind.id),
+                      activeApp.windowKinds.map((windowKind) => windowKind.label ?? windowKind.id),
+                    )
                   : activeApp.defaultLayout
               }
             />
@@ -20187,12 +20253,13 @@ const UIFindItemsSync: React.FC<{
   onFindSelect?: (itemId: string) => void;
 }> = ({ findItems, onFindSelect }) => {
   const findCtx = React.useContext(UIFindContext);
+  const resolvedFindItems = findItems ?? EMPTY_UI_FIND_ITEMS;
+
   React.useEffect(() => {
-    if (findCtx) {
-      findCtx.setFindItems(findItems ?? []);
-      findCtx.setOnFindItem(onFindSelect);
-    }
-  }, [findItems, onFindSelect, findCtx]);
+    if (!findCtx) return;
+    findCtx.setFindItems(resolvedFindItems);
+    findCtx.setOnFindItem(onFindSelect);
+  }, [findCtx, onFindSelect, resolvedFindItems]);
   return null;
 };
 
@@ -20281,12 +20348,13 @@ const treeVitest = (
       describe: typeof import("vitest").describe;
       expect: typeof import("vitest").expect;
       it: typeof import("vitest").it;
+      vi: typeof import("vitest").vi;
     };
   }
 ).vitest;
 
 if (treeVitest) {
-  const { describe, expect, it } = treeVitest;
+  const { describe, expect, it, vi } = treeVitest;
 
   describe("tree helpers", () => {
     it("normalizes selected ids for single and multiple selection", () => {
@@ -20344,6 +20412,68 @@ if (treeVitest) {
       ];
 
       expect(getTreeItemOrderedIds(sections, {}, {})).toEqual(["item-a", "item-a-1", "item-b", "item-c"]);
+    });
+  });
+
+  describe("layout helpers", () => {
+    it("converts abstract layout nodes to GoldenLayout config", () => {
+      expect(
+        layoutNodeToGoldenLayoutConfig({
+          root: {
+            kind: "row",
+            children: [
+              {
+                kind: "stack",
+                size: 100,
+                children: [{ kind: "window", windowKindId: "table", title: "table" }],
+              },
+            ],
+          },
+        }),
+      ).toEqual({
+        root: {
+          type: "row",
+          content: [
+            {
+              type: "stack",
+              size: "100%",
+              content: [{ type: "component", componentName: "table", title: "table", componentState: {} }],
+            },
+          ],
+        },
+      });
+    });
+
+    it("keeps find item synchronization stable for equivalent arrays", () => {
+      const item = { id: "find.item", label: "Find Item" };
+
+      expect(areFindItemsShallowEqual([], EMPTY_UI_FIND_ITEMS)).toBe(true);
+      expect(areFindItemsShallowEqual([item], [item])).toBe(true);
+      expect(areFindItemsShallowEqual([item], [{ ...item }])).toBe(false);
+      expect(areFindItemsShallowEqual([item], [])).toBe(false);
+    });
+
+    it("runs canvas cleanup immediately when async setup resolves after disposal", () => {
+      const lifecycle = createUICanvasAsyncLifecycle();
+      const cleanup = vi.fn();
+
+      lifecycle.dispose();
+      lifecycle.registerCleanup(cleanup);
+
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(lifecycle.isDisposed()).toBe(true);
+    });
+
+    it("runs canvas cleanup once when setup resolves before disposal", () => {
+      const lifecycle = createUICanvasAsyncLifecycle();
+      const cleanup = vi.fn();
+
+      lifecycle.registerCleanup(cleanup);
+      lifecycle.dispose();
+      lifecycle.dispose();
+
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(lifecycle.isDisposed()).toBe(true);
     });
   });
 }

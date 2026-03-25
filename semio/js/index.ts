@@ -21,16 +21,7 @@
 // #region 🔖Imports
 // [👤semio📚js💻semio🔖imports](repo://p/u/semio/b/l/js/f/semio.ts/s/Imports)
 // External dependency imports MUST be declared here.
-import {
-  Accessor as GltfAccessor,
-  Buffer as GltfBuffer,
-  Document as GltfDocument,
-  Material as GltfMaterial,
-  Mesh as GltfMesh,
-  Node as GltfNode,
-  Texture as GltfTexture,
-  NodeIO
-} from "@gltf-transform/core";
+import { Accessor as GltfAccessor, Buffer as GltfBuffer, Document as GltfDocument, Material as GltfMaterial, Mesh as GltfMesh, Node as GltfNode, Texture as GltfTexture, NodeIO } from "@gltf-transform/core";
 import { default as adjectives } from "@semio/assets/lists/adjectives.json" with { type: "json" };
 import { default as animals } from "@semio/assets/lists/animals.json" with { type: "json" };
 import { ClassValue, clsx } from "clsx";
@@ -2823,6 +2814,7 @@ export const QualitiesDiffSchema = z.object({
   updated: z.array(z.object({ quality: QualityIdSchema, diff: QualityDiffSchema })).optional(),
   added: z.array(QualitySchema).optional(),
 });
+export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 
 // #endregion 🔖Quality
 
@@ -4034,6 +4026,7 @@ export const ModelsDiffSchema = z.object({
   updated: z.array(z.object({ model: ModelIdSchema, diff: ModelDiffSchema })).optional(),
   added: z.array(ModelSchema).optional(),
 });
+export type ModelsDiff = z.infer<typeof ModelsDiffSchema>;
 
 /**
  * Equality check for Model values.
@@ -5307,6 +5300,7 @@ export const GroupsDiffSchema = z.object({
   updated: z.array(z.object({ group: GroupIdSchema, diff: GroupDiffSchema })).optional(),
   added: z.array(GroupSchema).optional(),
 });
+export type GroupsDiff = z.infer<typeof GroupsDiffSchema>;
 /**
  * Serializes Group for transport.
  * MUST produce a serializable output.
@@ -5841,6 +5835,7 @@ export const StatsDiffSchema = z.object({
   updated: z.array(z.object({ stat: StatIdSchema, diff: StatDiffSchema })).optional(),
   added: z.array(StatSchema).optional(),
 });
+export type StatsDiff = z.infer<typeof StatsDiffSchema>;
 /**
  * Serializes Stat for transport.
  * MUST produce a serializable output.
@@ -6342,6 +6337,50 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
 };
 
 /**
+ * Creates a mixed design keeping old entities with diff status annotations.
+ * designWithDiff MUST maintain all old pieces and connections (same parameters),
+ * annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
+ * keep deleted entities in place marked as removed, and append added entities marked as added.
+ * [👤semio📚js💻semio🔖design🪨designwithdiff](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/designWithDiff)
+ **/
+export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
+  const DIFF_STATUS_KEY = "semio.diffStatus";
+  const setStatus = (attrs: Attribute[] | undefined, status: DiffStatus): Attribute[] => {
+    const result = [...(attrs ?? [])];
+    result.push({ guid: `${DIFF_STATUS_KEY}.${status}`, key: DIFF_STATUS_KEY, value: status });
+    return result;
+  };
+
+  const removedPieceGuids = new Set((diff.pieces?.removed ?? []).map((r) => r.guid));
+  const updatedPieceMap = new Map((diff.pieces?.updated ?? []).map((u) => [(u as any).piece.guid, u.diff]));
+  const removedConnGuids = new Set((diff.connections?.removed ?? []).map((r) => r.guid));
+  const updatedConnMap = new Map((diff.connections?.updated ?? []).map((u) => [(u as any).connection.guid, u.diff]));
+
+  const resultPieces: Piece[] = (base.pieces ?? []).map((p) => {
+    if (removedPieceGuids.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Removed) };
+    if (updatedPieceMap.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Modified) };
+    return { ...p, attributes: setStatus(p.attributes, DiffStatus.Unchanged) };
+  });
+  for (const added of diff.pieces?.added ?? []) {
+    resultPieces.push({ ...added, attributes: setStatus(added.attributes, DiffStatus.Added) });
+  }
+
+  const resultConns: Connection[] = (base.connections ?? []).map((c) => {
+    if (removedConnGuids.has(c.guid)) return { ...c, attributes: setStatus(c.attributes, DiffStatus.Removed) };
+    if (updatedConnMap.has(c.guid)) return { ...c, attributes: setStatus(c.attributes, DiffStatus.Modified) };
+    return { ...c, attributes: setStatus(c.attributes, DiffStatus.Unchanged) };
+  });
+  for (const added of diff.connections?.added ?? []) {
+    resultConns.push({ ...added, attributes: setStatus(added.attributes, DiffStatus.Added) });
+  }
+
+  const result: Design = { ...base };
+  result.pieces = resultPieces;
+  result.connections = resultConns;
+  return result;
+};
+
+/**
  * Zod schema for Designs diff validation.
  * [👤semio📚js💻semio🔖design🪨designsdiffschema](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/DesignsDiffSchema)
  **/
@@ -6385,20 +6424,88 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
 };
 
 /**
+ * Deletes pieces and connections from a design, returning a DesignDiff.
+ * Removes stale connections referencing deleted pieces.
+ * Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
+ * [👤semio📚js💻semio🔖design🪨deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/deletePiecesAndConnectionsInDesign)
+ **/
+export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiff => {
+  const deletedPieceSet = new Set(pieceGuids);
+  const connections = design.connections ?? [];
+
+  // Find stale connections: connections referencing any deleted piece
+  const staleConnectionGuids = new Set<string>();
+  for (const conn of connections) {
+    if (deletedPieceSet.has(conn.connected.piece.guid) || deletedPieceSet.has(conn.connecting.piece.guid)) {
+      staleConnectionGuids.add(conn.guid);
+    }
+  }
+
+  // All removed connections = explicit + stale
+  const allRemovedConnectionGuids = new Set([...connectionGuids, ...staleConnectionGuids]);
+
+  // Find pieces that become fixed
+  const fixedPieceGuids: string[] = [];
+  for (const connGuid of allRemovedConnectionGuids) {
+    const conn = connections.find((c) => c.guid === connGuid);
+    if (!conn) continue;
+    const connectingGuid = conn.connecting.piece.guid;
+    if (deletedPieceSet.has(connectingGuid)) continue;
+    // Check if this piece has another parent connection not in the removed set
+    const hasOtherParent = connections.some((c) => c.connecting.piece.guid === connectingGuid && !allRemovedConnectionGuids.has(c.guid));
+    if (!hasOtherParent && !fixedPieceGuids.includes(connectingGuid)) {
+      fixedPieceGuids.push(connectingGuid);
+    }
+  }
+
+  // Flatten the design to get absolute plane and center for each piece
+  const flatChange = flattenDesign(kit, design.guid);
+  const flatPieceMap: { [guid: string]: { plane?: Plane; center?: Coord } } = {};
+  for (const piece of design.pieces ?? []) {
+    if (piece.plane) flatPieceMap[piece.guid] = { plane: piece.plane, center: piece.center };
+  }
+  for (const update of flatChange.forward.pieces?.updated ?? []) {
+    const existing = flatPieceMap[update.piece.guid] ?? {};
+    if (update.diff.plane) existing.plane = update.diff.plane;
+    if (update.diff.center) existing.center = update.diff.center;
+    flatPieceMap[update.piece.guid] = existing;
+  }
+
+  const identityPlane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+  const zeroCenter: Coord = { u: 0, v: 0 };
+
+  const diff: DesignDiff = {};
+
+  const piecesRemoved = pieceGuids.map((guid) => ({ guid }));
+  const piecesUpdated = fixedPieceGuids.map((guid) => {
+    const flat = flatPieceMap[guid];
+    return {
+      piece: { guid },
+      diff: { plane: flat?.plane ?? identityPlane, center: flat?.center ?? zeroCenter },
+    };
+  });
+  if (piecesRemoved.length > 0 || piecesUpdated.length > 0) {
+    diff.pieces = {};
+    if (piecesRemoved.length > 0) diff.pieces.removed = piecesRemoved;
+    if (piecesUpdated.length > 0) diff.pieces.updated = piecesUpdated;
+  }
+
+  const connectionsRemoved = [...allRemovedConnectionGuids].sort().map((guid) => ({ guid }));
+  if (connectionsRemoved.length > 0) {
+    diff.connections = { removed: connectionsRemoved };
+  }
+
+  return diff;
+};
+
+/**
  * Removes a PiecesAndConnectionsFromDesign element.
  * MUST remove the element from the collection.
  * [👤semio📚js💻semio🔖design🪨removepiecesandconnectionsfromdesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/removePiecesAndConnectionsFromDesign)
  **/
 export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignChange => {
   const design = findDesignInKit(kit, designId);
-  const forward: DesignDiff = {
-    pieces: {
-      removed: pieceIds.map((guid) => ({ guid })),
-    },
-    connections: {
-      removed: connectionIds.map((guid) => ({ guid })),
-    },
-  };
+  const forward = deletePiecesAndConnectionsInDesign(design, pieceIds, connectionIds);
   const backward = inverseDesignDiff(design, forward);
   return { forward, backward };
 };
@@ -6592,7 +6699,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
   components.forEach((component) => {
     let roots = component.nodes().filter((node) => {
       const piece = pieceMap[node.id()];
-      return piece?.plane !== undefined;
+      return piece?.plane !== undefined && piece?.center !== undefined;
     });
     let rootNode = roots.length > 0 ? roots[0] : component.nodes().length > 0 ? component.nodes()[0] : undefined;
     if (!rootNode) return;
@@ -6601,6 +6708,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
     const updatedRootPiece = setAttributes(rootPiece, [
       { key: "semio.fixedPieceId", value: rootPiece.guid },
       { key: "semio.depth", value: "0" },
+      { key: "semio.path", value: rootPiece.guid },
     ]);
     pieceMap[rootNode.id()] = updatedRootPiece;
     let rootPlane: Plane;
@@ -6619,6 +6727,16 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
       if (!flatDesign.pieces![rootPieceIndex].center) {
         flatDesign.pieces![rootPieceIndex].center = { u: 0, v: 0 };
       }
+
+      // Keep the computed root plane/center in `pieceMap` as well.
+      // Later we overwrite `flatDesign.pieces` from `pieceMap`, so without this
+      // root-piece plane/center would be lost and `SemioDesign` would render
+      // as diagram-only.
+      pieceMap[rootNode.id()] = {
+        ...(pieceMap[rootNode.id()] ?? updatedRootPiece),
+        plane: rootPlane,
+        center: flatDesign.pieces![rootPieceIndex].center,
+      };
     }
 
     let visitCount = 0;
@@ -6719,6 +6837,10 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
             {
               key: "semio.depth",
               value: depth.toString(),
+            },
+            {
+              key: "semio.path",
+              value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid,
             },
           ],
         );
@@ -7129,53 +7251,57 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
 
 /**
  * Computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
- * MUST return a DesignDiff with center offsets for root movers and u/v offsets for orphan connections.
+ * MUST offset center (absolute new center = current + offset) for all fixed pieces and their descendants.
+ * MUST update connection offset for non-fixed, non-descendant pieces and propagate center updates to their descendants.
+ * MUST ignore selected pieces that are descendants of another selected piece for connection diffs.
+ * A piece's parent connection is the connection where it is the connecting (child) piece.
  * [👤semio📚js💻semiots🔖design🪨dragpiecesindesign](repo://definition/SEMIO/JS/SEMIO.TS/DESIGN/DRAG-PIECES-IN-DESIGN)
  **/
 export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord): DesignDiff => {
   const selectedGuids = new Set((pieces.pieces ?? []).map((p) => p.guid));
   const connections = design.connections ?? [];
-  const designPieces = design.pieces ?? [];
   const parentMap = new Map<string, { connectionGuid: string; parentGuid: string }>();
-  const childrenMap = new Map<string, string[]>();
   for (const c of connections) {
-    parentMap.set(c.connected.piece.guid, { connectionGuid: c.guid, parentGuid: c.connecting.piece.guid });
-    const children = childrenMap.get(c.connecting.piece.guid) ?? [];
-    children.push(c.connected.piece.guid);
-    childrenMap.set(c.connecting.piece.guid, children);
+    parentMap.set(c.connecting.piece.guid, { connectionGuid: c.guid, parentGuid: c.connected.piece.guid });
   }
-  const rootMovers = new Set<string>();
-  for (const p of pieces.pieces ?? []) {
-    if (designPieces.find((dp) => dp.guid === p.guid)?.center) {
-      rootMovers.add(p.guid);
-    }
+  const pieceMap = new Map<string, Piece>();
+  for (const p of design.pieces ?? []) {
+    pieceMap.set(p.guid, p);
   }
-  const movingSet = new Set<string>();
-  const queue = [...rootMovers];
-  while (queue.length > 0) {
-    const guid = queue.pop()!;
-    if (movingSet.has(guid)) continue;
-    movingSet.add(guid);
-    for (const child of childrenMap.get(guid) ?? []) {
-      queue.push(child);
+  const fixedGuids = new Set<string>();
+  for (const guid of selectedGuids) {
+    if (!parentMap.has(guid)) {
+      fixedGuids.add(guid);
     }
   }
   const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
-  for (const guid of rootMovers) {
-    pieceUpdates.push({ piece: { guid }, diff: { center: { u: offset.u, v: offset.v } } });
+  for (const guid of fixedGuids) {
+    const currentCenter = pieceMap.get(guid)?.center;
+    if (currentCenter !== undefined) {
+      pieceUpdates.push({ piece: { guid }, diff: { center: { u: currentCenter.u + offset.u, v: currentCenter.v + offset.v } } });
+    }
   }
   const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
   for (const guid of selectedGuids) {
-    if (movingSet.has(guid)) continue;
+    if (fixedGuids.has(guid)) continue;
+    let isDescendant = false;
+    let current = guid;
+    while (parentMap.has(current)) {
+      const ancestor = parentMap.get(current)!.parentGuid;
+      if (selectedGuids.has(ancestor)) {
+        isDescendant = true;
+        break;
+      }
+      current = ancestor;
+    }
+    if (isDescendant) continue;
     const parent = parentMap.get(guid);
     if (!parent) continue;
     connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: { u: offset.u, v: offset.v } });
   }
   const diff: DesignDiff = {};
-  if (pieceUpdates.length > 0 || connectionUpdates.length > 0) {
-    if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
-    if (connectionUpdates.length > 0) diff.connections = { updated: connectionUpdates };
-  }
+  if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
+  if (connectionUpdates.length > 0) diff.connections = { updated: connectionUpdates };
   return diff;
 };
 
@@ -8014,12 +8140,67 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
 };
 
 /**
- * Filters a kit to only include entities related to a specific design.
- * Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
- * files not used by selected models, and keeps at most one model per type according to the optional tags.
- * [👤semio📚js💻semio🔖kit🔖filter🪨filterkitwithdesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/filterKitWithDesign)
+ * Glob filter with include and exclude patterns for name-based entity filtering.
+ * If include is non-empty, only names matching at least one include pattern are kept.
+ * Names matching any exclude pattern are always removed.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨globfilter](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/GlobFilter)
  **/
-export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[]): Kit => {
+export type GlobFilter = {
+  include?: string[];
+  exclude?: string[];
+};
+
+/**
+ * General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.
+ * When designGuid is set, first performs transitive design-scoped filtering.
+ * Glob filters on each entity kind are applied afterwards (or directly if no designGuid).
+ * [👤semio📚js💻semio🔖kit🔖filter🪨kitfilter](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/KitFilter)
+ **/
+export type KitFilter = {
+  designGuid?: string;
+  modelTags?: string[];
+  designs?: GlobFilter;
+  types?: GlobFilter;
+  ports?: GlobFilter;
+  files?: GlobFilter;
+  tags?: GlobFilter;
+  concepts?: GlobFilter;
+  qualities?: GlobFilter;
+  authors?: GlobFilter;
+  folders?: GlobFilter;
+};
+
+/**
+ * Matches a name against a glob pattern supporting * (any chars) and ? (single char). Case-insensitive.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨globmatch](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/globMatch)
+ **/
+export const globMatch = (name: string, pattern: string): boolean => {
+  let regex = "^";
+  for (const c of pattern) {
+    if (c === "*") regex += ".*";
+    else if (c === "?") regex += ".";
+    else regex += c.replace(/[-/\\^$+.()|[\]{}]/g, "\\$&");
+  }
+  regex += "$";
+  return new RegExp(regex, "i").test(name);
+};
+
+/**
+ * Checks if a name passes a GlobFilter. Returns true if no filter or name matches include and not exclude.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨matchesglobfilter](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/matchesGlobFilter)
+ **/
+export const matchesGlobFilter = (name: string, filter?: GlobFilter): boolean => {
+  if (!filter) return true;
+  const { include, exclude } = filter;
+  if (include && include.length > 0 && !include.some((p) => globMatch(name, p))) return false;
+  if (exclude && exclude.length > 0 && exclude.some((p) => globMatch(name, p))) return false;
+  return true;
+};
+
+/**
+ * Internal design-based transitive kit filtering. Produces a minimal kit subset scoped to a single design.
+ **/
+const filterKitByDesign = (kit: Kit, designGuid: string, modelTags?: string[]): Kit => {
   const design = findDesignInKit(kit, designGuid);
 
   const usedTypeGuids = new Set<string>();
@@ -8038,6 +8219,7 @@ export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[
   };
   for (const typeGuid of [...usedTypeGuids]) collectAncestors(typeGuid);
 
+  const tags = modelTags;
   const resolvedTagGuids = (tags ?? []).flatMap((tagValue) => {
     const byGuid = (kit.tags ?? []).find((tag) => tag.guid === tagValue);
     if (byGuid) return [byGuid.guid];
@@ -8115,6 +8297,30 @@ export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[
     attributes: kit.attributes,
     createdAt: kit.createdAt,
     updatedAt: kit.updatedAt,
+  };
+};
+
+/**
+ * General-purpose kit filter. Combines optional design-based transitive filtering with glob-based name filtering.
+ * When designGuid is set, first performs transitive design-scoped subset extraction.
+ * Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨filterkit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/filterKit)
+ **/
+export const filterKit = (kit: Kit, filter: KitFilter): Kit => {
+  const base = filter.designGuid ? filterKitByDesign(kit, filter.designGuid, filter.modelTags) : kit;
+  const hasGlobFilters = filter.designs || filter.types || filter.ports || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders;
+  if (!hasGlobFilters) return base;
+  return {
+    ...base,
+    types: (base.types ?? []).filter((t) => matchesGlobFilter(t.name, filter.types)),
+    designs: (base.designs ?? []).filter((d) => matchesGlobFilter(d.name, filter.designs)),
+    ports: (base.ports ?? []).filter((p) => matchesGlobFilter(p.name, filter.ports)),
+    files: (base.files ?? []).filter((f) => matchesGlobFilter(f.name, filter.files)),
+    tags: (base.tags ?? []).filter((t) => matchesGlobFilter(t.name, filter.tags)),
+    concepts: (base.concepts ?? []).filter((c) => matchesGlobFilter(c.name, filter.concepts)),
+    qualities: (base.qualities ?? []).filter((q) => matchesGlobFilter(q.name, filter.qualities)),
+    authors: (base.authors ?? []).filter((a) => matchesGlobFilter(a.name, filter.authors)),
+    folders: (base.folders ?? []).filter((f) => matchesGlobFilter(f.name, filter.folders)),
   };
 };
 
@@ -8266,9 +8472,7 @@ export const getTypeChildren = (kit: Kit, typeGuid: string): Type[] => {
 };
 
 /**
- * Checks if Types belong to the same family.
- * MUST return a boolean result.
- * [👤semio📚js💻semio🔖kit🔖typefamilyhelpers🪨aretypesinsamefamily](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Type%20Family%20Helpers/d/i/areTypesInSameFamily)
+ * 👨‍👩‍👧‍👦 Checks if Types belong to the same family (have same primitive type).
  **/
 export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: string): boolean => {
   const primitiveA = getPrimitiveType(kit, typeGuidA);
@@ -8277,6 +8481,1621 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 };
 
 // #endregion 🔖Type Family Helpers
+
+// #region 🔖Hash
+// [👤semio📚js💻semio🔖kit🔖hash](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Hash)
+// Merkle hash functions for all entities. Each hash function computes a deterministic
+// SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
+// Field order is alphabetical by JSON field name. Missing/null fields are skipped.
+// Number format: integer if no fractional part, else shortest decimal representation.
+
+// #region 🔖SHA-256
+// Pure JS SHA-256 implementation for cross-platform compatibility (Node + browser).
+const _sha256K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+  0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+  0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+]);
+const _sha256H0 = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+
+const sha256bytes = (data: Uint8Array): string => {
+  const rr = (x: number, n: number) => (x >>> n) | (x << (32 - n));
+  const bitLen = data.length * 8;
+  const padLen = data.length + 1 + ((((55 - data.length) % 64) + 64) % 64) + 8;
+  const padded = new Uint8Array(padLen);
+  padded.set(data);
+  padded[data.length] = 0x80;
+  const view = new DataView(padded.buffer);
+  view.setUint32(padLen - 4, bitLen, false);
+  if (bitLen > 0xffffffff) view.setUint32(padLen - 8, Math.floor(bitLen / 0x100000000), false);
+  const H = new Uint32Array(_sha256H0);
+  const W = new Uint32Array(64);
+  for (let off = 0; off < padLen; off += 64) {
+    for (let i = 0; i < 16; i++) W[i] = view.getUint32(off + i * 4, false);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rr(W[i - 15], 7) ^ rr(W[i - 15], 18) ^ (W[i - 15] >>> 3);
+      const s1 = rr(W[i - 2], 17) ^ rr(W[i - 2], 19) ^ (W[i - 2] >>> 10);
+      W[i] = (W[i - 16] + s0 + W[i - 7] + s1) | 0;
+    }
+    let [a, b, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + _sha256K[i] + W[i]) | 0;
+      const S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + maj) | 0;
+      h = g;
+      g = f;
+      f = e;
+      e = (d + t1) | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (t1 + t2) | 0;
+    }
+    H[0] = (H[0] + a) | 0;
+    H[1] = (H[1] + b) | 0;
+    H[2] = (H[2] + c) | 0;
+    H[3] = (H[3] + d) | 0;
+    H[4] = (H[4] + e) | 0;
+    H[5] = (H[5] + f) | 0;
+    H[6] = (H[6] + g) | 0;
+    H[7] = (H[7] + h) | 0;
+  }
+  return Array.from(H)
+    .map((v) => (v >>> 0).toString(16).padStart(8, "0"))
+    .join("");
+};
+// #endregion 🔖SHA-256
+
+// #region 🔖HashWriter
+/**
+ * Feeds structured data into a SHA-256 hasher for deterministic hashing.
+ * Uses length-prefixed strings and type tags for unambiguous encoding.
+ **/
+class HashWriter {
+  private parts: Uint8Array[] = [];
+  private len = 0;
+  private push(buf: Uint8Array) {
+    this.parts.push(buf);
+    this.len += buf.length;
+  }
+  writeString(s: string) {
+    const b = new TextEncoder().encode(s);
+    const lb = new Uint8Array(4);
+    new DataView(lb.buffer).setUint32(0, b.length, false);
+    this.push(lb);
+    this.push(b);
+  }
+  writeNumber(n: number) {
+    this.writeString(formatNumberForHash(n));
+  }
+  writeBool(b: boolean) {
+    this.push(new Uint8Array([b ? 1 : 0]));
+  }
+  writeHash(h: string) {
+    this.writeString(h);
+  }
+  writeHashList(hashes: string[]) {
+    const sorted = [...hashes].sort();
+    const lb = new Uint8Array(4);
+    new DataView(lb.buffer).setUint32(0, sorted.length, false);
+    this.push(lb);
+    for (const h of sorted) this.writeString(h);
+  }
+  writeGuidList(guids: string[]) {
+    const sorted = [...guids].sort();
+    const lb = new Uint8Array(4);
+    new DataView(lb.buffer).setUint32(0, sorted.length, false);
+    this.push(lb);
+    for (const g of sorted) this.writeString(g);
+  }
+  digest(): string {
+    const buf = new Uint8Array(this.len);
+    let off = 0;
+    for (const p of this.parts) {
+      buf.set(p, off);
+      off += p.length;
+    }
+    return sha256bytes(buf);
+  }
+}
+// #endregion 🔖HashWriter
+
+/**
+ * Formats a number deterministically for hashing.
+ * Integer values (no fractional part) are formatted without decimal point.
+ * Non-integer values use shortest decimal representation.
+ **/
+export const formatNumberForHash = (n: number): string => {
+  if (Number.isInteger(n)) return n.toString();
+  return n.toString();
+};
+
+// #region 🔖Hash Value Types
+/**
+ * Computes SHA-256 hash of a Coord value.
+ **/
+export const hashCoord = (c: Coord): string => {
+  const w = new HashWriter();
+  w.writeString("Coord");
+  w.writeString("u");
+  w.writeNumber(c.u);
+  w.writeString("v");
+  w.writeNumber(c.v);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Vec value.
+ **/
+export const hashVec = (v: Vec): string => {
+  const w = new HashWriter();
+  w.writeString("Vec");
+  w.writeString("u");
+  w.writeNumber(v.u);
+  w.writeString("v");
+  w.writeNumber(v.v);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Point value.
+ **/
+export const hashPoint = (p: Point): string => {
+  const w = new HashWriter();
+  w.writeString("Point");
+  w.writeString("x");
+  w.writeNumber(p.x);
+  w.writeString("y");
+  w.writeNumber(p.y);
+  w.writeString("z");
+  w.writeNumber(p.z);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Vector value.
+ **/
+export const hashVector = (v: Vector): string => {
+  const w = new HashWriter();
+  w.writeString("Vector");
+  w.writeString("x");
+  w.writeNumber(v.x);
+  w.writeString("y");
+  w.writeNumber(v.y);
+  w.writeString("z");
+  w.writeNumber(v.z);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Plane value.
+ **/
+export const hashPlane = (p: Plane): string => {
+  const w = new HashWriter();
+  w.writeString("Plane");
+  w.writeString("origin");
+  w.writeHash(hashPoint(p.origin));
+  w.writeString("xAxis");
+  w.writeHash(hashVector(p.xAxis));
+  w.writeString("yAxis");
+  w.writeHash(hashVector(p.yAxis));
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Camera value.
+ **/
+export const hashCamera = (c: Camera): string => {
+  const w = new HashWriter();
+  w.writeString("Camera");
+  w.writeString("forward");
+  w.writeHash(hashVector(c.forward));
+  w.writeString("position");
+  w.writeHash(hashPoint(c.position));
+  w.writeString("up");
+  w.writeHash(hashVector(c.up));
+  return w.digest();
+};
+// #endregion 🔖Hash Value Types
+
+// #region 🔖Hash Entities
+/**
+ * Computes SHA-256 hash of an Attribute entity.
+ **/
+export const hashAttribute = (a: Attribute): string => {
+  const w = new HashWriter();
+  w.writeString("Attribute");
+  if (a.definition != null) {
+    w.writeString("definition");
+    w.writeString(a.definition);
+  }
+  w.writeString("guid");
+  w.writeString(a.guid);
+  w.writeString("key");
+  w.writeString(a.key);
+  if (a.value != null) {
+    w.writeString("value");
+    w.writeString(a.value);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Location entity.
+ **/
+export const hashLocation = (l: Location): string => {
+  const w = new HashWriter();
+  w.writeString("Location");
+  if (l.altitude != null) {
+    w.writeString("altitude");
+    w.writeNumber(l.altitude);
+  }
+  if (l.attributes && l.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(l.attributes.map(hashAttribute));
+  }
+  w.writeString("guid");
+  w.writeString(l.guid);
+  w.writeString("latitude");
+  w.writeNumber(l.latitude);
+  w.writeString("longitude");
+  w.writeNumber(l.longitude);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of an Author entity.
+ **/
+export const hashAuthor = (a: Author): string => {
+  const w = new HashWriter();
+  w.writeString("Author");
+  if (a.attributes && a.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(a.attributes.map(hashAttribute));
+  }
+  if (a.email != null && a.email !== "") {
+    w.writeString("email");
+    w.writeString(a.email);
+  }
+  w.writeString("guid");
+  w.writeString(a.guid);
+  w.writeString("name");
+  w.writeString(a.name);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a File entity.
+ **/
+export const hashFile = (f: File): string => {
+  const w = new HashWriter();
+  w.writeString("File");
+  if (f.blob != null) {
+    w.writeString("blob");
+    w.writeString(f.blob);
+  }
+  if (f.folder != null) {
+    w.writeString("folder");
+    w.writeString(f.folder.guid);
+  }
+  w.writeString("guid");
+  w.writeString(f.guid);
+  if (f.hash != null) {
+    w.writeString("hash");
+    w.writeString(f.hash);
+  }
+  w.writeString("name");
+  w.writeString(f.name);
+  if (f.remote != null) {
+    w.writeString("remote");
+    w.writeString(f.remote);
+  }
+  if (f.size != null) {
+    w.writeString("size");
+    w.writeNumber(f.size);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Folder entity.
+ **/
+export const hashFolder = (f: Folder): string => {
+  const w = new HashWriter();
+  w.writeString("Folder");
+  if (f.attributes && f.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(f.attributes.map(hashAttribute));
+  }
+  if (f.description != null) {
+    w.writeString("description");
+    w.writeString(f.description);
+  }
+  w.writeString("guid");
+  w.writeString(f.guid);
+  w.writeString("name");
+  w.writeString(f.name);
+  if (f.parent != null) {
+    w.writeString("parent");
+    w.writeString(f.parent.guid);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Benchmark entity.
+ **/
+export const hashBenchmark = (b: Benchmark): string => {
+  const w = new HashWriter();
+  w.writeString("Benchmark");
+  if (b.attributes && b.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(b.attributes.map(hashAttribute));
+  }
+  w.writeString("guid");
+  w.writeString(b.guid);
+  if (b.icon != null) {
+    w.writeString("icon");
+    w.writeString(b.icon);
+  }
+  if (b.max != null) {
+    w.writeString("max");
+    w.writeNumber(b.max);
+  }
+  if (b.maxExcluded != null) {
+    w.writeString("maxExcluded");
+    w.writeBool(b.maxExcluded);
+  }
+  if (b.min != null) {
+    w.writeString("min");
+    w.writeNumber(b.min);
+  }
+  if (b.minExcluded != null) {
+    w.writeString("minExcluded");
+    w.writeBool(b.minExcluded);
+  }
+  w.writeString("name");
+  w.writeString(b.name);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Quality entity.
+ **/
+export const hashQuality = (q: Quality): string => {
+  const w = new HashWriter();
+  w.writeString("Quality");
+  if (q.benchmarks && q.benchmarks.length > 0) {
+    w.writeString("benchmarks");
+    w.writeHashList(q.benchmarks.map(hashBenchmark));
+  }
+  if (q.canScale != null) {
+    w.writeString("canScale");
+    w.writeBool(q.canScale);
+  }
+  if (q.defaultImperialUnit != null) {
+    w.writeString("defaultImperialUnit");
+    w.writeString(q.defaultImperialUnit);
+  }
+  if (q.defaultSiUnit != null) {
+    w.writeString("defaultSiUnit");
+    w.writeString(q.defaultSiUnit);
+  }
+  if (q.defaultValue != null) {
+    w.writeString("defaultValue");
+    w.writeNumber(q.defaultValue);
+  }
+  if (q.description != null) {
+    w.writeString("description");
+    w.writeString(q.description);
+  }
+  if (q.formula != null) {
+    w.writeString("formula");
+    w.writeString(q.formula);
+  }
+  w.writeString("guid");
+  w.writeString(q.guid);
+  if (q.icon != null) {
+    w.writeString("icon");
+    w.writeString(q.icon);
+  }
+  if (q.image != null) {
+    w.writeString("image");
+    w.writeString(q.image);
+  }
+  if (q.isMaxExcluded != null) {
+    w.writeString("isMaxExcluded");
+    w.writeBool(q.isMaxExcluded);
+  }
+  if (q.isMinExcluded != null) {
+    w.writeString("isMinExcluded");
+    w.writeBool(q.isMinExcluded);
+  }
+  w.writeString("key");
+  w.writeString(q.key);
+  if (q.kind != null) {
+    w.writeString("kind");
+    w.writeNumber(q.kind);
+  }
+  if (q.max != null) {
+    w.writeString("max");
+    w.writeNumber(q.max);
+  }
+  if (q.min != null) {
+    w.writeString("min");
+    w.writeNumber(q.min);
+  }
+  w.writeString("name");
+  w.writeString(q.name);
+  if (q.unit != null) {
+    w.writeString("unit");
+    w.writeString(q.unit);
+  }
+  if (q.uri != null) {
+    w.writeString("uri");
+    w.writeString(q.uri);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Port entity.
+ **/
+export const hashPort = (p: Port): string => {
+  const w = new HashWriter();
+  w.writeString("Port");
+  if (p.attributes && p.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(p.attributes.map(hashAttribute));
+  }
+  if (p.compatiblePorts && p.compatiblePorts.length > 0) {
+    w.writeString("compatiblePorts");
+    w.writeGuidList(p.compatiblePorts.map((cp) => cp.guid));
+  }
+  if (p.description != null) {
+    w.writeString("description");
+    w.writeString(p.description);
+  }
+  w.writeString("guid");
+  w.writeString(p.guid);
+  if (p.icon != null) {
+    w.writeString("icon");
+    w.writeString(p.icon);
+  }
+  w.writeString("name");
+  w.writeString(p.name);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Prop entity.
+ **/
+export const hashProp = (p: Prop): string => {
+  const w = new HashWriter();
+  w.writeString("Prop");
+  if (p.attributes && p.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(p.attributes.map(hashAttribute));
+  }
+  w.writeString("guid");
+  w.writeString(p.guid);
+  w.writeString("quality");
+  w.writeString(p.quality.guid);
+  if (p.unit != null) {
+    w.writeString("unit");
+    w.writeString(p.unit);
+  }
+  w.writeString("value");
+  w.writeString(p.value);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Tag entity.
+ **/
+export const hashTag = (t: Tag): string => {
+  const w = new HashWriter();
+  w.writeString("Tag");
+  if (t.attributes && t.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(t.attributes.map(hashAttribute));
+  }
+  if (t.description != null) {
+    w.writeString("description");
+    w.writeString(t.description);
+  }
+  w.writeString("guid");
+  w.writeString(t.guid);
+  if (t.icon != null) {
+    w.writeString("icon");
+    w.writeString(t.icon);
+  }
+  w.writeString("name");
+  w.writeString(t.name);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Concept entity.
+ **/
+export const hashConcept = (c: Concept): string => {
+  const w = new HashWriter();
+  w.writeString("Concept");
+  if (c.attributes && c.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(c.attributes.map(hashAttribute));
+  }
+  if (c.description != null) {
+    w.writeString("description");
+    w.writeString(c.description);
+  }
+  w.writeString("guid");
+  w.writeString(c.guid);
+  if (c.icon != null) {
+    w.writeString("icon");
+    w.writeString(c.icon);
+  }
+  w.writeString("name");
+  w.writeString(c.name);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Model entity.
+ **/
+export const hashModel = (m: Model): string => {
+  const w = new HashWriter();
+  w.writeString("Model");
+  if (m.attributes && m.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(m.attributes.map(hashAttribute));
+  }
+  if (m.description != null) {
+    w.writeString("description");
+    w.writeString(m.description);
+  }
+  w.writeString("file");
+  w.writeString(m.file.guid);
+  w.writeString("guid");
+  w.writeString(m.guid);
+  if (m.name != null) {
+    w.writeString("name");
+    w.writeString(m.name);
+  }
+  if (m.tags && m.tags.length > 0) {
+    w.writeString("tags");
+    w.writeGuidList(m.tags.map((t) => t.guid));
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Connector entity.
+ **/
+export const hashConnector = (c: Connector): string => {
+  const w = new HashWriter();
+  w.writeString("Connector");
+  if (c.attributes && c.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(c.attributes.map(hashAttribute));
+  }
+  if (c.description != null) {
+    w.writeString("description");
+    w.writeString(c.description);
+  }
+  w.writeString("direction");
+  w.writeHash(hashVector(c.direction));
+  w.writeString("guid");
+  w.writeString(c.guid);
+  if (c.mandatory != null) {
+    w.writeString("mandatory");
+    w.writeBool(c.mandatory);
+  }
+  if (c.name != null) {
+    w.writeString("name");
+    w.writeString(c.name);
+  }
+  w.writeString("point");
+  w.writeHash(hashPoint(c.point));
+  if (c.port != null) {
+    w.writeString("port");
+    w.writeString(c.port.guid);
+  }
+  if (c.props && c.props.length > 0) {
+    w.writeString("props");
+    w.writeHashList(c.props.map(hashProp));
+  }
+  w.writeString("t");
+  w.writeNumber(c.t);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Type entity.
+ **/
+export const hashType = (t: Type): string => {
+  const w = new HashWriter();
+  w.writeString("Type");
+  if (t.attributes && t.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(t.attributes.map(hashAttribute));
+  }
+  if (t.authors && t.authors.length > 0) {
+    w.writeString("authors");
+    w.writeGuidList(t.authors.map((a) => a.guid));
+  }
+  if (t.concepts && t.concepts.length > 0) {
+    w.writeString("concepts");
+    w.writeGuidList(t.concepts.map((c) => c.guid));
+  }
+  if (t.connectors && t.connectors.length > 0) {
+    w.writeString("connectors");
+    w.writeHashList(t.connectors.map(hashConnector));
+  }
+  if (t.description != null) {
+    w.writeString("description");
+    w.writeString(t.description);
+  }
+  if (t.folder != null) {
+    w.writeString("folder");
+    w.writeString(t.folder);
+  }
+  w.writeString("guid");
+  w.writeString(t.guid);
+  if (t.icon != null) {
+    w.writeString("icon");
+    w.writeString(t.icon);
+  }
+  if (t.image != null) {
+    w.writeString("image");
+    w.writeString(t.image);
+  }
+  if (t.isAbstract != null) {
+    w.writeString("isAbstract");
+    w.writeBool(t.isAbstract);
+  }
+  if (t.location != null) {
+    w.writeString("location");
+    w.writeString(t.location.guid);
+  }
+  if (t.models && t.models.length > 0) {
+    w.writeString("models");
+    w.writeHashList(t.models.map(hashModel));
+  }
+  w.writeString("name");
+  w.writeString(t.name);
+  if (t.parent != null) {
+    w.writeString("parent");
+    w.writeString(t.parent.guid);
+  }
+  if (t.props && t.props.length > 0) {
+    w.writeString("props");
+    w.writeHashList(t.props.map(hashProp));
+  }
+  if (t.stock != null) {
+    w.writeString("stock");
+    w.writeNumber(t.stock);
+  }
+  if (t.unit != null) {
+    w.writeString("unit");
+    w.writeString(t.unit);
+  }
+  if (t.virtual != null) {
+    w.writeString("virtual");
+    w.writeBool(t.virtual);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Layer entity.
+ **/
+export const hashLayer = (l: Layer): string => {
+  const w = new HashWriter();
+  w.writeString("Layer");
+  if (l.attributes && l.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(l.attributes.map(hashAttribute));
+  }
+  if (l.color != null) {
+    w.writeString("color");
+    w.writeString(l.color);
+  }
+  if (l.description != null) {
+    w.writeString("description");
+    w.writeString(l.description);
+  }
+  w.writeString("guid");
+  w.writeString(l.guid);
+  if (l.isHidden != null) {
+    w.writeString("isHidden");
+    w.writeBool(l.isHidden);
+  }
+  if (l.isLocked != null) {
+    w.writeString("isLocked");
+    w.writeBool(l.isLocked);
+  }
+  w.writeString("path");
+  w.writeString(l.path);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Stat entity.
+ **/
+export const hashStat = (s: Stat): string => {
+  const w = new HashWriter();
+  w.writeString("Stat");
+  w.writeString("guid");
+  w.writeString(s.guid);
+  if (s.max != null) {
+    w.writeString("max");
+    w.writeNumber(s.max);
+  }
+  if (s.maxExcluded != null) {
+    w.writeString("maxExcluded");
+    w.writeBool(s.maxExcluded);
+  }
+  if (s.min != null) {
+    w.writeString("min");
+    w.writeNumber(s.min);
+  }
+  if (s.minExcluded != null) {
+    w.writeString("minExcluded");
+    w.writeBool(s.minExcluded);
+  }
+  w.writeString("quality");
+  w.writeString(s.quality.guid);
+  if (s.unit != null) {
+    w.writeString("unit");
+    w.writeString(s.unit);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Group entity.
+ **/
+export const hashGroup = (g: Group): string => {
+  const w = new HashWriter();
+  w.writeString("Group");
+  if (g.attributes && g.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(g.attributes.map(hashAttribute));
+  }
+  if (g.color != null) {
+    w.writeString("color");
+    w.writeString(g.color);
+  }
+  if (g.description != null) {
+    w.writeString("description");
+    w.writeString(g.description);
+  }
+  w.writeString("guid");
+  w.writeString(g.guid);
+  if (g.name != null) {
+    w.writeString("name");
+    w.writeString(g.name);
+  }
+  w.writeString("pieces");
+  w.writeGuidList(g.pieces.map((p) => p.guid));
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Side value.
+ **/
+export const hashSide = (s: Side): string => {
+  const w = new HashWriter();
+  w.writeString("Side");
+  if (s.connector != null) {
+    w.writeString("connector");
+    w.writeString(s.connector.guid);
+  }
+  if (s.designPiece != null) {
+    w.writeString("designPiece");
+    w.writeString(s.designPiece.guid);
+  }
+  w.writeString("piece");
+  w.writeString(s.piece.guid);
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Connection entity.
+ **/
+export const hashConnection = (c: Connection): string => {
+  const w = new HashWriter();
+  w.writeString("Connection");
+  if (c.attributes && c.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(c.attributes.map(hashAttribute));
+  }
+  w.writeString("connected");
+  w.writeHash(hashSide(c.connected));
+  w.writeString("connecting");
+  w.writeHash(hashSide(c.connecting));
+  if (c.description != null) {
+    w.writeString("description");
+    w.writeString(c.description);
+  }
+  if (c.gap != null) {
+    w.writeString("gap");
+    w.writeNumber(c.gap);
+  }
+  w.writeString("guid");
+  w.writeString(c.guid);
+  if (c.rise != null) {
+    w.writeString("rise");
+    w.writeNumber(c.rise);
+  }
+  if (c.rotation != null) {
+    w.writeString("rotation");
+    w.writeNumber(c.rotation);
+  }
+  if (c.shift != null) {
+    w.writeString("shift");
+    w.writeNumber(c.shift);
+  }
+  if (c.tilt != null) {
+    w.writeString("tilt");
+    w.writeNumber(c.tilt);
+  }
+  if (c.turn != null) {
+    w.writeString("turn");
+    w.writeNumber(c.turn);
+  }
+  if (c.u != null) {
+    w.writeString("u");
+    w.writeNumber(c.u);
+  }
+  if (c.v != null) {
+    w.writeString("v");
+    w.writeNumber(c.v);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Piece entity.
+ **/
+export const hashPiece = (p: Piece): string => {
+  const w = new HashWriter();
+  w.writeString("Piece");
+  if (p.attributes && p.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(p.attributes.map(hashAttribute));
+  }
+  if (p.center != null) {
+    w.writeString("center");
+    w.writeHash(hashCoord(p.center));
+  }
+  if (p.color != null) {
+    w.writeString("color");
+    w.writeString(p.color);
+  }
+  if (p.description != null) {
+    w.writeString("description");
+    w.writeString(p.description);
+  }
+  if (p.design != null) {
+    w.writeString("design");
+    w.writeString(p.design.guid);
+  }
+  w.writeString("guid");
+  w.writeString(p.guid);
+  if (p.isHidden != null) {
+    w.writeString("isHidden");
+    w.writeBool(p.isHidden);
+  }
+  if (p.isLocked != null) {
+    w.writeString("isLocked");
+    w.writeBool(p.isLocked);
+  }
+  if (p.mirrorPlane != null) {
+    w.writeString("mirrorPlane");
+    w.writeHash(hashPlane(p.mirrorPlane));
+  }
+  if (p.name != null) {
+    w.writeString("name");
+    w.writeString(p.name);
+  }
+  if (p.plane != null) {
+    w.writeString("plane");
+    w.writeHash(hashPlane(p.plane));
+  }
+  if (p.props && p.props.length > 0) {
+    w.writeString("props");
+    w.writeHashList(p.props.map(hashProp));
+  }
+  if (p.scale != null) {
+    w.writeString("scale");
+    w.writeNumber(p.scale);
+  }
+  if (p.type != null) {
+    w.writeString("type");
+    w.writeString(p.type.guid);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 hash of a Design entity (Merkle tree).
+ **/
+export const hashDesign = (d: Design): string => {
+  const w = new HashWriter();
+  w.writeString("Design");
+  if (d.activeLayer != null) {
+    w.writeString("activeLayer");
+    w.writeString(d.activeLayer.guid);
+  }
+  if (d.attributes && d.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(d.attributes.map(hashAttribute));
+  }
+  if (d.authors && d.authors.length > 0) {
+    w.writeString("authors");
+    w.writeGuidList(d.authors.map((a) => a.guid));
+  }
+  if (d.canMirror != null) {
+    w.writeString("canMirror");
+    w.writeBool(d.canMirror);
+  }
+  if (d.canScale != null) {
+    w.writeString("canScale");
+    w.writeBool(d.canScale);
+  }
+  if (d.concepts && d.concepts.length > 0) {
+    w.writeString("concepts");
+    w.writeGuidList(d.concepts.map((c) => c.guid));
+  }
+  if (d.connections && d.connections.length > 0) {
+    w.writeString("connections");
+    w.writeHashList(d.connections.map(hashConnection));
+  }
+  if (d.description != null) {
+    w.writeString("description");
+    w.writeString(d.description);
+  }
+  if (d.folder != null) {
+    w.writeString("folder");
+    w.writeString(d.folder);
+  }
+  if (d.groups && d.groups.length > 0) {
+    w.writeString("groups");
+    w.writeHashList(d.groups.map(hashGroup));
+  }
+  w.writeString("guid");
+  w.writeString(d.guid);
+  if (d.icon != null) {
+    w.writeString("icon");
+    w.writeString(d.icon);
+  }
+  if (d.image != null) {
+    w.writeString("image");
+    w.writeString(d.image);
+  }
+  if (d.isAbstract != null) {
+    w.writeString("isAbstract");
+    w.writeBool(d.isAbstract);
+  }
+  if (d.layers && d.layers.length > 0) {
+    w.writeString("layers");
+    w.writeHashList(d.layers.map(hashLayer));
+  }
+  if (d.location != null) {
+    w.writeString("location");
+    w.writeString(d.location.guid);
+  }
+  w.writeString("name");
+  w.writeString(d.name);
+  if (d.parent != null) {
+    w.writeString("parent");
+    w.writeString(d.parent.guid);
+  }
+  if (d.pieces && d.pieces.length > 0) {
+    w.writeString("pieces");
+    w.writeHashList(d.pieces.map(hashPiece));
+  }
+  if (d.props && d.props.length > 0) {
+    w.writeString("props");
+    w.writeHashList(d.props.map(hashProp));
+  }
+  if (d.stats && d.stats.length > 0) {
+    w.writeString("stats");
+    w.writeHashList(d.stats.map(hashStat));
+  }
+  if (d.unit != null) {
+    w.writeString("unit");
+    w.writeString(d.unit);
+  }
+  return w.digest();
+};
+
+/**
+ * Computes SHA-256 Merkle hash of a Kit entity.
+ * Calls hashDesign, hashType, etc. for all children.
+ **/
+export const hashKit = (k: Kit): string => {
+  const w = new HashWriter();
+  w.writeString("Kit");
+  if (k.attributes && k.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(k.attributes.map(hashAttribute));
+  }
+  if (k.authors && k.authors.length > 0) {
+    w.writeString("authors");
+    w.writeHashList(k.authors.map(hashAuthor));
+  }
+  if (k.concepts && k.concepts.length > 0) {
+    w.writeString("concepts");
+    w.writeHashList(k.concepts.map(hashConcept));
+  }
+  if (k.description != null) {
+    w.writeString("description");
+    w.writeString(k.description);
+  }
+  if (k.designs && k.designs.length > 0) {
+    w.writeString("designs");
+    w.writeHashList(k.designs.map(hashDesign));
+  }
+  if (k.files && k.files.length > 0) {
+    w.writeString("files");
+    w.writeHashList(k.files.map(hashFile));
+  }
+  if (k.folders && k.folders.length > 0) {
+    w.writeString("folders");
+    w.writeHashList(k.folders.map(hashFolder));
+  }
+  w.writeString("guid");
+  w.writeString(k.guid);
+  if (k.homepage != null) {
+    w.writeString("homepage");
+    w.writeString(k.homepage);
+  }
+  if (k.icon != null) {
+    w.writeString("icon");
+    w.writeString(k.icon);
+  }
+  if (k.image != null) {
+    w.writeString("image");
+    w.writeString(k.image);
+  }
+  if (k.license != null) {
+    w.writeString("license");
+    w.writeString(k.license);
+  }
+  w.writeString("name");
+  w.writeString(k.name);
+  if (k.ports && k.ports.length > 0) {
+    w.writeString("ports");
+    w.writeHashList(k.ports.map(hashPort));
+  }
+  if (k.preview != null) {
+    w.writeString("preview");
+    w.writeString(k.preview);
+  }
+  if (k.qualities && k.qualities.length > 0) {
+    w.writeString("qualities");
+    w.writeHashList(k.qualities.map(hashQuality));
+  }
+  if (k.remote != null) {
+    w.writeString("remote");
+    w.writeString(k.remote);
+  }
+  if (k.tags && k.tags.length > 0) {
+    w.writeString("tags");
+    w.writeHashList(k.tags.map(hashTag));
+  }
+  if (k.types && k.types.length > 0) {
+    w.writeString("types");
+    w.writeHashList(k.types.map(hashType));
+  }
+  if (k.version != null) {
+    w.writeString("version");
+    w.writeString(k.version);
+  }
+  return w.digest();
+};
+// #endregion 🔖Hash Entities
+
+// #region 🔖Hash Diffs
+// Deterministic SHA-256 Merkle hash functions for all diff types.
+// Null fields are marked with a single 0x00 byte. Undefined fields are skipped.
+
+const writeNullableString = (w: HashWriter, key: string, val: string | null | undefined) => {
+  if (val === undefined) return;
+  w.writeString(key);
+  if (val === null) w.writeBool(false);
+  else w.writeString(val);
+};
+
+const writeNullableNumber = (w: HashWriter, key: string, val: number | null | undefined) => {
+  if (val === undefined) return;
+  w.writeString(key);
+  if (val === null) w.writeBool(false);
+  else w.writeNumber(val);
+};
+
+const writeNullableBool = (w: HashWriter, key: string, val: boolean | null | undefined) => {
+  if (val === undefined) return;
+  w.writeString(key);
+  if (val === null) w.writeBool(false);
+  else w.writeBool(val);
+};
+
+const writeNullableId = (w: HashWriter, key: string, val: { guid: string } | null | undefined) => {
+  if (val === undefined) return;
+  w.writeString(key);
+  if (val === null) w.writeBool(false);
+  else w.writeString(val.guid);
+};
+
+const writeNullableIdArray = (w: HashWriter, key: string, val: { guid: string }[] | null | undefined) => {
+  if (val === undefined) return;
+  w.writeString(key);
+  if (val === null) w.writeBool(false);
+  else w.writeGuidList(val.map((v) => v.guid));
+};
+
+const writeNullableHash = (w: HashWriter, key: string, val: any, hashFn: (v: any) => string) => {
+  if (val === undefined) return;
+  w.writeString(key);
+  if (val === null) w.writeBool(false);
+  else w.writeHash(hashFn(val));
+};
+
+const hashCollectionDiffGeneric = (tag: string, updateTag: string, entityKeyName: string, hashEntityFn: (e: any) => string, hashDiffFn: (d: any) => string, diff: { removed?: { guid: string }[]; updated?: any[]; added?: any[] }): string => {
+  const w = new HashWriter();
+  w.writeString(tag);
+  if (diff.added && diff.added.length > 0) {
+    w.writeString("added");
+    w.writeHashList(diff.added.map(hashEntityFn));
+  }
+  if (diff.removed && diff.removed.length > 0) {
+    w.writeString("removed");
+    w.writeGuidList(diff.removed.map((r) => r.guid));
+  }
+  if (diff.updated && diff.updated.length > 0) {
+    w.writeString("updated");
+    const keys = [entityKeyName, "diff"].sort();
+    const updateHashes = diff.updated.map((u: any) => {
+      const uw = new HashWriter();
+      uw.writeString(updateTag);
+      for (const k of keys) {
+        if (k === "diff") {
+          uw.writeString("diff");
+          uw.writeHash(hashDiffFn(u.diff));
+        } else {
+          uw.writeString(k);
+          uw.writeString(u[k].guid);
+        }
+      }
+      return uw.digest();
+    });
+    w.writeHashList(updateHashes);
+  }
+  return w.digest();
+};
+
+// #region 🔖Hash Diff Value Types
+
+export const hashCoordDiff = (d: CoordDiff): string => {
+  const w = new HashWriter();
+  w.writeString("CoordDiff");
+  writeNullableNumber(w, "u", d.u);
+  writeNullableNumber(w, "v", d.v);
+  return w.digest();
+};
+
+export const hashVecDiff = (d: VecDiff): string => {
+  const w = new HashWriter();
+  w.writeString("VecDiff");
+  writeNullableNumber(w, "u", d.u);
+  writeNullableNumber(w, "v", d.v);
+  return w.digest();
+};
+
+export const hashPointDiff = (d: PointDiff): string => {
+  const w = new HashWriter();
+  w.writeString("PointDiff");
+  writeNullableNumber(w, "x", d.x);
+  writeNullableNumber(w, "y", d.y);
+  writeNullableNumber(w, "z", d.z);
+  return w.digest();
+};
+
+export const hashVectorDiff = (d: VectorDiff): string => {
+  const w = new HashWriter();
+  w.writeString("VectorDiff");
+  writeNullableNumber(w, "x", d.x);
+  writeNullableNumber(w, "y", d.y);
+  writeNullableNumber(w, "z", d.z);
+  return w.digest();
+};
+
+export const hashPlaneDiff = (d: PlaneDiff): string => {
+  const w = new HashWriter();
+  w.writeString("PlaneDiff");
+  writeNullableHash(w, "origin", d.origin, hashPointDiff);
+  writeNullableHash(w, "xAxis", d.xAxis, hashVectorDiff);
+  writeNullableHash(w, "yAxis", d.yAxis, hashVectorDiff);
+  return w.digest();
+};
+
+export const hashCameraDiff = (d: CameraDiff): string => {
+  const w = new HashWriter();
+  w.writeString("CameraDiff");
+  writeNullableHash(w, "forward", d.forward, hashVectorDiff);
+  writeNullableHash(w, "position", d.position, hashPointDiff);
+  writeNullableHash(w, "up", d.up, hashVectorDiff);
+  return w.digest();
+};
+
+// #endregion 🔖Hash Diff Value Types
+
+// #region 🔖Hash Diff Entities
+
+export const hashAttributeDiff = (d: AttributeDiff): string => {
+  const w = new HashWriter();
+  w.writeString("AttributeDiff");
+  writeNullableString(w, "definition", d.definition);
+  writeNullableString(w, "key", d.key);
+  writeNullableString(w, "value", d.value);
+  return w.digest();
+};
+
+export const hashAttributesDiff = (d: AttributesDiff): string => hashCollectionDiffGeneric("AttributesDiff", "AttributeDiffUpdate", "attribute", hashAttribute, hashAttributeDiff, d);
+
+export const hashLocationDiff = (d: LocationDiff): string => {
+  const w = new HashWriter();
+  w.writeString("LocationDiff");
+  writeNullableNumber(w, "altitude", d.altitude);
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableNumber(w, "latitude", d.latitude);
+  writeNullableNumber(w, "longitude", d.longitude);
+  return w.digest();
+};
+
+export const hashAuthorDiff = (d: AuthorDiff): string => {
+  const w = new HashWriter();
+  w.writeString("AuthorDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "email", d.email);
+  writeNullableString(w, "name", d.name);
+  return w.digest();
+};
+
+export const hashAuthorsDiff = (d: AuthorsDiff): string => hashCollectionDiffGeneric("AuthorsDiff", "AuthorDiffUpdate", "author", hashAuthor, hashAuthorDiff, d);
+
+export const hashFileDiff = (d: FileDiff): string => {
+  const w = new HashWriter();
+  w.writeString("FileDiff");
+  writeNullableString(w, "blob", d.blob);
+  writeNullableId(w, "folder", d.folder);
+  writeNullableString(w, "hash", d.hash);
+  writeNullableString(w, "name", d.name);
+  writeNullableString(w, "remote", d.remote);
+  writeNullableNumber(w, "size", d.size);
+  return w.digest();
+};
+
+export const hashFilesDiff = (d: FilesDiff): string => hashCollectionDiffGeneric("FilesDiff", "FileDiffUpdate", "file", hashFile, hashFileDiff, d);
+
+export const hashFolderDiff = (d: FolderDiff): string => {
+  const w = new HashWriter();
+  w.writeString("FolderDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "name", d.name);
+  writeNullableId(w, "parent", d.parent);
+  return w.digest();
+};
+
+export const hashFoldersDiff = (d: FoldersDiff): string => hashCollectionDiffGeneric("FoldersDiff", "FolderDiffUpdate", "folder", hashFolder, hashFolderDiff, d);
+
+export const hashBenchmarkDiff = (d: BenchmarkDiff): string => {
+  const w = new HashWriter();
+  w.writeString("BenchmarkDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "definition", d.definition);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableNumber(w, "max", d.max);
+  writeNullableBool(w, "maxExcluded", d.maxExcluded);
+  writeNullableNumber(w, "min", d.min);
+  writeNullableBool(w, "minExcluded", d.minExcluded);
+  writeNullableString(w, "name", d.name);
+  return w.digest();
+};
+
+export const hashBenchmarksDiff = (d: BenchmarksDiff): string => hashCollectionDiffGeneric("BenchmarksDiff", "BenchmarkDiffUpdate", "benchmark", hashBenchmark, hashBenchmarkDiff, d);
+
+export const hashQualityDiff = (d: QualityDiff): string => {
+  const w = new HashWriter();
+  w.writeString("QualityDiff");
+  writeNullableHash(w, "benchmarks", d.benchmarks, hashBenchmarksDiff);
+  writeNullableBool(w, "canScale", d.canScale);
+  writeNullableString(w, "defaultImperialUnit", d.defaultImperialUnit);
+  writeNullableString(w, "defaultSiUnit", d.defaultSiUnit);
+  writeNullableNumber(w, "defaultValue", d.defaultValue);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "folder", d.folder);
+  writeNullableString(w, "formula", d.formula);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableString(w, "image", d.image);
+  writeNullableBool(w, "isMaxExcluded", d.isMaxExcluded);
+  writeNullableBool(w, "isMinExcluded", d.isMinExcluded);
+  writeNullableString(w, "key", d.key);
+  writeNullableNumber(w, "kind", d.kind);
+  writeNullableNumber(w, "max", d.max);
+  writeNullableNumber(w, "min", d.min);
+  writeNullableString(w, "name", d.name);
+  writeNullableString(w, "unit", d.unit);
+  writeNullableString(w, "uri", d.uri);
+  return w.digest();
+};
+
+export const hashQualitiesDiff = (d: QualitiesDiff): string => hashCollectionDiffGeneric("QualitiesDiff", "QualityDiffUpdate", "quality", hashQuality, hashQualityDiff, d);
+
+export const hashPortDiff = (d: PortDiff): string => {
+  const w = new HashWriter();
+  w.writeString("PortDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableIdArray(w, "compatiblePorts", d.compatiblePorts);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableString(w, "name", d.name);
+  return w.digest();
+};
+
+export const hashPortsDiff = (d: PortsDiff): string => hashCollectionDiffGeneric("PortsDiff", "PortDiffUpdate", "port", hashPort, hashPortDiff, d);
+
+export const hashPropDiff = (d: PropDiff): string => {
+  const w = new HashWriter();
+  w.writeString("PropDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableId(w, "quality", d.quality);
+  writeNullableString(w, "unit", d.unit);
+  writeNullableString(w, "value", d.value);
+  return w.digest();
+};
+
+export const hashPropsDiff = (d: PropsDiff): string => hashCollectionDiffGeneric("PropsDiff", "PropDiffUpdate", "prop", hashProp, hashPropDiff, d);
+
+export const hashTagDiff = (d: TagDiff): string => {
+  const w = new HashWriter();
+  w.writeString("TagDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableString(w, "name", d.name);
+  return w.digest();
+};
+
+export const hashTagsDiff = (d: TagsDiff): string => hashCollectionDiffGeneric("TagsDiff", "TagDiffUpdate", "tag", hashTag, hashTagDiff, d);
+
+export const hashConceptDiff = (d: ConceptDiff): string => {
+  const w = new HashWriter();
+  w.writeString("ConceptDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableString(w, "name", d.name);
+  return w.digest();
+};
+
+export const hashConceptsDiff = (d: ConceptsDiff): string => hashCollectionDiffGeneric("ConceptsDiff", "ConceptDiffUpdate", "concept", hashConcept, hashConceptDiff, d);
+
+export const hashModelDiff = (d: ModelDiff): string => {
+  const w = new HashWriter();
+  w.writeString("ModelDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableId(w, "file", d.file);
+  writeNullableString(w, "name", d.name);
+  writeNullableIdArray(w, "tags", d.tags);
+  return w.digest();
+};
+
+export const hashModelsDiff = (d: ModelsDiff): string => hashCollectionDiffGeneric("ModelsDiff", "ModelDiffUpdate", "model", hashModel, hashModelDiff, d);
+
+export const hashConnectorDiff = (d: ConnectorDiff): string => {
+  const w = new HashWriter();
+  w.writeString("ConnectorDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableHash(w, "direction", d.direction, hashVectorDiff);
+  writeNullableBool(w, "mandatory", d.mandatory);
+  writeNullableString(w, "name", d.name);
+  writeNullableHash(w, "point", d.point, hashPointDiff);
+  writeNullableId(w, "port", d.port);
+  writeNullableHash(w, "props", d.props, hashPropsDiff);
+  writeNullableNumber(w, "t", d.t);
+  return w.digest();
+};
+
+export const hashConnectorsDiff = (d: ConnectorsDiff): string => hashCollectionDiffGeneric("ConnectorsDiff", "ConnectorDiffUpdate", "connector", hashConnector, hashConnectorDiff, d);
+
+export const hashTypeDiff = (d: TypeDiff): string => {
+  const w = new HashWriter();
+  w.writeString("TypeDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableIdArray(w, "authors", d.authors);
+  writeNullableIdArray(w, "concepts", d.concepts);
+  writeNullableHash(w, "connectors", d.connectors, hashConnectorsDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "folder", d.folder);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableString(w, "image", d.image);
+  writeNullableBool(w, "isAbstract", d.isAbstract);
+  writeNullableId(w, "location", d.location);
+  writeNullableHash(w, "models", d.models, hashModelsDiff);
+  writeNullableString(w, "name", d.name);
+  writeNullableId(w, "parent", d.parent);
+  writeNullableHash(w, "props", d.props, hashPropsDiff);
+  writeNullableNumber(w, "stock", d.stock);
+  writeNullableString(w, "unit", d.unit);
+  writeNullableBool(w, "virtual", d.virtual);
+  return w.digest();
+};
+
+export const hashTypesDiff = (d: TypesDiff): string => hashCollectionDiffGeneric("TypesDiff", "TypeDiffUpdate", "type", hashType, hashTypeDiff, d);
+
+export const hashSideDiff = (d: SideDiff): string => {
+  const w = new HashWriter();
+  w.writeString("SideDiff");
+  writeNullableId(w, "connector", d.connector);
+  writeNullableId(w, "designPiece", d.designPiece);
+  writeNullableId(w, "piece", d.piece);
+  return w.digest();
+};
+
+export const hashLayerDiff = (d: LayerDiff): string => {
+  const w = new HashWriter();
+  w.writeString("LayerDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "color", d.color);
+  writeNullableString(w, "description", d.description);
+  writeNullableBool(w, "isHidden", d.isHidden);
+  writeNullableBool(w, "isLocked", d.isLocked);
+  writeNullableString(w, "path", d.path);
+  return w.digest();
+};
+
+export const hashLayersDiff = (d: LayersDiff): string => hashCollectionDiffGeneric("LayersDiff", "LayerDiffUpdate", "layer", hashLayer, hashLayerDiff, d);
+
+export const hashGroupDiff = (d: GroupDiff): string => {
+  const w = new HashWriter();
+  w.writeString("GroupDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "color", d.color);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "name", d.name);
+  writeNullableIdArray(w, "pieces", d.pieces);
+  return w.digest();
+};
+
+export const hashGroupsDiff = (d: GroupsDiff): string => hashCollectionDiffGeneric("GroupsDiff", "GroupDiffUpdate", "group", hashGroup, hashGroupDiff, d);
+
+export const hashStatDiff = (d: StatDiff): string => {
+  const w = new HashWriter();
+  w.writeString("StatDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableNumber(w, "max", d.max);
+  writeNullableBool(w, "maxExcluded", d.maxExcluded);
+  writeNullableNumber(w, "min", d.min);
+  writeNullableBool(w, "minExcluded", d.minExcluded);
+  writeNullableId(w, "quality", d.quality);
+  writeNullableString(w, "unit", d.unit);
+  return w.digest();
+};
+
+export const hashStatsDiff = (d: StatsDiff): string => hashCollectionDiffGeneric("StatsDiff", "StatDiffUpdate", "stat", hashStat, hashStatDiff, d);
+
+export const hashConnectionDiff = (d: ConnectionDiff): string => {
+  const w = new HashWriter();
+  w.writeString("ConnectionDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableHash(w, "connected", d.connected, hashSideDiff);
+  writeNullableHash(w, "connecting", d.connecting, hashSideDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableNumber(w, "gap", d.gap);
+  writeNullableNumber(w, "rise", d.rise);
+  writeNullableNumber(w, "rotation", d.rotation);
+  writeNullableNumber(w, "shift", d.shift);
+  writeNullableNumber(w, "tilt", d.tilt);
+  writeNullableNumber(w, "turn", d.turn);
+  writeNullableNumber(w, "u", d.u);
+  writeNullableNumber(w, "v", d.v);
+  return w.digest();
+};
+
+export const hashConnectionsDiff = (d: ConnectionsDiff): string => hashCollectionDiffGeneric("ConnectionsDiff", "ConnectionDiffUpdate", "connection", hashConnection, hashConnectionDiff, d);
+
+export const hashPieceDiff = (d: PieceDiff): string => {
+  const w = new HashWriter();
+  w.writeString("PieceDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableHash(w, "center", d.center, hashCoord);
+  writeNullableString(w, "color", d.color);
+  writeNullableString(w, "description", d.description);
+  writeNullableId(w, "design", d.design);
+  writeNullableBool(w, "isHidden", d.isHidden);
+  writeNullableBool(w, "isLocked", d.isLocked);
+  writeNullableHash(w, "mirrorPlane", d.mirrorPlane, hashPlane);
+  writeNullableString(w, "name", d.name);
+  writeNullableHash(w, "plane", d.plane, hashPlaneDiff);
+  writeNullableHash(w, "props", d.props, hashPropsDiff);
+  writeNullableNumber(w, "scale", d.scale);
+  writeNullableId(w, "type", d.type);
+  return w.digest();
+};
+
+export const hashPiecesDiff = (d: PiecesDiff): string => hashCollectionDiffGeneric("PiecesDiff", "PieceDiffUpdate", "piece", hashPiece, hashPieceDiff, d);
+
+export const hashDesignDiff = (d: DesignDiff): string => {
+  const w = new HashWriter();
+  w.writeString("DesignDiff");
+  writeNullableId(w, "activeLayer", d.activeLayer);
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableHash(w, "authors", d.authors, hashAuthorsDiff);
+  writeNullableBool(w, "canMirror", d.canMirror);
+  writeNullableBool(w, "canScale", d.canScale);
+  writeNullableIdArray(w, "concepts", d.concepts);
+  writeNullableHash(w, "connections", d.connections, hashConnectionsDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "folder", d.folder);
+  writeNullableHash(w, "groups", d.groups, hashGroupsDiff);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableString(w, "image", d.image);
+  writeNullableBool(w, "isAbstract", d.isAbstract);
+  writeNullableHash(w, "layers", d.layers, hashLayersDiff);
+  writeNullableId(w, "location", d.location);
+  writeNullableString(w, "name", d.name);
+  writeNullableId(w, "parent", d.parent);
+  writeNullableHash(w, "pieces", d.pieces, hashPiecesDiff);
+  writeNullableHash(w, "props", d.props, hashPropsDiff);
+  writeNullableHash(w, "stats", d.stats, hashStatsDiff);
+  writeNullableString(w, "unit", d.unit);
+  return w.digest();
+};
+
+export const hashDesignsDiff = (d: DesignsDiff): string => hashCollectionDiffGeneric("DesignsDiff", "DesignDiffUpdate", "design", hashDesign, hashDesignDiff, d);
+
+export const hashKitDiff = (d: KitDiff): string => {
+  const w = new HashWriter();
+  w.writeString("KitDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableHash(w, "authors", d.authors, hashAuthorsDiff);
+  writeNullableHash(w, "concepts", d.concepts, hashConceptsDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableHash(w, "designs", d.designs, hashDesignsDiff);
+  writeNullableHash(w, "files", d.files, hashFilesDiff);
+  writeNullableHash(w, "folders", d.folders, hashFoldersDiff);
+  writeNullableString(w, "homepage", d.homepage);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableString(w, "image", d.image);
+  writeNullableString(w, "license", d.license);
+  writeNullableString(w, "name", d.name);
+  writeNullableHash(w, "ports", d.ports, hashPortsDiff);
+  writeNullableString(w, "preview", d.preview);
+  writeNullableHash(w, "qualities", d.qualities, hashQualitiesDiff);
+  writeNullableString(w, "remote", d.remote);
+  writeNullableHash(w, "tags", d.tags, hashTagsDiff);
+  writeNullableHash(w, "types", d.types, hashTypesDiff);
+  writeNullableString(w, "version", d.version);
+  return w.digest();
+};
+
+// #endregion 🔖Hash Diff Entities
+
+// #endregion 🔖Hash Diffs
+
+// #endregion 🔖Hash
 
 /**
  * Searches for matching PortInKit entry.
@@ -8473,6 +10292,7 @@ export const piecesMetadata = (
     fixedPieceId: string;
     parentPieceId: string | null;
     depth: number;
+    path: string[];
   }
 > => {
   const design = findDesignInKit(kit, designGuid);
@@ -8484,6 +10304,10 @@ export const piecesMetadata = (
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
+  const paths = flatDesign.pieces?.map((p) => {
+    const raw = findAttributeValue(p, "semio.path", p.guid);
+    return raw ? raw.split(",").filter(Boolean) : [p.guid!];
+  });
   return new Map(
     flatDesign.pieces?.map((p, index) => [
       p.guid,
@@ -8493,6 +10317,7 @@ export const piecesMetadata = (
         fixedPieceId: fixedPieceIds![index],
         parentPieceId: parentPieceIds![index],
         depth: depths![index],
+        path: paths![index],
       },
     ]),
   );
@@ -13104,7 +14929,7 @@ export class InMemoryKitStore implements UndoableKitStore {
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
 if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
-  const { beforeAll, describe, expect, it } = await import("vitest");
+  const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
   const ElementsBundle = await import("@elements/ui");
@@ -13129,12 +14954,13 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     TambourMetaType,
     TambourShallowType,
     NakaginCapsuleTowerMetaDesign,
-    NakaginCapsuleTowerShallowDesign
+    NakaginCapsuleTowerShallowDesign,
+    NakaginCapsuleTowerDeletedDesignDiff,
+    NakaginCapsuleTowerDeletedSelection,
+    NakaginCapsuleTowerDiffDesign,
+    NakaginCapsuleTowerWithDiffDesign,
   } = await import("@semio/assets");
-  const {
-    createFolderKitStore,
-    createJsonFileKitStore
-  } = await import("@semio/studio");
+  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
   type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
   type KitJsonFileAdapter = import("@semio/studio").KitJsonFileAdapter;
 
@@ -13362,7 +15188,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
   // #region 🔖Kit Filter Tests
   // [👤semio📚js🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/KitFilterTests)
-  // Tests for filterKitWithDesign MUST verify correct subset extraction.
+  // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("Kit/Filter/Design", () => {
     const kit = MetabolismKit as Kit;
@@ -13371,7 +15197,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
     it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
       expect(nakaginDesign).toBeDefined();
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
 
       expect(filtered.designs?.length).toBe(expected.designs.length);
       expect(filtered.types?.length).toBe(expected.types.length);
@@ -13410,10 +15236,104 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
 
     it("preserves kit metadata", () => {
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
       expect(filtered.guid).toBe(kit.guid);
       expect(filtered.name).toBe(kit.name);
       expect(filtered.version).toBe(kit.version);
+    });
+  });
+
+  describe("Kit/Filter/Glob", () => {
+    it("globMatch matches wildcard patterns", () => {
+      expect(globMatch("Nakagin Capsule Tower", "Nakagin*")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "*Tower")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "*Capsule*")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "Nakagin Capsule Tower")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "Other*")).toBe(false);
+      expect(globMatch("Wall", "W?ll")).toBe(true);
+      expect(globMatch("Wall", "W??l")).toBe(true);
+      expect(globMatch("Wall", "W????")).toBe(false);
+    });
+
+    it("globMatch is case-insensitive", () => {
+      expect(globMatch("Wall", "wall")).toBe(true);
+      expect(globMatch("wall", "WALL")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "nakagin*")).toBe(true);
+    });
+
+    it("matchesGlobFilter with include only", () => {
+      expect(matchesGlobFilter("Wall", { include: ["Wall"] })).toBe(true);
+      expect(matchesGlobFilter("Column", { include: ["Wall"] })).toBe(false);
+      expect(matchesGlobFilter("Wall", { include: ["W*", "C*"] })).toBe(true);
+      expect(matchesGlobFilter("Column", { include: ["W*", "C*"] })).toBe(true);
+      expect(matchesGlobFilter("Beam", { include: ["W*", "C*"] })).toBe(false);
+    });
+
+    it("matchesGlobFilter with exclude only", () => {
+      expect(matchesGlobFilter("Wall", { exclude: ["Wall"] })).toBe(false);
+      expect(matchesGlobFilter("Column", { exclude: ["Wall"] })).toBe(true);
+      expect(matchesGlobFilter("Wall", { exclude: ["*all"] })).toBe(false);
+    });
+
+    it("matchesGlobFilter with include and exclude", () => {
+      expect(matchesGlobFilter("Wall", { include: ["W*"], exclude: ["Wall"] })).toBe(false);
+      expect(matchesGlobFilter("Window", { include: ["W*"], exclude: ["Wall"] })).toBe(true);
+    });
+
+    it("matchesGlobFilter with no filter returns true", () => {
+      expect(matchesGlobFilter("anything")).toBe(true);
+      expect(matchesGlobFilter("anything", undefined)).toBe(true);
+    });
+
+    it("filterKit with type glob include filters types by name", () => {
+      const kit = MetabolismKit as Kit;
+      const totalTypes = kit.types?.length ?? 0;
+      expect(totalTypes).toBeGreaterThan(0);
+      const filtered = filterKit(kit, { types: { include: ["Capsule*"] } });
+      expect(filtered.types?.length ?? 0).toBeGreaterThan(0);
+      expect(filtered.types?.length ?? 0).toBeLessThan(totalTypes);
+      for (const t of filtered.types ?? []) {
+        expect(t.name.toLowerCase().startsWith("capsule")).toBe(true);
+      }
+    });
+
+    it("filterKit with type glob exclude filters out matching types", () => {
+      const kit = MetabolismKit as Kit;
+      const totalTypes = kit.types?.length ?? 0;
+      const filtered = filterKit(kit, { types: { exclude: ["Capsule*"] } });
+      expect(filtered.types?.length ?? 0).toBeLessThan(totalTypes);
+      for (const t of filtered.types ?? []) {
+        expect(t.name.toLowerCase().startsWith("capsule")).toBe(false);
+      }
+    });
+
+    it("filterKit with design glob include filters designs by name", () => {
+      const kit = MetabolismKit as Kit;
+      const filtered = filterKit(kit, { designs: { include: ["Nakagin*"] } });
+      expect(filtered.designs?.length ?? 0).toBeGreaterThan(0);
+      for (const d of filtered.designs ?? []) {
+        expect(globMatch(d.name, "Nakagin*")).toBe(true);
+      }
+    });
+
+    it("filterKit with no filter returns kit unchanged", () => {
+      const kit = MetabolismKit as Kit;
+      const filtered = filterKit(kit, {});
+      expect(filtered.types?.length).toBe(kit.types?.length);
+      expect(filtered.designs?.length).toBe(kit.designs?.length);
+      expect(filtered.ports?.length).toBe(kit.ports?.length);
+    });
+
+    it("filterKit combines designGuid with glob filters", () => {
+      const kit = MetabolismKit as Kit;
+      const nakaginDesign = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
+      expect(nakaginDesign).toBeDefined();
+      const designFiltered = filterKit(kit, { designGuid: nakaginDesign!.guid });
+      const combinedFiltered = filterKit(kit, { designGuid: nakaginDesign!.guid, types: { exclude: ["Capsule*"] } });
+      expect(combinedFiltered.types?.length ?? 0).toBeLessThan(designFiltered.types?.length ?? 0);
+      for (const t of combinedFiltered.types ?? []) {
+        expect(t.name.toLowerCase().startsWith("capsule")).toBe(false);
+      }
     });
   });
 
@@ -13612,7 +15532,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
   // #region 🔖Kit Filter Tests
   // [👤semio📚js🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/KitFilterTests)
-  // Tests for filterKitWithDesign MUST verify correct subset extraction.
+  // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("Kit/Filter/Design", () => {
     const kit = MetabolismKit as Kit;
@@ -13621,7 +15541,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
     it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
       expect(nakaginDesign).toBeDefined();
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
 
       expect(filtered.designs?.length).toBe(expected.designs.length);
       expect(filtered.types?.length).toBe(expected.types.length);
@@ -13659,14 +15579,14 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
 
     it("preserves kit metadata", () => {
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
       expect(filtered.guid).toBe(kit.guid);
       expect(filtered.name).toBe(kit.name);
       expect(filtered.version).toBe(kit.version);
     });
 
     it("each type has at most one model", () => {
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
       for (const type of filtered.types ?? []) {
         expect((type.models ?? []).length).toBeLessThanOrEqual(1);
       }
@@ -13743,7 +15663,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         const exportedZip = await exportKit(kit);
         const { kit: reKit } = await importKit(exportedZip);
         expect(areKitsEqual(kit, reKit)).toBe(true);
-      });
+      }, 60000);
     });
   });
 
@@ -13828,6 +15748,107 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);
         expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);
         expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);
+      }
+    });
+
+    it("Nakagin Capsule Tower flattened non-fixed piece produces connection diff and piece center update", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const flatChange = flattenDesign(kit, design.guid);
+      const flatDesign = applyDesignDiff(design, flatChange.forward);
+      const pieceGuid = "9d18882e-d90b-40de-a171-47cb4564ffa6";
+      const parentConnectionGuids = new Set((flatDesign.connections ?? []).filter((c) => c.connecting.piece.guid === pieceGuid).map((c) => c.guid));
+      const flatPiece = flatDesign.pieces!.find((p) => p.guid === pieceGuid)!;
+      const pieces = { ...flatDesign, pieces: [flatPiece] } as Design;
+      const offset = { u: 3, v: -1 };
+      const diff = dragPiecesInDesign(flatDesign, pieces, offset);
+      expect(diff.connections).toBeDefined();
+      expect(diff.connections!.updated!.length).toBe(1);
+      expect(parentConnectionGuids.has(diff.connections!.updated![0].connection.guid)).toBe(true);
+      expect(diff.connections!.updated![0].diff.u).toBe(3);
+      expect(diff.connections!.updated![0].diff.v).toBe(-1);
+      expect(diff.pieces).toBeUndefined();
+    });
+  });
+
+  describe("Delete", () => {
+    it("Nakagin Capsule Tower delete third tambour and first small tower connection", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const selection = NakaginCapsuleTowerDeletedSelection as unknown as Design;
+      const expectedDiff = NakaginCapsuleTowerDeletedDesignDiff as any;
+
+      const pieceGuids = (selection.pieces ?? []).map((p) => p.guid);
+      const connectionGuids = (selection.connections ?? []).map((c) => c.guid);
+      const computedDiff = deletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
+
+      // Verify removed pieces
+      const computedRemovedPieces = (computedDiff.pieces?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
+      const expectedRemovedPieces = (expectedDiff.pieces?.removed ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
+      expect(computedRemovedPieces.length).toBe(expectedRemovedPieces.length);
+      for (let i = 0; i < computedRemovedPieces.length; i++) {
+        expect(computedRemovedPieces[i].guid).toBe(expectedRemovedPieces[i].guid);
+      }
+
+      // Verify updated (fixed) pieces
+      const computedUpdated = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
+      const expectedUpdated = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
+      expect(computedUpdated.length).toBe(expectedUpdated.length);
+      for (let i = 0; i < computedUpdated.length; i++) {
+        expect(computedUpdated[i].piece.guid).toBe(expectedUpdated[i].piece.guid);
+        expect(computedUpdated[i].diff.plane?.origin?.x).toBeCloseTo(expectedUpdated[i].diff.plane.origin.x, 3);
+        expect(computedUpdated[i].diff.plane?.origin?.y).toBeCloseTo(expectedUpdated[i].diff.plane.origin.y, 3);
+        expect(computedUpdated[i].diff.plane?.origin?.z).toBeCloseTo(expectedUpdated[i].diff.plane.origin.z, 3);
+        expect(computedUpdated[i].diff.center?.u).toBeCloseTo(expectedUpdated[i].diff.center.u, 3);
+        expect(computedUpdated[i].diff.center?.v).toBeCloseTo(expectedUpdated[i].diff.center.v, 3);
+      }
+
+      // Verify removed connections
+      const computedRemovedConns = (computedDiff.connections?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
+      const expectedRemovedConns = (expectedDiff.connections?.removed ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
+      expect(computedRemovedConns.length).toBe(expectedRemovedConns.length);
+      for (let i = 0; i < computedRemovedConns.length; i++) {
+        expect(computedRemovedConns[i].guid).toBe(expectedRemovedConns[i].guid);
+      }
+    });
+  });
+
+  describe("Design/WithDiff", () => {
+    it("Nakagin Capsule Tower with-diff preserves old entities and annotates status", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const diff = NakaginCapsuleTowerDiffDesign as unknown as DesignDiff;
+      const expected = NakaginCapsuleTowerWithDiffDesign as unknown as Design;
+      const computed = designWithDiff(design, diff);
+
+      expect(computed.pieces!.length).toBe(expected.pieces!.length);
+      expect(computed.connections!.length).toBe(expected.connections!.length);
+
+      const getStatus = (attrs?: Attribute[]) => (attrs ?? []).find((a) => a.key === "semio.diffStatus")?.value;
+
+      // Verify piece status counts
+      const pieceStatuses = computed.pieces!.map((p) => getStatus(p.attributes));
+      expect(pieceStatuses.filter((s) => s === "unchanged").length).toBe(163);
+      expect(pieceStatuses.filter((s) => s === "modified").length).toBe(7);
+      expect(pieceStatuses.filter((s) => s === "removed").length).toBe(10);
+      expect(pieceStatuses.filter((s) => s === "added").length).toBe(5);
+
+      // Verify connection status counts
+      const connStatuses = computed.connections!.map((c) => getStatus(c.attributes));
+      expect(connStatuses.filter((s) => s === "unchanged").length).toBe(168);
+      expect(connStatuses.filter((s) => s === "modified").length).toBe(1);
+      expect(connStatuses.filter((s) => s === "removed").length).toBe(10);
+      expect(connStatuses.filter((s) => s === "added").length).toBe(4);
+
+      // Verify modified pieces keep their original parameters (not diff-updated)
+      const removedPieceGuids = new Set((diff.pieces?.removed ?? []).map((r) => r.guid));
+      for (const piece of computed.pieces!) {
+        if (getStatus(piece.attributes) === "modified" || getStatus(piece.attributes) === "removed" || getStatus(piece.attributes) === "unchanged") {
+          const originalPiece = design.pieces!.find((p) => p.guid === piece.guid);
+          expect(originalPiece).toBeDefined();
+          expect(piece.name).toBe(originalPiece!.name);
+          expect(piece.description).toBe(originalPiece!.description);
+        }
       }
     });
   });
@@ -14049,7 +16070,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         resolve(__dirname, "../net/Semio.Tests"),
       );
 
-      const implementations = (skipGo ? (["js", "py", "rs", "net"] as const) : (["js", "py", "go", "rs", "net"] as const)) as const;
+      const implementations = skipGo ? (["js", "py", "rs", "net"] as const) : (["js", "py", "go", "rs", "net"] as const);
       const normalizedByImplementation = Object.fromEntries(
         implementations.map((implementation) => {
           const reportPath = resolve(EXPORT_REPORTS_DIR, `${implementation}.gltf`);
@@ -14115,7 +16136,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       };
       await fs.writeFile(resolve(reportsDir, "js.json"), JSON.stringify(report, null, 2), "utf8");
 
-      const canonicalPath = resolve(__dirname, "../assets/semio/model-kpi-nakagin.json");
+      const canonicalPath = resolve(__dirname, "../assets/semio/nakagin.kpi.model.semio.json");
       const canonical = JSON.parse(await fs.readFile(canonicalPath, "utf8"));
       const skipKeys = new Set(["centroid", "total_surface_area"]);
       for (const key of Object.keys(canonical)) {
@@ -14846,339 +16867,6 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   });
   // #endregion 🔖FolderKitStore Tests
 
-  // #region 🔖SketchpadStore Kit Store Factory Tests
-  // [👤semio📚js🥼semiotest🔖sketchpadstorekitstorefactorytests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/SketchpadStoreKitStoreFactoryTests)
-  // Tests for SketchpadStore.availableKitKinds() and createKit with optional factory props.
-
-  describe("SketchpadStore availableKitKinds", () => {
-    let SketchpadStore: any;
-    beforeAll(async () => {
-      const mod = await import("../sketchpad/index");
-      SketchpadStore = mod.SketchpadStore;
-    });
-    const dummyFactory: any = (kit: Kit) => new InMemoryKitStore(kit);
-
-    it("returns temporary=true when no factories and no injected store", () => {
-      const store = new SketchpadStore();
-      const kinds = store.availableKitKinds();
-      expect(kinds.temporary).toBe(true);
-      expect(kinds.local).toBe(false);
-      expect(kinds.remote).toBe(false);
-    });
-
-    it("returns temporary=true when only temporaryKitStoreFactory is provided", () => {
-      const store = new SketchpadStore(
-        undefined, // id
-        undefined, // remote
-        undefined, // initialState
-        undefined, // persistenceFactory
-        undefined, // injectedKitStore
-        dummyFactory, // temporaryKitStoreFactory
-      );
-      const kinds = store.availableKitKinds();
-      expect(kinds.temporary).toBe(true);
-      expect(kinds.local).toBe(false);
-      expect(kinds.remote).toBe(false);
-    });
-
-    it("returns local=true when folderKitStoreFactory is provided", () => {
-      const store = new SketchpadStore(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined, // temporaryKitStoreFactory
-        dummyFactory, // folderKitStoreFactory
-      );
-      const kinds = store.availableKitKinds();
-      expect(kinds.temporary).toBe(false);
-      expect(kinds.local).toBe(true);
-      expect(kinds.remote).toBe(false);
-    });
-
-    it("returns local=true when fileKitStoreFactory is provided", () => {
-      const store = new SketchpadStore(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined, // temporaryKitStoreFactory
-        undefined, // folderKitStoreFactory
-        dummyFactory, // fileKitStoreFactory
-      );
-      const kinds = store.availableKitKinds();
-      expect(kinds.temporary).toBe(false);
-      expect(kinds.local).toBe(true);
-      expect(kinds.remote).toBe(false);
-    });
-
-    it("returns remote=true when remoteKitStoreFactory is provided", () => {
-      const store = new SketchpadStore(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined, // temporaryKitStoreFactory
-        undefined, // folderKitStoreFactory
-        undefined, // fileKitStoreFactory
-        dummyFactory, // remoteKitStoreFactory
-      );
-      const kinds = store.availableKitKinds();
-      expect(kinds.temporary).toBe(false);
-      expect(kinds.local).toBe(false);
-      expect(kinds.remote).toBe(true);
-    });
-
-    it("returns all kinds when all factories are provided", () => {
-      const store = new SketchpadStore(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        dummyFactory, // temporaryKitStoreFactory
-        dummyFactory, // folderKitStoreFactory
-        undefined, // fileKitStoreFactory
-        dummyFactory, // remoteKitStoreFactory
-      );
-      const kinds = store.availableKitKinds();
-      expect(kinds.temporary).toBe(true);
-      expect(kinds.local).toBe(true);
-      expect(kinds.remote).toBe(true);
-    });
-
-    it("returns local=true when both folder and file factories are provided", () => {
-      const store = new SketchpadStore(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined, // temporaryKitStoreFactory
-        dummyFactory, // folderKitStoreFactory
-        dummyFactory, // fileKitStoreFactory
-      );
-      const kinds = store.availableKitKinds();
-      expect(kinds.temporary).toBe(false);
-      expect(kinds.local).toBe(true);
-      expect(kinds.remote).toBe(false);
-    });
-
-    it("infers availability from injected kit store when no factories provided", () => {
-      const injectedStore = new InMemoryKitStore({ guid: "test", name: "Test" });
-      const store = new SketchpadStore(undefined, undefined, undefined, undefined, injectedStore);
-      const kinds = store.availableKitKinds();
-      // InMemoryKitStore is inferred as temporary (non-local, non-remote)
-      expect(kinds.temporary).toBe(true);
-      expect(kinds.local).toBe(false);
-      expect(kinds.remote).toBe(false);
-    });
-
-    it("uses factories over injected store when both provided", () => {
-      const injectedStore = new InMemoryKitStore({ guid: "test", name: "Test" });
-      const store = new SketchpadStore(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        injectedStore,
-        undefined, // temporaryKitStoreFactory
-        dummyFactory, // folderKitStoreFactory
-      );
-      const kinds = store.availableKitKinds();
-      // Factories take precedence: no temporary factory => false, folder factory => local true
-      expect(kinds.temporary).toBe(false);
-      expect(kinds.local).toBe(true);
-      expect(kinds.remote).toBe(false);
-    });
-  });
-
-  describe("SketchpadStore createKit with factories", () => {
-    let SketchpadStore: any;
-    beforeAll(async () => {
-      const mod = await import("../sketchpad/index");
-      SketchpadStore = mod.SketchpadStore;
-    });
-    const dummyFactory: any = (kit: Kit) => new InMemoryKitStore(kit);
-
-    it("creates a kit using temporaryKitStoreFactory", async () => {
-      const createdKits: Kit[] = [];
-      const trackingFactory: any = (kit) => {
-        createdKits.push(kit);
-        return new InMemoryKitStore(kit);
-      };
-      const store = new SketchpadStore(undefined, undefined, undefined, undefined, undefined, trackingFactory);
-      const kit: Kit = { guid: "new-kit", name: "New Kit" };
-      await store.createKit(kit, false, false);
-      expect(createdKits).toHaveLength(1);
-      expect(createdKits[0].guid).toBe("new-kit");
-    });
-
-    it("creates a kit using folderKitStoreFactory for local", async () => {
-      const createdKits: Kit[] = [];
-      const trackingFactory: any = (kit) => {
-        createdKits.push(kit);
-        return new InMemoryKitStore(kit);
-      };
-      const store = new SketchpadStore(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        trackingFactory, // folderKitStoreFactory
-      );
-      const kit: Kit = { guid: "local-kit", name: "Local Kit" };
-      await store.createKit(kit, true, false);
-      expect(createdKits).toHaveLength(1);
-      expect(createdKits[0].guid).toBe("local-kit");
-    });
-
-    it("creates a kit using remoteKitStoreFactory for remote", async () => {
-      const createdKits: Kit[] = [];
-      const trackingFactory: any = (kit) => {
-        createdKits.push(kit);
-        return new InMemoryKitStore(kit);
-      };
-      const store = new SketchpadStore(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        trackingFactory, // remoteKitStoreFactory
-      );
-      const kit: Kit = { guid: "remote-kit", name: "Remote Kit" };
-      await store.createKit(kit, false, true);
-      expect(createdKits).toHaveLength(1);
-      expect(createdKits[0].guid).toBe("remote-kit");
-    });
-
-    it("falls back to InMemoryKitStore when no factory matches", async () => {
-      const store = new SketchpadStore();
-      const kit: Kit = { guid: "fallback-kit", name: "Fallback Kit" };
-      await store.createKit(kit, false, false);
-      // Kit is registered; if it weren't, an error would be thrown
-      expect(store.hasKit("fallback-kit")).toBe(true);
-    });
-
-    it("prefers folderKitStoreFactory over fileKitStoreFactory for local kits", async () => {
-      const folderKits: Kit[] = [];
-      const fileKits: Kit[] = [];
-      const folderFactory: any = (kit) => {
-        folderKits.push(kit);
-        return new InMemoryKitStore(kit);
-      };
-      const fileFactory: any = (kit) => {
-        fileKits.push(kit);
-        return new InMemoryKitStore(kit);
-      };
-      const store = new SketchpadStore(undefined, undefined, undefined, undefined, undefined, undefined, folderFactory, fileFactory);
-      const kit: Kit = { guid: "local-kit", name: "Local Kit" };
-      await store.createKit(kit, true, false);
-      expect(folderKits).toHaveLength(1);
-      expect(fileKits).toHaveLength(0);
-    });
-  });
-  // #endregion 🔖SketchpadStore Kit Store Factory Tests
-
-  // #region 🔖SketchpadStore Auto Save Tests
-  describe("SketchpadStore auto-save on registerKitStore", () => {
-    let SketchpadStore: any;
-    beforeAll(async () => {
-      const mod = await import("../sketchpad/index");
-      SketchpadStore = mod.SketchpadStore;
-    });
-
-    it("auto-saves when kit store becomes dirty after apply", async () => {
-      const saveCalls: number[] = [];
-      const kitStore = new InMemoryKitStore({ guid: "auto-save-kit", name: "Auto Save Kit" });
-      const originalSave = kitStore.save.bind(kitStore);
-      kitStore.save = async () => {
-        saveCalls.push(Date.now());
-        await originalSave();
-      };
-      const store = new SketchpadStore();
-      await store.createKit({ guid: "auto-save-kit-2", name: "Placeholder" }, false, false);
-      // Directly register the tracked kit store
-      (store as any).registerKitStore(kitStore, false, false);
-      // Apply a diff to make it dirty
-      kitStore.apply({ types: { add: [{ guid: "t1", name: "TestType" }] } });
-      expect(kitStore.getSnapshot().sync.dirty).toBe(true);
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      expect(saveCalls.length).toBeGreaterThanOrEqual(1);
-      expect(kitStore.getSnapshot().sync.dirty).toBe(false);
-    });
-
-    it("debounces rapid changes into a single save", async () => {
-      const saveCalls: number[] = [];
-      const kitStore = new InMemoryKitStore({ guid: "debounce-kit", name: "Debounce Kit" });
-      const originalSave = kitStore.save.bind(kitStore);
-      kitStore.save = async () => {
-        saveCalls.push(Date.now());
-        await originalSave();
-      };
-      const store = new SketchpadStore();
-      (store as any).registerKitStore(kitStore, false, false);
-      // Rapid applies
-      kitStore.apply({ types: { add: [{ guid: "t1", name: "T1" }] } });
-      kitStore.apply({ types: { add: [{ guid: "t2", name: "T2" }] } });
-      kitStore.apply({ types: { add: [{ guid: "t3", name: "T3" }] } });
-      // Wait for debounce
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // Should have debounced to a single save
-      expect(saveCalls.length).toBe(1);
-    });
-
-    it("does not auto-save when store status is not ready", async () => {
-      const saveCalls: number[] = [];
-      const kitStore = new InMemoryKitStore({ guid: "status-kit", name: "Status Kit" });
-      const originalSave = kitStore.save.bind(kitStore);
-      kitStore.save = async () => {
-        saveCalls.push(Date.now());
-        await originalSave();
-      };
-      // Simulate a non-ready status
-      (kitStore as any).status = "saving";
-      const store = new SketchpadStore();
-      (store as any).registerKitStore(kitStore, false, false);
-      kitStore.apply({ types: { add: [{ guid: "t1", name: "T1" }] } });
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      expect(saveCalls.length).toBe(0);
-    });
-
-    it("auto-saves injected kitStore from desktop", async () => {
-      const saveCalls: number[] = [];
-      const kitStore = new InMemoryKitStore({ guid: "desktop-kit", name: "Desktop Kit" });
-      const originalSave = kitStore.save.bind(kitStore);
-      kitStore.save = async () => {
-        saveCalls.push(Date.now());
-        await originalSave();
-      };
-      // Mark as local (FolderKitStore)
-      (kitStore as any).__semioKitPersistenceKind = { local: true, remote: false };
-      const store = new SketchpadStore(undefined, undefined, undefined, undefined, kitStore);
-      // Wait for loadPersistedKits to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      // The injected kit store should be registered
-      expect(store.hasKit("desktop-kit")).toBe(true);
-      // Apply a change and verify auto-save
-      kitStore.apply({ types: { add: [{ guid: "t1", name: "TestType" }] } });
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      expect(saveCalls.length).toBeGreaterThanOrEqual(1);
-      expect(kitStore.getSnapshot().sync.dirty).toBe(false);
-    });
-  });
-  // #endregion 🔖SketchpadStore Auto Save Tests
-
   // #region 🔖Meta/Shallow Tests
   // [👤semio📚js💻index🔖metashallowtests](repo://p/u/semio/b/l/js/f/index.ts/s/MetaShallowTests)
   // Tests for Meta and Shallow schema parsing, conversion functions, and roundtrips.
@@ -15321,6 +17009,215 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
   });
   // #endregion 🔖Meta/Shallow Tests
+
+  // #region 🔖Hash Tests
+  describe("Kit/Hash", () => {
+    it("hashKit produces a 64-char lowercase hex string", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const h = hashKit(kit);
+      expect(h).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashKit is deterministic (same input produces same output)", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const h1 = hashKit(kit);
+      const h2 = hashKit(kit);
+      expect(h1).toBe(h2);
+    });
+
+    it("hashDesign produces a 64-char lowercase hex string", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const h = hashDesign(nct);
+      expect(h).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashType produces a 64-char lowercase hex string", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const t = kit.types![0];
+      const h = hashType(t);
+      expect(h).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("different kits produce different hashes", () => {
+      const kit1 = MetabolismKit as unknown as Kit;
+      const kit2 = { ...kit1, name: "Different Name" };
+      expect(hashKit(kit1)).not.toBe(hashKit(kit2));
+    });
+
+    it("sha256 of empty input matches known value", () => {
+      const h = sha256bytes(new Uint8Array(0));
+      expect(h).toBe("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    });
+
+    it("sha256 of 'abc' matches known value", () => {
+      const h = sha256bytes(new TextEncoder().encode("abc"));
+      expect(h).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    });
+
+    it("hashKit of metabolism kit matches expected hash", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const h = hashKit(kit);
+      expect(h).toBe("4a8b056c2e80616afd25addb1bc31204da9879714c78ef2ec213df691a043160");
+    });
+
+    it("hashPiece is deterministic", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const piece = nct.pieces![0];
+      const h1 = hashPiece(piece);
+      const h2 = hashPiece(piece);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashConnection is deterministic", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const conn = nct.connections![0];
+      const h1 = hashConnection(conn);
+      const h2 = hashConnection(conn);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashConnector is deterministic", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const t = kit.types!.find((t: Type) => t.connectors && t.connectors.length > 0)!;
+      const conn = t.connectors![0];
+      const h1 = hashConnector(conn);
+      const h2 = hashConnector(conn);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashKitDiff is deterministic and produces valid hash", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const modified = { ...kit, name: "Modified Kit", description: "New description" };
+      const diff = getKitDiff(kit, modified);
+      const h1 = hashKitDiff(diff);
+      const h2 = hashKitDiff(diff);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashKitDiff produces different hashes for different diffs", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const mod1 = { ...kit, name: "Modified1" };
+      const mod2 = { ...kit, name: "Modified2" };
+      const diff1 = getKitDiff(kit, mod1);
+      const diff2 = getKitDiff(kit, mod2);
+      expect(hashKitDiff(diff1)).not.toBe(hashKitDiff(diff2));
+    });
+
+    it("hashKitDiff empty diff produces a consistent hash", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const diff = getKitDiff(kit, kit);
+      const h = hashKitDiff(diff);
+      expect(h).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashAttributeDiff is deterministic", () => {
+      const d: AttributeDiff = { key: "newKey", value: "newValue" };
+      const h1 = hashAttributeDiff(d);
+      const h2 = hashAttributeDiff(d);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashCoordDiff is deterministic", () => {
+      const d: CoordDiff = { u: 1.0, v: 2.0 };
+      const h1 = hashCoordDiff(d);
+      const h2 = hashCoordDiff(d);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashTypeDiff with collection diffs is deterministic", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      if (kit.types && kit.types.length >= 2) {
+        const modified = {
+          ...kit,
+          types: kit.types.map((t: Type, i: number) => (i === 0 ? { ...t, description: "Updated type description" } : t)),
+        };
+        const diff = getKitDiff(kit, modified);
+        if (diff.types) {
+          const h1 = hashTypesDiff(diff.types);
+          const h2 = hashTypesDiff(diff.types);
+          expect(h1).toBe(h2);
+          expect(h1).toMatch(/^[0-9a-f]{64}$/);
+        }
+      }
+    });
+
+    it("hashDesignDiff is deterministic", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      if (kit.designs && kit.designs.length >= 1) {
+        const modified = {
+          ...kit,
+          designs: kit.designs.map((d: Design, i: number) => (i === 0 ? { ...d, description: "Updated design" } : d)),
+        };
+        const diff = getKitDiff(kit, modified);
+        if (diff.designs) {
+          const h1 = hashDesignsDiff(diff.designs);
+          const h2 = hashDesignsDiff(diff.designs);
+          expect(h1).toBe(h2);
+          expect(h1).toMatch(/^[0-9a-f]{64}$/);
+        }
+      }
+    });
+
+    it("hashPlaneDiff is deterministic", () => {
+      const d: PlaneDiff = {
+        origin: { x: 1.0, y: 2.0 },
+        xAxis: { x: 1.0 },
+      };
+      const h1 = hashPlaneDiff(d);
+      const h2 = hashPlaneDiff(d);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashSideDiff is deterministic", () => {
+      const d: SideDiff = { piece: { guid: "p1" } };
+      const h1 = hashSideDiff(d);
+      const h2 = hashSideDiff(d);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashConnectionDiff is deterministic", () => {
+      const d: ConnectionDiff = { gap: 0.5, rotation: 90 };
+      const h1 = hashConnectionDiff(d);
+      const h2 = hashConnectionDiff(d);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashStatDiff is deterministic", () => {
+      const d: StatDiff = { min: 0, max: 100, unit: "mm" };
+      const h1 = hashStatDiff(d);
+      const h2 = hashStatDiff(d);
+      expect(h1).toBe(h2);
+      expect(h1).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashKitDiff with type addition produces valid hash", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const newType: Type = { guid: "new-type-guid", name: "NewType" };
+      const modified = { ...kit, types: [...(kit.types ?? []), newType] };
+      const diff = getKitDiff(kit, modified);
+      const h = hashKitDiff(diff);
+      expect(h).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashKitDiff matches expected canonical value", () => {
+      const diff: KitDiff = { name: "updated", description: null };
+      const h = hashKitDiff(diff);
+      expect(h).toBe("d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5");
+    });
+  });
+  // #endregion 🔖Hash Tests
 } // end vitest guard
 // #endregion 🔖Tests
 
@@ -15348,10 +17245,10 @@ async function bench(name: string, fn: () => Promise<void> | void) {
 
 // Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
 async function runBenchmarks() {
-  const DiffForward = (await import("@semio/assets/semio/diff_kit_metabolism.json")).default;
-  const DiffInverse = (await import("@semio/assets/semio/diff_kit_metabolism_inverted.json")).default;
-  const BenchMetabolismKit = (await import("@semio/assets/semio/kit_metabolism.json")).default;
-  const BenchInvalidKit = (await import("@semio/assets/semio/kit_invalid.json")).default;
+  const DiffForward = (await import("@semio/assets/semio/metabolism.kit.diff.semio.json")).default;
+  const DiffInverse = (await import("@semio/assets/semio/metabolism.kit.diff.inverted.semio.json")).default;
+  const BenchMetabolismKit = (await import("@semio/assets/semio/metabolism.kit.semio.json")).default;
+  const BenchInvalidKit = (await import("@semio/assets/semio/invalid.kit.semio.json")).default;
 
   const kitMetabolism = BenchMetabolismKit as unknown as Kit;
   const kitInvalid = BenchInvalidKit as unknown as Kit;

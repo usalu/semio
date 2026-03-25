@@ -1,0 +1,427 @@
+{
+  "pieces": [
+    {
+      "guid": "e2faf536-dbe0-49e2-97b2-965e57acd512",
+      "name": "b0",
+      "type": {
+        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "center": {
+        "u": 4.82491,
+        "v": 0.18330000000000002
+      },
+      "plane": {
+        "origin": {
+          "x": 7.500000000000001,
+          "y": 7.700000000000001,
+          "z": -7.500000000000001
+        },
+        "xAxis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "yAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "guid": "e72975ab-2adc-4bdd-a3fa-4e2df7dd61a1",
+      "name": "t_fs_b0_c0",
+      "type": {
+        "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": ""
+    },
+    {
+      "guid": "ade12a05-81e1-4d2a-b442-7152ab3f9df9",
+      "name": "t_b0_c0",
+      "type": {
+        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": ""
+    },
+    {
+      "guid": "ed7b6b3c-02d5-4ed6-ae51-f9cbec92cb83",
+      "name": "ci_bs_b0_c0",
+      "type": {
+        "guid": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": ""
+    },
+    {
+      "guid": "a7a6c527-0e89-4922-b6c1-2af6fb64ae29",
+      "name": "t_fs_b0_c1",
+      "type": {
+        "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": ""
+    },
+    {
+      "guid": "3910be91-289e-493b-9f4c-7ef4ac75603e",
+      "name": "b1",
+      "type": {
+        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "center": {
+        "u": 12.745473939343363,
+        "v": 0.037757142777375796
+      },
+      "plane": {
+        "origin": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "xAxis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "yAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "guid": "f0b8dd4a-f9a2-4db8-8958-a9d9396a0d91",
+      "name": "b2",
+      "type": {
+        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "center": {
+        "u": 11.107015833551136,
+        "v": 4.111146044677499
+      },
+      "plane": {
+        "origin": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "xAxis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "yAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "guid": "b6aff18a-820b-4629-a401-4c8e2ed0e01a",
+      "name": "t_fs_b2_c0",
+      "type": {
+        "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": ""
+    },
+    {
+      "guid": "91b889a0-b809-4f15-9945-945ecf198229",
+      "name": "b3",
+      "type": {
+        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "center": {
+        "u": 8.831073248515459,
+        "v": -1.1969289162454868
+      },
+      "plane": {
+        "origin": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "xAxis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "yAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "guid": "c52879d5-d5dc-47da-a37b-b97a5889756e",
+      "name": "t_f0_b0_c0",
+      "type": {
+        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": ""
+    },
+    {
+      "guid": "d885ae2c-87b7-4627-b8cd-f5a236b5ba34",
+      "name": "b4",
+      "type": {
+        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": "",
+      "center": {
+        "u": 16.080139848992868,
+        "v": 2.8978141094295897
+      },
+      "plane": {
+        "origin": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "xAxis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "yAxis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        }
+      }
+    },
+    {
+      "guid": "99969c34-c228-451d-b054-67a69748a5cd",
+      "name": "t_fs_b4_c1",
+      "type": {
+        "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
+      },
+      "isHidden": false,
+      "isLocked": false,
+      "description": ""
+    }
+  ],
+  "connections": [
+    {
+      "guid": "7296fbd8-9a46-4b67-a3a1-03c25fc0dd62",
+      "gap": 0,
+      "tilt": 0,
+      "rotation": 0,
+      "rise": 0,
+      "turn": 0,
+      "shift": 0,
+      "u": -1.003736574948555,
+      "v": 1.010535189313679,
+      "description": "",
+      "connected": {
+        "piece": {
+          "guid": "e2faf536-dbe0-49e2-97b2-965e57acd512"
+        },
+        "connector": {
+          "guid": "c5465220-19ba-4443-8f1d-617c832dd13c"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "guid": "e72975ab-2adc-4bdd-a3fa-4e2df7dd61a1"
+        },
+        "connector": {
+          "guid": "7be6cfda-db1b-47e4-bcea-cd011e516e2e"
+        }
+      }
+    },
+    {
+      "guid": "8f3dd453-ab99-417c-b98c-65264d312eb8",
+      "gap": 0,
+      "tilt": 0,
+      "rotation": 0,
+      "rise": 0,
+      "turn": 0,
+      "shift": 0,
+      "u": 0.01900304198758363,
+      "v": 0.9239401660320317,
+      "description": "",
+      "connected": {
+        "piece": {
+          "guid": "e72975ab-2adc-4bdd-a3fa-4e2df7dd61a1"
+        },
+        "connector": {
+          "guid": "8001a609-ea58-4cc1-a1bb-a1e56fbc2f3a"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "guid": "ade12a05-81e1-4d2a-b442-7152ab3f9df9"
+        },
+        "connector": {
+          "guid": "d33bc30f-a228-4708-a8db-49eeabf51f71"
+        }
+      }
+    },
+    {
+      "guid": "1fc6cbb2-4c32-48ca-866e-3629a76a9f44",
+      "gap": 0,
+      "tilt": 0,
+      "rotation": 0,
+      "rise": 0,
+      "turn": 0,
+      "shift": 0,
+      "u": -2.0253399652715736,
+      "v": -0.2982472182878894,
+      "description": "",
+      "connected": {
+        "piece": {
+          "guid": "ade12a05-81e1-4d2a-b442-7152ab3f9df9"
+        },
+        "connector": {
+          "guid": "26ed7622-ef47-4bc2-ae9c-af32f63e3b64"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "guid": "ed7b6b3c-02d5-4ed6-ae51-f9cbec92cb83"
+        },
+        "connector": {
+          "guid": "a3edeb3f-85a4-4f1c-9bf9-55ba5440022d"
+        }
+      }
+    },
+    {
+      "guid": "23886666-ff68-4f2d-afd8-ec9056c4703e",
+      "gap": 0,
+      "tilt": 0,
+      "rotation": 0,
+      "rise": 0,
+      "turn": 0,
+      "shift": 0,
+      "u": 1.0067427782973244,
+      "v": 1.0687619718940504,
+      "description": "",
+      "connected": {
+        "piece": {
+          "guid": "e2faf536-dbe0-49e2-97b2-965e57acd512"
+        },
+        "connector": {
+          "guid": "d25a91ed-b124-4e5b-8e7e-af832541c953"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "guid": "a7a6c527-0e89-4922-b6c1-2af6fb64ae29"
+        },
+        "connector": {
+          "guid": "7be6cfda-db1b-47e4-bcea-cd011e516e2e"
+        }
+      }
+    },
+    {
+      "guid": "b9c2feb0-4c1d-4cf0-adc6-c5bf4cd1beac",
+      "gap": 0,
+      "tilt": 0,
+      "rotation": 0,
+      "rise": 0,
+      "turn": 0,
+      "shift": 0,
+      "u": 0.3538625748690606,
+      "v": 1.7063479516740943,
+      "description": "",
+      "connected": {
+        "piece": {
+          "guid": "f0b8dd4a-f9a2-4db8-8958-a9d9396a0d91"
+        },
+        "connector": {
+          "guid": "c5465220-19ba-4443-8f1d-617c832dd13c"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "guid": "b6aff18a-820b-4629-a401-4c8e2ed0e01a"
+        },
+        "connector": {
+          "guid": "7be6cfda-db1b-47e4-bcea-cd011e516e2e"
+        }
+      }
+    },
+    {
+      "guid": "cd1fa979-d861-4061-b8e8-202847b10f22",
+      "gap": 0,
+      "tilt": 0,
+      "rotation": 0,
+      "rise": 0,
+      "turn": 0,
+      "shift": 0,
+      "u": 0.016506124075738173,
+      "v": 1.157366767748889,
+      "description": "",
+      "connected": {
+        "piece": {
+          "guid": "ade12a05-81e1-4d2a-b442-7152ab3f9df9"
+        },
+        "connector": {
+          "guid": "a074038c-a741-427c-a90f-6ec66000b09e"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "guid": "c52879d5-d5dc-47da-a37b-b97a5889756e"
+        },
+        "connector": {
+          "guid": "d33bc30f-a228-4708-a8db-49eeabf51f71"
+        }
+      }
+    },
+    {
+      "guid": "7f946e5e-c55e-494d-9002-9b5280e72d86",
+      "gap": 0,
+      "tilt": 0,
+      "rotation": 0,
+      "rise": 0,
+      "turn": 0,
+      "shift": 0,
+      "u": 1.0471949192133116,
+      "v": 0.8607438607421182,
+      "description": "",
+      "connected": {
+        "piece": {
+          "guid": "d885ae2c-87b7-4627-b8cd-f5a236b5ba34"
+        },
+        "connector": {
+          "guid": "d25a91ed-b124-4e5b-8e7e-af832541c953"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "guid": "99969c34-c228-451d-b054-67a69748a5cd"
+        },
+        "connector": {
+          "guid": "7be6cfda-db1b-47e4-bcea-cd011e516e2e"
+        }
+      }
+    }
+  ]
+}

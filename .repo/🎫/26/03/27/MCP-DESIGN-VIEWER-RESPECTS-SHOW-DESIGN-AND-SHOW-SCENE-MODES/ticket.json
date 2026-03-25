@@ -1,0 +1,13 @@
+{
+  "title": "Mcp Design Viewer Respects Show Design And Show Scene Modes",
+  "status": "closed",
+  "description": "normalizeMcpDiagramPayload dropped mode/design/kit; McpDesignViewer defaulted to diagram and kit-only branch order wrong. Preserve fields, score richer payloads, render SemioDesign/SemioScene first.",
+  "summary": "normalizeMcpDiagramPayload now passes through mode, design, and kit from engine JSON; scoreMcpDiagramPayload favors those fields so bestMcpDiagramPayload does not drop them for stripped structuredContent. McpDesignViewer evaluates show-design/show-scene before the kit-only (!hasDiagram) branch. Vitest: preserves mode/design/kit. Engine tool docstrings already describe split design vs diagram vs scene. Rebuilt dist/mcp-app.html.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1152"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪7942d1edb4d244c7841df5a8e476ffc9"
+  ]
+}

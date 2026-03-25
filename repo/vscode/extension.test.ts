@@ -302,7 +302,7 @@ async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.Code
 // #region 🔖Extension Activation
 suiteSetup(async function () {
   this.timeout(30000);
-  await openFixture("semio/kit_metabolism.json");
+  await openFixture("semio/metabolism.kit.semio.json");
   await new Promise((resolve) => setTimeout(resolve, 2000));
 });
 
@@ -399,13 +399,13 @@ suite("Kit Validation Test Suite", function () {
   this.timeout(15000);
 
   test("Valid kit file produces no diagnostics", async function () {
-    const document = await openFixture("semio/kit_metabolism.json");
+    const document = await openFixture("semio/metabolism.kit.semio.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     assert.strictEqual(diagnostics.length, 0, "Valid kit should have no validation errors");
   });
 
   test("Invalid kit file triggers all expected constraint breachs", async function () {
-    const document = await openFixture("semio/kit_invalid.json");
+    const document = await openFixture("semio/invalid.kit.semio.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -424,7 +424,7 @@ suite("Kit Validation Test Suite", function () {
   });
 
   test("Diagnostics have correct source and severity", async function () {
-    const document = await openFixture("semio/kit_invalid.json");
+    const document = await openFixture("semio/invalid.kit.semio.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -438,7 +438,7 @@ suite("Kit Validation Test Suite", function () {
   });
 
   test("Quick fixes are available for kit diagnostics", async function () {
-    const document = await openFixture("semio/kit_invalid.json");
+    const document = await openFixture("semio/invalid.kit.semio.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -452,7 +452,7 @@ suite("Kit Validation Test Suite", function () {
   });
 
   test("Quick fix workspace edit contains valid text edits", async function () {
-    const document = await openFixture("semio/kit_invalid.json");
+    const document = await openFixture("semio/invalid.kit.semio.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -554,7 +554,7 @@ suite("Refresh Diagnostics Test Suite", function () {
   this.timeout(15000);
 
   test("semio.refreshDiagnostics updates all open documents", async function () {
-    const document = await openFixture("semio/kit_invalid.json");
+    const document = await openFixture("semio/invalid.kit.semio.json");
     await vscode.commands.executeCommand("semio.refreshDiagnostics");
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const diagnostics = vscode.languages.getDiagnostics(document.uri).filter((d) => d.source === "semio");
@@ -1974,11 +1974,11 @@ suite("CodeLens Behavior Test Suite", function () {
 suite("Semio VS Code Kit Editor Test Suite", () => {
   test("Kit file detection matches semio kit naming conventions", () => {
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/kit_metabolism.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.semio.json"), true);
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/kit-metabolism.json"), true);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism/.semio/kit.json"), true);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.embedded.semio.json"), true);
     assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/jsonschema/kit.json"), false);
-    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/diff_kit_metabolism.json"), false);
+    assert.strictEqual(isLikelyKitJsonFilePath("/workspace/semio/assets/semio/metabolism.kit.diff.semio.json"), false);
   });
 
   test("Sketchpad dist resolution prefers bundled assets and falls back to workspace sketchpad dist", () => {

@@ -113,7 +113,7 @@ export default defineConfig(async () => {
     },
     build: {
       rollupOptions: {
-        external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/semio/kit_metabolism.json", "fs", "path", "url"],
+        external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/semio/metabolism.kit.semio.json", "fs", "path", "url"],
       },
     },
     ssr: {

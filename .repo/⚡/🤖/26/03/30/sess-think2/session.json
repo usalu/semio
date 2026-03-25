@@ -1,0 +1,54 @@
+{
+  "id": "sess-think2",
+  "uri": "repo://session/sess-think2",
+  "client": "cursor-chat",
+  "second": "2026-03-30T22:35:45Z",
+  "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-03-30T22:35:45Z",
+        "session": "sess-think2"
+      },
+      "native": {
+        "event": {
+          "native": {
+            "event": {
+              "text": "Thinking deeply",
+              "hook_event_name": "afterAgentThought"
+            }
+          },
+          "session_id": "sess-think2"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-03-30T22:36:27Z",
+        "session": "sess-think2"
+      },
+      "native": {
+        "event": {
+          "native": {
+            "event": {
+              "text": "Thinking deeply",
+              "hook_event_name": "afterAgentThought"
+            }
+          },
+          "session_id": "sess-think2"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

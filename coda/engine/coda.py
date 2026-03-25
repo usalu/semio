@@ -517,18 +517,21 @@ class Session:
 # Singleton session for sidecar mode; MCP mode uses per-MCP-session dicts.
 _sidecar_session = Session()
 
-# MCP session-scoped state (keyed by MCP session id).
-_mcp_sessions: dict[int, Session] = {}
+# MCP session-scoped state (keyed by session id).
+import weakref
+_mcp_sessions: weakref.WeakKeyDictionary[typing.Any, Session] = weakref.WeakKeyDictionary()
 
 
-def _mcp_session_id(ctx) -> int:
-    """Get MCP session id from context."""
-    return id(ctx.session) if ctx and hasattr(ctx, "session") else 0
+def _mcp_session_id(ctx) -> typing.Any | None:
+    """Get MCP session object from context."""
+    return ctx.session if ctx and hasattr(ctx, "session") else None
 
 
 def _get_mcp_session(ctx) -> Session:
     """Get or create Session for an MCP session."""
     sid = _mcp_session_id(ctx)
+    if sid is None:
+        return _sidecar_session
     if sid not in _mcp_sessions:
         _mcp_sessions[sid] = Session()
     return _mcp_sessions[sid]

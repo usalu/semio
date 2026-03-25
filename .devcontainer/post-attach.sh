@@ -586,9 +586,17 @@ for (const [name, server] of Object.entries(normalizedServers)) {
   codexLines.push("");
 }
 fs.writeFileSync(codexConfigPath, `${codexLines.join("\n")}\n`);
+
+// Kiro CLI: .kiro/settings/mcp.json
+const kiroDir = path.join(repoRoot, ".kiro", "settings");
+fs.mkdirSync(kiroDir, { recursive: true });
+fs.writeFileSync(
+  path.join(kiroDir, "mcp.json"),
+  `${JSON.stringify({ mcpServers: normalizedServers }, null, 2)}\n`,
+);
 EOF
 
-  echo "✅ Synced MCP configs for Windsurf and Codex."
+  echo "✅ Synced MCP configs for Windsurf, Codex, and Kiro CLI."
 }
 #endregion 🔖McpConfig
 

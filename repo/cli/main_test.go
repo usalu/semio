@@ -12904,6 +12904,97 @@ func TestToolTicketLifecycle(t *testing.T) {
 	os.RemoveAll(ticketPath)
 }
 
+func TestParseTicketPath(t *testing.T) {
+	tests := []struct {
+		name    string
+		path    string
+		year    int
+		month   int
+		day     int
+		slug    string
+		wantErr bool
+	}{
+		{"two-digit year", "26/03/27/FIX-MCP", 26, 3, 27, "FIX-MCP", false},
+		{"four-digit year normalized", "2026/03/27/FIX-MCP", 26, 3, 27, "FIX-MCP", false},
+		{"nested slug", "26/03/27/PARENT/CHILD", 26, 3, 27, "PARENT/CHILD", false},
+		{"too few parts", "26/03", 0, 0, 0, "", true},
+		{"empty slug", "26/03/27/", 0, 0, 0, "", true},
+		{"non-numeric year", "abc/03/27/SLUG", 0, 0, 0, "", true},
+		{"non-numeric month", "26/abc/27/SLUG", 0, 0, 0, "", true},
+		{"non-numeric day", "26/03/abc/SLUG", 0, 0, 0, "", true},
+		{"empty string", "", 0, 0, 0, "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			y, m, d, s, err := parseTicketPath(tt.path)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("parseTicketPath(%q) error = %v, wantErr %v", tt.path, err, tt.wantErr)
+			}
+			if !tt.wantErr {
+				if y != tt.year || m != tt.month || d != tt.day || s != tt.slug {
+					t.Errorf("parseTicketPath(%q) = (%d,%d,%d,%q), want (%d,%d,%d,%q)", tt.path, y, m, d, s, tt.year, tt.month, tt.day, tt.slug)
+				}
+			}
+		})
+	}
+}
+
+func TestMcpTicketCloseAutoResolve(t *testing.T) {
+	setupToolTest(t)
+
+	result := ToolTicketOpen("Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	if result.Error != "" {
+		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
+	}
+	ticket, ok := result.Data.(*Ticket)
+	if !ok || ticket == nil {
+		t.Fatal("ToolTicketOpen returned nil ticket")
+	}
+	defer func() {
+		ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "cleanup", []string{"repo/cli/main.go"}, "", true)
+		os.RemoveAll(GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug))
+	}()
+
+	year, month, day, slug, err := resolveTicketForClose("")
+	if err != nil {
+		t.Fatalf("resolveTicketForClose('') error: %v", err)
+	}
+	resolved, err := ReadTicket(year, month, day, slug)
+	if err != nil {
+		t.Fatalf("resolved ticket not readable: %v", err)
+	}
+	if resolved.Status != TicketStatusOpen {
+		t.Errorf("resolveTicketForClose('') resolved to non-open ticket (status=%s)", resolved.Status)
+	}
+}
+
+func TestMcpTicketCloseWithFullYearPath(t *testing.T) {
+	setupToolTest(t)
+
+	result := ToolTicketOpen("Test Full Year Path", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	if result.Error != "" {
+		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
+	}
+	ticket, ok := result.Data.(*Ticket)
+	if !ok || ticket == nil {
+		t.Fatal("ToolTicketOpen returned nil ticket")
+	}
+	defer func() {
+		os.RemoveAll(GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug))
+	}()
+
+	fullYearPath := fmt.Sprintf("%d/%02d/%02d/%s", 2000+ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+	year, month, day, slug, err := parseTicketPath(fullYearPath)
+	if err != nil {
+		t.Fatalf("parseTicketPath(%q) error: %v", fullYearPath, err)
+	}
+
+	closeResult := ToolTicketClose(year, month, day, slug, "Test summary", []string{"repo/cli/main.go"}, "", true)
+	if closeResult.Error != "" {
+		t.Fatalf("ToolTicketClose with full year path returned error: %s", closeResult.Error)
+	}
+}
+
 func TestToolDraftLifecycle(t *testing.T) {
 	setupToolTest(t)
 	tmpDir := t.TempDir()
@@ -15967,6 +16058,8 @@ func TestIsToolBlocked(t *testing.T) {
 		{"ksh git reset blocked", "run_in_terminal", `ksh -c "git reset --hard"`, true},
 		{"xargs git stash blocked", "run_in_terminal", "xargs git stash", true},
 		{"python git status allowed", "run_in_terminal", `python3 -c "import subprocess; subprocess.call(['git', 'status'])"`, false},
+		{"kill lsof port blocked", "terminal", "kill $(lsof -t -i:9876)", true},
+		{"kill -9 lsof port blocked", "terminal", "kill -9 $(lsof -t -i:3000)", true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -16068,6 +16161,9 @@ func TestIsCommandSegmentBlocked(t *testing.T) {
 		{"xargs git stash", true},
 		{"xargs git checkout", true},
 		{"xargs git status", false},
+		// kill+lsof port killing is denied (can terminate devcontainer).
+		{"kill $(lsof -t -i:9876)", true},
+		{"kill -9 $(lsof -t -i:9876)", true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.segment, func(t *testing.T) {
@@ -16914,7 +17010,7 @@ func TestConfigureGitHooks(t *testing.T) {
 
 func TestGetClientHookMappings(t *testing.T) {
 	mappings := getClientHookMappings()
-	expectedClients := []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid"}
+	expectedClients := []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "kiro-cli"}
 	if len(mappings) != len(expectedClients) {
 		t.Errorf("expected %d mappings, got %d", len(expectedClients), len(mappings))
 	}
@@ -18430,6 +18526,16 @@ func TestClassifyTool(t *testing.T) {
 		{"open_simple_browser", "open_simple_browser", ToolKindCodeSearch},
 		{"Glob", "Glob", ToolKindCodeSearch},
 		{"tool_search_tool_regex", "tool_search_tool_regex", ToolKindGeneric},
+		{"fs_read", "fs_read", ToolKindCodeSearch},
+		{"fs_write", "fs_write", ToolKindCodeEdit},
+		{"execute_bash", "execute_bash", ToolKindTerminal},
+		{"code", "code", ToolKindCodeSearch},
+		{"grep_kiro", "grep", ToolKindCodeSearch},
+		{"glob_kiro", "glob", ToolKindCodeSearch},
+		{"web_search", "web_search", ToolKindCodeSearch},
+		{"web_fetch", "web_fetch", ToolKindCodeSearch},
+		{"use_subagent", "use_subagent", ToolKindGeneric},
+		{"use_aws", "use_aws", ToolKindGeneric},
 		{"empty", "", ToolKindGeneric},
 	}
 	for _, tc := range cases {
@@ -19544,6 +19650,21 @@ func TestResolveHookEvent(t *testing.T) {
 		{"codex PreToolUse", "PreToolUse", "codex", "Read", HookAgentToolSearchStarting, "", false},
 		{"antigravity PreToolUse", "PreToolUse", "antigravity-chat", "Task", HookAgentToolPlanUpdatingStarting, "", false},
 		{"unknown client defaults to claude-compatible", "SessionStart", "unknown-client", "", HookAgentStarted, "", false},
+		{"kiro agentSpawn", "agentSpawn", "kiro-cli", "", HookAgentStarted, "", false},
+		{"kiro userPromptSubmit", "userPromptSubmit", "kiro-cli", "", HookAgentPromptSubmitting, "", false},
+		{"kiro preToolUse fs_read", "preToolUse", "kiro-cli", "fs_read", HookAgentToolSearchStarting, "", false},
+		{"kiro preToolUse fs_write", "preToolUse", "kiro-cli", "fs_write", HookAgentToolCodeEditStarting, "", false},
+		{"kiro preToolUse execute_bash", "preToolUse", "kiro-cli", "execute_bash", HookAgentToolTerminalStarting, "", false},
+		{"kiro preToolUse code", "preToolUse", "kiro-cli", "code", HookAgentToolSearchStarting, "", false},
+		{"kiro preToolUse grep", "preToolUse", "kiro-cli", "grep", HookAgentToolSearchStarting, "", false},
+		{"kiro preToolUse glob", "preToolUse", "kiro-cli", "glob", HookAgentToolSearchStarting, "", false},
+		{"kiro preToolUse web_search", "preToolUse", "kiro-cli", "web_search", HookAgentToolSearchStarting, "", false},
+		{"kiro preToolUse web_fetch", "preToolUse", "kiro-cli", "web_fetch", HookAgentToolSearchStarting, "", false},
+		{"kiro preToolUse use_subagent", "preToolUse", "kiro-cli", "use_subagent", HookAgentToolStarting, "", false},
+		{"kiro postToolUse fs_write", "postToolUse", "kiro-cli", "fs_write", HookAgentToolCodeEditEnded, "", false},
+		{"kiro postToolUse execute_bash", "postToolUse", "kiro-cli", "execute_bash", HookAgentToolTerminalEnded, "", false},
+		{"kiro stop", "stop", "kiro-cli", "", HookAgentEnded, "", false},
+		{"kiro invalid event", "UnknownEvent", "kiro-cli", "", "", "", true},
 		{"invalid copilot event", "UnknownEvent", "copilot-chat", "", "", "", true},
 		{"invalid cursor event", "UnknownEvent", "cursor-chat", "", "", "", true},
 		{"invalid windsurf event", "UnknownEvent", "windsurf-chat", "", "", "", true},
@@ -22057,6 +22178,7 @@ func TestEditorProviderInterface(t *testing.T) {
 	var _ EditorProvider = &DroidEditorProvider{}
 	var _ EditorProvider = &CodexEditorProvider{}
 	var _ EditorProvider = &AntigravityEditorProvider{}
+	var _ EditorProvider = &KiroEditorProvider{}
 }
 
 // #endregion 🔖Provider

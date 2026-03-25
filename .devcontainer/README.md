@@ -91,7 +91,7 @@ The launcher script automatically:
 Configure GitKraken behavior with these environment variables:
 
 - `SEMIO_GITKRAKEN_WORKSPACE_NAME`: Workspace name (default: "semio")
-- `SEMIO_GITKRAKEN_AUTO_START`: Auto-start GitKraken on attach (default: "true")
+- `SEMIO_GITKRAKEN_AUTO_START`: Auto-start GitKraken on attach (default: "false", disabled to prevent spurious git stashing in concurrent editing workflows)
 - `SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL`: Skip extension installation (default: empty)
 
 ### Error Resilience

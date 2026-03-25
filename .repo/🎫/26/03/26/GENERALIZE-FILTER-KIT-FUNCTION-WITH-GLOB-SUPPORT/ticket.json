@@ -1,0 +1,13 @@
+{
+  "title": "Generalize Filter Kit Function with Glob Support",
+  "status": "closed",
+  "description": "Generalize the filter kit with design to a general filter kit function. Accept designs, types, ports, files, etc. For all of them add glob support on names both for include and exclude.",
+  "summary": "Generalized filterKitWithDesign to filterKit across all 5 languages (TypeScript, Go, Rust, Python, C#). Added GlobFilter (include/exclude string[] patterns) and KitFilter (designGuid, modelTags, plus GlobFilter per entity kind: designs, types, ports, files, tags, concepts, qualities, authors, folders). Implemented globMatch (supports * and ? wildcards, case-insensitive) and matchesGlobFilter helpers. Fixed vitest guard condition that prevented test discovery (removed stale cwd check). Fixed incorrect test assertion for W??l pattern. All tests pass: TS (125/125), Go (7/7), Rust (27/27), Python (6/6), C# filter tests (2/2).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1111"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪b582d40eb7184835b98ff95934fd613e"
+  ]
+}

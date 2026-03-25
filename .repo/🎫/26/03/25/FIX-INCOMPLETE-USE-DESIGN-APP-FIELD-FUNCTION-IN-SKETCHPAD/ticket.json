@@ -7,7 +7,6 @@
     "issue": "https://github.com/usalu/semio/issues/1084"
   },
   "goal": "🎯r2603",
-  "files": ["semio/sketchpad/index.tsx", "elements/ui/index.tsx"],
   "sessions": [
     "⚪e254f6099b91450ea24b536d6f4cde10"
   ]

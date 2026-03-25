@@ -28,6 +28,7 @@
 use base64::Engine;
 use nalgebra::{Matrix4, Point3, Vector3};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::f64::consts::PI;
 use thiserror::Error;
@@ -506,6 +507,8 @@ pub struct Folder {
     pub guid: Guid,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub parent: Option<FolderId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<Vec<Attribute>>,
@@ -567,6 +570,31 @@ pub struct QualityId {
     pub guid: Guid,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct BenchmarkId {
+    pub guid: Guid,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Benchmark {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(rename = "minExcluded", skip_serializing_if = "Option::is_none")]
+    pub min_excluded: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(rename = "maxExcluded", skip_serializing_if = "Option::is_none")]
+    pub max_excluded: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub definition: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attributes: Option<Vec<Attribute>>,
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[repr(i32)]
 /// <summary>QualityKind holds the data fields for a QualityKind record.</summary>
@@ -591,6 +619,14 @@ pub struct Quality {
     pub name: String,
     #[serde(default)]
     pub kind: QualityKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
     #[serde(rename = "defaultValue", skip_serializing_if = "Option::is_none")]
     pub default_value: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -614,6 +650,8 @@ pub struct Quality {
     pub can_scale: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub uri: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub benchmarks: Option<Vec<Benchmark>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<Vec<Attribute>>,
 }
@@ -675,6 +713,8 @@ pub struct Tag {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attributes: Option<Vec<Attribute>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -705,6 +745,8 @@ pub struct Concept {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attributes: Option<Vec<Attribute>>,
 }
 
 // #endregion 🔖Model Types - Quality, Port, Tag, Concept
@@ -1149,6 +1191,8 @@ pub struct Design {
     pub stats: Option<Vec<Stat>>,
     #[serde(rename = "activeLayer", skip_serializing_if = "Option::is_none")]
     pub active_layer: Option<LayerId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location: Option<LocationId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<Vec<Attribute>>,
     #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
@@ -1716,6 +1760,14 @@ impl<D: DiffHasGuid> DiffHasGuid for DiffUpdate<D> {
     }
 }
 
+fn deserialize_some<'de, T, D>(deserializer: D) -> std::result::Result<Option<T>, D::Error>
+where
+    T: serde::Deserialize<'de>,
+    D: serde::Deserializer<'de>,
+{
+    serde::Deserialize::deserialize(deserializer).map(Some)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(bound(deserialize = "T: Deserialize<'de>, D: serde::de::DeserializeOwned"))]
 // [🛠️semio/rs/semio.rs#Diff Types§CollectionDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/COLLECTION-DIFF)
@@ -1744,9 +1796,17 @@ pub struct AttributeDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub value: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub definition: Option<Option<String>>,
 }
 
@@ -1763,7 +1823,11 @@ pub struct PropDiff {
     pub quality: Option<QualityId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub unit: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -1784,13 +1848,29 @@ pub struct ConnectorDiff {
     pub direction: Option<Vector>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub t: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub name: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub mandatory: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub port: Option<Option<PortId>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub props: Option<CollectionDiff<Prop, PropDiff>>,
@@ -1809,11 +1889,23 @@ pub struct ModelDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub file: Option<FileId>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub name: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub tags: Option<Option<Vec<TagId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -1830,29 +1922,79 @@ pub struct TypeDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub parent: Option<Option<TypeId>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub icon: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub image: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub folder: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub unit: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stock: Option<Option<i32>>,
-    #[serde(rename = "isAbstract", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "isAbstract",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_abstract: Option<Option<bool>>,
-    #[serde(rename = "virtual", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "virtual",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub virtual_type: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub location: Option<Option<LocationId>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub concepts: Option<Option<Vec<ConceptId>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub authors: Option<Option<Vec<AuthorId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub props: Option<CollectionDiff<Prop, PropDiff>>,
@@ -1874,9 +2016,18 @@ pub struct TypeDiff {
 pub struct SideDiff {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub piece: Option<PieceId>,
-    #[serde(rename = "designPiece", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "designPiece",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub design_piece: Option<Option<PieceId>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub connector: Option<Option<ConnectorId>>,
 }
 
@@ -1905,11 +2056,23 @@ pub struct ConnectionDiff {
     pub turn: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tilt: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub u: Option<Option<f64>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub v: Option<Option<f64>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -1924,27 +2087,75 @@ pub struct ConnectionDiff {
 /// </remarks>
 pub struct PieceDiff {
     pub guid: Guid,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub name: Option<Option<String>>,
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "type",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub type_ref: Option<Option<TypeId>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub design: Option<Option<DesignId>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub plane: Option<Option<Plane>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub center: Option<Option<Coord>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub scale: Option<Option<f64>>,
-    #[serde(rename = "mirrorPlane", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "mirrorPlane",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub mirror_plane: Option<Option<Plane>>,
-    #[serde(rename = "isHidden", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "isHidden",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_hidden: Option<Option<bool>>,
-    #[serde(rename = "isLocked", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "isLocked",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_locked: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub color: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub props: Option<CollectionDiff<Prop, PropDiff>>,
@@ -1963,13 +2174,31 @@ pub struct LayerDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
-    #[serde(rename = "isHidden", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "isHidden",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_hidden: Option<Option<bool>>,
-    #[serde(rename = "isLocked", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "isLocked",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_locked: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub color: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -1984,13 +2213,29 @@ pub struct LayerDiff {
 /// </remarks>
 pub struct GroupDiff {
     pub guid: Guid,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub name: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub color: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub pieces: Option<Option<Vec<PieceId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -2007,15 +2252,37 @@ pub struct StatDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub quality: Option<QualityId>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub min: Option<Option<f64>>,
-    #[serde(rename = "minExcluded", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "minExcluded",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub min_excluded: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub max: Option<Option<f64>>,
-    #[serde(rename = "maxExcluded", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "maxExcluded",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub max_excluded: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub unit: Option<Option<String>>,
 }
 
@@ -2027,30 +2294,78 @@ pub struct StatDiff {
 /// [👤semio📚rs💻semio🔖difftypes🛠️designdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignDiff)
 /// </remarks>
 pub struct DesignDiff {
+    #[serde(default)]
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub parent: Option<Option<DesignId>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub icon: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub image: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub folder: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub unit: Option<Option<String>>,
-    #[serde(rename = "isAbstract", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "isAbstract",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_abstract: Option<Option<bool>>,
-    #[serde(rename = "canScale", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "canScale",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub can_scale: Option<Option<bool>>,
-    #[serde(rename = "canMirror", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "canMirror",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub can_mirror: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub concepts: Option<Option<Vec<ConceptId>>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub authors: Option<Option<Vec<AuthorId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub props: Option<CollectionDiff<Prop, PropDiff>>,
@@ -2064,7 +2379,12 @@ pub struct DesignDiff {
     pub groups: Option<CollectionDiff<Group, GroupDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stats: Option<CollectionDiff<Stat, StatDiff>>,
-    #[serde(rename = "activeLayer", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "activeLayer",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub active_layer: Option<Option<LayerId>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -2081,9 +2401,17 @@ pub struct TagDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub icon: Option<Option<String>>,
 }
 
@@ -2098,9 +2426,17 @@ pub struct ConceptDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub icon: Option<Option<String>>,
 }
 
@@ -2115,11 +2451,24 @@ pub struct PortDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub icon: Option<Option<String>>,
-    #[serde(rename = "compatiblePorts", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "compatiblePorts",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub compatible_interfaces: Option<Option<Vec<PortId>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -2140,28 +2489,71 @@ pub struct QualityDiff {
     pub name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<QualityKind>,
-    #[serde(rename = "defaultValue", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "defaultValue",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_value: Option<Option<f64>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub formula: Option<Option<String>>,
-    #[serde(rename = "defaultSiUnit", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "defaultSiUnit",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_si_unit: Option<Option<String>>,
     #[serde(
         rename = "defaultImperialUnit",
+        default,
+        deserialize_with = "deserialize_some",
         skip_serializing_if = "Option::is_none"
     )]
     pub default_imperial_unit: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub min: Option<Option<f64>>,
-    #[serde(rename = "isMinExcluded", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "isMinExcluded",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_min_excluded: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub max: Option<Option<f64>>,
-    #[serde(rename = "isMaxExcluded", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "isMaxExcluded",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_max_excluded: Option<Option<bool>>,
-    #[serde(rename = "canScale", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "canScale",
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub can_scale: Option<Option<bool>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub uri: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -2178,13 +2570,29 @@ pub struct FileDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub remote: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub folder: Option<Option<FolderId>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub size: Option<Option<i64>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub hash: Option<Option<String>>,
 }
 
@@ -2199,7 +2607,11 @@ pub struct FolderDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub parent: Option<Option<FolderId>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -2216,7 +2628,11 @@ pub struct AuthorDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub email: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
@@ -2233,21 +2649,53 @@ pub struct KitDiff {
     pub guid: Guid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub version: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub icon: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub image: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub preview: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub remote: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub homepage: Option<Option<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_some",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub license: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub concepts: Option<CollectionDiff<Concept, ConceptDiff>>,
@@ -4090,6 +4538,123 @@ pub fn apply_design_diff(item: &mut Design, diff: &DesignDiff) {
     apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
 }
 
+/// Creates a mixed design keeping old entities with diff status annotations.
+/// design_with_diff MUST maintain all old pieces and connections (same parameters),
+/// annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
+/// keep deleted entities in place marked as removed, and append added entities marked as added.
+/// [👤semio📚rs💻semio🔖applydiff🛠️designwithdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/design_with_diff)
+pub fn design_with_diff(base: &Design, diff: &DesignDiff) -> Design {
+    let status_attr = |status: &str| Attribute {
+        guid: format!("semio.diffStatus.{}", status),
+        key: "semio.diffStatus".to_string(),
+        value: Some(status.to_string()),
+        definition: None,
+    };
+
+    let removed_piece_guids: std::collections::HashSet<&str> = diff
+        .pieces
+        .as_ref()
+        .map(|pd| {
+            pd.removed
+                .as_ref()
+                .map(|r| r.iter().map(|id| id.guid.as_str()).collect())
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
+    let updated_piece_guids: std::collections::HashSet<&str> = diff
+        .pieces
+        .as_ref()
+        .map(|pd| {
+            pd.updated
+                .as_ref()
+                .map(|u| u.iter().map(|upd| upd.guid.as_str()).collect())
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
+
+    let removed_conn_guids: std::collections::HashSet<&str> = diff
+        .connections
+        .as_ref()
+        .map(|cd| {
+            cd.removed
+                .as_ref()
+                .map(|r| r.iter().map(|id| id.guid.as_str()).collect())
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
+    let updated_conn_guids: std::collections::HashSet<&str> = diff
+        .connections
+        .as_ref()
+        .map(|cd| {
+            cd.updated
+                .as_ref()
+                .map(|u| u.iter().map(|upd| upd.guid.as_str()).collect())
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
+
+    let mut result_pieces: Vec<Piece> = Vec::new();
+    if let Some(ref pieces) = base.pieces {
+        for p in pieces {
+            let mut pc = p.clone();
+            let mut attrs = pc.attributes.clone().unwrap_or_default();
+            if removed_piece_guids.contains(pc.guid.as_str()) {
+                attrs.push(status_attr("removed"));
+            } else if updated_piece_guids.contains(pc.guid.as_str()) {
+                attrs.push(status_attr("modified"));
+            } else {
+                attrs.push(status_attr("unchanged"));
+            }
+            pc.attributes = Some(attrs);
+            result_pieces.push(pc);
+        }
+    }
+    if let Some(ref pd) = diff.pieces {
+        if let Some(ref added) = pd.added {
+            for a in added {
+                let mut ac = a.clone();
+                let mut attrs = ac.attributes.clone().unwrap_or_default();
+                attrs.push(status_attr("added"));
+                ac.attributes = Some(attrs);
+                result_pieces.push(ac);
+            }
+        }
+    }
+
+    let mut result_conns: Vec<Connection> = Vec::new();
+    if let Some(ref conns) = base.connections {
+        for c in conns {
+            let mut cc = c.clone();
+            let mut attrs = cc.attributes.clone().unwrap_or_default();
+            if removed_conn_guids.contains(cc.guid.as_str()) {
+                attrs.push(status_attr("removed"));
+            } else if updated_conn_guids.contains(cc.guid.as_str()) {
+                attrs.push(status_attr("modified"));
+            } else {
+                attrs.push(status_attr("unchanged"));
+            }
+            cc.attributes = Some(attrs);
+            result_conns.push(cc);
+        }
+    }
+    if let Some(ref cd) = diff.connections {
+        if let Some(ref added) = cd.added {
+            for a in added {
+                let mut ac = a.clone();
+                let mut attrs = ac.attributes.clone().unwrap_or_default();
+                attrs.push(status_attr("added"));
+                ac.attributes = Some(attrs);
+                result_conns.push(ac);
+            }
+        }
+    }
+
+    let mut result = base.clone();
+    result.pieces = Some(result_pieces);
+    result.connections = Some(result_conns);
+    result
+}
+
 /// <summary>apply_tag_diff holds the data fields for a apply_tag_diff record.</summary>
 /// [👤semio📚rs💻semio🔖applydiff🛠️applytagdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_tag_diff)
 /// <remarks>
@@ -5068,6 +5633,150 @@ pub fn inverse_design_diff(original: &Design, forward: &DesignDiff) -> DesignDif
     get_design_diff(&after, original)
 }
 
+/// Deletes pieces and connections from a design, returning a DesignDiff.
+/// Removes stale connections referencing deleted pieces.
+/// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/delete_pieces_and_connections_in_design)
+pub fn delete_pieces_and_connections_in_design(
+    kit: &Kit,
+    design: &Design,
+    piece_guids: &[String],
+    connection_guids: &[String],
+) -> DesignDiff {
+    let deleted_piece_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
+    let connections = design.connections.as_deref().unwrap_or(&[]);
+
+    // Find stale connections: connections referencing any deleted piece
+    let mut stale_connection_guids: HashSet<String> = HashSet::new();
+    for conn in connections {
+        if deleted_piece_set.contains(conn.connected.piece.guid.as_str())
+            || deleted_piece_set.contains(conn.connecting.piece.guid.as_str())
+        {
+            stale_connection_guids.insert(conn.guid.clone());
+        }
+    }
+
+    // All removed connections = explicit + stale
+    let mut all_removed_connection_guids: HashSet<String> =
+        connection_guids.iter().cloned().collect();
+    all_removed_connection_guids.extend(stale_connection_guids);
+
+    // Find pieces that become fixed: pieces whose parent connection was removed
+    // and are not themselves being deleted.
+    // A piece becomes fixed when the connection where it is the "connecting" side is removed
+    // and it has no other remaining parent connection.
+    let mut fixed_piece_guids: Vec<String> = Vec::new();
+    for conn_guid in &all_removed_connection_guids {
+        let conn = match connections.iter().find(|c| &c.guid == conn_guid) {
+            Some(c) => c,
+            None => continue,
+        };
+        let connecting_guid = &conn.connecting.piece.guid;
+        if deleted_piece_set.contains(connecting_guid.as_str()) {
+            continue;
+        }
+        // Check if this piece has another parent connection not in the removed set
+        let has_other_parent = connections.iter().any(|c| {
+            c.connecting.piece.guid == *connecting_guid
+                && !all_removed_connection_guids.contains(&c.guid)
+        });
+        if !has_other_parent && !fixed_piece_guids.contains(connecting_guid) {
+            fixed_piece_guids.push(connecting_guid.clone());
+        }
+    }
+
+    // Build the diff - flatten the design to get absolute plane and center for each piece
+    let flat_change = flatten_design(kit, &design.guid);
+    let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
+    if let Some(pieces) = &design.pieces {
+        for piece in pieces {
+            if let Some(plane) = &piece.plane {
+                flat_piece_map.insert(
+                    piece.guid.clone(),
+                    (Some(plane.clone()), piece.center.clone()),
+                );
+            }
+        }
+    }
+    if let Some(pieces_diff) = &flat_change.forward.pieces {
+        if let Some(updates) = &pieces_diff.updated {
+            for update in updates {
+                let entry = flat_piece_map
+                    .entry(update.guid.clone())
+                    .or_insert((None, None));
+                if let Some(Some(plane)) = &update.diff.plane {
+                    entry.0 = Some(plane.clone());
+                }
+                if let Some(Some(center)) = &update.diff.center {
+                    entry.1 = Some(center.clone());
+                }
+            }
+        }
+    }
+
+    let pieces_removed: Vec<RemovedItem> = piece_guids
+        .iter()
+        .map(|g| RemovedItem { guid: g.clone() })
+        .collect();
+    let pieces_updated: Vec<DiffUpdate<PieceDiff>> = fixed_piece_guids
+        .iter()
+        .map(|g| {
+            let (flat_plane, flat_center) = flat_piece_map
+                .get(g)
+                .cloned()
+                .unwrap_or((Some(Plane::default()), Some(Coord::default())));
+            DiffUpdate {
+                key: "piece".to_string(),
+                guid: g.clone(),
+                diff: PieceDiff {
+                    guid: g.clone(),
+                    plane: Some(flat_plane),
+                    center: Some(flat_center),
+                    ..Default::default()
+                },
+            }
+        })
+        .collect();
+    let mut sorted_removed_connections: Vec<String> =
+        all_removed_connection_guids.into_iter().collect();
+    sorted_removed_connections.sort();
+    let connections_removed: Vec<RemovedItem> = sorted_removed_connections
+        .iter()
+        .map(|g| RemovedItem { guid: g.clone() })
+        .collect();
+
+    let mut diff = DesignDiff {
+        guid: design.guid.clone(),
+        ..Default::default()
+    };
+
+    if !pieces_removed.is_empty() || !pieces_updated.is_empty() {
+        diff.pieces = Some(CollectionDiff {
+            removed: if pieces_removed.is_empty() {
+                None
+            } else {
+                Some(pieces_removed)
+            },
+            updated: if pieces_updated.is_empty() {
+                None
+            } else {
+                Some(pieces_updated)
+            },
+            added: None,
+        });
+    }
+
+    if !connections_removed.is_empty() {
+        diff.connections = Some(CollectionDiff {
+            removed: Some(connections_removed),
+            updated: None,
+            added: None,
+        });
+    }
+
+    diff
+}
+
 /// Computes a reversible KitChange from two kit states.
 /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getkitchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_kit_change)
 pub fn get_kit_change(before: &Kit, after: &Kit) -> KitChange {
@@ -5103,6 +5812,87 @@ pub fn get_design_change(before: &Design, after: &Design) -> DesignChange {
 // #region 🔖Filter
 // [👤semio📚rs💻semio🔖filter](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter)
 // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
+
+/// Glob filter with include and exclude patterns for name-based entity filtering.
+/// If include is non-empty, only names matching at least one include pattern are kept.
+/// Names matching any exclude pattern are always removed.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct GlobFilter {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exclude: Option<Vec<String>>,
+}
+
+/// General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct KitFilter {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub design_guid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_tags: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub designs: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub types: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ports: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub files: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub concepts: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qualities: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authors: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folders: Option<GlobFilter>,
+}
+
+/// Matches a name against a glob pattern supporting * (any chars) and ? (single char). Case-insensitive.
+pub fn glob_match(name: &str, pattern: &str) -> bool {
+    let name_lower = name.to_lowercase();
+    let pattern_lower = pattern.to_lowercase();
+    let name_bytes = name_lower.as_bytes();
+    let pattern_bytes = pattern_lower.as_bytes();
+
+    fn matches(name: &[u8], pattern: &[u8]) -> bool {
+        match (name.len(), pattern.len()) {
+            (0, 0) => true,
+            (_, 0) => false,
+            (0, _) => pattern.iter().all(|&c| c == b'*'),
+            _ => {
+                if pattern[0] == b'*' {
+                    matches(name, &pattern[1..]) || matches(&name[1..], pattern)
+                } else if pattern[0] == b'?' || pattern[0] == name[0] {
+                    matches(&name[1..], &pattern[1..])
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
+    matches(name_bytes, pattern_bytes)
+}
+
+/// Checks if a name passes a GlobFilter. Returns true if filter is None or name matches.
+pub fn matches_glob_filter(name: &str, filter: Option<&GlobFilter>) -> bool {
+    let Some(filter) = filter else { return true };
+    if let Some(include) = &filter.include {
+        if !include.is_empty() && !include.iter().any(|p| glob_match(name, p)) {
+            return false;
+        }
+    }
+    if let Some(exclude) = &filter.exclude {
+        if exclude.iter().any(|p| glob_match(name, p)) {
+            return false;
+        }
+    }
+    true
+}
 
 fn select_best_model_for_filter(models: &[Model], selected_tag_guids: &[String]) -> Option<Model> {
     if models.is_empty() {
@@ -5163,11 +5953,11 @@ fn select_best_model_for_filter(models: &[Model], selected_tag_guids: &[String])
     Some(best_model)
 }
 
-/// Filters a kit to only include entities related to a specific design.
+/// Internal design-based transitive kit filtering.
 /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
 /// files not used by selected models, and keeps at most one model per type according to the optional tags.
-/// [👤semio📚rs💻semio🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit_with_design)
-pub fn filter_kit_with_design(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
+/// [👤semio📚rs💻semio🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit_by_design)
+fn filter_kit_by_design(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
     let design = match find_design_in_kit(kit, design_guid) {
         Some(design) => design,
         None => {
@@ -5440,6 +6230,129 @@ pub fn filter_kit_with_design(kit: &Kit, design_guid: &str, tags: Option<&[Strin
     }
 }
 
+/// General-purpose kit filter. Combines optional design-based transitive filtering with glob-based name filtering.
+/// When design_guid is set, first performs transitive design-scoped subset extraction.
+/// Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
+/// [👤semio📚rs💻semio🔖filter🛠️filterkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit)
+pub fn filter_kit(kit: &Kit, filter: &KitFilter) -> Kit {
+    let base = if let Some(design_guid) = &filter.design_guid {
+        filter_kit_by_design(kit, design_guid, filter.model_tags.as_deref())
+    } else {
+        kit.clone()
+    };
+
+    let has_glob_filters = filter.designs.is_some()
+        || filter.types.is_some()
+        || filter.ports.is_some()
+        || filter.files.is_some()
+        || filter.tags.is_some()
+        || filter.concepts.is_some()
+        || filter.qualities.is_some()
+        || filter.authors.is_some()
+        || filter.folders.is_some();
+
+    if !has_glob_filters {
+        return base;
+    }
+
+    Kit {
+        guid: base.guid,
+        name: base.name,
+        version: base.version,
+        description: base.description,
+        icon: base.icon,
+        image: base.image,
+        preview: base.preview,
+        remote: base.remote,
+        homepage: base.homepage,
+        license: base.license,
+        types: Some(
+            base.types
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|t| matches_glob_filter(&t.name, filter.types.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        designs: Some(
+            base.designs
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|d| matches_glob_filter(&d.name, filter.designs.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        ports: Some(
+            base.ports
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|p| matches_glob_filter(&p.name, filter.ports.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        files: Some(
+            base.files
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|f| matches_glob_filter(&f.name, filter.files.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        tags: Some(
+            base.tags
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|t| matches_glob_filter(&t.name, filter.tags.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        concepts: Some(
+            base.concepts
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|c| matches_glob_filter(&c.name, filter.concepts.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        qualities: Some(
+            base.qualities
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|q| matches_glob_filter(&q.name, filter.qualities.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        folders: Some(
+            base.folders
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|f| matches_glob_filter(&f.name, filter.folders.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        authors: Some(
+            base.authors
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|a| matches_glob_filter(&a.name, filter.authors.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        attributes: base.attributes,
+        created_at: base.created_at,
+        updated_at: base.updated_at,
+    }
+}
+
 // #endregion 🔖Filter
 
 // #region 🔖FlattenDesign
@@ -5454,6 +6367,7 @@ pub struct FlattenedPiece {
     pub plane: Plane,
     pub type_guid: Option<String>,
     pub design_guid: Option<String>,
+    pub path: Vec<String>,
 }
 
 /// <summary>flatten_design holds the data fields for a flatten_design record.</summary>
@@ -5524,6 +6438,7 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
 
     let mut piece_planes: HashMap<&str, Matrix4<f64>> = HashMap::with_capacity(pieces.len());
     let mut piece_centers: HashMap<&str, Coord> = HashMap::with_capacity(pieces.len());
+    let mut piece_paths: HashMap<&str, String> = HashMap::with_capacity(pieces.len());
     let mut visited: HashSet<&str> = HashSet::with_capacity(pieces.len());
     let mut queue: VecDeque<&str> = VecDeque::with_capacity(pieces.len());
 
@@ -5542,6 +6457,7 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
 
             let initial_center = piece.center.clone().unwrap_or(Coord { u: 0.0, v: 0.0 });
             piece_centers.insert(piece.guid.as_str(), initial_center);
+            piece_paths.insert(piece.guid.as_str(), piece.guid.clone());
 
             visited.insert(piece.guid.as_str());
             queue.push_back(piece.guid.as_str());
@@ -5613,6 +6529,10 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
 
                         piece_planes.insert(neighbor_guid, new_matrix);
                         piece_centers.insert(neighbor_guid, child_center);
+                        let parent_path =
+                            piece_paths.get(current_guid).cloned().unwrap_or_default();
+                        piece_paths
+                            .insert(neighbor_guid, format!("{},{}", parent_path, neighbor_guid));
                         visited.insert(neighbor_guid);
                         queue.push_back(neighbor_guid);
                     }
@@ -5642,6 +6562,18 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
             };
 
             if plane_needs_update || center_needs_update {
+                let path_attr = piece_paths
+                    .get(piece.guid.as_str())
+                    .map(|path| CollectionDiff {
+                        added: Some(vec![Attribute {
+                            guid: guid(),
+                            key: "semio.path".to_string(),
+                            value: Some(path.clone()),
+                            definition: None,
+                        }]),
+                        removed: None,
+                        updated: None,
+                    });
                 updated_pieces.push(DiffUpdate {
                     key: "piece".to_string(),
                     guid: piece.guid.clone(),
@@ -5657,6 +6589,7 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
                         } else {
                             None
                         },
+                        attributes: path_attr,
                         ..Default::default()
                     },
                 });
@@ -6033,67 +6966,64 @@ pub fn drag_pieces_in_design(
     offset: &Coord,
 ) -> DesignDiff {
     let selected_guids: HashSet<&str> = selected_pieces.iter().map(|p| p.guid.as_str()).collect();
-    let design_piece_map: HashMap<&str, &Piece> =
-        design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
-    let mut children_map: HashMap<&str, Vec<&str>> = HashMap::new();
-    let mut connection_by_child: HashMap<&str, &Connection> = HashMap::new();
+    let mut parent_map: HashMap<&str, (&str, &str)> = HashMap::new();
     for conn in design_connections {
         let connecting_guid = conn.connecting.piece.guid.as_str();
         let connected_guid = conn.connected.piece.guid.as_str();
-        children_map
-            .entry(connecting_guid)
-            .or_default()
-            .push(connected_guid);
-        connection_by_child.insert(connected_guid, conn);
+        parent_map.insert(connecting_guid, (conn.guid.as_str(), connected_guid));
     }
-    let root_movers: Vec<&str> = selected_guids
+    let piece_map: HashMap<&str, &Piece> =
+        design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+    let fixed_guids: HashSet<&str> = selected_guids
         .iter()
-        .filter(|&&guid| {
-            design_piece_map
-                .get(guid)
-                .map_or(false, |p| p.center.is_some())
-        })
+        .filter(|&&guid| !parent_map.contains_key(guid))
         .copied()
         .collect();
-    let mut moving_set: HashSet<&str> = HashSet::new();
-    let mut queue: VecDeque<&str> = root_movers.iter().copied().collect();
-    while let Some(current) = queue.pop_front() {
-        if !moving_set.insert(current) {
-            continue;
-        }
-        if let Some(children) = children_map.get(current) {
-            for &child in children {
-                if !moving_set.contains(child) {
-                    queue.push_back(child);
-                }
-            }
-        }
-    }
-    let piece_updates: Vec<DiffUpdate<PieceDiff>> = root_movers
+    let piece_updates: Vec<DiffUpdate<PieceDiff>> = fixed_guids
         .iter()
-        .map(|&guid| DiffUpdate {
-            key: "piece".to_string(),
-            guid: guid.to_string(),
-            diff: PieceDiff {
+        .filter_map(|&guid| {
+            let center = piece_map.get(guid)?.center.as_ref()?;
+            Some(DiffUpdate {
+                key: "piece".to_string(),
                 guid: guid.to_string(),
-                center: Some(Some(Coord {
-                    u: offset.u,
-                    v: offset.v,
-                })),
-                ..Default::default()
-            },
+                diff: PieceDiff {
+                    guid: guid.to_string(),
+                    center: Some(Some(Coord {
+                        u: center.u + offset.u,
+                        v: center.v + offset.v,
+                    })),
+                    ..Default::default()
+                },
+            })
         })
         .collect();
     let connection_updates: Vec<DiffUpdate<ConnectionDiff>> = selected_guids
         .iter()
-        .filter(|&&guid| !moving_set.contains(guid) && connection_by_child.contains_key(guid))
+        .filter(|&&guid| {
+            if fixed_guids.contains(guid) {
+                return false;
+            }
+            let mut current = guid;
+            loop {
+                match parent_map.get(current) {
+                    Some(&(_conn_guid, ancestor_guid)) => {
+                        if selected_guids.contains(ancestor_guid) {
+                            return false;
+                        }
+                        current = ancestor_guid;
+                    }
+                    None => break,
+                }
+            }
+            parent_map.contains_key(guid)
+        })
         .map(|&guid| {
-            let conn = connection_by_child[guid];
+            let (conn_guid, _parent_guid) = parent_map[guid];
             DiffUpdate {
                 key: "connection".to_string(),
-                guid: conn.guid.clone(),
+                guid: conn_guid.to_string(),
                 diff: ConnectionDiff {
-                    guid: conn.guid.clone(),
+                    guid: conn_guid.to_string(),
                     u: Some(Some(offset.u)),
                     v: Some(Some(offset.v)),
                     ..Default::default()
@@ -7985,6 +8915,7 @@ pub mod sqlite {
                     name: row.get(1)?,
                     description: row.get(2)?,
                     icon: row.get(3)?,
+                    attributes: None,
                 })
             })
             .map_err(|e| SemioError::Database {
@@ -8009,6 +8940,7 @@ pub mod sqlite {
                     name: row.get(1)?,
                     description: row.get(2)?,
                     icon: row.get(3)?,
+                    attributes: None,
                 })
             })
             .map_err(|e| SemioError::Database {
@@ -8057,6 +8989,7 @@ pub mod sqlite {
                 Ok(Folder {
                     guid: row.get(0)?,
                     name: row.get(1)?,
+                    description: None,
                     parent: row
                         .get::<_, Option<String>>(2)?
                         .map(|g| FolderId { guid: g }),
@@ -8352,6 +9285,7 @@ pub mod sqlite {
                 },
                 stats: None,
                 active_layer: None,
+                location: None,
                 attributes: None,
                 created_at: None,
                 updated_at: None,
@@ -8756,7 +9690,12 @@ fn hydrate_kit_file_blobs(kit: &mut Kit, files: &HashMap<String, Vec<u8>>) {
     let file_paths: Vec<String> = kit
         .files
         .as_ref()
-        .map(|kit_files| kit_files.iter().map(|file| zip_roundtrip::build_file_path(kit, file)).collect())
+        .map(|kit_files| {
+            kit_files
+                .iter()
+                .map(|file| zip_roundtrip::build_file_path(kit, file))
+                .collect()
+        })
         .unwrap_or_default();
 
     if let Some(kit_files) = kit.files.as_mut() {
@@ -8802,7 +9741,10 @@ fn remap_kit_file_bytes(
     let mut before_paths_by_guid = HashMap::new();
     if let Some(before_files_meta) = &before_kit.files {
         for file in before_files_meta {
-            before_paths_by_guid.insert(file.guid.clone(), zip_roundtrip::build_file_path(before_kit, file));
+            before_paths_by_guid.insert(
+                file.guid.clone(),
+                zip_roundtrip::build_file_path(before_kit, file),
+            );
         }
     }
 
@@ -8878,9 +9820,12 @@ fn import_kit_from_zip_bytes(zip_bytes: &[u8]) -> Result<zip_roundtrip::KitImpor
         .write_all(zip_bytes)
         .map_err(|error| io_semio_error("Failed to write temporary zip file", error))?;
 
-    let temp_path = temp_file.path().to_str().ok_or(SemioError::InvalidOperation {
-        message: "Temporary zip path is not valid UTF-8".to_string(),
-    })?;
+    let temp_path = temp_file
+        .path()
+        .to_str()
+        .ok_or(SemioError::InvalidOperation {
+            message: "Temporary zip path is not valid UTF-8".to_string(),
+        })?;
 
     zip_roundtrip::import_kit_from_zip(temp_path)
 }
@@ -8970,8 +9915,9 @@ pub fn export_folder_kit(
 
     let database_path = metadata_path.join(KIT_FOLDER_DATABASE_FILENAME);
     if database_path.exists() {
-        std::fs::remove_file(&database_path)
-            .map_err(|error| io_semio_error("Failed to replace existing folder kit database", error))?;
+        std::fs::remove_file(&database_path).map_err(|error| {
+            io_semio_error("Failed to replace existing folder kit database", error)
+        })?;
     }
     let database_path_str = database_path.to_str().ok_or(SemioError::InvalidOperation {
         message: "Folder kit database path is not valid UTF-8".to_string(),
@@ -8982,8 +9928,9 @@ pub fn export_folder_kit(
     for (relative_path, data) in resolved_files {
         let asset_path = root_path.join(&relative_path);
         if let Some(parent) = asset_path.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|error| io_semio_error("Failed to create folder kit asset directory", error))?;
+            std::fs::create_dir_all(parent).map_err(|error| {
+                io_semio_error("Failed to create folder kit asset directory", error)
+            })?;
         }
         std::fs::write(&asset_path, data)
             .map_err(|error| io_semio_error("Failed to write folder kit asset file", error))?;
@@ -9005,9 +9952,11 @@ pub fn import_remote_kit(url: &str) -> Result<zip_roundtrip::KitImportResult> {
         .get(reqwest::header::CONTENT_TYPE)
         .and_then(|value| value.to_str().ok())
         .map(|value| value.to_string());
-    let response = response.error_for_status().map_err(|error| SemioError::Database {
-        message: format!("Remote kit request failed for {}: {}", url, error),
-    })?;
+    let response = response
+        .error_for_status()
+        .map_err(|error| SemioError::Database {
+            message: format!("Remote kit request failed for {}: {}", url, error),
+        })?;
     let bytes = response.bytes().map_err(|error| SemioError::Database {
         message: format!("Failed to read remote kit body from {}: {}", url, error),
     })?;
@@ -9242,6 +10191,2850 @@ pub mod wasm {
 }
 
 // #endregion 🔖WASM Bindings
+
+// #region 🔖Hash
+// Hash MUST provide deterministic SHA-256 Merkle hash functions for all entities.
+
+struct HashWriter {
+    buf: Vec<u8>,
+}
+
+impl HashWriter {
+    fn new() -> Self {
+        Self { buf: Vec::new() }
+    }
+
+    fn write_string(&mut self, s: &str) {
+        let bytes = s.as_bytes();
+        self.buf
+            .extend_from_slice(&(bytes.len() as u32).to_be_bytes());
+        self.buf.extend_from_slice(bytes);
+    }
+
+    fn write_number(&mut self, n: f64) {
+        self.write_string(&format_number_for_hash(n));
+    }
+
+    fn write_int_number(&mut self, n: i32) {
+        self.write_string(&n.to_string());
+    }
+
+    fn write_bool(&mut self, b: bool) {
+        self.buf.push(if b { 1 } else { 0 });
+    }
+
+    fn write_hash(&mut self, h: &str) {
+        self.write_string(h);
+    }
+
+    fn write_hash_list(&mut self, hashes: &[String]) {
+        let mut sorted: Vec<&str> = hashes.iter().map(|s| s.as_str()).collect();
+        sorted.sort();
+        self.buf
+            .extend_from_slice(&(sorted.len() as u32).to_be_bytes());
+        for h in sorted {
+            self.write_string(h);
+        }
+    }
+
+    fn write_guid_list(&mut self, guids: &[String]) {
+        let mut sorted: Vec<&str> = guids.iter().map(|s| s.as_str()).collect();
+        sorted.sort();
+        self.buf
+            .extend_from_slice(&(sorted.len() as u32).to_be_bytes());
+        for g in sorted {
+            self.write_string(g);
+        }
+    }
+
+    fn digest(&self) -> String {
+        let hash = Sha256::digest(&self.buf);
+        hex::encode(hash)
+    }
+}
+
+fn format_number_for_hash(n: f64) -> String {
+    let abs = n.abs();
+    if n == n.trunc() && !n.is_infinite() && abs < 1e15 {
+        return (n as i64).to_string();
+    }
+    if abs > 0.0 && (abs < 1e-6 || abs >= 1e21) {
+        let s = format!("{:e}", n);
+        if let Some(e_pos) = s.rfind('e') {
+            let mantissa = &s[..e_pos];
+            let exp_part = &s[e_pos + 1..];
+            let sign = if exp_part.starts_with('-') { "-" } else { "+" };
+            let digits = exp_part.trim_start_matches(|c: char| c == '+' || c == '-');
+            let digits = digits.trim_start_matches('0');
+            let digits = if digits.is_empty() { "0" } else { digits };
+            return format!("{}e{}{}", mantissa, sign, digits);
+        }
+        return s;
+    }
+    format!("{}", n)
+}
+
+// #region 🔖Hash Value Types
+
+pub fn hash_coord(c: &Coord) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Coord");
+    w.write_string("u");
+    w.write_number(c.u);
+    w.write_string("v");
+    w.write_number(c.v);
+    w.digest()
+}
+
+pub fn hash_point(v: &Vector) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Point");
+    w.write_string("x");
+    w.write_number(v.x);
+    w.write_string("y");
+    w.write_number(v.y);
+    w.write_string("z");
+    w.write_number(v.z);
+    w.digest()
+}
+
+pub fn hash_vector(v: &Vector) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Vector");
+    w.write_string("x");
+    w.write_number(v.x);
+    w.write_string("y");
+    w.write_number(v.y);
+    w.write_string("z");
+    w.write_number(v.z);
+    w.digest()
+}
+
+pub fn hash_plane(p: &Plane) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Plane");
+    w.write_string("origin");
+    w.write_hash(&hash_point(&p.origin));
+    w.write_string("xAxis");
+    w.write_hash(&hash_vector(&p.x_axis));
+    w.write_string("yAxis");
+    w.write_hash(&hash_vector(&p.y_axis));
+    w.digest()
+}
+
+pub fn hash_camera(c: &Camera) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Camera");
+    w.write_string("forward");
+    w.write_hash(&hash_vector(&c.target));
+    w.write_string("position");
+    w.write_hash(&hash_point(&c.position));
+    w.write_string("up");
+    w.write_hash(&hash_vector(&c.up));
+    w.digest()
+}
+
+// #endregion 🔖Hash Value Types
+
+// #region 🔖Hash Entities
+
+pub fn hash_attribute(a: &Attribute) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Attribute");
+    if let Some(s) = &a.definition {
+        w.write_string("definition");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&a.guid);
+    w.write_string("key");
+    w.write_string(&a.key);
+    if let Some(s) = &a.value {
+        w.write_string("value");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_author(a: &Author) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Author");
+    if let Some(v) = &a.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &a.email {
+        if !s.is_empty() {
+            w.write_string("email");
+            w.write_string(s);
+        }
+    }
+    w.write_string("guid");
+    w.write_string(&a.guid);
+    w.write_string("name");
+    w.write_string(&a.name);
+    w.digest()
+}
+
+pub fn hash_file(f: &File) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("File");
+    if let Some(s) = &f.blob {
+        w.write_string("blob");
+        w.write_string(s);
+    }
+    if let Some(fid) = &f.folder {
+        w.write_string("folder");
+        w.write_string(&fid.guid);
+    }
+    w.write_string("guid");
+    w.write_string(&f.guid);
+    if let Some(s) = &f.hash {
+        w.write_string("hash");
+        w.write_string(s);
+    }
+    w.write_string("name");
+    w.write_string(&f.name);
+    if let Some(s) = &f.remote {
+        w.write_string("remote");
+        w.write_string(s);
+    }
+    if let Some(n) = &f.size {
+        w.write_string("size");
+        w.write_int_number(*n as i32);
+    }
+    w.digest()
+}
+
+pub fn hash_folder(f: &Folder) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Folder");
+    if let Some(v) = &f.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &f.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&f.guid);
+    w.write_string("name");
+    w.write_string(&f.name);
+    if let Some(p) = &f.parent {
+        w.write_string("parent");
+        w.write_string(&p.guid);
+    }
+    w.digest()
+}
+
+pub fn hash_benchmark(b: &Benchmark) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Benchmark");
+    if let Some(v) = &b.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    w.write_string("guid");
+    w.write_string(&b.guid);
+    if let Some(s) = &b.icon {
+        w.write_string("icon");
+        w.write_string(s);
+    }
+    if let Some(n) = &b.max {
+        w.write_string("max");
+        w.write_number(*n);
+    }
+    if let Some(b_val) = &b.max_excluded {
+        w.write_string("maxExcluded");
+        w.write_bool(*b_val);
+    }
+    if let Some(n) = &b.min {
+        w.write_string("min");
+        w.write_number(*n);
+    }
+    if let Some(b_val) = &b.min_excluded {
+        w.write_string("minExcluded");
+        w.write_bool(*b_val);
+    }
+    w.write_string("name");
+    w.write_string(&b.name);
+    w.digest()
+}
+
+pub fn hash_quality(q: &Quality) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Quality");
+    if let Some(v) = &q.benchmarks {
+        if !v.is_empty() {
+            w.write_string("benchmarks");
+            let hashes: Vec<String> = v.iter().map(|x| hash_benchmark(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(b) = &q.can_scale {
+        w.write_string("canScale");
+        w.write_bool(*b);
+    }
+    if let Some(s) = &q.default_imperial_unit {
+        w.write_string("defaultImperialUnit");
+        w.write_string(s);
+    }
+    if let Some(s) = &q.default_si_unit {
+        w.write_string("defaultSiUnit");
+        w.write_string(s);
+    }
+    if let Some(n) = &q.default_value {
+        w.write_string("defaultValue");
+        w.write_number(*n);
+    }
+    if let Some(s) = &q.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    if let Some(s) = &q.formula {
+        w.write_string("formula");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&q.guid);
+    if let Some(s) = &q.icon {
+        w.write_string("icon");
+        w.write_string(s);
+    }
+    if let Some(s) = &q.image {
+        w.write_string("image");
+        w.write_string(s);
+    }
+    if let Some(b) = &q.is_max_excluded {
+        w.write_string("isMaxExcluded");
+        w.write_bool(*b);
+    }
+    if let Some(b) = &q.is_min_excluded {
+        w.write_string("isMinExcluded");
+        w.write_bool(*b);
+    }
+    w.write_string("key");
+    w.write_string(&q.key);
+    if q.kind as i32 != 0 {
+        w.write_string("kind");
+        w.write_int_number(q.kind as i32);
+    }
+    if let Some(n) = &q.max {
+        w.write_string("max");
+        w.write_number(*n);
+    }
+    if let Some(n) = &q.min {
+        w.write_string("min");
+        w.write_number(*n);
+    }
+    w.write_string("name");
+    w.write_string(&q.name);
+    if let Some(s) = &q.unit {
+        w.write_string("unit");
+        w.write_string(s);
+    }
+    if let Some(s) = &q.uri {
+        w.write_string("uri");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_port(p: &Port) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Port");
+    if let Some(v) = &p.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &p.compatible_interfaces {
+        if !v.is_empty() {
+            w.write_string("compatiblePorts");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+    }
+    if let Some(s) = &p.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&p.guid);
+    if let Some(s) = &p.icon {
+        w.write_string("icon");
+        w.write_string(s);
+    }
+    w.write_string("name");
+    w.write_string(&p.name);
+    w.digest()
+}
+
+pub fn hash_prop(p: &Prop) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Prop");
+    if let Some(v) = &p.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    w.write_string("guid");
+    w.write_string(&p.guid);
+    w.write_string("quality");
+    w.write_string(&p.quality.guid);
+    if let Some(s) = &p.unit {
+        w.write_string("unit");
+        w.write_string(s);
+    }
+    w.write_string("value");
+    w.write_string(&p.value);
+    w.digest()
+}
+
+pub fn hash_tag(t: &Tag) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Tag");
+    if let Some(v) = &t.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &t.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&t.guid);
+    if let Some(s) = &t.icon {
+        w.write_string("icon");
+        w.write_string(s);
+    }
+    w.write_string("name");
+    w.write_string(&t.name);
+    w.digest()
+}
+
+pub fn hash_concept(c: &Concept) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Concept");
+    if let Some(v) = &c.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &c.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&c.guid);
+    if let Some(s) = &c.icon {
+        w.write_string("icon");
+        w.write_string(s);
+    }
+    w.write_string("name");
+    w.write_string(&c.name);
+    w.digest()
+}
+
+pub fn hash_model(m: &Model) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Model");
+    if let Some(v) = &m.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &m.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("file");
+    w.write_string(&m.file.guid);
+    w.write_string("guid");
+    w.write_string(&m.guid);
+    if let Some(s) = &m.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    if let Some(v) = &m.tags {
+        if !v.is_empty() {
+            w.write_string("tags");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+    }
+    w.digest()
+}
+
+pub fn hash_connector(c: &Connector) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Connector");
+    if let Some(v) = &c.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &c.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("direction");
+    w.write_hash(&hash_vector(&c.direction));
+    w.write_string("guid");
+    w.write_string(&c.guid);
+    if let Some(b) = &c.mandatory {
+        w.write_string("mandatory");
+        w.write_bool(*b);
+    }
+    if let Some(s) = &c.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    w.write_string("point");
+    w.write_hash(&hash_point(&c.point));
+    if let Some(pid) = &c.port {
+        w.write_string("port");
+        w.write_string(&pid.guid);
+    }
+    if let Some(v) = &c.props {
+        if !v.is_empty() {
+            w.write_string("props");
+            let hashes: Vec<String> = v.iter().map(|x| hash_prop(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    w.write_string("t");
+    w.write_number(c.t);
+    w.digest()
+}
+
+pub fn hash_type(t: &Type) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Type");
+    if let Some(v) = &t.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &t.authors {
+        if !v.is_empty() {
+            w.write_string("authors");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+    }
+    if let Some(v) = &t.concepts {
+        if !v.is_empty() {
+            w.write_string("concepts");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+    }
+    if let Some(v) = &t.connectors {
+        if !v.is_empty() {
+            w.write_string("connectors");
+            let hashes: Vec<String> = v.iter().map(|x| hash_connector(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &t.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    if let Some(s) = &t.folder {
+        w.write_string("folder");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&t.guid);
+    if let Some(s) = &t.icon {
+        w.write_string("icon");
+        w.write_string(s);
+    }
+    if let Some(s) = &t.image {
+        w.write_string("image");
+        w.write_string(s);
+    }
+    if let Some(b) = &t.is_abstract {
+        w.write_string("isAbstract");
+        w.write_bool(*b);
+    }
+    if let Some(lid) = &t.location {
+        w.write_string("location");
+        w.write_string(&lid.guid);
+    }
+    if let Some(v) = &t.models {
+        if !v.is_empty() {
+            w.write_string("models");
+            let hashes: Vec<String> = v.iter().map(|x| hash_model(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    w.write_string("name");
+    w.write_string(&t.name);
+    if let Some(pid) = &t.parent {
+        w.write_string("parent");
+        w.write_string(&pid.guid);
+    }
+    if let Some(v) = &t.props {
+        if !v.is_empty() {
+            w.write_string("props");
+            let hashes: Vec<String> = v.iter().map(|x| hash_prop(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(n) = &t.stock {
+        w.write_string("stock");
+        w.write_int_number(*n);
+    }
+    if let Some(s) = &t.unit {
+        w.write_string("unit");
+        w.write_string(s);
+    }
+    if let Some(b) = &t.virtual_type {
+        w.write_string("virtual");
+        w.write_bool(*b);
+    }
+    w.digest()
+}
+
+pub fn hash_layer(l: &Layer) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Layer");
+    if let Some(v) = &l.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &l.color {
+        w.write_string("color");
+        w.write_string(s);
+    }
+    if let Some(s) = &l.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&l.guid);
+    if let Some(b) = &l.is_hidden {
+        w.write_string("isHidden");
+        w.write_bool(*b);
+    }
+    if let Some(b) = &l.is_locked {
+        w.write_string("isLocked");
+        w.write_bool(*b);
+    }
+    w.write_string("path");
+    w.write_string(&l.path);
+    w.digest()
+}
+
+pub fn hash_stat(s: &Stat) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Stat");
+    w.write_string("guid");
+    w.write_string(&s.guid);
+    if let Some(n) = &s.max {
+        w.write_string("max");
+        w.write_number(*n);
+    }
+    if let Some(b) = &s.max_excluded {
+        w.write_string("maxExcluded");
+        w.write_bool(*b);
+    }
+    if let Some(n) = &s.min {
+        w.write_string("min");
+        w.write_number(*n);
+    }
+    if let Some(b) = &s.min_excluded {
+        w.write_string("minExcluded");
+        w.write_bool(*b);
+    }
+    w.write_string("quality");
+    w.write_string(&s.quality.guid);
+    if let Some(u) = &s.unit {
+        w.write_string("unit");
+        w.write_string(u);
+    }
+    w.digest()
+}
+
+pub fn hash_group(g: &Group) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Group");
+    if let Some(v) = &g.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &g.color {
+        w.write_string("color");
+        w.write_string(s);
+    }
+    if let Some(s) = &g.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("guid");
+    w.write_string(&g.guid);
+    if let Some(s) = &g.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    w.write_string("pieces");
+    let guids: Vec<String> = g
+        .pieces
+        .as_ref()
+        .map_or(Vec::new(), |v| v.iter().map(|x| x.guid.clone()).collect());
+    w.write_guid_list(&guids);
+    w.digest()
+}
+
+pub fn hash_side(s: &Side) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Side");
+    if let Some(cid) = &s.connector {
+        w.write_string("connector");
+        w.write_string(&cid.guid);
+    }
+    if let Some(dpid) = &s.design_piece {
+        w.write_string("designPiece");
+        w.write_string(&dpid.guid);
+    }
+    w.write_string("piece");
+    w.write_string(&s.piece.guid);
+    w.digest()
+}
+
+pub fn hash_connection(c: &Connection) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Connection");
+    if let Some(v) = &c.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    w.write_string("connected");
+    w.write_hash(&hash_side(&c.connected));
+    w.write_string("connecting");
+    w.write_hash(&hash_side(&c.connecting));
+    if let Some(s) = &c.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    w.write_string("gap");
+    w.write_number(c.gap);
+    w.write_string("guid");
+    w.write_string(&c.guid);
+    w.write_string("rise");
+    w.write_number(c.rise);
+    w.write_string("rotation");
+    w.write_number(c.rotation);
+    w.write_string("shift");
+    w.write_number(c.shift);
+    w.write_string("tilt");
+    w.write_number(c.tilt);
+    w.write_string("turn");
+    w.write_number(c.turn);
+    w.write_string("u");
+    w.write_number(c.u.unwrap_or(0.0));
+    w.write_string("v");
+    w.write_number(c.v.unwrap_or(0.0));
+    w.digest()
+}
+
+pub fn hash_piece(p: &Piece) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Piece");
+    if let Some(v) = &p.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(c) = &p.center {
+        w.write_string("center");
+        w.write_hash(&hash_coord(c));
+    }
+    if let Some(s) = &p.color {
+        w.write_string("color");
+        w.write_string(s);
+    }
+    if let Some(s) = &p.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    if let Some(did) = &p.design {
+        w.write_string("design");
+        w.write_string(&did.guid);
+    }
+    w.write_string("guid");
+    w.write_string(&p.guid);
+    if let Some(b) = &p.is_hidden {
+        w.write_string("isHidden");
+        w.write_bool(*b);
+    }
+    if let Some(b) = &p.is_locked {
+        w.write_string("isLocked");
+        w.write_bool(*b);
+    }
+    if let Some(mp) = &p.mirror_plane {
+        w.write_string("mirrorPlane");
+        w.write_hash(&hash_plane(mp));
+    }
+    if let Some(s) = &p.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    if let Some(pl) = &p.plane {
+        w.write_string("plane");
+        w.write_hash(&hash_plane(pl));
+    }
+    if let Some(v) = &p.props {
+        if !v.is_empty() {
+            w.write_string("props");
+            let hashes: Vec<String> = v.iter().map(|x| hash_prop(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(n) = &p.scale {
+        w.write_string("scale");
+        w.write_number(*n);
+    }
+    if let Some(tid) = &p.type_ref {
+        w.write_string("type");
+        w.write_string(&tid.guid);
+    }
+    w.digest()
+}
+
+pub fn hash_design(d: &Design) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Design");
+    if let Some(al) = &d.active_layer {
+        w.write_string("activeLayer");
+        w.write_string(&al.guid);
+    }
+    if let Some(v) = &d.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &d.authors {
+        if !v.is_empty() {
+            w.write_string("authors");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+    }
+    if let Some(b) = &d.can_mirror {
+        w.write_string("canMirror");
+        w.write_bool(*b);
+    }
+    if let Some(b) = &d.can_scale {
+        w.write_string("canScale");
+        w.write_bool(*b);
+    }
+    if let Some(v) = &d.concepts {
+        if !v.is_empty() {
+            w.write_string("concepts");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+    }
+    if let Some(v) = &d.connections {
+        if !v.is_empty() {
+            w.write_string("connections");
+            let hashes: Vec<String> = v.iter().map(|x| hash_connection(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &d.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    if let Some(s) = &d.folder {
+        w.write_string("folder");
+        w.write_string(s);
+    }
+    if let Some(v) = &d.groups {
+        if !v.is_empty() {
+            w.write_string("groups");
+            let hashes: Vec<String> = v.iter().map(|x| hash_group(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    w.write_string("guid");
+    w.write_string(&d.guid);
+    if let Some(s) = &d.icon {
+        w.write_string("icon");
+        w.write_string(s);
+    }
+    if let Some(s) = &d.image {
+        w.write_string("image");
+        w.write_string(s);
+    }
+    if let Some(b) = &d.is_abstract {
+        w.write_string("isAbstract");
+        w.write_bool(*b);
+    }
+    if let Some(v) = &d.layers {
+        if !v.is_empty() {
+            w.write_string("layers");
+            let hashes: Vec<String> = v.iter().map(|x| hash_layer(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(lid) = &d.location {
+        w.write_string("location");
+        w.write_string(&lid.guid);
+    }
+    w.write_string("name");
+    w.write_string(&d.name);
+    if let Some(pid) = &d.parent {
+        w.write_string("parent");
+        w.write_string(&pid.guid);
+    }
+    if let Some(v) = &d.pieces {
+        if !v.is_empty() {
+            w.write_string("pieces");
+            let hashes: Vec<String> = v.iter().map(|x| hash_piece(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &d.props {
+        if !v.is_empty() {
+            w.write_string("props");
+            let hashes: Vec<String> = v.iter().map(|x| hash_prop(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &d.stats {
+        if !v.is_empty() {
+            w.write_string("stats");
+            let hashes: Vec<String> = v.iter().map(|x| hash_stat(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &d.unit {
+        w.write_string("unit");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_kit(k: &Kit) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("Kit");
+    if let Some(v) = &k.attributes {
+        if !v.is_empty() {
+            w.write_string("attributes");
+            let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &k.authors {
+        if !v.is_empty() {
+            w.write_string("authors");
+            let hashes: Vec<String> = v.iter().map(|x| hash_author(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &k.concepts {
+        if !v.is_empty() {
+            w.write_string("concepts");
+            let hashes: Vec<String> = v.iter().map(|x| hash_concept(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &k.description {
+        w.write_string("description");
+        w.write_string(s);
+    }
+    if let Some(v) = &k.designs {
+        if !v.is_empty() {
+            w.write_string("designs");
+            let hashes: Vec<String> = v.iter().map(|x| hash_design(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &k.files {
+        if !v.is_empty() {
+            w.write_string("files");
+            let hashes: Vec<String> = v.iter().map(|x| hash_file(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &k.folders {
+        if !v.is_empty() {
+            w.write_string("folders");
+            let hashes: Vec<String> = v.iter().map(|x| hash_folder(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    w.write_string("guid");
+    w.write_string(&k.guid);
+    if let Some(s) = &k.homepage {
+        w.write_string("homepage");
+        w.write_string(s);
+    }
+    if let Some(s) = &k.icon {
+        w.write_string("icon");
+        w.write_string(s);
+    }
+    if let Some(s) = &k.image {
+        w.write_string("image");
+        w.write_string(s);
+    }
+    if let Some(s) = &k.license {
+        w.write_string("license");
+        w.write_string(s);
+    }
+    w.write_string("name");
+    w.write_string(&k.name);
+    if let Some(v) = &k.ports {
+        if !v.is_empty() {
+            w.write_string("ports");
+            let hashes: Vec<String> = v.iter().map(|x| hash_port(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &k.preview {
+        w.write_string("preview");
+        w.write_string(s);
+    }
+    if let Some(v) = &k.qualities {
+        if !v.is_empty() {
+            w.write_string("qualities");
+            let hashes: Vec<String> = v.iter().map(|x| hash_quality(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &k.remote {
+        w.write_string("remote");
+        w.write_string(s);
+    }
+    if let Some(v) = &k.tags {
+        if !v.is_empty() {
+            w.write_string("tags");
+            let hashes: Vec<String> = v.iter().map(|x| hash_tag(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(v) = &k.types {
+        if !v.is_empty() {
+            w.write_string("types");
+            let hashes: Vec<String> = v.iter().map(|x| hash_type(x)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(s) = &k.version {
+        if !s.is_empty() {
+            w.write_string("version");
+            w.write_string(s);
+        }
+    }
+    w.digest()
+}
+
+// #endregion 🔖Hash Entities
+
+// #region 🔖Hash Diff Value Types
+
+fn hash_coord_diff(c: &Coord) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("CoordDiff");
+    w.write_string("u");
+    w.write_number(c.u);
+    w.write_string("v");
+    w.write_number(c.v);
+    w.digest()
+}
+
+fn hash_point_diff(v: &Vector) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("PointDiff");
+    w.write_string("x");
+    w.write_number(v.x);
+    w.write_string("y");
+    w.write_number(v.y);
+    w.write_string("z");
+    w.write_number(v.z);
+    w.digest()
+}
+
+fn hash_vector_diff(v: &Vector) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("VectorDiff");
+    w.write_string("x");
+    w.write_number(v.x);
+    w.write_string("y");
+    w.write_number(v.y);
+    w.write_string("z");
+    w.write_number(v.z);
+    w.digest()
+}
+
+fn hash_plane_diff(p: &Plane) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("PlaneDiff");
+    w.write_string("origin");
+    w.write_hash(&hash_point_diff(&p.origin));
+    w.write_string("xAxis");
+    w.write_hash(&hash_vector_diff(&p.x_axis));
+    w.write_string("yAxis");
+    w.write_hash(&hash_vector_diff(&p.y_axis));
+    w.digest()
+}
+
+// #endregion 🔖Hash Diff Value Types
+
+// #region 🔖Hash Diff Collection
+
+fn hash_collection_diff<T, D>(
+    tag: &str,
+    update_tag: &str,
+    entity_key_name: &str,
+    hash_entity: &dyn Fn(&T) -> String,
+    hash_diff: &dyn Fn(&D) -> String,
+    coll: &CollectionDiff<T, D>,
+) -> String {
+    let mut w = HashWriter::new();
+    w.write_string(tag);
+    if let Some(ref added) = coll.added {
+        if !added.is_empty() {
+            w.write_string("added");
+            let hashes: Vec<String> = added.iter().map(|e| hash_entity(e)).collect();
+            w.write_hash_list(&hashes);
+        }
+    }
+    if let Some(ref removed) = coll.removed {
+        if !removed.is_empty() {
+            w.write_string("removed");
+            let guids: Vec<String> = removed.iter().map(|r| r.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+    }
+    if let Some(ref updated) = coll.updated {
+        if !updated.is_empty() {
+            w.write_string("updated");
+            let mut keys = vec![entity_key_name.to_string(), "diff".to_string()];
+            keys.sort();
+            let update_hashes: Vec<String> = updated
+                .iter()
+                .map(|u| {
+                    let mut uw = HashWriter::new();
+                    uw.write_string(update_tag);
+                    for k in &keys {
+                        if k == "diff" {
+                            uw.write_string("diff");
+                            uw.write_hash(&hash_diff(&u.diff));
+                        } else {
+                            uw.write_string(k);
+                            uw.write_string(&u.guid);
+                        }
+                    }
+                    uw.digest()
+                })
+                .collect();
+            w.write_hash_list(&update_hashes);
+        }
+    }
+    w.digest()
+}
+
+// #endregion 🔖Hash Diff Collection
+
+// #region 🔖Hash Diff Entities
+
+pub fn hash_attribute_diff(d: &AttributeDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("AttributeDiff");
+    match &d.definition {
+        Some(Some(s)) => {
+            w.write_string("definition");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("definition");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.key {
+        w.write_string("key");
+        w.write_string(s);
+    }
+    match &d.value {
+        Some(Some(s)) => {
+            w.write_string("value");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("value");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_author_diff(d: &AuthorDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("AuthorDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.email {
+        Some(Some(s)) => {
+            w.write_string("email");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("email");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_file_diff(d: &FileDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("FileDiff");
+    match &d.folder {
+        Some(Some(fid)) => {
+            w.write_string("folder");
+            w.write_string(&fid.guid);
+        }
+        Some(None) => {
+            w.write_string("folder");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.hash {
+        Some(Some(s)) => {
+            w.write_string("hash");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("hash");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    match &d.remote {
+        Some(Some(s)) => {
+            w.write_string("remote");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("remote");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.size {
+        Some(Some(n)) => {
+            w.write_string("size");
+            w.write_int_number(*n as i32);
+        }
+        Some(None) => {
+            w.write_string("size");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_folder_diff(d: &FolderDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("FolderDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    match &d.parent {
+        Some(Some(fid)) => {
+            w.write_string("parent");
+            w.write_string(&fid.guid);
+        }
+        Some(None) => {
+            w.write_string("parent");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_quality_diff(d: &QualityDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("QualityDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.can_scale {
+        Some(Some(b)) => {
+            w.write_string("canScale");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("canScale");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.default_imperial_unit {
+        Some(Some(s)) => {
+            w.write_string("defaultImperialUnit");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("defaultImperialUnit");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.default_si_unit {
+        Some(Some(s)) => {
+            w.write_string("defaultSiUnit");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("defaultSiUnit");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.default_value {
+        Some(Some(n)) => {
+            w.write_string("defaultValue");
+            w.write_number(*n);
+        }
+        Some(None) => {
+            w.write_string("defaultValue");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.formula {
+        Some(Some(s)) => {
+            w.write_string("formula");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("formula");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.is_max_excluded {
+        Some(Some(b)) => {
+            w.write_string("isMaxExcluded");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("isMaxExcluded");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.is_min_excluded {
+        Some(Some(b)) => {
+            w.write_string("isMinExcluded");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("isMinExcluded");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.key {
+        w.write_string("key");
+        w.write_string(s);
+    }
+    if let Some(ref kind) = d.kind {
+        w.write_string("kind");
+        w.write_int_number(*kind as i32);
+    }
+    match &d.max {
+        Some(Some(n)) => {
+            w.write_string("max");
+            w.write_number(*n);
+        }
+        Some(None) => {
+            w.write_string("max");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.min {
+        Some(Some(n)) => {
+            w.write_string("min");
+            w.write_number(*n);
+        }
+        Some(None) => {
+            w.write_string("min");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    match &d.uri {
+        Some(Some(s)) => {
+            w.write_string("uri");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("uri");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_port_diff(d: &PortDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("PortDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.compatible_interfaces {
+        Some(Some(v)) if !v.is_empty() => {
+            w.write_string("compatiblePorts");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+        Some(_) => {
+            w.write_string("compatiblePorts");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.icon {
+        Some(Some(s)) => {
+            w.write_string("icon");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("icon");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_prop_diff(d: &PropDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("PropDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref qid) = d.quality {
+        w.write_string("quality");
+        w.write_string(&qid.guid);
+    }
+    match &d.unit {
+        Some(Some(s)) => {
+            w.write_string("unit");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("unit");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.value {
+        w.write_string("value");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_tag_diff(d: &TagDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("TagDiff");
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.icon {
+        Some(Some(s)) => {
+            w.write_string("icon");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("icon");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_concept_diff(d: &ConceptDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("ConceptDiff");
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.icon {
+        Some(Some(s)) => {
+            w.write_string("icon");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("icon");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_model_diff(d: &ModelDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("ModelDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref fid) = d.file {
+        w.write_string("file");
+        w.write_string(&fid.guid);
+    }
+    match &d.name {
+        Some(Some(s)) => {
+            w.write_string("name");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("name");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.tags {
+        Some(Some(v)) if !v.is_empty() => {
+            w.write_string("tags");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+        Some(_) => {
+            w.write_string("tags");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_connector_diff(d: &ConnectorDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("ConnectorDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref v) = d.direction {
+        w.write_string("direction");
+        w.write_hash(&hash_vector_diff(v));
+    }
+    match &d.mandatory {
+        Some(Some(b)) => {
+            w.write_string("mandatory");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("mandatory");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.name {
+        Some(Some(s)) => {
+            w.write_string("name");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("name");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref v) = d.point {
+        w.write_string("point");
+        w.write_hash(&hash_point_diff(v));
+    }
+    match &d.port {
+        Some(Some(pid)) => {
+            w.write_string("port");
+            w.write_string(&pid.guid);
+        }
+        Some(None) => {
+            w.write_string("port");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.props {
+        w.write_string("props");
+        w.write_hash(&hash_collection_diff(
+            "PropsDiff",
+            "PropDiffUpdate",
+            "prop",
+            &|p: &Prop| hash_prop(p),
+            &|d: &PropDiff| hash_prop_diff(d),
+            coll,
+        ));
+    }
+    if let Some(n) = d.t {
+        w.write_string("t");
+        w.write_number(n);
+    }
+    w.digest()
+}
+
+pub fn hash_type_diff(d: &TypeDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("TypeDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.authors {
+        Some(Some(v)) if !v.is_empty() => {
+            w.write_string("authors");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+        Some(_) => {
+            w.write_string("authors");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.concepts {
+        Some(Some(v)) if !v.is_empty() => {
+            w.write_string("concepts");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+        Some(_) => {
+            w.write_string("concepts");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.connectors {
+        w.write_string("connectors");
+        w.write_hash(&hash_collection_diff(
+            "ConnectorsDiff",
+            "ConnectorDiffUpdate",
+            "connector",
+            &|c: &Connector| hash_connector(c),
+            &|d: &ConnectorDiff| hash_connector_diff(d),
+            coll,
+        ));
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.folder {
+        Some(Some(s)) => {
+            w.write_string("folder");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("folder");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.icon {
+        Some(Some(s)) => {
+            w.write_string("icon");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("icon");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.image {
+        Some(Some(s)) => {
+            w.write_string("image");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("image");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.is_abstract {
+        Some(Some(b)) => {
+            w.write_string("isAbstract");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("isAbstract");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.location {
+        Some(Some(lid)) => {
+            w.write_string("location");
+            w.write_string(&lid.guid);
+        }
+        Some(None) => {
+            w.write_string("location");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.models {
+        w.write_string("models");
+        w.write_hash(&hash_collection_diff(
+            "ModelsDiff",
+            "ModelDiffUpdate",
+            "model",
+            &|m: &Model| hash_model(m),
+            &|d: &ModelDiff| hash_model_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    match &d.parent {
+        Some(Some(tid)) => {
+            w.write_string("parent");
+            w.write_string(&tid.guid);
+        }
+        Some(None) => {
+            w.write_string("parent");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.props {
+        w.write_string("props");
+        w.write_hash(&hash_collection_diff(
+            "PropsDiff",
+            "PropDiffUpdate",
+            "prop",
+            &|p: &Prop| hash_prop(p),
+            &|d: &PropDiff| hash_prop_diff(d),
+            coll,
+        ));
+    }
+    match &d.stock {
+        Some(Some(n)) => {
+            w.write_string("stock");
+            w.write_int_number(*n);
+        }
+        Some(None) => {
+            w.write_string("stock");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.unit {
+        Some(Some(s)) => {
+            w.write_string("unit");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("unit");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.virtual_type {
+        Some(Some(b)) => {
+            w.write_string("virtual");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("virtual");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_side_diff(d: &SideDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("SideDiff");
+    match &d.connector {
+        Some(Some(cid)) => {
+            w.write_string("connector");
+            w.write_string(&cid.guid);
+        }
+        Some(None) => {
+            w.write_string("connector");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.design_piece {
+        Some(Some(pid)) => {
+            w.write_string("designPiece");
+            w.write_string(&pid.guid);
+        }
+        Some(None) => {
+            w.write_string("designPiece");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref pid) = d.piece {
+        w.write_string("piece");
+        w.write_string(&pid.guid);
+    }
+    w.digest()
+}
+
+pub fn hash_connection_diff(d: &ConnectionDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("ConnectionDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref s) = d.connected {
+        w.write_string("connected");
+        w.write_hash(&hash_side_diff(s));
+    }
+    if let Some(ref s) = d.connecting {
+        w.write_string("connecting");
+        w.write_hash(&hash_side_diff(s));
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(n) = d.gap {
+        w.write_string("gap");
+        w.write_number(n);
+    }
+    if let Some(n) = d.rise {
+        w.write_string("rise");
+        w.write_number(n);
+    }
+    if let Some(n) = d.rotation {
+        w.write_string("rotation");
+        w.write_number(n);
+    }
+    if let Some(n) = d.shift {
+        w.write_string("shift");
+        w.write_number(n);
+    }
+    if let Some(n) = d.tilt {
+        w.write_string("tilt");
+        w.write_number(n);
+    }
+    if let Some(n) = d.turn {
+        w.write_string("turn");
+        w.write_number(n);
+    }
+    match d.u {
+        Some(Some(n)) => {
+            w.write_string("u");
+            w.write_number(n);
+        }
+        Some(None) => {
+            w.write_string("u");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match d.v {
+        Some(Some(n)) => {
+            w.write_string("v");
+            w.write_number(n);
+        }
+        Some(None) => {
+            w.write_string("v");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_piece_diff(d: &PieceDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("PieceDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.center {
+        Some(Some(c)) => {
+            w.write_string("center");
+            w.write_hash(&hash_coord_diff(c));
+        }
+        Some(None) => {
+            w.write_string("center");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.color {
+        Some(Some(s)) => {
+            w.write_string("color");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("color");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.design {
+        Some(Some(did)) => {
+            w.write_string("design");
+            w.write_string(&did.guid);
+        }
+        Some(None) => {
+            w.write_string("design");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.is_hidden {
+        Some(Some(b)) => {
+            w.write_string("isHidden");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("isHidden");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.is_locked {
+        Some(Some(b)) => {
+            w.write_string("isLocked");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("isLocked");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.mirror_plane {
+        Some(Some(p)) => {
+            w.write_string("mirrorPlane");
+            w.write_hash(&hash_plane_diff(p));
+        }
+        Some(None) => {
+            w.write_string("mirrorPlane");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.name {
+        Some(Some(s)) => {
+            w.write_string("name");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("name");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.plane {
+        Some(Some(p)) => {
+            w.write_string("plane");
+            w.write_hash(&hash_plane_diff(p));
+        }
+        Some(None) => {
+            w.write_string("plane");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.props {
+        w.write_string("props");
+        w.write_hash(&hash_collection_diff(
+            "PropsDiff",
+            "PropDiffUpdate",
+            "prop",
+            &|p: &Prop| hash_prop(p),
+            &|d: &PropDiff| hash_prop_diff(d),
+            coll,
+        ));
+    }
+    match &d.scale {
+        Some(Some(n)) => {
+            w.write_string("scale");
+            w.write_number(*n);
+        }
+        Some(None) => {
+            w.write_string("scale");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.type_ref {
+        Some(Some(tid)) => {
+            w.write_string("type");
+            w.write_string(&tid.guid);
+        }
+        Some(None) => {
+            w.write_string("type");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_layer_diff(d: &LayerDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("LayerDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.color {
+        Some(Some(s)) => {
+            w.write_string("color");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("color");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.is_hidden {
+        Some(Some(b)) => {
+            w.write_string("isHidden");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("isHidden");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.is_locked {
+        Some(Some(b)) => {
+            w.write_string("isLocked");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("isLocked");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.path {
+        w.write_string("path");
+        w.write_string(s);
+    }
+    w.digest()
+}
+
+pub fn hash_group_diff(d: &GroupDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("GroupDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.color {
+        Some(Some(s)) => {
+            w.write_string("color");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("color");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.name {
+        Some(Some(s)) => {
+            w.write_string("name");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("name");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.pieces {
+        Some(Some(v)) if !v.is_empty() => {
+            w.write_string("pieces");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+        Some(_) => {
+            w.write_string("pieces");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_stat_diff(d: &StatDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("StatDiff");
+    match &d.max {
+        Some(Some(n)) => {
+            w.write_string("max");
+            w.write_number(*n);
+        }
+        Some(None) => {
+            w.write_string("max");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.max_excluded {
+        Some(Some(b)) => {
+            w.write_string("maxExcluded");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("maxExcluded");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.min {
+        Some(Some(n)) => {
+            w.write_string("min");
+            w.write_number(*n);
+        }
+        Some(None) => {
+            w.write_string("min");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.min_excluded {
+        Some(Some(b)) => {
+            w.write_string("minExcluded");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("minExcluded");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref qid) = d.quality {
+        w.write_string("quality");
+        w.write_string(&qid.guid);
+    }
+    match &d.unit {
+        Some(Some(s)) => {
+            w.write_string("unit");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("unit");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_design_diff(d: &DesignDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("DesignDiff");
+    match &d.active_layer {
+        Some(Some(lid)) => {
+            w.write_string("activeLayer");
+            w.write_string(&lid.guid);
+        }
+        Some(None) => {
+            w.write_string("activeLayer");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    match &d.authors {
+        Some(Some(v)) if !v.is_empty() => {
+            w.write_string("authors");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+        Some(_) => {
+            w.write_string("authors");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.can_mirror {
+        Some(Some(b)) => {
+            w.write_string("canMirror");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("canMirror");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.can_scale {
+        Some(Some(b)) => {
+            w.write_string("canScale");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("canScale");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.concepts {
+        Some(Some(v)) if !v.is_empty() => {
+            w.write_string("concepts");
+            let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+            w.write_guid_list(&guids);
+        }
+        Some(_) => {
+            w.write_string("concepts");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.connections {
+        w.write_string("connections");
+        w.write_hash(&hash_collection_diff(
+            "ConnectionsDiff",
+            "ConnectionDiffUpdate",
+            "connection",
+            &|c: &Connection| hash_connection(c),
+            &|d: &ConnectionDiff| hash_connection_diff(d),
+            coll,
+        ));
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.folder {
+        Some(Some(s)) => {
+            w.write_string("folder");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("folder");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.groups {
+        w.write_string("groups");
+        w.write_hash(&hash_collection_diff(
+            "GroupsDiff",
+            "GroupDiffUpdate",
+            "group",
+            &|g: &Group| hash_group(g),
+            &|d: &GroupDiff| hash_group_diff(d),
+            coll,
+        ));
+    }
+    match &d.icon {
+        Some(Some(s)) => {
+            w.write_string("icon");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("icon");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.image {
+        Some(Some(s)) => {
+            w.write_string("image");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("image");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.is_abstract {
+        Some(Some(b)) => {
+            w.write_string("isAbstract");
+            w.write_bool(*b);
+        }
+        Some(None) => {
+            w.write_string("isAbstract");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.layers {
+        w.write_string("layers");
+        w.write_hash(&hash_collection_diff(
+            "LayersDiff",
+            "LayerDiffUpdate",
+            "layer",
+            &|l: &Layer| hash_layer(l),
+            &|d: &LayerDiff| hash_layer_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    match &d.parent {
+        Some(Some(did)) => {
+            w.write_string("parent");
+            w.write_string(&did.guid);
+        }
+        Some(None) => {
+            w.write_string("parent");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.pieces {
+        w.write_string("pieces");
+        w.write_hash(&hash_collection_diff(
+            "PiecesDiff",
+            "PieceDiffUpdate",
+            "piece",
+            &|p: &Piece| hash_piece(p),
+            &|d: &PieceDiff| hash_piece_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref coll) = d.props {
+        w.write_string("props");
+        w.write_hash(&hash_collection_diff(
+            "PropsDiff",
+            "PropDiffUpdate",
+            "prop",
+            &|p: &Prop| hash_prop(p),
+            &|d: &PropDiff| hash_prop_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref coll) = d.stats {
+        w.write_string("stats");
+        w.write_hash(&hash_collection_diff(
+            "StatsDiff",
+            "StatDiffUpdate",
+            "stat",
+            &|s: &Stat| hash_stat(s),
+            &|d: &StatDiff| hash_stat_diff(d),
+            coll,
+        ));
+    }
+    match &d.unit {
+        Some(Some(s)) => {
+            w.write_string("unit");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("unit");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    w.digest()
+}
+
+pub fn hash_kit_diff(d: &KitDiff) -> String {
+    let mut w = HashWriter::new();
+    w.write_string("KitDiff");
+    if let Some(ref coll) = d.attributes {
+        w.write_string("attributes");
+        w.write_hash(&hash_collection_diff(
+            "AttributesDiff",
+            "AttributeDiffUpdate",
+            "attribute",
+            &|a: &Attribute| hash_attribute(a),
+            &|d: &AttributeDiff| hash_attribute_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref coll) = d.authors {
+        w.write_string("authors");
+        w.write_hash(&hash_collection_diff(
+            "AuthorsDiff",
+            "AuthorDiffUpdate",
+            "author",
+            &|a: &Author| hash_author(a),
+            &|d: &AuthorDiff| hash_author_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref coll) = d.concepts {
+        w.write_string("concepts");
+        w.write_hash(&hash_collection_diff(
+            "ConceptsDiff",
+            "ConceptDiffUpdate",
+            "concept",
+            &|c: &Concept| hash_concept(c),
+            &|d: &ConceptDiff| hash_concept_diff(d),
+            coll,
+        ));
+    }
+    match &d.description {
+        Some(Some(s)) => {
+            w.write_string("description");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("description");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.designs {
+        w.write_string("designs");
+        w.write_hash(&hash_collection_diff(
+            "DesignsDiff",
+            "DesignDiffUpdate",
+            "design",
+            &|d: &Design| hash_design(d),
+            &|d: &DesignDiff| hash_design_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref coll) = d.files {
+        w.write_string("files");
+        w.write_hash(&hash_collection_diff(
+            "FilesDiff",
+            "FileDiffUpdate",
+            "file",
+            &|f: &File| hash_file(f),
+            &|d: &FileDiff| hash_file_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref coll) = d.folders {
+        w.write_string("folders");
+        w.write_hash(&hash_collection_diff(
+            "FoldersDiff",
+            "FolderDiffUpdate",
+            "folder",
+            &|f: &Folder| hash_folder(f),
+            &|d: &FolderDiff| hash_folder_diff(d),
+            coll,
+        ));
+    }
+    match &d.homepage {
+        Some(Some(s)) => {
+            w.write_string("homepage");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("homepage");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.icon {
+        Some(Some(s)) => {
+            w.write_string("icon");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("icon");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.image {
+        Some(Some(s)) => {
+            w.write_string("image");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("image");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    match &d.license {
+        Some(Some(s)) => {
+            w.write_string("license");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("license");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref s) = d.name {
+        w.write_string("name");
+        w.write_string(s);
+    }
+    if let Some(ref coll) = d.ports {
+        w.write_string("ports");
+        w.write_hash(&hash_collection_diff(
+            "PortsDiff",
+            "PortDiffUpdate",
+            "port",
+            &|p: &Port| hash_port(p),
+            &|d: &PortDiff| hash_port_diff(d),
+            coll,
+        ));
+    }
+    match &d.preview {
+        Some(Some(s)) => {
+            w.write_string("preview");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("preview");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.qualities {
+        w.write_string("qualities");
+        w.write_hash(&hash_collection_diff(
+            "QualitiesDiff",
+            "QualityDiffUpdate",
+            "quality",
+            &|q: &Quality| hash_quality(q),
+            &|d: &QualityDiff| hash_quality_diff(d),
+            coll,
+        ));
+    }
+    match &d.remote {
+        Some(Some(s)) => {
+            w.write_string("remote");
+            w.write_string(s);
+        }
+        Some(None) => {
+            w.write_string("remote");
+            w.write_bool(false);
+        }
+        None => {}
+    }
+    if let Some(ref coll) = d.tags {
+        w.write_string("tags");
+        w.write_hash(&hash_collection_diff(
+            "TagsDiff",
+            "TagDiffUpdate",
+            "tag",
+            &|t: &Tag| hash_tag(t),
+            &|d: &TagDiff| hash_tag_diff(d),
+            coll,
+        ));
+    }
+    if let Some(ref coll) = d.types {
+        w.write_string("types");
+        w.write_hash(&hash_collection_diff(
+            "TypesDiff",
+            "TypeDiffUpdate",
+            "type",
+            &|t: &Type| hash_type(t),
+            &|d: &TypeDiff| hash_type_diff(d),
+            coll,
+        ));
+    }
+    match &d.version {
+        Some(Some(s)) if !s.is_empty() => {
+            w.write_string("version");
+            w.write_string(s);
+        }
+        _ => {}
+    }
+    w.digest()
+}
+
+// #endregion 🔖Hash Diff Entities
+
+// #endregion 🔖Hash
 
 // #region 🔖Tests
 // [👤semio📚rs💻semio🔖tests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests)
@@ -9526,7 +13319,7 @@ mod tests {
 
         #[test]
         fn metabolism() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let json = serialize_kit(&kit).unwrap();
             let restored = deserialize_kit(&json).unwrap();
             assert!(
@@ -9582,10 +13375,11 @@ mod tests {
 
         #[test]
         fn model_selection_from_shared_semio_assets() {
-            let path = Path::new(ASSETS_DIR).join("model_selection.json");
-            let data = fs::read_to_string(&path).expect("Failed to read model_selection.json");
-            let payload: ModelSelectionAsset =
-                serde_json::from_str(&data).expect("Failed to deserialize model_selection.json");
+            let path = Path::new(ASSETS_DIR).join("model.selection.semio.json");
+            let data =
+                fs::read_to_string(&path).expect("Failed to read model.selection.semio.json");
+            let payload: ModelSelectionAsset = serde_json::from_str(&data)
+                .expect("Failed to deserialize model.selection.semio.json");
 
             for case in payload.cases {
                 let models: Vec<Model> = case
@@ -9631,7 +13425,7 @@ mod tests {
 
         #[test]
         fn nakagin_capsule_tower_filter_produces_expected_subset() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let expected = load_kit("nakagin-capsule-tower.filtered.kit.semio.json");
             let design = kit
                 .designs
@@ -9643,7 +13437,13 @@ mod tests {
                 })
                 .expect("Nakagin Capsule Tower design not found");
 
-            let filtered = filter_kit_with_design(&kit, &design.guid, None);
+            let filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    design_guid: Some(design.guid.clone()),
+                    ..Default::default()
+                },
+            );
 
             assert_eq!(
                 filtered.designs.as_ref().map(|v| v.len()).unwrap_or(0),
@@ -9763,7 +13563,7 @@ mod tests {
 
         #[test]
         fn nakagin_capsule_tower_filter_preserves_metadata() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -9774,11 +13574,120 @@ mod tests {
                 })
                 .expect("Nakagin Capsule Tower design not found");
 
-            let filtered = filter_kit_with_design(&kit, &design.guid, None);
+            let filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    design_guid: Some(design.guid.clone()),
+                    ..Default::default()
+                },
+            );
 
             assert_eq!(filtered.guid, kit.guid);
             assert_eq!(filtered.name, kit.name);
             assert_eq!(filtered.version, kit.version);
+        }
+
+        #[test]
+        fn glob_filters_types_by_name_include() {
+            let kit = load_kit("metabolism.kit.semio.json");
+            let filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    types: Some(GlobFilter {
+                        include: Some(vec!["Capsule*".to_string()]),
+                        exclude: None,
+                    }),
+                    ..Default::default()
+                },
+            );
+            let types = filtered.types.as_ref().unwrap();
+            assert!(!types.is_empty());
+            for t in types {
+                assert!(
+                    glob_match(&t.name, "Capsule*"),
+                    "Type {} should match Capsule*",
+                    t.name
+                );
+            }
+        }
+
+        #[test]
+        fn glob_filters_types_by_name_exclude() {
+            let kit = load_kit("metabolism.kit.semio.json");
+            let total_types = kit.types.as_ref().map(|v| v.len()).unwrap_or(0);
+            let filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    types: Some(GlobFilter {
+                        include: None,
+                        exclude: Some(vec!["Capsule*".to_string()]),
+                    }),
+                    ..Default::default()
+                },
+            );
+            let types = filtered.types.as_ref().unwrap();
+            assert!(types.len() < total_types);
+            for t in types {
+                assert!(
+                    !glob_match(&t.name, "Capsule*"),
+                    "Type {} should have been excluded",
+                    t.name
+                );
+            }
+        }
+
+        #[test]
+        fn empty_filter_returns_kit_unchanged() {
+            let kit = load_kit("metabolism.kit.semio.json");
+            let filtered = filter_kit(&kit, &KitFilter::default());
+            assert_eq!(
+                filtered.types.as_ref().map(|v| v.len()),
+                kit.types.as_ref().map(|v| v.len())
+            );
+            assert_eq!(
+                filtered.designs.as_ref().map(|v| v.len()),
+                kit.designs.as_ref().map(|v| v.len())
+            );
+        }
+
+        #[test]
+        fn combines_design_guid_with_glob_filters() {
+            let kit = load_kit("metabolism.kit.semio.json");
+            let design = kit
+                .designs
+                .as_ref()
+                .and_then(|designs| {
+                    designs
+                        .iter()
+                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                })
+                .expect("Nakagin Capsule Tower design not found");
+            let design_filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    design_guid: Some(design.guid.clone()),
+                    ..Default::default()
+                },
+            );
+            let combined_filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    design_guid: Some(design.guid.clone()),
+                    types: Some(GlobFilter {
+                        include: None,
+                        exclude: Some(vec!["Capsule*".to_string()]),
+                    }),
+                    ..Default::default()
+                },
+            );
+            assert!(
+                combined_filtered
+                    .types
+                    .as_ref()
+                    .map(|v| v.len())
+                    .unwrap_or(0)
+                    < design_filtered.types.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
         }
     }
 
@@ -9838,7 +13747,8 @@ mod tests {
             fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap())
                 .expect("Failed to write report");
 
-            let canonical_path = std::path::Path::new(ASSETS_DIR).join("model-kpi-nakagin.json");
+            let canonical_path =
+                std::path::Path::new(ASSETS_DIR).join("nakagin.kpi.model.semio.json");
             let canonical_bytes =
                 fs::read(&canonical_path).expect("read canonical model-kpi asset");
             let canonical: serde_json::Value =
@@ -9876,7 +13786,7 @@ mod tests {
 
             #[test]
             fn kit_flatten_diff_apply_flat() {
-                let kit = load_kit("kit_metabolism.json");
+                let kit = load_kit("metabolism.kit.semio.json");
                 test_flatten_design(&kit, &["Nakagin Capsule Tower"]);
             }
 
@@ -9885,7 +13795,7 @@ mod tests {
 
                 #[test]
                 fn kit_flatten_diff_apply_flat() {
-                    let kit = load_kit("kit_metabolism.json");
+                    let kit = load_kit("metabolism.kit.semio.json");
                     test_flatten_design(&kit, &["Nakagin Capsule Tower", "Slanted"]);
                 }
             }
@@ -9895,7 +13805,7 @@ mod tests {
 
                 #[test]
                 fn kit_flatten_diff_apply_flat() {
-                    let kit = load_kit("kit_metabolism.json");
+                    let kit = load_kit("metabolism.kit.semio.json");
                     test_flatten_design(&kit, &["Nakagin Capsule Tower", "Twisted"]);
                 }
             }
@@ -9905,7 +13815,7 @@ mod tests {
 
                 #[test]
                 fn kit_flatten_diff_apply_flat() {
-                    let kit = load_kit("kit_metabolism.json");
+                    let kit = load_kit("metabolism.kit.semio.json");
                     test_flatten_design(&kit, &["Nakagin Capsule Tower", "Dancing"]);
                 }
             }
@@ -9916,7 +13826,7 @@ mod tests {
 
             #[test]
             fn kit_flatten_diff_apply_flat() {
-                let kit = load_kit("kit_metabolism.json");
+                let kit = load_kit("metabolism.kit.semio.json");
                 test_flatten_design(&kit, &["Capsule Dream"]);
             }
         }
@@ -9936,12 +13846,12 @@ mod tests {
 
             #[test]
             fn kit_change_forward_backward_inverse_behavior() {
-                let mut kit_original = load_kit("kit_metabolism.json");
+                let mut kit_original = load_kit("metabolism.kit.semio.json");
                 if let Some(designs) = kit_original.designs.take() {
                     kit_original.designs =
                         Some(designs.into_iter().filter(|d| d.parent.is_none()).collect());
                 }
-                let kit_diffed = load_kit("kit_metabolism_diffed.json");
+                let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
 
                 let change = get_kit_change(&kit_original, &kit_diffed);
 
@@ -9969,6 +13879,401 @@ mod tests {
 
     // #endregion 🔖Change Tests
 
+    // #region 🔖Delete Tests
+    // [👤semio📚rs💻semio🔖tests🔖deletetests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Delete%20Tests)
+    // Delete Tests MUST verify delete_pieces_and_connections_in_design functionality.
+
+    mod delete {
+        use super::*;
+
+        #[test]
+        fn nakagin_capsule_tower_delete_third_tambour_and_first_small_tower_connection() {
+            let kit = load_kit("metabolism.kit.semio.json");
+            let designs = kit.designs.as_ref().expect("Kit has no designs");
+            let design = designs
+                .iter()
+                .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                .expect("Design 'Nakagin Capsule Tower' not found");
+
+            // Load selection
+            let selection_path =
+                Path::new(ASSETS_DIR).join("nakagin-capsule-tower.deleted.selection.semio.json");
+            let selection_data =
+                fs::read_to_string(&selection_path).expect("Failed to read selection asset");
+            let selection: serde_json::Value =
+                serde_json::from_str(&selection_data).expect("Failed to parse selection");
+            let piece_guids: Vec<String> = selection["pieces"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| p["guid"].as_str().unwrap().to_string())
+                .collect();
+            let connection_guids: Vec<String> = selection["connections"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|c| c["guid"].as_str().unwrap().to_string())
+                .collect();
+
+            // Load expected diff as JSON value (no guid field required)
+            let diff_path =
+                Path::new(ASSETS_DIR).join("nakagin-capsule-tower.deleted.design.diff.semio.json");
+            let diff_data = fs::read_to_string(&diff_path).expect("Failed to read diff asset");
+            let expected_json: serde_json::Value =
+                serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
+
+            // Compute diff
+            let computed_diff = delete_pieces_and_connections_in_design(
+                &kit,
+                design,
+                &piece_guids,
+                &connection_guids,
+            );
+
+            // Serialize computed diff to JSON for comparison
+            let computed_json: serde_json::Value =
+                serde_json::to_value(&computed_diff).expect("Failed to serialize computed diff");
+
+            // Verify removed pieces
+            let computed_removed = computed_json["pieces"]["removed"]
+                .as_array()
+                .expect("No removed pieces in computed diff");
+            let expected_removed = expected_json["pieces"]["removed"]
+                .as_array()
+                .expect("No removed pieces in expected diff");
+            assert_eq!(
+                computed_removed.len(),
+                expected_removed.len(),
+                "Removed pieces count mismatch"
+            );
+            for (c, e) in computed_removed.iter().zip(expected_removed.iter()) {
+                assert_eq!(c["guid"], e["guid"], "Removed piece guid mismatch");
+            }
+
+            // Verify updated (fixed) pieces
+            let computed_updated = computed_json["pieces"]["updated"]
+                .as_array()
+                .expect("No updated pieces in computed diff");
+            let expected_updated = expected_json["pieces"]["updated"]
+                .as_array()
+                .expect("No updated pieces in expected diff");
+            assert_eq!(
+                computed_updated.len(),
+                expected_updated.len(),
+                "Updated pieces count mismatch: computed {} vs expected {}",
+                computed_updated.len(),
+                expected_updated.len()
+            );
+            let mut computed_guids: Vec<&str> = computed_updated
+                .iter()
+                .map(|u| u["piece"]["guid"].as_str().unwrap())
+                .collect();
+            computed_guids.sort();
+            let mut expected_guids: Vec<&str> = expected_updated
+                .iter()
+                .map(|u| u["piece"]["guid"].as_str().unwrap())
+                .collect();
+            expected_guids.sort();
+            assert_eq!(
+                computed_guids, expected_guids,
+                "Updated piece guids mismatch"
+            );
+            for u in computed_updated {
+                let guid = u["piece"]["guid"].as_str().unwrap();
+                let plane = &u["diff"]["plane"];
+                let center = &u["diff"]["center"];
+                // Find matching expected entry
+                let expected_entry = expected_updated
+                    .iter()
+                    .find(|e| e["piece"]["guid"].as_str().unwrap() == guid)
+                    .expect(&format!("Expected entry for piece {}", guid));
+                let exp_plane = &expected_entry["diff"]["plane"];
+                let exp_center = &expected_entry["diff"]["center"];
+                let tol = 0.001;
+                assert!(
+                    (plane["origin"]["x"].as_f64().unwrap()
+                        - exp_plane["origin"]["x"].as_f64().unwrap())
+                    .abs()
+                        < tol,
+                    "plane origin x mismatch for {}",
+                    guid
+                );
+                assert!(
+                    (plane["origin"]["y"].as_f64().unwrap()
+                        - exp_plane["origin"]["y"].as_f64().unwrap())
+                    .abs()
+                        < tol,
+                    "plane origin y mismatch for {}",
+                    guid
+                );
+                assert!(
+                    (plane["origin"]["z"].as_f64().unwrap()
+                        - exp_plane["origin"]["z"].as_f64().unwrap())
+                    .abs()
+                        < tol,
+                    "plane origin z mismatch for {}",
+                    guid
+                );
+                assert!(
+                    (center["u"].as_f64().unwrap() - exp_center["u"].as_f64().unwrap()).abs() < tol,
+                    "center u mismatch for {}",
+                    guid
+                );
+                assert!(
+                    (center["v"].as_f64().unwrap() - exp_center["v"].as_f64().unwrap()).abs() < tol,
+                    "center v mismatch for {}",
+                    guid
+                );
+            }
+
+            // Verify removed connections
+            let computed_conn_removed = computed_json["connections"]["removed"]
+                .as_array()
+                .expect("No removed connections in computed diff");
+            let expected_conn_removed = expected_json["connections"]["removed"]
+                .as_array()
+                .expect("No removed connections in expected diff");
+            assert_eq!(
+                computed_conn_removed.len(),
+                expected_conn_removed.len(),
+                "Removed connections count mismatch: computed {} vs expected {}",
+                computed_conn_removed.len(),
+                expected_conn_removed.len()
+            );
+            let mut computed_conn_guids: Vec<&str> = computed_conn_removed
+                .iter()
+                .map(|r| r["guid"].as_str().unwrap())
+                .collect();
+            computed_conn_guids.sort();
+            let mut expected_conn_guids: Vec<&str> = expected_conn_removed
+                .iter()
+                .map(|r| r["guid"].as_str().unwrap())
+                .collect();
+            expected_conn_guids.sort();
+            assert_eq!(
+                computed_conn_guids, expected_conn_guids,
+                "Removed connection guids mismatch"
+            );
+        }
+    }
+
+    // #endregion 🔖Delete Tests
+
+    // #region 🔖WithDiff Tests
+    // [👤semio📚rs💻semio🔖tests🔖withdifftests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/WithDiff%20Tests)
+    // WithDiff Tests MUST verify design_with_diff functionality.
+
+    mod with_diff {
+        use super::*;
+
+        #[test]
+        fn nakagin_capsule_tower_design_with_diff() {
+            let kit = load_kit("metabolism.kit.semio.json");
+            let designs = kit.designs.as_ref().expect("Kit has no designs");
+            let design = designs
+                .iter()
+                .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                .expect("Design 'Nakagin Capsule Tower' not found");
+
+            let diff_path =
+                Path::new(ASSETS_DIR).join("nakgin-capsule-tower.diff.design.semio.json");
+            let diff_data = fs::read_to_string(&diff_path).expect("Failed to read diff asset");
+            let diff: DesignDiff =
+                serde_json::from_str(&diff_data).expect("Failed to deserialize design diff");
+
+            let expected_path =
+                Path::new(ASSETS_DIR).join("nakagin-capsule-tower.with-diff.design.semio.json");
+            let expected_data =
+                fs::read_to_string(&expected_path).expect("Failed to read with-diff asset");
+            let expected: Design = serde_json::from_str(&expected_data)
+                .expect("Failed to deserialize expected design");
+
+            let result = design_with_diff(design, &diff);
+
+            let result_pieces = result.pieces.as_ref().expect("No pieces in result");
+            let expected_pieces = expected.pieces.as_ref().expect("No pieces in expected");
+            assert_eq!(
+                result_pieces.len(),
+                expected_pieces.len(),
+                "Piece count mismatch: got {} expected {}",
+                result_pieces.len(),
+                expected_pieces.len()
+            );
+
+            let result_conns = result
+                .connections
+                .as_ref()
+                .expect("No connections in result");
+            let expected_conns = expected
+                .connections
+                .as_ref()
+                .expect("No connections in expected");
+            assert_eq!(
+                result_conns.len(),
+                expected_conns.len(),
+                "Connection count mismatch: got {} expected {}",
+                result_conns.len(),
+                expected_conns.len()
+            );
+
+            let get_status = |attrs: &Option<Vec<Attribute>>| -> String {
+                attrs
+                    .as_ref()
+                    .and_then(|a| {
+                        a.iter()
+                            .find(|attr| attr.key == "semio.diffStatus")
+                            .and_then(|attr| attr.value.clone())
+                    })
+                    .unwrap_or_default()
+            };
+
+            let mut piece_status_counts = std::collections::HashMap::new();
+            for p in result_pieces {
+                *piece_status_counts
+                    .entry(get_status(&p.attributes))
+                    .or_insert(0) += 1;
+            }
+            assert_eq!(piece_status_counts.get("unchanged"), Some(&163));
+            assert_eq!(piece_status_counts.get("modified"), Some(&7));
+            assert_eq!(piece_status_counts.get("removed"), Some(&10));
+            assert_eq!(piece_status_counts.get("added"), Some(&5));
+
+            let mut conn_status_counts = std::collections::HashMap::new();
+            for c in result_conns {
+                *conn_status_counts
+                    .entry(get_status(&c.attributes))
+                    .or_insert(0) += 1;
+            }
+            assert_eq!(conn_status_counts.get("unchanged"), Some(&168));
+            assert_eq!(conn_status_counts.get("modified"), Some(&1));
+            assert_eq!(conn_status_counts.get("removed"), Some(&10));
+            assert_eq!(conn_status_counts.get("added"), Some(&4));
+        }
+    }
+
+    // #endregion 🔖WithDiff Tests
+
+    // #region 🔖Drag Tests
+    // [👤semio📚rs💻semio🔖tests🔖dragtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Drag%20Tests)
+    // Drag Tests MUST verify drag_pieces_in_design functionality.
+
+    mod drag {
+        use super::*;
+
+        #[test]
+        fn design_pieces_offset_diff_design() {
+            let design_path = Path::new(ASSETS_DIR).join("drag/design.semio.json");
+            let design_data = fs::read_to_string(&design_path).expect("Failed to read design");
+            let design_json: serde_json::Value =
+                serde_json::from_str(&design_data).expect("Failed to parse design");
+            let design_pieces: Vec<Piece> =
+                serde_json::from_value(design_json["pieces"].clone()).unwrap_or_default();
+            let design_connections: Vec<Connection> =
+                serde_json::from_value(design_json["connections"].clone()).unwrap_or_default();
+            let pieces_path = Path::new(ASSETS_DIR).join("drag/pieces.semio.json");
+            let pieces_data = fs::read_to_string(&pieces_path).expect("Failed to read pieces");
+            let pieces_json: serde_json::Value =
+                serde_json::from_str(&pieces_data).expect("Failed to parse pieces");
+            let selected_pieces: Vec<Piece> =
+                serde_json::from_value(pieces_json["pieces"].clone()).unwrap_or_default();
+            let offset_path = Path::new(ASSETS_DIR).join("drag/offset.semio.json");
+            let offset_data = fs::read_to_string(&offset_path).expect("Failed to read offset");
+            let offset: Coord = serde_json::from_str(&offset_data).expect("Failed to parse offset");
+            let diff_path = Path::new(ASSETS_DIR).join("drag/diff.design.semio.json");
+            let diff_data = fs::read_to_string(&diff_path).expect("Failed to read diff");
+            let expected: serde_json::Value =
+                serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
+            let computed = drag_pieces_in_design(
+                &design_pieces,
+                &design_connections,
+                &selected_pieces,
+                &offset,
+            );
+            let computed_json: serde_json::Value =
+                serde_json::to_value(&computed).expect("Failed to serialize computed diff");
+            let expected_pieces = expected["pieces"]["updated"].as_array();
+            let computed_pieces = computed_json["pieces"]["updated"].as_array();
+            match (expected_pieces, computed_pieces) {
+                (Some(ep), Some(cp)) => {
+                    assert_eq!(cp.len(), ep.len(), "Piece updates count mismatch");
+                    let mut expected_map: std::collections::HashMap<&str, &serde_json::Value> =
+                        std::collections::HashMap::new();
+                    for u in ep {
+                        expected_map.insert(u["piece"]["guid"].as_str().unwrap(), &u["diff"]);
+                    }
+                    for u in cp {
+                        let guid = u["piece"]["guid"].as_str().unwrap();
+                        let exp = expected_map
+                            .get(guid)
+                            .unwrap_or_else(|| panic!("Unexpected piece update for {}", guid));
+                        let tol = 0.001;
+                        assert!(
+                            (u["diff"]["center"]["u"].as_f64().unwrap()
+                                - exp["center"]["u"].as_f64().unwrap())
+                            .abs()
+                                < tol,
+                            "Piece {} center u mismatch",
+                            guid
+                        );
+                        assert!(
+                            (u["diff"]["center"]["v"].as_f64().unwrap()
+                                - exp["center"]["v"].as_f64().unwrap())
+                            .abs()
+                                < tol,
+                            "Piece {} center v mismatch",
+                            guid
+                        );
+                    }
+                }
+                (None, None) => {}
+                _ => panic!(
+                    "Piece updates mismatch: expected {:?} vs computed {:?}",
+                    expected_pieces.map(|v| v.len()),
+                    computed_pieces.map(|v| v.len())
+                ),
+            }
+            let expected_conns = expected["connections"]["updated"].as_array();
+            let computed_conns = computed_json["connections"]["updated"].as_array();
+            match (expected_conns, computed_conns) {
+                (Some(ec), Some(cc)) => {
+                    assert_eq!(cc.len(), ec.len(), "Connection updates count mismatch");
+                    let mut expected_map: std::collections::HashMap<&str, &serde_json::Value> =
+                        std::collections::HashMap::new();
+                    for u in ec {
+                        expected_map.insert(u["connection"]["guid"].as_str().unwrap(), &u["diff"]);
+                    }
+                    for u in cc {
+                        let guid = u["connection"]["guid"].as_str().unwrap();
+                        let exp = expected_map
+                            .get(guid)
+                            .unwrap_or_else(|| panic!("Unexpected connection update for {}", guid));
+                        let tol = 0.001;
+                        assert!(
+                            (u["diff"]["u"].as_f64().unwrap() - exp["u"].as_f64().unwrap()).abs()
+                                < tol,
+                            "Connection {} u mismatch",
+                            guid
+                        );
+                        assert!(
+                            (u["diff"]["v"].as_f64().unwrap() - exp["v"].as_f64().unwrap()).abs()
+                                < tol,
+                            "Connection {} v mismatch",
+                            guid
+                        );
+                    }
+                }
+                (None, None) => {}
+                _ => panic!(
+                    "Connection updates mismatch: expected {:?} vs computed {:?}",
+                    expected_conns.map(|v| v.len()),
+                    computed_conns.map(|v| v.len())
+                ),
+            }
+        }
+    }
+
+    // #endregion 🔖Drag Tests
+
     // #region 🔖Validation Tests
     // [👤semio📚rs💻semio🔖tests🔖validationtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Validation%20Tests)
     // Validation Tests MUST provide the validation tests functionality.
@@ -9981,7 +14286,7 @@ mod tests {
 
             #[test]
             fn metabolism_kit_validate_empty_report() {
-                let kit = load_kit("kit_metabolism.json");
+                let kit = load_kit("metabolism.kit.semio.json");
                 let result = validate_kit(&kit);
                 assert!(result.problems.is_empty());
             }
@@ -9992,9 +14297,9 @@ mod tests {
 
             #[test]
             fn invalid_kit_validate_invalid_report() {
-                let kit = load_kit("kit_invalid.json");
+                let kit = load_kit("invalid.kit.semio.json");
                 let result = validate_kit(&kit);
-                let expected = load_validation_result("validation.json");
+                let expected = load_validation_result("validation.semio.json");
                 assert_eq!(
                     result.problems.len(),
                     expected.problems.len(),
@@ -10016,7 +14321,7 @@ mod tests {
 
             #[test]
             fn sum_effective_floor_area() {
-                let kit = load_kit("kit_metabolism.json");
+                let kit = load_kit("metabolism.kit.semio.json");
                 let design = kit
                     .designs
                     .as_ref()
@@ -10050,7 +14355,7 @@ mod tests {
 
         #[test]
         fn glb_format_valid_header() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -10080,7 +14385,7 @@ mod tests {
 
         #[test]
         fn gltf_format_valid_json() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -10105,7 +14410,7 @@ mod tests {
 
         #[test]
         fn invalid_format_returns_error() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -10125,7 +14430,7 @@ mod tests {
 
         #[test]
         fn export_scene_graph_report() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -10227,7 +14532,7 @@ mod tests {
 
     #[test]
     fn kit_to_meta_to_shallow() {
-        let kit = load_kit("kit_metabolism.json");
+        let kit = load_kit("metabolism.kit.semio.json");
         let meta = kit.to_meta();
         assert_eq!(meta.name, kit.name);
         assert_eq!(meta.guid, kit.guid);
@@ -10358,6 +14663,7 @@ mod tests {
                 folders: Some(vec![Folder {
                     guid: folder_guid,
                     name: "assets".to_string(),
+                    description: None,
                     parent: None,
                     attributes: None,
                     created_at: None,
@@ -10419,14 +14725,18 @@ mod tests {
 
         fn spawn_test_http_server(routes: Vec<TestHttpRoute>) -> (String, thread::JoinHandle<()>) {
             let listener = TcpListener::bind("127.0.0.1:0").expect("bind test http listener");
-            let address = listener.local_addr().expect("get test http listener address");
+            let address = listener
+                .local_addr()
+                .expect("get test http listener address");
             let handle = thread::spawn(move || {
                 for _ in 0..routes.len() {
                     let (mut stream, _) = listener.accept().expect("accept test http connection");
                     let mut request_line = String::new();
                     {
                         let mut reader = BufReader::new(stream.try_clone().expect("clone stream"));
-                        reader.read_line(&mut request_line).expect("read request line");
+                        reader
+                            .read_line(&mut request_line)
+                            .expect("read request line");
                     }
                     let request_path = request_line
                         .split_whitespace()
@@ -10593,19 +14903,46 @@ mod tests {
     #[test]
     fn test_kit_kind_serialization() {
         assert_eq!(serde_json::to_string(&KitKind::File).unwrap(), "\"file\"");
-        assert_eq!(serde_json::to_string(&KitKind::Folder).unwrap(), "\"folder\"");
-        assert_eq!(serde_json::to_string(&KitKind::Archive).unwrap(), "\"archive\"");
-        assert_eq!(serde_json::to_string(&KitKind::Remote).unwrap(), "\"remote\"");
-        assert_eq!(serde_json::to_string(&KitKind::Temporary).unwrap(), "\"temporary\"");
+        assert_eq!(
+            serde_json::to_string(&KitKind::Folder).unwrap(),
+            "\"folder\""
+        );
+        assert_eq!(
+            serde_json::to_string(&KitKind::Archive).unwrap(),
+            "\"archive\""
+        );
+        assert_eq!(
+            serde_json::to_string(&KitKind::Remote).unwrap(),
+            "\"remote\""
+        );
+        assert_eq!(
+            serde_json::to_string(&KitKind::Temporary).unwrap(),
+            "\"temporary\""
+        );
     }
 
     #[test]
     fn test_kit_kind_deserialization() {
-        assert_eq!(serde_json::from_str::<KitKind>("\"file\"").unwrap(), KitKind::File);
-        assert_eq!(serde_json::from_str::<KitKind>("\"folder\"").unwrap(), KitKind::Folder);
-        assert_eq!(serde_json::from_str::<KitKind>("\"archive\"").unwrap(), KitKind::Archive);
-        assert_eq!(serde_json::from_str::<KitKind>("\"remote\"").unwrap(), KitKind::Remote);
-        assert_eq!(serde_json::from_str::<KitKind>("\"temporary\"").unwrap(), KitKind::Temporary);
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"file\"").unwrap(),
+            KitKind::File
+        );
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"folder\"").unwrap(),
+            KitKind::Folder
+        );
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"archive\"").unwrap(),
+            KitKind::Archive
+        );
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"remote\"").unwrap(),
+            KitKind::Remote
+        );
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"temporary\"").unwrap(),
+            KitKind::Temporary
+        );
     }
 
     #[test]
@@ -10674,6 +15011,152 @@ mod tests {
     }
 
     // #endregion 🔖KitKind Tests
+
+    // #region 🔖Hash Tests
+
+    #[test]
+    fn test_hash_kit() {
+        let kit = load_kit("metabolism.kit.semio.json");
+        let hash = hash_kit(&kit);
+        assert_eq!(
+            hash,
+            "4a8b056c2e80616afd25addb1bc31204da9879714c78ef2ec213df691a043160"
+        );
+    }
+
+    #[test]
+    fn test_hash_piece_deterministic() {
+        let kit = load_kit("metabolism.kit.semio.json");
+        let design = kit
+            .designs
+            .as_ref()
+            .unwrap()
+            .iter()
+            .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+            .unwrap();
+        let piece = &design.pieces.as_ref().unwrap()[0];
+        let h1 = hash_piece(piece);
+        let h2 = hash_piece(piece);
+        assert_eq!(h1, h2);
+        assert!(h1.len() == 64);
+    }
+
+    #[test]
+    fn test_hash_connection_deterministic() {
+        let kit = load_kit("metabolism.kit.semio.json");
+        let design = kit
+            .designs
+            .as_ref()
+            .unwrap()
+            .iter()
+            .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+            .unwrap();
+        let conn = &design.connections.as_ref().unwrap()[0];
+        let h1 = hash_connection(conn);
+        let h2 = hash_connection(conn);
+        assert_eq!(h1, h2);
+        assert!(h1.len() == 64);
+    }
+
+    #[test]
+    fn test_hash_connector_deterministic() {
+        let kit = load_kit("metabolism.kit.semio.json");
+        let t = kit
+            .types
+            .as_ref()
+            .unwrap()
+            .iter()
+            .find(|t| t.connectors.as_ref().map_or(false, |c| !c.is_empty()))
+            .unwrap();
+        let conn = &t.connectors.as_ref().unwrap()[0];
+        let h1 = hash_connector(conn);
+        let h2 = hash_connector(conn);
+        assert_eq!(h1, h2);
+        assert!(h1.len() == 64);
+    }
+
+    #[test]
+    fn test_hash_type_deterministic() {
+        let kit = load_kit("metabolism.kit.semio.json");
+        let t = &kit.types.as_ref().unwrap()[0];
+        let h1 = hash_type(t);
+        let h2 = hash_type(t);
+        assert_eq!(h1, h2);
+        assert!(h1.len() == 64);
+    }
+
+    #[test]
+    fn test_hash_design_deterministic() {
+        let kit = load_kit("metabolism.kit.semio.json");
+        let d = &kit.designs.as_ref().unwrap()[0];
+        let h1 = hash_design(d);
+        let h2 = hash_design(d);
+        assert_eq!(h1, h2);
+        assert!(h1.len() == 64);
+    }
+
+    #[test]
+    fn test_hash_kit_diff_canonical() {
+        let json = r#"{"name":"updated","description":null}"#;
+        let diff: KitDiff = serde_json::from_str(json).unwrap();
+        let hash = hash_kit_diff(&diff);
+        assert_eq!(
+            hash,
+            "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
+        );
+    }
+
+    #[test]
+    fn test_hash_kit_diff_name_only() {
+        let json = r#"{"name":"updated"}"#;
+        let diff: KitDiff = serde_json::from_str(json).unwrap();
+        let hash = hash_kit_diff(&diff);
+        assert!(hash.len() == 64);
+        assert_ne!(
+            hash,
+            "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
+        );
+    }
+
+    #[test]
+    fn test_hash_kit_diff_empty() {
+        let json = r#"{}"#;
+        let diff: KitDiff = serde_json::from_str(json).unwrap();
+        let hash = hash_kit_diff(&diff);
+        assert!(hash.len() == 64);
+    }
+
+    #[test]
+    fn test_hash_kit_diff_deterministic() {
+        let json = r#"{"name":"updated","description":null}"#;
+        let diff: KitDiff = serde_json::from_str(json).unwrap();
+        let h1 = hash_kit_diff(&diff);
+        let h2 = hash_kit_diff(&diff);
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_hash_attribute_diff() {
+        let diff = AttributeDiff {
+            guid: String::new(),
+            key: Some("newKey".to_string()),
+            value: Some(None),
+            definition: None,
+        };
+        let hash = hash_attribute_diff(&diff);
+        assert!(hash.len() == 64);
+    }
+
+    #[test]
+    fn test_hash_kit_diff_field_order_matters() {
+        let json1 = r#"{"name":"a","description":"b"}"#;
+        let json2 = r#"{"description":"b","name":"a"}"#;
+        let diff1: KitDiff = serde_json::from_str(json1).unwrap();
+        let diff2: KitDiff = serde_json::from_str(json2).unwrap();
+        assert_eq!(hash_kit_diff(&diff1), hash_kit_diff(&diff2));
+    }
+
+    // #endregion 🔖Hash Tests
 }
 
 // #endregion 🔖Tests

@@ -1,4 +1,12 @@
 {
+  "enabledPlugins": {
+    "csharp-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "mcp-apps@mcp-apps": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
   "hooks": {
     "Notification": [
       {
@@ -22,105 +30,6 @@
         "matcher": ""
       }
     ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook PostToolUse claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook PostToolUseFailure claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook PreCompact claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook PreToolUse claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook SessionEnd claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook SessionStart claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook Stop claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook SubagentStart claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook SubagentStop claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
     "TaskCompleted": [
       {
         "hooks": [
@@ -137,17 +46,6 @@
         "hooks": [
           {
             "command": "./repo/cli/cli hook TeammateIdle claude-code",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "command": "./repo/cli/cli hook UserPromptSubmit claude-code",
             "type": "command"
           }
         ],

@@ -22,28 +22,31 @@
 // [👤semio🏪assets💻index🔖exports](repo://p/u/semio/b/a/assets/f/index.ts/s/Exports)
 // Re-exports and data constants MUST come from the Metabolism kit assets.
 
-import MetabolismKitData from "./semio/kit_metabolism.json";
+import MetabolismKitData from "./semio/metabolism.kit.semio.json";
 export * from "./icons";
-export { default as MetabolismKitDiff } from "./semio/diff_kit_metabolism.json";
-export { default as MetabolismKitDiffInverted } from "./semio/diff_kit_metabolism_inverted.json";
-export { default as InvalidKit } from "./semio/kit_invalid.json";
-export { default as MetabolismKitDiffed } from "./semio/kit_metabolism_diffed.json";
-export { default as InvalidKitValidation } from "./semio/validation.json";
-export { MetabolismKitData as MetabolismKit };
-export { default as DragDesign } from "./semio/drag/design.json";
-export { default as DragPieces } from "./semio/drag/pieces.json";
-export { default as DragOffset } from "./semio/drag/offset.json";
-export { default as DragDiffDesign } from "./semio/drag/diff_design.json";
-export { default as DragDiffDesignFree } from "./semio/drag/diff_design_free.json";
-export { default as ModelSelectionCases } from "./semio/model_selection.json";
-export { default as MetabolismKitFilteredNakaginCapsuleTower } from "./semio/nakagin-capsule-tower.filtered.kit.semio.json";
-export { default as NakaginCapsuleTowerFilteredKit } from "./semio/nakagin-capsule-tower.filtered.kit.semio.json";
+export { default as DragDesign } from "./semio/drag/design.semio.json";
+export { default as DragDiffDesignFree } from "./semio/drag/diff.design.free.semio.json";
+export { default as DragDiffDesign } from "./semio/drag/diff.design.semio.json";
+export { default as DragOffset } from "./semio/drag/offset.semio.json";
+export { default as DragPieces } from "./semio/drag/pieces.semio.json";
+export { default as InvalidKit } from "./semio/invalid.kit.semio.json";
+export { default as MetabolismKitDiffInverted } from "./semio/metabolism.kit.diff.inverted.semio.json";
+export { default as MetabolismKitDiff } from "./semio/metabolism.kit.diff.semio.json";
+export { default as MetabolismKitDiffed } from "./semio/metabolism.kit.diffed.semio.json";
 export { default as MetabolismMetaKit } from "./semio/metabolism.meta.kit.semio.json";
 export { default as MetabolismShallowKit } from "./semio/metabolism.shallow.kit.semio.json";
-export { default as TambourMetaType } from "./semio/tambour.meta.type.semio.json";
-export { default as TambourShallowType } from "./semio/tambour.shallow.type.semio.json";
+export { default as ModelSelectionCases } from "./semio/model.selection.semio.json";
+export { default as NakaginCapsuleTowerDeletedDesignDiff } from "./semio/nakagin-capsule-tower.deleted.design.diff.semio.json";
+export { default as NakaginCapsuleTowerDeletedSelection } from "./semio/nakagin-capsule-tower.deleted.selection.semio.json";
+export { default as MetabolismKitFilteredNakaginCapsuleTower, default as NakaginCapsuleTowerFilteredKit } from "./semio/nakagin-capsule-tower.filtered.kit.semio.json";
 export { default as NakaginCapsuleTowerMetaDesign } from "./semio/nakagin-capsule-tower.meta.design.semio.json";
 export { default as NakaginCapsuleTowerShallowDesign } from "./semio/nakagin-capsule-tower.shallow.design.semio.json";
+export { default as NakaginCapsuleTowerWithDiffDesign } from "./semio/nakagin-capsule-tower.with-diff.design.semio.json";
+export { default as NakaginCapsuleTowerDiffDesign, default as NakginCapsuleTowerDiffDesign } from "./semio/nakgin-capsule-tower.diff.design.semio.json";
+export { default as TambourMetaType } from "./semio/tambour.meta.type.semio.json";
+export { default as TambourShallowType } from "./semio/tambour.shallow.type.semio.json";
+export { default as InvalidKitValidation } from "./semio/validation.semio.json";
+export { MetabolismKitData as MetabolismKit };
 
 /**
  * Metabolism kit types array

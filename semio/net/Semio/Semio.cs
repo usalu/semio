@@ -2087,8 +2087,8 @@ public class Attribute : Entity<Attribute>
 {
     public string Guid { get; set; } = "";
     public string Key { get; set; } = "";
-    public string Value { get; set; } = "";
-    public string Definition { get; set; } = "";
+    public string? Value { get; set; }
+    public string? Definition { get; set; }
 
     public static implicit operator Attribute(AttributeId id) => new() { Guid = id.Guid };
     public static implicit operator Attribute(AttributeDiff diff) => new() { Guid = diff.Guid ?? "", Key = diff.Key, Value = diff.Value, Definition = diff.Definition };
@@ -2137,12 +2137,12 @@ public class Attribute : Entity<Attribute>
 
 public class Coord : Entity<Coord>
 {
-    public float U { get; set; }
-    public float V { get; set; }
+    public double U { get; set; }
+    public double V { get; set; }
 
     public Coord Normalize()
     {
-        var length = (float)Math.Sqrt(U * U + V * V);
+        var length = (double)Math.Sqrt(U * U + V * V);
         return new Coord { U = U / length, V = V / length };
     }
 }
@@ -2155,9 +2155,9 @@ public class Coord : Entity<Coord>
 
 public class Point : Entity<Point>
 {
-    public float X { get; set; } = 0;
-    public float Y { get; set; } = 0;
-    public float Z { get; set; } = 0;
+    public double X { get; set; } = 0;
+    public double Y { get; set; } = 0;
+    public double Z { get; set; } = 0;
 }
 
 #endregion 🔖Point
@@ -2168,11 +2168,11 @@ public class Point : Entity<Point>
 
 public class Vector : Entity<Vector>
 {
-    public float X { get; set; } = 1;
-    public float Y { get; set; }
-    public float Z { get; set; } = 0;
+    public double X { get; set; } = 1;
+    public double Y { get; set; }
+    public double Z { get; set; } = 0;
 
-    public static float DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+    public static double DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
 
     public static bool IsOrthogonal(Vector a, Vector b) => Math.Abs(DotProduct(a, b)) < Constants.Tolerance;
 
@@ -2247,9 +2247,9 @@ public class LocationId : Entity<LocationId>
 public class Location : Entity<Location>
 {
     public string Guid { get; set; } = "";
-    public float Longitude { get; set; }
-    public float Latitude { get; set; }
-    public float? Altitude { get; set; }
+    public double Longitude { get; set; }
+    public double Latitude { get; set; }
+    public double? Altitude { get; set; }
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2620,9 +2620,9 @@ public class Benchmark : Entity<Benchmark>
     public string Guid { get; set; } = "";
     public string Name { get; set; } = "";
     public string? Icon { get; set; }
-    public float? Min { get; set; }
+    public double? Min { get; set; }
     public bool? MinExcluded { get; set; }
-    public float? Max { get; set; }
+    public double? Max { get; set; }
     public bool? MaxExcluded { get; set; }
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Guid}";
@@ -2636,18 +2636,18 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
     private string? _guid;
     private string? _name;
     private string? _icon;
-    private float? _min;
+    private double? _min;
     private bool? _minExcluded;
-    private float? _max;
+    private double? _max;
     private bool? _maxExcluded;
     private AttributesDiff? _attributes;
 
     public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
     public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
     public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
-    public float? Min { get => _min; set { _min = value; _setProperties.Add("Min"); } }
+    public double? Min { get => _min; set { _min = value; _setProperties.Add("Min"); } }
     public bool? MinExcluded { get => _minExcluded; set { _minExcluded = value; _setProperties.Add("MinExcluded"); } }
-    public float? Max { get => _max; set { _max = value; _setProperties.Add("Max"); } }
+    public double? Max { get => _max; set { _max = value; _setProperties.Add("Max"); } }
     public bool? MaxExcluded { get => _maxExcluded; set { _maxExcluded = value; _setProperties.Add("MaxExcluded"); } }
     public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
 
@@ -2698,17 +2698,17 @@ public class QualityDiff : Entity<QualityDiff>
     public string Key { get; set; } = "";
     public string Name { get; set; } = "";
     public string? Description { get; set; }
-    public string Uri { get; set; } = "";
-    public bool Scalable { get; set; } = false;
+    public string? Uri { get; set; }
+    public bool? Scalable { get; set; }
     public QualityKind Kind { get; set; } = QualityKind.General;
-    public string SI { get; set; } = "";
-    public string Imperial { get; set; } = "";
-    public float Min { get; set; } = 0;
-    public bool MinExcluded { get; set; } = true;
-    public float Max { get; set; } = 0;
-    public bool MaxExcluded { get; set; } = true;
-    public float Default { get; set; } = 0;
-    public string Formula { get; set; } = "";
+    public string? SI { get; set; }
+    public string? Imperial { get; set; }
+    public double? Min { get; set; }
+    public bool? MinExcluded { get; set; }
+    public double? Max { get; set; }
+    public bool? MaxExcluded { get; set; }
+    public double? Default { get; set; }
+    public string? Formula { get; set; }
     public List<Benchmark> Benchmarks { get; set; } = new();
     public List<Attribute> Attributes { get; set; } = new();
 
@@ -2723,18 +2723,18 @@ public class Quality : Entity<Quality>
     public string Key { get; set; } = "";
     public string Name { get; set; } = "";
     public string? Description { get; set; }
-    public string Uri { get; set; } = "";
+    public string? Uri { get; set; }
     public string? Folder { get; set; }
-    public bool Scalable { get; set; } = false;
+    public bool? Scalable { get; set; }
     public QualityKind Kind { get; set; } = QualityKind.General;
-    public string SI { get; set; } = "";
-    public string Imperial { get; set; } = "";
-    public float Min { get; set; } = 0;
-    public bool MinExcluded { get; set; } = true;
-    public float Max { get; set; } = 0;
-    public bool MaxExcluded { get; set; } = true;
-    public float Default { get; set; } = 0;
-    public string Formula { get; set; } = "";
+    public string? SI { get; set; }
+    public string? Imperial { get; set; }
+    public double? Min { get; set; }
+    public bool? MinExcluded { get; set; }
+    public double? Max { get; set; }
+    public bool? MaxExcluded { get; set; }
+    public double? Default { get; set; }
+    public string? Formula { get; set; }
     public string? Icon { get; set; }
     public string? Image { get; set; }
     public string? Unit { get; set; }
@@ -3026,7 +3026,7 @@ public class Prop : Entity<Prop>
     public string Guid { get; set; } = "";
     public QualityId Quality { get; set; } = new();
     public string Value { get; set; } = "";
-    public string Unit { get; set; } = "";
+    public string? Unit { get; set; }
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Guid}";
@@ -3239,7 +3239,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     private string? _description;
     private PortId? _port;
     private bool? _mandatory;
-    private float? _t;
+    private double? _t;
     private Point? _point;
     private Vector? _direction;
     private List<Prop>? _props;
@@ -3250,7 +3250,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
     public PortId? Port { get => _port; set { _port = value; _setProperties.Add("Port"); } }
     public bool? Mandatory { get => _mandatory; set { _mandatory = value; _setProperties.Add("Mandatory"); } }
-    public float? T { get => _t; set { _t = value; _setProperties.Add("T"); } }
+    public double? T { get => _t; set { _t = value; _setProperties.Add("T"); } }
     public Point? Point { get => _point; set { _point = value; _setProperties.Add("Point"); } }
     public Vector? Direction { get => _direction; set { _direction = value; _setProperties.Add("Direction"); } }
     public List<Prop>? Props { get => _props; set { _props = value; _setProperties.Add("Props"); } }
@@ -3309,13 +3309,13 @@ public class ConnectorsDiff : Entity<ConnectorsDiff>
 public class Connector : Entity<Connector>
 {
     public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
+    public string? Name { get; set; }
     public string? Description { get; set; }
-    public bool Mandatory { get; set; } = false;
+    public bool? Mandatory { get; set; }
     public PortId? Port { get; set; }
     public Point? Point { get; set; } = null;
     public Vector? Direction { get; set; } = null;
-    public float T { get; set; } = 0;
+    public double T { get; set; } = 0;
     public List<Prop> Props { get; set; } = new();
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Guid}";
@@ -3323,7 +3323,7 @@ public class Connector : Entity<Connector>
     public override string ToString() => $"Por({ToHumanIdString()})";
 
     public static implicit operator Connector(ConnectorId id) => new() { Guid = id.Guid };
-    public static implicit operator Connector(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Port = diff.Port, Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes?.Added ?? new() };
+    public static implicit operator Connector(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name, Description = diff.Description, Port = diff.Port, Mandatory = diff.Mandatory, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes?.Added ?? new() };
     public static implicit operator string(Connector connector) => connector.Guid;
     public static implicit operator Connector(string guid) => new() { Guid = guid };
 
@@ -3619,11 +3619,11 @@ public class Type : Entity<Type>
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public string? Image { get; set; }
-    public int Stock { get; set; } = 2147483647;
-    public bool Virtual { get; set; } = false;
-    public string Uri { get; set; } = "";
+    public int? Stock { get; set; }
+    public bool? Virtual { get; set; }
+    public string? Uri { get; set; }
     public Location? Location { get; set; }
-    public string Unit { get; set; } = "";
+    public string? Unit { get; set; }
     public List<Model> Models { get; set; } = new();
     public List<Connector> Connectors { get; set; } = new();
     public List<Prop> Props { get; set; } = new();
@@ -3647,13 +3647,13 @@ public class Type : Entity<Type>
         Parent = diff.Parent,
         IsAbstract = diff.IsAbstract,
         Folder = diff.Folder,
-        Description = diff.Description ?? "",
-        Icon = diff.Icon ?? "",
-        Image = diff.Image ?? "",
-        Stock = diff.Stock ?? 2147483647,
-        Virtual = diff.Virtual ?? false,
-        Uri = diff.Uri ?? "",
-        Unit = diff.Unit ?? "",
+        Description = diff.Description,
+        Icon = diff.Icon,
+        Image = diff.Image,
+        Stock = diff.Stock,
+        Virtual = diff.Virtual,
+        Uri = diff.Uri,
+        Unit = diff.Unit,
         Location = diff.Location,
         Models = diff.Models?.Added ?? new(),
         Connectors = diff.Connectors?.Added ?? new(),
@@ -3680,13 +3680,13 @@ public class Type : Entity<Type>
         {
             Guid = type.Guid,
             Name = string.IsNullOrEmpty(diff.Name) ? type.Name : diff.Name,
-            Description = string.IsNullOrEmpty(diff.Description) ? type.Description : diff.Description,
-            Icon = string.IsNullOrEmpty(diff.Icon) ? type.Icon : diff.Icon,
-            Image = string.IsNullOrEmpty(diff.Image) ? type.Image : diff.Image,
+            Description = diff.Description ?? type.Description,
+            Icon = diff.Icon ?? type.Icon,
+            Image = diff.Image ?? type.Image,
             Stock = diff.Stock ?? type.Stock,
             Virtual = diff.Virtual ?? type.Virtual,
-            Uri = string.IsNullOrEmpty(diff.Uri) ? type.Uri : diff.Uri,
-            Unit = string.IsNullOrEmpty(diff.Unit) ? type.Unit : diff.Unit,
+            Uri = diff.Uri ?? type.Uri,
+            Unit = diff.Unit ?? type.Unit,
             Location = diff.Location ?? type.Location,
             Models = models,
             Connectors = connectors,
@@ -3892,9 +3892,9 @@ public class Layer : Entity<Layer>
 {
     public string Guid { get; set; } = "";
     public string Path { get; set; } = "";
-    public bool IsHidden { get; set; } = false;
-    public bool IsLocked { get; set; } = false;
-    public string Color { get; set; } = "";
+    public bool? IsHidden { get; set; }
+    public bool? IsLocked { get; set; }
+    public string? Color { get; set; }
     public string? Description { get; set; }
     public List<Attribute> Attributes { get; set; } = new();
 
@@ -4031,7 +4031,7 @@ public class PieceDiff : Entity<PieceDiff>
     private DesignId? _design;
     private Plane? _plane;
     private Coord? _center;
-    private float? _scale;
+    private double? _scale;
     private Plane? _mirrorPlane;
     private bool? _isHidden;
     private bool? _isLocked;
@@ -4046,7 +4046,7 @@ public class PieceDiff : Entity<PieceDiff>
     public DesignId? Design { get => _design; set { _design = value; _setProperties.Add("Design"); } }
     public Plane? Plane { get => _plane; set { _plane = value; _setProperties.Add("Plane"); } }
     public Coord? Center { get => _center; set { _center = value; _setProperties.Add("Center"); } }
-    public float? Scale { get => _scale; set { _scale = value; _setProperties.Add("Scale"); } }
+    public double? Scale { get => _scale; set { _scale = value; _setProperties.Add("Scale"); } }
     public Plane? MirrorPlane { get => _mirrorPlane; set { _mirrorPlane = value; _setProperties.Add("MirrorPlane"); } }
     public bool? IsHidden { get => _isHidden; set { _isHidden = value; _setProperties.Add("IsHidden"); } }
     public bool? IsLocked { get => _isLocked; set { _isLocked = value; _setProperties.Add("IsLocked"); } }
@@ -4082,7 +4082,7 @@ public class Piece : Entity<Piece>
     public DesignId? Design { get; set; }
     public Plane? Plane { get; set; }
     public Coord? Center { get; set; }
-    public float? Scale { get; set; }
+    public double? Scale { get; set; }
     public Plane? MirrorPlane { get; set; }
     public bool? IsHidden { get; set; }
     public bool? IsLocked { get; set; }
@@ -4274,27 +4274,27 @@ public class ConnectionDiff : Entity<ConnectionDiff>
     private SideDiff? _connected;
     private SideDiff? _connecting;
     private string? _description;
-    private float? _gap;
-    private float? _shift;
-    private float? _rise;
-    private float? _rotation;
-    private float? _turn;
-    private float? _tilt;
-    private float? _u;
-    private float? _v;
+    private double? _gap;
+    private double? _shift;
+    private double? _rise;
+    private double? _rotation;
+    private double? _turn;
+    private double? _tilt;
+    private double? _u;
+    private double? _v;
     private AttributesDiff? _attributes;
 
     public SideDiff? Connected { get => _connected; set { _connected = value; _setProperties.Add("Connected"); } }
     public SideDiff? Connecting { get => _connecting; set { _connecting = value; _setProperties.Add("Connecting"); } }
     public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
-    public float? Gap { get => _gap; set { _gap = value; _setProperties.Add("Gap"); } }
-    public float? Shift { get => _shift; set { _shift = value; _setProperties.Add("Shift"); } }
-    public float? Rise { get => _rise; set { _rise = value; _setProperties.Add("Rise"); } }
-    public float? Rotation { get => _rotation; set { _rotation = value; _setProperties.Add("Rotation"); } }
-    public float? Turn { get => _turn; set { _turn = value; _setProperties.Add("Turn"); } }
-    public float? Tilt { get => _tilt; set { _tilt = value; _setProperties.Add("Tilt"); } }
-    public float? U { get => _u; set { _u = value; _setProperties.Add("U"); } }
-    public float? V { get => _v; set { _v = value; _setProperties.Add("V"); } }
+    public double? Gap { get => _gap; set { _gap = value; _setProperties.Add("Gap"); } }
+    public double? Shift { get => _shift; set { _shift = value; _setProperties.Add("Shift"); } }
+    public double? Rise { get => _rise; set { _rise = value; _setProperties.Add("Rise"); } }
+    public double? Rotation { get => _rotation; set { _rotation = value; _setProperties.Add("Rotation"); } }
+    public double? Turn { get => _turn; set { _turn = value; _setProperties.Add("Turn"); } }
+    public double? Tilt { get => _tilt; set { _tilt = value; _setProperties.Add("Tilt"); } }
+    public double? U { get => _u; set { _u = value; _setProperties.Add("U"); } }
+    public double? V { get => _v; set { _v = value; _setProperties.Add("V"); } }
     public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
 
     public bool ShouldSerializeConnected() => _setProperties.Contains("Connected");
@@ -4358,14 +4358,14 @@ public class Connection : Entity<Connection>
     public Side Connected { get; set; } = new();
     public Side Connecting { get; set; } = new();
     public string? Description { get; set; }
-    public float Gap { get; set; } = 0;
-    public float Shift { get; set; } = 0;
-    public float Rise { get; set; } = 0;
-    public float Rotation { get; set; } = 0;
-    public float Turn { get; set; } = 0;
-    public float Tilt { get; set; } = 0;
-    public float? U { get; set; }
-    public float? V { get; set; }
+    public double Gap { get; set; } = 0;
+    public double Shift { get; set; } = 0;
+    public double Rise { get; set; } = 0;
+    public double Rotation { get; set; } = 0;
+    public double Turn { get; set; } = 0;
+    public double Tilt { get; set; } = 0;
+    public double? U { get; set; }
+    public double? V { get; set; }
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Guid + (Connected.Connector.Guid != "" ? ":" + Connected.Connector.Guid : "")}--{(Connecting.Connector.Guid != "" ? Connecting.Connector.Guid + ":" : "") + Connecting.Piece.Guid}";
@@ -4546,9 +4546,9 @@ public class Stat : Entity<Stat>
     public string Guid { get; set; } = "";
     public QualityId Quality { get; set; } = new();
     public string? Unit { get; set; }
-    public float? Min { get; set; }
+    public double? Min { get; set; }
     public bool? MinExcluded { get; set; }
-    public float? Max { get; set; }
+    public double? Max { get; set; }
     public bool? MaxExcluded { get; set; }
 
     public string ToIdString() => $"{Guid}";
@@ -4562,17 +4562,17 @@ public class StatDiff : Entity<StatDiff>
     private string? _guid;
     private QualityId? _quality;
     private string? _unit;
-    private float? _min;
+    private double? _min;
     private bool? _minExcluded;
-    private float? _max;
+    private double? _max;
     private bool? _maxExcluded;
 
     public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
     public QualityId? Quality { get => _quality; set { _quality = value; _setProperties.Add("Quality"); } }
     public string? Unit { get => _unit; set { _unit = value; _setProperties.Add("Unit"); } }
-    public float? Min { get => _min; set { _min = value; _setProperties.Add("Min"); } }
+    public double? Min { get => _min; set { _min = value; _setProperties.Add("Min"); } }
     public bool? MinExcluded { get => _minExcluded; set { _minExcluded = value; _setProperties.Add("MinExcluded"); } }
-    public float? Max { get => _max; set { _max = value; _setProperties.Add("Max"); } }
+    public double? Max { get => _max; set { _max = value; _setProperties.Add("Max"); } }
     public bool? MaxExcluded { get => _maxExcluded; set { _maxExcluded = value; _setProperties.Add("MaxExcluded"); } }
 
     public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
@@ -4738,7 +4738,7 @@ public class Design : Entity<Design>
     public List<ConceptId> Concepts { get; set; } = new();
     public List<AuthorId> Authors { get; set; } = new();
     public Location? Location { get; set; }
-    public string Unit { get; set; } = "";
+    public string? Unit { get; set; }
     public bool? CanScale { get; set; }
     public bool? CanMirror { get; set; }
     public List<Layer> Layers { get; set; } = new();
@@ -4986,7 +4986,7 @@ public class Design : Entity<Design>
     }
 
     public static Design Flatten(Design design, IEnumerable<Type> types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, float, Plane> computeChildPlane)
+        Func<Plane, Point, Vector, Point, Vector, double, double, double, double, double, double, Plane> computeChildPlane)
     {
         if (design.Pieces.Count > 1 && design.Connections.Count > 0)
         {
@@ -5080,7 +5080,7 @@ public class Design : Entity<Design>
                     }
                 }
 
-                pieceCenters[child.Guid] = new Coord { U = (float)Math.Round(childU, 6), V = (float)Math.Round(childV, 6) };
+                pieceCenters[child.Guid] = new Coord { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
 
                 var existingAttributes = new List<Attribute>(child.Attributes);
                 var semioAttribute = existingAttributes.FirstOrDefault(q => q.Key == "semio.parent");
@@ -5176,12 +5176,12 @@ public class Design : Entity<Design>
         Vector parentDirection,
         Point childPoint,
         Vector childDirection,
-        float gap,
-        float shift,
-        float rise,
-        float rotation,
-        float turn,
-        float tilt)
+        double gap,
+        double shift,
+        double rise,
+        double rotation,
+        double turn,
+        double tilt)
     {
         var pMatrix = PlaneToMatrix(parentPlane);
 
@@ -5261,9 +5261,9 @@ public class Design : Entity<Design>
 
         var transform = MultiplyMatrices(orientationT, centerChildT);
 
-        var gapT = MakeTranslation(gapDirection.X * gap, gapDirection.Y * gap, gapDirection.Z * gap);
-        var shiftT = MakeTranslation(shiftDirection.X * shift, shiftDirection.Y * shift, shiftDirection.Z * shift);
-        var raiseT = MakeTranslation(raiseDirection.X * rise, raiseDirection.Y * rise, raiseDirection.Z * rise);
+        var gapT = MakeTranslation(gapDirection.X * (float)gap, gapDirection.Y * (float)gap, gapDirection.Z * (float)gap);
+        var shiftT = MakeTranslation(shiftDirection.X * (float)shift, shiftDirection.Y * (float)shift, shiftDirection.Z * (float)shift);
+        var raiseT = MakeTranslation(raiseDirection.X * (float)rise, raiseDirection.Y * (float)rise, raiseDirection.Z * (float)rise);
 
         var translationT = MultiplyMatrices(raiseT, MultiplyMatrices(shiftT, gapT));
         transform = MultiplyMatrices(translationT, transform);
@@ -5276,7 +5276,7 @@ public class Design : Entity<Design>
         return MatrixToPlane(finalMatrix);
     }
 
-    private static float DegreesToRadians(float deg) => deg * (float)Math.PI / 180f;
+    private static float DegreesToRadians(double deg) => (float)(deg * Math.PI / 180.0);
 
     private static System.Numerics.Quaternion CreateFromTwoVectors(System.Numerics.Vector3 u, System.Numerics.Vector3 v)
     {
@@ -5539,7 +5539,7 @@ public class Design : Entity<Design>
     public static string Diagram(
         Design design,
         IEnumerable<Type> types,
-        Func<Plane, Point, Vector, Point, Vector, float, float, float, float, float, float, Plane> computeChildPlane,
+        Func<Plane, Point, Vector, Point, Vector, double, double, double, double, double, double, Plane> computeChildPlane,
         string kitDirectory = "",
         float iconWidth = 48, float iconStroke = 1f, float connectionStroke = 2f, float margin = 0)
     {
@@ -5554,9 +5554,9 @@ public class Design : Entity<Design>
 
         var svgDoc = new SvgDocument
         {
-            Width = flatCloneInSvgCoordinates.Pieces.Where(p => p.Center is not null).Max(piece => piece.Center!.U) + margin * 2 + iconWidth +
+            Width = (float)flatCloneInSvgCoordinates.Pieces.Where(p => p.Center is not null).Max(piece => piece.Center!.U) + margin * 2 + iconWidth +
                     2 * iconStroke,
-            Height = flatCloneInSvgCoordinates.Pieces.Where(p => p.Center is not null).Max(piece => piece.Center!.V) + margin * 2 + iconWidth +
+            Height = (float)flatCloneInSvgCoordinates.Pieces.Where(p => p.Center is not null).Max(piece => piece.Center!.V) + margin * 2 + iconWidth +
                      2 * iconStroke
         };
 
@@ -5680,10 +5680,10 @@ public class Design : Entity<Design>
             if (connectedPieceFlat?.Center is null || connectingPieceFlat?.Center is null) continue;
             var connectionLine = new SvgLine
             {
-                StartX = connectedPieceFlat.Center.U + iconWidth / 2,
-                StartY = connectedPieceFlat.Center.V + iconWidth / 2,
-                EndX = connectingPieceFlat.Center.U + iconWidth / 2,
-                EndY = connectingPieceFlat.Center.V + iconWidth / 2,
+                StartX = (float)connectedPieceFlat.Center.U + iconWidth / 2,
+                StartY = (float)connectedPieceFlat.Center.V + iconWidth / 2,
+                EndX = (float)connectingPieceFlat.Center.U + iconWidth / 2,
+                EndY = (float)connectingPieceFlat.Center.V + iconWidth / 2,
                 Stroke = new SvgColourServer(Color.Black),
                 StrokeWidth = connectionStroke,
                 Children = { new SvgTitle { Content = connection.ToIdString() } }
@@ -5703,8 +5703,8 @@ public class Design : Entity<Design>
                 var rootPiece = new SvgUse
                 {
                     CustomAttributes = { { "href", "#root" } },
-                    X = flatPiece.Center.U,
-                    Y = flatPiece.Center.V
+                    X = (float)flatPiece.Center.U,
+                    Y = (float)flatPiece.Center.V
                 };
                 pieces.Children.Add(rootPiece);
             }
@@ -5716,8 +5716,8 @@ public class Design : Entity<Design>
                 {
                     CustomAttributes =
                         { { "href", "#" + typesDict[pieceType.Name].ToIdString() } },
-                    X = flatPiece.Center.U,
-                    Y = flatPiece.Center.V,
+                    X = (float)flatPiece.Center.U,
+                    Y = (float)flatPiece.Center.V,
                     Children = { new SvgTitle { Content = flatPiece.Guid } }
                 };
                 pieces.Children.Add(pieceIcon);
@@ -5984,60 +5984,55 @@ text {
 
     public static DesignDiff DragPiecesInDesign(Design design, Design pieces, Coord offset)
     {
-        var designPieces = design.Pieces;
         var designConnections = design.Connections;
         var selectedPieces = pieces.Pieces;
         var selectedGuids = new HashSet<string>(selectedPieces.Select(p => p.Guid));
-        var designPieceMap = designPieces.ToDictionary(p => p.Guid, p => p);
-        var childrenMap = new Dictionary<string, List<string>>();
         var connectionByChild = new Dictionary<string, Connection>();
         foreach (var conn in designConnections)
         {
-            var connectingGuid = conn.Connecting.Piece.Guid;
-            var connectedGuid = conn.Connected.Piece.Guid;
-            if (!childrenMap.ContainsKey(connectingGuid))
-                childrenMap[connectingGuid] = new List<string>();
-            childrenMap[connectingGuid].Add(connectedGuid);
-            connectionByChild[connectedGuid] = conn;
+            connectionByChild[conn.Connecting.Piece.Guid] = conn;
         }
-        var rootMovers = new List<string>();
+        var fixedGuids = new HashSet<string>();
         foreach (var guid in selectedGuids)
         {
-            if (designPieceMap.TryGetValue(guid, out var p) && p.Center != null)
-                rootMovers.Add(guid);
+            if (!connectionByChild.ContainsKey(guid))
+                fixedGuids.Add(guid);
         }
-        var movingSet = new HashSet<string>();
-        var queue = new Queue<string>(rootMovers);
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-            if (!movingSet.Add(current)) continue;
-            if (childrenMap.TryGetValue(current, out var children))
-            {
-                foreach (var child in children)
-                {
-                    if (!movingSet.Contains(child))
-                        queue.Enqueue(child);
-                }
-            }
-        }
+        var pieceMap = design.Pieces.ToDictionary(p => p.Guid);
         var pieceUpdates = new List<PieceDiffUpdate>();
-        foreach (var guid in rootMovers)
+        foreach (var guid in fixedGuids)
         {
-            pieceUpdates.Add(new PieceDiffUpdate
+            if (pieceMap.TryGetValue(guid, out var piece) && piece.Center != null)
             {
-                Piece = new PieceId { Guid = guid },
-                Diff = new PieceDiff { Center = new Coord { U = offset.U, V = offset.V } },
-            });
+                pieceUpdates.Add(new PieceDiffUpdate
+                {
+                    Piece = new PieceId { Guid = guid },
+                    Diff = new PieceDiff { Center = new Coord { U = piece.Center.U + offset.U, V = piece.Center.V + offset.V } },
+                });
+            }
         }
         var connectionUpdates = new List<ConnectionDiffUpdate>();
         foreach (var guid in selectedGuids)
         {
-            if (!movingSet.Contains(guid) && connectionByChild.TryGetValue(guid, out var conn))
+            if (fixedGuids.Contains(guid)) continue;
+            var isDescendant = false;
+            var current = guid;
+            while (connectionByChild.TryGetValue(current, out var conn))
+            {
+                var parentGuid = conn.Connected.Piece.Guid;
+                if (selectedGuids.Contains(parentGuid))
+                {
+                    isDescendant = true;
+                    break;
+                }
+                current = parentGuid;
+            }
+            if (isDescendant) continue;
+            if (connectionByChild.TryGetValue(guid, out var parentConn))
             {
                 connectionUpdates.Add(new ConnectionDiffUpdate
                 {
-                    Connection = new ConnectionId { Guid = conn.Guid },
+                    Connection = new ConnectionId { Guid = parentConn.Guid },
                     Diff = new ConnectionDiff { U = offset.U, V = offset.V },
                 });
             }
@@ -6047,6 +6042,99 @@ text {
             diff.Pieces = new PiecesDiff { Updated = pieceUpdates };
         if (connectionUpdates.Count > 0)
             diff.Connections = new ConnectionsDiff { Updated = connectionUpdates };
+        return diff;
+    }
+
+    /// <summary>
+    /// Deletes pieces and connections from a design, returning a DesignDiff.
+    /// Removes stale connections referencing deleted pieces.
+    /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
+    /// </summary>
+    public static DesignDiff DeletePiecesAndConnectionsInDesign(Kit kit, Design design, List<string> pieceGuids, List<string> connectionGuids)
+    {
+        var deletedPieceSet = new HashSet<string>(pieceGuids);
+
+        // Find stale connections: connections referencing any deleted piece
+        var staleConnectionGuids = new HashSet<string>();
+        foreach (var conn in design.Connections)
+        {
+            if (deletedPieceSet.Contains(conn.Connected.Piece.Guid) ||
+                deletedPieceSet.Contains(conn.Connecting.Piece.Guid))
+            {
+                staleConnectionGuids.Add(conn.Guid);
+            }
+        }
+
+        // All removed connections = explicit + stale
+        var allRemovedConnectionGuids = new HashSet<string>(connectionGuids);
+        allRemovedConnectionGuids.UnionWith(staleConnectionGuids);
+
+        // Find pieces that become fixed: pieces whose parent connection was removed
+        // and are not themselves being deleted
+        // A piece becomes fixed when the connection where it is the "connecting" side is removed
+        // and it has no other remaining parent connection
+        var fixedPieceGuids = new List<string>();
+        foreach (var connGuid in allRemovedConnectionGuids)
+        {
+            var conn = design.Connections.FirstOrDefault(c => c.Guid == connGuid);
+            if (conn == null) continue;
+            var connectingGuid = conn.Connecting.Piece.Guid;
+            if (deletedPieceSet.Contains(connectingGuid)) continue;
+            // Check if this piece has another parent connection not in the removed set
+            var hasOtherParent = design.Connections.Any(c =>
+                c.Connecting.Piece.Guid == connectingGuid &&
+                !allRemovedConnectionGuids.Contains(c.Guid));
+            if (!hasOtherParent && !fixedPieceGuids.Contains(connectingGuid))
+                fixedPieceGuids.Add(connectingGuid);
+        }
+
+        // Build the diff
+        var piecesRemoved = pieceGuids.Select(g => new PieceId { Guid = g }).ToList();
+
+        // Flatten the design to get absolute plane and center for each piece
+        var flatResult = Kit.FlattenDesign(kit, design.Guid);
+        var flatPieceMap = new Dictionary<string, (Plane? Plane, Coord? Center)>();
+        foreach (var piece in design.Pieces)
+        {
+            if (piece.Plane != null)
+                flatPieceMap[piece.Guid] = (piece.Plane, piece.Center);
+        }
+        if (flatResult.Pieces?.Updated != null)
+        {
+            foreach (var update in flatResult.Pieces.Updated)
+            {
+                var existing = flatPieceMap.ContainsKey(update.Piece.Guid)
+                    ? flatPieceMap[update.Piece.Guid]
+                    : ((Plane?)null, (Coord?)null);
+                if (update.Diff?.Plane != null) existing.Item1 = update.Diff.Plane;
+                if (update.Diff?.Center != null) existing.Item2 = update.Diff.Center;
+                flatPieceMap[update.Piece.Guid] = existing;
+            }
+        }
+
+        var piecesUpdated = fixedPieceGuids.Select(g =>
+        {
+            var flat = flatPieceMap.ContainsKey(g) ? flatPieceMap[g] : ((Plane?)null, (Coord?)null);
+            return new PieceDiffUpdate
+            {
+                Piece = new PieceId { Guid = g },
+                Diff = new PieceDiff
+                {
+                    Plane = flat.Item1 ?? new Plane(),
+                    Center = flat.Item2 ?? new Coord()
+                }
+            };
+        }).ToList();
+        var connectionsRemoved = allRemovedConnectionGuids
+            .OrderBy(g => g)
+            .Select(g => new ConnectionId { Guid = g })
+            .ToList();
+
+        var diff = new DesignDiff();
+        if (piecesRemoved.Count > 0 || piecesUpdated.Count > 0)
+            diff.Pieces = new PiecesDiff { Removed = piecesRemoved, Updated = piecesUpdated };
+        if (connectionsRemoved.Count > 0)
+            diff.Connections = new ConnectionsDiff { Removed = connectionsRemoved };
         return diff;
     }
 }
@@ -6240,9 +6328,9 @@ public class Kit : Entity<Kit>
     public string? Image { get; set; }
     public List<Concept> Concepts { get; set; } = new();
     public List<Tag> Tags { get; set; } = new();
-    public string Remote { get; set; } = "";
-    public string Homepage { get; set; } = "";
-    public string License { get; set; } = "";
+    public string? Remote { get; set; }
+    public string? Homepage { get; set; }
+    public string? License { get; set; }
     public List<Author> Authors { get; set; } = new();
     public List<Piece> Pieces { get; set; } = new();
     public List<Group> Groups { get; set; } = new();
@@ -6250,7 +6338,7 @@ public class Kit : Entity<Kit>
     public List<Prop> Props { get; set; } = new();
     public List<Stat> Stats { get; set; } = new();
     public List<Attribute> Attributes { get; set; } = new();
-    public string Preview { get; set; } = "";
+    public string? Preview { get; set; }
     public List<Quality> Qualities { get; set; } = new();
     [JsonProperty("ports")]
     public List<Port> Ports { get; set; } = new();
@@ -6955,13 +7043,62 @@ public class Kit : Entity<Kit>
     // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter)
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
+    /// <summary>Glob filter with include and exclude patterns for name-based entity filtering.</summary>
+    public class GlobFilter
+    {
+        public List<string>? Include { get; set; }
+        public List<string>? Exclude { get; set; }
+    }
+
+    /// <summary>General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.</summary>
+    public class KitFilter
+    {
+        public string? DesignGuid { get; set; }
+        public string[]? ModelTags { get; set; }
+        public GlobFilter? Designs { get; set; }
+        public GlobFilter? Types { get; set; }
+        public GlobFilter? Ports { get; set; }
+        public GlobFilter? Files { get; set; }
+        public GlobFilter? Tags { get; set; }
+        public GlobFilter? Concepts { get; set; }
+        public GlobFilter? Qualities { get; set; }
+        public GlobFilter? Authors { get; set; }
+        public GlobFilter? Folders { get; set; }
+    }
+
+    /// <summary>Matches a name against a glob pattern supporting * and ?. Case-insensitive.</summary>
+    public static bool GlobMatch(string name, string pattern)
+    {
+        var regexStr = "^";
+        foreach (var c in pattern)
+        {
+            regexStr += c switch
+            {
+                '*' => ".*",
+                '?' => ".",
+                _ => System.Text.RegularExpressions.Regex.Escape(c.ToString())
+            };
+        }
+        regexStr += "$";
+        return System.Text.RegularExpressions.Regex.IsMatch(name, regexStr, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    }
+
+    /// <summary>Checks if a name passes a GlobFilter.</summary>
+    public static bool MatchesGlobFilter(string name, GlobFilter? filter)
+    {
+        if (filter == null) return true;
+        if (filter.Include is { Count: > 0 } && !filter.Include.Any(p => GlobMatch(name, p))) return false;
+        if (filter.Exclude is { Count: > 0 } && filter.Exclude.Any(p => GlobMatch(name, p))) return false;
+        return true;
+    }
+
     /// <summary>Filters a kit to only include entities related to a specific design.</summary>
     /// <remarks>
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
     /// files not used by selected models, and keeps at most one model per type according to the optional tags.
-    /// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter/d/i/FilterKitWithDesign)
+    /// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter/d/i/FilterKitByDesign)
     /// </remarks>
-    public static Kit FilterKitWithDesign(Kit kit, string designGuid, string[]? tags = null)
+    private static Kit FilterKitByDesign(Kit kit, string designGuid, string[]? tags = null)
     {
         var design = (kit.Designs ?? new List<Design>()).FirstOrDefault(d => d.Guid == designGuid);
         if (design == null) return new Kit { Guid = kit.Guid, Name = kit.Name, Version = kit.Version };
@@ -7084,6 +7221,49 @@ public class Kit : Entity<Kit>
         };
     }
 
+    /// <summary>General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.</summary>
+    /// <remarks>
+    /// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter🛠️filterkit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter/d/i/FilterKit)
+    /// </remarks>
+    public static Kit FilterKit(Kit kit, KitFilter filter)
+    {
+        var baseKit = !string.IsNullOrEmpty(filter.DesignGuid)
+            ? FilterKitByDesign(kit, filter.DesignGuid, filter.ModelTags)
+            : kit;
+
+        var hasGlobFilters = filter.Designs != null || filter.Types != null || filter.Ports != null ||
+            filter.Files != null || filter.Tags != null || filter.Concepts != null ||
+            filter.Qualities != null || filter.Authors != null || filter.Folders != null;
+
+        if (!hasGlobFilters) return baseKit;
+
+        return new Kit
+        {
+            Guid = baseKit.Guid,
+            Name = baseKit.Name,
+            Version = baseKit.Version,
+            Description = baseKit.Description,
+            Icon = baseKit.Icon,
+            Image = baseKit.Image,
+            Preview = baseKit.Preview,
+            Remote = baseKit.Remote,
+            Homepage = baseKit.Homepage,
+            License = baseKit.License,
+            Types = (baseKit.Types ?? new List<Type>()).Where(t => MatchesGlobFilter(t.Name, filter.Types)).ToList(),
+            Designs = (baseKit.Designs ?? new List<Design>()).Where(d => MatchesGlobFilter(d.Name, filter.Designs)).ToList(),
+            Ports = (baseKit.Ports ?? new List<Port>()).Where(p => MatchesGlobFilter(p.Name, filter.Ports)).ToList(),
+            Files = (baseKit.Files ?? new List<File>()).Where(f => MatchesGlobFilter(f.Name, filter.Files)).ToList(),
+            Tags = (baseKit.Tags ?? new List<Tag>()).Where(t => MatchesGlobFilter(t.Name, filter.Tags)).ToList(),
+            Concepts = (baseKit.Concepts ?? new List<Concept>()).Where(c => MatchesGlobFilter(c.Name, filter.Concepts)).ToList(),
+            Qualities = (baseKit.Qualities ?? new List<Quality>()).Where(q => MatchesGlobFilter(q.Name, filter.Qualities)).ToList(),
+            Folders = (baseKit.Folders ?? new List<Folder>()).Where(f => MatchesGlobFilter(f.Name, filter.Folders)).ToList(),
+            Authors = (baseKit.Authors ?? new List<Author>()).Where(a => MatchesGlobFilter(a.Name, filter.Authors)).ToList(),
+            Attributes = baseKit.Attributes,
+            CreatedAt = baseKit.CreatedAt,
+            UpdatedAt = baseKit.UpdatedAt,
+        };
+    }
+
     #endregion 🔖Filter
 
     #region 🔖Flatten Design
@@ -7187,7 +7367,7 @@ public class Kit : Entity<Kit>
             var roots = component.Where(nodeId =>
             {
                 var piece = pieceMap.TryGetValue(nodeId, out var p) ? p : null;
-                return piece?.Plane != null;
+                return piece?.Plane != null && piece?.Center != null;
             }).ToList();
 
             var rootNode = roots.Count > 0 ? roots[0] : (component.Count > 0 ? component[0] : null);
@@ -7199,7 +7379,8 @@ public class Kit : Entity<Kit>
             var updatedRootPiece = SetAttributes(rootPiece, new[]
             {
                 ("semio.fixedPieceId", rootPiece.Guid),
-                ("semio.depth", "0")
+                ("semio.depth", "0"),
+                ("semio.path", rootPiece.Guid)
             });
             pieceMap[rootNode] = updatedRootPiece;
 
@@ -7258,30 +7439,31 @@ public class Kit : Entity<Kit>
                 var horizontalScale = 3.0633;
                 var parentCenter = parentPiece.Center ?? new Coord { U = 0, V = 0 };
 
-                float childU, childV;
+                double childU, childV;
                 if (parentCenter.U == 0 && parentCenter.V == 0)
                 {
                     var angle = 2 * Math.PI * parentConnector.T;
-                    childU = (float)(radius * Math.Sin(angle));
-                    childV = (float)(radius * Math.Cos(angle));
+                    childU = radius * Math.Sin(angle);
+                    childV = radius * Math.Cos(angle);
                 }
                 else
                 {
                     var isVerticalConnection = Math.Abs(parentConnector.Direction?.Z ?? 0) > 0.5;
                     if (isVerticalConnection)
                     {
-                        childU = parentCenter.U + (float)(connection.U ?? 0);
-                        childV = parentCenter.V + (float)(connection.V ?? 0) + (float)verticalVExtra;
+                        childU = parentCenter.U + (connection.U ?? 0);
+                        childV = parentCenter.V + (connection.V ?? 0) + verticalVExtra;
                     }
                     else
                     {
-                        childU = parentCenter.U + (float)((connection.U ?? 0) * horizontalScale);
-                        childV = parentCenter.V + (float)((connection.V ?? 0) * horizontalScale);
+                        childU = parentCenter.U + (connection.U ?? 0) * horizontalScale;
+                        childV = parentCenter.V + (connection.V ?? 0) * horizontalScale;
                     }
                 }
 
-                var childCenter = new Coord { U = (float)Math.Round(childU), V = (float)Math.Round(childV) };
+                var childCenter = new Coord { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
                 var fixedPieceId = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.fixedPieceId")?.Value ?? "";
+                var parentPath = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.path")?.Value ?? "";
 
                 childPiece.Plane = childPlane;
                 childPiece.Center = childCenter;
@@ -7290,7 +7472,8 @@ public class Kit : Entity<Kit>
                 {
                     ("semio.fixedPieceId", fixedPieceId),
                     ("semio.parentPieceId", parentPiece.Guid),
-                    ("semio.depth", depths[childId].ToString())
+                    ("semio.depth", depths[childId].ToString()),
+                    ("semio.path", parentPath + "," + childPiece.Guid)
                 });
                 pieceMap[childId] = flatChildPiece;
             };
@@ -7459,7 +7642,7 @@ public class Kit : Entity<Kit>
 
         foreach (var p in pieces)
         {
-            if (p.Plane != null)
+            if (p.Plane != null && p.Center != null)
             {
                 piecePlanes[p.Guid] = p.Plane;
                 visited.Add(p.Guid);
@@ -7608,9 +7791,9 @@ public class Kit : Entity<Kit>
 
     private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
     {
-        var origin = new System.Numerics.Vector3(p.Origin.X, p.Origin.Y, p.Origin.Z);
-        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3(p.XAxis.X, p.XAxis.Y, p.XAxis.Z));
-        var yRaw = new System.Numerics.Vector3(p.YAxis.X, p.YAxis.Y, p.YAxis.Z);
+        var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
+        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
+        var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
         var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
         var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
         return ExportApplySemioToGltfBasis(new System.Numerics.Matrix4x4(
@@ -8129,6 +8312,2137 @@ public class Kit : Entity<Kit>
 
 #endregion 🔖Kit
 
+#region 🔖Hash
+// [👤semio📚net🛅semio💻semio🔖hash](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Hash)
+// Merkle hash functions for all entities. Each hash function computes a deterministic
+// SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
+// Field order is alphabetical by JSON field name. Missing/null/empty fields are skipped.
+
+public static class Hashing
+{
+    private class HashWriter
+    {
+        private readonly List<byte> _buf = new();
+
+        public void WriteString(string s)
+        {
+            var bytes = Encoding.UTF8.GetBytes(s);
+            var lb = BitConverter.GetBytes((uint)bytes.Length);
+            if (BitConverter.IsLittleEndian) Array.Reverse(lb);
+            _buf.AddRange(lb);
+            _buf.AddRange(bytes);
+        }
+
+        public void WriteNumber(double n) => WriteString(FormatNumberForHash(n));
+
+        public void WriteIntNumber(int n) => WriteString(n.ToString());
+
+        public void WriteBool(bool b) => _buf.Add(b ? (byte)1 : (byte)0);
+
+        public void WriteHash(string h) => WriteString(h);
+
+        public void WriteHashList(List<string> hashes)
+        {
+            var sorted = hashes.OrderBy(h => h, StringComparer.Ordinal).ToList();
+            var lb = BitConverter.GetBytes((uint)sorted.Count);
+            if (BitConverter.IsLittleEndian) Array.Reverse(lb);
+            _buf.AddRange(lb);
+            foreach (var h in sorted)
+                WriteString(h);
+        }
+
+        public void WriteGuidList(List<string> guids)
+        {
+            var sorted = guids.OrderBy(g => g, StringComparer.Ordinal).ToList();
+            var lb = BitConverter.GetBytes((uint)sorted.Count);
+            if (BitConverter.IsLittleEndian) Array.Reverse(lb);
+            _buf.AddRange(lb);
+            foreach (var g in sorted)
+                WriteString(g);
+        }
+
+        public string Digest()
+        {
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var hash = sha256.ComputeHash(_buf.ToArray());
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        }
+    }
+
+    public static string FormatNumberForHash(double n)
+    {
+        if (n == Math.Truncate(n) && !double.IsInfinity(n) && Math.Abs(n) < 1e15)
+            return ((long)n).ToString(CultureInfo.InvariantCulture);
+        var abs = Math.Abs(n);
+        var roundTrip = n.ToString("R", CultureInfo.InvariantCulture);
+        if (abs > 0 && (abs < 1e-6 || abs >= 1e21))
+        {
+            return NormalizeScientificNumber(roundTrip);
+        }
+        return roundTrip.IndexOfAny(new[] { 'E', 'e' }) >= 0
+            ? ExpandScientificNumber(roundTrip)
+            : TrimFractionZeros(roundTrip);
+    }
+
+    private static string TrimFractionZeros(string value)
+    {
+        if (!value.Contains('.'))
+            return value == "-0" ? "0" : value;
+
+        var trimmed = value.TrimEnd('0').TrimEnd('.');
+        return trimmed == "-0" ? "0" : trimmed;
+    }
+
+    private static string NormalizeScientificNumber(string value)
+    {
+        var exponentIndex = value.IndexOfAny(new[] { 'E', 'e' });
+        if (exponentIndex < 0)
+            return value;
+
+        var mantissa = TrimFractionZeros(value[..exponentIndex]);
+        var exponent = value[(exponentIndex + 1)..];
+        var sign = exponent.StartsWith("-", StringComparison.Ordinal) ? "-" : "+";
+        var digits = exponent.TrimStart('+', '-').TrimStart('0');
+        if (digits == "")
+            digits = "0";
+
+        return $"{mantissa}e{sign}{digits}";
+    }
+
+    private static string ExpandScientificNumber(string value)
+    {
+        var exponentIndex = value.IndexOfAny(new[] { 'E', 'e' });
+        if (exponentIndex < 0)
+            return TrimFractionZeros(value);
+
+        var mantissa = value[..exponentIndex];
+        var prefix = "";
+        if (mantissa.StartsWith("-", StringComparison.Ordinal))
+        {
+            prefix = "-";
+            mantissa = mantissa[1..];
+        }
+        else if (mantissa.StartsWith("+", StringComparison.Ordinal))
+        {
+            mantissa = mantissa[1..];
+        }
+
+        var exponent = int.Parse(value[(exponentIndex + 1)..], CultureInfo.InvariantCulture);
+        var decimalIndex = mantissa.IndexOf('.');
+        var digits = mantissa.Replace(".", "", StringComparison.Ordinal);
+        if (decimalIndex < 0)
+            decimalIndex = digits.Length;
+
+        var pointIndex = decimalIndex + exponent;
+        string expanded;
+        if (pointIndex <= 0)
+        {
+            expanded = "0." + new string('0', -pointIndex) + digits;
+        }
+        else if (pointIndex >= digits.Length)
+        {
+            expanded = digits + new string('0', pointIndex - digits.Length);
+        }
+        else
+        {
+            expanded = digits.Insert(pointIndex, ".");
+        }
+
+        expanded = TrimFractionZeros(expanded);
+        if (expanded.StartsWith(".", StringComparison.Ordinal))
+            expanded = "0" + expanded;
+        if (expanded == "0")
+            return expanded;
+
+        return prefix + expanded;
+    }
+
+    public static string HashCoord(Coord c)
+    {
+        var w = new HashWriter();
+        w.WriteString("Coord");
+        w.WriteString("u");
+        w.WriteNumber(c.U);
+        w.WriteString("v");
+        w.WriteNumber(c.V);
+        return w.Digest();
+    }
+
+    public static string HashPoint(Point p)
+    {
+        var w = new HashWriter();
+        w.WriteString("Point");
+        w.WriteString("x");
+        w.WriteNumber(p.X);
+        w.WriteString("y");
+        w.WriteNumber(p.Y);
+        w.WriteString("z");
+        w.WriteNumber(p.Z);
+        return w.Digest();
+    }
+
+    public static string HashVector(Vector v)
+    {
+        var w = new HashWriter();
+        w.WriteString("Vector");
+        w.WriteString("x");
+        w.WriteNumber(v.X);
+        w.WriteString("y");
+        w.WriteNumber(v.Y);
+        w.WriteString("z");
+        w.WriteNumber(v.Z);
+        return w.Digest();
+    }
+
+    public static string HashPlane(Plane p)
+    {
+        var w = new HashWriter();
+        w.WriteString("Plane");
+        w.WriteString("origin");
+        w.WriteHash(HashPoint(p.Origin));
+        w.WriteString("xAxis");
+        w.WriteHash(HashVector(p.XAxis));
+        w.WriteString("yAxis");
+        w.WriteHash(HashVector(p.YAxis));
+        return w.Digest();
+    }
+
+    public static string HashAttribute(Attribute a)
+    {
+        var w = new HashWriter();
+        w.WriteString("Attribute");
+        if (a.Definition != null)
+        {
+            w.WriteString("definition");
+            w.WriteString(a.Definition);
+        }
+        w.WriteString("guid");
+        w.WriteString(a.Guid);
+        w.WriteString("key");
+        w.WriteString(a.Key);
+        if (a.Value != null)
+        {
+            w.WriteString("value");
+            w.WriteString(a.Value);
+        }
+        return w.Digest();
+    }
+
+    public static string HashLocation(Location l)
+    {
+        var w = new HashWriter();
+        w.WriteString("Location");
+        if (l.Altitude.HasValue)
+        {
+            w.WriteString("altitude");
+            w.WriteNumber(l.Altitude.Value);
+        }
+        if (l.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(l.Attributes.Select(HashAttribute).ToList());
+        }
+        w.WriteString("guid");
+        w.WriteString(l.Guid);
+        w.WriteString("latitude");
+        w.WriteNumber(l.Latitude);
+        w.WriteString("longitude");
+        w.WriteNumber(l.Longitude);
+        return w.Digest();
+    }
+
+    public static string HashAuthor(Author a)
+    {
+        var w = new HashWriter();
+        w.WriteString("Author");
+        if (a.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(a.Attributes.Select(HashAttribute).ToList());
+        }
+        if (!string.IsNullOrEmpty(a.Email))
+        {
+            w.WriteString("email");
+            w.WriteString(a.Email);
+        }
+        w.WriteString("guid");
+        w.WriteString(a.Guid);
+        w.WriteString("name");
+        w.WriteString(a.Name);
+        return w.Digest();
+    }
+
+    public static string HashFile(File f)
+    {
+        var w = new HashWriter();
+        w.WriteString("File");
+        if (f.Blob != null)
+        {
+            w.WriteString("blob");
+            w.WriteString(f.Blob);
+        }
+        if (f.Folder != null)
+        {
+            w.WriteString("folder");
+            w.WriteString(f.Folder.Guid);
+        }
+        w.WriteString("guid");
+        w.WriteString(f.Guid);
+        if (f.Hash != null)
+        {
+            w.WriteString("hash");
+            w.WriteString(f.Hash);
+        }
+        w.WriteString("name");
+        w.WriteString(f.Name);
+        if (f.Remote != null)
+        {
+            w.WriteString("remote");
+            w.WriteString(f.Remote);
+        }
+        if (f.Size.HasValue)
+        {
+            w.WriteString("size");
+            w.WriteIntNumber(f.Size.Value);
+        }
+        return w.Digest();
+    }
+
+    public static string HashFolder(Folder f)
+    {
+        var w = new HashWriter();
+        w.WriteString("Folder");
+        if (f.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(f.Attributes.Select(HashAttribute).ToList());
+        }
+        if (f.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(f.Description);
+        }
+        w.WriteString("guid");
+        w.WriteString(f.Guid);
+        w.WriteString("name");
+        w.WriteString(f.Name);
+        if (f.Parent != null)
+        {
+            w.WriteString("parent");
+            w.WriteString(f.Parent.Guid);
+        }
+        return w.Digest();
+    }
+
+    public static string HashBenchmark(Benchmark b)
+    {
+        var w = new HashWriter();
+        w.WriteString("Benchmark");
+        if (b.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(b.Attributes.Select(HashAttribute).ToList());
+        }
+        w.WriteString("guid");
+        w.WriteString(b.Guid);
+        if (b.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(b.Icon);
+        }
+        if (b.Max.HasValue)
+        {
+            w.WriteString("max");
+            w.WriteNumber(b.Max.Value);
+        }
+        if (b.MaxExcluded.HasValue)
+        {
+            w.WriteString("maxExcluded");
+            w.WriteBool(b.MaxExcluded.Value);
+        }
+        if (b.Min.HasValue)
+        {
+            w.WriteString("min");
+            w.WriteNumber(b.Min.Value);
+        }
+        if (b.MinExcluded.HasValue)
+        {
+            w.WriteString("minExcluded");
+            w.WriteBool(b.MinExcluded.Value);
+        }
+        w.WriteString("name");
+        w.WriteString(b.Name);
+        return w.Digest();
+    }
+
+    public static string HashQuality(Quality q)
+    {
+        var w = new HashWriter();
+        w.WriteString("Quality");
+        if (q.Benchmarks?.Count > 0)
+        {
+            w.WriteString("benchmarks");
+            w.WriteHashList(q.Benchmarks.Select(HashBenchmark).ToList());
+        }
+        if (q.Scalable.HasValue)
+        {
+            w.WriteString("canScale");
+            w.WriteBool(q.Scalable.Value);
+        }
+        if (!string.IsNullOrEmpty(q.Imperial))
+        {
+            w.WriteString("defaultImperialUnit");
+            w.WriteString(q.Imperial);
+        }
+        if (!string.IsNullOrEmpty(q.SI))
+        {
+            w.WriteString("defaultSiUnit");
+            w.WriteString(q.SI);
+        }
+        if (q.Default.HasValue)
+        {
+            w.WriteString("defaultValue");
+            w.WriteNumber(q.Default.Value);
+        }
+        if (q.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(q.Description);
+        }
+        if (!string.IsNullOrEmpty(q.Formula))
+        {
+            w.WriteString("formula");
+            w.WriteString(q.Formula);
+        }
+        w.WriteString("guid");
+        w.WriteString(q.Guid);
+        if (q.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(q.Icon);
+        }
+        if (q.Image != null)
+        {
+            w.WriteString("image");
+            w.WriteString(q.Image);
+        }
+        if (q.MaxExcluded.HasValue)
+        {
+            w.WriteString("isMaxExcluded");
+            w.WriteBool(q.MaxExcluded.Value);
+        }
+        if (q.MinExcluded.HasValue)
+        {
+            w.WriteString("isMinExcluded");
+            w.WriteBool(q.MinExcluded.Value);
+        }
+        w.WriteString("key");
+        w.WriteString(q.Key);
+        if (q.Kind != QualityKind.General)
+        {
+            w.WriteString("kind");
+            w.WriteIntNumber((int)q.Kind);
+        }
+        if (q.Max.HasValue)
+        {
+            w.WriteString("max");
+            w.WriteNumber(q.Max.Value);
+        }
+        if (q.Min.HasValue)
+        {
+            w.WriteString("min");
+            w.WriteNumber(q.Min.Value);
+        }
+        w.WriteString("name");
+        w.WriteString(q.Name);
+        if (q.Unit != null)
+        {
+            w.WriteString("unit");
+            w.WriteString(q.Unit);
+        }
+        if (!string.IsNullOrEmpty(q.Uri))
+        {
+            w.WriteString("uri");
+            w.WriteString(q.Uri);
+        }
+        return w.Digest();
+    }
+
+    public static string HashPort(Port p)
+    {
+        var w = new HashWriter();
+        w.WriteString("Port");
+        if (p.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(p.Attributes.Select(HashAttribute).ToList());
+        }
+        if (p.CompatiblePorts?.Count > 0)
+        {
+            w.WriteString("compatiblePorts");
+            w.WriteGuidList(p.CompatiblePorts.Select(cp => cp.Guid).ToList());
+        }
+        if (p.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(p.Description);
+        }
+        w.WriteString("guid");
+        w.WriteString(p.Guid);
+        if (p.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(p.Icon);
+        }
+        w.WriteString("name");
+        w.WriteString(p.Name);
+        return w.Digest();
+    }
+
+    public static string HashProp(Prop p)
+    {
+        var w = new HashWriter();
+        w.WriteString("Prop");
+        if (p.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(p.Attributes.Select(HashAttribute).ToList());
+        }
+        w.WriteString("guid");
+        w.WriteString(p.Guid);
+        w.WriteString("quality");
+        w.WriteString(p.Quality.Guid);
+        if (p.Unit != null)
+        {
+            w.WriteString("unit");
+            w.WriteString(p.Unit);
+        }
+        w.WriteString("value");
+        w.WriteString(p.Value);
+        return w.Digest();
+    }
+
+    public static string HashTag(Tag t)
+    {
+        var w = new HashWriter();
+        w.WriteString("Tag");
+        if (t.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(t.Attributes.Select(HashAttribute).ToList());
+        }
+        if (t.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(t.Description);
+        }
+        w.WriteString("guid");
+        w.WriteString(t.Guid);
+        if (t.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(t.Icon);
+        }
+        w.WriteString("name");
+        w.WriteString(t.Name);
+        return w.Digest();
+    }
+
+    public static string HashConcept(Concept c)
+    {
+        var w = new HashWriter();
+        w.WriteString("Concept");
+        if (c.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(c.Attributes.Select(HashAttribute).ToList());
+        }
+        if (c.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(c.Description);
+        }
+        w.WriteString("guid");
+        w.WriteString(c.Guid);
+        if (c.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(c.Icon);
+        }
+        w.WriteString("name");
+        w.WriteString(c.Name);
+        return w.Digest();
+    }
+
+    public static string HashModel(Model m)
+    {
+        var w = new HashWriter();
+        w.WriteString("Model");
+        if (m.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(m.Attributes.Select(HashAttribute).ToList());
+        }
+        if (m.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(m.Description);
+        }
+        w.WriteString("file");
+        w.WriteString(m.File.Guid);
+        w.WriteString("guid");
+        w.WriteString(m.Guid);
+        if (m.Name != null)
+        {
+            w.WriteString("name");
+            w.WriteString(m.Name);
+        }
+        if (m.Tags?.Count > 0)
+        {
+            w.WriteString("tags");
+            w.WriteGuidList(m.Tags.Select(t => t.Guid).ToList());
+        }
+        return w.Digest();
+    }
+
+    public static string HashConnector(Connector c)
+    {
+        var w = new HashWriter();
+        w.WriteString("Connector");
+        if (c.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(c.Attributes.Select(HashAttribute).ToList());
+        }
+        if (c.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(c.Description);
+        }
+        w.WriteString("direction");
+        w.WriteHash(HashVector(c.Direction ?? new Vector()));
+        w.WriteString("guid");
+        w.WriteString(c.Guid);
+        if (c.Mandatory.HasValue)
+        {
+            w.WriteString("mandatory");
+            w.WriteBool(c.Mandatory.Value);
+        }
+        if (!string.IsNullOrEmpty(c.Name))
+        {
+            w.WriteString("name");
+            w.WriteString(c.Name);
+        }
+        w.WriteString("point");
+        w.WriteHash(HashPoint(c.Point ?? new Point()));
+        if (c.Port != null)
+        {
+            w.WriteString("port");
+            w.WriteString(c.Port.Guid);
+        }
+        if (c.Props?.Count > 0)
+        {
+            w.WriteString("props");
+            w.WriteHashList(c.Props.Select(HashProp).ToList());
+        }
+        w.WriteString("t");
+        w.WriteNumber(c.T);
+        return w.Digest();
+    }
+
+    public static string HashType(Type t)
+    {
+        var w = new HashWriter();
+        w.WriteString("Type");
+        if (t.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(t.Attributes.Select(HashAttribute).ToList());
+        }
+        if (t.Authors?.Count > 0)
+        {
+            w.WriteString("authors");
+            w.WriteGuidList(t.Authors.Select(a => a.Guid).ToList());
+        }
+        if (t.Concepts?.Count > 0)
+        {
+            w.WriteString("concepts");
+            w.WriteGuidList(t.Concepts.Select(c => c.Guid).ToList());
+        }
+        if (t.Connectors?.Count > 0)
+        {
+            w.WriteString("connectors");
+            w.WriteHashList(t.Connectors.Select(HashConnector).ToList());
+        }
+        if (t.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(t.Description);
+        }
+        if (t.Folder != null)
+        {
+            w.WriteString("folder");
+            w.WriteString(t.Folder);
+        }
+        w.WriteString("guid");
+        w.WriteString(t.Guid);
+        if (t.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(t.Icon);
+        }
+        if (t.Image != null)
+        {
+            w.WriteString("image");
+            w.WriteString(t.Image);
+        }
+        if (t.IsAbstract.HasValue)
+        {
+            w.WriteString("isAbstract");
+            w.WriteBool(t.IsAbstract.Value);
+        }
+        if (t.Location != null)
+        {
+            w.WriteString("location");
+            w.WriteString(t.Location.Guid);
+        }
+        if (t.Models?.Count > 0)
+        {
+            w.WriteString("models");
+            w.WriteHashList(t.Models.Select(HashModel).ToList());
+        }
+        w.WriteString("name");
+        w.WriteString(t.Name);
+        if (t.Parent != null)
+        {
+            w.WriteString("parent");
+            w.WriteString(t.Parent.Guid);
+        }
+        if (t.Props?.Count > 0)
+        {
+            w.WriteString("props");
+            w.WriteHashList(t.Props.Select(HashProp).ToList());
+        }
+        if (t.Stock.HasValue)
+        {
+            w.WriteString("stock");
+            w.WriteIntNumber(t.Stock.Value);
+        }
+        if (t.Unit != null)
+        {
+            w.WriteString("unit");
+            w.WriteString(t.Unit);
+        }
+        if (t.Virtual.HasValue)
+        {
+            w.WriteString("virtual");
+            w.WriteBool(t.Virtual.Value);
+        }
+        return w.Digest();
+    }
+
+    public static string HashLayer(Layer l)
+    {
+        var w = new HashWriter();
+        w.WriteString("Layer");
+        if (l.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(l.Attributes.Select(HashAttribute).ToList());
+        }
+        if (l.Color != null)
+        {
+            w.WriteString("color");
+            w.WriteString(l.Color);
+        }
+        if (l.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(l.Description);
+        }
+        w.WriteString("guid");
+        w.WriteString(l.Guid);
+        if (l.IsHidden.HasValue)
+        {
+            w.WriteString("isHidden");
+            w.WriteBool(l.IsHidden.Value);
+        }
+        if (l.IsLocked.HasValue)
+        {
+            w.WriteString("isLocked");
+            w.WriteBool(l.IsLocked.Value);
+        }
+        w.WriteString("path");
+        w.WriteString(l.Path);
+        return w.Digest();
+    }
+
+    public static string HashStat(Stat s)
+    {
+        var w = new HashWriter();
+        w.WriteString("Stat");
+        w.WriteString("guid");
+        w.WriteString(s.Guid);
+        if (s.Max.HasValue)
+        {
+            w.WriteString("max");
+            w.WriteNumber(s.Max.Value);
+        }
+        if (s.MaxExcluded.HasValue)
+        {
+            w.WriteString("maxExcluded");
+            w.WriteBool(s.MaxExcluded.Value);
+        }
+        if (s.Min.HasValue)
+        {
+            w.WriteString("min");
+            w.WriteNumber(s.Min.Value);
+        }
+        if (s.MinExcluded.HasValue)
+        {
+            w.WriteString("minExcluded");
+            w.WriteBool(s.MinExcluded.Value);
+        }
+        w.WriteString("quality");
+        w.WriteString(s.Quality.Guid);
+        if (s.Unit != null)
+        {
+            w.WriteString("unit");
+            w.WriteString(s.Unit);
+        }
+        return w.Digest();
+    }
+
+    public static string HashGroup(Group g)
+    {
+        var w = new HashWriter();
+        w.WriteString("Group");
+        if (g.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(g.Attributes.Select(HashAttribute).ToList());
+        }
+        if (g.Color != null)
+        {
+            w.WriteString("color");
+            w.WriteString(g.Color);
+        }
+        if (g.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(g.Description);
+        }
+        w.WriteString("guid");
+        w.WriteString(g.Guid);
+        if (g.Name != null)
+        {
+            w.WriteString("name");
+            w.WriteString(g.Name);
+        }
+        w.WriteString("pieces");
+        w.WriteGuidList(g.Pieces?.Select(p => p.Guid).ToList() ?? new List<string>());
+        return w.Digest();
+    }
+
+    public static string HashSide(Side s)
+    {
+        var w = new HashWriter();
+        w.WriteString("Side");
+        if (s.Connector != null)
+        {
+            w.WriteString("connector");
+            w.WriteString(s.Connector.Guid);
+        }
+        if (s.DesignPiece != null)
+        {
+            w.WriteString("designPiece");
+            w.WriteString(s.DesignPiece.Guid);
+        }
+        w.WriteString("piece");
+        w.WriteString(s.Piece.Guid);
+        return w.Digest();
+    }
+
+    public static string HashConnection(Connection c)
+    {
+        var w = new HashWriter();
+        w.WriteString("Connection");
+        if (c.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(c.Attributes.Select(HashAttribute).ToList());
+        }
+        w.WriteString("connected");
+        w.WriteHash(HashSide(c.Connected));
+        w.WriteString("connecting");
+        w.WriteHash(HashSide(c.Connecting));
+        if (c.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(c.Description);
+        }
+        w.WriteString("gap");
+        w.WriteNumber(c.Gap);
+        w.WriteString("guid");
+        w.WriteString(c.Guid);
+        w.WriteString("rise");
+        w.WriteNumber(c.Rise);
+        w.WriteString("rotation");
+        w.WriteNumber(c.Rotation);
+        w.WriteString("shift");
+        w.WriteNumber(c.Shift);
+        w.WriteString("tilt");
+        w.WriteNumber(c.Tilt);
+        w.WriteString("turn");
+        w.WriteNumber(c.Turn);
+        w.WriteString("u");
+        w.WriteNumber(c.U ?? 0);
+        w.WriteString("v");
+        w.WriteNumber(c.V ?? 0);
+        return w.Digest();
+    }
+
+    public static string HashPiece(Piece p)
+    {
+        var w = new HashWriter();
+        w.WriteString("Piece");
+        if (p.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(p.Attributes.Select(HashAttribute).ToList());
+        }
+        if (p.Center != null)
+        {
+            w.WriteString("center");
+            w.WriteHash(HashCoord(p.Center));
+        }
+        if (p.Color != null)
+        {
+            w.WriteString("color");
+            w.WriteString(p.Color);
+        }
+        if (p.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(p.Description);
+        }
+        if (p.Design != null)
+        {
+            w.WriteString("design");
+            w.WriteString(p.Design.Guid);
+        }
+        w.WriteString("guid");
+        w.WriteString(p.Guid);
+        if (p.IsHidden.HasValue)
+        {
+            w.WriteString("isHidden");
+            w.WriteBool(p.IsHidden.Value);
+        }
+        if (p.IsLocked.HasValue)
+        {
+            w.WriteString("isLocked");
+            w.WriteBool(p.IsLocked.Value);
+        }
+        if (p.MirrorPlane != null)
+        {
+            w.WriteString("mirrorPlane");
+            w.WriteHash(HashPlane(p.MirrorPlane));
+        }
+        if (p.Name != null)
+        {
+            w.WriteString("name");
+            w.WriteString(p.Name);
+        }
+        if (p.Plane != null)
+        {
+            w.WriteString("plane");
+            w.WriteHash(HashPlane(p.Plane));
+        }
+        if (p.Props?.Count > 0)
+        {
+            w.WriteString("props");
+            w.WriteHashList(p.Props.Select(HashProp).ToList());
+        }
+        if (p.Scale.HasValue)
+        {
+            w.WriteString("scale");
+            w.WriteNumber(p.Scale.Value);
+        }
+        if (p.Type != null)
+        {
+            w.WriteString("type");
+            w.WriteString(p.Type.Guid);
+        }
+        return w.Digest();
+    }
+
+    public static string HashDesign(Design d)
+    {
+        var w = new HashWriter();
+        w.WriteString("Design");
+        if (d.ActiveLayer != null)
+        {
+            w.WriteString("activeLayer");
+            w.WriteString(d.ActiveLayer.Guid);
+        }
+        if (d.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(d.Attributes.Select(HashAttribute).ToList());
+        }
+        if (d.Authors?.Count > 0)
+        {
+            w.WriteString("authors");
+            w.WriteGuidList(d.Authors.Select(a => a.Guid).ToList());
+        }
+        if (d.CanMirror.HasValue)
+        {
+            w.WriteString("canMirror");
+            w.WriteBool(d.CanMirror.Value);
+        }
+        if (d.CanScale.HasValue)
+        {
+            w.WriteString("canScale");
+            w.WriteBool(d.CanScale.Value);
+        }
+        if (d.Concepts?.Count > 0)
+        {
+            w.WriteString("concepts");
+            w.WriteGuidList(d.Concepts.Select(c => c.Guid).ToList());
+        }
+        if (d.Connections?.Count > 0)
+        {
+            w.WriteString("connections");
+            w.WriteHashList(d.Connections.Select(HashConnection).ToList());
+        }
+        if (d.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(d.Description);
+        }
+        if (d.Folder != null)
+        {
+            w.WriteString("folder");
+            w.WriteString(d.Folder);
+        }
+        if (d.Groups?.Count > 0)
+        {
+            w.WriteString("groups");
+            w.WriteHashList(d.Groups.Select(HashGroup).ToList());
+        }
+        w.WriteString("guid");
+        w.WriteString(d.Guid);
+        if (d.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(d.Icon);
+        }
+        if (d.Image != null)
+        {
+            w.WriteString("image");
+            w.WriteString(d.Image);
+        }
+        if (d.IsAbstract.HasValue)
+        {
+            w.WriteString("isAbstract");
+            w.WriteBool(d.IsAbstract.Value);
+        }
+        if (d.Layers?.Count > 0)
+        {
+            w.WriteString("layers");
+            w.WriteHashList(d.Layers.Select(HashLayer).ToList());
+        }
+        if (d.Location != null)
+        {
+            w.WriteString("location");
+            w.WriteString(d.Location.Guid);
+        }
+        w.WriteString("name");
+        w.WriteString(d.Name);
+        if (d.Parent != null)
+        {
+            w.WriteString("parent");
+            w.WriteString(d.Parent.Guid);
+        }
+        if (d.Pieces?.Count > 0)
+        {
+            w.WriteString("pieces");
+            w.WriteHashList(d.Pieces.Select(HashPiece).ToList());
+        }
+        if (d.Props?.Count > 0)
+        {
+            w.WriteString("props");
+            w.WriteHashList(d.Props.Select(HashProp).ToList());
+        }
+        if (d.Stats?.Count > 0)
+        {
+            w.WriteString("stats");
+            w.WriteHashList(d.Stats.Select(HashStat).ToList());
+        }
+        if (d.Unit != null)
+        {
+            w.WriteString("unit");
+            w.WriteString(d.Unit);
+        }
+        return w.Digest();
+    }
+
+    public static string HashKit(Kit k)
+    {
+        var w = new HashWriter();
+        w.WriteString("Kit");
+        if (k.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(k.Attributes.Select(HashAttribute).ToList());
+        }
+        if (k.Authors?.Count > 0)
+        {
+            w.WriteString("authors");
+            w.WriteHashList(k.Authors.Select(HashAuthor).ToList());
+        }
+        if (k.Concepts?.Count > 0)
+        {
+            w.WriteString("concepts");
+            w.WriteHashList(k.Concepts.Select(HashConcept).ToList());
+        }
+        if (k.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(k.Description);
+        }
+        if (k.Designs?.Count > 0)
+        {
+            w.WriteString("designs");
+            w.WriteHashList(k.Designs.Select(HashDesign).ToList());
+        }
+        if (k.Files?.Count > 0)
+        {
+            w.WriteString("files");
+            w.WriteHashList(k.Files.Select(HashFile).ToList());
+        }
+        if (k.Folders?.Count > 0)
+        {
+            w.WriteString("folders");
+            w.WriteHashList(k.Folders.Select(HashFolder).ToList());
+        }
+        w.WriteString("guid");
+        w.WriteString(k.Guid);
+        if (k.Homepage != null)
+        {
+            w.WriteString("homepage");
+            w.WriteString(k.Homepage);
+        }
+        if (k.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(k.Icon);
+        }
+        if (k.Image != null)
+        {
+            w.WriteString("image");
+            w.WriteString(k.Image);
+        }
+        if (k.License != null)
+        {
+            w.WriteString("license");
+            w.WriteString(k.License);
+        }
+        w.WriteString("name");
+        w.WriteString(k.Name);
+        if (k.Ports?.Count > 0)
+        {
+            w.WriteString("ports");
+            w.WriteHashList(k.Ports.Select(HashPort).ToList());
+        }
+        if (k.Preview != null)
+        {
+            w.WriteString("preview");
+            w.WriteString(k.Preview);
+        }
+        if (k.Qualities?.Count > 0)
+        {
+            w.WriteString("qualities");
+            w.WriteHashList(k.Qualities.Select(HashQuality).ToList());
+        }
+        if (k.Remote != null)
+        {
+            w.WriteString("remote");
+            w.WriteString(k.Remote);
+        }
+        if (k.Tags?.Count > 0)
+        {
+            w.WriteString("tags");
+            w.WriteHashList(k.Tags.Select(HashTag).ToList());
+        }
+        if (k.Types?.Count > 0)
+        {
+            w.WriteString("types");
+            w.WriteHashList(k.Types.Select(HashType).ToList());
+        }
+        if (k.Version != null && k.Version != "")
+        {
+            w.WriteString("version");
+            w.WriteString(k.Version);
+        }
+        return w.Digest();
+    }
+
+    // #region 🔖Hash Diffs
+    // Deterministic SHA-256 Merkle hash functions for all diff types.
+    // Fields are ordered alphabetically by JSON field name. Guid is excluded from
+    // diff hashes. Null markers (field name + WriteBool(false)) indicate explicit
+    // null. Absent/unset fields are skipped entirely.
+
+    private static void WriteDiffNullableString(HashWriter w, string key, string? value, bool shouldSerialize)
+    {
+        if (value != null) { w.WriteString(key); w.WriteString(value); }
+        else if (shouldSerialize) { w.WriteString(key); w.WriteBool(false); }
+    }
+
+    private static void WriteDiffOptString(HashWriter w, string key, string? value, bool shouldSerialize)
+    {
+        if (shouldSerialize && value != null) { w.WriteString(key); w.WriteString(value); }
+    }
+
+    private static void WriteDiffOptNumber(HashWriter w, string key, double? value, bool shouldSerialize)
+    {
+        if (shouldSerialize && value.HasValue) { w.WriteString(key); w.WriteNumber(value.Value); }
+    }
+
+    private static void WriteDiffOptIntNumber(HashWriter w, string key, int? value, bool shouldSerialize)
+    {
+        if (shouldSerialize && value.HasValue) { w.WriteString(key); w.WriteIntNumber(value.Value); }
+    }
+
+    private static void WriteDiffOptBool(HashWriter w, string key, bool? value, bool shouldSerialize)
+    {
+        if (shouldSerialize && value.HasValue) { w.WriteString(key); w.WriteBool(value.Value); }
+    }
+
+    private static string HashCollectionDiffGeneric<TEntity, TDiff>(
+        string tag, string updateTag, string entityKeyName,
+        Func<TEntity, string> hashEntityFn,
+        Func<TDiff, string> hashDiffFn,
+        List<string> removedGuids,
+        List<(string key, TDiff diff)> updates,
+        List<TEntity> added)
+    {
+        var w = new HashWriter();
+        w.WriteString(tag);
+        if (added?.Count > 0)
+        {
+            w.WriteString("added");
+            w.WriteHashList(added.Select(hashEntityFn).ToList());
+        }
+        if (removedGuids?.Count > 0)
+        {
+            w.WriteString("removed");
+            w.WriteGuidList(removedGuids);
+        }
+        if (updates?.Count > 0)
+        {
+            w.WriteString("updated");
+            var keys = new List<string> { entityKeyName, "diff" };
+            keys.Sort(StringComparer.Ordinal);
+            var updateHashes = updates.Select(u =>
+            {
+                var uw = new HashWriter();
+                uw.WriteString(updateTag);
+                foreach (var k in keys)
+                {
+                    if (k == "diff")
+                    {
+                        uw.WriteString("diff");
+                        uw.WriteHash(hashDiffFn(u.diff));
+                    }
+                    else
+                    {
+                        uw.WriteString(k);
+                        uw.WriteString(u.key);
+                    }
+                }
+                return uw.Digest();
+            }).ToList();
+            w.WriteHashList(updateHashes);
+        }
+        return w.Digest();
+    }
+
+    // #region 🔖Hash Diff Value Types
+
+    public static string HashCoordDiff(Coord c)
+    {
+        var w = new HashWriter();
+        w.WriteString("CoordDiff");
+        w.WriteString("u");
+        w.WriteNumber(c.U);
+        w.WriteString("v");
+        w.WriteNumber(c.V);
+        return w.Digest();
+    }
+
+    public static string HashPointDiff(Point p)
+    {
+        var w = new HashWriter();
+        w.WriteString("PointDiff");
+        w.WriteString("x");
+        w.WriteNumber(p.X);
+        w.WriteString("y");
+        w.WriteNumber(p.Y);
+        w.WriteString("z");
+        w.WriteNumber(p.Z);
+        return w.Digest();
+    }
+
+    public static string HashVectorDiff(Vector v)
+    {
+        var w = new HashWriter();
+        w.WriteString("VectorDiff");
+        w.WriteString("x");
+        w.WriteNumber(v.X);
+        w.WriteString("y");
+        w.WriteNumber(v.Y);
+        w.WriteString("z");
+        w.WriteNumber(v.Z);
+        return w.Digest();
+    }
+
+    public static string HashPlaneDiff(Plane p)
+    {
+        var w = new HashWriter();
+        w.WriteString("PlaneDiff");
+        w.WriteString("origin");
+        w.WriteHash(HashPointDiff(p.Origin));
+        w.WriteString("xAxis");
+        w.WriteHash(HashVectorDiff(p.XAxis));
+        w.WriteString("yAxis");
+        w.WriteHash(HashVectorDiff(p.YAxis));
+        return w.Digest();
+    }
+
+    // #endregion 🔖Hash Diff Value Types
+
+    // #region 🔖Hash Diff Entities
+
+    public static string HashAttributeDiff(AttributeDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("AttributeDiff");
+        WriteDiffOptString(w, "definition", d.Definition, d.ShouldSerializeDefinition());
+        WriteDiffOptString(w, "key", d.Key, d.ShouldSerializeKey());
+        WriteDiffOptString(w, "value", d.Value, d.ShouldSerializeValue());
+        return w.Digest();
+    }
+
+    public static string HashAttributesDiff(AttributesDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "AttributesDiff", "AttributeDiffUpdate", "attribute",
+            (Attribute a) => HashAttribute(a),
+            (AttributeDiff ad) => HashAttributeDiff(ad),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Attribute.Guid, u.Diff!)).ToList() ?? new List<(string, AttributeDiff)>(),
+            d.Added ?? new List<Attribute>());
+    }
+
+    public static string HashAuthorDiff(AuthorDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("AuthorDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(d.Attributes.Select(HashAttribute).ToList());
+        }
+        WriteDiffOptString(w, "email", d.Email, d.ShouldSerializeEmail());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        return w.Digest();
+    }
+
+    public static string HashAuthorsDiff(AuthorsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "AuthorsDiff", "AuthorDiffUpdate", "author",
+            (Author a) => HashAuthor(a),
+            (AuthorDiff ad) => HashAuthorDiff(ad),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Author.Guid, u.Diff!)).ToList() ?? new List<(string, AuthorDiff)>(),
+            d.Added ?? new List<Author>());
+    }
+
+    public static string HashFileDiff(FileDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("FileDiff");
+        WriteDiffOptString(w, "blob", d.Blob, d.ShouldSerializeBlob());
+        if (d.ShouldSerializeFolder() && d.Folder != null)
+        {
+            w.WriteString("folder");
+            w.WriteString(d.Folder.Guid);
+        }
+        WriteDiffOptString(w, "hash", d.Hash, d.ShouldSerializeHash());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        WriteDiffOptString(w, "remote", d.Remote, d.ShouldSerializeRemote());
+        WriteDiffOptIntNumber(w, "size", d.Size, d.ShouldSerializeSize());
+        return w.Digest();
+    }
+
+    public static string HashFilesDiff(FilesDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "FilesDiff", "FileDiffUpdate", "file",
+            (File f) => HashFile(f),
+            (FileDiff fd) => HashFileDiff(fd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.File.Guid, u.Diff!)).ToList() ?? new List<(string, FileDiff)>(),
+            d.Added ?? new List<File>());
+    }
+
+    public static string HashFolderDiff(FolderDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("FolderDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(d.Attributes.Select(HashAttribute).ToList());
+        }
+        WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        if (d.ShouldSerializeParent() && d.Parent != null)
+        {
+            w.WriteString("parent");
+            w.WriteString(d.Parent.Guid);
+        }
+        return w.Digest();
+    }
+
+    public static string HashFoldersDiff(FoldersDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "FoldersDiff", "FolderDiffUpdate", "folder",
+            (Folder f) => HashFolder(f),
+            (FolderDiff fd) => HashFolderDiff(fd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Folder.Guid, u.Diff!)).ToList() ?? new List<(string, FolderDiff)>(),
+            d.Added ?? new List<Folder>());
+    }
+
+    public static string HashBenchmarkDiff(BenchmarkDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("BenchmarkDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        WriteDiffOptString(w, "icon", d.Icon, d.ShouldSerializeIcon());
+        WriteDiffOptNumber(w, "max", d.Max, d.ShouldSerializeMax());
+        WriteDiffOptBool(w, "maxExcluded", d.MaxExcluded, d.ShouldSerializeMaxExcluded());
+        WriteDiffOptNumber(w, "min", d.Min, d.ShouldSerializeMin());
+        WriteDiffOptBool(w, "minExcluded", d.MinExcluded, d.ShouldSerializeMinExcluded());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        return w.Digest();
+    }
+
+    public static string HashQualityDiff(QualityDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("QualityDiff");
+        if (d.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(d.Attributes.Select(HashAttribute).ToList());
+        }
+        if (d.Benchmarks?.Count > 0)
+        {
+            w.WriteString("benchmarks");
+            w.WriteHashList(d.Benchmarks.Select(HashBenchmark).ToList());
+        }
+        if (d.Scalable.HasValue)
+        {
+            w.WriteString("canScale");
+            w.WriteBool(d.Scalable.Value);
+        }
+        if (!string.IsNullOrEmpty(d.Imperial))
+        {
+            w.WriteString("defaultImperialUnit");
+            w.WriteString(d.Imperial);
+        }
+        if (!string.IsNullOrEmpty(d.SI))
+        {
+            w.WriteString("defaultSiUnit");
+            w.WriteString(d.SI);
+        }
+        if (d.Default.HasValue)
+        {
+            w.WriteString("defaultValue");
+            w.WriteNumber(d.Default.Value);
+        }
+        if (d.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(d.Description);
+        }
+        if (!string.IsNullOrEmpty(d.Formula))
+        {
+            w.WriteString("formula");
+            w.WriteString(d.Formula);
+        }
+        if (d.MaxExcluded.HasValue)
+        {
+            w.WriteString("isMaxExcluded");
+            w.WriteBool(d.MaxExcluded.Value);
+        }
+        if (d.MinExcluded.HasValue)
+        {
+            w.WriteString("isMinExcluded");
+            w.WriteBool(d.MinExcluded.Value);
+        }
+        if (!string.IsNullOrEmpty(d.Key))
+        {
+            w.WriteString("key");
+            w.WriteString(d.Key);
+        }
+        if (d.Kind != QualityKind.General)
+        {
+            w.WriteString("kind");
+            w.WriteIntNumber((int)d.Kind);
+        }
+        if (d.Max.HasValue)
+        {
+            w.WriteString("max");
+            w.WriteNumber(d.Max.Value);
+        }
+        if (d.Min.HasValue)
+        {
+            w.WriteString("min");
+            w.WriteNumber(d.Min.Value);
+        }
+        if (!string.IsNullOrEmpty(d.Name))
+        {
+            w.WriteString("name");
+            w.WriteString(d.Name);
+        }
+        if (!string.IsNullOrEmpty(d.Uri))
+        {
+            w.WriteString("uri");
+            w.WriteString(d.Uri);
+        }
+        return w.Digest();
+    }
+
+    public static string HashTagDiff(TagDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("TagDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        WriteDiffNullableString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffNullableString(w, "icon", d.Icon, d.ShouldSerializeIcon());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        return w.Digest();
+    }
+
+    public static string HashTagsDiff(TagsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "TagsDiff", "TagDiffUpdate", "tag",
+            (Tag t) => HashTag(t),
+            (TagDiff td) => HashTagDiff(td),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Tag.Guid, u.Diff!)).ToList() ?? new List<(string, TagDiff)>(),
+            d.Added ?? new List<Tag>());
+    }
+
+    public static string HashConceptDiff(ConceptDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("ConceptDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        WriteDiffNullableString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffNullableString(w, "icon", d.Icon, d.ShouldSerializeIcon());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        return w.Digest();
+    }
+
+    public static string HashConceptsDiff(ConceptsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "ConceptsDiff", "ConceptDiffUpdate", "concept",
+            (Concept c) => HashConcept(c),
+            (ConceptDiff cd) => HashConceptDiff(cd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Concept.Guid, u.Diff!)).ToList() ?? new List<(string, ConceptDiff)>(),
+            d.Added ?? new List<Concept>());
+    }
+
+    public static string HashPortDiff(PortDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("PortDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes?.Count > 0)
+        {
+            w.WriteString("attributes");
+            w.WriteHashList(d.Attributes.Select(HashAttribute).ToList());
+        }
+        if (d.ShouldSerializeCompatiblePorts() && d.CompatiblePorts?.Count > 0)
+        {
+            w.WriteString("compatiblePorts");
+            w.WriteGuidList(d.CompatiblePorts.Select(cp => cp.Guid).ToList());
+        }
+        WriteDiffNullableString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffNullableString(w, "icon", d.Icon, d.ShouldSerializeIcon());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        return w.Digest();
+    }
+
+    public static string HashPortsDiff(PortsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "PortsDiff", "PortDiffUpdate", "port",
+            (Port p) => HashPort(p),
+            (PortDiff pd) => HashPortDiff(pd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Port.Guid, u.Diff!)).ToList() ?? new List<(string, PortDiff)>(),
+            d.Added ?? new List<Port>());
+    }
+
+    public static string HashPropDiff(PropDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("PropDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        if (d.ShouldSerializeQuality() && d.Quality != null)
+        {
+            w.WriteString("quality");
+            w.WriteString(d.Quality.Guid);
+        }
+        WriteDiffOptString(w, "unit", d.Unit, d.ShouldSerializeUnit());
+        WriteDiffOptString(w, "value", d.Value, d.ShouldSerializeValue());
+        return w.Digest();
+    }
+
+    public static string HashModelDiff(ModelDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("ModelDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
+        if (d.ShouldSerializeFile() && d.File != null)
+        {
+            w.WriteString("file");
+            w.WriteString(d.File.Guid);
+        }
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        if (d.ShouldSerializeTags() && d.Tags?.Count > 0)
+        {
+            w.WriteString("tags");
+            w.WriteGuidList(d.Tags.Select(t => t.Guid).ToList());
+        }
+        return w.Digest();
+    }
+
+    public static string HashModelsDiff(ModelsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "ModelsDiff", "ModelDiffUpdate", "model",
+            (Model m) => HashModel(m),
+            (ModelDiff md) => HashModelDiff(md),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Model.Guid, u.Diff!)).ToList() ?? new List<(string, ModelDiff)>(),
+            d.Added ?? new List<Model>());
+    }
+
+    public static string HashConnectorDiff(ConnectorDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("ConnectorDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
+        if (d.ShouldSerializeDirection() && d.Direction != null)
+        {
+            w.WriteString("direction");
+            w.WriteHash(HashVectorDiff(d.Direction));
+        }
+        WriteDiffOptBool(w, "mandatory", d.Mandatory, d.ShouldSerializeMandatory());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        if (d.ShouldSerializePoint() && d.Point != null)
+        {
+            w.WriteString("point");
+            w.WriteHash(HashPointDiff(d.Point));
+        }
+        if (d.ShouldSerializePort() && d.Port != null)
+        {
+            w.WriteString("port");
+            w.WriteString(d.Port.Guid);
+        }
+        if (d.ShouldSerializeProps() && d.Props?.Count > 0)
+        {
+            w.WriteString("props");
+            w.WriteHashList(d.Props.Select(HashProp).ToList());
+        }
+        WriteDiffOptNumber(w, "t", d.T, d.ShouldSerializeT());
+        return w.Digest();
+    }
+
+    public static string HashConnectorsDiff(ConnectorsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "ConnectorsDiff", "ConnectorDiffUpdate", "connector",
+            (Connector c) => HashConnector(c),
+            (ConnectorDiff cd) => HashConnectorDiff(cd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Connector.Guid, u.Diff!)).ToList() ?? new List<(string, ConnectorDiff)>(),
+            d.Added ?? new List<Connector>());
+    }
+
+    public static string HashTypeDiff(TypeDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("TypeDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        if (d.ShouldSerializeAuthors() && d.Authors?.Count > 0)
+        {
+            w.WriteString("authors");
+            w.WriteGuidList(d.Authors.Select(a => a.Guid).ToList());
+        }
+        else if (d.ShouldSerializeAuthors())
+        {
+            w.WriteString("authors");
+            w.WriteBool(false);
+        }
+        if (d.ShouldSerializeConcepts() && d.Concepts?.Count > 0)
+        {
+            w.WriteString("concepts");
+            w.WriteGuidList(d.Concepts.Select(c => c.Guid).ToList());
+        }
+        else if (d.ShouldSerializeConcepts())
+        {
+            w.WriteString("concepts");
+            w.WriteBool(false);
+        }
+        if (d.ShouldSerializeConnectors() && d.Connectors != null)
+        {
+            w.WriteString("connectors");
+            w.WriteHash(HashConnectorsDiff(d.Connectors));
+        }
+        WriteDiffNullableString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffNullableString(w, "folder", d.Folder, d.ShouldSerializeFolder());
+        WriteDiffNullableString(w, "icon", d.Icon, d.ShouldSerializeIcon());
+        WriteDiffNullableString(w, "image", d.Image, d.ShouldSerializeImage());
+        WriteDiffOptBool(w, "isAbstract", d.IsAbstract, d.ShouldSerializeIsAbstract());
+        if (d.ShouldSerializeLocation() && d.Location != null)
+        {
+            w.WriteString("location");
+            w.WriteString(d.Location.Guid);
+        }
+        else if (d.ShouldSerializeLocation())
+        {
+            w.WriteString("location");
+            w.WriteBool(false);
+        }
+        if (d.ShouldSerializeModels() && d.Models != null)
+        {
+            w.WriteString("models");
+            w.WriteHash(HashModelsDiff(d.Models));
+        }
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        if (d.ShouldSerializeParent() && d.Parent != null)
+        {
+            w.WriteString("parent");
+            w.WriteString(d.Parent.Guid);
+        }
+        else if (d.ShouldSerializeParent())
+        {
+            w.WriteString("parent");
+            w.WriteBool(false);
+        }
+        WriteDiffOptIntNumber(w, "stock", d.Stock, d.ShouldSerializeStock());
+        WriteDiffOptString(w, "unit", d.Unit != "" ? d.Unit : null, d.ShouldSerializeUnit());
+        WriteDiffOptBool(w, "virtual", d.Virtual, d.ShouldSerializeVirtual());
+        return w.Digest();
+    }
+
+    public static string HashTypesDiff(TypesDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "TypesDiff", "TypeDiffUpdate", "type",
+            (Type t) => HashType(t),
+            (TypeDiff td) => HashTypeDiff(td),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Type.Guid, u.Diff!)).ToList() ?? new List<(string, TypeDiff)>(),
+            d.Added ?? new List<Type>());
+    }
+
+    public static string HashSideDiff(SideDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("SideDiff");
+        if (d.ShouldSerializeConnector() && d.Connector != null)
+        {
+            w.WriteString("connector");
+            w.WriteString(d.Connector.Guid);
+        }
+        if (d.ShouldSerializeDesignPiece() && d.DesignPiece != null)
+        {
+            w.WriteString("designPiece");
+            w.WriteString(d.DesignPiece.Guid);
+        }
+        if (d.ShouldSerializePiece() && d.Piece != null)
+        {
+            w.WriteString("piece");
+            w.WriteString(d.Piece.Guid);
+        }
+        return w.Digest();
+    }
+
+    public static string HashLayerDiff(LayerDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("LayerDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        WriteDiffOptString(w, "color", d.Color, d.ShouldSerializeColor());
+        WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffOptBool(w, "isHidden", d.IsHidden, d.ShouldSerializeIsHidden());
+        WriteDiffOptBool(w, "isLocked", d.IsLocked, d.ShouldSerializeIsLocked());
+        WriteDiffOptString(w, "path", d.Path, d.ShouldSerializePath());
+        return w.Digest();
+    }
+
+    public static string HashGroupDiff(GroupDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("GroupDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        WriteDiffOptString(w, "color", d.Color, d.ShouldSerializeColor());
+        WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        if (d.ShouldSerializePieces() && d.Pieces?.Count > 0)
+        {
+            w.WriteString("pieces");
+            w.WriteGuidList(d.Pieces.Select(p => p.Guid).ToList());
+        }
+        return w.Digest();
+    }
+
+    public static string HashStatDiff(StatDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("StatDiff");
+        WriteDiffOptNumber(w, "max", d.Max, d.ShouldSerializeMax());
+        WriteDiffOptBool(w, "maxExcluded", d.MaxExcluded, d.ShouldSerializeMaxExcluded());
+        WriteDiffOptNumber(w, "min", d.Min, d.ShouldSerializeMin());
+        WriteDiffOptBool(w, "minExcluded", d.MinExcluded, d.ShouldSerializeMinExcluded());
+        if (d.ShouldSerializeQuality() && d.Quality != null)
+        {
+            w.WriteString("quality");
+            w.WriteString(d.Quality.Guid);
+        }
+        WriteDiffOptString(w, "unit", d.Unit, d.ShouldSerializeUnit());
+        return w.Digest();
+    }
+
+    public static string HashConnectionDiff(ConnectionDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("ConnectionDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        if (d.ShouldSerializeConnected() && d.Connected != null)
+        {
+            w.WriteString("connected");
+            w.WriteHash(HashSideDiff(d.Connected));
+        }
+        if (d.ShouldSerializeConnecting() && d.Connecting != null)
+        {
+            w.WriteString("connecting");
+            w.WriteHash(HashSideDiff(d.Connecting));
+        }
+        WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffOptNumber(w, "gap", d.Gap, d.ShouldSerializeGap());
+        WriteDiffOptNumber(w, "rise", d.Rise, d.ShouldSerializeRise());
+        WriteDiffOptNumber(w, "rotation", d.Rotation, d.ShouldSerializeRotation());
+        WriteDiffOptNumber(w, "shift", d.Shift, d.ShouldSerializeShift());
+        WriteDiffOptNumber(w, "tilt", d.Tilt, d.ShouldSerializeTilt());
+        WriteDiffOptNumber(w, "turn", d.Turn, d.ShouldSerializeTurn());
+        WriteDiffOptNumber(w, "u", d.U, d.ShouldSerializeU());
+        WriteDiffOptNumber(w, "v", d.V, d.ShouldSerializeV());
+        return w.Digest();
+    }
+
+    public static string HashConnectionsDiff(ConnectionsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "ConnectionsDiff", "ConnectionDiffUpdate", "connection",
+            (Connection c) => HashConnection(c),
+            (ConnectionDiff cd) => HashConnectionDiff(cd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Connection.Guid, u.Diff!)).ToList() ?? new List<(string, ConnectionDiff)>(),
+            d.Added ?? new List<Connection>());
+    }
+
+    public static string HashPieceDiff(PieceDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("PieceDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        if (d.ShouldSerializeCenter() && d.Center != null)
+        {
+            w.WriteString("center");
+            w.WriteHash(HashCoordDiff(d.Center));
+        }
+        WriteDiffOptString(w, "color", d.Color, d.ShouldSerializeColor());
+        WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
+        if (d.ShouldSerializeDesign() && d.Design != null)
+        {
+            w.WriteString("design");
+            w.WriteString(d.Design.Guid);
+        }
+        WriteDiffOptBool(w, "isHidden", d.IsHidden, d.ShouldSerializeIsHidden());
+        WriteDiffOptBool(w, "isLocked", d.IsLocked, d.ShouldSerializeIsLocked());
+        if (d.ShouldSerializeMirrorPlane() && d.MirrorPlane != null)
+        {
+            w.WriteString("mirrorPlane");
+            w.WriteHash(HashPlaneDiff(d.MirrorPlane));
+        }
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        if (d.ShouldSerializePlane() && d.Plane != null)
+        {
+            w.WriteString("plane");
+            w.WriteHash(HashPlaneDiff(d.Plane));
+        }
+        if (d.ShouldSerializeProps() && d.Props?.Count > 0)
+        {
+            w.WriteString("props");
+            w.WriteHashList(d.Props.Select(HashProp).ToList());
+        }
+        WriteDiffOptNumber(w, "scale", d.Scale, d.ShouldSerializeScale());
+        if (d.ShouldSerializeType() && d.Type != null)
+        {
+            w.WriteString("type");
+            w.WriteString(d.Type.Guid);
+        }
+        return w.Digest();
+    }
+
+    public static string HashPiecesDiff(PiecesDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "PiecesDiff", "PieceDiffUpdate", "piece",
+            (Piece p) => HashPiece(p),
+            (PieceDiff pd) => HashPieceDiff(pd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Piece.Guid, u.Diff!)).ToList() ?? new List<(string, PieceDiff)>(),
+            d.Added ?? new List<Piece>());
+    }
+
+    public static string HashDesignDiff(DesignDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("DesignDiff");
+        if (d.ShouldSerializeActiveLayer() && d.ActiveLayer != null)
+        {
+            w.WriteString("activeLayer");
+            w.WriteString(d.ActiveLayer.Guid);
+        }
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        if (d.ShouldSerializeAuthors() && d.Authors?.Count > 0)
+        {
+            w.WriteString("authors");
+            w.WriteGuidList(d.Authors.Select(a => a.Guid).ToList());
+        }
+        WriteDiffOptBool(w, "canMirror", d.CanMirror, d.ShouldSerializeCanMirror());
+        WriteDiffOptBool(w, "canScale", d.CanScale, d.ShouldSerializeCanScale());
+        if (d.ShouldSerializeConcepts() && d.Concepts?.Count > 0)
+        {
+            w.WriteString("concepts");
+            w.WriteGuidList(d.Concepts.Select(c => c.Guid).ToList());
+        }
+        if (d.ShouldSerializeConnections() && d.Connections != null)
+        {
+            w.WriteString("connections");
+            w.WriteHash(HashConnectionsDiff(d.Connections));
+        }
+        WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
+        WriteDiffOptString(w, "folder", d.Folder, d.ShouldSerializeFolder());
+        if (d.ShouldSerializeGroups() && d.Groups?.Count > 0)
+        {
+            w.WriteString("groups");
+            w.WriteHashList(d.Groups.Select(HashGroup).ToList());
+        }
+        WriteDiffOptString(w, "icon", d.Icon, d.ShouldSerializeIcon());
+        WriteDiffOptString(w, "image", d.Image, d.ShouldSerializeImage());
+        WriteDiffOptBool(w, "isAbstract", d.IsAbstract, d.ShouldSerializeIsAbstract());
+        if (d.ShouldSerializeLayers() && d.Layers?.Count > 0)
+        {
+            w.WriteString("layers");
+            w.WriteHashList(d.Layers.Select(HashLayer).ToList());
+        }
+        if (d.ShouldSerializeLocation() && d.Location != null)
+        {
+            w.WriteString("location");
+            w.WriteString(d.Location.Guid);
+        }
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        if (d.ShouldSerializeParent() && d.Parent != null)
+        {
+            w.WriteString("parent");
+            w.WriteString(d.Parent.Guid);
+        }
+        if (d.ShouldSerializePieces() && d.Pieces != null)
+        {
+            w.WriteString("pieces");
+            w.WriteHash(HashPiecesDiff(d.Pieces));
+        }
+        if (d.ShouldSerializeProps() && d.Props?.Count > 0)
+        {
+            w.WriteString("props");
+            w.WriteHashList(d.Props.Select(HashProp).ToList());
+        }
+        if (d.ShouldSerializeStats() && d.Stats?.Count > 0)
+        {
+            w.WriteString("stats");
+            w.WriteHashList(d.Stats.Select(HashStat).ToList());
+        }
+        WriteDiffOptString(w, "unit", d.Unit, d.ShouldSerializeUnit());
+        return w.Digest();
+    }
+
+    public static string HashDesignsDiff(DesignsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "DesignsDiff", "DesignDiffUpdate", "design",
+            (Design ds) => HashDesign(ds),
+            (DesignDiff dd) => HashDesignDiff(dd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Design.Guid, u.Diff!)).ToList() ?? new List<(string, DesignDiff)>(),
+            d.Added ?? new List<Design>());
+    }
+
+    public static string HashKitDiff(KitDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("KitDiff");
+        if (d.ShouldSerializeAttributes() && d.Attributes != null)
+        {
+            w.WriteString("attributes");
+            w.WriteHash(HashAttributesDiff(d.Attributes));
+        }
+        if (d.ShouldSerializeAuthors() && d.Authors != null)
+        {
+            w.WriteString("authors");
+            w.WriteHash(HashAuthorsDiff(d.Authors));
+        }
+        if (d.ShouldSerializeConcepts() && d.Concepts != null)
+        {
+            w.WriteString("concepts");
+            w.WriteHash(HashConceptsDiff(d.Concepts));
+        }
+        WriteDiffNullableString(w, "description", d.Description, d.ShouldSerializeDescription());
+        if (d.ShouldSerializeDesigns() && d.Designs != null)
+        {
+            w.WriteString("designs");
+            w.WriteHash(HashDesignsDiff(d.Designs));
+        }
+        if (d.ShouldSerializeFiles() && d.Files != null)
+        {
+            w.WriteString("files");
+            w.WriteHash(HashFilesDiff(d.Files));
+        }
+        if (d.ShouldSerializeFolders() && d.Folders != null)
+        {
+            w.WriteString("folders");
+            w.WriteHash(HashFoldersDiff(d.Folders));
+        }
+        WriteDiffNullableString(w, "homepage", d.Homepage, d.ShouldSerializeHomepage());
+        WriteDiffNullableString(w, "icon", d.Icon, d.ShouldSerializeIcon());
+        WriteDiffNullableString(w, "image", d.Image, d.ShouldSerializeImage());
+        WriteDiffNullableString(w, "license", d.License, d.ShouldSerializeLicense());
+        WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
+        if (d.ShouldSerializePorts() && d.Ports != null)
+        {
+            w.WriteString("ports");
+            w.WriteHash(HashPortsDiff(d.Ports));
+        }
+        WriteDiffNullableString(w, "preview", d.Preview, d.ShouldSerializePreview());
+        WriteDiffNullableString(w, "remote", d.Remote, d.ShouldSerializeRemote());
+        if (d.ShouldSerializeTags() && d.Tags != null)
+        {
+            w.WriteString("tags");
+            w.WriteHash(HashTagsDiff(d.Tags));
+        }
+        if (d.ShouldSerializeTypes() && d.Types != null)
+        {
+            w.WriteString("types");
+            w.WriteHash(HashTypesDiff(d.Types));
+        }
+        WriteDiffOptString(w, "version", d.Version, d.ShouldSerializeVersion());
+        return w.Digest();
+    }
+
+    public static string HashKitsDiff(KitsDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "KitsDiff", "KitDiffUpdate", "kit",
+            (Kit k) => HashKit(k),
+            (KitDiff kd) => HashKitDiff(kd),
+            d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Kit.Guid, u.Diff!)).ToList() ?? new List<(string, KitDiff)>(),
+            d.Added ?? new List<Kit>());
+    }
+
+    // #endregion 🔖Hash Diff Entities
+
+    // #endregion 🔖Hash Diffs
+}
+
+#endregion 🔖Hash
+
 #region 🔖MetaShallow
 // [👤semio📚net🛅semio💻semio🔖entitying🔖metashallow](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/MetaShallow)
 // Meta classes strip List<> and heavy blob properties. Shallow classes replace List<> properties with Meta item lists.
@@ -8148,7 +10462,7 @@ public class PropMeta
     public string Guid { get; set; } = "";
     public QualityId Quality { get; set; } = new();
     public string Value { get; set; } = "";
-    public string Unit { get; set; } = "";
+    public string? Unit { get; set; }
 }
 
 public class TagMeta
@@ -8206,18 +10520,18 @@ public class QualityMeta
     public string Key { get; set; } = "";
     public string Name { get; set; } = "";
     public string? Description { get; set; }
-    public string Uri { get; set; } = "";
+    public string? Uri { get; set; }
     public string? Folder { get; set; }
-    public bool Scalable { get; set; } = false;
+    public bool? Scalable { get; set; }
     public QualityKind Kind { get; set; } = QualityKind.General;
-    public string SI { get; set; } = "";
-    public string Imperial { get; set; } = "";
-    public float Min { get; set; } = 0;
-    public bool MinExcluded { get; set; } = true;
-    public float Max { get; set; } = 0;
-    public bool MaxExcluded { get; set; } = true;
-    public float Default { get; set; } = 0;
-    public string Formula { get; set; } = "";
+    public string? SI { get; set; }
+    public string? Imperial { get; set; }
+    public double? Min { get; set; }
+    public bool? MinExcluded { get; set; }
+    public double? Max { get; set; }
+    public bool? MaxExcluded { get; set; }
+    public double? Default { get; set; }
+    public string? Formula { get; set; }
     public string? Icon { get; set; }
     public string? Image { get; set; }
     public string? Unit { get; set; }
@@ -8242,13 +10556,13 @@ public class ModelMeta
 public class ConnectorMeta
 {
     public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public float T { get; set; } = 0;
+    public string? Name { get; set; }
+    public double T { get; set; } = 0;
     public Point? Point { get; set; }
     public Vector? Direction { get; set; }
     public string? Description { get; set; }
     public PortId? Port { get; set; }
-    public bool Mandatory { get; set; } = false;
+    public bool? Mandatory { get; set; }
 }
 
 public class LayerMeta
@@ -8270,7 +10584,7 @@ public class PieceMeta
     public DesignId? Design { get; set; }
     public Plane? Plane { get; set; }
     public Coord? Center { get; set; }
-    public float? Scale { get; set; }
+    public double? Scale { get; set; }
     public Plane? MirrorPlane { get; set; }
     public bool? IsHidden { get; set; }
     public bool? IsLocked { get; set; }
@@ -8291,14 +10605,14 @@ public class ConnectionMeta
     public Side Connected { get; set; } = new();
     public Side Connecting { get; set; } = new();
     public string? Description { get; set; }
-    public float Gap { get; set; } = 0;
-    public float Shift { get; set; } = 0;
-    public float Rise { get; set; } = 0;
-    public float Rotation { get; set; } = 0;
-    public float Turn { get; set; } = 0;
-    public float Tilt { get; set; } = 0;
-    public float? U { get; set; }
-    public float? V { get; set; }
+    public double Gap { get; set; } = 0;
+    public double Shift { get; set; } = 0;
+    public double Rise { get; set; } = 0;
+    public double Rotation { get; set; } = 0;
+    public double Turn { get; set; } = 0;
+    public double Tilt { get; set; } = 0;
+    public double? U { get; set; }
+    public double? V { get; set; }
 }
 
 public class StatMeta
@@ -8306,9 +10620,9 @@ public class StatMeta
     public string Guid { get; set; } = "";
     public QualityId Quality { get; set; } = new();
     public string? Unit { get; set; }
-    public float? Min { get; set; }
+    public double? Min { get; set; }
     public bool? MinExcluded { get; set; }
-    public float? Max { get; set; }
+    public double? Max { get; set; }
     public bool? MaxExcluded { get; set; }
 }
 
@@ -8326,11 +10640,11 @@ public class TypeMeta
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public string? Image { get; set; }
-    public int Stock { get; set; } = 2147483647;
-    public bool Virtual { get; set; } = false;
-    public string Uri { get; set; } = "";
+    public int? Stock { get; set; }
+    public bool? Virtual { get; set; }
+    public string? Uri { get; set; }
     public Location? Location { get; set; }
-    public string Unit { get; set; } = "";
+    public string? Unit { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -8345,11 +10659,11 @@ public class TypeShallow
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public string? Image { get; set; }
-    public int Stock { get; set; } = 2147483647;
-    public bool Virtual { get; set; } = false;
-    public string Uri { get; set; } = "";
+    public int? Stock { get; set; }
+    public bool? Virtual { get; set; }
+    public string? Uri { get; set; }
     public Location? Location { get; set; }
-    public string Unit { get; set; } = "";
+    public string? Unit { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public List<ModelMeta> Models { get; set; } = new();
@@ -8583,9 +10897,9 @@ public static class MetaShallowConversions
     {
         Guid = l.Guid,
         Path = l.Path,
-        IsHidden = l.IsHidden,
-        IsLocked = l.IsLocked,
-        Color = l.Color,
+        IsHidden = l.IsHidden ?? false,
+        IsLocked = l.IsLocked ?? false,
+        Color = l.Color ?? "",
         Description = l.Description
     };
 
@@ -10850,7 +13164,7 @@ public static class FolderKit
         {
             if (string.IsNullOrEmpty(file.Blob)) continue;
             var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
-                ? file.Blob[(file.Blob.IndexOf(',') + 1)..]
+                ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
                 : file.Blob;
             files[BuildFilePath(kit, file)] = Convert.FromBase64String(blobData);
         }
@@ -12643,12 +14957,12 @@ public static class SemioDiff
 
     public static bool AreKitsEqual(Kit a, Kit b)
     {
-        const float Tolerance = 1e-5f;
+        const double Tolerance = 1e-5f;
         List<T> NormalizeArray<T>(List<T>? arr) => arr ?? new List<T>();
         string? NormalizeValue(string? value) => string.IsNullOrEmpty(value) ? null : value;
         bool? NormalizeBoolean(bool? value) => value == true ? true : null;
-        bool FloatEqual(float valA, float valB) => Math.Abs(valA - valB) < Tolerance;
-        bool NullableFloatEqual(float? valA, float? valB)
+        bool FloatEqual(double valA, double valB) => Math.Abs(valA - valB) < Tolerance;
+        bool NullableFloatEqual(double? valA, double? valB)
         {
             if (valA == null && valB == null) return true;
             if (valA == null || valB == null) return false;

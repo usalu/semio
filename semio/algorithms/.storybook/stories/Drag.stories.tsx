@@ -1,19 +1,23 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx
 // Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Drag story using real Diagram-based algorithm windows from @semio/ui.
+// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
+import type { DesignChange, DesignDiff } from "@semio/js";
+import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
-import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, WindowKind } from "../../index";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
+import { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
 import { useAlgorithmLanguage } from "../withLanguage";
 
-import metabolismKit from "../../../assets/semio/kit_metabolism.json";
+import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+import { DragDesign, DragOffset, DragPieces } from "../../../assets/index";
 
-const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = { ...DragDesign, guid: "drag-preset-guid", name: "Drag Preset" };
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "drag-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },
@@ -23,43 +27,88 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function DragFrame() {
-  const language = useAlgorithmLanguage();
-  const kit = metabolismKit as any;
-  const baseDesign = React.useMemo(() => (kit.designs ?? []).find((design: any) => design.guid === nakaginCapsuleTowerDesignGuid) as any, [kit]);
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
-  const [vec, setVec] = React.useState({ u: 1, v: -2 });
+  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
+  
+  const kit = React.useMemo(() => ({
+    ...metabolismKit,
+    designs: [...((metabolismKit as any).designs || []), rawDesign],
+  }), []) as any;
+
+  const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
+  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
+  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>((DragPieces as any).pieces?.map((p: any) => p.guid) ?? []);
+  const [vec, setVec] = React.useState(DragOffset);
+  const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
 
   React.useEffect(() => {
-    if (selectedPieceGuids.length > 0) return;
-    setSelectedPieceGuids((baseDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
-  }, [baseDesign, selectedPieceGuids.length]);
+    let cancelled = false;
+    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.
+    // Keep user inputs (selection, vec) stable so different languages can be compared easily.
+    setFlattenChange(null);
+    setBaseDesign(null);
+    setDesignDiff(undefined);
+    void (async () => {
+      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
+      if (cancelled) return;
+      setFlattenChange(fc);
+      const bd = applyDesignDiff(rawDesign, fc.forward) as any;
+      setBaseDesign(bd);
+      setSelectedPieceGuids((prev) => {
+        const pieceGuids = new Set<string>((bd?.pieces ?? []).map((p: any) => p.guid));
+        const filtered = prev.filter((g) => pieceGuids.has(g));
+        if (filtered.length > 0) return filtered;
+        return (DragPieces as any).pieces?.map((p: any) => p.guid) ?? [];
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [kit, language]);
+
+  React.useEffect(() => {
+    if (!baseDesign) return;
+    let cancelled = false;
+    void (async () => {
+      if (selectedPieceGuids.length === 0) {
+        if (!cancelled) setDesignDiff(undefined);
+        return;
+      }
+      // Invalidate stale output while recomputing.
+      setDesignDiff(undefined);
+      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);
+      if (!cancelled) setDesignDiff(diff);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [baseDesign, selectedPieceGuids, vec, language]);
+
+  const outputDesign = React.useMemo(() => (designDiff && baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      designGuid: nakaginCapsuleTowerDesignGuid,
+      design: baseDesign ?? rawDesign,
       vec,
       onVecChange: setVec,
       vecMin: { u: -10, v: -10 },
       vecMax: { u: 10, v: 10 },
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
-      designDiff: {
-        pieces: { updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: { center: { ...vec }, language } })) },
-        connections: { updated: [] },
-      },
-      outputKit: kit,
-      outputDesignGuid: nakaginCapsuleTowerDesignGuid,
+      designDiff,
+      outputDesign,
+      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? "Select at least one piece to drag." : !designDiff ? `Loading drag result (${language})…` : undefined,
     }),
-    [kit, language, selectedPieceGuids, vec],
+    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],
   );
 
   return <AlgorithmApp id="drag" label="Drag" windows={WINDOWS} context={context} className="h-full w-full" />;
 }
 
 const meta = {
-  title: "semio-algorithms/Design/Drag",
-  parameters: { layout: "padded" },
+  title: "semio-algorithms/Drag",
+  component: DragFrame,
+  parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
 } satisfies Meta;
 

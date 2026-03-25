@@ -305,7 +305,7 @@
             }
           ],
           "default": null,
-          "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
+          "description": "\u25f3 The optional plane of the piece. Fixed pieces MUST have both plane and center set simultaneously."
         },
         "center": {
           "anyOf": [
@@ -317,7 +317,7 @@
             }
           ],
           "default": null,
-          "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+          "description": "\ud83d\udcfa The optional center of the piece in the diagram. Fixed pieces MUST have both plane and center set simultaneously."
         },
         "attributes": {
           "description": "\ud83d\udccf The attributes of the piece.",

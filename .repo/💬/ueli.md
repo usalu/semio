@@ -32,6 +32,9 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## 🧰repo⌨️cli
 
+Whenever invoking this command, regardless of the port, the container is being killed aswell stopping all running work. Make sure that the agent hooks deny this and give a meaningful reason.
+kill $(lsof -t -i:9876)
+
 We are building a general tool that abstracts source control managment tools like git.
 It should provide task-focused and simplified
 The workflow in git is:
@@ -45,8 +48,6 @@ https://docs.windsurf.com/windsurf/cascade/hooks#hook-events
 https://cursor.com/en/docs/agent/hooks
 https://code.claude.com/docs/en/hooks-guide
 https://docs.factory.ai/cli/configuration/hooks-guide
-
-## Change
 
 ## Later
 
@@ -73,9 +74,19 @@ TODO: Add roomie to discord for verification
 
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
 
+Remove all tasks.json and integrate it directly into launch.json
+
+elements ui and semio ui MUST NOT have any dependency to sketchpad. Further make sure that all test dependencies etc are not bundled in the build. Same for tests assets such as semio asset metabolism.
+
+Something in the repo is spuriously stashing.
+It creates messages that have partially the commit sha and the commit message e.g. `5a1a2ef1e 16`
+This MUST NOT happen.
+
 ## 🔬coda
 
 coda:
+Extend the s
+
 coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
 
 coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the semio engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
@@ -100,6 +111,79 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+There is an error with drag. The descendants of other dragged pieces are not ignored properly. E.g. in semio/algorithms/Drag `b0` is dragged but all the descendants of `b0` are also dragged (with piece diffs).
+
+semio:
+Define a clusterPiecesInDesign(kit:Kit, design:Guid, pieces:Guid[]):KitDiff function that
+
+- Creates a new design
+- Removes given pieces from the current design and adds them to the new design
+- Removes all internal connection which are only within the given pieces from the current design and
+
+A clusterPiecesInDesign is a shape invariant operation (all piece planes after flatten are identical before and after cluster)
+
+Define a designWithDiff(design:Design,designDiff:DesignDiff): Design
+The design is a mixture between the old and the new but more resembling the old than the new. On the other hand, applyDesignDiff(design:Design,designDiff:DesignDiff): Design is the new design.
+designWithDiff MUST:
+
+- maintain all old pieces and connections (same paramters) but apply status attributes to them. E.g. a connection that has new u, v, x,y,z,rotation, etc keeps the old u, v, x,y,z,rotation, etc but has the new status attribute updated.
+- Delted pieces and connections are not removed from the design. They are only marked as deleted.
+- For new pieces and connections, add them to the design.
+
+Add a test Design/WithDiff and a new asset `nakagin-capsule-tower.with-diff.design.semio.json` which applies the `nakagin-capsule-tower.diff.design.semio.json` diff.
+
+You MUST implement it for every programming language. All tests MUST pass.
+
+In order to disply the diff properly, build an
+
+Define hash\* function for every entity. Use hashes of the collections for the children. Build a merkle hash tree. Hence hashKit calls hashDesign that calls hashPiece, etc.
+Extend a test Kit/Hash.
+You MUST implement it for every programming language. They all MUST return the same hash.
+You MUST implement the same for hash*Diff. Add the hash as a property of the diff. Other than normal entities, diffs MUST be read-only structures. Once constructed they MUST NOT change. Hashes act as the id for diffs.
+You MUST implement the same for hash*Change. Add the hash as a property of the diff. Other than normal entities, diffs MUST be read-only structures. Once constructed they MUST NOT change. Hashes act as the id for diffs.
+
+Make sure drag is correctly implemented.
+dragPiecesInDesign(pieces:Guid[], offset:Vec):DesignDiff MUST
+
+- Offset center for all fixed pieces (pieces with center and plane) by drag offset (piece diff).
+- If a selected piece is a descendent of another selected piece then it is ignored. Othwerwise add the drag offset to the the parent connection (connection diff)
+  This MUST be identical on all programming languages, tests, algorithms, docs, etc
+
+Fixed pieces MUST have a plane and a center simultaneously. Currently some programming languages/code/docs/algorithms/tests only assumes planes.
+You MUST refactor/extend it everywhere.
+
+Refactor all existing code to use this.
+Create a test-case where you delete the third tambour of the large tower and the first connection from the tambour of the small tower with two assets:
+`nakagin-capsule-tower.deleted.design.diff.semio.json`
+`nakagin-capsule-tower.deleted.selection.semio.json`
+You MUST implement this for all programming languages.
+Add a Design/Delete
+
+Extend pieces metadata with the path that was during flatten (all pieces from root until the piece). You MUST implement it for all programming languages
+
+Create a new asset called `nakgin-capsule-tower.diff.design.semio.json`
+The diff should should
+
+- Remove the last storey (tambour + capsules) from the larger tower.
+- Reconnect the capital to the tambour below
+- Add a new base with a new one tambour on top which has one new capsule
+- Change all capsules from the third storey of the smaller tower.
+- Replace one capsule with a bridge in the fifth storey (same is in the other floors)
+  Integrate it into the metabolism kit diffs and stories.
+
+There should be a new semio ui component for vector which lets you select or display a 3d vector. Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.
+
+There should be a new semio ui component for kit which lets you select kit artifacts (designs, types, ports). Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components. The component works with shallow kit.
+In semio engine mcp: When calling start working in kit then call that app with that component.
+
+Make sure the semio engine mcp app works correctly with semio ui.
+Currently when invoking show_design after calling start_working_in_local_kit(workspaces/semio/semio/assets/semio/metabolism) and start_working_in_design(9a890dd4-0a9c-48ac-920a-9e62666465ef) the ui hangs and is not rendering the diagram
+You MUST follow all official guidelines.
+https://modelcontextprotocol.io/extensions/apps/overview
+You MUST use the official react package:
+https://apps.extensions.modelcontextprotocol.io/api/modules/_modelcontextprotocol_ext-apps_react.html
+
 There are exactly five kind of kits:
 
 - FileKit (JSON)
@@ -107,11 +191,11 @@ There are exactly five kind of kits:
 - ArchiveKit (zip file of FolderKit)
 - RemoteKit (url)
 - TemporaryKit (InMemory)
-  The current implementations are messy and inconsistent.
-  You MUST refactor everything to support exactly those kits and nothing else.
-  You MUST implement it for all programming languages.
-  You MUST test every kind of kit Kit/File, KitFolder, Kit/Archive, Kit/Remote, Kit/Temporary.
 
+The current implementations are messy and inconsistent.
+You MUST refactor everything to support exactly those kits and nothing else.
+You MUST implement it for all programming languages.
+You MUST test every kind of kit Kit/File, KitFolder, Kit/Archive, Kit/Remote, Kit/Temporary.
 Make sure that all programming languages have a *Meta and *Shallow same as they have a _Diff equivalent. A shallow is the same as the normal but for all child collections it only has the Meta information. E.g. A shallow kit has only meta and types meta, designs meta, etc. All meta only has all non-heavy properties (e.g. no file blobs) and no child collections.
 You MUST implement it everywhere. Extend the semio assets with metabolism.shallow.kit.semio.json, nakagin-capsule-tower.shallow.design.semio.json, tambour.shallow.type.semio.json.
 You MUST extend all tests with Kit/Shallow, Design/Shallow, TypeShallow
@@ -159,7 +243,76 @@ You MUST implement and test for all programming languages.
 All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
 
+## 👤semio📚ui
+
+semio ui:
+
+semio ui diagram:
+
+The diff is not displayed correctly.
+
+Add a copy to clipboard (ctrl + c) feature to all components:
+Design:
+
+- When no diff + no selection is present: Copy design
+- When no diff + selection is present: Copy selection (pieces and connections)
+- When diff is present + no selection is present: Copy diff
+- When diff and selection is present: Copy only selected parts of the diff
+
+The scene diff shows a lot deleted pieces which are not deleted.
+Only modified pieces are different to diagram. The difference is that child pieces of modified connections are are also displayed as modified because connections are otherwise invisible in the scene.
+
+semio ui storybook:
+Use nakagin-capsule-tower from the semio assets metabolism as example for all designs. Make sure the depedency doesnt leak into the final build and is only dev only.
+
+Refactor everything cleanly.
+
+- semio ui MUST use general ui elements/configs from elements/ui
+- All stories MUST have same naming patterns etc (First story is always Default which has the maximum of features with minimal setup)
+- All components MUST use the minimal data possible (e.g. Diagram only needs design, Scene only needs filtered kit with only one model and file per type etc,)
+- All stories MUST work. e.g. Kit is not working
+- Design, Diagram, Scene MUST have equal api and Story layout and naming
+
+Create a new Vec component that takes a vec and displays the vector xy input with visible origin and axes. Optionally take minU, maxU, minV, maxV, showAxes, showOrigin, `onVecChange(vec)`
+
+Create a new PiecesSelection component where you can select pieces with `onPieceSelect(piece)` which is triggered when the circle on the piece diagram is selected. It should be Digram
+
+Extend the diagram component:
+
+- Optionally take a design diff. The diff colors pieces and connections in the diagram. 3 extra colors: removed, added, modified
+- Optionally take a selection (piece guids and connection guids)
+- Add callbacks `onPieceClick(piece)`, `onConnectionClick(connection)`
+
+Create a Diagram component that shows a minimal diagram of the design that can be displayed e.g. in a mini map.
+Use small filled circles for pieces and clean lines for connections (circles on top of lines, lines go center to center). Use flattenDesign for absolute placements. Fit the Diagram to the size to the div container. Add story for for Nakagin Capsule Tower to storybook.
+
+Create a new bundle semio/ui that holds reusable ui components. Make sure that all general ui dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.
+
 ## 👤semio🖱️algorithms
+
+semio algorithms:
+The drag algorithm is not working correctly.
+It MUST be:
+Fixed selected pieces get center offset If a selected piece is a descendent of another selected piece then it is ignored. Othwerwise add the drag offset to the the parent connection. Due to the flatten algorithm all children will update automatically.
+Currently it shows:
+On a fixed pieces only the fixed piece is dragged without the children. This shouldnt be possible. When the fixed piece all children should be dragged along.
+On a descendent piece only the descendent piece, the center is moved to the origin plus the drag offset. Instead the parrent connection MUST be modified only.
+
+A lot is not working:
+
+- The delete typescript story is perfect. But all other programming languages are not showing the same thing. C# is still missing completly.
+- Flatten input is just showing one piece. The flatten diff is not showing the removed connections. The output is not the flat design.
+- Move story is a 3d move, not in the diagram. The output MUST be scene only
+- Cluster is not compyling at all
+
+- make sure the native code is called with the storybook decorator
+- drag is not working correctly
+  If a selected piece is a descendent of another selected piece then it is ignored. Othwerwise add the drag offset to the the parent connection.
+  fixed selected pieces get center offset.
+- flatten is missing input design (ready only). The output design is not the flat design from flatten design.
+- delete story is not loading
+
+Write a small adapter that calls into the native functions of the respective implementations in the native programming language. Expose it over a rest interface. Make sure the storybook uses this correctly when using the programming lanugage decorator. Just one file. Integrate it, so it works end-to-end.
 
 The purpose of algorithms is to to have a ui to test all algorithms for all implementations (ts, python, rust, go).
 
@@ -189,24 +342,6 @@ Add a language decorator to the algorithms storybook. Make sure that all native 
 
 Add PieceSelection which is a Diagram component that only works for selecting pieces.
 
-## 👤semio📚ui
-
-semio ui:
-Create a new Vec component that takes a vec and displays the vector xy input with visible origin and axes. Optionally take minU, maxU, minV, maxV, showAxes, showOrigin, `onVecChange(vec)`
-
-Create a new PiecesSelection component where you can select pieces with `onPieceSelect(piece)` which is triggered when the circle on the piece diagram is selected. It should be Digram
-
-Extend the diagram component:
-
-- Optionally take a design diff. The diff colors pieces and connections in the diagram. 3 extra colors: removed, added, modified
-- Optionally take a selection (piece guids and connection guids)
-- Add callbacks `onPieceClick(piece)`, `onConnectionClick(connection)`
-
-Create a Diagram component that shows a minimal diagram of the design that can be displayed e.g. in a mini map.
-Use small filled circles for pieces and clean lines for connections (circles on top of lines, lines go center to center). Use flattenDesign for absolute placements. Fit the Diagram to the size to the div container. Add story for for Nakagin Capsule Tower to storybook.
-
-Create a new bundle semio/ui that holds reusable ui components. Make sure that all general ui dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.
-
 ## 👤semio⌨️engine
 
 semio engine:
@@ -216,6 +351,8 @@ MUST work for both kind of kits. Extend the engine with a way to authenticate wi
 ## 👤semio⌨️engine🤖mcp
 
 semio engine mcp:
+All apps MUST use semio/ui. Use clean architecture, no stubs etc
+
 This should not happen:
 {
 "error": "Kit not found at path: /workspaces/semio/semio/assets/metabolism"

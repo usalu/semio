@@ -27,6 +27,7 @@ package semio
 import (
 	"bytes"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
@@ -34,6 +35,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -808,18 +810,22 @@ type Quality struct {
 	Guid                string      `json:"guid"`
 	Key                 string      `json:"key"`
 	Name                string      `json:"name"`
+	Description         *string     `json:"description,omitempty"`
+	Uri                 *string     `json:"uri,omitempty"`
 	Kind                QualityKind `json:"kind,omitempty"`
-	Default             *float64    `json:"default,omitempty"`
-	Formula             *string     `json:"formula,omitempty"`
+	CanScale            *bool       `json:"canScale,omitempty"`
 	DefaultSiUnit       *string     `json:"defaultSiUnit,omitempty"`
 	DefaultImperialUnit *string     `json:"defaultImperialUnit,omitempty"`
 	Min                 *float64    `json:"min,omitempty"`
-	MinExcluded         *bool       `json:"minExcluded,omitempty"`
+	IsMinExcluded       *bool       `json:"isMinExcluded,omitempty"`
 	Max                 *float64    `json:"max,omitempty"`
-	MaxExcluded         *bool       `json:"maxExcluded,omitempty"`
-	CanScale            *bool       `json:"canScale,omitempty"`
+	IsMaxExcluded       *bool       `json:"isMaxExcluded,omitempty"`
+	DefaultValue        *float64    `json:"defaultValue,omitempty"`
+	Formula             *string     `json:"formula,omitempty"`
+	Icon                *string     `json:"icon,omitempty"`
+	Image               *string     `json:"image,omitempty"`
+	Unit                *string     `json:"unit,omitempty"`
 	Benchmarks          []Benchmark `json:"benchmarks,omitempty"`
-	Definition          *string     `json:"definition,omitempty"`
 	Attributes          []Attribute `json:"attributes,omitempty"`
 	CreatedAt           string      `json:"createdAt,omitempty"`
 	UpdatedAt           string      `json:"updatedAt,omitempty"`
@@ -830,18 +836,22 @@ type Quality struct {
 type QualityDiff struct {
 	Key                 *string         `json:"key,omitempty"`
 	Name                *string         `json:"name,omitempty"`
+	Description         *string         `json:"description,omitempty"`
+	Uri                 *string         `json:"uri,omitempty"`
 	Kind                *QualityKind    `json:"kind,omitempty"`
-	Default             *float64        `json:"default,omitempty"`
-	Formula             *string         `json:"formula,omitempty"`
+	CanScale            *bool           `json:"canScale,omitempty"`
 	DefaultSiUnit       *string         `json:"defaultSiUnit,omitempty"`
 	DefaultImperialUnit *string         `json:"defaultImperialUnit,omitempty"`
 	Min                 *float64        `json:"min,omitempty"`
-	MinExcluded         *bool           `json:"minExcluded,omitempty"`
+	IsMinExcluded       *bool           `json:"isMinExcluded,omitempty"`
 	Max                 *float64        `json:"max,omitempty"`
-	MaxExcluded         *bool           `json:"maxExcluded,omitempty"`
-	CanScale            *bool           `json:"canScale,omitempty"`
+	IsMaxExcluded       *bool           `json:"isMaxExcluded,omitempty"`
+	DefaultValue        *float64        `json:"defaultValue,omitempty"`
+	Formula             *string         `json:"formula,omitempty"`
+	Icon                *string         `json:"icon,omitempty"`
+	Image               *string         `json:"image,omitempty"`
+	Unit                *string         `json:"unit,omitempty"`
 	Benchmarks          *BenchmarksDiff `json:"benchmarks,omitempty"`
-	Definition          *string         `json:"definition,omitempty"`
 	Attributes          *AttributesDiff `json:"attributes,omitempty"`
 }
 
@@ -861,18 +871,21 @@ type QualityMeta struct {
 	Guid                string      `json:"guid"`
 	Key                 string      `json:"key"`
 	Name                string      `json:"name"`
+	Description         *string     `json:"description,omitempty"`
+	Uri                 *string     `json:"uri,omitempty"`
 	Kind                QualityKind `json:"kind,omitempty"`
-	Default             *float64    `json:"default,omitempty"`
-	Formula             *string     `json:"formula,omitempty"`
+	CanScale            *bool       `json:"canScale,omitempty"`
 	DefaultSiUnit       *string     `json:"defaultSiUnit,omitempty"`
 	DefaultImperialUnit *string     `json:"defaultImperialUnit,omitempty"`
-	Unit                *string     `json:"unit,omitempty"`
 	Min                 *float64    `json:"min,omitempty"`
-	MinExcluded         *bool       `json:"minExcluded,omitempty"`
+	IsMinExcluded       *bool       `json:"isMinExcluded,omitempty"`
 	Max                 *float64    `json:"max,omitempty"`
-	MaxExcluded         *bool       `json:"maxExcluded,omitempty"`
-	CanScale            *bool       `json:"canScale,omitempty"`
-	Definition          *string     `json:"definition,omitempty"`
+	IsMaxExcluded       *bool       `json:"isMaxExcluded,omitempty"`
+	DefaultValue        *float64    `json:"defaultValue,omitempty"`
+	Formula             *string     `json:"formula,omitempty"`
+	Icon                *string     `json:"icon,omitempty"`
+	Image               *string     `json:"image,omitempty"`
+	Unit                *string     `json:"unit,omitempty"`
 	CreatedAt           string      `json:"createdAt,omitempty"`
 	UpdatedAt           string      `json:"updatedAt,omitempty"`
 }
@@ -1701,12 +1714,14 @@ type ConnectionMeta struct {
 // Stat represents a statistical quality measurement with min and max bounds.
 // [👤semio📚go💻semio🔖stat✂️stat](repo://p/u/semio/b/l/go/f/semio.go/s/Stat/d/i/Stat)
 type Stat struct {
-	Guid       string      `json:"guid"`
-	Quality    QualityId   `json:"quality"`
-	Min        *float64    `json:"min,omitempty"`
-	Max        *float64    `json:"max,omitempty"`
-	Unit       *string     `json:"unit,omitempty"`
-	Attributes []Attribute `json:"attributes,omitempty"`
+	Guid        string      `json:"guid"`
+	Quality     QualityId   `json:"quality"`
+	Min         *float64    `json:"min,omitempty"`
+	MinExcluded *bool       `json:"minExcluded,omitempty"`
+	Max         *float64    `json:"max,omitempty"`
+	MaxExcluded *bool       `json:"maxExcluded,omitempty"`
+	Unit        *string     `json:"unit,omitempty"`
+	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
 // StatDiff represents changes to a stat entity.
@@ -1971,6 +1986,30 @@ type KitDiff struct {
 	Description *string         `json:"description,omitempty"`
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 	UpdatedAt   *string         `json:"updatedAt,omitempty"`
+	setFields   map[string]bool `json:"-"`
+}
+
+// UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+func (d *KitDiff) UnmarshalJSON(data []byte) error {
+	type Alias KitDiff
+	aux := &struct{ *Alias }{Alias: (*Alias)(d)}
+	var rawMap map[string]json.RawMessage
+	if err := json.Unmarshal(data, &rawMap); err != nil {
+		return err
+	}
+	d.setFields = make(map[string]bool)
+	for key := range rawMap {
+		d.setFields[key] = true
+	}
+	return json.Unmarshal(data, aux)
+}
+
+// HasField returns whether a JSON field was present in the unmarshaled data.
+func (d *KitDiff) HasField(field string) bool {
+	if d.setFields == nil {
+		return false
+	}
+	return d.setFields[field]
 }
 
 // KitsDiff represents a collection of kit additions, removals and updates.
@@ -2050,7 +2089,7 @@ func ToFolderMeta(f Folder) FolderMeta {
 
 // ToQualityMeta converts a Quality to its Meta projection.
 func ToQualityMeta(q Quality) QualityMeta {
-	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Kind: q.Kind, Default: q.Default, Formula: q.Formula, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, MinExcluded: q.MinExcluded, Max: q.Max, MaxExcluded: q.MaxExcluded, CanScale: q.CanScale, Definition: q.Definition, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
+	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Description: q.Description, Uri: q.Uri, Kind: q.Kind, CanScale: q.CanScale, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, IsMinExcluded: q.IsMinExcluded, Max: q.Max, IsMaxExcluded: q.IsMaxExcluded, DefaultValue: q.DefaultValue, Formula: q.Formula, Icon: q.Icon, Image: q.Image, Unit: q.Unit, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
 }
 
 // ToPortMeta converts a Port to its Meta projection.
@@ -2323,6 +2362,152 @@ type DesignChange = Change[Design, DesignDiff]
 // KitChange holds the data fields for a KitChange record.
 type KitChange = Change[Kit, KitDiff]
 
+// [👤semio📚go💻semio🔖kit🛠️deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/DeletePiecesAndConnectionsInDesign)
+// DeletePiecesAndConnectionsInDesign deletes pieces and connections from a design, returning a DesignDiff.
+// Removes stale connections referencing deleted pieces.
+// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
+func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) DesignDiff {
+	deletedPieceSet := make(map[string]bool)
+	for _, g := range pieceGuids {
+		deletedPieceSet[g] = true
+	}
+
+	// Find stale connections: connections referencing any deleted piece
+	staleConnectionGuids := make(map[string]bool)
+	for _, conn := range design.Connections {
+		if deletedPieceSet[conn.Connected.Piece.Guid] || deletedPieceSet[conn.Connecting.Piece.Guid] {
+			staleConnectionGuids[conn.Guid] = true
+		}
+	}
+
+	// All removed connections = explicit + stale
+	allRemovedConnectionGuids := make(map[string]bool)
+	for _, g := range connectionGuids {
+		allRemovedConnectionGuids[g] = true
+	}
+	for g := range staleConnectionGuids {
+		allRemovedConnectionGuids[g] = true
+	}
+
+	// Find pieces that become fixed
+	fixedPieceGuids := []string{}
+	fixedPieceSet := make(map[string]bool)
+	for connGuid := range allRemovedConnectionGuids {
+		var conn *Connection
+		for i := range design.Connections {
+			if design.Connections[i].Guid == connGuid {
+				conn = &design.Connections[i]
+				break
+			}
+		}
+		if conn == nil {
+			continue
+		}
+		connectingGuid := conn.Connecting.Piece.Guid
+		if deletedPieceSet[connectingGuid] {
+			continue
+		}
+		// Check if this piece has another parent connection not in the removed set
+		hasOtherParent := false
+		for _, c := range design.Connections {
+			if c.Connecting.Piece.Guid == connectingGuid && !allRemovedConnectionGuids[c.Guid] {
+				hasOtherParent = true
+				break
+			}
+		}
+		if !hasOtherParent && !fixedPieceSet[connectingGuid] {
+			fixedPieceGuids = append(fixedPieceGuids, connectingGuid)
+			fixedPieceSet[connectingGuid] = true
+		}
+	}
+
+	// Build the diff
+	var piecesRemoved []PieceId
+	for _, g := range pieceGuids {
+		piecesRemoved = append(piecesRemoved, PieceId{Guid: g})
+	}
+
+	// Flatten the design to get absolute plane and center for each piece.
+	// FlattenDesign modifies Center in-place but stores Plane only in the diff,
+	// so we apply the diff to get a fully correct flattened design.
+	flatDiff := FlattenDesign(kit, design.Guid)
+	flatDesign := ApplyDesignDiff(design, flatDiff)
+	flatPieceMap := make(map[string]*Piece)
+	for i := range flatDesign.Pieces {
+		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
+	}
+
+	zero := 0.0
+	one := 1.0
+	identityPlaneDiff := &PlaneDiff{
+		Origin: &PointDiff{X: &zero, Y: &zero, Z: &zero},
+		XAxis:  &VectorDiff{X: &one, Y: &zero, Z: &zero},
+		YAxis:  &VectorDiff{X: &zero, Y: &one, Z: &zero},
+	}
+	zeroCenterDiff := &CoordDiff{U: &zero, V: &zero}
+
+	var piecesUpdated []struct {
+		Piece PieceId   `json:"piece"`
+		Diff  PieceDiff `json:"diff"`
+	}
+	for _, g := range fixedPieceGuids {
+		planeDiff := identityPlaneDiff
+		centerDiff := zeroCenterDiff
+		if flatPiece, ok := flatPieceMap[g]; ok {
+			if flatPiece.Plane != nil {
+				ox, oy, oz := flatPiece.Plane.Origin.X, flatPiece.Plane.Origin.Y, flatPiece.Plane.Origin.Z
+				xax, xay, xaz := flatPiece.Plane.XAxis.X, flatPiece.Plane.XAxis.Y, flatPiece.Plane.XAxis.Z
+				yax, yay, yaz := flatPiece.Plane.YAxis.X, flatPiece.Plane.YAxis.Y, flatPiece.Plane.YAxis.Z
+				planeDiff = &PlaneDiff{
+					Origin: &PointDiff{X: &ox, Y: &oy, Z: &oz},
+					XAxis:  &VectorDiff{X: &xax, Y: &xay, Z: &xaz},
+					YAxis:  &VectorDiff{X: &yax, Y: &yay, Z: &yaz},
+				}
+			}
+			if flatPiece.Center != nil {
+				cu, cv := flatPiece.Center.U, flatPiece.Center.V
+				centerDiff = &CoordDiff{U: &cu, V: &cv}
+			}
+		}
+		piecesUpdated = append(piecesUpdated, struct {
+			Piece PieceId   `json:"piece"`
+			Diff  PieceDiff `json:"diff"`
+		}{
+			Piece: PieceId{Guid: g},
+			Diff: PieceDiff{
+				Plane:  planeDiff,
+				Center: centerDiff,
+			},
+		})
+	}
+
+	// Sort removed connections by guid
+	sortedConnectionGuids := make([]string, 0, len(allRemovedConnectionGuids))
+	for g := range allRemovedConnectionGuids {
+		sortedConnectionGuids = append(sortedConnectionGuids, g)
+	}
+	sort.Strings(sortedConnectionGuids)
+	var connectionsRemoved []ConnectionId
+	for _, g := range sortedConnectionGuids {
+		connectionsRemoved = append(connectionsRemoved, ConnectionId{Guid: g})
+	}
+
+	diff := DesignDiff{}
+	if len(piecesRemoved) > 0 || len(piecesUpdated) > 0 {
+		diff.Pieces = &PiecesDiff{
+			Removed: piecesRemoved,
+			Updated: piecesUpdated,
+		}
+	}
+	if len(connectionsRemoved) > 0 {
+		diff.Connections = &ConnectionsDiff{
+			Removed: connectionsRemoved,
+		}
+	}
+
+	return diff
+}
+
 // [👤semio📚go💻semio🔖kit🛠️getdesignchange](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/GetDesignChange)
 // GetDesignChange holds the data fields for a GetDesignChange record.
 // GetDesignChange MUST perform the GetDesignChange operation.
@@ -2342,6 +2527,2411 @@ func GetKitChange(before, after Kit, author *string, time *string) KitChange {
 }
 
 // #endregion 🔖Kit
+
+// #region 🔖Hash
+// [👤semio📚go💻semio🔖hash](repo://p/u/semio/b/l/go/f/semio.go/s/Hash)
+// Merkle hash functions for all entities. Each hash function computes a deterministic
+// SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
+// Field order is alphabetical by JSON field name. Missing/null fields are skipped.
+// Number format: integer if no fractional part, else shortest decimal representation.
+
+// #region 🔖HashWriter
+// hashWriter accumulates binary data for deterministic SHA-256 hashing.
+type hashWriter struct {
+	buf bytes.Buffer
+}
+
+func (w *hashWriter) writeString(s string) {
+	b := []byte(s)
+	lb := make([]byte, 4)
+	binary.BigEndian.PutUint32(lb, uint32(len(b)))
+	w.buf.Write(lb)
+	w.buf.Write(b)
+}
+
+func (w *hashWriter) writeNumber(n float64) {
+	w.writeString(FormatNumberForHash(n))
+}
+
+func (w *hashWriter) writeIntNumber(n int) {
+	w.writeString(strconv.Itoa(n))
+}
+
+func (w *hashWriter) writeBool(b bool) {
+	if b {
+		w.buf.WriteByte(1)
+	} else {
+		w.buf.WriteByte(0)
+	}
+}
+
+func (w *hashWriter) writeHash(h string) {
+	w.writeString(h)
+}
+
+func (w *hashWriter) writeHashList(hashes []string) {
+	sorted := make([]string, len(hashes))
+	copy(sorted, hashes)
+	sort.Strings(sorted)
+	lb := make([]byte, 4)
+	binary.BigEndian.PutUint32(lb, uint32(len(sorted)))
+	w.buf.Write(lb)
+	for _, h := range sorted {
+		w.writeString(h)
+	}
+}
+
+func (w *hashWriter) writeGuidList(guids []string) {
+	sorted := make([]string, len(guids))
+	copy(sorted, guids)
+	sort.Strings(sorted)
+	lb := make([]byte, 4)
+	binary.BigEndian.PutUint32(lb, uint32(len(sorted)))
+	w.buf.Write(lb)
+	for _, g := range sorted {
+		w.writeString(g)
+	}
+}
+
+func (w *hashWriter) digest() string {
+	h := sha256.Sum256(w.buf.Bytes())
+	return hex.EncodeToString(h[:])
+}
+
+// FormatNumberForHash formats a number deterministically for hashing.
+func FormatNumberForHash(n float64) string {
+	if n == math.Trunc(n) && !math.IsInf(n, 0) && math.Abs(n) < 1e15 {
+		return strconv.FormatInt(int64(n), 10)
+	}
+	abs := math.Abs(n)
+	// Match JavaScript's Number.prototype.toString():
+	// Scientific notation for abs < 1e-6 or abs >= 1e21.
+	if abs > 0 && (abs < 1e-6 || abs >= 1e21) {
+		s := strconv.FormatFloat(n, 'e', -1, 64)
+		// Remove leading zeros from exponent: e-07 → e-7, e+02 → e+2
+		idx := strings.LastIndex(s, "e")
+		if idx != -1 {
+			exp := s[idx+1:]
+			sign := string(exp[0])
+			digits := strings.TrimLeft(exp[1:], "0")
+			if digits == "" {
+				digits = "0"
+			}
+			return s[:idx] + "e" + sign + digits
+		}
+		return s
+	}
+	return strconv.FormatFloat(n, 'f', -1, 64)
+}
+
+// #endregion 🔖HashWriter
+
+// #region 🔖Hash Value Types
+
+// HashCoord computes SHA-256 hash of a Coord value.
+func HashCoord(c Coord) string {
+	w := &hashWriter{}
+	w.writeString("Coord")
+	w.writeString("u")
+	w.writeNumber(c.U)
+	w.writeString("v")
+	w.writeNumber(c.V)
+	return w.digest()
+}
+
+// HashVec computes SHA-256 hash of a Vec value.
+func HashVec(v Vec) string {
+	w := &hashWriter{}
+	w.writeString("Vec")
+	w.writeString("u")
+	w.writeNumber(v.U)
+	w.writeString("v")
+	w.writeNumber(v.V)
+	return w.digest()
+}
+
+// HashPoint computes SHA-256 hash of a Point value.
+func HashPoint(p Point) string {
+	w := &hashWriter{}
+	w.writeString("Point")
+	w.writeString("x")
+	w.writeNumber(p.X)
+	w.writeString("y")
+	w.writeNumber(p.Y)
+	w.writeString("z")
+	w.writeNumber(p.Z)
+	return w.digest()
+}
+
+// HashVector computes SHA-256 hash of a Vector value.
+func HashVector(v Vector) string {
+	w := &hashWriter{}
+	w.writeString("Vector")
+	w.writeString("x")
+	w.writeNumber(v.X)
+	w.writeString("y")
+	w.writeNumber(v.Y)
+	w.writeString("z")
+	w.writeNumber(v.Z)
+	return w.digest()
+}
+
+// HashPlane computes SHA-256 hash of a Plane value.
+func HashPlane(p Plane) string {
+	w := &hashWriter{}
+	w.writeString("Plane")
+	w.writeString("origin")
+	w.writeHash(HashPoint(p.Origin))
+	w.writeString("xAxis")
+	w.writeHash(HashVector(p.XAxis))
+	w.writeString("yAxis")
+	w.writeHash(HashVector(p.YAxis))
+	return w.digest()
+}
+
+// HashCamera computes SHA-256 hash of a Camera value.
+func HashCamera(c Camera) string {
+	w := &hashWriter{}
+	w.writeString("Camera")
+	w.writeString("forward")
+	w.writeHash(HashVector(c.Forward))
+	w.writeString("position")
+	w.writeHash(HashPoint(c.Position))
+	w.writeString("up")
+	w.writeHash(HashVector(c.Up))
+	return w.digest()
+}
+
+// #endregion 🔖Hash Value Types
+
+// #region 🔖Hash Entities
+
+// HashAttribute computes SHA-256 hash of an Attribute entity.
+func HashAttribute(a Attribute) string {
+	w := &hashWriter{}
+	w.writeString("Attribute")
+	if a.Definition != nil {
+		w.writeString("definition")
+		w.writeString(*a.Definition)
+	}
+	w.writeString("guid")
+	w.writeString(a.Guid)
+	w.writeString("key")
+	w.writeString(a.Key)
+	if a.Value != nil {
+		w.writeString("value")
+		w.writeString(*a.Value)
+	}
+	return w.digest()
+}
+
+// HashLocation computes SHA-256 hash of a Location entity.
+func HashLocation(l Location) string {
+	w := &hashWriter{}
+	w.writeString("Location")
+	if l.Altitude != nil {
+		w.writeString("altitude")
+		w.writeNumber(*l.Altitude)
+	}
+	if len(l.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(l.Attributes))
+		for i, a := range l.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	w.writeString("guid")
+	w.writeString(l.Guid)
+	w.writeString("latitude")
+	w.writeNumber(l.Latitude)
+	w.writeString("longitude")
+	w.writeNumber(l.Longitude)
+	return w.digest()
+}
+
+// HashAuthor computes SHA-256 hash of an Author entity.
+func HashAuthor(a Author) string {
+	w := &hashWriter{}
+	w.writeString("Author")
+	if len(a.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(a.Attributes))
+		for i, attr := range a.Attributes {
+			hashes[i] = HashAttribute(attr)
+		}
+		w.writeHashList(hashes)
+	}
+	if a.Email != nil && *a.Email != "" {
+		w.writeString("email")
+		w.writeString(*a.Email)
+	}
+	w.writeString("guid")
+	w.writeString(a.Guid)
+	w.writeString("name")
+	w.writeString(a.Name)
+	return w.digest()
+}
+
+// HashFile computes SHA-256 hash of a File entity.
+func HashFile(f File) string {
+	w := &hashWriter{}
+	w.writeString("File")
+	if f.Blob != nil {
+		w.writeString("blob")
+		w.writeString(*f.Blob)
+	}
+	if f.Folder != nil {
+		w.writeString("folder")
+		w.writeString(f.Folder.Guid)
+	}
+	w.writeString("guid")
+	w.writeString(f.Guid)
+	if f.Hash != nil {
+		w.writeString("hash")
+		w.writeString(*f.Hash)
+	}
+	w.writeString("name")
+	w.writeString(f.Name)
+	if f.Remote != nil {
+		w.writeString("remote")
+		w.writeString(*f.Remote)
+	}
+	if f.Size != nil {
+		w.writeString("size")
+		w.writeIntNumber(int(*f.Size))
+	}
+	return w.digest()
+}
+
+// HashFolder computes SHA-256 hash of a Folder entity.
+func HashFolder(f Folder) string {
+	w := &hashWriter{}
+	w.writeString("Folder")
+	if len(f.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(f.Attributes))
+		for i, a := range f.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if f.Description != nil {
+		w.writeString("description")
+		w.writeString(*f.Description)
+	}
+	w.writeString("guid")
+	w.writeString(f.Guid)
+	w.writeString("name")
+	w.writeString(f.Name)
+	if f.Parent != nil {
+		w.writeString("parent")
+		w.writeString(f.Parent.Guid)
+	}
+	return w.digest()
+}
+
+// HashBenchmark computes SHA-256 hash of a Benchmark entity.
+func HashBenchmark(b Benchmark) string {
+	w := &hashWriter{}
+	w.writeString("Benchmark")
+	if len(b.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(b.Attributes))
+		for i, a := range b.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	w.writeString("guid")
+	w.writeString(b.Guid)
+	if b.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*b.Icon)
+	}
+	if b.Max != nil {
+		w.writeString("max")
+		w.writeNumber(*b.Max)
+	}
+	if b.MaxExcluded != nil {
+		w.writeString("maxExcluded")
+		w.writeBool(*b.MaxExcluded)
+	}
+	if b.Min != nil {
+		w.writeString("min")
+		w.writeNumber(*b.Min)
+	}
+	if b.MinExcluded != nil {
+		w.writeString("minExcluded")
+		w.writeBool(*b.MinExcluded)
+	}
+	w.writeString("name")
+	w.writeString(b.Name)
+	return w.digest()
+}
+
+// HashQuality computes SHA-256 hash of a Quality entity.
+func HashQuality(q Quality) string {
+	w := &hashWriter{}
+	w.writeString("Quality")
+	if len(q.Benchmarks) > 0 {
+		w.writeString("benchmarks")
+		hashes := make([]string, len(q.Benchmarks))
+		for i, b := range q.Benchmarks {
+			hashes[i] = HashBenchmark(b)
+		}
+		w.writeHashList(hashes)
+	}
+	if q.CanScale != nil {
+		w.writeString("canScale")
+		w.writeBool(*q.CanScale)
+	}
+	if q.DefaultImperialUnit != nil {
+		w.writeString("defaultImperialUnit")
+		w.writeString(*q.DefaultImperialUnit)
+	}
+	if q.DefaultSiUnit != nil {
+		w.writeString("defaultSiUnit")
+		w.writeString(*q.DefaultSiUnit)
+	}
+	if q.DefaultValue != nil {
+		w.writeString("defaultValue")
+		w.writeNumber(*q.DefaultValue)
+	}
+	if q.Description != nil {
+		w.writeString("description")
+		w.writeString(*q.Description)
+	}
+	if q.Formula != nil {
+		w.writeString("formula")
+		w.writeString(*q.Formula)
+	}
+	w.writeString("guid")
+	w.writeString(q.Guid)
+	if q.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*q.Icon)
+	}
+	if q.Image != nil {
+		w.writeString("image")
+		w.writeString(*q.Image)
+	}
+	if q.IsMaxExcluded != nil {
+		w.writeString("isMaxExcluded")
+		w.writeBool(*q.IsMaxExcluded)
+	}
+	if q.IsMinExcluded != nil {
+		w.writeString("isMinExcluded")
+		w.writeBool(*q.IsMinExcluded)
+	}
+	w.writeString("key")
+	w.writeString(q.Key)
+	if q.Kind != 0 {
+		w.writeString("kind")
+		w.writeIntNumber(int(q.Kind))
+	}
+	if q.Max != nil {
+		w.writeString("max")
+		w.writeNumber(*q.Max)
+	}
+	if q.Min != nil {
+		w.writeString("min")
+		w.writeNumber(*q.Min)
+	}
+	w.writeString("name")
+	w.writeString(q.Name)
+	if q.Unit != nil {
+		w.writeString("unit")
+		w.writeString(*q.Unit)
+	}
+	if q.Uri != nil {
+		w.writeString("uri")
+		w.writeString(*q.Uri)
+	}
+	return w.digest()
+}
+
+// HashPort computes SHA-256 hash of a Port entity.
+func HashPort(p Port) string {
+	w := &hashWriter{}
+	w.writeString("Port")
+	if len(p.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(p.Attributes))
+		for i, a := range p.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(p.CompatiblePorts) > 0 {
+		w.writeString("compatiblePorts")
+		guids := make([]string, len(p.CompatiblePorts))
+		for i, cp := range p.CompatiblePorts {
+			guids[i] = cp.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	if p.Description != nil {
+		w.writeString("description")
+		w.writeString(*p.Description)
+	}
+	w.writeString("guid")
+	w.writeString(p.Guid)
+	if p.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*p.Icon)
+	}
+	w.writeString("name")
+	w.writeString(p.Name)
+	return w.digest()
+}
+
+// HashProp computes SHA-256 hash of a Prop entity.
+func HashProp(p Prop) string {
+	w := &hashWriter{}
+	w.writeString("Prop")
+	if len(p.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(p.Attributes))
+		for i, a := range p.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	w.writeString("guid")
+	w.writeString(p.Guid)
+	w.writeString("quality")
+	w.writeString(p.Quality.Guid)
+	if p.Unit != nil {
+		w.writeString("unit")
+		w.writeString(*p.Unit)
+	}
+	w.writeString("value")
+	w.writeString(p.Value)
+	return w.digest()
+}
+
+// HashTag computes SHA-256 hash of a Tag entity.
+func HashTag(t Tag) string {
+	w := &hashWriter{}
+	w.writeString("Tag")
+	if len(t.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(t.Attributes))
+		for i, a := range t.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if t.Description != nil {
+		w.writeString("description")
+		w.writeString(*t.Description)
+	}
+	w.writeString("guid")
+	w.writeString(t.Guid)
+	if t.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*t.Icon)
+	}
+	w.writeString("name")
+	w.writeString(t.Name)
+	return w.digest()
+}
+
+// HashConcept computes SHA-256 hash of a Concept entity.
+func HashConcept(c Concept) string {
+	w := &hashWriter{}
+	w.writeString("Concept")
+	if len(c.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(c.Attributes))
+		for i, a := range c.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if c.Description != nil {
+		w.writeString("description")
+		w.writeString(*c.Description)
+	}
+	w.writeString("guid")
+	w.writeString(c.Guid)
+	if c.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*c.Icon)
+	}
+	w.writeString("name")
+	w.writeString(c.Name)
+	return w.digest()
+}
+
+// HashModel computes SHA-256 hash of a Model entity.
+func HashModel(m Model) string {
+	w := &hashWriter{}
+	w.writeString("Model")
+	if len(m.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(m.Attributes))
+		for i, a := range m.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if m.Description != nil {
+		w.writeString("description")
+		w.writeString(*m.Description)
+	}
+	w.writeString("file")
+	w.writeString(m.File.Guid)
+	w.writeString("guid")
+	w.writeString(m.Guid)
+	if m.Name != nil {
+		w.writeString("name")
+		w.writeString(*m.Name)
+	}
+	if len(m.Tags) > 0 {
+		w.writeString("tags")
+		guids := make([]string, len(m.Tags))
+		for i, t := range m.Tags {
+			guids[i] = t.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	return w.digest()
+}
+
+// HashConnector computes SHA-256 hash of a Connector entity.
+func HashConnector(c Connector) string {
+	w := &hashWriter{}
+	w.writeString("Connector")
+	if len(c.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(c.Attributes))
+		for i, a := range c.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if c.Description != nil {
+		w.writeString("description")
+		w.writeString(*c.Description)
+	}
+	w.writeString("direction")
+	w.writeHash(HashVector(c.Direction))
+	w.writeString("guid")
+	w.writeString(c.Guid)
+	if c.Mandatory != nil {
+		w.writeString("mandatory")
+		w.writeBool(*c.Mandatory)
+	}
+	if c.Name != nil {
+		w.writeString("name")
+		w.writeString(*c.Name)
+	}
+	w.writeString("point")
+	w.writeHash(HashPoint(c.Point))
+	if c.Port != nil {
+		w.writeString("port")
+		w.writeString(c.Port.Guid)
+	}
+	if len(c.Props) > 0 {
+		w.writeString("props")
+		hashes := make([]string, len(c.Props))
+		for i, p := range c.Props {
+			hashes[i] = HashProp(p)
+		}
+		w.writeHashList(hashes)
+	}
+	w.writeString("t")
+	w.writeNumber(c.T)
+	return w.digest()
+}
+
+// HashType computes SHA-256 hash of a Type entity.
+func HashType(t Type) string {
+	w := &hashWriter{}
+	w.writeString("Type")
+	if len(t.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(t.Attributes))
+		for i, a := range t.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(t.Authors) > 0 {
+		w.writeString("authors")
+		guids := make([]string, len(t.Authors))
+		for i, a := range t.Authors {
+			guids[i] = a.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	if len(t.Concepts) > 0 {
+		w.writeString("concepts")
+		guids := make([]string, len(t.Concepts))
+		for i, c := range t.Concepts {
+			guids[i] = c.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	if len(t.Connectors) > 0 {
+		w.writeString("connectors")
+		hashes := make([]string, len(t.Connectors))
+		for i, c := range t.Connectors {
+			hashes[i] = HashConnector(c)
+		}
+		w.writeHashList(hashes)
+	}
+	if t.Description != nil {
+		w.writeString("description")
+		w.writeString(*t.Description)
+	}
+	if t.Folder != nil {
+		w.writeString("folder")
+		w.writeString(*t.Folder)
+	}
+	w.writeString("guid")
+	w.writeString(t.Guid)
+	if t.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*t.Icon)
+	}
+	if t.Image != nil {
+		w.writeString("image")
+		w.writeString(*t.Image)
+	}
+	if t.IsAbstract != nil {
+		w.writeString("isAbstract")
+		w.writeBool(*t.IsAbstract)
+	}
+	if t.Location != nil {
+		w.writeString("location")
+		w.writeString(t.Location.Guid)
+	}
+	if len(t.Models) > 0 {
+		w.writeString("models")
+		hashes := make([]string, len(t.Models))
+		for i, m := range t.Models {
+			hashes[i] = HashModel(m)
+		}
+		w.writeHashList(hashes)
+	}
+	w.writeString("name")
+	w.writeString(t.Name)
+	if t.Parent != nil {
+		w.writeString("parent")
+		w.writeString(t.Parent.Guid)
+	}
+	if len(t.Props) > 0 {
+		w.writeString("props")
+		hashes := make([]string, len(t.Props))
+		for i, p := range t.Props {
+			hashes[i] = HashProp(p)
+		}
+		w.writeHashList(hashes)
+	}
+	if t.Stock != nil {
+		w.writeString("stock")
+		w.writeIntNumber(*t.Stock)
+	}
+	if t.Unit != nil {
+		w.writeString("unit")
+		w.writeString(*t.Unit)
+	}
+	if t.Virtual != nil {
+		w.writeString("virtual")
+		w.writeBool(*t.Virtual)
+	}
+	return w.digest()
+}
+
+// HashLayer computes SHA-256 hash of a Layer entity.
+func HashLayer(l Layer) string {
+	w := &hashWriter{}
+	w.writeString("Layer")
+	if len(l.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(l.Attributes))
+		for i, a := range l.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if l.Color != nil {
+		w.writeString("color")
+		w.writeString(*l.Color)
+	}
+	if l.Description != nil {
+		w.writeString("description")
+		w.writeString(*l.Description)
+	}
+	w.writeString("guid")
+	w.writeString(l.Guid)
+	if l.IsHidden != nil {
+		w.writeString("isHidden")
+		w.writeBool(*l.IsHidden)
+	}
+	if l.IsLocked != nil {
+		w.writeString("isLocked")
+		w.writeBool(*l.IsLocked)
+	}
+	w.writeString("path")
+	w.writeString(l.Path)
+	return w.digest()
+}
+
+// HashStat computes SHA-256 hash of a Stat entity.
+func HashStat(s Stat) string {
+	w := &hashWriter{}
+	w.writeString("Stat")
+	w.writeString("guid")
+	w.writeString(s.Guid)
+	if s.Max != nil {
+		w.writeString("max")
+		w.writeNumber(*s.Max)
+	}
+	if s.MaxExcluded != nil {
+		w.writeString("maxExcluded")
+		w.writeBool(*s.MaxExcluded)
+	}
+	if s.Min != nil {
+		w.writeString("min")
+		w.writeNumber(*s.Min)
+	}
+	if s.MinExcluded != nil {
+		w.writeString("minExcluded")
+		w.writeBool(*s.MinExcluded)
+	}
+	w.writeString("quality")
+	w.writeString(s.Quality.Guid)
+	if s.Unit != nil {
+		w.writeString("unit")
+		w.writeString(*s.Unit)
+	}
+	return w.digest()
+}
+
+// HashGroup computes SHA-256 hash of a Group entity.
+func HashGroup(g Group) string {
+	w := &hashWriter{}
+	w.writeString("Group")
+	if len(g.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(g.Attributes))
+		for i, a := range g.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if g.Color != nil {
+		w.writeString("color")
+		w.writeString(*g.Color)
+	}
+	if g.Description != nil {
+		w.writeString("description")
+		w.writeString(*g.Description)
+	}
+	w.writeString("guid")
+	w.writeString(g.Guid)
+	if g.Name != nil {
+		w.writeString("name")
+		w.writeString(*g.Name)
+	}
+	w.writeString("pieces")
+	guids := make([]string, len(g.Pieces))
+	for i, p := range g.Pieces {
+		guids[i] = p.Guid
+	}
+	w.writeGuidList(guids)
+	return w.digest()
+}
+
+// HashSide computes SHA-256 hash of a Side value.
+func HashSide(s Side) string {
+	w := &hashWriter{}
+	w.writeString("Side")
+	if s.Connector != nil {
+		w.writeString("connector")
+		w.writeString(s.Connector.Guid)
+	}
+	if s.DesignPiece != nil {
+		w.writeString("designPiece")
+		w.writeString(s.DesignPiece.Guid)
+	}
+	w.writeString("piece")
+	w.writeString(s.Piece.Guid)
+	return w.digest()
+}
+
+// HashConnection computes SHA-256 hash of a Connection entity.
+func HashConnection(c Connection) string {
+	w := &hashWriter{}
+	w.writeString("Connection")
+	if len(c.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(c.Attributes))
+		for i, a := range c.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	w.writeString("connected")
+	w.writeHash(HashSide(c.Connected))
+	w.writeString("connecting")
+	w.writeHash(HashSide(c.Connecting))
+	if c.Description != nil {
+		w.writeString("description")
+		w.writeString(*c.Description)
+	}
+	// Connection float fields are non-optional in Go but optional in TS.
+	// For hash compatibility, always write them (they're always present in JSON).
+	w.writeString("gap")
+	w.writeNumber(c.Gap)
+	w.writeString("guid")
+	w.writeString(c.Guid)
+	w.writeString("rise")
+	w.writeNumber(c.Rise)
+	w.writeString("rotation")
+	w.writeNumber(c.Rotation)
+	w.writeString("shift")
+	w.writeNumber(c.Shift)
+	w.writeString("tilt")
+	w.writeNumber(c.Tilt)
+	w.writeString("turn")
+	w.writeNumber(c.Turn)
+	w.writeString("u")
+	w.writeNumber(c.U)
+	w.writeString("v")
+	w.writeNumber(c.V)
+	return w.digest()
+}
+
+// HashPiece computes SHA-256 hash of a Piece entity.
+func HashPiece(p Piece) string {
+	w := &hashWriter{}
+	w.writeString("Piece")
+	if len(p.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(p.Attributes))
+		for i, a := range p.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if p.Center != nil {
+		w.writeString("center")
+		w.writeHash(HashCoord(*p.Center))
+	}
+	if p.Color != nil {
+		w.writeString("color")
+		w.writeString(*p.Color)
+	}
+	if p.Description != nil {
+		w.writeString("description")
+		w.writeString(*p.Description)
+	}
+	if p.Design != nil {
+		w.writeString("design")
+		w.writeString(p.Design.Guid)
+	}
+	w.writeString("guid")
+	w.writeString(p.Guid)
+	if p.IsHidden != nil {
+		w.writeString("isHidden")
+		w.writeBool(*p.IsHidden)
+	}
+	if p.IsLocked != nil {
+		w.writeString("isLocked")
+		w.writeBool(*p.IsLocked)
+	}
+	if p.MirrorPlane != nil {
+		w.writeString("mirrorPlane")
+		w.writeHash(HashPlane(*p.MirrorPlane))
+	}
+	if p.Name != nil {
+		w.writeString("name")
+		w.writeString(*p.Name)
+	}
+	if p.Plane != nil {
+		w.writeString("plane")
+		w.writeHash(HashPlane(*p.Plane))
+	}
+	if len(p.Props) > 0 {
+		w.writeString("props")
+		hashes := make([]string, len(p.Props))
+		for i, prop := range p.Props {
+			hashes[i] = HashProp(prop)
+		}
+		w.writeHashList(hashes)
+	}
+	if p.Scale != nil {
+		w.writeString("scale")
+		w.writeNumber(*p.Scale)
+	}
+	if p.Type != nil {
+		w.writeString("type")
+		w.writeString(p.Type.Guid)
+	}
+	return w.digest()
+}
+
+// HashDesign computes SHA-256 Merkle hash of a Design entity.
+func HashDesign(d Design) string {
+	w := &hashWriter{}
+	w.writeString("Design")
+	if d.ActiveLayer != nil {
+		w.writeString("activeLayer")
+		w.writeString(d.ActiveLayer.Guid)
+	}
+	if len(d.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(d.Attributes))
+		for i, a := range d.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(d.Authors) > 0 {
+		w.writeString("authors")
+		guids := make([]string, len(d.Authors))
+		for i, a := range d.Authors {
+			guids[i] = a.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	if d.CanMirror != nil {
+		w.writeString("canMirror")
+		w.writeBool(*d.CanMirror)
+	}
+	if d.CanScale != nil {
+		w.writeString("canScale")
+		w.writeBool(*d.CanScale)
+	}
+	if len(d.Concepts) > 0 {
+		w.writeString("concepts")
+		guids := make([]string, len(d.Concepts))
+		for i, c := range d.Concepts {
+			guids[i] = c.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	if len(d.Connections) > 0 {
+		w.writeString("connections")
+		hashes := make([]string, len(d.Connections))
+		for i, c := range d.Connections {
+			hashes[i] = HashConnection(c)
+		}
+		w.writeHashList(hashes)
+	}
+	if d.Description != nil {
+		w.writeString("description")
+		w.writeString(*d.Description)
+	}
+	if d.Folder != nil {
+		w.writeString("folder")
+		w.writeString(*d.Folder)
+	}
+	if len(d.Groups) > 0 {
+		w.writeString("groups")
+		hashes := make([]string, len(d.Groups))
+		for i, g := range d.Groups {
+			hashes[i] = HashGroup(g)
+		}
+		w.writeHashList(hashes)
+	}
+	w.writeString("guid")
+	w.writeString(d.Guid)
+	if d.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*d.Icon)
+	}
+	if d.Image != nil {
+		w.writeString("image")
+		w.writeString(*d.Image)
+	}
+	if d.IsAbstract != nil {
+		w.writeString("isAbstract")
+		w.writeBool(*d.IsAbstract)
+	}
+	if len(d.Layers) > 0 {
+		w.writeString("layers")
+		hashes := make([]string, len(d.Layers))
+		for i, l := range d.Layers {
+			hashes[i] = HashLayer(l)
+		}
+		w.writeHashList(hashes)
+	}
+	if d.Location != nil {
+		w.writeString("location")
+		w.writeString(d.Location.Guid)
+	}
+	w.writeString("name")
+	w.writeString(d.Name)
+	if d.Parent != nil {
+		w.writeString("parent")
+		w.writeString(d.Parent.Guid)
+	}
+	if len(d.Pieces) > 0 {
+		w.writeString("pieces")
+		hashes := make([]string, len(d.Pieces))
+		for i, p := range d.Pieces {
+			hashes[i] = HashPiece(p)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(d.Props) > 0 {
+		w.writeString("props")
+		hashes := make([]string, len(d.Props))
+		for i, p := range d.Props {
+			hashes[i] = HashProp(p)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(d.Stats) > 0 {
+		w.writeString("stats")
+		hashes := make([]string, len(d.Stats))
+		for i, s := range d.Stats {
+			hashes[i] = HashStat(s)
+		}
+		w.writeHashList(hashes)
+	}
+	if d.Unit != nil {
+		w.writeString("unit")
+		w.writeString(*d.Unit)
+	}
+	return w.digest()
+}
+
+// HashKit computes SHA-256 Merkle hash of a Kit entity.
+func HashKit(k Kit) string {
+	w := &hashWriter{}
+	w.writeString("Kit")
+	if len(k.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(k.Attributes))
+		for i, a := range k.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(k.Authors) > 0 {
+		w.writeString("authors")
+		hashes := make([]string, len(k.Authors))
+		for i, a := range k.Authors {
+			hashes[i] = HashAuthor(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(k.Concepts) > 0 {
+		w.writeString("concepts")
+		hashes := make([]string, len(k.Concepts))
+		for i, c := range k.Concepts {
+			hashes[i] = HashConcept(c)
+		}
+		w.writeHashList(hashes)
+	}
+	if k.Description != nil {
+		w.writeString("description")
+		w.writeString(*k.Description)
+	}
+	if len(k.Designs) > 0 {
+		w.writeString("designs")
+		hashes := make([]string, len(k.Designs))
+		for i, d := range k.Designs {
+			hashes[i] = HashDesign(d)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(k.Files) > 0 {
+		w.writeString("files")
+		hashes := make([]string, len(k.Files))
+		for i, f := range k.Files {
+			hashes[i] = HashFile(f)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(k.Folders) > 0 {
+		w.writeString("folders")
+		hashes := make([]string, len(k.Folders))
+		for i, f := range k.Folders {
+			hashes[i] = HashFolder(f)
+		}
+		w.writeHashList(hashes)
+	}
+	w.writeString("guid")
+	w.writeString(k.Guid)
+	if k.Homepage != nil {
+		w.writeString("homepage")
+		w.writeString(*k.Homepage)
+	}
+	if k.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*k.Icon)
+	}
+	if k.Image != nil {
+		w.writeString("image")
+		w.writeString(*k.Image)
+	}
+	if k.License != nil {
+		w.writeString("license")
+		w.writeString(*k.License)
+	}
+	w.writeString("name")
+	w.writeString(k.Name)
+	if len(k.Ports) > 0 {
+		w.writeString("ports")
+		hashes := make([]string, len(k.Ports))
+		for i, p := range k.Ports {
+			hashes[i] = HashPort(p)
+		}
+		w.writeHashList(hashes)
+	}
+	if k.Preview != nil {
+		w.writeString("preview")
+		w.writeString(*k.Preview)
+	}
+	if len(k.Qualities) > 0 {
+		w.writeString("qualities")
+		hashes := make([]string, len(k.Qualities))
+		for i, q := range k.Qualities {
+			hashes[i] = HashQuality(q)
+		}
+		w.writeHashList(hashes)
+	}
+	if k.Remote != nil {
+		w.writeString("remote")
+		w.writeString(*k.Remote)
+	}
+	if len(k.Tags) > 0 {
+		w.writeString("tags")
+		hashes := make([]string, len(k.Tags))
+		for i, t := range k.Tags {
+			hashes[i] = HashTag(t)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(k.Types) > 0 {
+		w.writeString("types")
+		hashes := make([]string, len(k.Types))
+		for i, t := range k.Types {
+			hashes[i] = HashType(t)
+		}
+		w.writeHashList(hashes)
+	}
+	if k.Version != "" {
+		w.writeString("version")
+		w.writeString(k.Version)
+	}
+	return w.digest()
+}
+
+// #endregion 🔖Hash Entities
+
+// #region 🔖Hash Diffs
+// Deterministic SHA-256 Merkle hash functions for all diff types.
+
+func writeNullableStringDiff(w *hashWriter, key string, val *string, isSet bool) {
+	if val != nil {
+		w.writeString(key)
+		w.writeString(*val)
+	} else if isSet {
+		w.writeString(key)
+		w.writeBool(false)
+	}
+}
+
+func writeOptStringDiff(w *hashWriter, key string, val *string) {
+	if val != nil {
+		w.writeString(key)
+		w.writeString(*val)
+	}
+}
+
+func writeOptNumberDiff(w *hashWriter, key string, val *float64) {
+	if val != nil {
+		w.writeString(key)
+		w.writeNumber(*val)
+	}
+}
+
+func writeOptIntNumberDiff(w *hashWriter, key string, val *int) {
+	if val != nil {
+		w.writeString(key)
+		w.writeIntNumber(*val)
+	}
+}
+
+func writeOptBoolDiff(w *hashWriter, key string, val *bool) {
+	if val != nil {
+		w.writeString(key)
+		w.writeBool(*val)
+	}
+}
+
+func hashCollectionDiffGeneric(
+	tag string, updateTag string, entityKeyName string,
+	hashEntityFn func(interface{}) string,
+	hashDiffFn func(interface{}) string,
+	removed []string,
+	updated []struct {
+		key  string
+		diff interface{}
+	},
+	added []interface{},
+) string {
+	w := &hashWriter{}
+	w.writeString(tag)
+	if len(added) > 0 {
+		w.writeString("added")
+		hashes := make([]string, len(added))
+		for i, e := range added {
+			hashes[i] = hashEntityFn(e)
+		}
+		w.writeHashList(hashes)
+	}
+	if len(removed) > 0 {
+		w.writeString("removed")
+		w.writeGuidList(removed)
+	}
+	if len(updated) > 0 {
+		w.writeString("updated")
+		keys := []string{entityKeyName, "diff"}
+		sort.Strings(keys)
+		updateHashes := make([]string, len(updated))
+		for i, u := range updated {
+			uw := &hashWriter{}
+			uw.writeString(updateTag)
+			for _, k := range keys {
+				if k == "diff" {
+					uw.writeString("diff")
+					uw.writeHash(hashDiffFn(u.diff))
+				} else {
+					uw.writeString(k)
+					uw.writeString(u.key)
+				}
+			}
+			updateHashes[i] = uw.digest()
+		}
+		w.writeHashList(updateHashes)
+	}
+	return w.digest()
+}
+
+func HashCoordDiff(d CoordDiff) string {
+	w := &hashWriter{}
+	w.writeString("CoordDiff")
+	writeOptNumberDiff(w, "u", d.U)
+	writeOptNumberDiff(w, "v", d.V)
+	return w.digest()
+}
+
+func HashPointDiff(d PointDiff) string {
+	w := &hashWriter{}
+	w.writeString("PointDiff")
+	writeOptNumberDiff(w, "x", d.X)
+	writeOptNumberDiff(w, "y", d.Y)
+	writeOptNumberDiff(w, "z", d.Z)
+	return w.digest()
+}
+
+func HashVectorDiff(d VectorDiff) string {
+	w := &hashWriter{}
+	w.writeString("VectorDiff")
+	writeOptNumberDiff(w, "x", d.X)
+	writeOptNumberDiff(w, "y", d.Y)
+	writeOptNumberDiff(w, "z", d.Z)
+	return w.digest()
+}
+
+func HashPlaneDiff(d PlaneDiff) string {
+	w := &hashWriter{}
+	w.writeString("PlaneDiff")
+	if d.Origin != nil {
+		w.writeString("origin")
+		w.writeHash(HashPointDiff(*d.Origin))
+	}
+	if d.XAxis != nil {
+		w.writeString("xAxis")
+		w.writeHash(HashVectorDiff(*d.XAxis))
+	}
+	if d.YAxis != nil {
+		w.writeString("yAxis")
+		w.writeHash(HashVectorDiff(*d.YAxis))
+	}
+	return w.digest()
+}
+
+func HashCameraDiff(d CameraDiff) string {
+	w := &hashWriter{}
+	w.writeString("CameraDiff")
+	if d.Forward != nil {
+		w.writeString("forward")
+		w.writeHash(HashVectorDiff(*d.Forward))
+	}
+	if d.Position != nil {
+		w.writeString("position")
+		w.writeHash(HashPointDiff(*d.Position))
+	}
+	if d.Up != nil {
+		w.writeString("up")
+		w.writeHash(HashVectorDiff(*d.Up))
+	}
+	return w.digest()
+}
+
+func HashAttributeDiff(d AttributeDiff) string {
+	w := &hashWriter{}
+	w.writeString("AttributeDiff")
+	writeOptStringDiff(w, "definition", d.Definition)
+	writeOptStringDiff(w, "key", d.Key)
+	writeOptStringDiff(w, "value", d.Value)
+	return w.digest()
+}
+
+func HashAttributesDiff(d AttributesDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Attribute.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("AttributesDiff", "AttributeDiffUpdate", "attribute",
+		func(e interface{}) string { return HashAttribute(e.(Attribute)) },
+		func(d interface{}) string { return HashAttributeDiff(d.(AttributeDiff)) },
+		removed, updated, added)
+}
+
+func HashLocationDiff(d LocationDiff) string {
+	w := &hashWriter{}
+	w.writeString("LocationDiff")
+	writeOptNumberDiff(w, "altitude", d.Altitude)
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptNumberDiff(w, "latitude", d.Latitude)
+	writeOptNumberDiff(w, "longitude", d.Longitude)
+	return w.digest()
+}
+
+func HashAuthorDiff(d AuthorDiff) string {
+	w := &hashWriter{}
+	w.writeString("AuthorDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptStringDiff(w, "email", d.Email)
+	writeOptStringDiff(w, "name", d.Name)
+	return w.digest()
+}
+
+func HashAuthorsDiff(d AuthorsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Author.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("AuthorsDiff", "AuthorDiffUpdate", "author",
+		func(e interface{}) string { return HashAuthor(e.(Author)) },
+		func(d interface{}) string { return HashAuthorDiff(d.(AuthorDiff)) },
+		removed, updated, added)
+}
+
+func HashFileDiff(d FileDiff) string {
+	w := &hashWriter{}
+	w.writeString("FileDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptStringDiff(w, "blob", d.Blob)
+	writeOptStringDiff(w, "description", d.Description)
+	if d.Folder != nil {
+		w.writeString("folder")
+		w.writeString(d.Folder.Guid)
+	}
+	writeOptStringDiff(w, "hash", d.Hash)
+	writeOptStringDiff(w, "name", d.Name)
+	writeOptStringDiff(w, "remote", d.Remote)
+	if d.Size != nil {
+		w.writeString("size")
+		w.writeIntNumber(int(*d.Size))
+	}
+	return w.digest()
+}
+
+func HashFilesDiff(d FilesDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.File.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("FilesDiff", "FileDiffUpdate", "file",
+		func(e interface{}) string { return HashFile(e.(File)) },
+		func(d interface{}) string { return HashFileDiff(d.(FileDiff)) },
+		removed, updated, added)
+}
+
+func HashFolderDiff(d FolderDiff) string {
+	w := &hashWriter{}
+	w.writeString("FolderDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptStringDiff(w, "description", d.Description)
+	writeOptStringDiff(w, "name", d.Name)
+	if d.Parent != nil {
+		w.writeString("parent")
+		w.writeString(d.Parent.Guid)
+	}
+	return w.digest()
+}
+
+func HashFoldersDiff(d FoldersDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Folder.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("FoldersDiff", "FolderDiffUpdate", "folder",
+		func(e interface{}) string { return HashFolder(e.(Folder)) },
+		func(d interface{}) string { return HashFolderDiff(d.(FolderDiff)) },
+		removed, updated, added)
+}
+
+func HashBenchmarkDiff(d BenchmarkDiff) string {
+	w := &hashWriter{}
+	w.writeString("BenchmarkDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptStringDiff(w, "definition", d.Definition)
+	writeOptStringDiff(w, "icon", d.Icon)
+	writeOptNumberDiff(w, "max", d.Max)
+	writeOptBoolDiff(w, "maxExcluded", d.MaxExcluded)
+	writeOptNumberDiff(w, "min", d.Min)
+	writeOptBoolDiff(w, "minExcluded", d.MinExcluded)
+	writeOptStringDiff(w, "name", d.Name)
+	return w.digest()
+}
+
+func HashBenchmarksDiff(d BenchmarksDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Benchmark.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("BenchmarksDiff", "BenchmarkDiffUpdate", "benchmark",
+		func(e interface{}) string { return HashBenchmark(e.(Benchmark)) },
+		func(d interface{}) string { return HashBenchmarkDiff(d.(BenchmarkDiff)) },
+		removed, updated, added)
+}
+
+func HashQualityDiff(d QualityDiff) string {
+	w := &hashWriter{}
+	w.writeString("QualityDiff")
+	if d.Benchmarks != nil {
+		w.writeString("benchmarks")
+		w.writeHash(HashBenchmarksDiff(*d.Benchmarks))
+	}
+	writeOptBoolDiff(w, "canScale", d.CanScale)
+	writeOptStringDiff(w, "defaultImperialUnit", d.DefaultImperialUnit)
+	writeOptStringDiff(w, "defaultSiUnit", d.DefaultSiUnit)
+	writeOptNumberDiff(w, "defaultValue", d.DefaultValue)
+	writeOptStringDiff(w, "description", d.Description)
+	writeOptStringDiff(w, "formula", d.Formula)
+	writeOptStringDiff(w, "icon", d.Icon)
+	writeOptStringDiff(w, "image", d.Image)
+	writeOptBoolDiff(w, "isMaxExcluded", d.IsMaxExcluded)
+	writeOptBoolDiff(w, "isMinExcluded", d.IsMinExcluded)
+	writeOptStringDiff(w, "key", d.Key)
+	if d.Kind != nil {
+		w.writeString("kind")
+		w.writeIntNumber(int(*d.Kind))
+	}
+	writeOptNumberDiff(w, "max", d.Max)
+	writeOptNumberDiff(w, "min", d.Min)
+	writeOptStringDiff(w, "name", d.Name)
+	writeOptStringDiff(w, "unit", d.Unit)
+	writeOptStringDiff(w, "uri", d.Uri)
+	return w.digest()
+}
+
+func HashQualitiesDiff(d QualitiesDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Quality.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("QualitiesDiff", "QualityDiffUpdate", "quality",
+		func(e interface{}) string { return HashQuality(e.(Quality)) },
+		func(d interface{}) string { return HashQualityDiff(d.(QualityDiff)) },
+		removed, updated, added)
+}
+
+func HashPortDiff(d PortDiff) string {
+	w := &hashWriter{}
+	w.writeString("PortDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	if len(d.CompatiblePorts) > 0 {
+		w.writeString("compatiblePorts")
+		guids := make([]string, len(d.CompatiblePorts))
+		for i, cp := range d.CompatiblePorts {
+			guids[i] = cp.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
+	writeNullableStringDiff(w, "icon", d.Icon, d.HasField("icon"))
+	writeOptStringDiff(w, "name", d.Name)
+	return w.digest()
+}
+
+func HashPortsDiff(d PortsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Port.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("PortsDiff", "PortDiffUpdate", "port",
+		func(e interface{}) string { return HashPort(e.(Port)) },
+		func(d interface{}) string { return HashPortDiff(d.(PortDiff)) },
+		removed, updated, added)
+}
+
+func HashPropDiff(d PropDiff) string {
+	w := &hashWriter{}
+	w.writeString("PropDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	if d.Quality != nil {
+		w.writeString("quality")
+		w.writeString(d.Quality.Guid)
+	}
+	writeOptStringDiff(w, "unit", d.Unit)
+	writeOptStringDiff(w, "value", d.Value)
+	return w.digest()
+}
+
+func HashPropsDiff(d PropsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Prop.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("PropsDiff", "PropDiffUpdate", "prop",
+		func(e interface{}) string { return HashProp(e.(Prop)) },
+		func(d interface{}) string { return HashPropDiff(d.(PropDiff)) },
+		removed, updated, added)
+}
+
+func HashTagDiff(d TagDiff) string {
+	w := &hashWriter{}
+	w.writeString("TagDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
+	writeNullableStringDiff(w, "icon", d.Icon, d.HasField("icon"))
+	writeOptStringDiff(w, "name", d.Name)
+	return w.digest()
+}
+
+func HashTagsDiff(d TagsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Tag.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("TagsDiff", "TagDiffUpdate", "tag",
+		func(e interface{}) string { return HashTag(e.(Tag)) },
+		func(d interface{}) string { return HashTagDiff(d.(TagDiff)) },
+		removed, updated, added)
+}
+
+func HashConceptDiff(d ConceptDiff) string {
+	w := &hashWriter{}
+	w.writeString("ConceptDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
+	writeNullableStringDiff(w, "icon", d.Icon, d.HasField("icon"))
+	writeOptStringDiff(w, "name", d.Name)
+	return w.digest()
+}
+
+func HashConceptsDiff(d ConceptsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Concept.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("ConceptsDiff", "ConceptDiffUpdate", "concept",
+		func(e interface{}) string { return HashConcept(e.(Concept)) },
+		func(d interface{}) string { return HashConceptDiff(d.(ConceptDiff)) },
+		removed, updated, added)
+}
+
+func HashModelDiff(d ModelDiff) string {
+	w := &hashWriter{}
+	w.writeString("ModelDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptStringDiff(w, "description", d.Description)
+	if d.File != nil {
+		w.writeString("file")
+		w.writeString(d.File.Guid)
+	}
+	writeOptStringDiff(w, "name", d.Name)
+	if len(d.Tags) > 0 {
+		w.writeString("tags")
+		guids := make([]string, len(d.Tags))
+		for i, t := range d.Tags {
+			guids[i] = t.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	return w.digest()
+}
+
+func HashModelsDiff(d ModelsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Model.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("ModelsDiff", "ModelDiffUpdate", "model",
+		func(e interface{}) string { return HashModel(e.(Model)) },
+		func(d interface{}) string { return HashModelDiff(d.(ModelDiff)) },
+		removed, updated, added)
+}
+
+func HashConnectorDiff(d ConnectorDiff) string {
+	w := &hashWriter{}
+	w.writeString("ConnectorDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptStringDiff(w, "description", d.Description)
+	if d.Direction != nil {
+		w.writeString("direction")
+		w.writeHash(HashVectorDiff(*d.Direction))
+	}
+	writeOptBoolDiff(w, "mandatory", d.Mandatory)
+	writeOptStringDiff(w, "name", d.Name)
+	if d.Point != nil {
+		w.writeString("point")
+		w.writeHash(HashPointDiff(*d.Point))
+	}
+	if d.Port != nil {
+		w.writeString("port")
+		w.writeString(d.Port.Guid)
+	}
+	if d.Props != nil {
+		w.writeString("props")
+		w.writeHash(HashPropsDiff(*d.Props))
+	}
+	writeOptNumberDiff(w, "t", d.T)
+	return w.digest()
+}
+
+func HashConnectorsDiff(d ConnectorsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Connector.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("ConnectorsDiff", "ConnectorDiffUpdate", "connector",
+		func(e interface{}) string { return HashConnector(e.(Connector)) },
+		func(d interface{}) string { return HashConnectorDiff(d.(ConnectorDiff)) },
+		removed, updated, added)
+}
+
+func HashTypeDiff(d TypeDiff) string {
+	w := &hashWriter{}
+	w.writeString("TypeDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	if len(d.Authors) > 0 {
+		w.writeString("authors")
+		guids := make([]string, len(d.Authors))
+		for i, a := range d.Authors {
+			guids[i] = a.Guid
+		}
+		w.writeGuidList(guids)
+	} else if d.HasField("authors") {
+		w.writeString("authors")
+		w.writeBool(false)
+	}
+	if len(d.Concepts) > 0 {
+		w.writeString("concepts")
+		guids := make([]string, len(d.Concepts))
+		for i, c := range d.Concepts {
+			guids[i] = c.Guid
+		}
+		w.writeGuidList(guids)
+	} else if d.HasField("concepts") {
+		w.writeString("concepts")
+		w.writeBool(false)
+	}
+	if d.Connectors != nil {
+		w.writeString("connectors")
+		w.writeHash(HashConnectorsDiff(*d.Connectors))
+	}
+	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
+	writeNullableStringDiff(w, "folder", d.Folder, d.HasField("folder"))
+	writeNullableStringDiff(w, "icon", d.Icon, d.HasField("icon"))
+	writeNullableStringDiff(w, "image", d.Image, d.HasField("image"))
+	writeOptBoolDiff(w, "isAbstract", d.IsAbstract)
+	if d.Location != nil {
+		w.writeString("location")
+		w.writeString(d.Location.Guid)
+	} else if d.HasField("location") {
+		w.writeString("location")
+		w.writeBool(false)
+	}
+	if d.Models != nil {
+		w.writeString("models")
+		w.writeHash(HashModelsDiff(*d.Models))
+	}
+	writeOptStringDiff(w, "name", d.Name)
+	if d.Parent != nil {
+		w.writeString("parent")
+		w.writeString(d.Parent.Guid)
+	} else if d.HasField("parent") {
+		w.writeString("parent")
+		w.writeBool(false)
+	}
+	if d.Props != nil {
+		w.writeString("props")
+		w.writeHash(HashPropsDiff(*d.Props))
+	}
+	writeOptIntNumberDiff(w, "stock", d.Stock)
+	writeOptStringDiff(w, "unit", d.Unit)
+	writeOptBoolDiff(w, "virtual", d.Virtual)
+	return w.digest()
+}
+
+func HashTypesDiff(d TypesDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Type.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("TypesDiff", "TypeDiffUpdate", "type",
+		func(e interface{}) string { return HashType(e.(Type)) },
+		func(d interface{}) string { return HashTypeDiff(d.(TypeDiff)) },
+		removed, updated, added)
+}
+
+func HashSideDiff(d SideDiff) string {
+	w := &hashWriter{}
+	w.writeString("SideDiff")
+	if d.Connector != nil {
+		w.writeString("connector")
+		w.writeString(d.Connector.Guid)
+	}
+	if d.DesignPiece != nil {
+		w.writeString("designPiece")
+		w.writeString(d.DesignPiece.Guid)
+	}
+	if d.Piece != nil {
+		w.writeString("piece")
+		w.writeString(d.Piece.Guid)
+	}
+	return w.digest()
+}
+
+func HashLayerDiff(d LayerDiff) string {
+	w := &hashWriter{}
+	w.writeString("LayerDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptStringDiff(w, "color", d.Color)
+	writeOptStringDiff(w, "description", d.Description)
+	writeOptBoolDiff(w, "isHidden", d.IsHidden)
+	writeOptBoolDiff(w, "isLocked", d.IsLocked)
+	writeOptStringDiff(w, "path", d.Path)
+	return w.digest()
+}
+
+func HashLayersDiff(d LayersDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Layer.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("LayersDiff", "LayerDiffUpdate", "layer",
+		func(e interface{}) string { return HashLayer(e.(Layer)) },
+		func(d interface{}) string { return HashLayerDiff(d.(LayerDiff)) },
+		removed, updated, added)
+}
+
+func HashGroupDiff(d GroupDiff) string {
+	w := &hashWriter{}
+	w.writeString("GroupDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptStringDiff(w, "color", d.Color)
+	writeOptStringDiff(w, "description", d.Description)
+	writeOptStringDiff(w, "name", d.Name)
+	if len(d.Pieces) > 0 {
+		w.writeString("pieces")
+		guids := make([]string, len(d.Pieces))
+		for i, p := range d.Pieces {
+			guids[i] = p.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	return w.digest()
+}
+
+func HashGroupsDiff(d GroupsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Group.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("GroupsDiff", "GroupDiffUpdate", "group",
+		func(e interface{}) string { return HashGroup(e.(Group)) },
+		func(d interface{}) string { return HashGroupDiff(d.(GroupDiff)) },
+		removed, updated, added)
+}
+
+func HashStatDiff(d StatDiff) string {
+	w := &hashWriter{}
+	w.writeString("StatDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeOptNumberDiff(w, "max", d.Max)
+	writeOptNumberDiff(w, "min", d.Min)
+	if d.Quality != nil {
+		w.writeString("quality")
+		w.writeString(d.Quality.Guid)
+	}
+	writeOptStringDiff(w, "unit", d.Unit)
+	return w.digest()
+}
+
+func HashStatsDiff(d StatsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Stat.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("StatsDiff", "StatDiffUpdate", "stat",
+		func(e interface{}) string { return HashStat(e.(Stat)) },
+		func(d interface{}) string { return HashStatDiff(d.(StatDiff)) },
+		removed, updated, added)
+}
+
+func HashConnectionDiff(d ConnectionDiff) string {
+	w := &hashWriter{}
+	w.writeString("ConnectionDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	if d.Connected != nil {
+		w.writeString("connected")
+		w.writeHash(HashSideDiff(*d.Connected))
+	}
+	if d.Connecting != nil {
+		w.writeString("connecting")
+		w.writeHash(HashSideDiff(*d.Connecting))
+	}
+	writeOptStringDiff(w, "description", d.Description)
+	writeOptNumberDiff(w, "gap", d.Gap)
+	writeOptNumberDiff(w, "rise", d.Rise)
+	writeOptNumberDiff(w, "rotation", d.Rotation)
+	writeOptNumberDiff(w, "shift", d.Shift)
+	writeOptNumberDiff(w, "tilt", d.Tilt)
+	writeOptNumberDiff(w, "turn", d.Turn)
+	writeOptNumberDiff(w, "u", d.U)
+	writeOptNumberDiff(w, "v", d.V)
+	return w.digest()
+}
+
+func HashConnectionsDiff(d ConnectionsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Connection.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("ConnectionsDiff", "ConnectionDiffUpdate", "connection",
+		func(e interface{}) string { return HashConnection(e.(Connection)) },
+		func(d interface{}) string { return HashConnectionDiff(d.(ConnectionDiff)) },
+		removed, updated, added)
+}
+
+func HashPieceDiff(d PieceDiff) string {
+	w := &hashWriter{}
+	w.writeString("PieceDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	if d.Center != nil {
+		w.writeString("center")
+		w.writeHash(HashCoordDiff(*d.Center))
+	}
+	writeOptStringDiff(w, "color", d.Color)
+	writeOptStringDiff(w, "description", d.Description)
+	if d.Design != nil {
+		w.writeString("design")
+		w.writeString(d.Design.Guid)
+	}
+	writeOptBoolDiff(w, "isHidden", d.IsHidden)
+	writeOptBoolDiff(w, "isLocked", d.IsLocked)
+	if d.MirrorPlane != nil {
+		w.writeString("mirrorPlane")
+		w.writeHash(HashPlaneDiff(*d.MirrorPlane))
+	}
+	writeOptStringDiff(w, "name", d.Name)
+	if d.Plane != nil {
+		w.writeString("plane")
+		w.writeHash(HashPlaneDiff(*d.Plane))
+	}
+	if d.Props != nil {
+		w.writeString("props")
+		w.writeHash(HashPropsDiff(*d.Props))
+	}
+	writeOptNumberDiff(w, "scale", d.Scale)
+	if d.Type != nil {
+		w.writeString("type")
+		w.writeString(d.Type.Guid)
+	}
+	return w.digest()
+}
+
+func HashPiecesDiff(d PiecesDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Piece.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("PiecesDiff", "PieceDiffUpdate", "piece",
+		func(e interface{}) string { return HashPiece(e.(Piece)) },
+		func(d interface{}) string { return HashPieceDiff(d.(PieceDiff)) },
+		removed, updated, added)
+}
+
+func HashDesignDiff(d DesignDiff) string {
+	w := &hashWriter{}
+	w.writeString("DesignDiff")
+	if d.ActiveLayer != nil {
+		w.writeString("activeLayer")
+		w.writeString(d.ActiveLayer.Guid)
+	}
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	if len(d.Authors) > 0 {
+		w.writeString("authors")
+		guids := make([]string, len(d.Authors))
+		for i, a := range d.Authors {
+			guids[i] = a.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	writeOptBoolDiff(w, "canMirror", d.CanMirror)
+	writeOptBoolDiff(w, "canScale", d.CanScale)
+	if len(d.Concepts) > 0 {
+		w.writeString("concepts")
+		guids := make([]string, len(d.Concepts))
+		for i, c := range d.Concepts {
+			guids[i] = c.Guid
+		}
+		w.writeGuidList(guids)
+	}
+	if d.Connections != nil {
+		w.writeString("connections")
+		w.writeHash(HashConnectionsDiff(*d.Connections))
+	}
+	writeOptStringDiff(w, "description", d.Description)
+	writeOptStringDiff(w, "folder", d.Folder)
+	if d.Groups != nil {
+		w.writeString("groups")
+		w.writeHash(HashGroupsDiff(*d.Groups))
+	}
+	writeOptStringDiff(w, "icon", d.Icon)
+	writeOptStringDiff(w, "image", d.Image)
+	writeOptBoolDiff(w, "isAbstract", d.IsAbstract)
+	if d.Layers != nil {
+		w.writeString("layers")
+		w.writeHash(HashLayersDiff(*d.Layers))
+	}
+	if d.Location != nil {
+		w.writeString("location")
+		w.writeString(d.Location.Guid)
+	}
+	writeOptStringDiff(w, "name", d.Name)
+	if d.Parent != nil {
+		w.writeString("parent")
+		w.writeString(d.Parent.Guid)
+	}
+	if d.Pieces != nil {
+		w.writeString("pieces")
+		w.writeHash(HashPiecesDiff(*d.Pieces))
+	}
+	if d.Props != nil {
+		w.writeString("props")
+		w.writeHash(HashPropsDiff(*d.Props))
+	}
+	if d.Stats != nil {
+		w.writeString("stats")
+		w.writeHash(HashStatsDiff(*d.Stats))
+	}
+	writeOptStringDiff(w, "unit", d.Unit)
+	if d.View != nil {
+		w.writeString("view")
+		w.writeHash(HashCameraDiff(*d.View))
+	}
+	return w.digest()
+}
+
+func HashDesignsDiff(d DesignsDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Design.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("DesignsDiff", "DesignDiffUpdate", "design",
+		func(e interface{}) string { return HashDesign(e.(Design)) },
+		func(d interface{}) string { return HashDesignDiff(d.(DesignDiff)) },
+		removed, updated, added)
+}
+
+func HashKitDiff(d KitDiff) string {
+	w := &hashWriter{}
+	w.writeString("KitDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	if d.Authors != nil {
+		w.writeString("authors")
+		w.writeHash(HashAuthorsDiff(*d.Authors))
+	}
+	if d.Concepts != nil {
+		w.writeString("concepts")
+		w.writeHash(HashConceptsDiff(*d.Concepts))
+	}
+	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
+	if d.Designs != nil {
+		w.writeString("designs")
+		w.writeHash(HashDesignsDiff(*d.Designs))
+	}
+	if d.Files != nil {
+		w.writeString("files")
+		w.writeHash(HashFilesDiff(*d.Files))
+	}
+	if d.Folders != nil {
+		w.writeString("folders")
+		w.writeHash(HashFoldersDiff(*d.Folders))
+	}
+	writeNullableStringDiff(w, "homepage", d.Homepage, d.HasField("homepage"))
+	writeNullableStringDiff(w, "icon", d.Icon, d.HasField("icon"))
+	writeNullableStringDiff(w, "image", d.Image, d.HasField("image"))
+	writeNullableStringDiff(w, "license", d.License, d.HasField("license"))
+	writeOptStringDiff(w, "name", d.Name)
+	if d.Ports != nil {
+		w.writeString("ports")
+		w.writeHash(HashPortsDiff(*d.Ports))
+	}
+	writeNullableStringDiff(w, "preview", d.Preview, d.HasField("preview"))
+	if d.Qualities != nil {
+		w.writeString("qualities")
+		w.writeHash(HashQualitiesDiff(*d.Qualities))
+	}
+	writeNullableStringDiff(w, "remote", d.Remote, d.HasField("remote"))
+	if d.Tags != nil {
+		w.writeString("tags")
+		w.writeHash(HashTagsDiff(*d.Tags))
+	}
+	if d.Types != nil {
+		w.writeString("types")
+		w.writeHash(HashTypesDiff(*d.Types))
+	}
+	writeOptStringDiff(w, "version", d.Version)
+	return w.digest()
+}
+
+// #endregion 🔖Hash Diff Entities
+
+// #endregion 🔖Hash Diffs
+
+// #endregion 🔖Hash
 
 // #region 🔖Serialization
 // [👤semio📚go💻semio🔖serialization](repo://p/u/semio/b/l/go/f/semio.go/s/Serialization)
@@ -7217,6 +9807,96 @@ func applyDesignDiff(base Design, diff DesignDiff) Design {
 	return result
 }
 
+// DesignWithDiff creates a mixed design keeping old entities with diff status annotations.
+// DesignWithDiff MUST maintain all old pieces and connections (same parameters),
+// annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
+// keep deleted entities in place marked as removed, and append added entities marked as added.
+// [👤semio📚go💻semio🔖kitoperations🛠️designwithdiff](repo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/DesignWithDiff)
+func DesignWithDiff(base Design, diff DesignDiff) Design {
+	statusAttr := func(status string) Attribute {
+		return Attribute{
+			Guid:  "semio.diffStatus." + status,
+			Key:   "semio.diffStatus",
+			Value: ptrString(status),
+		}
+	}
+
+	removedPieceGuids := make(map[string]bool)
+	updatedPieceGuids := make(map[string]bool)
+	if diff.Pieces != nil {
+		for _, r := range diff.Pieces.Removed {
+			removedPieceGuids[r.Guid] = true
+		}
+		for _, u := range diff.Pieces.Updated {
+			updatedPieceGuids[u.Piece.Guid] = true
+		}
+	}
+
+	removedConnGuids := make(map[string]bool)
+	updatedConnGuids := make(map[string]bool)
+	if diff.Connections != nil {
+		for _, r := range diff.Connections.Removed {
+			removedConnGuids[r.Guid] = true
+		}
+		for _, u := range diff.Connections.Updated {
+			updatedConnGuids[u.Connection.Guid] = true
+		}
+	}
+
+	resultPieces := make([]Piece, 0, len(base.Pieces))
+	for _, p := range base.Pieces {
+		pc := p
+		attrs := append([]Attribute{}, pc.Attributes...)
+		if removedPieceGuids[pc.Guid] {
+			attrs = append(attrs, statusAttr("removed"))
+		} else if updatedPieceGuids[pc.Guid] {
+			attrs = append(attrs, statusAttr("modified"))
+		} else {
+			attrs = append(attrs, statusAttr("unchanged"))
+		}
+		pc.Attributes = attrs
+		resultPieces = append(resultPieces, pc)
+	}
+	if diff.Pieces != nil {
+		for _, added := range diff.Pieces.Added {
+			ac := added
+			attrs := append([]Attribute{}, ac.Attributes...)
+			attrs = append(attrs, statusAttr("added"))
+			ac.Attributes = attrs
+			resultPieces = append(resultPieces, ac)
+		}
+	}
+
+	resultConns := make([]Connection, 0, len(base.Connections))
+	for _, c := range base.Connections {
+		cc := c
+		attrs := append([]Attribute{}, cc.Attributes...)
+		if removedConnGuids[cc.Guid] {
+			attrs = append(attrs, statusAttr("removed"))
+		} else if updatedConnGuids[cc.Guid] {
+			attrs = append(attrs, statusAttr("modified"))
+		} else {
+			attrs = append(attrs, statusAttr("unchanged"))
+		}
+		cc.Attributes = attrs
+		resultConns = append(resultConns, cc)
+	}
+	if diff.Connections != nil {
+		for _, added := range diff.Connections.Added {
+			ac := added
+			attrs := append([]Attribute{}, ac.Attributes...)
+			attrs = append(attrs, statusAttr("added"))
+			ac.Attributes = attrs
+			resultConns = append(resultConns, ac)
+		}
+	}
+
+	result := base
+	result.Pieces = resultPieces
+	result.Connections = resultConns
+	return result
+}
+
 // [👤semio📚go💻semio🔖kitoperations🛠️applypiecesdiff](repo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Operations/d/i/applyPiecesDiff)
 // applyPiecesDiff holds the data fields for a applyPiecesDiff record.
 // applyPiecesDiff MUST perform the applyPiecesDiff operation.
@@ -7840,11 +10520,75 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 // [👤semio📚go💻semio🔖kit🔖filter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter)
 // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
-// FilterKitWithDesign filters a kit to only include entities related to a specific design.
+// GlobFilter provides include/exclude glob patterns for name-based entity filtering.
+// If Include is non-empty, only names matching at least one include pattern are kept.
+// Names matching any Exclude pattern are always removed.
+// [👤semio📚go💻semio🔖kit🔖filter✂️globfilter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/GlobFilter)
+type GlobFilter struct {
+	Include []string `json:"include,omitempty"`
+	Exclude []string `json:"exclude,omitempty"`
+}
+
+// KitFilter provides general-purpose filtering combining design-based transitive filtering with glob-based name filtering.
+// When DesignGuid is set, first performs transitive design-scoped subset extraction.
+// Glob filters on each entity kind are applied afterwards.
+// [👤semio📚go💻semio🔖kit🔖filter✂️kitfilter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/KitFilter)
+type KitFilter struct {
+	DesignGuid string      `json:"designGuid,omitempty"`
+	ModelTags  []string    `json:"modelTags,omitempty"`
+	Designs    *GlobFilter `json:"designs,omitempty"`
+	Types      *GlobFilter `json:"types,omitempty"`
+	Ports      *GlobFilter `json:"ports,omitempty"`
+	Files      *GlobFilter `json:"files,omitempty"`
+	Tags       *GlobFilter `json:"tags,omitempty"`
+	Concepts   *GlobFilter `json:"concepts,omitempty"`
+	Qualities  *GlobFilter `json:"qualities,omitempty"`
+	Authors    *GlobFilter `json:"authors,omitempty"`
+	Folders    *GlobFilter `json:"folders,omitempty"`
+}
+
+// GlobMatch matches a name against a glob pattern supporting * and ?. Case-insensitive.
+// Uses path.Match semantics but converts both name and pattern to lowercase first.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️globmatch](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/GlobMatch)
+func GlobMatch(name, pattern string) bool {
+	matched, err := path.Match(strings.ToLower(pattern), strings.ToLower(name))
+	if err != nil {
+		return false
+	}
+	return matched
+}
+
+// MatchesGlobFilter checks if a name passes a GlobFilter. Returns true if filter is nil or name matches.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️matchesglobfilter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/MatchesGlobFilter)
+func MatchesGlobFilter(name string, filter *GlobFilter) bool {
+	if filter == nil {
+		return true
+	}
+	if len(filter.Include) > 0 {
+		matched := false
+		for _, p := range filter.Include {
+			if GlobMatch(name, p) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return false
+		}
+	}
+	for _, p := range filter.Exclude {
+		if GlobMatch(name, p) {
+			return false
+		}
+	}
+	return true
+}
+
+// filterKitByDesign filters a kit to only include entities related to a specific design.
 // Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
 // files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
-// [👤semio📚go💻semio🔖kit🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/FilterKitWithDesign)
-func FilterKitWithDesign(kit Kit, designGuid string, tags []string) Kit {
+// [👤semio📚go💻semio🔖kit🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/filterKitByDesign)
+func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 	var design *Design
 	for i := range kit.Designs {
 		if kit.Designs[i].Guid == designGuid {
@@ -8056,8 +10800,91 @@ func FilterKitWithDesign(kit Kit, designGuid string, tags []string) Kit {
 	return result
 }
 
+// FilterKit applies general-purpose filtering to a kit. Combines optional design-based transitive filtering
+// with glob-based name filtering. When DesignGuid is set, first performs transitive design-scoped subset extraction.
+// Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️filterkit](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/FilterKit)
+func FilterKit(kit Kit, filter KitFilter) Kit {
+	var base Kit
+	if filter.DesignGuid != "" {
+		base = filterKitByDesign(kit, filter.DesignGuid, filter.ModelTags)
+	} else {
+		base = kit
+	}
+
+	hasGlobFilters := filter.Designs != nil || filter.Types != nil || filter.Ports != nil || filter.Files != nil ||
+		filter.Tags != nil || filter.Concepts != nil || filter.Qualities != nil || filter.Authors != nil || filter.Folders != nil
+	if !hasGlobFilters {
+		return base
+	}
+
+	result := Kit{
+		Guid:        base.Guid,
+		Name:        base.Name,
+		Version:     base.Version,
+		Description: base.Description,
+		Icon:        base.Icon,
+		Image:       base.Image,
+		Preview:     base.Preview,
+		Remote:      base.Remote,
+		Homepage:    base.Homepage,
+		License:     base.License,
+		Attributes:  base.Attributes,
+		CreatedAt:   base.CreatedAt,
+		UpdatedAt:   base.UpdatedAt,
+	}
+
+	for _, t := range base.Types {
+		if MatchesGlobFilter(t.Name, filter.Types) {
+			result.Types = append(result.Types, t)
+		}
+	}
+	for _, d := range base.Designs {
+		if MatchesGlobFilter(d.Name, filter.Designs) {
+			result.Designs = append(result.Designs, d)
+		}
+	}
+	for _, p := range base.Ports {
+		if MatchesGlobFilter(p.Name, filter.Ports) {
+			result.Ports = append(result.Ports, p)
+		}
+	}
+	for _, f := range base.Files {
+		if MatchesGlobFilter(f.Name, filter.Files) {
+			result.Files = append(result.Files, f)
+		}
+	}
+	for _, t := range base.Tags {
+		if MatchesGlobFilter(t.Name, filter.Tags) {
+			result.Tags = append(result.Tags, t)
+		}
+	}
+	for _, c := range base.Concepts {
+		if MatchesGlobFilter(c.Name, filter.Concepts) {
+			result.Concepts = append(result.Concepts, c)
+		}
+	}
+	for _, q := range base.Qualities {
+		if MatchesGlobFilter(q.Name, filter.Qualities) {
+			result.Qualities = append(result.Qualities, q)
+		}
+	}
+	for _, a := range base.Authors {
+		if MatchesGlobFilter(a.Name, filter.Authors) {
+			result.Authors = append(result.Authors, a)
+		}
+	}
+	for _, f := range base.Folders {
+		if MatchesGlobFilter(f.Name, filter.Folders) {
+			result.Folders = append(result.Folders, f)
+		}
+	}
+
+	return result
+}
+
 // selectBestModelLike selects the best model based on tag matching using Jaccard similarity.
-// Helper for FilterKitWithDesign.
+// Helper for filterKitByDesign.
 // [👤semio📚go💻semio🔖kit🔖filter🛠️selectbestmodellike](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/selectBestModelLike)
 func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
 	if len(models) == 0 {
@@ -8107,7 +10934,7 @@ func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
 }
 
 // jaccardTagGuidsGo computes Jaccard similarity between model tags and selected tags.
-// Helper for FilterKitWithDesign.
+// Helper for filterKitByDesign.
 // [👤semio📚go💻semio🔖kit🔖filter🛠️jaccardtagguidsgo](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/jaccardTagGuidsGo)
 func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 	modelTagSet := make(map[string]bool)
@@ -9664,13 +12491,26 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 		}{srcGuid, conn})
 	}
 
+	// Save original centers before BFS modifies pieces in-place.
+	// pieceMap shares pointers with design.Pieces, so after BFS
+	// piece.Center and pieceMap[guid].Center are the same pointer.
+	originalCenters := make(map[string]*Coord)
+	for _, p := range design.Pieces {
+		if p.Center != nil {
+			c := *p.Center
+			originalCenters[p.Guid] = &c
+		}
+	}
+
 	visited := make(map[string]bool)
+	piecePaths := make(map[string]string)
 	var bfs func(rootGuid string)
 	bfs = func(rootGuid string) {
 		queue := []string{rootGuid}
 		visited[rootGuid] = true
+		piecePaths[rootGuid] = rootGuid
 		rootPiece := pieceMap[rootGuid]
-		if rootPiece.Plane != nil {
+		if rootPiece.Plane != nil && rootPiece.Center != nil {
 			piecePlanes[rootGuid] = rootPiece.Plane
 		} else {
 			identityPlane := Plane{
@@ -9758,6 +12598,7 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 
 				childCenter := &Coord{U: roundFloat(childU, 6), V: roundFloat(childV, 6)}
 				neighborPiece.Center = childCenter
+				piecePaths[neighbor.neighborGuid] = piecePaths[currentGuid] + "," + neighbor.neighborGuid
 
 				queue = append(queue, neighbor.neighborGuid)
 			}
@@ -9795,13 +12636,20 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 
 		pieceFromMap := pieceMap[piece.Guid]
 		if pieceFromMap.Center != nil {
-			if piece.Center == nil || pieceFromMap.Center.U != piece.Center.U || pieceFromMap.Center.V != piece.Center.V {
+			origCenter := originalCenters[piece.Guid]
+			if origCenter == nil || pieceFromMap.Center.U != origCenter.U || pieceFromMap.Center.V != origCenter.V {
 				diff.Center = &CoordDiff{U: &pieceFromMap.Center.U, V: &pieceFromMap.Center.V}
 				hasChanges = true
 			}
 		}
 
 		if hasChanges {
+			if path, ok := piecePaths[piece.Guid]; ok {
+				pathValue := path
+				diff.Attributes = &AttributesDiff{
+					Added: []Attribute{{Guid: Guid(), Key: "semio.path", Value: &pathValue}},
+				}
+			}
 			updatedPieces = append(updatedPieces, struct {
 				Piece PieceId   `json:"piece"`
 				Diff  PieceDiff `json:"diff"`
@@ -9840,7 +12688,9 @@ func ApplyDesignDiff(base Design, diff DesignDiff) Design {
 }
 
 // DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
-// DragPiecesInDesign MUST return piece center offsets for root movers and u/v offsets for orphan connections.
+// DragPiecesInDesign MUST offset center for all fixed pieces (pieces without parent connection) by drag offset.
+// DragPiecesInDesign MUST ignore selected pieces that are descendants of another selected piece for connection diffs.
+// A piece's parent connection is the connection where it is the Connecting (child) piece.
 // [👤semio📚go💻semiogo🔖flattendesign🛠️dragpiecesindesign](repo://definition/SEMIO/GO/SEMIO.GO/FLATTEN-DESIGN/DRAG-PIECES-IN-DESIGN)
 func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 	selectedGuids := make(map[string]bool)
@@ -9848,79 +12698,80 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 		selectedGuids[p.Guid] = true
 	}
 	parentMap := make(map[string]struct{ connectionGuid, parentGuid string })
-	childrenMap := make(map[string][]string)
 	for _, c := range design.Connections {
-		parentMap[c.Connected.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connecting.Piece.Guid}
-		childrenMap[c.Connecting.Piece.Guid] = append(childrenMap[c.Connecting.Piece.Guid], c.Connected.Piece.Guid)
+		parentMap[c.Connecting.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connected.Piece.Guid}
 	}
-	rootMovers := make(map[string]bool)
-	for _, p := range pieces.Pieces {
-		for _, dp := range design.Pieces {
-			if dp.Guid == p.Guid && dp.Center != nil {
-				rootMovers[p.Guid] = true
-				break
-			}
-		}
-	}
-	movingSet := make(map[string]bool)
-	queue := make([]string, 0, len(rootMovers))
-	for guid := range rootMovers {
-		queue = append(queue, guid)
-	}
-	for len(queue) > 0 {
-		guid := queue[len(queue)-1]
-		queue = queue[:len(queue)-1]
-		if movingSet[guid] {
-			continue
-		}
-		movingSet[guid] = true
-		for _, child := range childrenMap[guid] {
-			queue = append(queue, child)
+	fixedGuids := make(map[string]bool)
+	for guid := range selectedGuids {
+		if _, hasParent := parentMap[guid]; !hasParent {
+			fixedGuids[guid] = true
 		}
 	}
 	var pieceUpdates []struct {
 		Piece PieceId   `json:"piece"`
 		Diff  PieceDiff `json:"diff"`
 	}
-	u := offset.U
-	v := offset.V
-	for guid := range rootMovers {
-		pieceUpdates = append(pieceUpdates, struct {
-			Piece PieceId   `json:"piece"`
-			Diff  PieceDiff `json:"diff"`
-		}{
-			Piece: PieceId{Guid: guid},
-			Diff:  PieceDiff{Center: &CoordDiff{U: &u, V: &v}},
-		})
+	pieceMap := make(map[string]*Piece)
+	for i := range design.Pieces {
+		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+	}
+	for guid := range fixedGuids {
+		if p, ok := pieceMap[guid]; ok && p.Center != nil {
+			newU := p.Center.U + offset.U
+			newV := p.Center.V + offset.V
+			pieceUpdates = append(pieceUpdates, struct {
+				Piece PieceId   `json:"piece"`
+				Diff  PieceDiff `json:"diff"`
+			}{
+				Piece: PieceId{Guid: guid},
+				Diff:  PieceDiff{Center: &CoordDiff{U: &newU, V: &newV}},
+			})
+		}
 	}
 	var connectionUpdates []struct {
 		Connection ConnectionId   `json:"connection"`
 		Diff       ConnectionDiff `json:"diff"`
 	}
 	for guid := range selectedGuids {
-		if movingSet[guid] {
+		if fixedGuids[guid] {
+			continue
+		}
+		isDescendant := false
+		current := guid
+		for {
+			p, ok := parentMap[current]
+			if !ok {
+				break
+			}
+			if selectedGuids[p.parentGuid] {
+				isDescendant = true
+				break
+			}
+			current = p.parentGuid
+		}
+		if isDescendant {
 			continue
 		}
 		parent, ok := parentMap[guid]
 		if !ok {
 			continue
 		}
+		connU := offset.U
+		connV := offset.V
 		connectionUpdates = append(connectionUpdates, struct {
 			Connection ConnectionId   `json:"connection"`
 			Diff       ConnectionDiff `json:"diff"`
 		}{
 			Connection: ConnectionId{Guid: parent.connectionGuid},
-			Diff:       ConnectionDiff{U: &u, V: &v},
+			Diff:       ConnectionDiff{U: &connU, V: &connV},
 		})
 	}
 	diff := DesignDiff{}
-	if len(pieceUpdates) > 0 || len(connectionUpdates) > 0 {
-		if len(pieceUpdates) > 0 {
-			diff.Pieces = &PiecesDiff{Updated: pieceUpdates}
-		}
-		if len(connectionUpdates) > 0 {
-			diff.Connections = &ConnectionsDiff{Updated: connectionUpdates}
-		}
+	if len(pieceUpdates) > 0 {
+		diff.Pieces = &PiecesDiff{Updated: pieceUpdates}
+	}
+	if len(connectionUpdates) > 0 {
+		diff.Connections = &ConnectionsDiff{Updated: connectionUpdates}
 	}
 	return diff
 }
@@ -10460,7 +13311,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		visited[rootGuid] = true
 		rootPieceGuids = append(rootPieceGuids, rootGuid)
 		rootPiece := pieceMap[rootGuid]
-		if rootPiece.Plane != nil {
+		if rootPiece.Plane != nil && rootPiece.Center != nil {
 			piecePlanes[rootGuid] = rootPiece.Plane
 		} else {
 			p := Plane{

@@ -335,7 +335,7 @@ public class Tests
         public void Metabolism_Json_Memory_Json_Json_Zip_Zip_Json()
         {
 
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var json = Utility.Serialize(kit);
             var deserializedKit = Utility.Deserialize<Kit>(json);
             Assert.Equal(Utility.Serialize(kit), Utility.Serialize(deserializedKit!));
@@ -366,7 +366,7 @@ public class Tests
             [Fact]
             public void Metabolism_Kit_Sqlite_Kit()
             {
-                var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+                var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
 
                 var tempDir = Path.Combine(Path.GetTempPath(), "semio_sqlite_test_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
@@ -433,7 +433,7 @@ public class Tests
 
         private void TestFlatten(string designName, string? parentName = null)
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = FindDesign(kit, designName, parentName);
 
             var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Guid == design.Guid);
@@ -494,12 +494,12 @@ public class Tests
         [Fact]
         public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()
         {
-            var kitOriginal = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kitOriginal = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             kitOriginal.Designs = kitOriginal.Designs?.Where(d => d.Parent == null).ToList();
 
-            var kitDiff = Tests.LoadAsset<KitDiff>("diff_kit_metabolism.json");
-            var kitDiffInverted = Tests.LoadAsset<KitDiff>("diff_kit_metabolism_inverted.json");
-            var kitDiffed = Tests.LoadAsset<Kit>("kit_metabolism_diffed.json");
+            var kitDiff = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
+            var kitDiffInverted = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
+            var kitDiffed = Tests.LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
 
             var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
             Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), "GetKitChange: forward diff doesn't match expected diff");
@@ -519,7 +519,7 @@ public class Tests
         [Fact]
         public void Metabolism_Kit_Validate_Empty_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var result = SemioValidator.ValidateKit(kit);
             Assert.Empty(result.Issues);
         }
@@ -527,9 +527,9 @@ public class Tests
         [Fact]
         public void Invalid_Kit_Validate_Invalid_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_invalid.json");
+            var kit = Tests.LoadAsset<Kit>("invalid.kit.semio.json");
             var result = SemioValidator.ValidateKit(kit);
-            var filePath = Path.Combine(Tests.AssetsPath, "validation.json");
+            var filePath = Path.Combine(Tests.AssetsPath, "validation.semio.json");
             var expectedJson = System.IO.File.ReadAllText(filePath);
             var expected = ValidationResult.Parse(expectedJson);
 
@@ -542,10 +542,10 @@ public class Tests
         [Fact]
         public void Design_Pieces_Offset_DiffDesign()
         {
-            var design = Tests.LoadAsset<Design>("drag/design.json");
-            var pieces = Tests.LoadAsset<Design>("drag/pieces.json");
-            var offset = Tests.LoadAsset<Coord>("drag/offset.json");
-            var expectedDiff = Tests.LoadAsset<DesignDiff>("drag/diff_design.json");
+            var design = Tests.LoadAsset<Design>("drag/design.semio.json");
+            var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
+            var offset = Tests.LoadAsset<Coord>("drag/offset.semio.json");
+            var expectedDiff = Tests.LoadAsset<DesignDiff>("drag/diff.design.semio.json");
             var computedDiff = Design.DragPiecesInDesign(design, pieces, offset);
             Assert.NotNull(computedDiff.Pieces);
             Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
@@ -572,6 +572,54 @@ public class Tests
         }
     }
 
+    public class Delete
+    {
+        [Fact]
+        public void Nakagin_Capsule_Tower_Delete_Third_Tambour_And_First_Small_Tower_Connection()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var selection = Tests.LoadAsset<Design>("nakagin-capsule-tower.deleted.selection.semio.json");
+            var expectedDiff = Tests.LoadAsset<DesignDiff>("nakagin-capsule-tower.deleted.design.diff.semio.json");
+
+            var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
+            var connectionGuids = selection.Connections.Select(c => c.Guid).ToList();
+            var computedDiff = Design.DeletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
+
+            // Verify removed pieces
+            Assert.NotNull(computedDiff.Pieces);
+            Assert.Equal(expectedDiff.Pieces!.Removed.Count, computedDiff.Pieces!.Removed.Count);
+            var expectedRemovedPieces = new HashSet<string>(expectedDiff.Pieces.Removed.Select(r => r.Guid));
+            foreach (var r in computedDiff.Pieces.Removed)
+                Assert.True(expectedRemovedPieces.Contains(r.Guid), $"Unexpected removed piece {r.Guid}");
+
+            // Verify updated (fixed) pieces
+            Assert.Equal(expectedDiff.Pieces.Updated.Count, computedDiff.Pieces.Updated.Count);
+            var expectedUpdatedMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
+            foreach (var u in computedDiff.Pieces.Updated)
+            {
+                Assert.True(expectedUpdatedMap.ContainsKey(u.Piece.Guid), $"Unexpected piece update for {u.Piece.Guid}");
+                var expected = expectedUpdatedMap[u.Piece.Guid];
+                Assert.NotNull(u.Diff!.Plane);
+                Assert.NotNull(expected!.Plane);
+                Assert.Equal(expected.Plane!.Origin.X, u.Diff.Plane!.Origin.X, 3);
+                Assert.Equal(expected.Plane.Origin.Y, u.Diff.Plane.Origin.Y, 3);
+                Assert.Equal(expected.Plane.Origin.Z, u.Diff.Plane.Origin.Z, 3);
+                Assert.NotNull(u.Diff.Center);
+                Assert.NotNull(expected.Center);
+                Assert.Equal(expected.Center!.U, u.Diff.Center!.U, 3);
+                Assert.Equal(expected.Center.V, u.Diff.Center.V, 3);
+            }
+
+            // Verify removed connections
+            Assert.NotNull(computedDiff.Connections);
+            Assert.Equal(expectedDiff.Connections!.Removed.Count, computedDiff.Connections!.Removed.Count);
+            var expectedRemovedConns = new HashSet<string>(expectedDiff.Connections.Removed.Select(r => r.Guid));
+            foreach (var r in computedDiff.Connections.Removed)
+                Assert.True(expectedRemovedConns.Contains(r.Guid), $"Unexpected removed connection {r.Guid}");
+        }
+    }
+
     public class DesignModel
     {
         private static Model? SelectBestModelLikeSemioTs(List<Model> models, List<string> selectedTagGuids)
@@ -593,7 +641,7 @@ public class Tests
         [Fact]
         public void Model_Selection_From_Shared_Semio_Assets()
         {
-            var payload = Tests.LoadAsset<ModelSelectionAsset>("model_selection.json");
+            var payload = Tests.LoadAsset<ModelSelectionAsset>("model.selection.semio.json");
             foreach (var testCase in payload.Cases)
             {
                 var models = testCase.Models
@@ -616,11 +664,11 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Filter_Produces_Expected_Subset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var expected = Tests.LoadAsset<Kit>("nakagin-capsule-tower.filtered.kit.semio.json");
             var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
 
-            var filtered = Kit.FilterKitWithDesign(kit, design.Guid);
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid });
 
             Assert.Equal(expected.Designs?.Count ?? 0, filtered.Designs?.Count ?? 0);
             Assert.Equal(expected.Types?.Count ?? 0, filtered.Types?.Count ?? 0);
@@ -662,10 +710,10 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Filter_Preserves_Metadata()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
 
-            var filtered = Kit.FilterKitWithDesign(kit, design.Guid);
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid });
 
             Assert.Equal(kit.Guid, filtered.Guid);
             Assert.Equal(kit.Name, filtered.Name);
@@ -678,7 +726,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Sum_Effective_Floor_Area()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var quality = kit.Qualities.First(q => q.Name == "effective floor area");
             var result = Kit.SumQualityInDesign(kit, design.Guid, quality.Guid);
@@ -722,7 +770,7 @@ public class Tests
             };
             System.IO.File.WriteAllText(Path.Combine(reportsDir, "net.json"), report.ToString());
 
-            var canonicalPath = Path.Combine(AssetsPath, "model-kpi-nakagin.json");
+            var canonicalPath = Path.Combine(AssetsPath, "nakagin.kpi.model.semio.json");
             var canonical = JObject.Parse(System.IO.File.ReadAllText(canonicalPath));
             var skip = new HashSet<string> { "centroid", "total_surface_area" };
             foreach (var kv in canonical)
@@ -738,7 +786,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Glb_Valid_Header()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignModel(kit, design.Guid, ".glb");
             Assert.NotNull(result);
@@ -757,7 +805,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Gltf_Valid_Json()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
             Assert.NotNull(result);
@@ -770,7 +818,7 @@ public class Tests
         [Fact]
         public void Invalid_Format_Throws()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             Assert.Throws<ArgumentException>(() => Kit.ExportDesignModel(kit, design.Guid, ".invalid"));
         }
@@ -778,7 +826,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Scene_Graph_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
             Assert.NotNull(result);
@@ -797,7 +845,7 @@ public class Tests
         [Fact]
         public void Type_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var type = kit.Types.First();
             var meta = type.ToMeta();
 
@@ -820,7 +868,7 @@ public class Tests
         [Fact]
         public void Type_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var type = kit.Types.First();
             var shallow = type.ToShallow();
 
@@ -848,7 +896,7 @@ public class Tests
         [Fact]
         public void Design_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Parent == null);
             var meta = design.ToMeta();
 
@@ -870,7 +918,7 @@ public class Tests
         [Fact]
         public void Design_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Parent == null);
             var shallow = design.ToShallow();
 
@@ -896,7 +944,7 @@ public class Tests
         [Fact]
         public void Kit_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var meta = kit.ToMeta();
 
             Assert.Equal(kit.Guid, meta.Guid);
@@ -916,7 +964,7 @@ public class Tests
         [Fact]
         public void Kit_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var shallow = kit.ToShallow();
 
             Assert.Equal(kit.Guid, shallow.Guid);
@@ -942,7 +990,7 @@ public class Tests
         [Fact]
         public void Kit_To_Meta_To_Shallow()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
 
             var meta = kit.ToMeta();
             Assert.NotNull(meta);
@@ -990,5 +1038,190 @@ public class Tests
             }
         }
     }
+
+    #region 🔖Hash
+    // Hash tests for Merkle hash functions.
+
+    public class HashTests
+    {
+        [Fact]
+        public void HashKit_Metabolism_Matches_Expected()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+
+            var hash = Hashing.HashKit(kit);
+            Assert.Equal("4a8b056c2e80616afd25addb1bc31204da9879714c78ef2ec213df691a043160", hash);
+        }
+
+        [Fact]
+        public void HashKit_Deterministic()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var hash1 = Hashing.HashKit(kit);
+            var hash2 = Hashing.HashKit(kit);
+            Assert.Equal(hash1, hash2);
+        }
+
+        [Fact]
+        public void HashPoint_Deterministic()
+        {
+            var p = new Point { X = 1.5, Y = -2.3, Z = 0 };
+            var h1 = Hashing.HashPoint(p);
+            var h2 = Hashing.HashPoint(p);
+            Assert.Equal(h1, h2);
+            Assert.Equal(64, h1.Length);
+        }
+
+        [Fact]
+        public void HashVector_Deterministic()
+        {
+            var v = new Vector { X = 0, Y = 0, Z = 1 };
+            var h1 = Hashing.HashVector(v);
+            var h2 = Hashing.HashVector(v);
+            Assert.Equal(h1, h2);
+            Assert.Equal(64, h1.Length);
+        }
+
+        [Fact]
+        public void HashConnector_Deterministic()
+        {
+            var c = new Connector
+            {
+                Guid = "test-guid",
+                T = 0.5,
+                Mandatory = true,
+                Point = new Point { X = 0, Y = 0, Z = 0 },
+                Direction = new Vector { X = 0, Y = 0, Z = 1 }
+            };
+            var h1 = Hashing.HashConnector(c);
+            var h2 = Hashing.HashConnector(c);
+            Assert.Equal(h1, h2);
+            Assert.Equal(64, h1.Length);
+        }
+
+        [Fact]
+        public void HashDesign_Deterministic()
+        {
+            var d = new Design { Guid = "test-design", Name = "TestDesign" };
+            var h1 = Hashing.HashDesign(d);
+            var h2 = Hashing.HashDesign(d);
+            Assert.Equal(h1, h2);
+            Assert.Equal(64, h1.Length);
+        }
+
+        [Fact]
+        public void HashConnection_Deterministic()
+        {
+            var c = new Connection
+            {
+                Guid = "test-conn",
+                Gap = 0,
+                Shift = 0,
+                Rise = 0,
+                Rotation = 90,
+                Turn = 0,
+                Tilt = 0,
+                Connected = new Side { Piece = new PieceId { Guid = "p1" } },
+                Connecting = new Side { Piece = new PieceId { Guid = "p2" } }
+            };
+            var h1 = Hashing.HashConnection(c);
+            var h2 = Hashing.HashConnection(c);
+            Assert.Equal(h1, h2);
+            Assert.Equal(64, h1.Length);
+        }
+
+        [Fact]
+        public void FormatNumberForHash_Integers()
+        {
+            Assert.Equal("0", Hashing.FormatNumberForHash(0));
+            Assert.Equal("1", Hashing.FormatNumberForHash(1));
+            Assert.Equal("-1", Hashing.FormatNumberForHash(-1));
+            Assert.Equal("42", Hashing.FormatNumberForHash(42));
+        }
+
+        [Fact]
+        public void FormatNumberForHash_Decimals()
+        {
+            Assert.Equal("0.5", Hashing.FormatNumberForHash(0.5));
+            Assert.Equal("1.5", Hashing.FormatNumberForHash(1.5));
+        }
+
+        [Fact]
+        public void FormatNumberForHash_JavaScriptThresholds()
+        {
+            Assert.Equal("-2.7755576e-17", Hashing.FormatNumberForHash(-2.7755576e-17));
+            Assert.Equal("0.000001", Hashing.FormatNumberForHash(0.000001));
+            Assert.Equal("1e-7", Hashing.FormatNumberForHash(1e-7));
+            Assert.Equal("100000000000000000000", Hashing.FormatNumberForHash(1e20));
+            Assert.Equal("1e+21", Hashing.FormatNumberForHash(1e21));
+        }
+
+        [Fact]
+        public void HashKitDiff_Canonical()
+        {
+            var d = new KitDiff { Name = "updated", Description = null };
+            d.GetType().GetMethod("ShouldSerializeDescription")!.Invoke(d, null);
+            var dManual = new KitDiff();
+            dManual.Name = "updated";
+            dManual.Description = null;
+            var hash = Hashing.HashKitDiff(dManual);
+            Assert.Equal("d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5", hash);
+        }
+
+        [Fact]
+        public void HashKitDiff_NameOnly()
+        {
+            var d = new KitDiff();
+            d.Name = "updated";
+            var hash = Hashing.HashKitDiff(d);
+            Assert.Equal(64, hash.Length);
+            Assert.NotEqual("d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5", hash);
+        }
+
+        [Fact]
+        public void HashKitDiff_Empty()
+        {
+            var d = new KitDiff();
+            var hash = Hashing.HashKitDiff(d);
+            Assert.Equal(64, hash.Length);
+        }
+
+        [Fact]
+        public void HashKitDiff_Deterministic()
+        {
+            var d = new KitDiff();
+            d.Name = "test";
+            d.Description = "desc";
+            var h1 = Hashing.HashKitDiff(d);
+            var h2 = Hashing.HashKitDiff(d);
+            Assert.Equal(h1, h2);
+        }
+
+        [Fact]
+        public void HashAttributeDiff_Deterministic()
+        {
+            var d = new AttributeDiff();
+            d.Key = "k1";
+            d.Value = "v1";
+            var h1 = Hashing.HashAttributeDiff(d);
+            var h2 = Hashing.HashAttributeDiff(d);
+            Assert.Equal(h1, h2);
+            Assert.Equal(64, h1.Length);
+        }
+
+        [Fact]
+        public void HashKitDiff_FieldOrderMatters()
+        {
+            var d1 = new KitDiff();
+            d1.Name = "a";
+            d1.Description = "b";
+            var d2 = new KitDiff();
+            d2.Name = "b";
+            d2.Description = "a";
+            Assert.NotEqual(Hashing.HashKitDiff(d1), Hashing.HashKitDiff(d2));
+        }
+    }
+
+    #endregion 🔖Hash
 
 }
