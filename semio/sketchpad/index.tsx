@@ -24684,12 +24684,12 @@ export const LayoutCanvas: FC<{
           return normalized;
         };
 
-        const rawConfig = parseWindowLayout(layoutState) || (windowConfig.defaultLayout ? layoutNodeToGoldenLayoutConfig(windowConfig.defaultLayout) : undefined);
-        if (!rawConfig) {
+        const parsedLayout = parseWindowLayout(layoutState) ?? parseWindowLayout(windowConfig.defaultLayout);
+        if (!parsedLayout) {
           console.error("[LayoutCanvas] No layout config provided!");
           return;
         }
-        const config = normalizeLayoutConfig(rawConfig);
+        const config = normalizeLayoutConfig(layoutNodeToGoldenLayoutConfig(parsedLayout));
 
         const layout = new GoldenLayout(config, containerRef.current!);
         let isInitialized = false;
@@ -24769,8 +24769,8 @@ export const LayoutCanvas: FC<{
 
           try {
             if (isInitialized) {
-              const config = layout.toConfig();
-              onLayoutChange(config);
+              const nextLayout = parseWindowLayout(layout.toConfig());
+              onLayoutChange(nextLayout ?? layout.toConfig());
             }
           } catch (error: any) {
             if (error?.message?.includes("not yet initialised")) {
@@ -29544,6 +29544,30 @@ function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesig
   const hasScope = kitGuid !== "" && designGuid !== "";
   const canSet = useWildcardFallback ? canSetFromSnapshot || hasScope : canSetFromSnapshot;
   return useMemo(() => createField(value, (next: T) => actor.send(createSendEvent(kitGuid, designGuid, next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createSendEvent, kitGuid, designGuid, canSet]);
+}
+
+/**
+ * Returns a reactive field for the Design app selection state.
+ * MUST create a Field wrapping the current selection and setter.
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappselectionfield](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppSelectionField)
+ **/
+export function useDesignAppSelectionField(): Field<DesignAppSelection> {
+  return useDesignAppField<DesignAppSelection, { type: "DESIGN.SET_SELECTION"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }>({
+    createGranularSelector: createDesignSelectionSelector,
+    fallback: {},
+    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: {} }),
+    createSendEvent: (kitGuid, designGuid, selection) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection }),
+    useWildcardFallback: true,
+  });
+}
+
+/**
+ * Returns a hook result for the Design app selection state.
+ * MUST provide the current selection, a setter, and a canSet flag.
+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappselection](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppSelection)
+ **/
+export function useDesignAppSelection(): HookResult<DesignAppSelection> {
+  return fieldToHookResult(useDesignAppSelectionField());
 }
 
 /**
@@ -51886,6 +51910,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       const infiniteLoopErrors = errors.filter((e) => e.includes("Maximum update depth exceeded"));
       expect(infiniteLoopErrors).toHaveLength(0);
+      const missingDesignSelectionHookErrors = errors.filter((error) => error.includes("useDesignAppSelection is not defined"));
+      expect(missingDesignSelectionHookErrors).toHaveLength(0);
 
       const navbar = page.locator('[id="semio.sketchpad.navbar"]');
       await expect(navbar).toBeVisible({ timeout: 30000 });

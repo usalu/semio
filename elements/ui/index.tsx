@@ -20346,4 +20346,34 @@ if (treeVitest) {
       expect(getTreeItemOrderedIds(sections, {}, {})).toEqual(["item-a", "item-a-1", "item-b", "item-c"]);
     });
   });
+
+  describe("layout helpers", () => {
+    it("converts abstract layout nodes to GoldenLayout config", () => {
+      expect(
+        layoutNodeToGoldenLayoutConfig({
+          root: {
+            kind: "row",
+            children: [
+              {
+                kind: "stack",
+                size: 100,
+                children: [{ kind: "window", windowKindId: "table", title: "table" }],
+              },
+            ],
+          },
+        }),
+      ).toEqual({
+        root: {
+          type: "row",
+          content: [
+            {
+              type: "stack",
+              size: "100%",
+              content: [{ type: "component", componentName: "table", title: "table", componentState: {} }],
+            },
+          ],
+        },
+      });
+    });
+  });
 }
