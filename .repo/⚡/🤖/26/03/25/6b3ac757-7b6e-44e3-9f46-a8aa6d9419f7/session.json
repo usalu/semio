@@ -129,6 +129,59 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "069825986549d4a1eede0a98c933400d78030b76",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-25T15:14:00Z",
+        "session": "6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T15:14:00.781Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "algorithms WindowKind AlgorithmApp"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_vrtx_01BTy7V5rjZrkT4k1UqC7kR3__vscode-1774442858789",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "069825986549d4a1eede0a98c933400d78030b76",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-25T15:14:06Z",
+        "session": "6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-25T15:14:06.543Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "algorithms"
+          },
+          "tool_use_id": "toolu_vrtx_01P88rwYTeuSfkqXmbs5hyMi__vscode-1774442858790",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
     }
   ]
 }
