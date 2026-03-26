@@ -42,6 +42,7 @@ _engine_spec.loader.exec_module(engine)
 # region Constants
 ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets" / "semio"
 KIT_METABOLISM_PATH = ASSETS_DIR / "kit_metabolism.json"
+METABOLISM_DIR = ASSETS_DIR / "metabolism"
 
 # endregion Constants
 
@@ -578,6 +579,16 @@ class TestMcp:
         kit = engine._mcp_session_kits[id(mock_ctx.session)]
         assert "designs" in kit
 
+    def test_start_working_in_local_kit_loads_from_metabolism_folder(self):
+        """start_working_in_local_kit loads kit from a folder backed by .semio/kit.db."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        result = engine.start_working_in_local_kit(str(METABOLISM_DIR), mock_ctx)
+        assert result.get("ok") is True
+        assert result.get("path") == str(METABOLISM_DIR)
+        kit = engine._mcp_session_kits[id(mock_ctx.session)]
+        assert "designs" in kit
+        assert any(design.get("name") == "Nakagin Capsule Tower" for design in kit.get("designs", []))
+
     def test_start_working_in_local_kit_clears_design_and_type(self):
         """start_working_in_local_kit clears any previously set design and type."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
@@ -749,7 +760,7 @@ class TestMcp:
         result = engine.abort_transaction(mock_ctx)
         assert "error" in result
 
-    def test_stateful_flat_tools_build_exact_nakagin_capsule_tower_json(self, kitMetabolismJson: dict):
+    def test_stateful_flat_tools_build_nakagin_capsule_tower_flat_payload(self, kitMetabolismJson: dict):
         mock_ctx = type("MockCtx", (), {"session": object()})()
         expected_design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
 
@@ -870,7 +881,13 @@ class TestMcp:
         finalized = engine.transaction_finalize(mock_ctx)
         assert finalized.get("ok") is True
         current_design = engine.read_current_design(mock_ctx)
-        assert current_design == expected_design
+        expected_flat_design = {
+            key: value
+            for key, value in expected_design.items()
+            if key != "layers"
+        }
+        assert current_design == expected_flat_design
+        assert "layers" not in current_design
 
     def test_read_current_selection_default_empty(self):
         """read_current_selection returns empty lists when no selection is set."""

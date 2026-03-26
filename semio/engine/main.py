@@ -1476,6 +1476,109 @@ graphqlSchema = graphene.Schema(
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
 
 
+def _build_design_viewer_html() -> str:
+    """Build the embeddable design viewer HTML shell.
+    Callers MUST use the returned HTML for the /app/design-viewer endpoint.
+    [👤semio📚engine💻engine🔖rest🛠️builddesignviewerhtml](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_build_design_viewer_html)
+    """
+    return """<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>semio design viewer</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: #f4f1e8;
+        color: #1b1a17;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top, rgba(184, 134, 11, 0.16), transparent 30%),
+          linear-gradient(180deg, #f7f4ec 0%, #efe7d7 100%);
+      }
+      #root {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      .panel {
+        width: min(720px, 100%);
+        padding: 24px;
+        border: 1px solid rgba(27, 26, 23, 0.12);
+        border-radius: 20px;
+        background: rgba(255, 252, 245, 0.92);
+        box-shadow: 0 24px 80px rgba(60, 47, 23, 0.12);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 24px;
+        text-transform: lowercase;
+      }
+      p {
+        margin: 0;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <main class="panel">
+        <h1>semio design viewer</h1>
+        <p>This iframe shell exchanges state through postMessage using semio:init, semio:ready, and semio:selectionChange events.</p>
+      </main>
+    </div>
+    <script>
+      const semioEvents = {
+        init: "semio:init",
+        ready: "semio:ready",
+        selectionChange: "semio:selectionChange"
+      };
+
+      function emit(type, payload) {
+        window.parent.postMessage({ type, payload }, "*");
+      }
+
+      window.addEventListener("message", (event) => {
+        if (!event || !event.data || typeof event.data.type !== "string") {
+          return;
+        }
+        if (event.data.type === semioEvents.init) {
+          emit(semioEvents.ready, { received: semioEvents.init });
+        }
+        if (event.data.type === semioEvents.selectionChange) {
+          emit(semioEvents.selectionChange, event.data.payload ?? {});
+        }
+      });
+
+      emit(semioEvents.ready, { status: "booted" });
+    </script>
+  </body>
+</html>
+"""
+
+
+@rest.get("/app/design-viewer")
+async def app_design_viewer() -> fastapi.Response:
+    """Return the embeddable design viewer HTML shell.
+    Callers MUST use this endpoint to embed the semio design viewer in an iframe.
+    [👤semio📚engine💻engine🔖rest🛠️appdesignviewer](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/app_design_viewer)
+    """
+    return fastapi.Response(
+        content=_build_design_viewer_html(),
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:;",
+        },
+    )
+
+
 @rest.get("/kits/{encodedKitUri}")
 async def kit(
     request: fastapi.Request,
@@ -1872,7 +1975,7 @@ def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
 
 
 def _load_kit_from_path(path: str) -> dict:
-    """Load kit dict from path (JSON file or folder with .semio/kit.sqlite3 or kit JSON).
+    """Load kit dict from path (JSON file or folder with .semio/kit.db or kit JSON).
     [👤semio📚engine💻engine🔖mcp🛠️loadkitfrompath](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_load_kit_from_path)
     """
     p = pathlib.Path(path).resolve()
@@ -1882,9 +1985,12 @@ def _load_kit_from_path(path: str) -> dict:
     if p.is_dir():
         sqlite_path = p / KIT_LOCAL_FOLDERNAME / KIT_LOCAL_FILENAME
         if sqlite_path.exists():
-            store = StoreFactory(str(p))
-            kit = store.get({"kind": "kit", "kitUri": str(p)})
-            return kit.model_dump() if hasattr(kit, "model_dump") else KitOutput.model_validate(kit).model_dump()
+            kit, _files = _semio_core.import_folder_kit(str(p))
+            if hasattr(kit, "model_dump"):
+                return kit.model_dump()
+            if hasattr(kit, "to_dict"):
+                return kit.to_dict()
+            return KitOutput.model_validate(kit).model_dump()
         for name in ("kit_metabolism.json", "kit.json"):
             json_path = p / name
             if json_path.exists():
@@ -2079,7 +2185,7 @@ def _rollback_session_transaction(sid: int):
 @mcp.tool()
 def start_working_in_local_kit(path: str, ctx: Context) -> dict:
     """Start working in a local kit for this MCP session. MUST be called first.
-    Path: absolute path to kit folder (with .semio/kit.sqlite3) or JSON file, or folder containing kit_metabolism.json.
+    Path: absolute path to kit folder (with .semio/kit.db) or JSON file, or folder containing kit_metabolism.json.
     [👤semio📚engine💻engine🔖mcp🛠️startworkinginlocalkit](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_local_kit)
     """
     try:

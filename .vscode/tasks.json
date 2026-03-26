@@ -657,6 +657,32 @@
     // MCP
     // ========================================
     {
+      "label": "🔍inspector👤semio📚engine🤖mcp",
+      "type": "shell",
+      "isBackground": true,
+      "command": "npm run mcp:inspector",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting MCP",
+          "endsPattern": ":6274"
+        }
+      },
+      "group": "none"
+    },
+    {
       "label": "🔍inspector🧰mcp",
       "type": "shell",
       "isBackground": true,

@@ -40,7 +40,8 @@
   },
   "packageManager": "npm@11.7.0",
   "scripts": {
-    "mcp:inspector": "HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo",
+    "mcp:inspector": "HOST=0.0.0.0 npx @mcpjam/inspector@latest uv --directory /workspaces/semio/semio/engine run main.py --mcp-stdio",
+    "mcp:inspector:repo": "HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo",
     "dev:elements:ui:storybook": "npx nx dev elements/ui",
     "dev:js:sketchpad": "npx nx dev:sketchpad semio/js",
     "dev:3dm:ui": "npx nx dev @semio/3dm-ui",

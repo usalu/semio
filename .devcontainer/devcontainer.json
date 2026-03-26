@@ -76,6 +76,10 @@
     "6006": {
       "label": "Storybook",
       "onAutoForward": "notify"
+    },
+    "6274": {
+      "label": "MCP Inspector",
+      "onAutoForward": "notify"
     }
   },
   "mounts": [

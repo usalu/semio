@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "./repo/cli/cli hook agentSpawn kiro-cli"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "./repo/cli/cli hook postToolUse kiro-cli"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "./repo/cli/cli hook preToolUse kiro-cli"
+      }
+    ],
+    "stop": [
+      {
+        "command": "./repo/cli/cli hook stop kiro-cli"
+      }
+    ],
+    "userPromptSubmit": [
+      {
+        "command": "./repo/cli/cli hook userPromptSubmit kiro-cli"
+      }
+    ]
+  }
+}

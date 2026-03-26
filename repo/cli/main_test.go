@@ -16914,7 +16914,7 @@ func TestConfigureGitHooks(t *testing.T) {
 
 func TestGetClientHookMappings(t *testing.T) {
 	mappings := getClientHookMappings()
-	expectedClients := []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid"}
+	expectedClients := []string{"copilot-chat", "cursor-chat", "windsurf-chat", "claude-code", "droid", "kiro-cli"}
 	if len(mappings) != len(expectedClients) {
 		t.Errorf("expected %d mappings, got %d", len(expectedClients), len(mappings))
 	}
@@ -22057,6 +22057,7 @@ func TestEditorProviderInterface(t *testing.T) {
 	var _ EditorProvider = &DroidEditorProvider{}
 	var _ EditorProvider = &CodexEditorProvider{}
 	var _ EditorProvider = &AntigravityEditorProvider{}
+	var _ EditorProvider = &KiroEditorProvider{}
 }
 
 // #endregion 🔖Provider

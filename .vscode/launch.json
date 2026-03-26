@@ -3,21 +3,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "🚀gitkraken",
+      "name": "🖱️gitkraken",
       "type": "node-terminal",
       "request": "launch",
       "command": "/usr/bin/gitkraken --path \"${workspaceFolder}\"",
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🚀f3d",
+      "name": "🖱️f3d",
       "type": "node-terminal",
       "request": "launch",
       "command": "if [ -z \"$DISPLAY\" ]; then echo '⚠️ F3D requires a display. Please run in a GUI environment or use X11 forwarding.'; else /usr/bin/f3d; fi",
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🚀mcpinspector",
+      "name": "🖱️mcpinspector",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
@@ -37,6 +37,20 @@
         "pattern": "(http://[^\\s]+:6274)",
         "uriFormat": "%s"
       }
+    },
+    {
+      "name": "⌨️kiro",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "kiro-cli chat --trust-all-tools",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "⌨️gemini",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "gemini --yolo",
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🛠️dev👤elements📚ui📖storybook",
@@ -179,6 +193,27 @@
         "${workspaceFolder}/semio/vscode/out/**/*.js"
       ],
       "preLaunchTask": "🛠️dev👤semio⌨️vscode"
+    },
+    {
+      "name": "🛠️dev👤semio📚engine🤖mcp",
+      "preLaunchTask": "🔍inspector👤semio📚engine🤖mcp",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "--directory",
+        "semio/engine",
+        "run",
+        "main.py",
+        "--mcp-stdio"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://[^\\s]+:6274)",
+        "uriFormat": "%s"
+      }
     },
     {
       "name": "🛠️dev🧰repo⌨️vscode",

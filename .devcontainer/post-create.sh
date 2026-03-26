@@ -309,7 +309,7 @@ cat << 'MCPCONFIG' > /home/vscode/.gemini/antigravity/mcp_config.json
         "--directory",
         "/workspaces/semio/semio/engine",
         "run",
-        "engine.py",
+        "main.py",
         "--mcp-stdio"
       ]
     },
