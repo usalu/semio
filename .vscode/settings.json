@@ -83,5 +83,6 @@
       ]
     }
   },
-  "chat.subagents.allowInvocationsFromSubagents": false
+  "chat.subagents.allowInvocationsFromSubagents": false,
+  "python.terminal.activateEnvironment": false
 }

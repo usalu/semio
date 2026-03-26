@@ -1,0 +1,12 @@
+{
+  "title": "Fix Mcp App Not Rendering When Executed on Client",
+  "status": "open",
+  "description": "MCP apps in semio engine are not rendering when executed on the client. Need to investigate the full tool/resource registration chain and the client-side MCP App lifecycle to find and fix the root cause.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1113"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪a9e319003c9b4deda9805086b08a50d7"
+  ]
+}

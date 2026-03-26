@@ -21,16 +21,7 @@
 // #region 🔖Imports
 // [👤semio📚js💻semio🔖imports](repo://p/u/semio/b/l/js/f/semio.ts/s/Imports)
 // External dependency imports MUST be declared here.
-import {
-  Accessor as GltfAccessor,
-  Buffer as GltfBuffer,
-  Document as GltfDocument,
-  Material as GltfMaterial,
-  Mesh as GltfMesh,
-  Node as GltfNode,
-  Texture as GltfTexture,
-  NodeIO
-} from "@gltf-transform/core";
+import { Accessor as GltfAccessor, Buffer as GltfBuffer, Document as GltfDocument, Material as GltfMaterial, Mesh as GltfMesh, Node as GltfNode, Texture as GltfTexture, NodeIO } from "@gltf-transform/core";
 import { default as adjectives } from "@semio/assets/lists/adjectives.json" with { type: "json" };
 import { default as animals } from "@semio/assets/lists/animals.json" with { type: "json" };
 import { ClassValue, clsx } from "clsx";
@@ -8014,12 +8005,67 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
 };
 
 /**
- * Filters a kit to only include entities related to a specific design.
- * Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
- * files not used by selected models, and keeps at most one model per type according to the optional tags.
- * [👤semio📚js💻semio🔖kit🔖filter🪨filterkitwithdesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/filterKitWithDesign)
+ * Glob filter with include and exclude patterns for name-based entity filtering.
+ * If include is non-empty, only names matching at least one include pattern are kept.
+ * Names matching any exclude pattern are always removed.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨globfilter](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/GlobFilter)
  **/
-export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[]): Kit => {
+export type GlobFilter = {
+  include?: string[];
+  exclude?: string[];
+};
+
+/**
+ * General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.
+ * When designGuid is set, first performs transitive design-scoped filtering.
+ * Glob filters on each entity kind are applied afterwards (or directly if no designGuid).
+ * [👤semio📚js💻semio🔖kit🔖filter🪨kitfilter](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/KitFilter)
+ **/
+export type KitFilter = {
+  designGuid?: string;
+  modelTags?: string[];
+  designs?: GlobFilter;
+  types?: GlobFilter;
+  ports?: GlobFilter;
+  files?: GlobFilter;
+  tags?: GlobFilter;
+  concepts?: GlobFilter;
+  qualities?: GlobFilter;
+  authors?: GlobFilter;
+  folders?: GlobFilter;
+};
+
+/**
+ * Matches a name against a glob pattern supporting * (any chars) and ? (single char). Case-insensitive.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨globmatch](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/globMatch)
+ **/
+export const globMatch = (name: string, pattern: string): boolean => {
+  let regex = "^";
+  for (const c of pattern) {
+    if (c === "*") regex += ".*";
+    else if (c === "?") regex += ".";
+    else regex += c.replace(/[-/\\^$+.()|[\]{}]/g, "\\$&");
+  }
+  regex += "$";
+  return new RegExp(regex, "i").test(name);
+};
+
+/**
+ * Checks if a name passes a GlobFilter. Returns true if no filter or name matches include and not exclude.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨matchesglobfilter](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/matchesGlobFilter)
+ **/
+export const matchesGlobFilter = (name: string, filter?: GlobFilter): boolean => {
+  if (!filter) return true;
+  const { include, exclude } = filter;
+  if (include && include.length > 0 && !include.some((p) => globMatch(name, p))) return false;
+  if (exclude && exclude.length > 0 && exclude.some((p) => globMatch(name, p))) return false;
+  return true;
+};
+
+/**
+ * Internal design-based transitive kit filtering. Produces a minimal kit subset scoped to a single design.
+ **/
+const filterKitByDesign = (kit: Kit, designGuid: string, modelTags?: string[]): Kit => {
   const design = findDesignInKit(kit, designGuid);
 
   const usedTypeGuids = new Set<string>();
@@ -8038,6 +8084,7 @@ export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[
   };
   for (const typeGuid of [...usedTypeGuids]) collectAncestors(typeGuid);
 
+  const tags = modelTags;
   const resolvedTagGuids = (tags ?? []).flatMap((tagValue) => {
     const byGuid = (kit.tags ?? []).find((tag) => tag.guid === tagValue);
     if (byGuid) return [byGuid.guid];
@@ -8115,6 +8162,30 @@ export const filterKitWithDesign = (kit: Kit, designGuid: string, tags?: string[
     attributes: kit.attributes,
     createdAt: kit.createdAt,
     updatedAt: kit.updatedAt,
+  };
+};
+
+/**
+ * General-purpose kit filter. Combines optional design-based transitive filtering with glob-based name filtering.
+ * When designGuid is set, first performs transitive design-scoped subset extraction.
+ * Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
+ * [👤semio📚js💻semio🔖kit🔖filter🪨filterkit](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/Filter/d/i/filterKit)
+ **/
+export const filterKit = (kit: Kit, filter: KitFilter): Kit => {
+  const base = filter.designGuid ? filterKitByDesign(kit, filter.designGuid, filter.modelTags) : kit;
+  const hasGlobFilters = filter.designs || filter.types || filter.ports || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders;
+  if (!hasGlobFilters) return base;
+  return {
+    ...base,
+    types: (base.types ?? []).filter((t) => matchesGlobFilter(t.name, filter.types)),
+    designs: (base.designs ?? []).filter((d) => matchesGlobFilter(d.name, filter.designs)),
+    ports: (base.ports ?? []).filter((p) => matchesGlobFilter(p.name, filter.ports)),
+    files: (base.files ?? []).filter((f) => matchesGlobFilter(f.name, filter.files)),
+    tags: (base.tags ?? []).filter((t) => matchesGlobFilter(t.name, filter.tags)),
+    concepts: (base.concepts ?? []).filter((c) => matchesGlobFilter(c.name, filter.concepts)),
+    qualities: (base.qualities ?? []).filter((q) => matchesGlobFilter(q.name, filter.qualities)),
+    authors: (base.authors ?? []).filter((a) => matchesGlobFilter(a.name, filter.authors)),
+    folders: (base.folders ?? []).filter((f) => matchesGlobFilter(f.name, filter.folders)),
   };
 };
 
@@ -10170,20 +10241,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-              }
+                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+                }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-              }
+                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+                }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -10298,54 +10369,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-        return {
-          guid: row.guid,
-          key: row.key,
-          name: row.name,
-          kind: row.kind || undefined,
-          defaultValue: row.default_value ?? undefined,
-          formula: toUndefined(row.formula),
-          defaultSiUnit: toUndefined(row.default_si_unit),
-          defaultImperialUnit: toUndefined(row.default_imperial_unit),
-          min: row.min_value ?? undefined,
-          minExcluded: row.min_excluded ? true : undefined,
-          max: row.max_value ?? undefined,
-          maxExcluded: row.max_excluded ? true : undefined,
-          canScale: row.can_scale ? true : undefined,
-          uri: toUndefined(row.definition),
-          benchmarks: benchmarks.map((b: any) => {
-            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-            return {
-              guid: b.guid,
-              name: b.name,
-              icon: toUndefined(b.icon),
-              min: b.min_value ?? undefined,
-              minExcluded: b.min_excluded ? true : undefined,
-              max: b.max_value ?? undefined,
-              maxExcluded: b.max_excluded ? true : undefined,
-              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-            };
-          }),
-          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-        };
-      })
+          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+          return {
+            guid: row.guid,
+            key: row.key,
+            name: row.name,
+            kind: row.kind || undefined,
+            defaultValue: row.default_value ?? undefined,
+            formula: toUndefined(row.formula),
+            defaultSiUnit: toUndefined(row.default_si_unit),
+            defaultImperialUnit: toUndefined(row.default_imperial_unit),
+            min: row.min_value ?? undefined,
+            minExcluded: row.min_excluded ? true : undefined,
+            max: row.max_value ?? undefined,
+            maxExcluded: row.max_excluded ? true : undefined,
+            canScale: row.can_scale ? true : undefined,
+            uri: toUndefined(row.definition),
+            benchmarks: benchmarks.map((b: any) => {
+              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+              return {
+                guid: b.guid,
+                name: b.name,
+                icon: toUndefined(b.icon),
+                min: b.min_value ?? undefined,
+                minExcluded: b.min_excluded ? true : undefined,
+                max: b.max_value ?? undefined,
+                maxExcluded: b.max_excluded ? true : undefined,
+                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+              };
+            }),
+            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+          };
+        })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        remote: toUndefined(row.remote_url),
-        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-        size: row.size ?? undefined,
-        hash: toUndefined(row.hash),
-        createdAt: row.created,
-        updatedAt: row.updated,
-      }))
+          guid: row.guid,
+          name: row.name,
+          remote: toUndefined(row.remote_url),
+          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+          size: row.size ?? undefined,
+          hash: toUndefined(row.hash),
+          createdAt: row.created,
+          updatedAt: row.updated,
+        }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -10361,10 +10432,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        email: toUndefined(row.email),
-      }))
+          guid: row.guid,
+          name: row.name,
+          email: toUndefined(row.email),
+        }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -11627,7 +11698,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch { }
+      } catch {}
     }
   }
 
@@ -12651,7 +12722,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch { }
+      } catch {}
     });
   });
   return problems;
@@ -13103,11 +13174,7 @@ export class InMemoryKitStore implements UndoableKitStore {
 // [👤semio📚js💻index🔖tests](repo://p/u/semio/b/l/js/f/index.ts/s/Tests)
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
-if (
-  typeof (globalThis as any).__vitest_worker__ !== "undefined" &&
-  typeof process !== "undefined" &&
-  process.cwd().replace(/\\/g, "/").endsWith("/semio/js")
-) {
+if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof process !== "undefined" && process.cwd().replace(/\\/g, "/").endsWith("/semio/js")) {
   const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
@@ -13133,12 +13200,9 @@ if (
     TambourMetaType,
     TambourShallowType,
     NakaginCapsuleTowerMetaDesign,
-    NakaginCapsuleTowerShallowDesign
+    NakaginCapsuleTowerShallowDesign,
   } = await import("@semio/assets");
-  const {
-    createFolderKitStore,
-    createJsonFileKitStore
-  } = await import("@semio/studio");
+  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
   type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
   type KitJsonFileAdapter = import("@semio/studio").KitJsonFileAdapter;
 
@@ -13366,7 +13430,7 @@ if (
 
   // #region 🔖Kit Filter Tests
   // [👤semio📚js🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/KitFilterTests)
-  // Tests for filterKitWithDesign MUST verify correct subset extraction.
+  // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("Kit/Filter/Design", () => {
     const kit = MetabolismKit as Kit;
@@ -13375,7 +13439,7 @@ if (
 
     it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
       expect(nakaginDesign).toBeDefined();
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
 
       expect(filtered.designs?.length).toBe(expected.designs.length);
       expect(filtered.types?.length).toBe(expected.types.length);
@@ -13414,10 +13478,103 @@ if (
     });
 
     it("preserves kit metadata", () => {
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
       expect(filtered.guid).toBe(kit.guid);
       expect(filtered.name).toBe(kit.name);
       expect(filtered.version).toBe(kit.version);
+    });
+  });
+
+  describe("Kit/Filter/Glob", () => {
+    it("globMatch matches wildcard patterns", () => {
+      expect(globMatch("Nakagin Capsule Tower", "Nakagin*")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "*Tower")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "*Capsule*")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "Nakagin Capsule Tower")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "Other*")).toBe(false);
+      expect(globMatch("Wall", "W?ll")).toBe(true);
+      expect(globMatch("Wall", "W??l")).toBe(false);
+    });
+
+    it("globMatch is case-insensitive", () => {
+      expect(globMatch("Wall", "wall")).toBe(true);
+      expect(globMatch("wall", "WALL")).toBe(true);
+      expect(globMatch("Nakagin Capsule Tower", "nakagin*")).toBe(true);
+    });
+
+    it("matchesGlobFilter with include only", () => {
+      expect(matchesGlobFilter("Wall", { include: ["Wall"] })).toBe(true);
+      expect(matchesGlobFilter("Column", { include: ["Wall"] })).toBe(false);
+      expect(matchesGlobFilter("Wall", { include: ["W*", "C*"] })).toBe(true);
+      expect(matchesGlobFilter("Column", { include: ["W*", "C*"] })).toBe(true);
+      expect(matchesGlobFilter("Beam", { include: ["W*", "C*"] })).toBe(false);
+    });
+
+    it("matchesGlobFilter with exclude only", () => {
+      expect(matchesGlobFilter("Wall", { exclude: ["Wall"] })).toBe(false);
+      expect(matchesGlobFilter("Column", { exclude: ["Wall"] })).toBe(true);
+      expect(matchesGlobFilter("Wall", { exclude: ["*all"] })).toBe(false);
+    });
+
+    it("matchesGlobFilter with include and exclude", () => {
+      expect(matchesGlobFilter("Wall", { include: ["W*"], exclude: ["Wall"] })).toBe(false);
+      expect(matchesGlobFilter("Window", { include: ["W*"], exclude: ["Wall"] })).toBe(true);
+    });
+
+    it("matchesGlobFilter with no filter returns true", () => {
+      expect(matchesGlobFilter("anything")).toBe(true);
+      expect(matchesGlobFilter("anything", undefined)).toBe(true);
+    });
+
+    it("filterKit with type glob include filters types by name", () => {
+      const kit = MetabolismKit as Kit;
+      const totalTypes = kit.types?.length ?? 0;
+      expect(totalTypes).toBeGreaterThan(0);
+      const filtered = filterKit(kit, { types: { include: ["Capsule*"] } });
+      expect(filtered.types?.length ?? 0).toBeGreaterThan(0);
+      expect(filtered.types?.length ?? 0).toBeLessThan(totalTypes);
+      for (const t of filtered.types ?? []) {
+        expect(t.name.toLowerCase().startsWith("capsule")).toBe(true);
+      }
+    });
+
+    it("filterKit with type glob exclude filters out matching types", () => {
+      const kit = MetabolismKit as Kit;
+      const totalTypes = kit.types?.length ?? 0;
+      const filtered = filterKit(kit, { types: { exclude: ["Capsule*"] } });
+      expect(filtered.types?.length ?? 0).toBeLessThan(totalTypes);
+      for (const t of filtered.types ?? []) {
+        expect(t.name.toLowerCase().startsWith("capsule")).toBe(false);
+      }
+    });
+
+    it("filterKit with design glob include filters designs by name", () => {
+      const kit = MetabolismKit as Kit;
+      const filtered = filterKit(kit, { designs: { include: ["Nakagin*"] } });
+      expect(filtered.designs?.length ?? 0).toBeGreaterThan(0);
+      for (const d of filtered.designs ?? []) {
+        expect(globMatch(d.name, "Nakagin*")).toBe(true);
+      }
+    });
+
+    it("filterKit with no filter returns kit unchanged", () => {
+      const kit = MetabolismKit as Kit;
+      const filtered = filterKit(kit, {});
+      expect(filtered.types?.length).toBe(kit.types?.length);
+      expect(filtered.designs?.length).toBe(kit.designs?.length);
+      expect(filtered.ports?.length).toBe(kit.ports?.length);
+    });
+
+    it("filterKit combines designGuid with glob filters", () => {
+      const kit = MetabolismKit as Kit;
+      const nakaginDesign = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
+      expect(nakaginDesign).toBeDefined();
+      const designFiltered = filterKit(kit, { designGuid: nakaginDesign!.guid });
+      const combinedFiltered = filterKit(kit, { designGuid: nakaginDesign!.guid, types: { exclude: ["Capsule*"] } });
+      expect(combinedFiltered.types?.length ?? 0).toBeLessThan(designFiltered.types?.length ?? 0);
+      for (const t of combinedFiltered.types ?? []) {
+        expect(t.name.toLowerCase().startsWith("capsule")).toBe(false);
+      }
     });
   });
 
@@ -13616,7 +13773,7 @@ if (
 
   // #region 🔖Kit Filter Tests
   // [👤semio📚js🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/js/f/semio.test.ts/s/KitFilterTests)
-  // Tests for filterKitWithDesign MUST verify correct subset extraction.
+  // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("Kit/Filter/Design", () => {
     const kit = MetabolismKit as Kit;
@@ -13625,7 +13782,7 @@ if (
 
     it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
       expect(nakaginDesign).toBeDefined();
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
 
       expect(filtered.designs?.length).toBe(expected.designs.length);
       expect(filtered.types?.length).toBe(expected.types.length);
@@ -13663,14 +13820,14 @@ if (
     });
 
     it("preserves kit metadata", () => {
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
       expect(filtered.guid).toBe(kit.guid);
       expect(filtered.name).toBe(kit.name);
       expect(filtered.version).toBe(kit.version);
     });
 
     it("each type has at most one model", () => {
-      const filtered = filterKitWithDesign(kit, nakaginDesign!.guid);
+      const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
       for (const type of filtered.types ?? []) {
         expect((type.models ?? []).length).toBeLessThanOrEqual(1);
       }
@@ -13839,9 +13996,9 @@ if (
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },

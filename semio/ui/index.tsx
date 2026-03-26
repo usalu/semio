@@ -1223,6 +1223,185 @@ export const Vec: React.FC<VecProps> = ({ id, vec, minU = -1, maxU = 1, minV = -
 
 // #endregion 🔖Vec
 
+// #region 🔖Vec3
+
+// Specs: Semio 3D vector component supporting display/select modes with partial/full
+// controlled/uncontrolled behavior. Supports per-axis enable flags for partial selection.
+// Summary: 3D vector editor/viewer with full-vector and per-axis controllable state.
+
+export interface Vec3Value {
+  u: number;
+  v: number;
+  w: number;
+}
+
+export interface Vec3Props {
+  id: string;
+
+  vec?: Vec3Value;
+  defaultVec?: Vec3Value;
+  onVecChange?: (vec: Vec3Value) => void;
+
+  u?: number;
+  defaultU?: number;
+  onUChange?: (u: number) => void;
+
+  v?: number;
+  defaultV?: number;
+  onVChange?: (v: number) => void;
+
+  w?: number;
+  defaultW?: number;
+  onWChange?: (w: number) => void;
+
+  selectionEnabled?: boolean;
+  uSelectionEnabled?: boolean;
+  vSelectionEnabled?: boolean;
+  wSelectionEnabled?: boolean;
+
+  displayEnabled?: boolean;
+  uDisplayEnabled?: boolean;
+  vDisplayEnabled?: boolean;
+  wDisplayEnabled?: boolean;
+
+  minU?: number;
+  maxU?: number;
+  minV?: number;
+  maxV?: number;
+  minW?: number;
+  maxW?: number;
+  step?: number;
+  className?: string;
+}
+
+const normalizeVec3 = (vec?: Vec3Value): Vec3Value => ({
+  u: vec?.u ?? 0,
+  v: vec?.v ?? 0,
+  w: vec?.w ?? 0,
+});
+
+const clampVec3Axis = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+export const Vec3: React.FC<Vec3Props> = ({
+  id,
+  vec,
+  defaultVec,
+  onVecChange,
+  u,
+  defaultU,
+  onUChange,
+  v,
+  defaultV,
+  onVChange,
+  w,
+  defaultW,
+  onWChange,
+  selectionEnabled = true,
+  uSelectionEnabled = true,
+  vSelectionEnabled = true,
+  wSelectionEnabled = true,
+  displayEnabled = true,
+  uDisplayEnabled = true,
+  vDisplayEnabled = true,
+  wDisplayEnabled = true,
+  minU = -1,
+  maxU = 1,
+  minV = -1,
+  maxV = 1,
+  minW = -1,
+  maxW = 1,
+  step = 0.1,
+  className = "",
+}) => {
+  const [resolvedVec, setResolvedVec] = useInteractiveControllableValue<Vec3Value>(vec, normalizeVec3(defaultVec), onVecChange);
+
+  const hasUPartialControl = u !== undefined || defaultU !== undefined || onUChange !== undefined;
+  const hasVPartialControl = v !== undefined || defaultV !== undefined || onVChange !== undefined;
+  const hasWPartialControl = w !== undefined || defaultW !== undefined || onWChange !== undefined;
+
+  const [resolvedU, setResolvedU] = useInteractiveControllableValue<number>(u, defaultU ?? resolvedVec.u, onUChange);
+  const [resolvedV, setResolvedV] = useInteractiveControllableValue<number>(v, defaultV ?? resolvedVec.v, onVChange);
+  const [resolvedW, setResolvedW] = useInteractiveControllableValue<number>(w, defaultW ?? resolvedVec.w, onWChange);
+
+  const currentVec: Vec3Value = {
+    u: hasUPartialControl ? resolvedU : resolvedVec.u,
+    v: hasVPartialControl ? resolvedV : resolvedVec.v,
+    w: hasWPartialControl ? resolvedW : resolvedVec.w,
+  };
+
+  const updateAxis = React.useCallback(
+    (axis: "u" | "v" | "w", rawValue: number) => {
+      const parsedValue = Number.isFinite(rawValue) ? rawValue : 0;
+      const clampedValue =
+        axis === "u" ? clampVec3Axis(parsedValue, minU, maxU) : axis === "v" ? clampVec3Axis(parsedValue, minV, maxV) : clampVec3Axis(parsedValue, minW, maxW);
+      const nextVec: Vec3Value = { ...currentVec, [axis]: clampedValue };
+
+      if (axis === "u" && hasUPartialControl) setResolvedU(clampedValue);
+      if (axis === "v" && hasVPartialControl) setResolvedV(clampedValue);
+      if (axis === "w" && hasWPartialControl) setResolvedW(clampedValue);
+
+      setResolvedVec(nextVec);
+    },
+    [currentVec, hasUPartialControl, hasVPartialControl, hasWPartialControl, maxU, maxV, maxW, minU, minV, minW, setResolvedU, setResolvedV, setResolvedVec, setResolvedW],
+  );
+
+  const renderAxisRow = (
+    axis: "u" | "v" | "w",
+    label: string,
+    value: number,
+    min: number,
+    max: number,
+    axisDisplayEnabled: boolean,
+    axisSelectionEnabled: boolean,
+  ) => {
+    if (!axisDisplayEnabled) return null;
+    const canSelect = selectionEnabled && axisSelectionEnabled;
+
+    return (
+      <div key={axis} className="grid grid-cols-[24px_1fr_88px] items-center gap-2">
+        <label htmlFor={`${id}-${axis}`} className="text-xs font-semibold uppercase text-muted-foreground">
+          {label}
+        </label>
+        {canSelect ? (
+          <input
+            id={`${id}-${axis}`}
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            onChange={(event) => updateAxis(axis, Number(event.target.value))}
+          />
+        ) : (
+          <div className="h-2 rounded-full bg-muted/60" />
+        )}
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          readOnly={!canSelect}
+          onChange={canSelect ? (event) => updateAxis(axis, Number(event.target.value)) : undefined}
+          className="w-full rounded-md border border-input bg-background px-2 py-1 text-right text-sm font-mono"
+        />
+      </div>
+    );
+  };
+
+  if (!displayEnabled) return null;
+
+  return (
+    <div id={id} data-slot="vec3" className={`flex flex-col gap-2 ${className}`}>
+      {renderAxisRow("u", "U", currentVec.u, minU, maxU, uDisplayEnabled, uSelectionEnabled)}
+      {renderAxisRow("v", "V", currentVec.v, minV, maxV, vDisplayEnabled, vSelectionEnabled)}
+      {renderAxisRow("w", "W", currentVec.w, minW, maxW, wDisplayEnabled, wSelectionEnabled)}
+    </div>
+  );
+};
+
+// #endregion 🔖Vec3
+
 // #region 🔖Scene
 
 // Specs: Minimal 3D scene rendering a design from a kit. Uses React Three Fiber Canvas
@@ -1994,7 +2173,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 // (points and lines) from tool results as JSON text content. Renders pure SVG diagram.
 // Summary: MCP App React component for rendering semio diagrams inside MCP host iframes.
 
-import { useApp } from "@modelcontextprotocol/ext-apps/react";
+import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 
 // #region 🔖McpApp Types
@@ -2079,11 +2258,13 @@ export const McpDesignViewer: React.FC = () => {
           setSelectedConnections(new Set());
         }
       };
-      a.onerror = (err) => {
-        console.error("[semio design viewer] MCP App error:", err);
-      };
+      a.onteardown = async () => ({});
+      a.onerror = console.error;
     },
   });
+
+  // Apply host theme CSS variables (background, text colors, fonts, etc.)
+  useHostStyles(app, app?.getHostContext());
 
   const sendSelectionUpdate = React.useCallback(
     (pieces: Set<string>, connections: Set<string>) => {
@@ -2108,7 +2289,7 @@ export const McpDesignViewer: React.FC = () => {
 
   if (error) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "#dc2626" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-danger, #dc2626)" }}>
         <p>Error: {error.message}</p>
       </div>
     );
@@ -2116,7 +2297,7 @@ export const McpDesignViewer: React.FC = () => {
 
   if (!isConnected || !app) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "#737373" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
         <p>Connecting to host…</p>
       </div>
     );
@@ -2124,7 +2305,7 @@ export const McpDesignViewer: React.FC = () => {
 
   if (!payload) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "#737373" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
         <p>Waiting for design data…</p>
       </div>
     );

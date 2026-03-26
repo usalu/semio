@@ -100,6 +100,9 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+There should be a new semio ui component for vector which lets you select or display a 3d vector. Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.
+
 There should be a new semio ui component for kit which lets you select kit artifacts (designs, types, ports). Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.
 In semio engine mcp: When calling start_working_design then call that app with that component.
 

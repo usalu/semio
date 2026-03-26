@@ -1,0 +1,12 @@
+{
+  "title": "Generalize Filter Kit Function with Glob Support",
+  "status": "open",
+  "description": "Generalize the filter kit with design to a general filter kit function. Accept designs, types, ports, files, etc. For all of them add glob support on names both for include and exclude.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1111"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪b582d40eb7184835b98ff95934fd613e"
+  ]
+}

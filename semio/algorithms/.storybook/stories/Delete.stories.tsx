@@ -48,7 +48,7 @@ function DeleteFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Design/Delete",
+  title: "semio-algorithms/Delete",
   parameters: { layout: "padded" },
   tags: ["autodocs"],
 } satisfies Meta;

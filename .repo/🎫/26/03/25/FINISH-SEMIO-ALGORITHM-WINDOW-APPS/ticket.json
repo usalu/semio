@@ -1,8 +1,8 @@
 {
   "title": "Finish Semio Algorithm Window Apps",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor semio algorithms to use elements/ui UI with AlgorithmApp and semio UI for window kinds. WindowKinds: VecInput, PiecesSelectionInput (Diagram with piece selection, no diff), DesignDiffOutput (Diagram with diff, no selection), DesignOutput (Diagram with no diff, no selection). Remove DESIGN_INPUT. Update all algorithm stories (Drag, Delete, Move, Flatten, Cluster) to use the correct window kinds.",
-  "summary": "Refactored semio algorithms to use the real AlgorithmApp from @semio/ui with standardized window kinds (VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput). Removed DESIGN_INPUT from WindowKind enum. Replaced standalone lightweight AlgorithmApp in algorithms/index.ts with re-exports from @semio/ui. Fixed elements/ui/index.tsx mega-file by removing ~7000 lines of inline stories and configs (duplicate of separate files), cleaned up ~40 unused imports. Fixed @elements/ui/elements.tsx references across storybook configs and tsconfigs (file was renamed to index.tsx). Fixed withLevel.tsx imports in both elements/ui and algorithms storybooks. Verified both algorithms storybook (10 stories) and elements/ui storybook build successfully.",
+  "summary": "Finished the algorithm window app contract cleanup by codifying the canonical WindowKind behaviors in semio/ui, adding regression coverage for the AlgorithmApp window mapping and default layout, and fixing the shared Vitest wiring so elements/ui, semio/ui, semio/algorithms, and semio/js tests run from real source files. Also constrained semio/js and sketchpad test blocks so they do not execute as import side effects under unrelated Vitest runs, and adjusted the affected inline tests to match runtime diff expectations.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1083"
   },

@@ -34,6 +34,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -7840,11 +7841,75 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 // [👤semio📚go💻semio🔖kit🔖filter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter)
 // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
-// FilterKitWithDesign filters a kit to only include entities related to a specific design.
+// GlobFilter provides include/exclude glob patterns for name-based entity filtering.
+// If Include is non-empty, only names matching at least one include pattern are kept.
+// Names matching any Exclude pattern are always removed.
+// [👤semio📚go💻semio🔖kit🔖filter✂️globfilter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/GlobFilter)
+type GlobFilter struct {
+	Include []string `json:"include,omitempty"`
+	Exclude []string `json:"exclude,omitempty"`
+}
+
+// KitFilter provides general-purpose filtering combining design-based transitive filtering with glob-based name filtering.
+// When DesignGuid is set, first performs transitive design-scoped subset extraction.
+// Glob filters on each entity kind are applied afterwards.
+// [👤semio📚go💻semio🔖kit🔖filter✂️kitfilter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/KitFilter)
+type KitFilter struct {
+	DesignGuid string      `json:"designGuid,omitempty"`
+	ModelTags  []string    `json:"modelTags,omitempty"`
+	Designs    *GlobFilter `json:"designs,omitempty"`
+	Types      *GlobFilter `json:"types,omitempty"`
+	Ports      *GlobFilter `json:"ports,omitempty"`
+	Files      *GlobFilter `json:"files,omitempty"`
+	Tags       *GlobFilter `json:"tags,omitempty"`
+	Concepts   *GlobFilter `json:"concepts,omitempty"`
+	Qualities  *GlobFilter `json:"qualities,omitempty"`
+	Authors    *GlobFilter `json:"authors,omitempty"`
+	Folders    *GlobFilter `json:"folders,omitempty"`
+}
+
+// GlobMatch matches a name against a glob pattern supporting * and ?. Case-insensitive.
+// Uses path.Match semantics but converts both name and pattern to lowercase first.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️globmatch](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/GlobMatch)
+func GlobMatch(name, pattern string) bool {
+	matched, err := path.Match(strings.ToLower(pattern), strings.ToLower(name))
+	if err != nil {
+		return false
+	}
+	return matched
+}
+
+// MatchesGlobFilter checks if a name passes a GlobFilter. Returns true if filter is nil or name matches.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️matchesglobfilter](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/MatchesGlobFilter)
+func MatchesGlobFilter(name string, filter *GlobFilter) bool {
+	if filter == nil {
+		return true
+	}
+	if len(filter.Include) > 0 {
+		matched := false
+		for _, p := range filter.Include {
+			if GlobMatch(name, p) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return false
+		}
+	}
+	for _, p := range filter.Exclude {
+		if GlobMatch(name, p) {
+			return false
+		}
+	}
+	return true
+}
+
+// filterKitByDesign filters a kit to only include entities related to a specific design.
 // Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
 // files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
-// [👤semio📚go💻semio🔖kit🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/FilterKitWithDesign)
-func FilterKitWithDesign(kit Kit, designGuid string, tags []string) Kit {
+// [👤semio📚go💻semio🔖kit🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/filterKitByDesign)
+func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 	var design *Design
 	for i := range kit.Designs {
 		if kit.Designs[i].Guid == designGuid {
@@ -8056,8 +8121,91 @@ func FilterKitWithDesign(kit Kit, designGuid string, tags []string) Kit {
 	return result
 }
 
+// FilterKit applies general-purpose filtering to a kit. Combines optional design-based transitive filtering
+// with glob-based name filtering. When DesignGuid is set, first performs transitive design-scoped subset extraction.
+// Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
+// [👤semio📚go💻semio🔖kit🔖filter🛠️filterkit](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/FilterKit)
+func FilterKit(kit Kit, filter KitFilter) Kit {
+	var base Kit
+	if filter.DesignGuid != "" {
+		base = filterKitByDesign(kit, filter.DesignGuid, filter.ModelTags)
+	} else {
+		base = kit
+	}
+
+	hasGlobFilters := filter.Designs != nil || filter.Types != nil || filter.Ports != nil || filter.Files != nil ||
+		filter.Tags != nil || filter.Concepts != nil || filter.Qualities != nil || filter.Authors != nil || filter.Folders != nil
+	if !hasGlobFilters {
+		return base
+	}
+
+	result := Kit{
+		Guid:        base.Guid,
+		Name:        base.Name,
+		Version:     base.Version,
+		Description: base.Description,
+		Icon:        base.Icon,
+		Image:       base.Image,
+		Preview:     base.Preview,
+		Remote:      base.Remote,
+		Homepage:    base.Homepage,
+		License:     base.License,
+		Attributes:  base.Attributes,
+		CreatedAt:   base.CreatedAt,
+		UpdatedAt:   base.UpdatedAt,
+	}
+
+	for _, t := range base.Types {
+		if MatchesGlobFilter(t.Name, filter.Types) {
+			result.Types = append(result.Types, t)
+		}
+	}
+	for _, d := range base.Designs {
+		if MatchesGlobFilter(d.Name, filter.Designs) {
+			result.Designs = append(result.Designs, d)
+		}
+	}
+	for _, p := range base.Ports {
+		if MatchesGlobFilter(p.Name, filter.Ports) {
+			result.Ports = append(result.Ports, p)
+		}
+	}
+	for _, f := range base.Files {
+		if MatchesGlobFilter(f.Name, filter.Files) {
+			result.Files = append(result.Files, f)
+		}
+	}
+	for _, t := range base.Tags {
+		if MatchesGlobFilter(t.Name, filter.Tags) {
+			result.Tags = append(result.Tags, t)
+		}
+	}
+	for _, c := range base.Concepts {
+		if MatchesGlobFilter(c.Name, filter.Concepts) {
+			result.Concepts = append(result.Concepts, c)
+		}
+	}
+	for _, q := range base.Qualities {
+		if MatchesGlobFilter(q.Name, filter.Qualities) {
+			result.Qualities = append(result.Qualities, q)
+		}
+	}
+	for _, a := range base.Authors {
+		if MatchesGlobFilter(a.Name, filter.Authors) {
+			result.Authors = append(result.Authors, a)
+		}
+	}
+	for _, f := range base.Folders {
+		if MatchesGlobFilter(f.Name, filter.Folders) {
+			result.Folders = append(result.Folders, f)
+		}
+	}
+
+	return result
+}
+
 // selectBestModelLike selects the best model based on tag matching using Jaccard similarity.
-// Helper for FilterKitWithDesign.
+// Helper for filterKitByDesign.
 // [👤semio📚go💻semio🔖kit🔖filter🛠️selectbestmodellike](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/selectBestModelLike)
 func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
 	if len(models) == 0 {
@@ -8107,7 +8255,7 @@ func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
 }
 
 // jaccardTagGuidsGo computes Jaccard similarity between model tags and selected tags.
-// Helper for FilterKitWithDesign.
+// Helper for filterKitByDesign.
 // [👤semio📚go💻semio🔖kit🔖filter🛠️jaccardtagguidsgo](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/s/Filter/d/i/jaccardTagGuidsGo)
 func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 	modelTagSet := make(map[string]bool)

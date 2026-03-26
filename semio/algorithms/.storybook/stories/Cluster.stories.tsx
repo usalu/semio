@@ -58,7 +58,7 @@ function ClusterFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Design/Cluster",
+  title: "semio-algorithms/Cluster",
   parameters: { layout: "padded" },
   tags: ["autodocs"],
 } satisfies Meta;

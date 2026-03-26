@@ -58,7 +58,7 @@ function DragFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Design/Drag",
+  title: "semio-algorithms/Drag",
   parameters: { layout: "padded" },
   tags: ["autodocs"],
 } satisfies Meta;

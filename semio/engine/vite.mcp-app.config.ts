@@ -33,11 +33,11 @@ function zodJitlessPlugin(): Plugin {
           "export const allowsEval = { get value() { return false; } };",
         );
       }
-      // Patch doc.js: make compile() throw instead of using new Function
+      // Patch doc.js: make compile() return a no-op function instead of using new Function
       if (id.endsWith("core/doc.js") || id.endsWith("core/doc.mjs")) {
         return code.replace(
           /compile\(\)\s*\{[\s\S]*?return new F\([^)]*\);\s*\}/,
-          'compile() { throw new Error("Zod JIT disabled for CSP compliance"); }',
+          "compile() { return () => {}; }",
         );
       }
       return undefined;

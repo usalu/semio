@@ -11,7 +11,7 @@
 
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { useApp } from "@modelcontextprotocol/ext-apps/react";
+import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 import type { App as McpAppInstance } from "@modelcontextprotocol/ext-apps";
 
 // #region 🔖KitArtifactSelect
@@ -251,11 +251,13 @@ const McpDesignViewer: React.FC = () => {
           setArtifactSelection({ designGuids: [], typeGuids: [], portGuids: [] });
         }
       };
-      a.onerror = (err: unknown) => {
-        console.error("[semio design viewer] MCP App error:", err);
-      };
+      a.onteardown = async () => ({});
+      a.onerror = console.error;
     },
   });
+
+  // Apply host theme CSS variables (background, text colors, fonts, etc.)
+  useHostStyles(app, app?.getHostContext());
 
   // Resize observer
   React.useLayoutEffect(() => {
@@ -379,7 +381,7 @@ const McpDesignViewer: React.FC = () => {
 
   if (error) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", color: "#dc2626" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-danger, #dc2626)" }}>
         <p>Error: {error.message}</p>
       </div>
     );
@@ -387,7 +389,7 @@ const McpDesignViewer: React.FC = () => {
 
   if (!isConnected || !app) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", color: "#737373" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
         <p>Connecting to host…</p>
       </div>
     );
@@ -395,7 +397,7 @@ const McpDesignViewer: React.FC = () => {
 
   if (!payload || !bounds) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", color: "#737373" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
         <p>Waiting for design data…</p>
       </div>
     );
@@ -471,7 +473,7 @@ const McpDesignViewer: React.FC = () => {
   };
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100vh", position: "relative" }} onDoubleClick={handleDoubleClick} onWheel={handleWheel}>
+    <div ref={containerRef} style={{ width: "100%", height: "100vh", position: "relative", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-primary, currentColor)" }} onDoubleClick={handleDoubleClick} onWheel={handleWheel}>
       {payload.kitArtifacts && (
         <div style={{ position: "absolute", left: 12, top: 12, right: 12, pointerEvents: "none", zIndex: 10 }}>
           <div style={{ pointerEvents: "auto", maxHeight: "38vh", overflow: "auto" }}>
@@ -567,8 +569,11 @@ const McpDesignViewer: React.FC = () => {
 
 // #endregion 🔖DiagramRendering
 
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <McpDesignViewer />
-  </React.StrictMode>,
-);
+const rootEl = document.getElementById("root");
+if (rootEl) {
+  createRoot(rootEl).render(
+    <React.StrictMode>
+      <McpDesignViewer />
+    </React.StrictMode>,
+  );
+}

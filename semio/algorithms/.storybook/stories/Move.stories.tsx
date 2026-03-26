@@ -53,7 +53,7 @@ function MoveFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Design/Move",
+  title: "semio-algorithms/Move",
   parameters: { layout: "padded" },
   tags: ["autodocs"],
 } satisfies Meta;

@@ -341,7 +341,7 @@ func TestKitFilterDesign(t *testing.T) {
 	}
 
 	t.Run("filters kit to Nakagin Capsule Tower subset", func(t *testing.T) {
-		filtered := FilterKitWithDesign(kit, nakaginDesign.Guid, nil)
+		filtered := FilterKit(kit, KitFilter{DesignGuid: nakaginDesign.Guid})
 
 		if len(filtered.Designs) != len(expected.Designs) {
 			t.Fatalf("Expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
@@ -436,7 +436,7 @@ func TestKitFilterDesign(t *testing.T) {
 	})
 
 	t.Run("preserves kit metadata", func(t *testing.T) {
-		filtered := FilterKitWithDesign(kit, nakaginDesign.Guid, nil)
+		filtered := FilterKit(kit, KitFilter{DesignGuid: nakaginDesign.Guid})
 		if filtered.Guid != kit.Guid || filtered.Name != kit.Name || filtered.Version != kit.Version {
 			t.Fatalf("Filtered kit metadata mismatch")
 		}
@@ -1273,9 +1273,9 @@ func TestKitWorkflowKinds(t *testing.T) {
 
 // #region 🔖Kit Filter Tests
 // [👤semio📚go🥼semiotest🔖kitfiltertests](repo://p/u/semio/b/l/go/f/semio_test.go/s/KitFilterTests)
-// Tests for FilterKitWithDesign MUST verify correct subset extraction.
+// Tests for FilterKit MUST verify correct subset extraction.
 
-func TestFilterKitWithDesign(t *testing.T) {
+func TestFilterKit(t *testing.T) {
 	var kit Kit
 	loadJSON(t, "kit_metabolism.json", &kit)
 	designGuid := "9a890dd4-0a9c-48ac-920a-9e62666465ef"
@@ -1283,7 +1283,7 @@ func TestFilterKitWithDesign(t *testing.T) {
 	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
 
 	t.Run("filters kit to only contain entities related to Nakagin Capsule Tower design", func(t *testing.T) {
-		filtered := FilterKitWithDesign(kit, designGuid, nil)
+		filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
 
 		if len(filtered.Designs) != len(expected.Designs) {
 			t.Errorf("expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
@@ -1341,7 +1341,7 @@ func TestFilterKitWithDesign(t *testing.T) {
 	})
 
 	t.Run("preserves kit metadata", func(t *testing.T) {
-		filtered := FilterKitWithDesign(kit, designGuid, nil)
+		filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
 		if filtered.Guid != kit.Guid {
 			t.Errorf("expected guid %s, got %s", kit.Guid, filtered.Guid)
 		}
@@ -1350,6 +1350,66 @@ func TestFilterKitWithDesign(t *testing.T) {
 		}
 		if filtered.Version != kit.Version {
 			t.Errorf("expected version %s, got %s", kit.Version, filtered.Version)
+		}
+	})
+
+	t.Run("glob filters types by name include", func(t *testing.T) {
+		filtered := FilterKit(kit, KitFilter{Types: &GlobFilter{Include: []string{"Capsule*"}}})
+		if len(filtered.Types) == 0 {
+			t.Fatal("expected at least one type matching Capsule*")
+		}
+		for _, ty := range filtered.Types {
+			if !GlobMatch(ty.Name, "Capsule*") {
+				t.Errorf("type %s should not be included", ty.Name)
+			}
+		}
+	})
+
+	t.Run("glob filters types by name exclude", func(t *testing.T) {
+		totalTypes := len(kit.Types)
+		filtered := FilterKit(kit, KitFilter{Types: &GlobFilter{Exclude: []string{"Capsule*"}}})
+		if len(filtered.Types) >= totalTypes {
+			t.Errorf("expected fewer types after excluding Capsule*")
+		}
+		for _, ty := range filtered.Types {
+			if GlobMatch(ty.Name, "Capsule*") {
+				t.Errorf("type %s should have been excluded", ty.Name)
+			}
+		}
+	})
+
+	t.Run("glob filters designs by name include", func(t *testing.T) {
+		filtered := FilterKit(kit, KitFilter{Designs: &GlobFilter{Include: []string{"Nakagin*"}}})
+		if len(filtered.Designs) == 0 {
+			t.Fatal("expected at least one design matching Nakagin*")
+		}
+		for _, d := range filtered.Designs {
+			if !GlobMatch(d.Name, "Nakagin*") {
+				t.Errorf("design %s should not be included", d.Name)
+			}
+		}
+	})
+
+	t.Run("empty filter returns kit unchanged", func(t *testing.T) {
+		filtered := FilterKit(kit, KitFilter{})
+		if len(filtered.Types) != len(kit.Types) {
+			t.Errorf("expected %d types, got %d", len(kit.Types), len(filtered.Types))
+		}
+		if len(filtered.Designs) != len(kit.Designs) {
+			t.Errorf("expected %d designs, got %d", len(kit.Designs), len(filtered.Designs))
+		}
+	})
+
+	t.Run("combines designGuid with glob filters", func(t *testing.T) {
+		designFiltered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
+		combinedFiltered := FilterKit(kit, KitFilter{DesignGuid: designGuid, Types: &GlobFilter{Exclude: []string{"Capsule*"}}})
+		if len(combinedFiltered.Types) >= len(designFiltered.Types) {
+			t.Errorf("expected fewer types with combined filter")
+		}
+		for _, ty := range combinedFiltered.Types {
+			if GlobMatch(ty.Name, "Capsule*") {
+				t.Errorf("type %s should have been excluded", ty.Name)
+			}
 		}
 	})
 }
