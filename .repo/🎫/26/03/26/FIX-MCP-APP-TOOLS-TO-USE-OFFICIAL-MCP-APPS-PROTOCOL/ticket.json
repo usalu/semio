@@ -1,0 +1,12 @@
+{
+  "title": "Fix Mcp App Tools to Use Official Mcp Apps Protocol",
+  "status": "open",
+  "description": "Fix the semio engine MCP app tools (show_design, show_diagram, etc.) to use the official MCP Apps protocol with @modelcontextprotocol/ext-apps/react. Currently the UI hangs because the tools use a custom protocol instead of the standard MCP Apps protocol with ui:// resources, tool meta, and the App class for postMessage communication.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1098"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪c02d2963859b4bf08db1e2d87d0248e4"
+  ]
+}

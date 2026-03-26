@@ -745,7 +745,6 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(queryCommand(factory, &config))
 	root.AddCommand(exportCommand(factory, &config))
 	root.AddCommand(hookCommand(factory, &config))
-	root.AddCommand(configureCommand(factory, &config))
 	root.AddCommand(mermaidCommand(factory, &config))
 	root.AddCommand(technologyCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
@@ -11195,7 +11194,6 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 type VersionControlProvider interface {
 	Kind() string
 	RepoURL() (string, error)
-	Configure(repoRoot string) error
 
 	Checkpoint(repoRoot string, description string) (id string, err error)
 
@@ -11249,7 +11247,6 @@ type ManagementLabel struct {
 // [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️managementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementProvider)
 type ManagementProvider interface {
 	Kind() string
-	Configure(repoRoot string) error
 	CreateIssue(title, body string, milestone *int) (string, error)
 	CloseIssue(issueURL string) error
 	ReopenIssue(issueURL string) error
@@ -11288,26 +11285,15 @@ type ManagementProvider interface {
 // [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️sandboxprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/SandboxProvider)
 type SandboxProvider interface {
 	Kind() string
-	Configure(repoRoot string) error
-}
-
-// EditorHookMapping holds the data fields for an editor hook mapping record.
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️editorhookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/EditorHookMapping)
-type EditorHookMapping struct {
-	Client     string
-	ConfigPath string
 }
 
 // EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
 // [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️editorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/EditorProvider)
 type EditorProvider interface {
 	Kind() string
-	Configure(repoRoot string) error
 	ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error)
 	FormatHookOutput(hookEventName string, result HookResult) string
 	NativeEventFromHookEvent(event HookEvent, parentInfo string) string
-	GenerateHookConfig(repoRoot string) (string, error)
-	HookMapping() EditorHookMapping
 }
 
 // #endregion 🔖Provider Interfaces
@@ -11325,11 +11311,6 @@ type GitHubManagementProvider struct{}
 // Kind holds the data fields for a Kind record.
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Kind)
 func (p *GitHubManagementProvider) Kind() string { return "github" }
-
-// Configure MUST perform the Configure operation.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Configure)
-// Configure performs the Configure operation.
-func (p *GitHubManagementProvider) Configure(repoRoot string) error { return nil }
 
 // CreateIssue MUST perform the CreateIssue operation.
 // CreateIssue holds the data fields for a CreateIssue record.

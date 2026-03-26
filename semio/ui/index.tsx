@@ -1681,6 +1681,213 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 
 // #endregion 🔖Design
 
+// #region 🔖McpApp
+// [👤semio📚ui💻index🔖mcpapp](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp)
+// Specs: MCP App design viewer component using the official @modelcontextprotocol/ext-apps/react
+// protocol. Communicates with the MCP host via useApp hook. Receives kit/design data
+// from tool results as JSON text content. Renders SemioDiagram, SemioScene, or SemioDesign
+// based on the mode. Supports piece/connection selection.
+// Summary: MCP App React component for rendering semio designs inside MCP host iframes.
+
+import { useApp } from "@modelcontextprotocol/ext-apps/react";
+import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
+
+/**
+ * Payload structure sent as JSON text content in MCP tool results.
+ * [👤semio📚ui💻index🔖mcpapp🪨mcpdesignviewerpayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpDesignViewerPayload)
+ **/
+export interface McpDesignViewerPayload {
+  mode: string;
+  kit: Kit;
+  designGuid: string;
+  designDiff?: DesignDiff;
+  selectedPieceGuids?: string[];
+  selectedConnectionGuids?: string[];
+  capabilities?: {
+    pieceSelection?: boolean;
+    connectionSelection?: boolean;
+    diff?: boolean;
+  };
+}
+
+/**
+ * Parses the MCP tool result content to extract the McpDesignViewerPayload.
+ * [👤semio📚ui💻index🔖mcpapp🛠️parsemcptoolresult](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/parseMcpToolResult)
+ **/
+const parseMcpToolResult = (result: unknown): McpDesignViewerPayload | null => {
+  if (!result || typeof result !== "object") return null;
+  const r = result as { content?: Array<{ type: string; text?: string }> };
+  const textContent = r.content?.find((c) => c.type === "text");
+  if (!textContent?.text) return null;
+  try {
+    return JSON.parse(textContent.text) as McpDesignViewerPayload;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * MCP App design viewer that renders a semio design using the official MCP Apps protocol.
+ * Uses useApp from @modelcontextprotocol/ext-apps/react for host communication.
+ * [👤semio📚ui💻index🔖mcpapp🛠️mcpdesignviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpDesignViewer)
+ *
+ * Specs:
+ * - Connects to MCP host via useApp hook with PostMessageTransport.
+ * - Receives design data from tool results via ontoolresult callback.
+ * - Renders SemioDiagram for diagram modes, SemioScene for scene modes,
+ *   SemioDesign for combined modes based on the mode field.
+ * - Sends selection changes back to host via updateModelContext.
+ **/
+export const McpDesignViewer: React.FC = () => {
+  const [payload, setPayload] = React.useState<McpDesignViewerPayload | null>(null);
+  const [selection, setSelection] = React.useState<DiagramSelection>({ pieceGuids: [], connectionGuids: [] });
+  const appRef = React.useRef<McpApp | null>(null);
+
+  const { app, isConnected, error } = useApp({
+    appInfo: { name: "semio design viewer", version: "1.0.0" },
+    capabilities: {},
+    onAppCreated: (a) => {
+      appRef.current = a;
+      a.ontoolresult = (result) => {
+        const parsed = parseMcpToolResult(result);
+        if (parsed) {
+          setPayload(parsed);
+          setSelection({
+            pieceGuids: parsed.selectedPieceGuids ?? [],
+            connectionGuids: parsed.selectedConnectionGuids ?? [],
+          });
+        }
+      };
+      a.onerror = (err) => {
+        console.error("[semio design viewer] MCP App error:", err);
+      };
+    },
+  });
+
+  const handleSelectionChange = React.useCallback(
+    (next: DiagramSelection) => {
+      setSelection(next);
+      if (appRef.current) {
+        appRef.current.updateModelContext({
+          data: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                selectionChange: {
+                  pieceGuids: next.pieceGuids ?? [],
+                  connectionGuids: next.connectionGuids ?? [],
+                },
+              }),
+            },
+          ],
+        });
+      }
+    },
+    [],
+  );
+
+  if (error) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "#dc2626" }}>
+        <p>Error: {error.message}</p>
+      </div>
+    );
+  }
+
+  if (!isConnected || !app) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "#737373" }}>
+        <p>Connecting to host…</p>
+      </div>
+    );
+  }
+
+  if (!payload) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", color: "#737373" }}>
+        <p>Waiting for design data…</p>
+      </div>
+    );
+  }
+
+  const { mode, kit, designGuid, designDiff, capabilities } = payload;
+  const pieceSelectionEnabled = capabilities?.pieceSelection ?? false;
+  const connectionSelectionEnabled = capabilities?.connectionSelection ?? false;
+  const diffEnabled = capabilities?.diff ?? false;
+
+  const isDiagramOnly = mode === "show-diagram" || mode === "show-diagram-diff" || mode === "select-pieces" || mode === "select-connections" || mode === "select-pieces-and-connections";
+  const isSceneOnly = mode === "show-scene";
+
+  if (isSceneOnly) {
+    return (
+      <div style={{ width: "100%", height: "100vh" }}>
+        <SemioScene
+          kit={kit}
+          designGuid={designGuid}
+          designDiff={designDiff}
+          diffEnabled={diffEnabled}
+          selection={selection}
+          selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
+          pieceSelectionEnabled={pieceSelectionEnabled}
+          connectionSelectionEnabled={connectionSelectionEnabled}
+          onSelectionChange={handleSelectionChange}
+        />
+      </div>
+    );
+  }
+
+  if (isDiagramOnly) {
+    return (
+      <div style={{ width: "100%", height: "100vh" }}>
+        <SemioDiagram
+          kit={kit}
+          designGuid={designGuid}
+          designDiff={designDiff}
+          diffEnabled={diffEnabled}
+          selection={selection}
+          selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
+          pieceSelectionEnabled={pieceSelectionEnabled}
+          connectionSelectionEnabled={connectionSelectionEnabled}
+          onSelectionChange={handleSelectionChange}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ width: "100%", height: "100vh" }}>
+      <SemioDesign
+        kit={kit}
+        designGuid={designGuid}
+        designDiff={designDiff}
+        diffEnabled={diffEnabled}
+        selection={selection}
+        selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
+        pieceSelectionEnabled={pieceSelectionEnabled}
+        connectionSelectionEnabled={connectionSelectionEnabled}
+        onSelectionChange={handleSelectionChange}
+      />
+    </div>
+  );
+};
+
+/**
+ * Mount the MCP design viewer as a standalone app.
+ * Call this from the entry point TSX file after importing react-dom/client.
+ * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpdesignviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpDesignViewer)
+ **/
+export const mountMcpDesignViewer = (createRoot: (container: HTMLElement) => { render: (element: React.ReactNode) => void }) => {
+  const root = document.getElementById("root");
+  if (!root) throw new Error("Missing #root element");
+  createRoot(root).render(
+    <React.StrictMode>
+      <McpDesignViewer />
+    </React.StrictMode>,
+  );
+};
+
+// #endregion 🔖McpApp
+
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 

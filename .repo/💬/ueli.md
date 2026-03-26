@@ -100,6 +100,14 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+Make sure the semio engine mcp app works correctly with semio ui.
+Currently when invoking show_design after calling start_working_in_local_kit(workspaces/semio/semio/assets/semio/metabolism) and start_working_in_design(9a890dd4-0a9c-48ac-920a-9e62666465ef) the ui hangs and is not rendering the diagram
+You MUST follow all official guidelines.
+https://modelcontextprotocol.io/extensions/apps/overview
+You MUST use the official react package:
+https://apps.extensions.modelcontextprotocol.io/api/modules/_modelcontextprotocol_ext-apps_react.html
+
 There are exactly five kind of kits:
 
 - FileKit (JSON)
@@ -107,11 +115,11 @@ There are exactly five kind of kits:
 - ArchiveKit (zip file of FolderKit)
 - RemoteKit (url)
 - TemporaryKit (InMemory)
-  The current implementations are messy and inconsistent.
-  You MUST refactor everything to support exactly those kits and nothing else.
-  You MUST implement it for all programming languages.
-  You MUST test every kind of kit Kit/File, KitFolder, Kit/Archive, Kit/Remote, Kit/Temporary.
 
+The current implementations are messy and inconsistent.
+You MUST refactor everything to support exactly those kits and nothing else.
+You MUST implement it for all programming languages.
+You MUST test every kind of kit Kit/File, KitFolder, Kit/Archive, Kit/Remote, Kit/Temporary.
 Make sure that all programming languages have a *Meta and *Shallow same as they have a _Diff equivalent. A shallow is the same as the normal but for all child collections it only has the Meta information. E.g. A shallow kit has only meta and types meta, designs meta, etc. All meta only has all non-heavy properties (e.g. no file blobs) and no child collections.
 You MUST implement it everywhere. Extend the semio assets with metabolism.shallow.kit.semio.json, nakagin-capsule-tower.shallow.design.semio.json, tambour.shallow.type.semio.json.
 You MUST extend all tests with Kit/Shallow, Design/Shallow, TypeShallow
