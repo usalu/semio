@@ -1,9 +1,9 @@
 ---
-technology: semio
+technology: elements
 bundle:
  name: ui
  emoji: 🖱️
- description: A VSCode extension for interacting with semio.
+ description: The ui bundle for elements.
  kind: ui
 ---
 

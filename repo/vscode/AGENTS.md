@@ -1,9 +1,9 @@
 ---
-technology: semio
+technology: repo
 bundle:
- name: ui
+ name: vscode
  emoji: 🖱️
- description: A VSCode extension for interacting with semio.
+ description: The vscode bundle for repo.
  kind: ui
 ---
 

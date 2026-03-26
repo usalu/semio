@@ -18191,13 +18191,14 @@ interface SceneInnerProps {
   onCameraChange?: (camera: Camera) => void;
   focusedItemId?: string;
   onFocusComplete?: () => void;
+  selectionOnDrag?: boolean;
 }
 
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨sceneinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneInner)
  * SceneInner holds the data fields for a SceneInner record.
  **/
-const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete }) => {
+const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete, selectionOnDrag = false }) => {
   const [gridColors, setGridColors] = React.useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -18390,11 +18391,19 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       <OrbitControls
         ref={controlsRef}
         enableDamping={false}
-        mouseButtons={{
-          LEFT: THREE.MOUSE.ROTATE,
-          MIDDLE: undefined,
-          RIGHT: undefined,
-        }}
+        mouseButtons={
+          selectionOnDrag
+            ? {
+                LEFT: undefined,
+                MIDDLE: THREE.MOUSE.ROTATE,
+                RIGHT: THREE.MOUSE.ROTATE,
+              }
+            : {
+                LEFT: THREE.MOUSE.ROTATE,
+                MIDDLE: undefined,
+                RIGHT: undefined,
+              }
+        }
         onEnd={handleEnd}
       />
       <ambientLight intensity={1} />
@@ -18424,6 +18433,7 @@ interface SceneProps {
   onFocusComplete?: () => void;
   projection?: "camera" | "orthographic";
   onProjectionChange?: (projection: "camera" | "orthographic") => void;
+  selectionOnDrag?: boolean;
 }
 
 /**
@@ -18445,6 +18455,7 @@ export const Scene: React.FC<SceneProps> = ({
   onFocusComplete,
   projection = "orthographic",
   onProjectionChange,
+  selectionOnDrag = false,
 }) => {
   const projectionOptions: ActionDropdownOption[] = [
     {
@@ -18475,7 +18486,7 @@ export const Scene: React.FC<SceneProps> = ({
         style={{ width: "100%", height: "100%" }}
       >
         <SceneFrameControl />
-        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete}>
+        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete} selectionOnDrag={selectionOnDrag}>
           {children}
         </SceneInner>
       </ThreeCanvas>

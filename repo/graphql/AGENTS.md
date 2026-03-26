@@ -1,10 +1,10 @@
 ---
-technology: semio
+technology: repo
 bundle:
- name: ui
- emoji: 🖱️
- description: A VSCode extension for interacting with semio.
- kind: ui
+ name: graphql
+ emoji: 🛂
+ description: The graphql bundle for repo.
+ kind: schema
 ---
 
 # 🧾 Specification

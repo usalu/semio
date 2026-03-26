@@ -45,6 +45,42 @@ import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 
+// #region 🔖ControllableState
+// Specs: Semio UI components MUST support controlled/uncontrolled and partial/full control.
+// This hook is the shared mechanism used by multiple components for interactive state that can
+// be externally controlled while still supporting internal defaults.
+// Summary: Shared controllable state hook for Semio UI components.
+
+const useResolvedValue = <T,>(value: T | undefined, defaultValue: T) => value ?? defaultValue;
+
+const useInteractiveControllableValue = <T,>(value: T | undefined, defaultValue: T, onChange?: (nextValue: T) => void) => {
+  const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);
+  const isControlled = value !== undefined && onChange !== undefined;
+  const lastExternalValueRef = React.useRef(value);
+
+  React.useEffect(() => {
+    if (isControlled) return;
+    if (value === undefined) return;
+    if (Object.is(lastExternalValueRef.current, value)) return;
+    lastExternalValueRef.current = value;
+    setInternalValue(value);
+  }, [isControlled, value]);
+
+  const resolvedValue = isControlled ? value : internalValue;
+  const setValue = React.useCallback(
+    (nextValue: T) => {
+      if (!isControlled) {
+        setInternalValue(nextValue);
+      }
+      onChange?.(nextValue);
+    },
+    [isControlled, onChange],
+  );
+  return [resolvedValue, setValue, isControlled] as const;
+};
+
+// #endregion 🔖ControllableState
+
 // #region 🔖Exports
 
 // Re-export the runtime-safe ui primitives from @elements/ui/elements.
@@ -52,6 +88,304 @@ import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.j
 export * from "@elements/ui/elements";
 
 // #endregion 🔖Exports
+
+// #region 🔖KitArtifactSelect
+// Specs: KitArtifactSelect provides a kit-scoped artifact picker (designs, types, ports/connectors)
+// with the standard Semio UI controllable-state pattern: partial/full controlled/uncontrolled for
+// both available data and selection. It supports partial/full select via per-group enable flags.
+// Summary: Kit artifact selector with controllable data + selection and group enable constraints.
+
+export type KitArtifactSelectGroupKind = "design" | "type" | "port";
+
+export interface KitArtifactSelectPort {
+  guid: string;
+  typeGuid: string;
+  id?: string;
+  port?: string;
+  name?: string;
+  description?: string;
+  mandatory?: boolean;
+}
+
+export interface KitArtifactSelectData {
+  designs?: Array<Pick<Design, "guid" | "name" | "variant" | "view">>;
+  types?: Array<Pick<SemioKind, "guid" | "name" | "variant">>;
+  ports?: KitArtifactSelectPort[];
+}
+
+export interface KitArtifactSelectSelection {
+  designGuids?: string[];
+  typeGuids?: string[];
+  portGuids?: string[];
+}
+
+export interface KitArtifactSelectProps {
+  kit?: Kit;
+  data?: KitArtifactSelectData;
+  defaultData?: KitArtifactSelectData;
+  onDataChange?: (data: KitArtifactSelectData) => void;
+
+  selection?: KitArtifactSelectSelection;
+  defaultSelection?: KitArtifactSelectSelection;
+  onSelectionChange?: (selection: KitArtifactSelectSelection) => void;
+
+  selectionEnabled?: boolean;
+  designSelectionEnabled?: boolean;
+  typeSelectionEnabled?: boolean;
+  portSelectionEnabled?: boolean;
+
+  dataEnabled?: boolean;
+  designDataEnabled?: boolean;
+  typeDataEnabled?: boolean;
+  portDataEnabled?: boolean;
+
+  title?: string;
+  className?: string;
+}
+
+const normalizeKitArtifactSelectSelection = (selection?: KitArtifactSelectSelection): KitArtifactSelectSelection => ({
+  designGuids: selection?.designGuids ?? [],
+  typeGuids: selection?.typeGuids ?? [],
+  portGuids: selection?.portGuids ?? [],
+});
+
+const buildKitArtifactSelectDataFromKit = (kit: Kit | undefined): KitArtifactSelectData => {
+  if (!kit) return {};
+  const designs = (kit.designs ?? []).map((d) => ({ guid: d.guid, name: d.name, variant: d.variant, view: d.view }));
+  const types = (kit.types ?? []).map((t) => ({ guid: t.guid, name: t.name, variant: t.variant }));
+  const ports: KitArtifactSelectPort[] = (kit.types ?? []).flatMap((t) =>
+    (t.connectors ?? []).map((c) => ({
+      guid: c.guid,
+      typeGuid: t.guid,
+      id: c.id,
+      port: c.port,
+      name: c.id || c.port || "port",
+      description: c.description,
+      mandatory: c.mandatory,
+    })),
+  );
+  return { designs, types, ports };
+};
+
+export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
+  kit,
+  data,
+  defaultData,
+  onDataChange,
+  selection,
+  defaultSelection,
+  onSelectionChange,
+  selectionEnabled,
+  designSelectionEnabled = true,
+  typeSelectionEnabled = true,
+  portSelectionEnabled = true,
+  dataEnabled,
+  designDataEnabled = true,
+  typeDataEnabled = true,
+  portDataEnabled = true,
+  title = "Kit Artifacts",
+  className,
+}) => {
+  const effectiveDataEnabled = dataEnabled ?? true;
+  const effectiveSelectionEnabled = selectionEnabled ?? true;
+
+  const derivedData = React.useMemo(() => buildKitArtifactSelectDataFromKit(kit), [kit]);
+  const computedDefaultData = React.useMemo(() => defaultData ?? derivedData, [defaultData, derivedData]);
+
+  const [resolvedData, setResolvedData] = useInteractiveControllableValue<KitArtifactSelectData>(data, computedDefaultData, onDataChange);
+  const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(
+    selection,
+    normalizeKitArtifactSelectSelection(defaultSelection),
+    onSelectionChange,
+  );
+
+  const effectiveData = effectiveDataEnabled ? resolvedData : {};
+  const effectiveDesigns = designDataEnabled ? (effectiveData.designs ?? []) : [];
+  const effectiveTypes = typeDataEnabled ? (effectiveData.types ?? []) : [];
+  const effectivePorts = portDataEnabled ? (effectiveData.ports ?? []) : [];
+
+  const selectedDesignGuids = React.useMemo(
+    () => new Set(effectiveSelectionEnabled && designSelectionEnabled ? (resolvedSelection.designGuids ?? []) : []),
+    [designSelectionEnabled, effectiveSelectionEnabled, resolvedSelection.designGuids],
+  );
+  const selectedTypeGuids = React.useMemo(
+    () => new Set(effectiveSelectionEnabled && typeSelectionEnabled ? (resolvedSelection.typeGuids ?? []) : []),
+    [effectiveSelectionEnabled, resolvedSelection.typeGuids, typeSelectionEnabled],
+  );
+  const selectedPortGuids = React.useMemo(
+    () => new Set(effectiveSelectionEnabled && portSelectionEnabled ? (resolvedSelection.portGuids ?? []) : []),
+    [effectiveSelectionEnabled, portSelectionEnabled, resolvedSelection.portGuids],
+  );
+
+  const setNextSelection = React.useCallback(
+    (next: { designGuids?: string[]; typeGuids?: string[]; portGuids?: string[] }) => {
+      if (!effectiveSelectionEnabled) return;
+      setResolvedSelection({
+        designGuids: designSelectionEnabled ? (next.designGuids ?? []) : [],
+        typeGuids: typeSelectionEnabled ? (next.typeGuids ?? []) : [],
+        portGuids: portSelectionEnabled ? (next.portGuids ?? []) : [],
+      });
+    },
+    [designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, setResolvedSelection, typeSelectionEnabled],
+  );
+
+  const toggle = React.useCallback(
+    (group: KitArtifactSelectGroupKind, guid: string) => {
+      if (!effectiveSelectionEnabled) return;
+      if (group === "design" && !designSelectionEnabled) return;
+      if (group === "type" && !typeSelectionEnabled) return;
+      if (group === "port" && !portSelectionEnabled) return;
+
+      const nextDesigns = new Set(resolvedSelection.designGuids ?? []);
+      const nextTypes = new Set(resolvedSelection.typeGuids ?? []);
+      const nextPorts = new Set(resolvedSelection.portGuids ?? []);
+
+      const target = group === "design" ? nextDesigns : group === "type" ? nextTypes : nextPorts;
+      if (target.has(guid)) target.delete(guid);
+      else target.add(guid);
+
+      setNextSelection({
+        designGuids: Array.from(nextDesigns),
+        typeGuids: Array.from(nextTypes),
+        portGuids: Array.from(nextPorts),
+      });
+    },
+    [
+      designSelectionEnabled,
+      effectiveSelectionEnabled,
+      portSelectionEnabled,
+      resolvedSelection.designGuids,
+      resolvedSelection.portGuids,
+      resolvedSelection.typeGuids,
+      setNextSelection,
+      typeSelectionEnabled,
+    ],
+  );
+
+  const clear = React.useCallback(() => {
+    setNextSelection({ designGuids: [], typeGuids: [], portGuids: [] });
+  }, [setNextSelection]);
+
+  // If kit changes and data is uncontrolled, adopt derived data.
+  React.useEffect(() => {
+    if (!effectiveDataEnabled) return;
+    if (data !== undefined && onDataChange !== undefined) return;
+    setResolvedData(derivedData);
+  }, [data, derivedData, effectiveDataEnabled, onDataChange, setResolvedData]);
+
+  return (
+    <div className={className} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <div style={{ fontWeight: 600 }}>{title}</div>
+          <div style={{ fontSize: 12, opacity: 0.7 }}>
+            {effectiveDesigns.length} designs · {effectiveTypes.length} types · {effectivePorts.length} ports
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={clear}
+          disabled={!effectiveSelectionEnabled}
+          className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+        >
+          Clear
+        </button>
+      </div>
+
+      {designDataEnabled && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Designs</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
+            {effectiveDesigns.map((d) => (
+              <label
+                key={d.guid}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                className="rounded-md border border-border px-3 py-2 hover:bg-muted/40"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedDesignGuids.has(d.guid)}
+                  disabled={!effectiveSelectionEnabled || !designSelectionEnabled}
+                  onChange={() => toggle("design", d.guid)}
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {d.name || d.guid}
+                  </div>
+                  <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {d.variant || "default"} · {d.view || "default"}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {typeDataEnabled && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Types</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
+            {effectiveTypes.map((t) => (
+              <label
+                key={t.guid}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                className="rounded-md border border-border px-3 py-2 hover:bg-muted/40"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedTypeGuids.has(t.guid)}
+                  disabled={!effectiveSelectionEnabled || !typeSelectionEnabled}
+                  onChange={() => toggle("type", t.guid)}
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {t.name || t.guid}
+                  </div>
+                  <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {t.variant || "default"}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {portDataEnabled && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Ports</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
+            {effectivePorts.map((p) => (
+              <label
+                key={p.guid}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                className="rounded-md border border-border px-3 py-2 hover:bg-muted/40"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedPortGuids.has(p.guid)}
+                  disabled={!effectiveSelectionEnabled || !portSelectionEnabled}
+                  onChange={() => toggle("port", p.guid)}
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {p.name || p.guid}
+                  </div>
+                  <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {p.port || "default"} · {p.mandatory ? "mandatory" : "optional"}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// #endregion 🔖KitArtifactSelect
 
 // #region 🔖Diagram
 
@@ -313,34 +647,6 @@ const normalizeHover = (hover?: DiagramHover): DiagramHover => ({
   connectionGuid: hover?.connectionGuid ?? null,
 });
 
-const useResolvedValue = <T,>(value: T | undefined, defaultValue: T) => value ?? defaultValue;
-
-const useInteractiveControllableValue = <T,>(value: T | undefined, defaultValue: T, onChange?: (nextValue: T) => void) => {
-  const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);
-  const isControlled = value !== undefined && onChange !== undefined;
-  const lastExternalValueRef = React.useRef(value);
-
-  React.useEffect(() => {
-    if (isControlled) return;
-    if (value === undefined) return;
-    if (Object.is(lastExternalValueRef.current, value)) return;
-    lastExternalValueRef.current = value;
-    setInternalValue(value);
-  }, [isControlled, value]);
-
-  const resolvedValue = isControlled ? value : internalValue;
-  const setValue = React.useCallback(
-    (nextValue: T) => {
-      if (!isControlled) {
-        setInternalValue(nextValue);
-      }
-      onChange?.(nextValue);
-    },
-    [isControlled, onChange],
-  );
-  return [resolvedValue, setValue, isControlled] as const;
-};
-
 export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   kit,
   designGuid,
@@ -380,8 +686,8 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const effectivePieceSelectionEnabled = effectiveSelectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = effectiveSelectionEnabled && connectionSelectionEnabled;
   const effectiveHoverEnabled = hoverEnabled ?? true;
-  const effectivePieceHoverEnabled = effectiveHoverEnabled && pieceHoverEnabled;
-  const effectiveConnectionHoverEnabled = effectiveHoverEnabled && connectionHoverEnabled;
+  const effectivePieceHoverEnabled = effectiveHoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick);
+  const effectiveConnectionHoverEnabled = effectiveHoverEnabled && connectionHoverEnabled && (effectiveConnectionSelectionEnabled || !!onConnectionClick);
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
@@ -1414,8 +1720,8 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
 
   const effectivePieceSelectionEnabled = selectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = selectionEnabled && connectionSelectionEnabled;
-  const effectivePieceHoverEnabled = hoverEnabled && pieceHoverEnabled;
-  const effectiveConnectionHoverEnabled = hoverEnabled && connectionHoverEnabled;
+  const effectivePieceHoverEnabled = hoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick);
+  const effectiveConnectionHoverEnabled = hoverEnabled && connectionHoverEnabled && (effectiveConnectionSelectionEnabled || !!onConnectionClick);
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
   const selectedPieceGuids = React.useMemo(() => new Set(selectionEnabled ? (resolvedSelection.pieceGuids ?? []) : []), [selectionEnabled, resolvedSelection.pieceGuids]);
@@ -1684,63 +1990,80 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 // #region 🔖McpApp
 // [👤semio📚ui💻index🔖mcpapp](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp)
 // Specs: MCP App design viewer component using the official @modelcontextprotocol/ext-apps/react
-// protocol. Communicates with the MCP host via useApp hook. Receives kit/design data
-// from tool results as JSON text content. Renders SemioDiagram, SemioScene, or SemioDesign
-// based on the mode. Supports piece/connection selection.
-// Summary: MCP App React component for rendering semio designs inside MCP host iframes.
+// protocol. Communicates with the MCP host via useApp hook. Receives pre-computed diagram data
+// (points and lines) from tool results as JSON text content. Renders pure SVG diagram.
+// Summary: MCP App React component for rendering semio diagrams inside MCP host iframes.
 
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 
-/**
- * Payload structure sent as JSON text content in MCP tool results.
- * [👤semio📚ui💻index🔖mcpapp🪨mcpdesignviewerpayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpDesignViewerPayload)
- **/
-export interface McpDesignViewerPayload {
-  mode: string;
-  kit: Kit;
-  designGuid: string;
-  designDiff?: DesignDiff;
-  selectedPieceGuids?: string[];
-  selectedConnectionGuids?: string[];
-  capabilities?: {
-    pieceSelection?: boolean;
-    connectionSelection?: boolean;
-    diff?: boolean;
-  };
+// #region 🔖McpApp Types
+
+interface McpDiagramPoint {
+  guid: string;
+  id: string;
+  u: number;
+  v: number;
+  status: DiagramEntityStatus;
+}
+
+interface McpDiagramLine {
+  guid: string;
+  sourceU: number;
+  sourceV: number;
+  targetU: number;
+  targetV: number;
+  status: DiagramEntityStatus;
 }
 
 /**
- * Parses the MCP tool result content to extract the McpDesignViewerPayload.
+ * Payload structure sent as JSON text content in MCP tool results.
+ * Contains pre-computed diagram points and lines from the server.
+ * [👤semio📚ui💻index🔖mcpapp🪨mcpdiagrampayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpDiagramPayload)
+ **/
+export interface McpDiagramPayload {
+  points: McpDiagramPoint[];
+  lines: McpDiagramLine[];
+  capabilities?: {
+    pieceSelection?: boolean;
+    connectionSelection?: boolean;
+  };
+}
+
+// #endregion 🔖McpApp Types
+
+/**
+ * Parses the MCP tool result content to extract the McpDiagramPayload.
  * [👤semio📚ui💻index🔖mcpapp🛠️parsemcptoolresult](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/parseMcpToolResult)
  **/
-const parseMcpToolResult = (result: unknown): McpDesignViewerPayload | null => {
+const parseMcpToolResult = (result: unknown): McpDiagramPayload | null => {
   if (!result || typeof result !== "object") return null;
   const r = result as { content?: Array<{ type: string; text?: string }> };
   const textContent = r.content?.find((c) => c.type === "text");
   if (!textContent?.text) return null;
   try {
-    return JSON.parse(textContent.text) as McpDesignViewerPayload;
+    return JSON.parse(textContent.text) as McpDiagramPayload;
   } catch {
     return null;
   }
 };
 
 /**
- * MCP App design viewer that renders a semio design using the official MCP Apps protocol.
+ * MCP App design viewer that renders a semio diagram using the official MCP Apps protocol.
  * Uses useApp from @modelcontextprotocol/ext-apps/react for host communication.
+ * Receives pre-computed diagram data (points and lines) from tool results.
  * [👤semio📚ui💻index🔖mcpapp🛠️mcpdesignviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpDesignViewer)
  *
  * Specs:
  * - Connects to MCP host via useApp hook with PostMessageTransport.
- * - Receives design data from tool results via ontoolresult callback.
- * - Renders SemioDiagram for diagram modes, SemioScene for scene modes,
- *   SemioDesign for combined modes based on the mode field.
+ * - Receives pre-computed diagram points/lines from tool results via ontoolresult callback.
+ * - Renders SVG diagram with pan, zoom, and selection support.
  * - Sends selection changes back to host via updateModelContext.
  **/
 export const McpDesignViewer: React.FC = () => {
-  const [payload, setPayload] = React.useState<McpDesignViewerPayload | null>(null);
-  const [selection, setSelection] = React.useState<DiagramSelection>({ pieceGuids: [], connectionGuids: [] });
+  const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
+  const [selectedPieces, setSelectedPieces] = React.useState<Set<string>>(new Set());
+  const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
   const appRef = React.useRef<McpApp | null>(null);
 
   const { app, isConnected, error } = useApp({
@@ -1752,10 +2075,8 @@ export const McpDesignViewer: React.FC = () => {
         const parsed = parseMcpToolResult(result);
         if (parsed) {
           setPayload(parsed);
-          setSelection({
-            pieceGuids: parsed.selectedPieceGuids ?? [],
-            connectionGuids: parsed.selectedConnectionGuids ?? [],
-          });
+          setSelectedPieces(new Set());
+          setSelectedConnections(new Set());
         }
       };
       a.onerror = (err) => {
@@ -1764,18 +2085,17 @@ export const McpDesignViewer: React.FC = () => {
     },
   });
 
-  const handleSelectionChange = React.useCallback(
-    (next: DiagramSelection) => {
-      setSelection(next);
+  const sendSelectionUpdate = React.useCallback(
+    (pieces: Set<string>, connections: Set<string>) => {
       if (appRef.current) {
         appRef.current.updateModelContext({
           data: [
             {
-              type: "text",
+              type: "text" as const,
               text: JSON.stringify({
                 selectionChange: {
-                  pieceGuids: next.pieceGuids ?? [],
-                  connectionGuids: next.connectionGuids ?? [],
+                  pieceGuids: Array.from(pieces),
+                  connectionGuids: Array.from(connections),
                 },
               }),
             },
@@ -1810,62 +2130,28 @@ export const McpDesignViewer: React.FC = () => {
     );
   }
 
-  const { mode, kit, designGuid, designDiff, capabilities } = payload;
-  const pieceSelectionEnabled = capabilities?.pieceSelection ?? false;
-  const connectionSelectionEnabled = capabilities?.connectionSelection ?? false;
-  const diffEnabled = capabilities?.diff ?? false;
-
-  const isDiagramOnly = mode === "show-diagram" || mode === "show-diagram-diff" || mode === "select-pieces" || mode === "select-connections" || mode === "select-pieces-and-connections";
-  const isSceneOnly = mode === "show-scene";
-
-  if (isSceneOnly) {
-    return (
-      <div style={{ width: "100%", height: "100vh" }}>
-        <SemioScene
-          kit={kit}
-          designGuid={designGuid}
-          designDiff={designDiff}
-          diffEnabled={diffEnabled}
-          selection={selection}
-          selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
-          pieceSelectionEnabled={pieceSelectionEnabled}
-          connectionSelectionEnabled={connectionSelectionEnabled}
-          onSelectionChange={handleSelectionChange}
-        />
-      </div>
-    );
-  }
-
-  if (isDiagramOnly) {
-    return (
-      <div style={{ width: "100%", height: "100vh" }}>
-        <SemioDiagram
-          kit={kit}
-          designGuid={designGuid}
-          designDiff={designDiff}
-          diffEnabled={diffEnabled}
-          selection={selection}
-          selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
-          pieceSelectionEnabled={pieceSelectionEnabled}
-          connectionSelectionEnabled={connectionSelectionEnabled}
-          onSelectionChange={handleSelectionChange}
-        />
-      </div>
-    );
-  }
+  const pieceSelectionEnabled = payload.capabilities?.pieceSelection ?? false;
+  const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
 
   return (
     <div style={{ width: "100%", height: "100vh" }}>
-      <SemioDesign
-        kit={kit}
-        designGuid={designGuid}
-        designDiff={designDiff}
-        diffEnabled={diffEnabled}
-        selection={selection}
+      <SemioDiagram
+        kit={{ types: [], designs: [{ guid: "__mcp__", pieces: payload.points.map((p) => ({ guid: p.guid, id: p.id, center: { u: p.u, v: p.v } })), connections: payload.lines.map((l) => ({ guid: l.guid, connected: { piece: { guid: payload.points.find((p) => p.u === l.sourceU && p.v === l.sourceV)?.guid ?? "" } }, connecting: { piece: { guid: payload.points.find((p) => p.u === l.targetU && p.v === l.targetV)?.guid ?? "" } } })) }] }}
+        designGuid="__mcp__"
         selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
         pieceSelectionEnabled={pieceSelectionEnabled}
         connectionSelectionEnabled={connectionSelectionEnabled}
-        onSelectionChange={handleSelectionChange}
+        selection={{
+          pieceGuids: Array.from(selectedPieces),
+          connectionGuids: Array.from(selectedConnections),
+        }}
+        onSelectionChange={(next) => {
+          const nextPieces = new Set(next.pieceGuids ?? []);
+          const nextConns = new Set(next.connectionGuids ?? []);
+          setSelectedPieces(nextPieces);
+          setSelectedConnections(nextConns);
+          sendSelectionUpdate(nextPieces, nextConns);
+        }}
       />
     </div>
   );
@@ -2028,11 +2314,11 @@ if (import.meta.vitest) {
       const diff = {
         pieces: {
           added: [pieceC],
-          updated: [{ piece: { guid: "piece-b" } }],
+          updated: [{ piece: { guid: "piece-b" }, diff: {} }],
         },
         connections: {
           added: [connectionB],
-          updated: [{ connection: { guid: "connection-a" } }],
+          updated: [{ connection: { guid: "connection-a" }, diff: {} }],
         },
       } as unknown as DesignDiff;
 
@@ -2061,7 +2347,7 @@ if (import.meta.vitest) {
 // DesignDiffOutput (Diagram with diff, no selection), DesignOutput (Diagram with no diff, no selection).
 // Summary: Standardized algorithm IPO shell using typed WindowKind-based windows.
 
-import { WindowKind, createDefaultLayout, type UIAppConfig, type UIWindowKindDefinition, type SidePanelTabConfig, type FooterItem, type UIToolbarItem, UI, TreeSection, TreeRow, cn } from "@elements/ui/elements";
+import { WindowKind, createDefaultLayout, type UIAppConfig, type UIWindowKindDefinition, type SidePanelTabConfig, type FooterItem, UI, TreeSection, TreeRow, cn } from "@elements/ui/elements";
 import { DetailsIcon, PieceIcon, AlertCircleIcon } from "@semio/assets/icons";
 
 /**
@@ -2101,6 +2387,16 @@ export interface AlgorithmWindowDef {
   id: string;
   kind: WindowKind;
   label?: string;
+}
+
+type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT;
+
+interface AlgorithmWindowBehavior {
+  kind: AlgorithmWindowKind;
+  selectionEnabled: boolean;
+  diffEnabled: boolean;
+  usesPieceSelection: boolean;
+  component: React.ComponentType<any>;
 }
 
 /**
@@ -2181,6 +2477,65 @@ const ALGORITHM_WINDOW_COMPONENTS: Record<string, React.ComponentType<any>> = {
   [WindowKind.DESIGN_DIFF_OUTPUT]: AlgorithmDesignDiffOutputWindow,
   [WindowKind.DESIGN_OUTPUT]: AlgorithmDesignOutputWindow,
 };
+
+const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWindowBehavior, "kind">> = {
+  [WindowKind.VEC_INPUT]: {
+    selectionEnabled: false,
+    diffEnabled: false,
+    usesPieceSelection: false,
+    component: AlgorithmVecInputWindow,
+  },
+  [WindowKind.PIECES_SELECTION_INPUT]: {
+    selectionEnabled: true,
+    diffEnabled: false,
+    usesPieceSelection: true,
+    component: AlgorithmPiecesSelectionInputWindow,
+  },
+  [WindowKind.DESIGN_DIFF_OUTPUT]: {
+    selectionEnabled: false,
+    diffEnabled: true,
+    usesPieceSelection: false,
+    component: AlgorithmDesignDiffOutputWindow,
+  },
+  [WindowKind.DESIGN_OUTPUT]: {
+    selectionEnabled: false,
+    diffEnabled: false,
+    usesPieceSelection: false,
+    component: AlgorithmDesignOutputWindow,
+  },
+};
+
+export function isAlgorithmWindowKind(kind: WindowKind): kind is AlgorithmWindowKind {
+  return Object.prototype.hasOwnProperty.call(ALGORITHM_WINDOW_BEHAVIORS, kind);
+}
+
+export function getAlgorithmWindowBehavior(kind: WindowKind): AlgorithmWindowBehavior | undefined {
+  if (!isAlgorithmWindowKind(kind)) return undefined;
+  return { kind, ...ALGORITHM_WINDOW_BEHAVIORS[kind] };
+}
+
+export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWindowKindDefinition[] {
+  return windows.map((windowDef) => {
+    const behavior = getAlgorithmWindowBehavior(windowDef.kind);
+    return {
+      id: windowDef.id,
+      label: windowDef.label ?? windowDef.id,
+      component: behavior?.component ?? (() => <div className="p-2 text-sm text-muted-foreground">Unknown window kind: {windowDef.kind}</div>),
+    };
+  });
+}
+
+export function createAlgorithmLayout(windows: AlgorithmWindowDef[], defaultLayout?: AlgorithmAppProps["defaultLayout"]) {
+  return (
+    defaultLayout ??
+    createDefaultLayout(
+      windows.map((windowDef) => windowDef.id),
+      "row",
+      undefined,
+      windows.map((windowDef) => windowDef.label ?? windowDef.id),
+    )
+  );
+}
 
 // #region 🔖AlgorithmDetailsPanel
 
@@ -2265,7 +2620,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
         </TreeRow>
         {ctx.error && (
           <TreeRow id="algorithm.details.output.error">
-            <div className="px-2 py-1 text-xs text-destructive break-words">{ctx.error}</div>
+            <div className="px-2 py-1 text-xs text-destructive wrap-break-word">{ctx.error}</div>
           </TreeRow>
         )}
         {ctx.designDiff && (
@@ -2315,27 +2670,9 @@ export interface AlgorithmAppProps {
  * Provides a right panel with algorithm details and a footer with status.
  **/
 export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, defaultLayout, context, className }) => {
-  const windowKinds: UIWindowKindDefinition[] = React.useMemo(
-    () =>
-      windows.map((w) => ({
-        id: w.id,
-        label: w.label ?? w.id,
-        component: ALGORITHM_WINDOW_COMPONENTS[w.kind] ?? (() => <div className="p-2 text-sm text-muted-foreground">Unknown window kind: {w.kind}</div>),
-      })),
-    [windows],
-  );
+  const windowKinds: UIWindowKindDefinition[] = React.useMemo(() => createAlgorithmWindowKinds(windows), [windows]);
 
-  const layout = React.useMemo(
-    () =>
-      defaultLayout ??
-      createDefaultLayout(
-        windows.map((w) => w.id),
-        "row",
-        undefined,
-        windows.map((w) => w.label ?? w.id),
-      ),
-    [defaultLayout, windows],
-  );
+  const layout = React.useMemo(() => createAlgorithmLayout(windows, defaultLayout), [defaultLayout, windows]);
 
   const rightPanelTabs: SidePanelTabConfig[] = React.useMemo(
     () => [
@@ -2399,3 +2736,75 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
 };
 
 // #endregion 🔖AlgorithmApp
+
+const algorithmVitest = (
+  import.meta as ImportMeta & {
+    vitest?: {
+      describe: typeof import("vitest").describe;
+      expect: typeof import("vitest").expect;
+      it: typeof import("vitest").it;
+    };
+  }
+).vitest;
+
+if (algorithmVitest) {
+  const { describe, expect, it } = algorithmVitest;
+
+  describe("algorithm window helpers", () => {
+    it("recognizes the canonical algorithm window kinds", () => {
+      expect(isAlgorithmWindowKind(WindowKind.VEC_INPUT)).toBe(true);
+      expect(isAlgorithmWindowKind(WindowKind.PIECES_SELECTION_INPUT)).toBe(true);
+      expect(isAlgorithmWindowKind(WindowKind.DESIGN_DIFF_OUTPUT)).toBe(true);
+      expect(isAlgorithmWindowKind(WindowKind.DESIGN_OUTPUT)).toBe(true);
+      expect(isAlgorithmWindowKind(WindowKind.TABLE)).toBe(false);
+    });
+
+    it("encodes the intended diagram behavior for selection and diff windows", () => {
+      expect(getAlgorithmWindowBehavior(WindowKind.PIECES_SELECTION_INPUT)).toMatchObject({
+        kind: WindowKind.PIECES_SELECTION_INPUT,
+        selectionEnabled: true,
+        diffEnabled: false,
+        usesPieceSelection: true,
+      });
+      expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_DIFF_OUTPUT)).toMatchObject({
+        kind: WindowKind.DESIGN_DIFF_OUTPUT,
+        selectionEnabled: false,
+        diffEnabled: true,
+        usesPieceSelection: false,
+      });
+      expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_OUTPUT)).toMatchObject({
+        kind: WindowKind.DESIGN_OUTPUT,
+        selectionEnabled: false,
+        diffEnabled: false,
+        usesPieceSelection: false,
+      });
+    });
+
+    it("builds window definitions and the default algorithm layout from the declared windows", () => {
+      const windows: AlgorithmWindowDef[] = [
+        { id: "drag-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },
+        { id: "drag-input", kind: WindowKind.PIECES_SELECTION_INPUT, label: "Input" },
+        { id: "drag-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
+        { id: "drag-output", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
+      ];
+
+      expect(createAlgorithmWindowKinds(windows).map((windowDef) => ({ id: windowDef.id, label: windowDef.label }))).toEqual([
+        { id: "drag-vec", label: "Vec" },
+        { id: "drag-input", label: "Input" },
+        { id: "drag-diff", label: "Diff" },
+        { id: "drag-output", label: "Output" },
+      ]);
+      expect(createAlgorithmLayout(windows)).toEqual({
+        root: {
+          kind: "row",
+          children: [
+            { kind: "stack", children: [{ kind: "window", windowKindId: "drag-vec", title: "Vec" }] },
+            { kind: "stack", children: [{ kind: "window", windowKindId: "drag-input", title: "Input" }] },
+            { kind: "stack", children: [{ kind: "window", windowKindId: "drag-diff", title: "Diff" }] },
+            { kind: "stack", children: [{ kind: "window", windowKindId: "drag-output", title: "Output" }] },
+          ],
+        },
+      });
+    });
+  });
+}

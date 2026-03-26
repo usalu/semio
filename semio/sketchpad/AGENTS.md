@@ -1,9 +1,9 @@
 ---
 technology: semio
 bundle:
- name: ui
+ name: sketchpad
  emoji: 🖱️
- description: A VSCode extension for interacting with semio.
+ description: The sketchpad bundle for semio.
  kind: ui
 ---
 

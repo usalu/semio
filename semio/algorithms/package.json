@@ -12,7 +12,7 @@
     "dev": "storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug",
     "build": "storybook build",
     "lint": "eslint --max-warnings 0 --config eslint.config.ts .",
-    "test": "vitest run --passWithNoTests --config vitest.config.ts --root ../.."
+    "test": "vitest run --passWithNoTests --config ../../elements/ui/vitest.config.ts"
   },
   "targets": {
     "lint": {

@@ -1,21 +1,18 @@
 ---
-name: cli
-summary: Repo CLI implementation and tests for the Go-based `repo` tooling entrypoint.
-contributors: ["🧑‍💻ueli"]
+technology: repo
+bundle:
+ name: cli
+ emoji: ⌨️
+ description: The cli bundle for repo.
+ kind: binary
 ---
 
-# Specification
+# 🧾 Specification
 
-## Components
+## 🕸️ Systems
 
-### MCP Server
+## 🧮 Algorithms
 
-Tools:
+## 🛠️ Mechanisms
 
-- `search`
-- `ticket_open`
-- `ticket_close`
-- `ticket_reopen`
-- `section_move`
-- `section_extract`
-- `file_integrate`
+## 📛 Entities

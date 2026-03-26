@@ -1,0 +1,12 @@
+{
+  "title": "Add Selection Box for Multi-Select in Scene and Diagram",
+  "status": "open",
+  "description": "Add selection box (marquee/rubber band) that selects multiple pieces/connections simultaneously in both Scene and Diagram views of the semio UI elements.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1106"
+  },
+  "goal": "🎯sketchpad",
+  "sessions": [
+    "⚪a3202d98a34546308b4a0b19003a5490"
+  ]
+}

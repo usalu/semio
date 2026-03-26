@@ -37868,6 +37868,8 @@ const DesignAppScene: FC = () => {
   const [fullscreenValue] = useDesignAppFullscreen();
   const fullscreen = fullscreenValue === DesignAppFullscreenWindow.Accessl;
   const [camera] = useDesignAppCamera();
+  const [activeTool] = useDesignAppActiveTool();
+  const selectionOnDrag = activeTool !== ToolKind.HAND;
   const [focusedPieceGuid] = useDesignAppFocusedPieceGuid();
   const [panelVisibility] = useDesignAppPanelVisibility();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
@@ -38005,6 +38007,7 @@ const DesignAppScene: FC = () => {
         orthographic={projection === "orthographic"}
         projection={projection}
         onProjectionChange={setProjection}
+        selectionOnDrag={selectionOnDrag}
       >
         <SceneContextBridge
           designScope={designScope}
@@ -49345,7 +49348,7 @@ if (typeof document !== "undefined" && document.getElementById("root") && !isVsc
 // #endregion 🔖Entrypoint
 
 // #region 🔖Tests
-if (typeof process !== "undefined" && process.release && process.release.name === "node") {
+if (typeof process !== "undefined" && process.release && process.release.name === "node" && typeof (globalThis as any).__vitest_worker__ === "undefined") {
   const { expect, test } = await import(/* @vite-ignore */ "@playwright" + "/test");
   const MetabolismKitData = (await import(/* @vite-ignore */ "@semio/assets/semio/kit_metabolism.json", { assert: { type: "json" } })).default;
   const { readFile } = await import(/* @vite-ignore */ "node" + ":fs/promises");

@@ -1,6 +1,6 @@
 {
-  "title": "Algorithm App Window Kind Refactoring",
-  "status": "closed",
+  "title": "Finish Semio Algorithm Window Apps",
+  "status": "open",
   "description": "Refactor semio algorithms to use elements/ui UI with AlgorithmApp and semio UI for window kinds. WindowKinds: VecInput, PiecesSelectionInput (Diagram with piece selection, no diff), DesignDiffOutput (Diagram with diff, no selection), DesignOutput (Diagram with no diff, no selection). Remove DESIGN_INPUT. Update all algorithm stories (Drag, Delete, Move, Flatten, Cluster) to use the correct window kinds.",
   "summary": "Refactored semio algorithms to use the real AlgorithmApp from @semio/ui with standardized window kinds (VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput). Removed DESIGN_INPUT from WindowKind enum. Replaced standalone lightweight AlgorithmApp in algorithms/index.ts with re-exports from @semio/ui. Fixed elements/ui/index.tsx mega-file by removing ~7000 lines of inline stories and configs (duplicate of separate files), cleaned up ~40 unused imports. Fixed @elements/ui/elements.tsx references across storybook configs and tsconfigs (file was renamed to index.tsx). Fixed withLevel.tsx imports in both elements/ui and algorithms storybooks. Verified both algorithms storybook (10 stories) and elements/ui storybook build successfully.",
   "github": {
@@ -8,6 +8,7 @@
   },
   "goal": "🎯r2603",
   "sessions": [
-    "⚪fb40c4afc70c4f2b93aa8ebfcddfd52b"
+    "⚪fb40c4afc70c4f2b93aa8ebfcddfd52b",
+    "⚪68d3bcbdd3064d6386eca17887fa0932"
   ]
 }

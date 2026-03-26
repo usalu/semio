@@ -609,14 +609,17 @@ class TestMcp:
         assert abs(result.get("result") - 2349.53) < 0.01
 
     def test_start_working_in_design(self, kitMetabolismJson: dict):
-        """start_working_in_design selects a design by GUID from the session kit."""
+        """start_working_in_design selects a design by GUID from the session kit and opens the MCP app payload."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         result = engine.start_working_in_design(design["guid"], mock_ctx)
-        assert result.get("ok") is True
-        assert result.get("guid") == design["guid"]
+        assert isinstance(result, str)
+        payload = json.loads(result)
+        assert "points" in payload and "lines" in payload
+        assert "kitArtifacts" in payload
+        assert "designs" in payload["kitArtifacts"]
         assert sid in engine._mcp_session_designs
         assert engine._mcp_session_designs[sid]["guid"] == design["guid"]
 
@@ -625,7 +628,9 @@ class TestMcp:
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine._mcp_session_kits[id(mock_ctx.session)] = kitMetabolismJson
         result = engine.start_working_in_design("nonexistent-guid", mock_ctx)
-        assert "error" in result
+        assert isinstance(result, str)
+        payload = json.loads(result)
+        assert "error" in payload
 
     def test_read_current_design(self, kitMetabolismJson: dict):
         """read_current_design returns the design set by start_working_in_design."""
@@ -881,11 +886,7 @@ class TestMcp:
         finalized = engine.transaction_finalize(mock_ctx)
         assert finalized.get("ok") is True
         current_design = engine.read_current_design(mock_ctx)
-        expected_flat_design = {
-            key: value
-            for key, value in expected_design.items()
-            if key != "layers"
-        }
+        expected_flat_design = {key: value for key, value in expected_design.items() if key != "layers"}
         assert current_design == expected_flat_design
         assert "layers" not in current_design
 
@@ -931,73 +932,84 @@ class TestMcp:
         sel = engine.read_current_selection(mock_ctx)
         assert sel == {"pieceGuids": [], "connectionGuids": []}
 
-    def test_show_design_returns_structured_content(self, kitMetabolismJson: dict):
-        """show_design returns structuredContent with mode and _meta with kit."""
+    def test_show_design_returns_diagram_json(self, kitMetabolismJson: dict):
+        """show_design returns JSON string with points, lines, and capabilities."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_design(mock_ctx)
-        assert "structuredContent" in result
-        assert result["structuredContent"]["mode"] == "show-design"
-        assert result["structuredContent"]["designGuid"] == design["guid"]
-        assert "_meta" in result
-        assert result["_meta"]["kit"] is not None
-        assert result["_meta"]["appResource"] == "semio://app/design-viewer"
+        assert isinstance(result, str)
+        data = json.loads(result)
+        assert "points" in data
+        assert "lines" in data
+        assert "capabilities" in data
+        assert isinstance(data["points"], list)
+        assert isinstance(data["lines"], list)
 
-    def test_show_diagram_returns_correct_mode(self, kitMetabolismJson: dict):
-        """show_diagram returns structuredContent with mode 'show-diagram'."""
+    def test_show_diagram_returns_diagram_json(self, kitMetabolismJson: dict):
+        """show_diagram returns JSON string with diagram data."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_diagram(mock_ctx)
-        assert result["structuredContent"]["mode"] == "show-diagram"
+        data = json.loads(result)
+        assert "points" in data
+        assert "lines" in data
 
-    def test_show_scene_returns_correct_mode(self, kitMetabolismJson: dict):
-        """show_scene returns structuredContent with mode 'show-scene'."""
+    def test_show_scene_returns_diagram_json(self, kitMetabolismJson: dict):
+        """show_scene returns JSON string with diagram data."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_scene(mock_ctx)
-        assert result["structuredContent"]["mode"] == "show-scene"
+        data = json.loads(result)
+        assert "points" in data
+        assert "lines" in data
 
-    def test_show_diff_returns_correct_mode(self, kitMetabolismJson: dict):
-        """show_diff returns structuredContent with diff capabilities."""
+    def test_show_diff_returns_diagram_json(self, kitMetabolismJson: dict):
+        """show_diff returns JSON string with diagram data and default capabilities."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_diff(mock_ctx)
-        assert result["structuredContent"]["mode"] == "show-diff"
-        assert result["_meta"]["capabilities"]["diff"] is True
+        data = json.loads(result)
+        assert "points" in data
+        assert "lines" in data
+        assert data["capabilities"]["pieceSelection"] is False
+        assert data["capabilities"]["connectionSelection"] is False
 
-    def test_show_diagram_diff_returns_correct_mode(self, kitMetabolismJson: dict):
-        """show_diagram_diff returns structuredContent with diff capabilities."""
+    def test_show_diagram_diff_returns_diagram_json(self, kitMetabolismJson: dict):
+        """show_diagram_diff returns JSON string with diagram data."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_diagram_diff(mock_ctx)
-        assert result["structuredContent"]["mode"] == "show-diagram-diff"
-        assert result["_meta"]["capabilities"]["diff"] is True
+        data = json.loads(result)
+        assert "points" in data
+        assert "lines" in data
 
-    def test_show_diff_with_design_diff_payload(self, kitMetabolismJson: dict):
-        """show_diff passes through a design_diff payload."""
+    def test_show_diff_with_design_diff_adds_pieces(self, kitMetabolismJson: dict):
+        """show_diff with design_diff includes added pieces in points."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
-        diff = {"pieces": {"added": [{"guid": "new-piece"}]}}
+        diff = {"pieces": {"added": [{"guid": "new-piece", "id": "added-1", "center": {"u": 10, "v": 20}}]}}
         result = engine.show_diff(mock_ctx, design_diff=diff)
-        assert result["_meta"]["designDiff"] == diff
+        data = json.loads(result)
+        added_guids = [p["guid"] for p in data["points"] if p.get("status") == "added"]
+        assert "new-piece" in added_guids
 
     def test_select_pieces_capabilities(self, kitMetabolismJson: dict):
         """select_pieces sets pieceSelection capability."""
@@ -1007,9 +1019,9 @@ class TestMcp:
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.select_pieces(mock_ctx)
-        assert result["structuredContent"]["mode"] == "select-pieces"
-        assert result["_meta"]["capabilities"]["pieceSelection"] is True
-        assert result["_meta"]["capabilities"]["connectionSelection"] is False
+        data = json.loads(result)
+        assert data["capabilities"]["pieceSelection"] is True
+        assert data["capabilities"]["connectionSelection"] is False
 
     def test_select_connections_capabilities(self, kitMetabolismJson: dict):
         """select_connections sets connectionSelection capability."""
@@ -1019,9 +1031,9 @@ class TestMcp:
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.select_connections(mock_ctx)
-        assert result["structuredContent"]["mode"] == "select-connections"
-        assert result["_meta"]["capabilities"]["pieceSelection"] is False
-        assert result["_meta"]["capabilities"]["connectionSelection"] is True
+        data = json.loads(result)
+        assert data["capabilities"]["pieceSelection"] is False
+        assert data["capabilities"]["connectionSelection"] is True
 
     def test_select_pieces_and_connections_capabilities(self, kitMetabolismJson: dict):
         """select_pieces_and_connections sets both selection capabilities."""
@@ -1031,12 +1043,12 @@ class TestMcp:
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.select_pieces_and_connections(mock_ctx)
-        assert result["structuredContent"]["mode"] == "select-pieces-and-connections"
-        assert result["_meta"]["capabilities"]["pieceSelection"] is True
-        assert result["_meta"]["capabilities"]["connectionSelection"] is True
+        data = json.loads(result)
+        assert data["capabilities"]["pieceSelection"] is True
+        assert data["capabilities"]["connectionSelection"] is True
 
     def test_app_tools_require_kit_and_design(self):
-        """All app tools return error when kit or design is not set."""
+        """All app tools return error JSON string when kit or design is not set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         # Ensure clean state
@@ -1044,18 +1056,25 @@ class TestMcp:
         engine._mcp_session_designs.pop(sid, None)
         for tool_fn in (engine.show_design, engine.show_diagram, engine.show_scene, engine.select_pieces, engine.select_connections, engine.select_pieces_and_connections):
             result = tool_fn(mock_ctx)
-            assert "error" in result, f"{tool_fn.__name__} should require kit+design"
+            assert isinstance(result, str), f"{tool_fn.__name__} should return str"
+            data = json.loads(result)
+            assert "error" in data, f"{tool_fn.__name__} should require kit+design"
 
-    def test_app_tools_selection_reflects_session_state(self, kitMetabolismJson: dict):
-        """App tools include current session selection in structuredContent."""
+    def test_show_design_points_have_required_fields(self, kitMetabolismJson: dict):
+        """show_design points contain guid, id, u, v, status fields."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
-        engine.set_current_selection(mock_ctx, piece_guids=["p1", "p2"])
         result = engine.show_design(mock_ctx)
-        assert result["structuredContent"]["selectedPieceGuids"] == ["p1", "p2"]
+        data = json.loads(result)
+        for point in data["points"]:
+            assert "guid" in point
+            assert "id" in point
+            assert "u" in point
+            assert "v" in point
+            assert "status" in point
 
     def test_selection_isolated_between_sessions(self):
         """Selection state is isolated between different sessions."""
@@ -1760,8 +1779,10 @@ class TestMcpRemoteKit:
 
         # start_working_in_design works for remote kits
         result = engine.start_working_in_design("d1", mock_ctx)
-        assert result["ok"] is True
-        assert result["guid"] == "d1"
+        assert isinstance(result, str)
+        payload = json.loads(result)
+        assert "points" in payload and "lines" in payload
+        assert "kitArtifacts" in payload
 
         # read_current_design works
         design = engine.read_current_design(mock_ctx)

@@ -100,6 +100,8 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+There should be a new semio ui component for kit which lets you select kit artifacts (designs, types, ports). Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.
+In semio engine mcp: When calling start_working_design then call that app with that component.
 
 Make sure the semio engine mcp app works correctly with semio ui.
 Currently when invoking show_design after calling start_working_in_local_kit(workspaces/semio/semio/assets/semio/metabolism) and start_working_in_design(9a890dd4-0a9c-48ac-920a-9e62666465ef) the ui hangs and is not rendering the diagram

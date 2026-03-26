@@ -1,10 +1,10 @@
 ---
-technology: semio
+technology: coda
 bundle:
- name: ui
- emoji: 🖱️
- description: A VSCode extension for interacting with semio.
- kind: ui
+ name: examples
+ emoji: 📔
+ description: The examples bundle for coda.
+ kind: example
 ---
 
 # 🧾 Specification

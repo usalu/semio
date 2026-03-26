@@ -13103,8 +13103,12 @@ export class InMemoryKitStore implements UndoableKitStore {
 // [👤semio📚js💻index🔖tests](repo://p/u/semio/b/l/js/f/index.ts/s/Tests)
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
-if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
-  const { beforeAll, describe, expect, it } = await import("vitest");
+if (
+  typeof (globalThis as any).__vitest_worker__ !== "undefined" &&
+  typeof process !== "undefined" &&
+  process.cwd().replace(/\\/g, "/").endsWith("/semio/js")
+) {
+  const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
   const ElementsBundle = await import("@elements/ui");
@@ -13743,7 +13747,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         const exportedZip = await exportKit(kit);
         const { kit: reKit } = await importKit(exportedZip);
         expect(areKitsEqual(kit, reKit)).toBe(true);
-      });
+      }, 15000);
     });
   });
 

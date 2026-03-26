@@ -48,13 +48,17 @@ import fastapi.openapi
 import graphene
 import jinja2
 import lark
-import openai
 import pydantic
 import requests
 import starlette.applications
 import starlette_graphene3
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
+
+try:
+    import openai  # type: ignore
+except Exception:  # pragma: no cover
+    openai = None
 
 _semio_core_path = str(pathlib.Path(__file__).parent.parent / "py" / "main.py")
 _semio_core_spec = _ilu.spec_from_file_location("semio_core", _semio_core_path)
@@ -1115,8 +1119,8 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
 
 
 try:
-    openaiClient = openai.Client()
-except openai.OpenAIError:
+    openaiClient = openai.Client() if openai is not None else None
+except Exception:
     openaiClient = None
 
 systemPrompt = """You are a kit-of-parts design assistant.
@@ -2808,8 +2812,8 @@ def add_current_design_connection(
         return {"error": str(e)}
 
 
-@mcp.tool()
-def start_working_in_design(guid: str, ctx: Context) -> dict:
+@mcp.tool(meta={"ui": {"resourceUri": "ui://semio/design-viewer"}})
+def start_working_in_design(guid: str, ctx: Context) -> str:
     """Start working in a design within the current kit.
     Callers MUST have called start_working_in_local_kit first. Selects the design by GUID.
     [👤semio📚engine💻engine🔖mcp🛠️startworkingindesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/start_working_in_design)
@@ -2818,12 +2822,12 @@ def start_working_in_design(guid: str, ctx: Context) -> dict:
         kit = _get_session_kit(ctx)
         design = next((d for d in kit.get("designs", []) if d.get("guid") == guid), None)
         if design is None:
-            return {"error": f"Design with guid {guid} not found in kit."}
+            return json.dumps({"error": f"Design with guid {guid} not found in kit."})
         sid = _session_id(ctx)
         _mcp_session_designs[sid] = design
-        return {"ok": True, "guid": guid, "name": design.get("name", "")}
+        return _build_app_response("show-design", ctx)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
 def _read_current_design(ctx: Context) -> dict:
@@ -3060,59 +3064,215 @@ def clear_current_selection(ctx: Context) -> dict:
 # region MCP App Tools
 # [👤semio📚engine💻engine🔖mcp🔖mcpapptools](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools)
 # MCP App Tools MUST expose 8 user-facing design visualization/selection intents as MCP tools.
-# All tools return structuredContent with mode and _meta with full kit/design payload for iframe rendering.
+# All tools return pre-computed diagram data as JSON text content following the official MCP Apps protocol.
+# Tools declare _meta.ui.resourceUri so that MCP hosts render the design viewer app.
 
-_APP_RESOURCE_URI = "semio://app/design-viewer"
+_APP_RESOURCE_URI = "ui://semio/design-viewer"
+_APP_HTML_PATH = os.path.join(os.path.dirname(__file__), "dist", "mcp-app.html")
 
 
-def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> dict:
-    """Build standardized app tool response with structuredContent and _meta.
+def _build_kit_artifact_data(kit: dict) -> dict:
+    """Build a minimal kit artifact payload for UI selection (designs, types, ports/connectors).
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️buildkitartifactdata](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_kit_artifact_data)
+    """
+    designs = []
+    for d in kit.get("designs", []) or []:
+        guid = d.get("guid")
+        if not guid:
+            continue
+        designs.append({"guid": guid, "name": d.get("name", ""), "variant": d.get("variant", ""), "view": d.get("view", "")})
+
+    types = []
+    ports = []
+    for t in kit.get("types", []) or []:
+        t_guid = t.get("guid")
+        if not t_guid:
+            continue
+        types.append({"guid": t_guid, "name": t.get("name", ""), "variant": t.get("variant", "")})
+        for c in t.get("connectors", []) or []:
+            c_guid = c.get("guid")
+            if not c_guid:
+                continue
+            ports.append(
+                {
+                    "guid": c_guid,
+                    "typeGuid": t_guid,
+                    "id": c.get("id", ""),
+                    "port": c.get("port", ""),
+                    "name": c.get("id", "") or c.get("port", "") or "port",
+                    "description": c.get("description", ""),
+                    "mandatory": bool(c.get("mandatory", False)),
+                }
+            )
+
+    return {"designs": designs, "types": types, "ports": ports}
+
+
+def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = None) -> dict:
+    """Compute pre-rendered diagram points and lines from kit/design data.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️builddiagramdata](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_diagram_data)
+    """
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
+    if design is None:
+        return {"points": [], "lines": []}
+
+    # Flatten the design to get absolute piece positions
+    try:
+        flatten_result = flattenDesignDict(kit, design_guid)
+    except Exception:
+        flatten_result = {}
+
+    # Build piece center map from flatten result
+    piece_centers: dict[str, dict] = {}
+    for update in flatten_result.get("pieces", {}).get("updated", []):
+        pid = update.get("id")
+        center = update.get("diff", {}).get("center")
+        if pid and center:
+            piece_centers[pid] = center
+
+    # Build piece map with positions
+    pieces = design.get("pieces", [])
+    piece_map: dict[str, dict] = {}
+    for p in pieces:
+        guid = p.get("guid")
+        if not guid:
+            continue
+        center = piece_centers.get(guid, p.get("center") or {"u": 0, "v": 0})
+        piece_map[guid] = {"guid": guid, "id": p.get("id", ""), "center": center}
+
+    # Determine diff statuses
+    removed_piece_guids: set[str] = set()
+    added_piece_guids: set[str] = set()
+    modified_piece_guids: set[str] = set()
+    removed_conn_guids: set[str] = set()
+    added_conn_guids: set[str] = set()
+    modified_conn_guids: set[str] = set()
+
+    if design_diff:
+        for p in design_diff.get("pieces", {}).get("removed", []):
+            removed_piece_guids.add(p.get("guid", ""))
+        for p in design_diff.get("pieces", {}).get("added", []):
+            guid = p.get("guid", "")
+            added_piece_guids.add(guid)
+            # Include added pieces in the map with their centers
+            center = p.get("center") or {"u": 0, "v": 0}
+            piece_map[guid] = {"guid": guid, "id": p.get("id", ""), "center": center}
+        for p in design_diff.get("pieces", {}).get("updated", []):
+            modified_piece_guids.add(p.get("piece", {}).get("guid", ""))
+        for c in design_diff.get("connections", {}).get("removed", []):
+            removed_conn_guids.add(c.get("guid", ""))
+        for c in design_diff.get("connections", {}).get("added", []):
+            added_conn_guids.add(c.get("guid", ""))
+        for c in design_diff.get("connections", {}).get("updated", []):
+            modified_conn_guids.add(c.get("connection", {}).get("guid", ""))
+
+    # Build points
+    points = []
+    for guid, pdata in piece_map.items():
+        status = "default"
+        if guid in removed_piece_guids:
+            status = "removed"
+        elif guid in added_piece_guids:
+            status = "added"
+        elif guid in modified_piece_guids:
+            status = "modified"
+        center = pdata.get("center", {"u": 0, "v": 0})
+        points.append({
+            "guid": guid,
+            "id": pdata.get("id", ""),
+            "u": center.get("u", 0),
+            "v": center.get("v", 0),
+            "status": status,
+        })
+
+    # Build lines from connections
+    connections = design.get("connections", [])
+    # Also include added connections from diff
+    if design_diff:
+        for c in design_diff.get("connections", {}).get("added", []):
+            connections = list(connections) + [c]
+
+    lines = []
+    for c in connections:
+        guid = c.get("guid")
+        if not guid:
+            continue
+        source_guid = c.get("connected", {}).get("piece", {}).get("guid")
+        target_guid = c.get("connecting", {}).get("piece", {}).get("guid")
+        source = piece_map.get(source_guid)
+        target = piece_map.get(target_guid)
+        if not source or not target:
+            continue
+        source_center = source.get("center", {"u": 0, "v": 0})
+        target_center = target.get("center", {"u": 0, "v": 0})
+        status = "default"
+        if guid in removed_conn_guids:
+            status = "removed"
+        elif guid in added_conn_guids:
+            status = "added"
+        elif guid in modified_conn_guids:
+            status = "modified"
+        lines.append({
+            "guid": guid,
+            "sourceU": source_center.get("u", 0),
+            "sourceV": source_center.get("v", 0),
+            "targetU": target_center.get("u", 0),
+            "targetV": target_center.get("v", 0),
+            "status": status,
+        })
+
+    return {"points": points, "lines": lines}
+
+
+def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> str:
+    """Build MCP Apps protocol tool response with pre-computed diagram data as JSON text.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️buildappresponse](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_app_response)
     """
     kit = _get_session_kit(ctx)
     design = _get_session_design(ctx)
-    selection = _get_session_selection(ctx)
-    sid = _session_id(ctx)
-    camera = _mcp_session_camera.get(sid)
+    design_guid = design.get("guid")
 
-    structured_content = {
-        "mode": mode,
-        "designGuid": design.get("guid"),
-        "selectedPieceGuids": selection.get("pieceGuids", []),
-        "selectedConnectionGuids": selection.get("connectionGuids", []),
+    diagram_data = _build_diagram_data(kit, design_guid, design_diff)
+    diagram_data["capabilities"] = capabilities or {
+        "pieceSelection": mode in ("select-pieces", "select-pieces-and-connections"),
+        "connectionSelection": mode in ("select-connections", "select-pieces-and-connections"),
     }
-    meta = {
-        "appResource": _APP_RESOURCE_URI,
-        "kit": kit,
-        "designDiff": design_diff,
-        "camera": camera,
-        "capabilities": capabilities
-        or {
-            "pieceSelection": mode in ("select-pieces", "select-pieces-and-connections"),
-            "connectionSelection": mode in ("select-connections", "select-pieces-and-connections"),
-            "diff": mode in ("show-diff", "show-diagram-diff"),
-        },
-    }
-    return {
-        "structuredContent": structured_content,
-        "_meta": meta,
-    }
+    diagram_data["kitArtifacts"] = _build_kit_artifact_data(kit)
+
+    return json.dumps(diagram_data)
 
 
-@mcp.tool()
-def show_design(ctx: Context) -> dict:
-    """Show the current design in a combined 2D diagram + 3D scene split view.
+@mcp.resource(
+    _APP_RESOURCE_URI,
+    name="semio design viewer",
+    description="Interactive SVG diagram viewer for semio designs. Renders piece-connection diagrams with pan, zoom, and selection support.",
+    mime_type="text/html;profile=mcp-app",
+)
+def design_viewer_resource() -> str:
+    """Serve the MCP App design viewer HTML.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️designviewerresource](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/design_viewer_resource)
+    """
+    if os.path.exists(_APP_HTML_PATH):
+        with open(_APP_HTML_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    # Fallback: minimal HTML indicating the app needs to be built
+    return """<!doctype html><html><body><p>MCP App not built. Run: npm run build:mcp-app in semio/engine</p></body></html>"""
+
+
+@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+def show_design(ctx: Context) -> str:
+    """Show the current design as a 2D diagram.
     Callers MUST have called start_working_in_local_kit and start_working_in_design first.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdesign](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_design)
     """
     try:
         return _build_app_response("show-design", ctx)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def show_diagram(ctx: Context) -> dict:
+@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+def show_diagram(ctx: Context) -> str:
     """Show the current design as a 2D diagram only.
     Callers MUST have called start_working_in_local_kit and start_working_in_design first.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiagram](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diagram)
@@ -3120,24 +3280,24 @@ def show_diagram(ctx: Context) -> dict:
     try:
         return _build_app_response("show-diagram", ctx)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def show_scene(ctx: Context) -> dict:
-    """Show the current design as a 3D scene only.
+@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+def show_scene(ctx: Context) -> str:
+    """Show the current design as a 2D diagram (3D not available in MCP app).
     Callers MUST have called start_working_in_local_kit and start_working_in_design first.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showscene](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_scene)
     """
     try:
         return _build_app_response("show-scene", ctx)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def show_diff(ctx: Context, design_diff: dict | None = None) -> dict:
-    """Show a diff of the current design in combined 2D + 3D split view.
+@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+def show_diff(ctx: Context, design_diff: dict | None = None) -> str:
+    """Show a diff of the current design as a 2D diagram with diff coloring.
     If design_diff is omitted, an empty diff is used.
     Callers MUST have called start_working_in_local_kit and start_working_in_design first.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diff)
@@ -3145,12 +3305,12 @@ def show_diff(ctx: Context, design_diff: dict | None = None) -> dict:
     try:
         return _build_app_response("show-diff", ctx, design_diff=design_diff)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> dict:
-    """Show a diff of the current design as a 2D diagram only.
+@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> str:
+    """Show a diff of the current design as a 2D diagram only with diff coloring.
     If design_diff is omitted, an empty diff is used.
     Callers MUST have called start_working_in_local_kit and start_working_in_design first.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️showdiagramdiff](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/show_diagram_diff)
@@ -3158,11 +3318,11 @@ def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> dict:
     try:
         return _build_app_response("show-diagram-diff", ctx, design_diff=design_diff)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def select_pieces(ctx: Context) -> dict:
+@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+def select_pieces(ctx: Context) -> str:
     """Open a piece selection view where only pieces can be selected.
     Callers MUST have called start_working_in_local_kit and start_working_in_design first.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectpieces](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_pieces)
@@ -3174,15 +3334,14 @@ def select_pieces(ctx: Context) -> dict:
             capabilities={
                 "pieceSelection": True,
                 "connectionSelection": False,
-                "diff": False,
             },
         )
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def select_connections(ctx: Context) -> dict:
+@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+def select_connections(ctx: Context) -> str:
     """Open a connection selection view where only connections can be selected.
     Callers MUST have called start_working_in_local_kit and start_working_in_design first.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectconnections](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_connections)
@@ -3194,15 +3353,14 @@ def select_connections(ctx: Context) -> dict:
             capabilities={
                 "pieceSelection": False,
                 "connectionSelection": True,
-                "diff": False,
             },
         )
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def select_pieces_and_connections(ctx: Context) -> dict:
+@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+def select_pieces_and_connections(ctx: Context) -> str:
     """Open a combined selection view where both pieces and connections can be selected.
     Callers MUST have called start_working_in_local_kit and start_working_in_design first.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️selectpiecesandconnections](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/select_pieces_and_connections)
@@ -3214,11 +3372,10 @@ def select_pieces_and_connections(ctx: Context) -> dict:
             capabilities={
                 "pieceSelection": True,
                 "connectionSelection": True,
-                "diff": False,
             },
         )
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
 # endregion MCP App Tools

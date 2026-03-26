@@ -1,10 +1,10 @@
 ---
 technology: semio
 bundle:
- name: ui
- emoji: 🖱️
- description: A VSCode extension for interacting with semio.
- kind: ui
+ name: assets
+ emoji: 🏪
+ description: The assets bundle for semio.
+ kind: assets
 ---
 
 # 🧾 Specification
