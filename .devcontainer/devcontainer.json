@@ -158,7 +158,6 @@
         "ms-dotnettools.vscode-dotnet-runtime",
         "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
-        "ms-dotnettools.dotnet-interactive-vscode",
         // #endregion 🔖Extensions Dotnet
         // #region 🔖Extensions Python
         "ms-python.python",

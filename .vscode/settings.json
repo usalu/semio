@@ -82,5 +82,6 @@
         "--mcp-stdio"
       ]
     }
-  }
+  },
+  "chat.subagents.allowInvocationsFromSubagents": false
 }
