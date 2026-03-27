@@ -5,7 +5,6 @@
 
 // Specs: Vite config for building the standalone MCP App as a single HTML file.
 // Bundles React, @semio/ui, and @modelcontextprotocol/ext-apps into one inlined HTML file.
-// MUST exclude test deps (vitest, playwright), test assets (kit_metabolism), and sketchpad.
 // Summary: Vite build config bundling the MCP App into a single inlined HTML file.
 
 // #endregion 🔖Header
@@ -47,46 +46,37 @@ function zodJitlessPlugin(): Plugin {
 
 // #endregion 🔖ZodJitlessPlugin
 
-// #region 🔖StripTestAndSketchpadPlugin
-// Specs: Strip test-only code blocks, test dependencies, test assets, and sketchpad
-// imports from the production MCP App bundle. Resolves them to empty modules.
-// Summary: Vite plugin that stubs out test/sketchpad/playwright imports for production builds.
+// #region 🔖StubHeavyDepsPlugin
+// Specs: The MCP App only uses SemioDiagram (SVG) and SemioKit from @semio/ui.
+// Three.js, cytoscape, sql.js, jszip, and other heavy deps are not needed.
+// This plugin resolves them to empty stubs to keep the bundle small.
+// Summary: Vite plugin stubbing heavy deps unused by the MCP App.
 
-const BLOCKED_PATTERNS = [
-  /\/sketchpad\//,
-  /playwright/,
-  /vitest/,
-  /kit_metabolism\.json/,
-  /\.test\./,
-  /\.spec\./,
-];
+const STUB_EMPTY = path.resolve(__dirname, "stubs/empty.js");
+const STUBBED_PREFIXES = ["three", "@react-three", "cytoscape", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout", "@semio/js", "@semio/assets"];
 
-function stripTestAndSketchpadPlugin(): Plugin {
+function stubHeavyDepsPlugin(): Plugin {
   return {
-    name: "strip-test-and-sketchpad",
+    name: "stub-heavy-deps",
     enforce: "pre",
-    resolveId(source, importer) {
-      for (const pattern of BLOCKED_PATTERNS) {
-        if (pattern.test(source)) return { id: "\0empty-module", moduleSideEffects: false };
+    resolveId(source) {
+      for (const prefix of STUBBED_PREFIXES) {
+        if (source === prefix || source.startsWith(prefix + "/")) return { id: "\0stub:" + source, syntheticNamedExports: true };
       }
+      if (source === "i18next") return path.resolve(__dirname, "stubs/i18next.js");
+      if (source === "i18next-browser-languagedetector") return { id: "\0stub:" + source, syntheticNamedExports: true };
+      if (source === "react-i18next") return path.resolve(__dirname, "stubs/react-i18next.js");
+      if (source === "react-router-dom") return path.resolve(__dirname, "stubs/react-router-dom.js");
       return null;
     },
     load(id) {
-      if (id === "\0empty-module") return "export default {};";
+      if (id.startsWith("\0stub:")) return "const noop = () => noop; noop.prototype = {}; export default new Proxy(noop, { get: (_, p) => p === '__esModule' ? true : p === 'default' ? noop : noop });\n";
       return null;
-    },
-    transform(code, id) {
-      if (!id.includes("semio/js/index") && !id.includes("semio/ui/index") && !id.includes("elements/ui/index")) return;
-      return code
-        .replace(/if\s*\(\s*typeof\s*\(globalThis\s+as\s+any\)\.__vitest_worker__\s*!==\s*"undefined"\s*\)\s*\{[\s\S]*$/m, "")
-        .replace(/if\s*\(\s*import\.meta\.vitest\s*\)\s*\{[\s\S]*?^}/m, "")
-        .replace(/const\s+\w+\s*=\s*import\.meta\.vitest;\s*if\s*\(\s*\w+\s*\)\s*\{[\s\S]*?^}/gm, "")
-        .replace(/const\s+\w+\s*=\s*\(\s*import\.meta[\s\S]*?\.vitest[\s\S]*?\)\.vitest;\s*if\s*\(\s*\w+\s*\)\s*\{[\s\S]*?^}/gm, "");
     },
   };
 }
 
-// #endregion 🔖StripTestAndSketchpadPlugin
+// #endregion 🔖StubHeavyDepsPlugin
 
 export default defineConfig({
   root: __dirname,
@@ -95,9 +85,13 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, "mcp-app.html"),
+      onwarn(warning, warn) {
+        if (warning.code === "MISSING_EXPORT") return;
+        warn(warning);
+      },
     },
   },
-  plugins: [stripTestAndSketchpadPlugin(), mdx(), zodJitlessPlugin(), viteSingleFile()],
+  plugins: [stubHeavyDepsPlugin(), mdx(), zodJitlessPlugin(), viteSingleFile()],
   esbuild: {
     jsx: "automatic",
   },

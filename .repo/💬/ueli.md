@@ -214,6 +214,14 @@ Add PieceSelection which is a Diagram component that only works for selecting pi
 ## 👤semio📚ui
 
 semio ui:
+Refactor everything cleanly.
+
+- semio ui MUST use general ui elements/configs from elements/ui
+- All stories MUST have same naming patterns etc (First story is always Default which has the maximum of features with minimal setup)
+- All components MUST use the minimal data possible (e.g. Diagram only needs design, Scene only needs filtered kit with only one model and file per type etc,)
+- All stories MUST work. e.g. Kit is not working
+- Design, Diagram, Scene MUST have equal api and Story layout and naming
+
 Create a new Vec component that takes a vec and displays the vector xy input with visible origin and axes. Optionally take minU, maxU, minV, maxV, showAxes, showOrigin, `onVecChange(vec)`
 
 Create a new PiecesSelection component where you can select pieces with `onPieceSelect(piece)` which is triggered when the circle on the piece diagram is selected. It should be Digram
@@ -238,6 +246,8 @@ MUST work for both kind of kits. Extend the engine with a way to authenticate wi
 ## 👤semio⌨️engine🤖mcp
 
 semio engine mcp:
+All apps MUST use semio/ui. Use clean architecture, no stubs etc
+
 This should not happen:
 {
 "error": "Kit not found at path: /workspaces/semio/semio/assets/metabolism"

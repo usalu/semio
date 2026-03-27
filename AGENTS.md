@@ -4,6 +4,7 @@ There are many inconsistencies that you MUST refactor. You MUST use clean mechan
 
 - You MUST work simultaneously with others on the same files.
   - You MUST NOT use `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
+  - You MUST NOT use `kill $(lsof -t -i:<port>)` because it kills the ide aswell.
   - You MUST edit the existing files.
   - You MUST NOT create new files for broken files.
 

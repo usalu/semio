@@ -33,15 +33,14 @@ function DeleteFrame() {
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      designGuid: nakaginCapsuleTowerDesignGuid,
+      design: baseDesign,
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       designDiff: { pieces: { removed: selectedPieceGuids.map((guid) => ({ guid })) }, connections: { updated: [] } },
-      outputKit: kit,
-      outputDesignGuid: nakaginCapsuleTowerDesignGuid,
+      outputDesign: baseDesign,
       error: selectedPieceGuids.length === 0 ? "Select at least one piece to delete." : undefined,
     }),
-    [kit, selectedPieceGuids],
+    [baseDesign, kit, selectedPieceGuids],
   );
 
   return <AlgorithmApp id="delete" label="Delete" windows={WINDOWS} context={context} className="h-full w-full" />;

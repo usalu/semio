@@ -37,7 +37,7 @@ function DragFrame() {
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      designGuid: nakaginCapsuleTowerDesignGuid,
+      design: baseDesign,
       vec,
       onVecChange: setVec,
       vecMin: { u: -10, v: -10 },
@@ -48,10 +48,9 @@ function DragFrame() {
         pieces: { updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: { center: { ...vec }, language } })) },
         connections: { updated: [] },
       },
-      outputKit: kit,
-      outputDesignGuid: nakaginCapsuleTowerDesignGuid,
+      outputDesign: baseDesign,
     }),
-    [kit, language, selectedPieceGuids, vec],
+    [baseDesign, kit, language, selectedPieceGuids, vec],
   );
 
   return <AlgorithmApp id="drag" label="Drag" windows={WINDOWS} context={context} className="h-full w-full" />;

@@ -24,8 +24,6 @@
 
 import {
   applyDesignDiff,
-  findDesignInKit,
-  flattenDesign,
   planeToMatrix,
   selectBestModel,
   toThreeRotation,
@@ -366,8 +364,7 @@ export interface DiagramPan {
 }
 
 export interface SemioDiagramProps {
-  kit: Kit;
-  designGuid: string;
+  design: Design;
   designDiff?: DesignDiff;
   defaultDesignDiff?: DesignDiff;
   diffEnabled?: boolean;
@@ -436,14 +433,6 @@ interface DiagramBounds {
   height: number;
 }
 
-const buildFlatDesign = (kit: Kit, design: Design): Design => {
-  const flattenedKit: Kit = {
-    ...kit,
-    designs: (kit.designs ?? []).map((candidate) => (candidate.guid === design.guid ? design : candidate)),
-  };
-  return applyDesignDiff(design, flattenDesign(flattenedKit, design.guid).forward);
-};
-
 const getEntityStatusColor = (status: DiagramEntityStatus): string => {
   if (status === "removed") return "var(--color-removed)";
   if (status === "added") return "var(--color-new)";
@@ -461,11 +450,11 @@ const getInteractiveEntityColor = (status: DiagramEntityStatus, isSelected: bool
   return getEntityStatusColor(status);
 };
 
-const buildDiagramSnapshot = (kit: Kit, designGuid: string, padding: number, designDiff?: DesignDiff): DiagramSnapshot => {
-  const baseDesign = findDesignInKit(kit, designGuid);
+const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff): DiagramSnapshot => {
+  const baseDesign = design;
   const nextDesign = designDiff ? applyDesignDiff(baseDesign, designDiff) : baseDesign;
-  const flatBaseDesign = buildFlatDesign(kit, baseDesign);
-  const flatNextDesign = designDiff ? buildFlatDesign(kit, nextDesign) : flatBaseDesign;
+  const flatBaseDesign = baseDesign;
+  const flatNextDesign = nextDesign;
   const removedPieceGuids = new Set((designDiff?.pieces?.removed ?? []).map((piece) => piece.guid));
   const addedPieceGuids = new Set((designDiff?.pieces?.added ?? []).map((piece) => piece.guid));
   const modifiedPieceGuids = new Set((designDiff?.pieces?.updated ?? []).map((piece) => piece.piece.guid));
@@ -598,8 +587,7 @@ const normalizeHover = (hover?: DiagramHover): DiagramHover => ({
 });
 
 export const SemioDiagram: React.FC<SemioDiagramProps> = ({
-  kit,
-  designGuid,
+  design,
   designDiff,
   defaultDesignDiff,
   diffEnabled,
@@ -643,7 +631,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
   const [resolvedPan, setResolvedPan, isPanControlled] = useInteractiveControllableValue(pan, defaultPan ?? { x: 0, y: 0 }, onPanChange);
   const [resolvedZoom, setResolvedZoom, isZoomControlled] = useInteractiveControllableValue(zoom, defaultZoom ?? DEFAULT_DIAGRAM_ZOOM, onZoomChange);
-  const snapshot = React.useMemo(() => buildDiagramSnapshot(kit, designGuid, padding, effectiveDiffEnabled ? resolvedDesignDiff : undefined), [designGuid, effectiveDiffEnabled, kit, padding, resolvedDesignDiff]);
+  const snapshot = React.useMemo(() => buildDiagramSnapshot(design, padding, effectiveDiffEnabled ? resolvedDesignDiff : undefined), [design, effectiveDiffEnabled, padding, resolvedDesignDiff]);
   const selectedPieceGuids = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.pieceGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.pieceGuids]);
   const selectedConnectionGuids = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.connectionGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.connectionGuids]);
   const hoveredPieceGuid = effectivePieceHoverEnabled ? (resolvedHover.pieceGuid ?? null) : null;
@@ -1311,7 +1299,16 @@ export const Vector: React.FC<VectorProps> = ({
           {label}
         </label>
         {canSelect ? <input id={`${id}-${axis}`} type="range" min={min} max={max} step={step} value={value} onChange={(event) => updateAxis(axis, Number(event.target.value))} /> : <div className="h-2 rounded-full bg-muted/60" />}
-        <input type="number" min={min} max={max} step={step} value={value} readOnly={!canSelect} onChange={canSelect ? (event) => updateAxis(axis, Number(event.target.value)) : undefined} className="w-full rounded-md border border-input bg-background px-2 py-1 text-right text-sm font-mono" />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          readOnly={!canSelect}
+          onChange={canSelect ? (event) => updateAxis(axis, Number(event.target.value)) : undefined}
+          className="w-full rounded-md border border-input bg-background px-2 py-1 text-right text-sm font-mono"
+        />
       </div>
     );
   };
@@ -1407,11 +1404,11 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
 
 const toSceneVector = (coord: { x: number; y: number; z: number }): THREE.Vector3 => new THREE.Vector3(coord.x, coord.y, coord.z).applyMatrix4(SEMIO_TO_THREE_BASIS);
 
-const buildSceneSnapshot = (kit: Kit, designGuid: string, designDiff?: DesignDiff): SceneSnapshot => {
-  const baseDesign = findDesignInKit(kit, designGuid);
+const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnapshot => {
+  const baseDesign = design;
   const nextDesign = designDiff ? applyDesignDiff(baseDesign, designDiff) : baseDesign;
-  const flatBaseDesign = buildFlatDesign(kit, baseDesign);
-  const flatNextDesign = designDiff ? buildFlatDesign(kit, nextDesign) : flatBaseDesign;
+  const flatBaseDesign = baseDesign;
+  const flatNextDesign = nextDesign;
   const removedPieceGuids = new Set((designDiff?.pieces?.removed ?? []).map((piece) => piece.guid));
   const addedPieceGuids = new Set((designDiff?.pieces?.added ?? []).map((piece) => piece.guid));
   const modifiedPieceGuids = new Set((designDiff?.pieces?.updated ?? []).map((piece) => piece.piece.guid));
@@ -1714,8 +1711,8 @@ const SceneGrid: React.FC<SceneGridProps> = ({ show }) => {
 };
 
 export interface SemioSceneProps {
-  kit: Kit;
-  designGuid: string;
+  design: Design;
+  kit?: Kit;
   designDiff?: DesignDiff;
   defaultDesignDiff?: DesignDiff;
   diffEnabled?: boolean;
@@ -1822,8 +1819,8 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
 };
 
 export const SemioScene: React.FC<SemioSceneProps> = ({
+  design,
   kit,
-  designGuid,
   designDiff,
   defaultDesignDiff,
   diffEnabled = true,
@@ -1851,8 +1848,8 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const snapshot = React.useMemo(() => {
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
-    return buildSceneSnapshot(kit, designGuid, effectiveDiff);
-  }, [kit, designGuid, resolvedDesignDiff, diffEnabled]);
+    return buildSceneSnapshot(design, effectiveDiff);
+  }, [design, resolvedDesignDiff, diffEnabled]);
 
   const effectivePieceSelectionEnabled = selectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = selectionEnabled && connectionSelectionEnabled;
@@ -1926,7 +1923,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
     setResolvedSelection({ pieceGuids: [], connectionGuids: [] });
   }, [selectionEnabled, setResolvedSelection]);
 
-  const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit, snapshot.pieces), [kit, snapshot.pieces]);
+  const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit ?? ({ types: [], files: [] } as Kit), snapshot.pieces), [kit, snapshot.pieces]);
 
   return (
     <div className={`h-full w-full ${className}`} aria-label={title}>
@@ -1984,38 +1981,10 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
 
 // #region 🔖Model
 
-// Specs: 3D model viewer for a design with identical API to Scene and Design.
-// Delegates to SemioScene internally. Provides the same controlled/uncontrolled
-// diff, selection, and hover state management as Diagram, Scene, and Design.
-// Summary: 3D model viewer with identical diff/selection/hover API to Scene and Design.
+// Specs: Model is a direct alias of SemioScene with a different default title.
+// Summary: 3D model viewer alias of SemioScene.
 
-export interface SemioModelProps {
-  kit: Kit;
-  designGuid: string;
-  designDiff?: DesignDiff;
-  defaultDesignDiff?: DesignDiff;
-  diffEnabled?: boolean;
-  selection?: DiagramSelection;
-  defaultSelection?: DiagramSelection;
-  selectionEnabled?: boolean;
-  pieceSelectionEnabled?: boolean;
-  connectionSelectionEnabled?: boolean;
-  onSelectionChange?: (selection: DiagramSelection) => void;
-  hover?: DiagramHover;
-  defaultHover?: DiagramHover;
-  hoverEnabled?: boolean;
-  pieceHoverEnabled?: boolean;
-  connectionHoverEnabled?: boolean;
-  onHoverChange?: (hover: DiagramHover) => void;
-  onPieceClick?: (piece: Piece) => void;
-  onConnectionClick?: (connection: Connection) => void;
-  showGrid?: boolean;
-  showGizmo?: boolean;
-  camera?: Camera;
-  onCameraChange?: (camera: Camera) => void;
-  className?: string;
-  title?: string;
-}
+export type SemioModelProps = SemioSceneProps;
 
 export const SemioModel: React.FC<SemioModelProps> = (props) => <SemioScene {...props} title={props.title ?? "Design Model"} />;
 
@@ -2030,8 +1999,8 @@ export const SemioModel: React.FC<SemioModelProps> = (props) => <SemioScene {...
 // Summary: Combined 2D diagram + 3D scene split view for a design in a kit.
 
 export interface SemioDesignProps {
-  kit: Kit;
-  designGuid: string;
+  design: Design;
+  kit?: Kit;
   designDiff?: DesignDiff;
   defaultDesignDiff?: DesignDiff;
   diffEnabled?: boolean;
@@ -2059,8 +2028,8 @@ export interface SemioDesignProps {
 }
 
 export const SemioDesign: React.FC<SemioDesignProps> = ({
+  design,
   kit,
-  designGuid,
   designDiff,
   defaultDesignDiff,
   diffEnabled = true,
@@ -2088,13 +2057,10 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 }) => {
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const hasPlanes = React.useMemo(() => {
-    const baseDesign = findDesignInKit(kit, designGuid);
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
-    const nextDesign = effectiveDiff ? applyDesignDiff(baseDesign, effectiveDiff) : baseDesign;
-    const flatKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === nextDesign.guid ? nextDesign : d)) };
-    const flatDesign = applyDesignDiff(nextDesign, flattenDesign(flatKit, nextDesign.guid).forward);
-    return (flatDesign.pieces ?? []).some((p) => p.plane);
-  }, [kit, designGuid, resolvedDesignDiff, diffEnabled]);
+    const nextDesign = effectiveDiff ? applyDesignDiff(design, effectiveDiff) : design;
+    return (nextDesign.pieces ?? []).some((p) => p.plane);
+  }, [design, resolvedDesignDiff, diffEnabled]);
 
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
@@ -2114,8 +2080,8 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
       {hasPlanes && (
         <div className="h-full w-full overflow-hidden border-r border-border">
           <SemioScene
+            design={design}
             kit={kit}
-            designGuid={designGuid}
             designDiff={resolvedDesignDiff}
             diffEnabled={diffEnabled}
             selection={resolvedSelection}
@@ -2140,8 +2106,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
       )}
       <div className="h-full w-full overflow-hidden">
         <SemioDiagram
-          kit={kit}
-          designGuid={designGuid}
+          design={design}
           designDiff={resolvedDesignDiff}
           diffEnabled={diffEnabled}
           selection={resolvedSelection}
@@ -2334,21 +2299,17 @@ export const McpDesignViewer: React.FC = () => {
         </div>
       )}
       <SemioDiagram
-        kit={{
-          types: [],
-          designs: [
-            {
-              guid: "__mcp__",
-              pieces: payload.points.map((p) => ({ guid: p.guid, id: p.id, center: { u: p.u, v: p.v } })),
-              connections: payload.lines.map((l) => ({
-                guid: l.guid,
-                connected: { piece: { guid: payload.points.find((p) => p.u === l.sourceU && p.v === l.sourceV)?.guid ?? "" } },
-                connecting: { piece: { guid: payload.points.find((p) => p.u === l.targetU && p.v === l.targetV)?.guid ?? "" } },
-              })),
-            },
-          ],
-        }}
-        designGuid="__mcp__"
+        design={
+          {
+            guid: "__mcp__",
+            pieces: payload.points.map((p) => ({ guid: p.guid, id: p.id, center: { u: p.u, v: p.v } })),
+            connections: payload.lines.map((l) => ({
+              guid: l.guid,
+              connected: { piece: { guid: payload.points.find((p) => p.u === l.sourceU && p.v === l.sourceV)?.guid ?? "" } },
+              connecting: { piece: { guid: payload.points.find((p) => p.u === l.targetU && p.v === l.targetV)?.guid ?? "" } },
+            })),
+          } as Design
+        }
         selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
         pieceSelectionEnabled={pieceSelectionEnabled}
         connectionSelectionEnabled={connectionSelectionEnabled}
@@ -2533,7 +2494,7 @@ if (import.meta.vitest) {
         },
       } as unknown as DesignDiff;
 
-      const snapshot = buildSceneSnapshot(kit, "design-1", diff);
+      const snapshot = buildSceneSnapshot(design, diff);
 
       expect(snapshot.pieces.map((asset) => [asset.piece.guid, asset.status])).toEqual([
         ["piece-a", "default"],
@@ -2566,7 +2527,7 @@ import { DetailsIcon, PieceIcon, AlertCircleIcon } from "@semio/assets/icons";
  **/
 export interface AlgorithmContextValue {
   kit: Kit;
-  designGuid: string;
+  design: Design;
   vec?: VecValue;
   onVecChange?: (v: VecValue) => void;
   vecMin?: VecValue;
@@ -2574,9 +2535,8 @@ export interface AlgorithmContextValue {
   selectedPieceGuids: string[];
   onSelectedPieceGuidsChange?: (guids: string[]) => void;
   designDiff?: DesignDiff;
-  diffKit?: Kit;
-  outputKit: Kit;
-  outputDesignGuid: string;
+  diffDesign?: Design;
+  outputDesign: Design;
   error?: string;
 }
 
@@ -2671,8 +2631,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     usesPieceSelection: true,
     component: PieceSelection,
     createProps: (context) => ({
-      kit: context.kit,
-      designGuid: context.designGuid,
+      design: context.design,
       selection: { pieceGuids: context.selectedPieceGuids },
       onSelectionChange: (next: PieceSelectionState) => context.onSelectedPieceGuidsChange?.(next.pieceGuids ?? []),
       selectionEnabled: true,
@@ -2689,8 +2648,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     usesPieceSelection: false,
     component: SemioDiagram,
     createProps: (context) => ({
-      kit: context.diffKit ?? context.kit,
-      designGuid: context.designGuid,
+      design: context.diffDesign ?? context.design,
       designDiff: context.designDiff,
       diffEnabled: true,
       selectionEnabled: false,
@@ -2704,8 +2662,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     usesPieceSelection: false,
     component: SemioDiagram,
     createProps: (context) => ({
-      kit: context.outputKit,
-      designGuid: context.outputDesignGuid,
+      design: context.outputDesign,
       diffEnabled: false,
       selectionEnabled: false,
     }),
@@ -2767,7 +2724,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
   const ctx = React.useContext(AlgorithmContext);
   if (!ctx) return null;
 
-  const design = findDesignInKit(ctx.kit, ctx.designGuid);
+  const design = ctx.design;
   const allPieces = design?.pieces ?? [];
   const selectedPieces = allPieces.filter((p) => ctx.selectedPieceGuids.includes(p.guid));
 
@@ -2907,8 +2864,7 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
     [id],
   );
 
-  const design = findDesignInKit(context.kit, context.designGuid);
-  const pieceCount = design?.pieces?.length ?? 0;
+  const pieceCount = context.design?.pieces?.length ?? 0;
 
   const footerItems: FooterItem[] = React.useMemo(
     () => [

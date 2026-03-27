@@ -28,14 +28,13 @@ function FlattenFrame() {
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      designGuid: nakaginCapsuleTowerDesignGuid,
+      design: baseDesign,
       selectedPieceGuids: [],
       designDiff: {
         pieces: { updated: (baseDesign?.pieces ?? []).slice(0, 6).map((piece: any) => ({ piece: { guid: piece.guid }, note: `flattened-${language}` })) },
         connections: { updated: [] },
       },
-      outputKit: kit,
-      outputDesignGuid: nakaginCapsuleTowerDesignGuid,
+      outputDesign: baseDesign,
     }),
     [baseDesign, kit, language],
   );

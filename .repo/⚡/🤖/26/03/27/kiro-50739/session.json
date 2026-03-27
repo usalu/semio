@@ -1,0 +1,36 @@
+{
+  "id": "kiro-50739",
+  "uri": "repo://session/kiro-50739",
+  "client": "kiro-cli",
+  "second": "2026-03-27T14:39:01Z",
+  "checkpoint": "4ab97511db155f5239656e7edaed19ea993883d0",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "4ab97511db155f5239656e7edaed19ea993883d0",
+        "client": "kiro-cli",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-27T14:39:01Z",
+        "session": "kiro-50739"
+      },
+      "native": {
+        "event": {
+          "hook_event_name": "preToolUse",
+          "cwd": "/workspaces/semio",
+          "tool_name": "fs_read",
+          "tool_input": {
+            "operations": [
+              {
+                "mode": "Line",
+                "path": "/workspaces/semio/README.md"
+              }
+            ]
+          }
+        }
+      },
+      "response": {}
+    }
+  ]
+}

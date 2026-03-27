@@ -1,7 +1,7 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Scene.stories.tsx
-// Specs: One component per stories file with real semio design data for representative variants.
-// Summary: Showcases the semio 3D Scene with Metabolism kit Nakagin Capsule Tower design data, including diff.
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly. Kit is optional for 3D models.
+// Summary: Scene stories: Default, Diff, Selection, Controlled, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
@@ -11,10 +11,9 @@ import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismKit from "../../../assets/semio/kit_metabolism.json";
 
-// #region 🔖Scene
+// #region 🔖Data
 
-const nakaginDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const nakaginDesign = (metabolismKit.designs ?? []).find((d) => d.guid === nakaginDesignGuid)! as Design;
+const nakaginDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
 const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
 
 const connectionCounts = new Map<string, number>();
@@ -22,18 +21,18 @@ const connectionCounts = new Map<string, number>();
   connectionCounts.set(connection.connected.piece.guid, (connectionCounts.get(connection.connected.piece.guid) ?? 0) + 1);
   connectionCounts.set(connection.connecting.piece.guid, (connectionCounts.get(connection.connecting.piece.guid) ?? 0) + 1);
 });
+
 const removedPiece = (nakaginDesign.pieces ?? []).find((piece) => (connectionCounts.get(piece.guid) ?? 0) === 1) as Piece;
 const removedConnection = (nakaginDesign.connections ?? []).find((connection) => connection.connected.piece.guid === removedPiece.guid || connection.connecting.piece.guid === removedPiece.guid) as Connection;
-const modifiedPiece = (nakaginDesign.pieces ?? []).find((piece) => Boolean(piece.plane)) as Piece;
 
-const diffPreviewDesign: Design = structuredClone(nakaginDesign);
-diffPreviewDesign.pieces = (diffPreviewDesign.pieces ?? []).filter((piece) => piece.guid !== removedPiece.guid);
-diffPreviewDesign.connections = (diffPreviewDesign.connections ?? []).filter((connection) => connection.guid !== removedConnection.guid);
+const diffedDesign: Design = structuredClone(nakaginDesign);
+diffedDesign.pieces = (diffedDesign.pieces ?? []).filter((piece) => piece.guid !== removedPiece.guid);
+diffedDesign.connections = (diffedDesign.connections ?? []).filter((connection) => connection.guid !== removedConnection.guid);
 const addedPieceGuid = "11111111-2222-3333-4444-555555555555";
 const addedConnectionGuid = "66666666-7777-8888-9999-000000000000";
-diffPreviewDesign.pieces = [...(diffPreviewDesign.pieces ?? []), { ...structuredClone(removedPiece), guid: addedPieceGuid, name: `${removedPiece.name}_added` }];
-diffPreviewDesign.connections = [
-  ...(diffPreviewDesign.connections ?? []),
+diffedDesign.pieces = [...(diffedDesign.pieces ?? []), { ...structuredClone(removedPiece), guid: addedPieceGuid, name: `${removedPiece.name}_added` }];
+diffedDesign.connections = [
+  ...(diffedDesign.connections ?? []),
   {
     ...structuredClone(removedConnection),
     guid: addedConnectionGuid,
@@ -41,109 +40,97 @@ diffPreviewDesign.connections = [
     connected: removedConnection.connected.piece.guid === removedPiece.guid ? { ...removedConnection.connected, piece: { guid: addedPieceGuid } } : removedConnection.connected,
   },
 ];
-const previewDiff = getDesignDiff(nakaginDesign, diffPreviewDesign);
+const designDiff = getDesignDiff(nakaginDesign, diffedDesign);
+
+// Build minimal kit with only types and files referenced by the design.
+const usedTypeGuids = new Set((nakaginDesign.pieces ?? []).map((p) => p.type?.guid).filter(Boolean));
+const minimalTypes = (metabolismKit.types ?? [])
+  .filter((t: any) => usedTypeGuids.has(t.guid))
+  .map((t: any) => {
+    const models = (t.models ?? []).slice(0, 1);
+    return { ...t, models };
+  });
+const usedFileGuids = new Set(minimalTypes.flatMap((t: any) => (t.models ?? []).map((m: any) => m.file?.guid).filter(Boolean)));
+const minimalFiles = (metabolismKit.files ?? []).filter((f: any) => usedFileGuids.has(f.guid));
+const minimalKit = { types: minimalTypes, files: minimalFiles } as any;
+
+// #endregion 🔖Data
+
+// #region 🔖Scene
 
 const meta: Meta<typeof Scene> = {
   title: "semio/Scene",
   component: Scene,
   tags: ["autodocs"],
-  parameters: {
-    layout: "centered",
-  },
+  parameters: { layout: "centered" },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof Scene>;
 
-const sceneFrame = (node: React.ReactNode) => (
-  <div className="h-96 w-96 rounded-md border border-border bg-card text-foreground shadow-sm">{node}</div>
-);
+const frame = (node: React.ReactNode) => <div className="h-96 w-96 rounded-md border border-border bg-card text-foreground shadow-sm">{node}</div>;
 
-export const NakaginCapsuleTower: Story = {
+export const Default: Story = {
   args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    title: "Nakagin Capsule Tower Scene",
-    onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.guid),
-  },
-  render: (args) => sceneFrame(<Scene {...args} />),
-};
-
-export const WithSelection: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
+    design: nakaginDesign,
+    kit: minimalKit,
+    designDiff,
     defaultSelection: { pieceGuids: [firstPieceGuid] },
-    title: "Nakagin Capsule Tower With Selection",
+    title: "Scene",
+    onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.guid),
+    onConnectionClick: (connection: Connection) => console.info("Connection clicked", connection.guid),
   },
-  render: (args) => sceneFrame(<Scene {...args} />),
+  render: (args) => frame(<Scene {...args} />),
 };
 
 export const Diff: Story = {
   args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    designDiff: previewDiff,
+    design: nakaginDesign,
+    kit: minimalKit,
+    designDiff,
     diffEnabled: true,
     selectionEnabled: false,
     title: "Diff",
   },
-  render: (args) => sceneFrame(<Scene {...args} />),
+  render: (args) => frame(<Scene {...args} />),
 };
 
-export const DefaultDiff: Story = {
+export const Selection: Story = {
   args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    defaultDesignDiff: previewDiff,
-    title: "Default Diff (Uncontrolled)",
-  },
-  render: (args) => sceneFrame(<Scene {...args} />),
-};
-
-export const DiffDisabled: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    designDiff: previewDiff,
+    design: nakaginDesign,
+    kit: minimalKit,
+    defaultSelection: { pieceGuids: [firstPieceGuid] },
     diffEnabled: false,
-    title: "Diff Disabled",
+    title: "Selection",
+    onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.guid),
   },
-  render: (args) => sceneFrame(<Scene {...args} />),
-};
-
-export const NoGridNoGizmo: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    showGrid: false,
-    showGizmo: false,
-    title: "Nakagin Capsule Tower Without Grid And Gizmo",
-  },
-  render: (args) => sceneFrame(<Scene {...args} />),
-};
-
-export const SelectionDisabled: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    selectionEnabled: false,
-    title: "Nakagin Capsule Tower Selection Disabled",
-  },
-  render: (args) => sceneFrame(<Scene {...args} />),
+  render: (args) => frame(<Scene {...args} />),
 };
 
 export const Controlled: Story = {
   args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    title: "Controlled Nakagin Capsule Tower",
+    design: nakaginDesign,
+    kit: minimalKit,
+    title: "Controlled",
   },
   render: (args) => {
     const [selection, setSelection] = React.useState({ pieceGuids: [firstPieceGuid] });
-    return sceneFrame(<Scene {...args} selection={selection} onSelectionChange={setSelection} />);
+    return frame(<Scene {...args} selection={selection} onSelectionChange={setSelection} />);
   },
+};
+
+export const FeaturesDisabled: Story = {
+  args: {
+    design: nakaginDesign,
+    kit: minimalKit,
+    showGrid: false,
+    showGizmo: false,
+    selectionEnabled: false,
+    diffEnabled: false,
+    title: "Features Disabled",
+  },
+  render: (args) => frame(<Scene {...args} />),
 };
 
 // #endregion 🔖Scene

@@ -45343,6 +45343,9 @@ func writeHookArtifacts(ctx HookContext, result HookResult) {
 	SetRootDir(repoRoot)
 	now := time.Now().UTC()
 	sessionID := extractSessionIDFromInput(ctx.Input)
+	if sessionID == "" && ctx.Client == "kiro-cli" {
+		sessionID = fmt.Sprintf("kiro-%d", os.Getppid())
+	}
 	if sessionID == "" {
 		sessionID = "unknown"
 	}
@@ -45466,17 +45469,22 @@ func classifyTool(toolName string) ToolKind {
 	switch toolName {
 	case "manage_todo_list", "Task", "task", "todo_tool", "TodoWrite":
 		return ToolKindPlan
-	case "read_file", "grep_search", "rg", "ripgrep", "file_search", "semantic_search", "list_dir", "list_code_usages", "get_errors", "Read", "fetch_webpage", "open_simple_browser", "Grep", "Glob":
+	case "read_file", "grep_search", "rg", "ripgrep", "file_search", "semantic_search", "list_dir", "list_code_usages", "get_errors", "Read", "fetch_webpage", "open_simple_browser", "Grep", "Glob",
+		"fs_read", "code", "grep", "glob", "web_search", "web_fetch":
 		return ToolKindCodeSearch
-	case "replace_string_in_file", "create_file", "multi_replace_string_in_file", "Edit", "Write", "editfile":
+	case "replace_string_in_file", "create_file", "multi_replace_string_in_file", "Edit", "Write", "editfile",
+		"fs_write":
 		return ToolKindCodeEdit
-	case "run_in_terminal", "get_terminal_output", "Bash", "terminal":
+	case "run_in_terminal", "get_terminal_output", "Bash", "terminal",
+		"execute_bash":
 		return ToolKindTerminal
 	case "runTests", "run_tests":
 		return ToolKindTest
 	case "run_task", "create_and_run_task":
 		return ToolKindBuild
 	case "tool_search_tool_regex":
+		return ToolKindGeneric
+	case "use_subagent", "use_aws":
 		return ToolKindGeneric
 	default:
 		return ToolKindGeneric

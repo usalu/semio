@@ -19303,6 +19303,31 @@ interface UICanvasPortal {
   windowKind: UIWindowKindDefinition;
 }
 
+interface UICanvasAsyncLifecycle {
+  isDisposed: () => boolean;
+  registerCleanup: (cleanup: () => void) => void;
+  dispose: () => void;
+}
+
+function createUICanvasAsyncLifecycle(): UICanvasAsyncLifecycle {
+  let disposed = false;
+  let cleanup: (() => void) | undefined;
+
+  return {
+    isDisposed: () => disposed,
+    registerCleanup: (nextCleanup) => {
+      cleanup = nextCleanup;
+      if (disposed) {
+        cleanup();
+      }
+    },
+    dispose: () => {
+      disposed = true;
+      cleanup?.();
+    },
+  };
+}
+
 /**
  * Golden-layout canvas that renders window kinds using React portals.
  * Dynamically imports golden-layout and registers each window kind as a component.
@@ -19322,9 +19347,12 @@ const UICanvas: React.FC<{
   React.useEffect(() => {
     if (!containerRef.current || layoutRef.current) return;
 
+    const lifecycle = createUICanvasAsyncLifecycle();
+
     const loadGoldenLayout = async () => {
       try {
         const goldenLayoutModule = await import("golden-layout");
+        if (lifecycle.isDisposed()) return;
         const GoldenLayout = (goldenLayoutModule as any).GoldenLayout;
         if (!GoldenLayout || typeof GoldenLayout !== "function") {
           console.error("[UICanvas] GoldenLayout is not a constructor");
@@ -19344,6 +19372,7 @@ const UICanvas: React.FC<{
 
         windowKinds.forEach((windowKind) => {
           layout.registerComponent(windowKind.id, (container: any) => {
+            if (lifecycle.isDisposed()) return;
             const element = container.getElement();
             let domElement: HTMLElement;
             if (element instanceof HTMLElement) {
@@ -19397,20 +19426,26 @@ const UICanvas: React.FC<{
         const handleResize = () => layout.updateSize();
         window.addEventListener("resize", handleResize);
 
-        return () => {
+        lifecycle.registerCleanup(() => {
+          if (layoutRef.current === layout) {
+            layoutRef.current = null;
+          }
           window.removeEventListener("resize", handleResize);
           setPortals([]);
           try {
             layout.destroy();
           } catch { }
-          layoutRef.current = null;
-        };
+        });
       } catch (error) {
         console.error("[UICanvas] Failed to load GoldenLayout:", error);
       }
     };
 
-    loadGoldenLayout();
+    void loadGoldenLayout();
+
+    return () => {
+      lifecycle.dispose();
+    };
   }, [windowKinds, defaultLayout, layoutState, onLayoutChange, onActiveWindowChange]);
 
   return (
@@ -19563,6 +19598,16 @@ export interface UIFindContextValue {
 }
 
 const UIFindContext = React.createContext<UIFindContextValue | null>(null);
+const EMPTY_UI_FIND_ITEMS: UIFindItem[] = [];
+
+function areFindItemsShallowEqual(previousItems: UIFindItem[], nextItems: UIFindItem[]): boolean {
+  if (previousItems === nextItems) return true;
+  if (previousItems.length !== nextItems.length) return false;
+  for (let i = 0; i < nextItems.length; i++) {
+    if (previousItems[i] !== nextItems[i]) return false;
+  }
+  return true;
+}
 
 /**
  * Provider for per-app find functionality.
@@ -19573,7 +19618,9 @@ export const UIFindProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const onFindItemCallbackRef = React.useRef<((itemId: string) => void) | undefined>(undefined);
 
   const setFindItemsStable = React.useCallback((items: UIFindItem[]) => {
-    setFindItems(items);
+    setFindItems((previousItems) => {
+      return areFindItemsShallowEqual(previousItems, items) ? previousItems : items;
+    });
   }, []);
 
   const setOnFindItem = React.useCallback((callback: ((itemId: string) => void) | undefined) => {
@@ -20198,12 +20245,13 @@ const UIFindItemsSync: React.FC<{
   onFindSelect?: (itemId: string) => void;
 }> = ({ findItems, onFindSelect }) => {
   const findCtx = React.useContext(UIFindContext);
+  const resolvedFindItems = findItems ?? EMPTY_UI_FIND_ITEMS;
+
   React.useEffect(() => {
-    if (findCtx) {
-      findCtx.setFindItems(findItems ?? []);
-      findCtx.setOnFindItem(onFindSelect);
-    }
-  }, [findItems, onFindSelect, findCtx]);
+    if (!findCtx) return;
+    findCtx.setFindItems(resolvedFindItems);
+    findCtx.setOnFindItem(onFindSelect);
+  }, [findCtx, onFindSelect, resolvedFindItems]);
   return null;
 };
 
@@ -20292,12 +20340,13 @@ const treeVitest = (
       describe: typeof import("vitest").describe;
       expect: typeof import("vitest").expect;
       it: typeof import("vitest").it;
+      vi: typeof import("vitest").vi;
     };
   }
 ).vitest;
 
 if (treeVitest) {
-  const { describe, expect, it } = treeVitest;
+  const { describe, expect, it, vi } = treeVitest;
 
   describe("tree helpers", () => {
     it("normalizes selected ids for single and multiple selection", () => {
@@ -20385,6 +20434,38 @@ if (treeVitest) {
           ],
         },
       });
+    });
+
+    it("keeps find item synchronization stable for equivalent arrays", () => {
+      const item = { id: "find.item", label: "Find Item" };
+
+      expect(areFindItemsShallowEqual([], EMPTY_UI_FIND_ITEMS)).toBe(true);
+      expect(areFindItemsShallowEqual([item], [item])).toBe(true);
+      expect(areFindItemsShallowEqual([item], [{ ...item }])).toBe(false);
+      expect(areFindItemsShallowEqual([item], [])).toBe(false);
+    });
+
+    it("runs canvas cleanup immediately when async setup resolves after disposal", () => {
+      const lifecycle = createUICanvasAsyncLifecycle();
+      const cleanup = vi.fn();
+
+      lifecycle.dispose();
+      lifecycle.registerCleanup(cleanup);
+
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(lifecycle.isDisposed()).toBe(true);
+    });
+
+    it("runs canvas cleanup once when setup resolves before disposal", () => {
+      const lifecycle = createUICanvasAsyncLifecycle();
+      const cleanup = vi.fn();
+
+      lifecycle.registerCleanup(cleanup);
+      lifecycle.dispose();
+      lifecycle.dispose();
+
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(lifecycle.isDisposed()).toBe(true);
     });
   });
 }
