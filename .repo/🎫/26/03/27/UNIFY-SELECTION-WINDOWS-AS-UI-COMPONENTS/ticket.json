@@ -1,0 +1,12 @@
+{
+  "title": "Unify Selection Windows as UI Components",
+  "status": "open",
+  "description": "Refactor semio algorithms window kinds so selection-specific windows are semio/ui component specializations instead of separate bespoke window kinds. Piece selection should be implemented as a Diagram variant with restricted selection behavior, and the same pattern should apply to related selection windows. Update existing implementation and extend existing tests only; do not add new test files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1124"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8f52f2de9e1b47059fc1aa48def11ace"
+  ]
+}

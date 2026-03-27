@@ -1342,6 +1342,11 @@ export const Vector: React.FC<VectorProps> = ({
 const SCENE_BOX_SIZE = 1;
 
 const getSceneComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+const resolveSceneColor = (cssValue: string, fallback: string): string => {
+  if (cssValue.startsWith("var(")) return getSceneComputedColor(cssValue.replace("var(", "").replace(")", "")) || fallback;
+  if (cssValue === "currentColor") return fallback;
+  return cssValue;
+};
 const SEMIO_TO_THREE_BASIS = toThreeRotation();
 const THREE_TO_SEMIO_BASIS = SEMIO_TO_THREE_BASIS.clone().invert();
 
@@ -1491,13 +1496,13 @@ interface ScenePieceModelProps {
 const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, isSelected, isHovered }) => {
   const gltf = useGLTF(modelSource);
   const clone = React.useMemo(() => cloneSkeleton(gltf.scene), [gltf.scene]);
-  const isRemoved = status === "removed";
-  const isDiffed = status !== "default";
 
   React.useEffect(() => {
-    const statusColor = isDiffed ? getSceneComputedColor(getEntityStatusColor(status).replace("var(", "").replace(")", "")) : null;
-    const selectedColor = isSelected ? getSceneComputedColor(getInteractiveEntityColor(status, true, false).replace("var(", "").replace(")", "")) : null;
-    const hoveredColor = isHovered ? getSceneComputedColor(getInteractiveEntityColor(status, false, true).replace("var(", "").replace(")", "")) : null;
+    const isDiffed = status !== "default";
+    const isRemoved = status === "removed";
+    const statusColor = isDiffed ? resolveSceneColor(getEntityStatusColor(status), "#888888") : null;
+    const selectedColor = isSelected ? resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6") : null;
+    const hoveredColor = isHovered ? resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa") : null;
     clone.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
       const materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -1521,7 +1526,7 @@ const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, 
         mat.opacity = isRemoved ? 0.35 : 1;
       });
     });
-  }, [clone, status, isDiffed, isRemoved, isHovered, isSelected]);
+  }, [clone, status, isHovered, isSelected]);
 
   return <Clone object={clone} />;
 };
@@ -1539,9 +1544,9 @@ interface ScenePieceProps {
 }
 
 const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, modelSource, isSelected, isHovered, onPointerEnter, onPointerLeave, onClick }) => {
-  const defaultColor = React.useMemo(() => getEntityStatusColor(status), [status]);
-  const activeColor = React.useMemo(() => getInteractiveEntityColor(status, true, false), [status]);
-  const hoverColor = React.useMemo(() => getInteractiveEntityColor(status, false, true), [status]);
+  const defaultColor = React.useMemo(() => resolveSceneColor(getEntityStatusColor(status), "#888888"), [status]);
+  const activeColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6"), [status]);
+  const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
 
   const matrix = React.useMemo(() => {
     if (!piece.plane) return null;
@@ -1609,9 +1614,9 @@ interface SceneConnectionProps {
 }
 
 const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePiece, targetPiece, status, isSelected, isHovered, onPointerEnter, onPointerLeave, onClick }) => {
-  const defaultColor = React.useMemo(() => getEntityStatusColor(status), [status]);
-  const activeColor = React.useMemo(() => getInteractiveEntityColor(status, true, false), [status]);
-  const hoverColor = React.useMemo(() => getInteractiveEntityColor(status, false, true), [status]);
+  const defaultColor = React.useMemo(() => resolveSceneColor(getEntityStatusColor(status), "#888888"), [status]);
+  const activeColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6"), [status]);
+  const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
 
   const start = React.useMemo(() => (sourcePiece.plane ? toSceneVector(sourcePiece.plane.origin) : null), [sourcePiece.plane]);
   const end = React.useMemo(() => (targetPiece.plane ? toSceneVector(targetPiece.plane.origin) : null), [targetPiece.plane]);
