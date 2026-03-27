@@ -1997,11 +1997,56 @@ def _get_session_kit_mode(ctx) -> str:
     return _mcp_session_kit_mode.get(sid, "local")
 
 
+def _hydrate_design_from_kit_disk_if_shallow(design: dict[str, typing.Any], kit_source: str | None, design_guid: str) -> dict[str, typing.Any]:
+    """If the kit only lists design metadata (no pieces), load a sibling `*.design.semio.json` with the same guid.
+    [👤semio📚engine💻engine🔖mcp🛠️hydratedesignfromkitdiskifshallow](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/d/i/_hydrate_design_from_kit_disk_if_shallow)
+    """
+    pieces = design.get("pieces") or []
+    if len(pieces) > 0:
+        return design
+    if not kit_source or kit_source in ("<memory>",):
+        return design
+    if kit_source.startswith(("http://", "https://")):
+        return design
+    try:
+        base = pathlib.Path(kit_source).resolve()
+        search_root = base.parent if base.is_file() else base if base.is_dir() else None
+        if search_root is None or not search_root.is_dir():
+            return design
+        best: dict[str, typing.Any] | None = None
+        best_piece_count = -1
+        for candidate in sorted(search_root.glob("*.design.semio.json")):
+            try:
+                with open(candidate, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except OSError:
+                continue
+            if not isinstance(data, dict) or data.get("guid") != design_guid:
+                continue
+            n = len(data.get("pieces") or [])
+            if n > best_piece_count:
+                best_piece_count = n
+                best = data
+        if best is not None:
+            return best
+    except OSError:
+        return design
+    return design
+
+
 def _get_session_design(ctx) -> dict[str, typing.Any]:
     """Get current design from session. Raises if start_working_in_design was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_designs:
         raise ValueError("Call start_working_in_design(guid) first to set the design for this session.")
+    design = _mcp_session_designs[sid]
+    guid = design.get("guid")
+    if not isinstance(guid, str) or not guid:
+        return design
+    kit_src = _mcp_session_kit_source.get(sid)
+    merged = _hydrate_design_from_kit_disk_if_shallow(design, kit_src, guid)
+    if merged is not design:
+        _mcp_session_designs[sid] = merged
     return _mcp_session_designs[sid]
 
 
@@ -3162,7 +3207,7 @@ def kit_viewer_resource() -> str:
 
 @mcp.tool(meta=_APP_RESOURCE_META)
 def show_design(ctx: Context) -> CallToolResult:
-    """Show the current design as a 2D diagram. Requires an active kit and design session."""
+    """Show the current design in the split design viewer (scene + 2D diagram). Requires an active kit and design session."""
     try:
         return _build_app_response("show-design", ctx)
     except Exception as e:
@@ -3171,7 +3216,7 @@ def show_design(ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_APP_RESOURCE_META)
 def show_diagram(ctx: Context) -> CallToolResult:
-    """Show the current design as a 2D diagram only. Requires an active kit and design session."""
+    """Show the current design as a 2D diagram only (no 3D scene panel). Requires an active kit and design session."""
     try:
         return _build_app_response("show-diagram", ctx)
     except Exception as e:
@@ -3180,7 +3225,7 @@ def show_diagram(ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_APP_RESOURCE_META)
 def show_scene(ctx: Context) -> CallToolResult:
-    """Show the current design as a 2D diagram (3D not available in MCP app). Requires an active kit and design session."""
+    """Show the current design in the 3D scene viewer. Requires an active kit and design session."""
     try:
         return _build_app_response("show-scene", ctx)
     except Exception as e:

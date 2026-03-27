@@ -1,0 +1,12 @@
+{
+  "title": "Hydrate Shallow Kit Designs And Richest Mcp Design Payload",
+  "status": "open",
+  "description": "Shallow kit lists designs without pieces; load sibling *.design.semio.json by guid. UI: merge richest design from MCP candidates and score by piece count.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1154"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪e39b11d69e0c4437b5ae52be8a8765d5"
+  ]
+}

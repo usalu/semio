@@ -1,0 +1,12 @@
+{
+  "title": "Implement Delete Pieces And Connections In Design",
+  "status": "open",
+  "description": "Create a deletePiecesAndConnectionsInDesign(pieces:Guid[], connections:Guid[]):DesignDiff function. Implement for all programming languages. Create test cases with nakagin capsule tower deletion. Add Design/Delete.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1153"
+  },
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪b4fd51de111d482d8185b8607ea780b4"
+  ]
+}

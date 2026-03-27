@@ -2737,12 +2737,22 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
   const kitObj = raw.kitArtifacts;
   const hasKit = kitObj !== undefined && kitObj !== null && typeof kitObj === "object" && !Array.isArray(kitObj) && !isEmptyKitArtifactsData(kitObj);
   const hasDiagram = Array.isArray(raw.points) && Array.isArray(raw.lines);
-  if (!hasKit && !hasDiagram) return null;
+  const mode = typeof raw.mode === "string" ? raw.mode : undefined;
+  const designRaw = raw.design;
+  const hasDesign =
+    designRaw !== undefined && designRaw !== null && typeof designRaw === "object" && !Array.isArray(designRaw);
+  const kitRaw = raw.kit;
+  const hasFullKit =
+    kitRaw !== undefined && kitRaw !== null && typeof kitRaw === "object" && !Array.isArray(kitRaw);
+  if (!hasKit && !hasDiagram && !hasDesign) return null;
   return {
     points: Array.isArray(raw.points) ? (raw.points as McpDiagramPayload["points"]) : [],
     lines: Array.isArray(raw.lines) ? (raw.lines as McpDiagramPayload["lines"]) : [],
     capabilities: raw.capabilities as McpDiagramPayload["capabilities"],
     kitArtifacts: hasKit ? (raw.kitArtifacts as KitData) : undefined,
+    mode,
+    design: hasDesign ? (designRaw as Design) : undefined,
+    kit: hasFullKit ? (kitRaw as Kit) : undefined,
   };
 };
 
@@ -2750,6 +2760,19 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
  * Prefer the richest tool payload when hosts duplicate data in `structuredContent` (often truncated) and `content` text (full JSON).
  * [👤semio📚ui💻index🔖mcpapp🛠️scoremcpdiagrampayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/scoreMcpDiagramPayload)
  **/
+/**
+ * Prefer MCP tool payloads whose embedded {@link Design} includes full piece/connection lists (hosts often truncate `structuredContent`).
+ * [👤semio📚ui💻index🔖mcpapp🛠️mcpdesignrichness](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mcpDesignRichness)
+ **/
+const mcpDesignRichness = (p: McpDiagramPayload): number => {
+  const d = p.design;
+  if (!d || typeof d !== "object") return 0;
+  const o = d as { pieces?: unknown[]; connections?: unknown[] };
+  const pieces = Array.isArray(o.pieces) ? o.pieces.length : 0;
+  const conns = Array.isArray(o.connections) ? o.connections.length : 0;
+  return pieces * 20 + conns * 10;
+};
+
 const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
   let s = 0;
   const diagramShape = Array.isArray(p.points) && Array.isArray(p.lines);
@@ -2761,7 +2784,36 @@ const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
     if (typeof ka.name === "string" && ka.name.trim().length > 0) s += 50;
     if (typeof ka.guid === "string" && ka.guid.trim().length > 0) s += 10;
   }
+  if (p.mode === "show-design" || p.mode === "show-scene") s += 400;
+  if (p.design) s += 300;
+  if (p.kit) s += 100;
+  s += mcpDesignRichness(p);
   return s;
+};
+
+/**
+ * After scoring, take the richest `design` among all parse candidates (same tool result, different channels).
+ * [👤semio📚ui💻index🔖mcpapp🛠️mergerichestdesignfromcandidates](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mergeRichestDesignFromCandidates)
+ **/
+const mergeRichestDesignFromCandidates = (
+  candidates: Array<McpDiagramPayload | null | undefined>,
+  best: McpDiagramPayload | null,
+): McpDiagramPayload | null => {
+  if (!best) return null;
+  let bestDesign = best.design;
+  let bestScore = mcpDesignRichness({ ...best, design: bestDesign });
+  for (const c of candidates) {
+    if (!c?.design) continue;
+    const score = mcpDesignRichness({ ...best, design: c.design });
+    if (score > bestScore) {
+      bestScore = score;
+      bestDesign = c.design;
+    }
+  }
+  if (bestDesign !== best.design) {
+    return { ...best, design: bestDesign };
+  }
+  return best;
 };
 
 const bestMcpDiagramPayload = (candidates: Array<McpDiagramPayload | null | undefined>): McpDiagramPayload | null => {
@@ -2898,7 +2950,7 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
   candidates.push(normalizeMcpDiagramPayload(r));
   candidates.push(deepFindDiagramPayload(r));
 
-  return bestMcpDiagramPayload(candidates);
+  return mergeRichestDesignFromCandidates(candidates, bestMcpDiagramPayload(candidates));
 };
 
 /**
@@ -2910,7 +2962,7 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
  * Specs:
  * - Connects to MCP host via useApp hook with PostMessageTransport.
  * - Receives pre-computed diagram points/lines from tool results via ontoolresult callback.
- * - Renders SVG diagram with pan, zoom, and selection support.
+ * - Renders {@link SemioDesign} when `mode` is `show-design`, {@link SemioScene} when `show-scene`, otherwise {@link SemioDiagram}.
  * - Sends selection changes back to host via updateModelContext.
  **/
 export const McpDesignViewer: React.FC = () => {
@@ -3011,7 +3063,6 @@ export const McpDesignViewer: React.FC = () => {
     );
   }
 
-  const hasDiagram = payload.points.length > 0;
   const pieceSelectionEnabled = payload.capabilities?.pieceSelection ?? false;
   const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
 
@@ -3019,14 +3070,6 @@ export const McpDesignViewer: React.FC = () => {
     setKitSelection(next);
     sendKitSelectionUpdate(next);
   };
-
-  if (!hasDiagram && payload.kitArtifacts) {
-    return (
-      <div style={{ width: "100%", height: "100vh", overflow: "auto", padding: 12, background: "var(--base, var(--color-background-primary, #ffffff))", color: "var(--foreground)" }}>
-        <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit Artifacts" />
-      </div>
-    );
-  }
 
   const selectionProps = {
     selectionEnabled: pieceSelectionEnabled || connectionSelectionEnabled,
@@ -3055,6 +3098,16 @@ export const McpDesignViewer: React.FC = () => {
         ) : (
           <SemioScene design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} />
         )}
+      </div>
+    );
+  }
+
+  const hasDiagram = payload.points.length > 0;
+
+  if (!hasDiagram && payload.kitArtifacts) {
+    return (
+      <div style={{ width: "100%", height: "100vh", overflow: "auto", padding: 12, background: "var(--base, var(--color-background-primary, #ffffff))", color: "var(--foreground)" }}>
+        <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit Artifacts" />
       </div>
     );
   }
@@ -3394,6 +3447,43 @@ if (import.meta.vitest) {
         content: [{ type: "resource", resource: { uri: "x", mimeType: "text/plain", text: JSON.stringify(payload) } }],
       });
       expect(r?.kitArtifacts?.name).toBe("Res");
+    });
+
+    it("preserves mode, design, and kit for McpDesignViewer (show-design / show-scene vs diagram)", () => {
+      const inner = {
+        points: [],
+        lines: [],
+        mode: "show-scene",
+        capabilities: { pieceSelection: true, connectionSelection: false },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        design: { guid: "dg", pieces: [], connections: [] },
+        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] },
+      };
+      const r = parseDiagramPayloadFromToolResult({ structuredContent: inner });
+      expect(r?.mode).toBe("show-scene");
+      expect(r?.design?.guid).toBe("dg");
+      expect(r?.kit?.guid).toBe("kg");
+    });
+
+    it("merges the richest design when structuredContent truncates pieces", () => {
+      const stripped = {
+        points: [],
+        lines: [],
+        mode: "show-scene",
+        capabilities: {},
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        design: { guid: "dg", pieces: [{ guid: "p0" }], connections: [] },
+        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] },
+      };
+      const full = {
+        ...stripped,
+        design: { guid: "dg", pieces: Array.from({ length: 30 }, (_, i) => ({ guid: `p${i}` })), connections: [] },
+      };
+      const r = parseDiagramPayloadFromToolResult({
+        structuredContent: stripped,
+        content: [{ type: "text", text: JSON.stringify(full) }],
+      });
+      expect(r?.design?.pieces?.length).toBe(30);
     });
   });
 

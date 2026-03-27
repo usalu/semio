@@ -1006,6 +1006,15 @@ class TestMcp:
         assert "points" in data
         assert "lines" in data
 
+    def test_shallow_kit_hydrates_nakagin_design_from_disk(self):
+        """metabolism.shallow.kit.semio.json lists designs without pieces; load nakagin-capsule-tower.shallow.design.semio.json by guid."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        shallow_kit_path = ASSETS_DIR / "metabolism.shallow.kit.semio.json"
+        engine.start_working_in_local_kit(str(shallow_kit_path), mock_ctx)
+        engine.start_working_in_design("9a890dd4-0a9c-48ac-920a-9e62666465ef", mock_ctx)
+        d = engine._get_session_design(mock_ctx)
+        assert len(d.get("pieces", [])) > 50
+
     def test_show_diff_returns_diagram_json(self, kitMetabolismJson: dict):
         """show_diff returns diagram data and default capabilities in structuredContent."""
         mock_ctx = type("MockCtx", (), {"session": object()})()

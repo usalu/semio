@@ -113,6 +113,14 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+Create a deletePiecesAndConnectionsInDesign(pieces:Guid[], connections:Guid[]):DesignDiff function that returns the correct diff (e.g. remove all stale connections besides the pieces, apply the flat plane and center to the pieces that are suddenly fixed because their parent connection has been removed).
+Refactor all existing code to use this.
+Create a test-case where you delete the third tambour of the large tower and the first connection from the tambour of the small tower with two assets:
+`nakagin-capsule-tower.deleted.design.diff.semio.json`
+`nakagin-capsule-tower.deleted.selection.semio.json`
+You MUST implement this for all programming languages.
+Add a Design/Delete
+
 Extend pieces metadata with the path that was during flatten (all pieces from root until the piece). You MUST implement it for all programming languages
 
 Create a new asset called `nakgin-capsule-tower.diff.design.semio.json`
