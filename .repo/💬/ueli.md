@@ -76,6 +76,12 @@ TODO: Add roomie to discord for verification
 
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
 
+elements ui and semio ui MUST NOT have any dependency to sketchpad. Further make sure that all test dependencies etc are not bundled in the build. Same for tests assets such as semio asset metabolism.
+
+Something in the repo is spuriously stashing.
+It creates messages that have partially the commit sha and the commit message e.g. `5a1a2ef1e 16`
+This MUST NOT happen.
+
 ## 🔬coda
 
 coda:

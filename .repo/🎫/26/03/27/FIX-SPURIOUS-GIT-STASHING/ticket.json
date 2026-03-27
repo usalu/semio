@@ -1,0 +1,13 @@
+{
+  "title": "Fix Spurious Git Stashing",
+  "status": "closed",
+  "description": "Fix Spurious Git Stashing",
+  "summary": "Identified GitKraken Desktop auto-start as the source of spurious git stashing. Fixed by: (1) dropped existing stash entry, (2) disabled GitKraken auto-start in devcontainer.json (SEMIO_GITKRAKEN_AUTO_START=false), (3) added stash cleanup guard in post-start.sh that clears any spurious stashes on container start.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1126"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪974cb81917c4442085a216177eafcc08"
+  ]
+}

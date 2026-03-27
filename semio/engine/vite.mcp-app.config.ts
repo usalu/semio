@@ -4,13 +4,15 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // Specs: Vite config for building the standalone MCP App as a single HTML file.
-// Bundles React and @modelcontextprotocol/ext-apps only. No @semio/ui or heavy deps.
+// Bundles React, @semio/ui, and @modelcontextprotocol/ext-apps into one inlined HTML file.
+// MUST exclude test deps (vitest, playwright), test assets (kit_metabolism), and sketchpad.
 // Summary: Vite build config bundling the MCP App into a single inlined HTML file.
 
 // #endregion 🔖Header
 
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import mdx from "@mdx-js/rollup";
 import path from "path";
 
 // #region 🔖ZodJitlessPlugin
@@ -26,14 +28,12 @@ function zodJitlessPlugin(): Plugin {
     enforce: "pre",
     transform(code, id) {
       if (!id.includes("zod")) return;
-      // Patch util.js: make allowsEval always return false
       if (id.endsWith("core/util.js") || id.endsWith("core/util.mjs")) {
         return code.replace(
           /export const allowsEval[\s\S]*?}\);/,
           "export const allowsEval = { get value() { return false; } };",
         );
       }
-      // Patch doc.js: make compile() return a no-op function instead of using new Function
       if (id.endsWith("core/doc.js") || id.endsWith("core/doc.mjs")) {
         return code.replace(
           /compile\(\)\s*\{[\s\S]*?return new F\([^)]*\);\s*\}/,
@@ -47,6 +47,47 @@ function zodJitlessPlugin(): Plugin {
 
 // #endregion 🔖ZodJitlessPlugin
 
+// #region 🔖StripTestAndSketchpadPlugin
+// Specs: Strip test-only code blocks, test dependencies, test assets, and sketchpad
+// imports from the production MCP App bundle. Resolves them to empty modules.
+// Summary: Vite plugin that stubs out test/sketchpad/playwright imports for production builds.
+
+const BLOCKED_PATTERNS = [
+  /\/sketchpad\//,
+  /playwright/,
+  /vitest/,
+  /kit_metabolism\.json/,
+  /\.test\./,
+  /\.spec\./,
+];
+
+function stripTestAndSketchpadPlugin(): Plugin {
+  return {
+    name: "strip-test-and-sketchpad",
+    enforce: "pre",
+    resolveId(source, importer) {
+      for (const pattern of BLOCKED_PATTERNS) {
+        if (pattern.test(source)) return { id: "\0empty-module", moduleSideEffects: false };
+      }
+      return null;
+    },
+    load(id) {
+      if (id === "\0empty-module") return "export default {};";
+      return null;
+    },
+    transform(code, id) {
+      if (!id.includes("semio/js/index") && !id.includes("semio/ui/index") && !id.includes("elements/ui/index")) return;
+      return code
+        .replace(/if\s*\(\s*typeof\s*\(globalThis\s+as\s+any\)\.__vitest_worker__\s*!==\s*"undefined"\s*\)\s*\{[\s\S]*$/m, "")
+        .replace(/if\s*\(\s*import\.meta\.vitest\s*\)\s*\{[\s\S]*?^}/m, "")
+        .replace(/const\s+\w+\s*=\s*import\.meta\.vitest;\s*if\s*\(\s*\w+\s*\)\s*\{[\s\S]*?^}/gm, "")
+        .replace(/const\s+\w+\s*=\s*\(\s*import\.meta[\s\S]*?\.vitest[\s\S]*?\)\.vitest;\s*if\s*\(\s*\w+\s*\)\s*\{[\s\S]*?^}/gm, "");
+    },
+  };
+}
+
+// #endregion 🔖StripTestAndSketchpadPlugin
+
 export default defineConfig({
   root: __dirname,
   build: {
@@ -56,7 +97,7 @@ export default defineConfig({
       input: path.resolve(__dirname, "mcp-app.html"),
     },
   },
-  plugins: [zodJitlessPlugin(), viteSingleFile()],
+  plugins: [stripTestAndSketchpadPlugin(), mdx(), zodJitlessPlugin(), viteSingleFile()],
   esbuild: {
     jsx: "automatic",
   },

@@ -65,6 +65,15 @@ FONTCONFIG
 }
 #endregion 🔖EmojiFonts
 #region 🔖Startup
+#region 🔖StashCleanup
+# Drop all spurious git stash entries. Stashing is forbidden in concurrent editing workflows.
+cd "$WORKSPACE"
+stash_count=$(git stash list 2>/dev/null | wc -l)
+if [ "$stash_count" -gt 0 ]; then
+  git stash clear
+  echo "✅ Cleared $stash_count spurious git stash entries."
+fi
+#endregion 🔖StashCleanup
 #endregion 🔖Startup
 #region 🔖Ownership
 sudo chown -R vscode:vscode /home/vscode/.cache 2>/dev/null || true

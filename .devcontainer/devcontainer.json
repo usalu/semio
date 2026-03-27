@@ -111,7 +111,7 @@
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
     "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
-    "SEMIO_GITKRAKEN_AUTO_START": "true",
+    "SEMIO_GITKRAKEN_AUTO_START": "false",
     "SEMIO_F3D_AUTO_START": "true",
     "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL": "",
     "LANG": "en_US.UTF-8",

@@ -2206,6 +2206,7 @@ export interface McpDiagramPayload {
     pieceSelection?: boolean;
     connectionSelection?: boolean;
   };
+  kitArtifacts?: KitData;
 }
 
 // #endregion 🔖McpApp Types
@@ -2242,6 +2243,7 @@ export const McpDesignViewer: React.FC = () => {
   const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
   const [selectedPieces, setSelectedPieces] = React.useState<Set<string>>(new Set());
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
+  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [] });
   const appRef = React.useRef<McpApp | null>(null);
 
   const { app, isConnected, error } = useApp({
@@ -2255,6 +2257,7 @@ export const McpDesignViewer: React.FC = () => {
           setPayload(parsed);
           setSelectedPieces(new Set());
           setSelectedConnections(new Set());
+          setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
         }
       };
       a.ontoolcancelled = () => {};
@@ -2263,25 +2266,21 @@ export const McpDesignViewer: React.FC = () => {
     },
   });
 
-  // Apply host theme CSS variables (background, text colors, fonts, etc.)
   useHostStyles(app, app?.getHostContext());
 
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (appRef.current) {
       appRef.current.updateModelContext({
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify({
-              selectionChange: {
-                pieceGuids: Array.from(pieces),
-                connectionGuids: Array.from(connections),
-              },
-            }),
-          },
-        ],
+        content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceGuids: Array.from(pieces), connectionGuids: Array.from(connections) } }) }],
       });
     }
+  }, []);
+
+  const sendKitSelectionUpdate = React.useCallback((next: KitSelection) => {
+    if (!appRef.current) return;
+    appRef.current.updateModelContext({
+      content: [{ type: "text" as const, text: JSON.stringify({ kitArtifactSelectionChange: { designGuids: next.designGuids ?? [], typeGuids: next.typeGuids ?? [], portGuids: next.portGuids ?? [] } }) }],
+    });
   }, []);
 
   if (error) {
@@ -2308,11 +2307,32 @@ export const McpDesignViewer: React.FC = () => {
     );
   }
 
+  const hasDiagram = payload.points.length > 0;
   const pieceSelectionEnabled = payload.capabilities?.pieceSelection ?? false;
   const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
 
+  const handleKitSelectionChange = (next: KitSelection) => {
+    setKitSelection(next);
+    sendKitSelectionUpdate(next);
+  };
+
+  if (!hasDiagram && payload.kitArtifacts) {
+    return (
+      <div style={{ width: "100%", height: "100vh", overflow: "auto", padding: 12 }}>
+        <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit Artifacts" />
+      </div>
+    );
+  }
+
   return (
-    <div style={{ width: "100%", height: "100vh" }}>
+    <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      {payload.kitArtifacts && (
+        <div style={{ position: "absolute", left: 12, top: 12, right: 12, pointerEvents: "none", zIndex: 10 }}>
+          <div style={{ pointerEvents: "auto", maxHeight: "38vh", overflow: "auto" }}>
+            <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit Artifacts" />
+          </div>
+        </div>
+      )}
       <SemioDiagram
         kit={{
           types: [],
@@ -2582,23 +2602,28 @@ export interface AlgorithmWindowDef {
 
 type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT;
 
+type AlgorithmUiComponentId = "semio/ui:Vec" | "semio/ui:PieceSelection" | "semio/ui:Diagram";
+
 interface AlgorithmWindowBehavior {
   kind: AlgorithmWindowKind;
+  uiComponentId: AlgorithmUiComponentId;
   selectionEnabled: boolean;
   diffEnabled: boolean;
   usesPieceSelection: boolean;
   component: React.ComponentType<any>;
+  createProps: (context: AlgorithmContextValue) => Record<string, any>;
+  render: (component: React.ReactElement, context: AlgorithmContextValue) => React.ReactElement;
 }
 
-/**
- * VecInput window component: SVG 2D vector pad + numeric u/v inputs.
- **/
-const AlgorithmVecInputWindow: React.FC = () => {
-  const { vec, onVecChange, vecMin, vecMax } = useAlgorithm();
-  if (!vec || !onVecChange) return null;
+const renderAlgorithmFullWindow = (component: React.ReactElement): React.ReactElement => <div className="h-full w-full">{component}</div>;
+
+const renderAlgorithmVecWindow = (component: React.ReactElement, context: AlgorithmContextValue): React.ReactElement => {
+  const { vec, onVecChange } = context;
+  if (!vec || !onVecChange) return <></>;
+
   return (
     <div className="h-full flex flex-col items-center justify-center gap-2 p-2">
-      <Vec id="algorithm-vec-input" vec={vec} onVecChange={onVecChange} minU={vecMin?.u ?? -10} maxU={vecMax?.u ?? 10} minV={vecMin?.v ?? -10} maxV={vecMax?.v ?? 10} size={160} />
+      {component}
       <div className="flex gap-2">
         <div className="flex items-center gap-1">
           <span className="text-xs font-mono text-muted-foreground">u</span>
@@ -2613,87 +2638,92 @@ const AlgorithmVecInputWindow: React.FC = () => {
   );
 };
 
-/**
- * PiecesSelectionInput window component: Diagram with selection enabled, diff disabled.
- **/
-const AlgorithmPiecesSelectionInputWindow: React.FC = () => {
-  const { kit, designGuid, selectedPieceGuids, onSelectedPieceGuidsChange } = useAlgorithm();
-  return (
-    <div className="h-full w-full">
-      <PieceSelection
-        kit={kit}
-        designGuid={designGuid}
-        selection={{ pieceGuids: selectedPieceGuids }}
-        onSelectionChange={(next) => onSelectedPieceGuidsChange?.(next.pieceGuids ?? [])}
-        selectionEnabled={true}
-        diffEnabled={false}
-        panEnabled={false}
-        zoomEnabled={true}
-      />
-    </div>
-  );
-};
-
-/**
- * DesignDiffOutput window component: Diagram with diff enabled, selection disabled.
- **/
-const AlgorithmDesignDiffOutputWindow: React.FC = () => {
-  const { kit, diffKit, designGuid, designDiff, error } = useAlgorithm();
-  const effectiveKit = diffKit ?? kit;
-  if (error) {
-    return <div className="h-full flex items-center justify-center p-2 text-sm text-destructive font-mono">{error}</div>;
+const renderAlgorithmDiffWindow = (component: React.ReactElement, context: AlgorithmContextValue): React.ReactElement => {
+  if (context.error) {
+    return <div className="h-full flex items-center justify-center p-2 text-sm text-destructive font-mono">{context.error}</div>;
   }
-  return (
-    <div className="h-full w-full">
-      <SemioDiagram kit={effectiveKit} designGuid={designGuid} designDiff={designDiff} diffEnabled={true} selectionEnabled={false} />
-    </div>
-  );
-};
-
-/**
- * DesignOutput window component: Diagram with no diff, no selection.
- **/
-const AlgorithmDesignOutputWindow: React.FC = () => {
-  const { outputKit, outputDesignGuid } = useAlgorithm();
-  return (
-    <div className="h-full w-full">
-      <SemioDiagram kit={outputKit} designGuid={outputDesignGuid} diffEnabled={false} selectionEnabled={false} />
-    </div>
-  );
-};
-
-const ALGORITHM_WINDOW_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  [WindowKind.VEC_INPUT]: AlgorithmVecInputWindow,
-  [WindowKind.PIECES_SELECTION_INPUT]: AlgorithmPiecesSelectionInputWindow,
-  [WindowKind.DESIGN_DIFF_OUTPUT]: AlgorithmDesignDiffOutputWindow,
-  [WindowKind.DESIGN_OUTPUT]: AlgorithmDesignOutputWindow,
+  return renderAlgorithmFullWindow(component);
 };
 
 const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWindowBehavior, "kind">> = {
   [WindowKind.VEC_INPUT]: {
+    uiComponentId: "semio/ui:Vec",
     selectionEnabled: false,
     diffEnabled: false,
     usesPieceSelection: false,
-    component: AlgorithmVecInputWindow,
+    component: Vec,
+    createProps: (context) => ({
+      id: "algorithm-vec-input",
+      vec: context.vec ?? { u: 0, v: 0 },
+      onVecChange: context.onVecChange,
+      minU: context.vecMin?.u ?? -10,
+      maxU: context.vecMax?.u ?? 10,
+      minV: context.vecMin?.v ?? -10,
+      maxV: context.vecMax?.v ?? 10,
+      size: 160,
+    }),
+    render: renderAlgorithmVecWindow,
   },
   [WindowKind.PIECES_SELECTION_INPUT]: {
+    uiComponentId: "semio/ui:PieceSelection",
     selectionEnabled: true,
     diffEnabled: false,
     usesPieceSelection: true,
-    component: AlgorithmPiecesSelectionInputWindow,
+    component: PieceSelection,
+    createProps: (context) => ({
+      kit: context.kit,
+      designGuid: context.designGuid,
+      selection: { pieceGuids: context.selectedPieceGuids },
+      onSelectionChange: (next: PieceSelectionState) => context.onSelectedPieceGuidsChange?.(next.pieceGuids ?? []),
+      selectionEnabled: true,
+      diffEnabled: false,
+      panEnabled: false,
+      zoomEnabled: true,
+    }),
+    render: renderAlgorithmFullWindow,
   },
   [WindowKind.DESIGN_DIFF_OUTPUT]: {
+    uiComponentId: "semio/ui:Diagram",
     selectionEnabled: false,
     diffEnabled: true,
     usesPieceSelection: false,
-    component: AlgorithmDesignDiffOutputWindow,
+    component: SemioDiagram,
+    createProps: (context) => ({
+      kit: context.diffKit ?? context.kit,
+      designGuid: context.designGuid,
+      designDiff: context.designDiff,
+      diffEnabled: true,
+      selectionEnabled: false,
+    }),
+    render: renderAlgorithmDiffWindow,
   },
   [WindowKind.DESIGN_OUTPUT]: {
+    uiComponentId: "semio/ui:Diagram",
     selectionEnabled: false,
     diffEnabled: false,
     usesPieceSelection: false,
-    component: AlgorithmDesignOutputWindow,
+    component: SemioDiagram,
+    createProps: (context) => ({
+      kit: context.outputKit,
+      designGuid: context.outputDesignGuid,
+      diffEnabled: false,
+      selectionEnabled: false,
+    }),
+    render: renderAlgorithmFullWindow,
   },
+};
+
+const createAlgorithmWindowRenderer = (kind: AlgorithmWindowKind): React.FC => {
+  const AlgorithmWindowRenderer: React.FC = () => {
+    const context = useAlgorithm();
+    const behavior = getAlgorithmWindowBehavior(kind);
+    if (!behavior) return <div className="p-2 text-sm text-muted-foreground">Unknown window kind: {kind}</div>;
+    const WindowComponent = behavior.component;
+    return behavior.render(<WindowComponent {...behavior.createProps(context)} />, context);
+  };
+
+  AlgorithmWindowRenderer.displayName = `AlgorithmWindowRenderer(${kind})`;
+  return AlgorithmWindowRenderer;
 };
 
 export function isAlgorithmWindowKind(kind: WindowKind): kind is AlgorithmWindowKind {
@@ -2711,7 +2741,7 @@ export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWin
     return {
       id: windowDef.id,
       label: windowDef.label ?? windowDef.id,
-      component: behavior?.component ?? (() => <div className="p-2 text-sm text-muted-foreground">Unknown window kind: {windowDef.kind}</div>),
+      component: behavior ? createAlgorithmWindowRenderer(windowDef.kind) : () => <div className="p-2 text-sm text-muted-foreground">Unknown window kind: {windowDef.kind}</div>,
     };
   });
 }
@@ -2953,22 +2983,32 @@ if (algorithmVitest) {
     it("encodes the intended diagram behavior for selection and diff windows", () => {
       expect(getAlgorithmWindowBehavior(WindowKind.PIECES_SELECTION_INPUT)).toMatchObject({
         kind: WindowKind.PIECES_SELECTION_INPUT,
+        uiComponentId: "semio/ui:PieceSelection",
         selectionEnabled: true,
         diffEnabled: false,
         usesPieceSelection: true,
       });
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_DIFF_OUTPUT)).toMatchObject({
         kind: WindowKind.DESIGN_DIFF_OUTPUT,
+        uiComponentId: "semio/ui:Diagram",
         selectionEnabled: false,
         diffEnabled: true,
         usesPieceSelection: false,
       });
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_OUTPUT)).toMatchObject({
         kind: WindowKind.DESIGN_OUTPUT,
+        uiComponentId: "semio/ui:Diagram",
         selectionEnabled: false,
         diffEnabled: false,
         usesPieceSelection: false,
       });
+    });
+
+    it("maps algorithm selection and output windows to shared semio/ui components", () => {
+      expect(getAlgorithmWindowBehavior(WindowKind.VEC_INPUT)?.component).toBe(Vec);
+      expect(getAlgorithmWindowBehavior(WindowKind.PIECES_SELECTION_INPUT)?.component).toBe(PieceSelection);
+      expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_DIFF_OUTPUT)?.component).toBe(SemioDiagram);
+      expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_OUTPUT)?.component).toBe(SemioDiagram);
     });
 
     it("builds window definitions and the default algorithm layout from the declared windows", () => {
@@ -2985,6 +3025,7 @@ if (algorithmVitest) {
         { id: "drag-diff", label: "Diff" },
         { id: "drag-output", label: "Output" },
       ]);
+      expect(createAlgorithmWindowKinds(windows).every((windowDef) => typeof windowDef.component === "function")).toBe(true);
       expect(createAlgorithmLayout(windows)).toEqual({
         root: {
           kind: "row",
