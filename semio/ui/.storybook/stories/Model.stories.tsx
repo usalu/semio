@@ -1,17 +1,17 @@
 // #region 🔖Header
-// 💻 semio/ui/.storybook/stories/Design.stories.tsx
+// 💻 semio/ui/.storybook/stories/Model.stories.tsx
 // Specs: One component per stories file with real semio design data for representative variants.
-// Summary: Showcases the semio Design split view (Scene + Diagram) with Metabolism kit data, including diff.
+// Summary: Showcases the semio 3D Model viewer with Metabolism kit Nakagin Capsule Tower design data, including diff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
 import { getDesignDiff, type Connection, type Design, type Piece } from "@semio/js";
-import { SemioDesign as DesignView } from "@semio/ui";
+import { SemioModel as Model } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismKit from "../../../assets/semio/kit_metabolism.json";
 
-// #region 🔖Design
+// #region 🔖Model
 
 const nakaginDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 const nakaginDesign = (metabolismKit.designs ?? []).find((d) => d.guid === nakaginDesignGuid)! as Design;
@@ -42,9 +42,9 @@ diffPreviewDesign.connections = [
 ];
 const previewDiff = getDesignDiff(nakaginDesign, diffPreviewDesign);
 
-const meta: Meta<typeof DesignView> = {
-  title: "semio/Design",
-  component: DesignView,
+const meta: Meta<typeof Model> = {
+  title: "semio/Model",
+  component: Model,
   tags: ["autodocs"],
   parameters: {
     layout: "centered",
@@ -53,35 +53,20 @@ const meta: Meta<typeof DesignView> = {
 
 export default meta;
 
-type Story = StoryObj<typeof DesignView>;
+type Story = StoryObj<typeof Model>;
 
-const designFrame = (node: React.ReactNode) => (
-  <div className="h-96 w-3xl rounded-md border border-border bg-card text-foreground shadow-sm">{node}</div>
+const modelFrame = (node: React.ReactNode) => (
+  <div className="h-96 w-96 rounded-md border border-border bg-card text-foreground shadow-sm">{node}</div>
 );
 
-export const NakaginCapsuleTowerSplitView: Story = {
+export const NakaginCapsuleTower: Story = {
   args: {
     kit: metabolismKit,
     designGuid: nakaginDesignGuid,
-    title: "Nakagin Capsule Tower (Split View)",
-    onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.guid),
-    onConnectionClick: (connection: Connection) => console.info("Connection clicked", connection.guid),
-  },
-  render: (args) => designFrame(<DesignView {...args} />),
-};
-
-export const DiagramOnly: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    title: "Nakagin (Diagram Only)",
+    title: "Nakagin Capsule Tower Model",
     onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.guid),
   },
-  render: (args) => (
-    <div className="h-96 w-96 rounded-md border border-border bg-card text-foreground shadow-sm">
-      <DesignView {...args} />
-    </div>
-  ),
+  render: (args) => modelFrame(<Model {...args} />),
 };
 
 export const Diff: Story = {
@@ -93,7 +78,7 @@ export const Diff: Story = {
     selectionEnabled: false,
     title: "Diff",
   },
-  render: (args) => designFrame(<DesignView {...args} />),
+  render: (args) => modelFrame(<Model {...args} />),
 };
 
 export const DefaultDiff: Story = {
@@ -103,49 +88,29 @@ export const DefaultDiff: Story = {
     defaultDesignDiff: previewDiff,
     title: "Default Diff (Uncontrolled)",
   },
-  render: (args) => designFrame(<DesignView {...args} />),
-};
-
-export const DiffDisabled: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    designDiff: previewDiff,
-    diffEnabled: false,
-    title: "Diff Disabled",
-  },
-  render: (args) => designFrame(<DesignView {...args} />),
-};
-
-export const CustomRatio: Story = {
-  args: {
-    kit: metabolismKit,
-    designGuid: nakaginDesignGuid,
-    sceneRatio: 0.7,
-    title: "Nakagin Capsule Tower (70% Scene)",
-  },
-  render: (args) => designFrame(<DesignView {...args} />),
+  render: (args) => modelFrame(<Model {...args} />),
 };
 
 export const WithSelection: Story = {
   args: {
     kit: metabolismKit,
     designGuid: nakaginDesignGuid,
-    defaultSelection: { pieceGuids: [firstPieceGuid], connectionGuids: [] },
+    defaultSelection: { pieceGuids: [firstPieceGuid] },
     title: "Nakagin Capsule Tower With Selection",
   },
-  render: (args) => designFrame(<DesignView {...args} />),
+  render: (args) => modelFrame(<Model {...args} />),
 };
 
-export const NoGridNoGizmo: Story = {
+export const Controlled: Story = {
   args: {
     kit: metabolismKit,
     designGuid: nakaginDesignGuid,
-    showGrid: false,
-    showGizmo: false,
-    title: "Nakagin Capsule Tower Without Grid And Gizmo",
+    title: "Controlled Nakagin Capsule Tower",
   },
-  render: (args) => designFrame(<DesignView {...args} />),
+  render: (args) => {
+    const [selection, setSelection] = React.useState({ pieceGuids: [firstPieceGuid] });
+    return modelFrame(<Model {...args} selection={selection} onSelectionChange={setSelection} />);
+  },
 };
 
-// #endregion 🔖Design
+// #endregion 🔖Model

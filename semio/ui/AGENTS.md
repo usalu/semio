@@ -16,3 +16,7 @@ bundle:
 ## 🛠️ Mechanisms
 
 ## 📛 Entities
+
+### Components
+
+A `component` MUST work with full/partial controlled/uncontrolled state managment.

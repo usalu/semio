@@ -37,6 +37,7 @@ import {
   type Kit,
   type Piece,
   type Plane,
+  type Vector as SemioVector,
   type Type as SemioKind,
 } from "@semio/js";
 import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
@@ -1166,163 +1167,163 @@ export const Vec: React.FC<VecProps> = ({ id, vec, minU = -1, maxU = 1, minV = -
 
 // #endregion 🔖Vec
 
-// #region 🔖Vec3
+// #region 🔖Vector
 
 // Specs: Semio 3D vector component supporting display/select modes with partial/full
 // controlled/uncontrolled behavior. Supports per-axis enable flags for partial selection.
-// Summary: 3D vector editor/viewer with full-vector and per-axis controllable state.
+// Summary: 3D vector editor/viewer with semio Vector (x,y,z) and per-axis controllable state.
 
-export interface Vec3Value {
-  u: number;
-  v: number;
-  w: number;
-}
+export type VectorValue = Pick<SemioVector, "x" | "y" | "z">;
 
-export interface Vec3Props {
+export interface VectorProps {
   id: string;
+  vector?: VectorValue;
+  defaultVector?: VectorValue;
+  onVectorChange?: (vector: VectorValue) => void;
 
-  vec?: Vec3Value;
-  defaultVec?: Vec3Value;
-  onVecChange?: (vec: Vec3Value) => void;
-
-  u?: number;
-  defaultU?: number;
-  onUChange?: (u: number) => void;
-
-  v?: number;
-  defaultV?: number;
-  onVChange?: (v: number) => void;
-
-  w?: number;
-  defaultW?: number;
-  onWChange?: (w: number) => void;
+  x?: number;
+  defaultX?: number;
+  onXChange?: (x: number) => void;
+  y?: number;
+  defaultY?: number;
+  onYChange?: (y: number) => void;
+  z?: number;
+  defaultZ?: number;
+  onZChange?: (z: number) => void;
 
   selectionEnabled?: boolean;
-  uSelectionEnabled?: boolean;
-  vSelectionEnabled?: boolean;
-  wSelectionEnabled?: boolean;
-
+  xSelectionEnabled?: boolean;
+  ySelectionEnabled?: boolean;
+  zSelectionEnabled?: boolean;
   displayEnabled?: boolean;
-  uDisplayEnabled?: boolean;
-  vDisplayEnabled?: boolean;
-  wDisplayEnabled?: boolean;
+  xDisplayEnabled?: boolean;
+  yDisplayEnabled?: boolean;
+  zDisplayEnabled?: boolean;
 
-  minU?: number;
-  maxU?: number;
-  minV?: number;
-  maxV?: number;
-  minW?: number;
-  maxW?: number;
+  minX?: number;
+  maxX?: number;
+  minY?: number;
+  maxY?: number;
+  minZ?: number;
+  maxZ?: number;
   step?: number;
   className?: string;
 }
 
-const normalizeVec3 = (vec?: Vec3Value): Vec3Value => ({
-  u: vec?.u ?? 0,
-  v: vec?.v ?? 0,
-  w: vec?.w ?? 0,
-});
+const normalizeVector = (vector?: VectorValue): VectorValue => ({ x: vector?.x ?? 0, y: vector?.y ?? 0, z: vector?.z ?? 0 });
+const clampVectorAxis = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
-const clampVec3Axis = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const VectorPreview3D: React.FC<{ vector: VectorValue }> = ({ vector }) => {
+  const target = React.useMemo(() => new THREE.Vector3(vector.x, vector.y, vector.z), [vector.x, vector.y, vector.z]);
+  const length = Math.max(0.0001, target.length());
+  const dir = React.useMemo(() => target.clone().normalize(), [target]);
+  const midpoint = React.useMemo(() => target.clone().multiplyScalar(0.5), [target]);
+  const sphereSize = Math.max(0.03, Math.min(0.08, length * 0.1));
 
-export const Vec3: React.FC<Vec3Props> = ({
+  return (
+    <ThreeCanvas orthographic camera={{ zoom: 75, position: [2.5, 2, 2.5], up: [0, 0, 1], near: 0.1, far: 100 }}>
+      <ambientLight intensity={0.8} />
+      <directionalLight intensity={0.8} position={[3, 4, 5]} />
+      <gridHelper args={[4, 8, "#94a3b8", "#cbd5e1"]} rotation={[Math.PI / 2, 0, 0]} />
+      <axesHelper args={[1.5]} />
+      <mesh position={[target.x, target.y, target.z]}>
+        <sphereGeometry args={[sphereSize, 18, 18]} />
+        <meshStandardMaterial color="#2563eb" />
+      </mesh>
+      <mesh position={[midpoint.x, midpoint.y, midpoint.z]} quaternion={new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir)} scale={[1, length, 1]}>
+        <cylinderGeometry args={[0.02, 0.02, 1, 12]} />
+        <meshStandardMaterial color="#334155" />
+      </mesh>
+      <OrbitControls makeDefault />
+    </ThreeCanvas>
+  );
+};
+
+export const Vector: React.FC<VectorProps> = ({
   id,
-  vec,
-  defaultVec,
-  onVecChange,
-  u,
-  defaultU,
-  onUChange,
-  v,
-  defaultV,
-  onVChange,
-  w,
-  defaultW,
-  onWChange,
+  vector,
+  defaultVector,
+  onVectorChange,
+  x,
+  defaultX,
+  onXChange,
+  y,
+  defaultY,
+  onYChange,
+  z,
+  defaultZ,
+  onZChange,
   selectionEnabled = true,
-  uSelectionEnabled = true,
-  vSelectionEnabled = true,
-  wSelectionEnabled = true,
+  xSelectionEnabled = true,
+  ySelectionEnabled = true,
+  zSelectionEnabled = true,
   displayEnabled = true,
-  uDisplayEnabled = true,
-  vDisplayEnabled = true,
-  wDisplayEnabled = true,
-  minU = -1,
-  maxU = 1,
-  minV = -1,
-  maxV = 1,
-  minW = -1,
-  maxW = 1,
+  xDisplayEnabled = true,
+  yDisplayEnabled = true,
+  zDisplayEnabled = true,
+  minX = -1,
+  maxX = 1,
+  minY = -1,
+  maxY = 1,
+  minZ = -1,
+  maxZ = 1,
   step = 0.1,
   className = "",
 }) => {
-  const [resolvedVec, setResolvedVec] = useInteractiveControllableValue<Vec3Value>(vec, normalizeVec3(defaultVec), onVecChange);
-
-  const hasUPartialControl = u !== undefined || defaultU !== undefined || onUChange !== undefined;
-  const hasVPartialControl = v !== undefined || defaultV !== undefined || onVChange !== undefined;
-  const hasWPartialControl = w !== undefined || defaultW !== undefined || onWChange !== undefined;
-
-  const [resolvedU, setResolvedU] = useInteractiveControllableValue<number>(u, defaultU ?? resolvedVec.u, onUChange);
-  const [resolvedV, setResolvedV] = useInteractiveControllableValue<number>(v, defaultV ?? resolvedVec.v, onVChange);
-  const [resolvedW, setResolvedW] = useInteractiveControllableValue<number>(w, defaultW ?? resolvedVec.w, onWChange);
-
-  const currentVec: Vec3Value = {
-    u: hasUPartialControl ? resolvedU : resolvedVec.u,
-    v: hasVPartialControl ? resolvedV : resolvedVec.v,
-    w: hasWPartialControl ? resolvedW : resolvedVec.w,
+  const [resolvedVector, setResolvedVector] = useInteractiveControllableValue<VectorValue>(vector, normalizeVector(defaultVector), onVectorChange);
+  const hasXPartialControl = x !== undefined || defaultX !== undefined || onXChange !== undefined;
+  const hasYPartialControl = y !== undefined || defaultY !== undefined || onYChange !== undefined;
+  const hasZPartialControl = z !== undefined || defaultZ !== undefined || onZChange !== undefined;
+  const [resolvedX, setResolvedX] = useInteractiveControllableValue<number>(x, defaultX ?? resolvedVector.x, onXChange);
+  const [resolvedY, setResolvedY] = useInteractiveControllableValue<number>(y, defaultY ?? resolvedVector.y, onYChange);
+  const [resolvedZ, setResolvedZ] = useInteractiveControllableValue<number>(z, defaultZ ?? resolvedVector.z, onZChange);
+  const currentVector: VectorValue = {
+    x: hasXPartialControl ? resolvedX : resolvedVector.x,
+    y: hasYPartialControl ? resolvedY : resolvedVector.y,
+    z: hasZPartialControl ? resolvedZ : resolvedVector.z,
   };
 
   const updateAxis = React.useCallback(
-    (axis: "u" | "v" | "w", rawValue: number) => {
+    (axis: "x" | "y" | "z", rawValue: number) => {
       const parsedValue = Number.isFinite(rawValue) ? rawValue : 0;
-      const clampedValue = axis === "u" ? clampVec3Axis(parsedValue, minU, maxU) : axis === "v" ? clampVec3Axis(parsedValue, minV, maxV) : clampVec3Axis(parsedValue, minW, maxW);
-      const nextVec: Vec3Value = { ...currentVec, [axis]: clampedValue };
-
-      if (axis === "u" && hasUPartialControl) setResolvedU(clampedValue);
-      if (axis === "v" && hasVPartialControl) setResolvedV(clampedValue);
-      if (axis === "w" && hasWPartialControl) setResolvedW(clampedValue);
-
-      setResolvedVec(nextVec);
+      const clampedValue = axis === "x" ? clampVectorAxis(parsedValue, minX, maxX) : axis === "y" ? clampVectorAxis(parsedValue, minY, maxY) : clampVectorAxis(parsedValue, minZ, maxZ);
+      const nextVector: VectorValue = { ...currentVector, [axis]: clampedValue };
+      if (axis === "x" && hasXPartialControl) setResolvedX(clampedValue);
+      if (axis === "y" && hasYPartialControl) setResolvedY(clampedValue);
+      if (axis === "z" && hasZPartialControl) setResolvedZ(clampedValue);
+      setResolvedVector(nextVector);
     },
-    [currentVec, hasUPartialControl, hasVPartialControl, hasWPartialControl, maxU, maxV, maxW, minU, minV, minW, setResolvedU, setResolvedV, setResolvedVec, setResolvedW],
+    [currentVector, hasXPartialControl, hasYPartialControl, hasZPartialControl, maxX, maxY, maxZ, minX, minY, minZ, setResolvedVector, setResolvedX, setResolvedY, setResolvedZ],
   );
 
-  const renderAxisRow = (axis: "u" | "v" | "w", label: string, value: number, min: number, max: number, axisDisplayEnabled: boolean, axisSelectionEnabled: boolean) => {
+  const renderAxisRow = (axis: "x" | "y" | "z", label: string, value: number, min: number, max: number, axisDisplayEnabled: boolean, axisSelectionEnabled: boolean) => {
     if (!axisDisplayEnabled) return null;
     const canSelect = selectionEnabled && axisSelectionEnabled;
-
     return (
       <div key={axis} className="grid grid-cols-[24px_1fr_88px] items-center gap-2">
         <label htmlFor={`${id}-${axis}`} className="text-xs font-semibold uppercase text-muted-foreground">
           {label}
         </label>
         {canSelect ? <input id={`${id}-${axis}`} type="range" min={min} max={max} step={step} value={value} onChange={(event) => updateAxis(axis, Number(event.target.value))} /> : <div className="h-2 rounded-full bg-muted/60" />}
-        <input
-          type="number"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          readOnly={!canSelect}
-          onChange={canSelect ? (event) => updateAxis(axis, Number(event.target.value)) : undefined}
-          className="w-full rounded-md border border-input bg-background px-2 py-1 text-right text-sm font-mono"
-        />
+        <input type="number" min={min} max={max} step={step} value={value} readOnly={!canSelect} onChange={canSelect ? (event) => updateAxis(axis, Number(event.target.value)) : undefined} className="w-full rounded-md border border-input bg-background px-2 py-1 text-right text-sm font-mono" />
       </div>
     );
   };
 
   if (!displayEnabled) return null;
-
   return (
-    <div id={id} data-slot="vec3" className={`flex flex-col gap-2 ${className}`}>
-      {renderAxisRow("u", "U", currentVec.u, minU, maxU, uDisplayEnabled, uSelectionEnabled)}
-      {renderAxisRow("v", "V", currentVec.v, minV, maxV, vDisplayEnabled, vSelectionEnabled)}
-      {renderAxisRow("w", "W", currentVec.w, minW, maxW, wDisplayEnabled, wSelectionEnabled)}
+    <div id={id} data-slot="vector" className={`flex flex-col gap-3 ${className}`}>
+      <div className="h-40 w-full overflow-hidden rounded-md border border-border bg-background">
+        <VectorPreview3D vector={currentVector} />
+      </div>
+      {renderAxisRow("x", "X", currentVector.x, minX, maxX, xDisplayEnabled, xSelectionEnabled)}
+      {renderAxisRow("y", "Y", currentVector.y, minY, maxY, yDisplayEnabled, ySelectionEnabled)}
+      {renderAxisRow("z", "Z", currentVector.z, minZ, maxZ, zDisplayEnabled, zSelectionEnabled)}
     </div>
   );
 };
 
-// #endregion 🔖Vec3
+// #endregion 🔖Vector
 
 // #region 🔖Scene
 
@@ -1685,6 +1686,7 @@ export interface SemioSceneProps {
   kit: Kit;
   designGuid: string;
   designDiff?: DesignDiff;
+  defaultDesignDiff?: DesignDiff;
   diffEnabled?: boolean;
   selection?: DiagramSelection;
   defaultSelection?: DiagramSelection;
@@ -1792,6 +1794,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   kit,
   designGuid,
   designDiff,
+  defaultDesignDiff,
   diffEnabled = true,
   selection,
   defaultSelection,
@@ -1814,10 +1817,11 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   className = "",
   title = "Design Scene",
 }) => {
+  const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const snapshot = React.useMemo(() => {
-    const effectiveDiff = diffEnabled ? designDiff : undefined;
+    const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
     return buildSceneSnapshot(kit, designGuid, effectiveDiff);
-  }, [kit, designGuid, designDiff, diffEnabled]);
+  }, [kit, designGuid, resolvedDesignDiff, diffEnabled]);
 
   const effectivePieceSelectionEnabled = selectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = selectionEnabled && connectionSelectionEnabled;
@@ -1947,6 +1951,45 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
 
 // #endregion 🔖Scene
 
+// #region 🔖Model
+
+// Specs: 3D model viewer for a design with identical API to Scene and Design.
+// Delegates to SemioScene internally. Provides the same controlled/uncontrolled
+// diff, selection, and hover state management as Diagram, Scene, and Design.
+// Summary: 3D model viewer with identical diff/selection/hover API to Scene and Design.
+
+export interface SemioModelProps {
+  kit: Kit;
+  designGuid: string;
+  designDiff?: DesignDiff;
+  defaultDesignDiff?: DesignDiff;
+  diffEnabled?: boolean;
+  selection?: DiagramSelection;
+  defaultSelection?: DiagramSelection;
+  selectionEnabled?: boolean;
+  pieceSelectionEnabled?: boolean;
+  connectionSelectionEnabled?: boolean;
+  onSelectionChange?: (selection: DiagramSelection) => void;
+  hover?: DiagramHover;
+  defaultHover?: DiagramHover;
+  hoverEnabled?: boolean;
+  pieceHoverEnabled?: boolean;
+  connectionHoverEnabled?: boolean;
+  onHoverChange?: (hover: DiagramHover) => void;
+  onPieceClick?: (piece: Piece) => void;
+  onConnectionClick?: (connection: Connection) => void;
+  showGrid?: boolean;
+  showGizmo?: boolean;
+  camera?: Camera;
+  onCameraChange?: (camera: Camera) => void;
+  className?: string;
+  title?: string;
+}
+
+export const SemioModel: React.FC<SemioModelProps> = (props) => <SemioScene {...props} title={props.title ?? "Design Model"} />;
+
+// #endregion 🔖Model
+
 // #region 🔖Design
 
 // Specs: Split-view design viewer with Diagram on the right and Scene on the left.
@@ -1959,6 +2002,7 @@ export interface SemioDesignProps {
   kit: Kit;
   designGuid: string;
   designDiff?: DesignDiff;
+  defaultDesignDiff?: DesignDiff;
   diffEnabled?: boolean;
   selection?: DiagramSelection;
   defaultSelection?: DiagramSelection;
@@ -1987,6 +2031,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   kit,
   designGuid,
   designDiff,
+  defaultDesignDiff,
   diffEnabled = true,
   selection,
   defaultSelection,
@@ -2010,14 +2055,15 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   title = "Design",
   sceneRatio = 0.5,
 }) => {
+  const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const hasPlanes = React.useMemo(() => {
     const baseDesign = findDesignInKit(kit, designGuid);
-    const effectiveDiff = diffEnabled ? designDiff : undefined;
+    const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
     const nextDesign = effectiveDiff ? applyDesignDiff(baseDesign, effectiveDiff) : baseDesign;
     const flatKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === nextDesign.guid ? nextDesign : d)) };
     const flatDesign = applyDesignDiff(nextDesign, flattenDesign(flatKit, nextDesign.guid).forward);
     return (flatDesign.pieces ?? []).some((p) => p.plane);
-  }, [kit, designGuid, designDiff, diffEnabled]);
+  }, [kit, designGuid, resolvedDesignDiff, diffEnabled]);
 
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
@@ -2039,7 +2085,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
           <SemioScene
             kit={kit}
             designGuid={designGuid}
-            designDiff={designDiff}
+            designDiff={resolvedDesignDiff}
             diffEnabled={diffEnabled}
             selection={resolvedSelection}
             hover={resolvedHover}
@@ -2065,7 +2111,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
         <SemioDiagram
           kit={kit}
           designGuid={designGuid}
-          designDiff={designDiff}
+          designDiff={resolvedDesignDiff}
           diffEnabled={diffEnabled}
           selection={resolvedSelection}
           selectionEnabled={selectionEnabled}
