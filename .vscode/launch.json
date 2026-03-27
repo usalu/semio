@@ -105,16 +105,31 @@
     },
     {
       "name": "🛠️dev👤semio🖱️3dm",
-      "preLaunchTask": "🛠️dev:ui👤semio📚3dm",
-      "type": "chrome",
+      "type": "node-terminal",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev:3dm:ui"
-      ],
+      "command": "npx nx dev @semio/3dm-ui",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "http://localhost:5174/"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://localhost:5174)",
@@ -140,16 +155,27 @@
     },
     {
       "name": "🛠️dev👤semio🌐sites📖docs",
-      "preLaunchTask": "🛠️dev👤semio🌐sites📖docs",
-      "type": "node",
+      "type": "node-terminal",
       "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev:sites:docs"
-      ],
+      "command": "npx nx dev semio/sites/docs",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "astro",
+          "endsPattern": "http://localhost:4321/"
+        }
+      },
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://localhost:4321)",
@@ -170,10 +196,26 @@
     },
     {
       "name": "🛠️dev👤semio🖱️sketchpad",
-      "preLaunchTask": "🛠️dev👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "npx nx dev semio/sketchpad",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "http://localhost:5173/"
+        }
+      },
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {
@@ -191,12 +233,39 @@
       ],
       "outFiles": [
         "${workspaceFolder}/semio/vscode/out/**/*.js"
-      ],
-      "preLaunchTask": "🛠️dev👤semio⌨️vscode"
+      ]
+    },
+    {
+      "name": "🛠️dev👤semio⌨️vscode (integrated)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx nx dev semio/vscode",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^([^\\s].*?):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*vite.*building",
+          "endsPattern": ".*built in.*"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🛠️dev👤semio📚engine🤖mcp",
-      "preLaunchTask": "🔍inspector👤semio📚engine🤖mcp",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "uv",
@@ -216,6 +285,38 @@
       }
     },
     {
+      "name": "🛠️dev👤semio📚engine🤖mcp (with inspector)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run mcp:inspector",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting MCP",
+          "endsPattern": ":6274"
+        }
+      },
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://[^\\s]+:6274)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🧰repo⌨️vscode",
       "type": "extensionHost",
       "request": "launch",
@@ -224,8 +325,36 @@
       ],
       "outFiles": [
         "${workspaceFolder}/repo/vscode/out/**/*.js"
-      ],
-      "preLaunchTask": "🛠️dev🧰repo⌨️vscode"
+      ]
+    },
+    {
+      "name": "🛠️dev🧰repo⌨️vscode (integrated)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx nx dev repo/vscode",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^([^\\s].*?):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*vite.*building",
+          "endsPattern": ".*built in.*"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🛠️dev🧰repo🤖mcp",
@@ -262,7 +391,6 @@
     },
     {
       "name": "🛠️dev🔬coda🤖mcp",
-      "preLaunchTask": "🔍inspector🧰mcp",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "uv",
@@ -279,6 +407,42 @@
       },
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
+        "uriFormat": "%s&transport=stdio&serverCommand=./repo/cli/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+      }
+    },
+    {
+      "name": "🛠️dev🔬coda🤖mcp (with inspector)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run mcp:inspector",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "MCP_AUTO_OPEN_ENABLED": "false",
+          "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
+        }
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting MCP Inspector",
+          "endsPattern": ":6274"
+        }
+      },
+      "cwd": "${workspaceFolder}",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",

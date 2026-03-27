@@ -10024,7 +10024,7 @@ export interface ElementBaseProps {
   id: string;
 }
 
-export interface ElementProps extends ElementBaseProps { }
+export interface ElementProps extends ElementBaseProps {}
 
 /**
  * Returns the Tailwind background class for a given level.
@@ -11016,12 +11016,12 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, classN
   const normalizedName = (name ?? "").trim();
   const initials = normalizedName
     ? normalizedName
-      .split(" ")
-      .slice(0, 2)
-      .map((word: string) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .substring(0, 2)
+        .split(" ")
+        .slice(0, 2)
+        .map((word: string) => word.charAt(0))
+        .join("")
+        .toUpperCase()
+        .substring(0, 2)
     : "";
   const isImageIcon = typeof icon === "string";
   const isReactIcon = icon && !isImageIcon;
@@ -14508,7 +14508,7 @@ interface TreeItemProps {
  * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.
  **/
 interface SortableTreeItemsProps {
-  items: { id: string;[key: string]: any }[];
+  items: { id: string; [key: string]: any }[];
   onReorder: (oldIndex: number, newIndex: number) => void;
   children: (item: any, index: number) => React.ReactNode;
 }
@@ -16209,7 +16209,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
           </span>
         );
       }
-      const elementProps = itemContent.props as { className?: string;["data-slot"]?: string };
+      const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
       return React.cloneElement(itemContent as React.ReactElement<any>, {
         className: cn("cursor-selectable", elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",
@@ -19323,7 +19323,11 @@ function createUICanvasAsyncLifecycle(): UICanvasAsyncLifecycle {
     },
     dispose: () => {
       disposed = true;
-      cleanup?.();
+      if (cleanup) {
+        const fn = cleanup;
+        cleanup = undefined;
+        fn();
+      }
     },
   };
 }
@@ -19434,7 +19438,7 @@ const UICanvas: React.FC<{
           setPortals([]);
           try {
             layout.destroy();
-          } catch { }
+          } catch {}
         });
       } catch (error) {
         console.error("[UICanvas] Failed to load GoldenLayout:", error);
@@ -20168,13 +20172,13 @@ export const UI: React.FC<UIProps> = ({
         panelVisibility,
         togglePanel,
         uri: uriProp,
-        navigate: onNavigate ?? (() => { }),
+        navigate: onNavigate ?? (() => {}),
         canGoBack: canGoBackProp,
-        goBack: onGoBack ?? (() => { }),
+        goBack: onGoBack ?? (() => {}),
         canGoForward: canGoForwardProp,
-        goForward: onGoForward ?? (() => { }),
+        goForward: onGoForward ?? (() => {}),
         canGoUp: canGoUpProp,
-        goUp: onGoUp ?? (() => { }),
+        goUp: onGoUp ?? (() => {}),
       }}
     >
       <UIFindProvider>
@@ -20188,31 +20192,31 @@ export const UI: React.FC<UIProps> = ({
           mobilePanel={
             resolvedMobile && hasMobilePanelTabs
               ? {
-                visible: mobilePanelVisible,
-                tabs: mobilePanelTabs,
-              }
+                  visible: mobilePanelVisible,
+                  tabs: mobilePanelTabs,
+                }
               : undefined
           }
           leftSidePanel={
             !resolvedMobile && hasLeftPanel
               ? {
-                position: "left" as const,
-                visible: panelVisibility.leftSidePanel,
-                size: leftPanelSize,
-                onSizeChange: setLeftPanelSize,
-                tabs: activeApp.leftPanelTabs!,
-              }
+                  position: "left" as const,
+                  visible: panelVisibility.leftSidePanel,
+                  size: leftPanelSize,
+                  onSizeChange: setLeftPanelSize,
+                  tabs: activeApp.leftPanelTabs!,
+                }
               : undefined
           }
           rightSidePanel={
             !resolvedMobile && hasRightPanel
               ? {
-                position: "right" as const,
-                visible: panelVisibility.rightSidePanel,
-                size: rightPanelSize,
-                onSizeChange: setRightPanelSize,
-                tabs: activeApp.rightPanelTabs!,
-              }
+                  position: "right" as const,
+                  visible: panelVisibility.rightSidePanel,
+                  size: rightPanelSize,
+                  onSizeChange: setRightPanelSize,
+                  tabs: activeApp.rightPanelTabs!,
+                }
               : undefined
           }
           canvas={
@@ -20221,9 +20225,9 @@ export const UI: React.FC<UIProps> = ({
               defaultLayout={
                 resolvedMobile
                   ? createTabStackLayout(
-                    activeApp.windowKinds.map((windowKind) => windowKind.id),
-                    activeApp.windowKinds.map((windowKind) => windowKind.label ?? windowKind.id),
-                  )
+                      activeApp.windowKinds.map((windowKind) => windowKind.id),
+                      activeApp.windowKinds.map((windowKind) => windowKind.label ?? windowKind.id),
+                    )
                   : activeApp.defaultLayout
               }
             />

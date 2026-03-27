@@ -36,6 +36,17 @@
 
 You want to 🧩 the next 🏘🏛🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣👥🖱️️⌨️️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥✒🖨🪄🚀
 
+### Summary
+
+Design-Information-Modeling for Kit-of-Parts with AI-first design assistant, shared React UI components, and integrations for Rhino/Grasshopper.
+
+### Specs
+
+- Monorepo with distinct technologies (semio, repo, coda, elements).
+- Devcontainer-based environment with zero-touch tooling (GitKraken, ripgrep).
+- Automated agents for refactoring, testing, and lifecycle management.
+- AGPL-3.0 license.
+
 # 👋 Hello contributor
 
 > [!NOTE]
@@ -66,6 +77,7 @@ Let me walk you through 🚶
      - [🧩 elements](#-elements-)
    - [🔀 Git](#-git-)
      - [🦑 GitKraken](#-gitkraken-)
+     - [🔍 ripgrep](#-ripgrep-)
      - [💬 Discord](#-discord-)
      - [📢 Release](#-release-)
      - [🏷️ Tag](#%EF%B8%8F-tag-)
@@ -401,6 +413,12 @@ We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git clie
 It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
 
 The devcontainer installs Linux GitKraken Desktop and bootstraps zero-touch local workspace config for the semio monorepo and its git submodules, so the default Semio workspace is ready after attach without manual repository grouping 🔀
+
+### 🔍 ripgrep [↑](#-git-)
+
+The devcontainer installs [ripgrep](https://github.com/BurntSushi/ripgrep) (`rg`) for zero-touch codebase searching 🔎
+
+It is the fastest way to find anything in this monorepo ⚡
 
 ### 💬 Discord [↑](#-git-)
 

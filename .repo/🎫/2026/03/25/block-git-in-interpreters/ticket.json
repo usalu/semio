@@ -1,5 +1,9 @@
 {
   "title": "Block Git Commands in Script Interpreters",
-  "status": "closed",
-  "summary": "Extended IsToolBlocked and isCommandSegmentBlocked to detect and block git modifying commands invoked via script interpreters (python, node, perl, ruby, fish, ksh, dash, xargs) in addition to existing shell and direct git blocking."
+  "status": "open",
+  "summary": "Extended IsToolBlocked and isCommandSegmentBlocked to detect and block git modifying commands invoked via script interpreters (python, node, perl, ruby, fish, ksh, dash, xargs) in addition to existing shell and direct git blocking.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪433ba041e2d449dd983f41a0b3e83961"
+  ]
 }

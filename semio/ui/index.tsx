@@ -22,7 +22,7 @@
 
 // #endregion 🔖Header
 
-import { Button, Section, ToggleGroup } from "@elements/ui/elements";
+import { Breadcrumb, Button, Section } from "@elements/ui/elements";
 import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
 import {
@@ -93,7 +93,7 @@ export * from "@elements/ui/elements";
 // Specs: Kit provides a kit-scoped artifact picker (designs, types, ports/connectors)
 // with the standard Semio UI controllable-state pattern: partial/full controlled/uncontrolled for
 // both available data and selection. It supports partial/full select via per-group enable flags.
-// Summary: Kit artifact selector with controllable data + selection and group enable constraints.
+// Summary: Kit hierarchy browser with controllable data + selection, metadata, and artifact open action.
 
 export type KitGroupKind = "design" | "type" | "port";
 
@@ -107,9 +107,29 @@ export interface KitPort {
   mandatory?: boolean;
 }
 
+export interface KitDesignData extends Pick<Design, "guid" | "name" | "variant" | "view" | "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image"> {
+  parent?: { guid: string };
+}
+
+export interface KitKindData extends Pick<SemioKind, "guid" | "name" | "variant" | "description" | "createdAt" | "updatedAt" | "icon" | "image"> {
+  parent?: { guid: string };
+}
+
 export interface KitData {
-  designs?: Array<Pick<Design, "guid" | "name" | "variant" | "view">>;
-  types?: Array<Pick<SemioKind, "guid" | "name" | "variant">>;
+  guid?: string;
+  name?: string;
+  description?: string;
+  version?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  homepage?: string;
+  remote?: string;
+  preview?: string;
+  icon?: string;
+  image?: string;
+  license?: string;
+  designs?: KitDesignData[];
+  types?: KitKindData[];
   ports?: KitPort[];
 }
 
@@ -139,6 +159,8 @@ export interface KitProps {
   typeDataEnabled?: boolean;
   portDataEnabled?: boolean;
 
+  onOpenArtifact?: (artifact: KitHierarchyNode) => void;
+
   title?: string;
   className?: string;
 }
@@ -167,20 +189,306 @@ const getReferenceLabel = (value: unknown): string | undefined => {
 
 const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
   if (!kit) return {};
-  const designs = (kit.designs ?? []).map((d) => ({ guid: d.guid, name: d.name, variant: d.variant, view: d.view }));
-  const types = (kit.types ?? []).map((t) => ({ guid: t.guid, name: t.name, variant: t.variant }));
+  const designs = (kit.designs ?? []).map((d) => ({
+    guid: d.guid,
+    name: d.name,
+    variant: d.variant,
+    view: d.view,
+    description: d.description,
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+    unit: d.unit,
+    icon: d.icon,
+    image: d.image,
+    parent: d.parent ? { guid: d.parent.guid } : undefined,
+  }));
+  const types = (kit.types ?? []).map((t) => ({
+    guid: t.guid,
+    name: t.name,
+    variant: t.variant,
+    description: t.description,
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
+    icon: t.icon,
+    image: t.image,
+    parent: t.parent ? { guid: t.parent.guid } : undefined,
+  }));
   const ports: KitPort[] = (kit.types ?? []).flatMap((t) =>
     (t.connectors ?? []).map((c) => ({
       guid: c.guid,
       typeGuid: t.guid,
-      id: c.id,
+      id: c.id ?? c.name,
       port: getReferenceGuid(c.port),
-      name: c.id || getReferenceLabel(c.port) || "port",
+      name: c.name || getReferenceLabel(c.port) || "port",
       description: c.description,
       mandatory: c.mandatory,
     })),
   );
-  return { designs, types, ports };
+  return {
+    guid: kit.guid,
+    name: kit.name,
+    description: kit.description,
+    version: kit.version,
+    createdAt: kit.createdAt,
+    updatedAt: kit.updatedAt,
+    homepage: kit.homepage,
+    remote: kit.remote,
+    preview: kit.preview,
+    icon: kit.icon,
+    image: kit.image,
+    license: kit.license,
+    designs,
+    types,
+    ports,
+  };
+};
+
+type KitHierarchyNodeKind = "scope" | "kit" | "group" | "design" | "kind" | "port";
+
+export interface KitHierarchyNode {
+  key: string;
+  kind: KitHierarchyNodeKind;
+  label: string;
+  parentKey?: string;
+  guid?: string;
+  groupKind?: KitGroupKind;
+  href?: string;
+  summary?: string;
+  metadata: Array<{ label: string; value: string }>;
+}
+
+interface KitHierarchy {
+  rootKey: string;
+  nodesByKey: Map<string, KitHierarchyNode>;
+  childKeysByParentKey: Map<string, string[]>;
+}
+
+const addKitMetaEntry = (entries: Array<{ label: string; value: string }>, label: string, value: unknown) => {
+  if (typeof value !== "string" || value.trim().length === 0) return;
+  entries.push({ label, value });
+};
+
+const getKitArtifactHref = (value: Partial<KitData & KitDesignData & KitKindData>): string | undefined =>
+  value.view ?? value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;
+
+const buildKitHierarchy = (
+  data: KitData,
+  options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean },
+): KitHierarchy => {
+  const rootKey = "scope:kit";
+  const kitKey = "kit:root";
+  const designGroupKey = "group:designs";
+  const kindGroupKey = "group:types";
+  const portGroupKey = "group:ports";
+  const nodesByKey = new Map<string, KitHierarchyNode>();
+  const childKeysByParentKey = new Map<string, string[]>();
+
+  const registerNode = (node: KitHierarchyNode) => {
+    nodesByKey.set(node.key, node);
+    if (!childKeysByParentKey.has(node.key)) childKeysByParentKey.set(node.key, []);
+    if (!node.parentKey) return;
+    const currentChildren = childKeysByParentKey.get(node.parentKey) ?? [];
+    currentChildren.push(node.key);
+    childKeysByParentKey.set(node.parentKey, currentChildren);
+  };
+
+  const designCount = String(data.designs?.length ?? 0);
+  const kindCount = String(data.types?.length ?? 0);
+  const portCount = String(data.ports?.length ?? 0);
+
+  registerNode({
+    key: rootKey,
+    kind: "scope",
+    label: "Kit",
+    summary: "Kit hierarchy root.",
+    metadata: [
+      { label: "Designs", value: designCount },
+      { label: "Types", value: kindCount },
+      { label: "Ports", value: portCount },
+    ],
+  });
+
+  const kitMetadata: Array<{ label: string; value: string }> = [];
+  addKitMetaEntry(kitMetadata, "Name", data.name);
+  addKitMetaEntry(kitMetadata, "Guid", data.guid);
+  addKitMetaEntry(kitMetadata, "Description", data.description);
+  addKitMetaEntry(kitMetadata, "Version", data.version);
+  addKitMetaEntry(kitMetadata, "License", data.license);
+  addKitMetaEntry(kitMetadata, "Homepage", data.homepage);
+  addKitMetaEntry(kitMetadata, "Remote", data.remote);
+  addKitMetaEntry(kitMetadata, "Created", data.createdAt);
+  addKitMetaEntry(kitMetadata, "Updated", data.updatedAt);
+  registerNode({
+    key: kitKey,
+    kind: "kit",
+    label: data.name?.trim() || "Unnamed Kit",
+    parentKey: rootKey,
+    guid: data.guid,
+    href: getKitArtifactHref(data),
+    summary: data.description || "Kit metadata.",
+    metadata: kitMetadata,
+  });
+
+  if (options.designDataEnabled) {
+    registerNode({
+      key: designGroupKey,
+      kind: "group",
+      label: "Designs",
+      parentKey: kitKey,
+      groupKind: "design",
+      summary: "Design hierarchy.",
+      metadata: [{ label: "Count", value: designCount }],
+    });
+  }
+
+  if (options.typeDataEnabled) {
+    registerNode({
+      key: kindGroupKey,
+      kind: "group",
+      label: "Types",
+      parentKey: kitKey,
+      groupKind: "type",
+      summary: "Type hierarchy.",
+      metadata: [{ label: "Count", value: kindCount }],
+    });
+  }
+
+  const kindKeyByGuid = new Map<string, string>();
+  (data.types ?? []).forEach((kind) => {
+    const metadata: Array<{ label: string; value: string }> = [];
+    addKitMetaEntry(metadata, "Kind", "Type");
+    addKitMetaEntry(metadata, "Name", kind.name);
+    addKitMetaEntry(metadata, "Guid", kind.guid);
+    addKitMetaEntry(metadata, "Description", kind.description);
+    addKitMetaEntry(metadata, "Variant", kind.variant);
+    addKitMetaEntry(metadata, "Created", kind.createdAt);
+    addKitMetaEntry(metadata, "Updated", kind.updatedAt);
+    const key = `kind:${kind.guid}`;
+    kindKeyByGuid.set(kind.guid, key);
+    registerNode({
+      key,
+      kind: "kind",
+      label: kind.name || kind.guid,
+      parentKey: kind.parent?.guid ? `kind:${kind.parent.guid}` : kindGroupKey,
+      guid: kind.guid,
+      groupKind: "type",
+      href: getKitArtifactHref(kind),
+      summary: kind.description || "Type artifact.",
+      metadata,
+    });
+  });
+
+  (data.designs ?? []).forEach((design) => {
+    const metadata: Array<{ label: string; value: string }> = [];
+    addKitMetaEntry(metadata, "Kind", "Design");
+    addKitMetaEntry(metadata, "Name", design.name);
+    addKitMetaEntry(metadata, "Guid", design.guid);
+    addKitMetaEntry(metadata, "Description", design.description);
+    addKitMetaEntry(metadata, "Variant", design.variant);
+    addKitMetaEntry(metadata, "Unit", design.unit);
+    addKitMetaEntry(metadata, "View", design.view);
+    addKitMetaEntry(metadata, "Created", design.createdAt);
+    addKitMetaEntry(metadata, "Updated", design.updatedAt);
+    registerNode({
+      key: `design:${design.guid}`,
+      kind: "design",
+      label: design.name || design.guid,
+      parentKey: design.parent?.guid ? `design:${design.parent.guid}` : designGroupKey,
+      guid: design.guid,
+      groupKind: "design",
+      href: getKitArtifactHref(design),
+      summary: design.description || "Design artifact.",
+      metadata,
+    });
+  });
+
+  let orphanPortCount = 0;
+  (data.ports ?? []).forEach((port) => {
+    const metadata: Array<{ label: string; value: string }> = [];
+    addKitMetaEntry(metadata, "Kind", "Port");
+    addKitMetaEntry(metadata, "Name", port.name);
+    addKitMetaEntry(metadata, "Guid", port.guid);
+    addKitMetaEntry(metadata, "Connector Id", port.id);
+    addKitMetaEntry(metadata, "Port", port.port);
+    addKitMetaEntry(metadata, "Description", port.description);
+    addKitMetaEntry(metadata, "Mandatory", port.mandatory === undefined ? undefined : String(port.mandatory));
+    const parentKey = kindKeyByGuid.get(port.typeGuid) ?? portGroupKey;
+    if (parentKey === portGroupKey) orphanPortCount += 1;
+    registerNode({
+      key: `port:${port.guid}`,
+      kind: "port",
+      label: port.name || port.guid,
+      parentKey,
+      guid: port.guid,
+      groupKind: "port",
+      summary: port.description || "Port artifact.",
+      metadata,
+    });
+  });
+
+  if (orphanPortCount > 0 && options.portDataEnabled) {
+    registerNode({
+      key: portGroupKey,
+      kind: "group",
+      label: "Ports",
+      parentKey: kitKey,
+      groupKind: "port",
+      summary: "Ports without a resolved type parent.",
+      metadata: [{ label: "Count", value: String(orphanPortCount) }],
+    });
+  }
+
+  return { rootKey, nodesByKey, childKeysByParentKey };
+};
+
+const getKitNodePath = (hierarchy: KitHierarchy, nodeKey: string | undefined): KitHierarchyNode[] => {
+  if (!nodeKey) return [];
+  const path: KitHierarchyNode[] = [];
+  let currentKey: string | undefined = nodeKey;
+  while (currentKey) {
+    const node = hierarchy.nodesByKey.get(currentKey);
+    if (!node) break;
+    path.unshift(node);
+    currentKey = node.parentKey;
+  }
+  return path;
+};
+
+const getKitSiblingNodes = (hierarchy: KitHierarchy, node: KitHierarchyNode): KitHierarchyNode[] => {
+  if (!node.parentKey) return [];
+  const siblingKeys = hierarchy.childKeysByParentKey.get(node.parentKey) ?? [];
+  return siblingKeys
+    .map((key) => hierarchy.nodesByKey.get(key))
+    .filter((value): value is KitHierarchyNode => Boolean(value))
+    .sort((left, right) => left.label.localeCompare(right.label));
+};
+
+const getKitNodeSelection = (node: KitHierarchyNode): KitSelection => {
+  if (node.kind === "design") return { designGuids: node.guid ? [node.guid] : [], typeGuids: [], portGuids: [] };
+  if (node.kind === "kind") return { designGuids: [], typeGuids: node.guid ? [node.guid] : [], portGuids: [] };
+  if (node.kind === "port") return { designGuids: [], typeGuids: [], portGuids: node.guid ? [node.guid] : [] };
+  return { designGuids: [], typeGuids: [], portGuids: [] };
+};
+
+const getSelectedKitNodeKey = (hierarchy: KitHierarchy, selection: KitSelection): string | undefined => {
+  const selectedPort = selection.portGuids?.[0];
+  if (selectedPort && hierarchy.nodesByKey.has(`port:${selectedPort}`)) return `port:${selectedPort}`;
+  const selectedKind = selection.typeGuids?.[0];
+  if (selectedKind && hierarchy.nodesByKey.has(`kind:${selectedKind}`)) return `kind:${selectedKind}`;
+  const selectedDesign = selection.designGuids?.[0];
+  if (selectedDesign && hierarchy.nodesByKey.has(`design:${selectedDesign}`)) return `design:${selectedDesign}`;
+  return undefined;
+};
+
+const getDefaultKitNodeKey = (hierarchy: KitHierarchy): string => {
+  const groupKeys = hierarchy.childKeysByParentKey.get("kit:root") ?? [];
+  for (const groupKey of groupKeys) {
+    const node = hierarchy.nodesByKey.get(groupKey);
+    if (node?.kind !== "group") continue;
+    const firstChildKey = hierarchy.childKeysByParentKey.get(groupKey)?.[0];
+    if (firstChildKey) return firstChildKey;
+  }
+  return "kit:root";
 };
 
 export const SemioKit: React.FC<KitProps> = ({
@@ -199,6 +507,7 @@ export const SemioKit: React.FC<KitProps> = ({
   designDataEnabled = true,
   typeDataEnabled = true,
   portDataEnabled = true,
+  onOpenArtifact,
   title = "Kit Artifacts",
   className,
 }) => {
@@ -216,10 +525,6 @@ export const SemioKit: React.FC<KitProps> = ({
   const effectiveTypes = typeDataEnabled ? (effectiveData.types ?? []) : [];
   const effectivePorts = portDataEnabled ? (effectiveData.ports ?? []) : [];
 
-  const selectedDesignGuids = React.useMemo(() => new Set(effectiveSelectionEnabled && designSelectionEnabled ? (resolvedSelection.designGuids ?? []) : []), [designSelectionEnabled, effectiveSelectionEnabled, resolvedSelection.designGuids]);
-  const selectedTypeGuids = React.useMemo(() => new Set(effectiveSelectionEnabled && typeSelectionEnabled ? (resolvedSelection.typeGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.typeGuids, typeSelectionEnabled]);
-  const selectedPortGuids = React.useMemo(() => new Set(effectiveSelectionEnabled && portSelectionEnabled ? (resolvedSelection.portGuids ?? []) : []), [effectiveSelectionEnabled, portSelectionEnabled, resolvedSelection.portGuids]);
-
   const setNextSelection = React.useCallback(
     (next: { designGuids?: string[]; typeGuids?: string[]; portGuids?: string[] }) => {
       if (!effectiveSelectionEnabled) return;
@@ -230,30 +535,6 @@ export const SemioKit: React.FC<KitProps> = ({
       });
     },
     [designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, setResolvedSelection, typeSelectionEnabled],
-  );
-
-  const toggle = React.useCallback(
-    (group: KitGroupKind, guid: string) => {
-      if (!effectiveSelectionEnabled) return;
-      if (group === "design" && !designSelectionEnabled) return;
-      if (group === "type" && !typeSelectionEnabled) return;
-      if (group === "port" && !portSelectionEnabled) return;
-
-      const nextDesigns = new Set(resolvedSelection.designGuids ?? []);
-      const nextTypes = new Set(resolvedSelection.typeGuids ?? []);
-      const nextPorts = new Set(resolvedSelection.portGuids ?? []);
-
-      const target = group === "design" ? nextDesigns : group === "type" ? nextTypes : nextPorts;
-      if (target.has(guid)) target.delete(guid);
-      else target.add(guid);
-
-      setNextSelection({
-        designGuids: Array.from(nextDesigns),
-        typeGuids: Array.from(nextTypes),
-        portGuids: Array.from(nextPorts),
-      });
-    },
-    [designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, resolvedSelection.designGuids, resolvedSelection.portGuids, resolvedSelection.typeGuids, setNextSelection, typeSelectionEnabled],
   );
 
   const clear = React.useCallback(() => {
@@ -275,33 +556,92 @@ export const SemioKit: React.FC<KitProps> = ({
     return parts.join(" · ");
   }, [designDataEnabled, effectiveDesigns.length, portDataEnabled, effectivePorts.length, typeDataEnabled, effectiveTypes.length]);
 
-  const designItems = React.useMemo(
+  const hierarchy = React.useMemo(
     () =>
-      effectiveDesigns.map((d) => ({
-        value: d.guid,
-        text: d.name || d.guid,
-        id: d.guid,
-      })),
-    [effectiveDesigns],
+      buildKitHierarchy(
+        {
+          ...effectiveData,
+          designs: effectiveDesigns,
+          types: effectiveTypes,
+          ports: effectivePorts,
+        },
+        {
+          designDataEnabled,
+          typeDataEnabled,
+          portDataEnabled,
+        },
+      ),
+    [designDataEnabled, effectiveData, effectiveDesigns, effectivePorts, effectiveTypes, portDataEnabled, typeDataEnabled],
   );
-  const typeItems = React.useMemo(
+
+  const selectedNodeKey = React.useMemo(() => getSelectedKitNodeKey(hierarchy, resolvedSelection), [hierarchy, resolvedSelection]);
+  const [focusedNodeKey, setFocusedNodeKey] = React.useState<string>(() => selectedNodeKey ?? getDefaultKitNodeKey(hierarchy));
+
+  React.useEffect(() => {
+    const preferredKey = selectedNodeKey ?? focusedNodeKey;
+    if (preferredKey && hierarchy.nodesByKey.has(preferredKey)) {
+      if (preferredKey !== focusedNodeKey) setFocusedNodeKey(preferredKey);
+      return;
+    }
+    const fallbackKey = getDefaultKitNodeKey(hierarchy);
+    if (fallbackKey !== focusedNodeKey) setFocusedNodeKey(fallbackKey);
+  }, [focusedNodeKey, hierarchy, selectedNodeKey]);
+
+  const focusedNode = hierarchy.nodesByKey.get(focusedNodeKey) ?? hierarchy.nodesByKey.get(getDefaultKitNodeKey(hierarchy))!;
+  const path = React.useMemo(() => getKitNodePath(hierarchy, focusedNode.key), [focusedNode.key, hierarchy]);
+
+  const focusNode = React.useCallback(
+    (nodeKey: string) => {
+      const node = hierarchy.nodesByKey.get(nodeKey);
+      if (!node) return;
+      setFocusedNodeKey(node.key);
+      if (!effectiveSelectionEnabled) return;
+      if (node.kind === "design" && !designSelectionEnabled) return;
+      if (node.kind === "kind" && !typeSelectionEnabled) return;
+      if (node.kind === "port" && !portSelectionEnabled) return;
+      setNextSelection(getKitNodeSelection(node));
+    },
+    [designSelectionEnabled, effectiveSelectionEnabled, hierarchy.nodesByKey, portSelectionEnabled, setNextSelection, typeSelectionEnabled],
+  );
+
+  const breadcrumbItems = React.useMemo(
     () =>
-      effectiveTypes.map((t) => ({
-        value: t.guid,
-        text: t.name || t.guid,
-        id: t.guid,
+      path.map((node) => ({
+        id: node.guid,
+        content: (
+          <button
+            type="button"
+            onClick={() => focusNode(node.key)}
+            style={{
+              border: 0,
+              background: "transparent",
+              padding: 0,
+              cursor: "pointer",
+              color: node.key === focusedNode.key ? "var(--accent)" : "inherit",
+              fontWeight: node.key === focusedNode.key ? 700 : 500,
+            }}
+          >
+            {node.label}
+          </button>
+        ),
+        options: getKitSiblingNodes(hierarchy, node).map((sibling) => ({ label: sibling.label, href: sibling.key, id: sibling.guid })),
+        onNavigate: focusNode,
       })),
-    [effectiveTypes],
+    [focusNode, focusedNode.key, hierarchy, path],
   );
-  const portItems = React.useMemo(
-    () =>
-      effectivePorts.map((p) => ({
-        value: p.guid,
-        text: p.name || p.guid,
-        id: p.guid,
-      })),
-    [effectivePorts],
-  );
+
+  const openArtifact = React.useCallback(() => {
+    if (focusedNode.kind === "scope" || focusedNode.kind === "group") return;
+    if (onOpenArtifact) {
+      onOpenArtifact(focusedNode);
+      return;
+    }
+    if (focusedNode.href && typeof window !== "undefined") {
+      window.open(focusedNode.href, "_blank", "noopener,noreferrer");
+    }
+  }, [focusedNode, onOpenArtifact]);
+
+  const canOpenArtifact = focusedNode.kind !== "scope" && focusedNode.kind !== "group" && (Boolean(onOpenArtifact) || Boolean(focusedNode.href));
 
   return (
     <Section title={title} className={className}>
@@ -310,41 +650,35 @@ export const SemioKit: React.FC<KitProps> = ({
         <Button onClick={clear} disabled={!effectiveSelectionEnabled} text="Clear" />
       </div>
 
-      {designDataEnabled && (
-        <Section title="Designs">
-          <ToggleGroup
-            kind="multiple"
-            value={effectiveSelectionEnabled && designSelectionEnabled ? (resolvedSelection.designGuids ?? []) : []}
-            onValueChange={(next) => setNextSelection({ designGuids: next as string[], typeGuids: resolvedSelection.typeGuids, portGuids: resolvedSelection.portGuids })}
-            disabled={!effectiveSelectionEnabled || !designSelectionEnabled}
-            items={designItems}
-          />
-        </Section>
-      )}
+      <Section title="Hierarchy">
+        <Breadcrumb items={breadcrumbItems} />
+      </Section>
 
-      {typeDataEnabled && (
-        <Section title="Types">
-          <ToggleGroup
-            kind="multiple"
-            value={effectiveSelectionEnabled && typeSelectionEnabled ? (resolvedSelection.typeGuids ?? []) : []}
-            onValueChange={(next) => setNextSelection({ designGuids: resolvedSelection.designGuids, typeGuids: next as string[], portGuids: resolvedSelection.portGuids })}
-            disabled={!effectiveSelectionEnabled || !typeSelectionEnabled}
-            items={typeItems}
-          />
-        </Section>
-      )}
+      <Section title="Metadata">
+        <div style={{ display: "grid", gap: 8 }}>
+          {focusedNode.summary ? <div style={{ fontSize: 12, opacity: 0.75 }}>{focusedNode.summary}</div> : null}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {focusedNode.metadata.length === 0 ? <div style={{ fontSize: 12, opacity: 0.7 }}>No metadata available.</div> : null}
+            {focusedNode.metadata.map((entry) => (
+              <div
+                key={`${focusedNode.key}:${entry.label}`}
+                style={{
+                  minWidth: 120,
+                  border: "1px solid var(--border, rgba(0,0,0,0.12))",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  background: "var(--card, rgba(255,255,255,0.7))",
+                }}
+              >
+                <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.7 }}>{entry.label}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, wordBreak: "break-word" }}>{entry.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
 
-      {portDataEnabled && (
-        <Section title="Ports">
-          <ToggleGroup
-            kind="multiple"
-            value={effectiveSelectionEnabled && portSelectionEnabled ? (resolvedSelection.portGuids ?? []) : []}
-            onValueChange={(next) => setNextSelection({ designGuids: resolvedSelection.designGuids, typeGuids: resolvedSelection.typeGuids, portGuids: next as string[] })}
-            disabled={!effectiveSelectionEnabled || !portSelectionEnabled}
-            items={portItems}
-          />
-        </Section>
-      )}
+      <Button onClick={openArtifact} disabled={!canOpenArtifact} text="Open Artifact" />
     </Section>
   );
 };
@@ -1407,7 +1741,7 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
     .map(({ piece, status }) => {
       const kindGuid = piece.type?.guid;
       const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
-      const selectedModel = kind?.models?.length ? selectBestModel(kind.models as SemioKind["models"], []) : undefined;
+      const selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
       const file = selectedModel?.file?.guid ? filesByGuid.get(selectedModel.file.guid) : undefined;
       return {
         piece,
@@ -1939,7 +2273,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
     setResolvedSelection({ pieceGuids: [], connectionGuids: [] });
   }, [selectionEnabled, setResolvedSelection]);
 
-  const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit ?? ({ types: [], files: [] } as Kit), snapshot.pieces), [kit, snapshot.pieces]);
+  const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit ?? ({ guid: "", name: "", types: [], files: [] } as unknown as Kit), snapshot.pieces), [kit, snapshot.pieces]);
 
   return (
     <div className={`h-full w-full ${className}`} aria-label={title}>
@@ -2324,7 +2658,7 @@ export const McpDesignViewer: React.FC = () => {
               connected: { piece: { guid: payload.points.find((p) => p.u === l.sourceU && p.v === l.sourceV)?.guid ?? "" } },
               connecting: { piece: { guid: payload.points.find((p) => p.u === l.targetU && p.v === l.targetV)?.guid ?? "" } },
             })),
-          } as Design
+          } as unknown as Design
         }
         selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
         pieceSelectionEnabled={pieceSelectionEnabled}
@@ -2384,7 +2718,7 @@ if (import.meta.vitest) {
             connectors: [
               {
                 guid: "connector-guid",
-                id: "",
+                name: "",
                 port: { guid: "port-guid" },
               },
               {
@@ -2427,9 +2761,55 @@ if (import.meta.vitest) {
         designs: [{ guid: "design-guid", name: "Design" }],
       } as unknown as Kit);
 
-      expect(data.types).toEqual([{ guid: "kind-guid", name: "Kind", variant: undefined }]);
-      expect(data.designs).toEqual([{ guid: "design-guid", name: "Design", variant: undefined, view: undefined }]);
+      expect(data.types).toEqual([{ guid: "kind-guid", name: "Kind" }]);
+      expect(data.designs).toEqual([{ guid: "design-guid", name: "Design" }]);
       expect(data.ports).toEqual([]);
+    });
+  });
+
+  describe("buildKitHierarchy", () => {
+    it("builds a dynamic type breadcrumb path from nested parent kinds", () => {
+      const hierarchy = buildKitHierarchy(
+        {
+          name: "Metabolism",
+          types: [
+            { guid: "capsule", name: "Capsule" },
+            { guid: "ellipsoid", name: "Ellipsoid", parent: { guid: "capsule" } },
+            { guid: "l", name: "L", parent: { guid: "ellipsoid" } },
+          ],
+        },
+        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true },
+      );
+
+      expect(getKitNodePath(hierarchy, "kind:l").map((node) => node.label)).toEqual(["Kit", "Metabolism", "Types", "Capsule", "Ellipsoid", "L"]);
+    });
+
+    it("attaches ports beneath their resolved kind parent and derives port selection", () => {
+      const hierarchy = buildKitHierarchy(
+        {
+          name: "Metabolism",
+          types: [{ guid: "l", name: "L" }],
+          ports: [{ guid: "entry", typeGuid: "l", name: "Entry" }],
+        },
+        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true },
+      );
+
+      expect(getKitNodePath(hierarchy, "port:entry").map((node) => node.label)).toEqual(["Kit", "Metabolism", "Types", "L", "Entry"]);
+      expect(getKitNodeSelection(hierarchy.nodesByKey.get("port:entry")!)).toEqual({ designGuids: [], typeGuids: [], portGuids: ["entry"] });
+    });
+
+    it("falls back to the first populated group when no artifact is selected", () => {
+      const hierarchy = buildKitHierarchy(
+        {
+          name: "Metabolism",
+          designs: [{ guid: "tower", name: "Tower" }],
+          types: [{ guid: "capsule", name: "Capsule" }],
+        },
+        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true },
+      );
+
+      expect(getDefaultKitNodeKey(hierarchy)).toBe("design:tower");
+      expect(getSelectedKitNodeKey(hierarchy, { designGuids: [], typeGuids: [], portGuids: [] })).toBeUndefined();
     });
   });
 
@@ -2776,7 +3156,7 @@ export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWin
     return {
       id: windowDef.id,
       label: windowDef.label ?? windowDef.id,
-      component: behavior ? createAlgorithmWindowRenderer(windowDef.kind) : () => <div className="p-2 text-sm text-muted-foreground">Unknown window kind: {windowDef.kind}</div>,
+      component: behavior ? createAlgorithmWindowRenderer(windowDef.kind as AlgorithmWindowKind) : () => <div className="p-2 text-sm text-muted-foreground">Unknown window kind: {windowDef.kind}</div>,
     };
   });
 }

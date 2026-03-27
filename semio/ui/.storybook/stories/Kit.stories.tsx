@@ -1,7 +1,7 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Kit.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses the shallow kit prop directly.
-// Summary: Kit stories: Default, Controlled, DesignsOnly, TypesOnly, PortsOnly, SelectionDisabled, DataDisabled.
+// Summary: Kit stories: Default, Controlled, DesignsOnly, TypesOnly, PortsOnly, SelectionDisabled, DataDisabled, OpenArtifact.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
@@ -42,7 +42,18 @@ export const Controlled: Story = {
   args: { kit },
   render: (args) => {
     const [selection, setSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [] });
-    return frame(<Kit {...args} selection={selection} onSelectionChange={setSelection} />);
+    const [lastOpened, setLastOpened] = React.useState("Nothing opened yet");
+    return frame(
+      <div className="grid gap-3">
+        <Kit
+          {...args}
+          selection={selection}
+          onSelectionChange={setSelection}
+          onOpenArtifact={(artifact) => setLastOpened(`${artifact.kind}:${artifact.label}`)}
+        />
+        <div className="text-xs text-muted-foreground">{lastOpened}</div>
+      </div>,
+    );
   },
 };
 
@@ -69,6 +80,19 @@ export const SelectionDisabled: Story = {
 export const DataDisabled: Story = {
   args: { kit, dataEnabled: false },
   render: (args) => frame(<Kit {...args} />),
+};
+
+export const OpenArtifact: Story = {
+  args: { kit },
+  render: (args) => {
+    const [lastOpened, setLastOpened] = React.useState("Nothing opened yet");
+    return frame(
+      <div className="grid gap-3">
+        <Kit {...args} onOpenArtifact={(artifact) => setLastOpened(`Opened ${artifact.kind} ${artifact.label}`)} />
+        <div className="text-xs text-muted-foreground">{lastOpened}</div>
+      </div>,
+    );
+  },
 };
 
 // #endregion 🔖Kit

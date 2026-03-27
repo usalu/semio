@@ -34746,41 +34746,40 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_open",
-			mcp.WithDescription("Open a new ticket to track a task or bug fix."),
+			mcp.WithDescription("Open a new ticket to track a task or bug fix. Returns the ticket path for use with ticket_close and ticket_reopen."),
+			mcp.WithString("title", mcp.Required(), mcp.Description("Titleized short title (e.g. 'Fix Mcp Descriptions'). Must NOT be a slug or all-caps.")),
+			mcp.WithString("prompt", mcp.Required(), mcp.Description("Full description of the task.")),
 			mcp.WithString("goal", mcp.Description("Goal slug to associate the ticket with.")),
-			mcp.WithString("title", mcp.Description("Short title for the ticket.")),
-			mcp.WithString("prompt", mcp.Description("Full description of the task.")),
 			mcp.WithString("client", mcp.Description("Agent client used for this ticket.")),
 			mcp.WithString("llm", mcp.Description("LLM used for this ticket.")),
-			mcp.WithBoolean("no-issue", mcp.Description("Skip creating a GitHub issue.")),
+			mcp.WithBoolean("no_management", mcp.Description("Skip GitHub issue creation and management.")),
 			mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
 			mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets.")),
 			mcp.WithString("issue", mcp.Description("Existing GitHub issue URL to link instead of creating a new one.")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub issue creation.")),
 		),
 		ticketOpen,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_close",
-			mcp.WithDescription("Close a ticket and record the work summary."),
-			mcp.WithString("path", mcp.Description("Ticket path (e.g. 2026/03/26/fix-mcp-descriptions).")),
-			mcp.WithString("summary", mcp.Description("Summary of the work done.")),
+			mcp.WithDescription("Close a ticket and record the work summary. When path is omitted, closes the latest open ticket."),
+			mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the work done.")),
 			mcp.WithArray("files", mcp.Description("Files created, updated, or removed during the ticket."), mcp.WithStringItems()),
+			mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to close the latest open ticket.")),
 			mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip updating the GitHub issue.")),
+			mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
 		),
 		ticketClose,
 	)
 	s.AddTool(
 		mcp.NewTool("ticket_reopen",
-			mcp.WithDescription("Reopen a closed ticket to continue work on it."),
-			mcp.WithString("path", mcp.Description("Ticket path (e.g. 2026/03/26/fix-mcp-descriptions).")),
+			mcp.WithDescription("Reopen a closed ticket to continue work on it. When path is omitted, reopens the latest closed ticket."),
+			mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to reopen the latest closed ticket.")),
 			mcp.WithString("prompt", mcp.Description("Updated or additional task description.")),
 			mcp.WithString("llm", mcp.Description("LLM to use for the reopened ticket.")),
 			mcp.WithString("client", mcp.Description("Agent client to use for the reopened ticket.")),
 			mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
 			mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
-			mcp.WithBoolean("no_github", mcp.Description("Skip updating the GitHub issue.")),
+			mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
 		),
 		ticketReopen,
 	)
@@ -35215,18 +35214,17 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 // ticketOpen MUST perform the ticketOpen operation.
 func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
-	goal, _, _ := getStringArg(args, "goal")
 	title, _, _ := getStringArg(args, "title")
 	prompt, _, _ := getStringArg(args, "prompt")
+	goal, _, _ := getStringArg(args, "goal")
 	client, _, _ := getStringArg(args, "client")
 	llm, _, _ := getStringArg(args, "llm")
-	noIssue, _, _ := getBoolArg(args, "no-issue")
+	noManagement, _, _ := getBoolArg(args, "no_management")
 	draft, _, _ := getStringArg(args, "draft")
 	parent, _, _ := getStringArg(args, "parent")
 	issue, _, _ := getStringArg(args, "issue")
-	noManagement, _, _ := getBoolArg(args, "noManagement")
 
-	result := ToolTicketOpen(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
+	result := ToolTicketOpen(title, prompt, llm, client, draft, noManagement, goal, parent, noManagement, issue)
 	return toolResultToMCP(result)
 }
 
@@ -35255,6 +35253,68 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return toolResultToMCP(result)
 }
 
+// parseTicketPath parses a ticket path string (e.g. "26/03/27/SLUG") into year, month, day, slug.
+// Normalizes 4-digit years to 2-digit (2026 → 26).
+// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️parseticketpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/parseTicketPath)
+func parseTicketPath(path string) (int, int, int, string, error) {
+	parts := strings.Split(strings.TrimSpace(path), "/")
+	if len(parts) < 4 {
+		return 0, 0, 0, "", fmt.Errorf("invalid ticket path %q: expected format YY/MM/DD/SLUG (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS')", path)
+	}
+	year, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid year in ticket path %q", path)
+	}
+	if year >= 2000 {
+		year = year % 100
+	}
+	month, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid month in ticket path %q", path)
+	}
+	day, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("invalid day in ticket path %q", path)
+	}
+	slug := strings.Join(parts[3:], "/")
+	if slug == "" {
+		return 0, 0, 0, "", fmt.Errorf("missing slug in ticket path %q", path)
+	}
+	return year, month, day, slug, nil
+}
+
+// resolveTicketForClose resolves a ticket for closing: by path or latest open ticket.
+// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️resolveticketforclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/resolveTicketForClose)
+func resolveTicketForClose(path string) (int, int, int, string, error) {
+	if path != "" {
+		return parseTicketPath(path)
+	}
+	ticket, err := latestOpenTicket()
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("no path provided and failed to find latest open ticket: %w", err)
+	}
+	if ticket == nil {
+		return 0, 0, 0, "", fmt.Errorf("no path provided and no open tickets found")
+	}
+	return ticket.Year, ticket.Month, ticket.Day, ticket.Slug, nil
+}
+
+// resolveTicketForReopen resolves a ticket for reopening: by path or latest closed ticket.
+// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️resolveticketforreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/resolveTicketForReopen)
+func resolveTicketForReopen(path string) (int, int, int, string, error) {
+	if path != "" {
+		return parseTicketPath(path)
+	}
+	ticket, err := LatestTicket()
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("no path provided and failed to find latest ticket: %w", err)
+	}
+	if ticket == nil {
+		return 0, 0, 0, "", fmt.Errorf("no path provided and no tickets found")
+	}
+	return ticket.Year, ticket.Month, ticket.Day, ticket.Slug, nil
+}
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketClose)
 // ticketClose holds the data fields for a ticketClose record.
 // ticketClose MUST perform the ticketClose operation.
@@ -35264,27 +35324,11 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	summary, _, _ := getStringArg(args, "summary")
 	filesSlice, _, _ := getStringSliceArg(args, "files")
 	title, _, _ := getStringArg(args, "title")
-	noManagement, _, _ := getBoolArg(args, "noManagement")
+	noManagement, _, _ := getBoolArg(args, "no_management")
 
-	year := 0
-	month := 0
-	day := 0
-	slug := ""
-
-	if path != "" {
-		parts := strings.Split(path, "/")
-		if len(parts) >= 4 {
-			if y, err := strconv.Atoi(parts[0]); err == nil {
-				year = y
-			}
-			if m, err := strconv.Atoi(parts[1]); err == nil {
-				month = m
-			}
-			if d, err := strconv.Atoi(parts[2]); err == nil {
-				day = d
-			}
-			slug = strings.Join(parts[3:], "/")
-		}
+	year, month, day, slug, err := resolveTicketForClose(path)
+	if err != nil {
+		return nil, err
 	}
 
 	result := ToolTicketClose(year, month, day, slug, summary, filesSlice, title, noManagement)
@@ -35302,32 +35346,14 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	llm, _, _ := getStringArg(args, "llm")
 	title, _, _ := getStringArg(args, "title")
 	draft, _, _ := getStringArg(args, "draft")
-	goal, _, _ := getStringArg(args, "goal")
-	parent, _, _ := getStringArg(args, "parent")
-	noManagement, _, _ := getBoolArg(args, "noManagement")
+	noManagement, _, _ := getBoolArg(args, "no_management")
 
-	year := 0
-	month := 0
-	day := 0
-	slug := ""
-
-	if path != "" {
-		parts := strings.Split(path, "/")
-		if len(parts) >= 4 {
-			if y, err := strconv.Atoi(parts[0]); err == nil {
-				year = y
-			}
-			if m, err := strconv.Atoi(parts[1]); err == nil {
-				month = m
-			}
-			if d, err := strconv.Atoi(parts[2]); err == nil {
-				day = d
-			}
-			slug = strings.Join(parts[3:], "/")
-		}
+	year, month, day, slug, err := resolveTicketForReopen(path)
+	if err != nil {
+		return nil, err
 	}
 
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, goal, parent, noManagement)
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, "", "", noManagement)
 	return toolResultToMCP(result)
 }
 

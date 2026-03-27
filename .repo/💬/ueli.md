@@ -87,6 +87,8 @@ This MUST NOT happen.
 ## 🔬coda
 
 coda:
+Extend the s
+
 coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
 
 coda py is currently only an mcp server. Extend the program to be either a sidecar binary for electron or an mcp server. In both cases, make it stateful, to remember the current project, iteration etc. The mcp tool calls should be similar to the semio engine mcp such as start_working_on_project, start_run, start_iteration, start_translation, etc
@@ -186,9 +188,8 @@ There MUST be only one schema, no migrations or legacy api support.
 ## 👤semio📚ui
 
 semio ui:
-semio ui storybook:\
-Use nakagin-capsule-tower from the semio assets metabolism as example for all designs. Make sure the depedency doesnt leak into the final build and i
-s only dev only
+semio ui storybook:
+Use nakagin-capsule-tower from the semio assets metabolism as example for all designs. Make sure the depedency doesnt leak into the final build and is only dev only.
 
 Refactor everything cleanly.
 

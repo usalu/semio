@@ -6,11 +6,41 @@
       "name": "dev vscode",
       "type": "extensionHost",
       "request": "launch",
-      // "args": ["--extensionDevelopmentPath=${workspaceFolder}/js/vscode"],
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
-      ],
-      "preLaunchTask": "dev vscode"
+      ]
+    },
+    {
+      "name": "dev vscode (integrated)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^([^\\s].*?):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*vite.*building",
+          "endsPattern": ".*built in.*"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

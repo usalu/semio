@@ -12904,6 +12904,97 @@ func TestToolTicketLifecycle(t *testing.T) {
 	os.RemoveAll(ticketPath)
 }
 
+func TestParseTicketPath(t *testing.T) {
+	tests := []struct {
+		name    string
+		path    string
+		year    int
+		month   int
+		day     int
+		slug    string
+		wantErr bool
+	}{
+		{"two-digit year", "26/03/27/FIX-MCP", 26, 3, 27, "FIX-MCP", false},
+		{"four-digit year normalized", "2026/03/27/FIX-MCP", 26, 3, 27, "FIX-MCP", false},
+		{"nested slug", "26/03/27/PARENT/CHILD", 26, 3, 27, "PARENT/CHILD", false},
+		{"too few parts", "26/03", 0, 0, 0, "", true},
+		{"empty slug", "26/03/27/", 0, 0, 0, "", true},
+		{"non-numeric year", "abc/03/27/SLUG", 0, 0, 0, "", true},
+		{"non-numeric month", "26/abc/27/SLUG", 0, 0, 0, "", true},
+		{"non-numeric day", "26/03/abc/SLUG", 0, 0, 0, "", true},
+		{"empty string", "", 0, 0, 0, "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			y, m, d, s, err := parseTicketPath(tt.path)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("parseTicketPath(%q) error = %v, wantErr %v", tt.path, err, tt.wantErr)
+			}
+			if !tt.wantErr {
+				if y != tt.year || m != tt.month || d != tt.day || s != tt.slug {
+					t.Errorf("parseTicketPath(%q) = (%d,%d,%d,%q), want (%d,%d,%d,%q)", tt.path, y, m, d, s, tt.year, tt.month, tt.day, tt.slug)
+				}
+			}
+		})
+	}
+}
+
+func TestMcpTicketCloseAutoResolve(t *testing.T) {
+	setupToolTest(t)
+
+	result := ToolTicketOpen("Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	if result.Error != "" {
+		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
+	}
+	ticket, ok := result.Data.(*Ticket)
+	if !ok || ticket == nil {
+		t.Fatal("ToolTicketOpen returned nil ticket")
+	}
+	defer func() {
+		ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "cleanup", []string{"repo/cli/main.go"}, "", true)
+		os.RemoveAll(GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug))
+	}()
+
+	year, month, day, slug, err := resolveTicketForClose("")
+	if err != nil {
+		t.Fatalf("resolveTicketForClose('') error: %v", err)
+	}
+	resolved, err := ReadTicket(year, month, day, slug)
+	if err != nil {
+		t.Fatalf("resolved ticket not readable: %v", err)
+	}
+	if resolved.Status != TicketStatusOpen {
+		t.Errorf("resolveTicketForClose('') resolved to non-open ticket (status=%s)", resolved.Status)
+	}
+}
+
+func TestMcpTicketCloseWithFullYearPath(t *testing.T) {
+	setupToolTest(t)
+
+	result := ToolTicketOpen("Test Full Year Path", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	if result.Error != "" {
+		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
+	}
+	ticket, ok := result.Data.(*Ticket)
+	if !ok || ticket == nil {
+		t.Fatal("ToolTicketOpen returned nil ticket")
+	}
+	defer func() {
+		os.RemoveAll(GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug))
+	}()
+
+	fullYearPath := fmt.Sprintf("%d/%02d/%02d/%s", 2000+ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+	year, month, day, slug, err := parseTicketPath(fullYearPath)
+	if err != nil {
+		t.Fatalf("parseTicketPath(%q) error: %v", fullYearPath, err)
+	}
+
+	closeResult := ToolTicketClose(year, month, day, slug, "Test summary", []string{"repo/cli/main.go"}, "", true)
+	if closeResult.Error != "" {
+		t.Fatalf("ToolTicketClose with full year path returned error: %s", closeResult.Error)
+	}
+}
+
 func TestToolDraftLifecycle(t *testing.T) {
 	setupToolTest(t)
 	tmpDir := t.TempDir()

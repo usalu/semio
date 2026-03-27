@@ -1,0 +1,13 @@
+{
+  "title": "Implement Semio Algorithm Window Apps",
+  "status": "closed",
+  "description": "Every algorithm should be a elements/ui/UI with an AlgorithmApp and semio ui for the window kinds. WindowKinds: VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput. Drag: VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput. Delete: PiecesSelectionInput, DesignDiffOutput, DesignOutput. etc.",
+  "summary": "Fixed all type errors in the semio algorithm window app infrastructure. Updated KitData interface to remove obsolete variant/view properties from Design/Type picks. Fixed connector.id to connector.name alignment with current schema. Added required icon property to ToggleGroup items. Fixed AlgorithmWindowKind type narrowing in createAlgorithmWindowKinds. Fixed Kit and Design type casts. Added vitest/importMeta to tsconfig types for both semio/ui and semio/algorithms. Updated inline tests to match current schema. Fixed pre-existing createUICanvasAsyncLifecycle double-dispose bug in elements/ui. All 8 elements/ui tests, 119 semio/ui tests, and 107 semio/js tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1138"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪faf07075e3054f9980d44ea1e29006b3"
+  ]
+}
