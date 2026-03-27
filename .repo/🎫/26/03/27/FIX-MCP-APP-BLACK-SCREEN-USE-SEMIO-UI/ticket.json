@@ -1,0 +1,12 @@
+{
+  "title": "Fix Mcp App Black Screen Use Semio Ui",
+  "status": "open",
+  "description": "The start_working_in_local_kit MCP tool shows a black screen instead of the Kit UI from semio/ui. The semio engine MCP must use semio/ui exclusively.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1148"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪2f60b7c630f041408eb534d98aa1ca76"
+  ]
+}

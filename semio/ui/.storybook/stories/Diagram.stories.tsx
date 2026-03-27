@@ -1,16 +1,16 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Diagram.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly (no kit/designGuid).
-// Summary: Diagram stories: Default, Diff, Selection, FeaturesDisabled, NakginDiff.
+// Summary: Diagram stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { applyDesignDiff, flattenDesign, getDesignDiff, type Connection, type Design, type Kit, type Piece } from "@semio/js";
+import { applyDesignDiff, flattenDesign, type Design, type Kit } from "@semio/js";
 import { SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
-import nakginDiffDesign from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
+import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
 // #region 🔖Data
 
@@ -18,36 +18,7 @@ const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4
 const flattenChange = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
 const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces });
 const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
-
-const connectionCounts = new Map<string, number>();
-(nakaginDesign.connections ?? []).forEach((connection) => {
-  connectionCounts.set(connection.connected.piece.guid, (connectionCounts.get(connection.connected.piece.guid) ?? 0) + 1);
-  connectionCounts.set(connection.connecting.piece.guid, (connectionCounts.get(connection.connecting.piece.guid) ?? 0) + 1);
-});
-
-const removedPiece = (nakaginDesign.pieces ?? []).find((piece) => (connectionCounts.get(piece.guid) ?? 0) === 1) as Piece;
-const removedConnection = (nakaginDesign.connections ?? []).find((connection) => connection.connected.piece.guid === removedPiece.guid || connection.connecting.piece.guid === removedPiece.guid) as Connection;
-const modifiedPiece = (nakaginDesign.pieces ?? []).find((piece) => Boolean(piece.plane)) as Piece;
-const modifiedConnection = (nakaginDesign.connections ?? []).find((connection) => connection.guid !== removedConnection.guid) as Connection;
-
-const diffedDesign: Design = structuredClone(nakaginDesign);
-diffedDesign.pieces = (diffedDesign.pieces ?? []).filter((piece) => piece.guid !== removedPiece.guid);
-diffedDesign.connections = (diffedDesign.connections ?? []).filter((connection) => connection.guid !== removedConnection.guid);
-diffedDesign.pieces = (diffedDesign.pieces ?? []).map((piece) => (piece.guid === modifiedPiece.guid ? { ...piece, center: { u: (piece.center?.u ?? 0) + 3, v: (piece.center?.v ?? 0) + 2 } } : piece));
-diffedDesign.connections = (diffedDesign.connections ?? []).map((connection) => (connection.guid === modifiedConnection.guid ? { ...connection, u: (connection.u ?? 0) + 1.5, v: (connection.v ?? 0) - 1 } : connection));
-const addedPieceGuid = "11111111-2222-3333-4444-555555555555";
-const addedConnectionGuid = "66666666-7777-8888-9999-000000000000";
-diffedDesign.pieces = [...(diffedDesign.pieces ?? []), { ...structuredClone(removedPiece), guid: addedPieceGuid, name: `${removedPiece.name}_added` }];
-diffedDesign.connections = [
-  ...(diffedDesign.connections ?? []),
-  {
-    ...structuredClone(removedConnection),
-    guid: addedConnectionGuid,
-    connecting: removedConnection.connecting.piece.guid === removedPiece.guid ? { ...removedConnection.connecting, piece: { guid: addedPieceGuid } } : removedConnection.connecting,
-    connected: removedConnection.connected.piece.guid === removedPiece.guid ? { ...removedConnection.connected, piece: { guid: addedPieceGuid } } : removedConnection.connected,
-  },
-];
-const designDiff = getDesignDiff(nakaginDesign, diffedDesign);
+const designDiff = nakaginDiff as any;
 
 // #endregion 🔖Data
 
@@ -71,8 +42,8 @@ export const Default: Story = {
     design: nakaginDesign,
     designDiff,
     defaultSelection: {
-      pieceGuids: [removedPiece.guid, modifiedPiece.guid, addedPieceGuid],
-      connectionGuids: [removedConnection.guid, modifiedConnection.guid, addedConnectionGuid],
+      pieceGuids: ["71e18c51-7752-46bb-917e-31874504b259", "0a23d9c7-b75b-4166-8730-351367df9f8a", "019daa00-0000-7000-b000-000000000001"],
+      connectionGuids: ["40be9d59-91e8-4d8c-87b5-c5da567a4f9c", "019daa00-0000-7000-b000-000000000011"],
     },
     title: "Diagram",
     onPieceClick: (piece) => console.info("Piece clicked", piece.guid),
@@ -113,17 +84,6 @@ export const FeaturesDisabled: Story = {
     panEnabled: false,
     zoomEnabled: false,
     title: "Features Disabled",
-  },
-  render: (args) => frame(<Diagram {...args} />),
-};
-
-export const NakginDiff: Story = {
-  args: {
-    design: nakaginDesign,
-    designDiff: nakginDiffDesign as any,
-    diffEnabled: true,
-    selectionEnabled: false,
-    title: "Nakgin Diff",
   },
   render: (args) => frame(<Diagram {...args} />),
 };

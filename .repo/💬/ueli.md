@@ -114,6 +114,16 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+Create a new asset called `nakgin-capsule-tower.diff.design.semio.json`
+The diff should should
+
+- Remove the last storey (tambour + capsules) from the larger tower.
+- Reconnect the capital to the tambour below
+- Add a new base with a new one tambour on top which has one new capsule
+- Change all capsules from the third storey of the smaller tower.
+- Replace one capsule with a bridge in the fifth storey (same is in the other floors)
+  Integrate it into the metabolism kit diffs and stories.
+
 There should be a new semio ui component for vector which lets you select or display a 3d vector. Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.
 
 There should be a new semio ui component for kit which lets you select kit artifacts (designs, types, ports). Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components. The component works with shallow kit.

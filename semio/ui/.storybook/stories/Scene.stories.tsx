@@ -1,16 +1,16 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Scene.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly. Kit is optional for 3D models.
-// Summary: Scene stories: Default, Diff, Selection, FeaturesDisabled, NakginDiff.
+// Summary: Scene stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { applyDesignDiff, flattenDesign, getDesignDiff, type Connection, type Design, type Kit, type Piece } from "@semio/js";
+import { applyDesignDiff, flattenDesign, type Connection, type Design, type Kit, type Piece } from "@semio/js";
 import { SemioScene as Scene } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
-import nakginDiffDesign from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
+import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
 // #region 🔖Data
 
@@ -18,32 +18,7 @@ const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4
 const flattenChange = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
 const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces });
 const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
-
-const connectionCounts = new Map<string, number>();
-(nakaginDesign.connections ?? []).forEach((connection) => {
-  connectionCounts.set(connection.connected.piece.guid, (connectionCounts.get(connection.connected.piece.guid) ?? 0) + 1);
-  connectionCounts.set(connection.connecting.piece.guid, (connectionCounts.get(connection.connecting.piece.guid) ?? 0) + 1);
-});
-
-const removedPiece = (nakaginDesign.pieces ?? []).find((piece) => (connectionCounts.get(piece.guid) ?? 0) === 1) as Piece;
-const removedConnection = (nakaginDesign.connections ?? []).find((connection) => connection.connected.piece.guid === removedPiece.guid || connection.connecting.piece.guid === removedPiece.guid) as Connection;
-
-const diffedDesign: Design = structuredClone(nakaginDesign);
-diffedDesign.pieces = (diffedDesign.pieces ?? []).filter((piece) => piece.guid !== removedPiece.guid);
-diffedDesign.connections = (diffedDesign.connections ?? []).filter((connection) => connection.guid !== removedConnection.guid);
-const addedPieceGuid = "11111111-2222-3333-4444-555555555555";
-const addedConnectionGuid = "66666666-7777-8888-9999-000000000000";
-diffedDesign.pieces = [...(diffedDesign.pieces ?? []), { ...structuredClone(removedPiece), guid: addedPieceGuid, name: `${removedPiece.name}_added` }];
-diffedDesign.connections = [
-  ...(diffedDesign.connections ?? []),
-  {
-    ...structuredClone(removedConnection),
-    guid: addedConnectionGuid,
-    connecting: removedConnection.connecting.piece.guid === removedPiece.guid ? { ...removedConnection.connecting, piece: { guid: addedPieceGuid } } : removedConnection.connecting,
-    connected: removedConnection.connected.piece.guid === removedPiece.guid ? { ...removedConnection.connected, piece: { guid: addedPieceGuid } } : removedConnection.connected,
-  },
-];
-const designDiff = getDesignDiff(nakaginDesign, diffedDesign);
+const designDiff = nakaginDiff as any;
 
 // Build minimal kit with only types and files referenced by the design.
 const usedTypeGuids = new Set((nakaginDesign.pieces ?? []).map((p) => p.type?.guid).filter(Boolean));
@@ -120,18 +95,6 @@ export const FeaturesDisabled: Story = {
     selectionEnabled: false,
     diffEnabled: false,
     title: "Features Disabled",
-  },
-  render: (args) => frame(<Scene {...args} />),
-};
-
-export const NakginDiff: Story = {
-  args: {
-    design: nakaginDesign,
-    kit: minimalKit,
-    designDiff: nakginDiffDesign as any,
-    diffEnabled: true,
-    selectionEnabled: false,
-    title: "Nakgin Diff",
   },
   render: (args) => frame(<Scene {...args} />),
 };

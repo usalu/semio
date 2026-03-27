@@ -54,7 +54,6 @@
       }
     },
     // #endregion
-
     // #region 🛠️ Dev
     {
       "name": "🛠️dev👤elements📚ui📖storybook",
@@ -137,26 +136,6 @@
     },
     {
       "name": "🛠️dev👤semio📚engine🤖mcp",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": [
-        "--directory",
-        "semio/engine",
-        "run",
-        "main.py",
-        "--mcp-stdio"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://[^\\s]+:6274)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev👤semio📚engine🤖mcp (with inspector)",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run mcp:inspector",
@@ -454,7 +433,6 @@
       "cwd": "${workspaceFolder}"
     },
     // #endregion
-
     // #region 📦 Build
     {
       "name": "📦build👤semio🖱️3dm",
@@ -565,7 +543,6 @@
       "console": "integratedTerminal"
     },
     // #endregion
-
     // #region ⬆️ Publish
     {
       "name": "⬆️publish👤semio🖱️desktop",
