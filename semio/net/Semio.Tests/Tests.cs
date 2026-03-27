@@ -335,7 +335,7 @@ public class Tests
         public void Metabolism_Json_Memory_Json_Json_Zip_Zip_Json()
         {
 
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var json = Utility.Serialize(kit);
             var deserializedKit = Utility.Deserialize<Kit>(json);
             Assert.Equal(Utility.Serialize(kit), Utility.Serialize(deserializedKit!));
@@ -366,7 +366,7 @@ public class Tests
             [Fact]
             public void Metabolism_Kit_Sqlite_Kit()
             {
-                var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+                var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
 
                 var tempDir = Path.Combine(Path.GetTempPath(), "semio_sqlite_test_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
@@ -433,7 +433,7 @@ public class Tests
 
         private void TestFlatten(string designName, string? parentName = null)
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = FindDesign(kit, designName, parentName);
 
             var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Guid == design.Guid);
@@ -494,12 +494,12 @@ public class Tests
         [Fact]
         public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()
         {
-            var kitOriginal = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kitOriginal = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             kitOriginal.Designs = kitOriginal.Designs?.Where(d => d.Parent == null).ToList();
 
-            var kitDiff = Tests.LoadAsset<KitDiff>("diff_kit_metabolism.json");
-            var kitDiffInverted = Tests.LoadAsset<KitDiff>("diff_kit_metabolism_inverted.json");
-            var kitDiffed = Tests.LoadAsset<Kit>("kit_metabolism_diffed.json");
+            var kitDiff = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
+            var kitDiffInverted = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
+            var kitDiffed = Tests.LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
 
             var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
             Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), "GetKitChange: forward diff doesn't match expected diff");
@@ -519,7 +519,7 @@ public class Tests
         [Fact]
         public void Metabolism_Kit_Validate_Empty_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var result = SemioValidator.ValidateKit(kit);
             Assert.Empty(result.Issues);
         }
@@ -527,9 +527,9 @@ public class Tests
         [Fact]
         public void Invalid_Kit_Validate_Invalid_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_invalid.json");
+            var kit = Tests.LoadAsset<Kit>("invalid.kit.semio.json");
             var result = SemioValidator.ValidateKit(kit);
-            var filePath = Path.Combine(Tests.AssetsPath, "validation.json");
+            var filePath = Path.Combine(Tests.AssetsPath, "validation.semio.json");
             var expectedJson = System.IO.File.ReadAllText(filePath);
             var expected = ValidationResult.Parse(expectedJson);
 
@@ -542,10 +542,10 @@ public class Tests
         [Fact]
         public void Design_Pieces_Offset_DiffDesign()
         {
-            var design = Tests.LoadAsset<Design>("drag/design.json");
-            var pieces = Tests.LoadAsset<Design>("drag/pieces.json");
-            var offset = Tests.LoadAsset<Coord>("drag/offset.json");
-            var expectedDiff = Tests.LoadAsset<DesignDiff>("drag/diff_design.json");
+            var design = Tests.LoadAsset<Design>("drag/design.semio.json");
+            var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
+            var offset = Tests.LoadAsset<Coord>("drag/offset.semio.json");
+            var expectedDiff = Tests.LoadAsset<DesignDiff>("drag/diff.design.semio.json");
             var computedDiff = Design.DragPiecesInDesign(design, pieces, offset);
             Assert.NotNull(computedDiff.Pieces);
             Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
@@ -593,7 +593,7 @@ public class Tests
         [Fact]
         public void Model_Selection_From_Shared_Semio_Assets()
         {
-            var payload = Tests.LoadAsset<ModelSelectionAsset>("model_selection.json");
+            var payload = Tests.LoadAsset<ModelSelectionAsset>("model.selection.semio.json");
             foreach (var testCase in payload.Cases)
             {
                 var models = testCase.Models
@@ -616,7 +616,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Filter_Produces_Expected_Subset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var expected = Tests.LoadAsset<Kit>("nakagin-capsule-tower.filtered.kit.semio.json");
             var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
 
@@ -662,7 +662,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Filter_Preserves_Metadata()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
 
             var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid });
@@ -678,7 +678,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Sum_Effective_Floor_Area()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var quality = kit.Qualities.First(q => q.Name == "effective floor area");
             var result = Kit.SumQualityInDesign(kit, design.Guid, quality.Guid);
@@ -722,7 +722,7 @@ public class Tests
             };
             System.IO.File.WriteAllText(Path.Combine(reportsDir, "net.json"), report.ToString());
 
-            var canonicalPath = Path.Combine(AssetsPath, "model-kpi-nakagin.json");
+            var canonicalPath = Path.Combine(AssetsPath, "nakagin.kpi.model.semio.json");
             var canonical = JObject.Parse(System.IO.File.ReadAllText(canonicalPath));
             var skip = new HashSet<string> { "centroid", "total_surface_area" };
             foreach (var kv in canonical)
@@ -738,7 +738,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Glb_Valid_Header()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignModel(kit, design.Guid, ".glb");
             Assert.NotNull(result);
@@ -757,7 +757,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Gltf_Valid_Json()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
             Assert.NotNull(result);
@@ -770,7 +770,7 @@ public class Tests
         [Fact]
         public void Invalid_Format_Throws()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             Assert.Throws<ArgumentException>(() => Kit.ExportDesignModel(kit, design.Guid, ".invalid"));
         }
@@ -778,7 +778,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Scene_Graph_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
             Assert.NotNull(result);
@@ -797,7 +797,7 @@ public class Tests
         [Fact]
         public void Type_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var type = kit.Types.First();
             var meta = type.ToMeta();
 
@@ -820,7 +820,7 @@ public class Tests
         [Fact]
         public void Type_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var type = kit.Types.First();
             var shallow = type.ToShallow();
 
@@ -848,7 +848,7 @@ public class Tests
         [Fact]
         public void Design_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Parent == null);
             var meta = design.ToMeta();
 
@@ -870,7 +870,7 @@ public class Tests
         [Fact]
         public void Design_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Parent == null);
             var shallow = design.ToShallow();
 
@@ -896,7 +896,7 @@ public class Tests
         [Fact]
         public void Kit_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var meta = kit.ToMeta();
 
             Assert.Equal(kit.Guid, meta.Guid);
@@ -916,7 +916,7 @@ public class Tests
         [Fact]
         public void Kit_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var shallow = kit.ToShallow();
 
             Assert.Equal(kit.Guid, shallow.Guid);
@@ -942,7 +942,7 @@ public class Tests
         [Fact]
         public void Kit_To_Meta_To_Shallow()
         {
-            var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
 
             var meta = kit.ToMeta();
             Assert.NotNull(meta);

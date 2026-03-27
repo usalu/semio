@@ -41,7 +41,7 @@ _engine_spec.loader.exec_module(engine)
 
 # region Constants
 ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets" / "semio"
-KIT_METABOLISM_PATH = ASSETS_DIR / "kit_metabolism.json"
+KIT_METABOLISM_PATH = ASSETS_DIR / "metabolism.kit.semio.json"
 METABOLISM_DIR = ASSETS_DIR / "metabolism"
 
 # endregion Constants
@@ -573,7 +573,7 @@ class TestMcp:
         assert id(mock_ctx.session) in engine._mcp_session_kits
 
     def test_start_working_in_local_kit_loads_from_folder(self):
-        """start_working_in_local_kit loads kit from folder containing kit_metabolism.json."""
+        """start_working_in_local_kit loads kit from folder containing metabolism.kit.semio.json."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(ASSETS_DIR), mock_ctx)
         assert isinstance(result, str)

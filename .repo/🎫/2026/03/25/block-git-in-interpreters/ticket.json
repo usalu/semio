@@ -1,9 +1,10 @@
 {
   "title": "Block Git Commands in Script Interpreters",
   "status": "open",
-  "summary": "Extended IsToolBlocked and isCommandSegmentBlocked to detect and block git modifying commands invoked via script interpreters (python, node, perl, ruby, fish, ksh, dash, xargs) in addition to existing shell and direct git blocking.",
+  "summary": "Normalized semio asset filenames to dot-separated .semio.json naming and updated all runtime, tests, storybook stories, and extension fixtures to use the renamed asset paths. Added coverage updates for kit filename detection with the new canonical names.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
-    "⚪433ba041e2d449dd983f41a0b3e83961"
+    "⚪433ba041e2d449dd983f41a0b3e83961",
+    "⚪076dd8347d2046ad81f672419dad0547"
   ]
 }

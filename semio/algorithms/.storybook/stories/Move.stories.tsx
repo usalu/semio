@@ -10,7 +10,7 @@ import * as React from "react";
 
 import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, WindowKind } from "../../index";
 
-import metabolismKit from "../../../assets/semio/kit_metabolism.json";
+import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
 const nakaginDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef") as any;
 
@@ -52,7 +52,7 @@ function MoveFrame() {
 
 const meta = {
   title: "semio-algorithms/Move",
-  parameters: { layout: "padded" },
+  parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
 } satisfies Meta;
 

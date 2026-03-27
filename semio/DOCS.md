@@ -2119,8 +2119,8 @@ All implementations (TypeScript, Python, C#) produce **identical** validation ou
 
 ##### Test Data
 
-- `assets/semio/kit_invalid.json` - Invalid kit with all validation constraint breachs
-- `assets/semio/validation.json` - Expected output (sorted by constraintId, then entityGuid)
+- `assets/semio/invalid.kit.semio.json` - Invalid kit with all validation constraint breachs
+- `assets/semio/validation.semio.json` - Expected output (sorted by constraintId, then entityGuid)
 
 ##### Updating Metabolism Assets
 
@@ -2131,8 +2131,8 @@ npx tsx scripts/update-metabolism.tsx
 This script consolidates all Metabolism asset generation:
 
 - Regenerates `metabolism.zip` with updated SQL schema and copies to all public folders
-- Generates diff files (`diff_kit_metabolism.json`, `diff_kit_metabolism_inverted.json`, `kit_metabolism_diffed.json`)
-- Generates `validation.json` from `kit_invalid.json`
+- Generates diff files (`metabolism.kit.diff.semio.json`, `metabolism.kit.diff.inverted.semio.json`, `metabolism.kit.diffed.semio.json`)
+- Generates `validation.semio.json` from `invalid.kit.semio.json`
 
 ##### Validation Constraints
 

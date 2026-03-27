@@ -1924,12 +1924,12 @@ def _load_kit_from_path(path: str) -> dict:
             if hasattr(kit, "to_dict"):
                 return kit.to_dict()
             return KitOutput.model_validate(kit).model_dump()
-        for name in ("kit_metabolism.json", "kit.json"):
+        for name in ("metabolism.kit.semio.json", "kit.json"):
             json_path = p / name
             if json_path.exists():
                 with open(json_path, "r", encoding="utf-8") as f:
                     return json.load(f)
-        parent_json = p.parent / "kit_metabolism.json"
+        parent_json = p.parent / "metabolism.kit.semio.json"
         if parent_json.exists():
             with open(parent_json, "r", encoding="utf-8") as f:
                 return json.load(f)
@@ -2119,7 +2119,7 @@ def _rollback_session_transaction(sid: int):
 def start_working_in_local_kit(path: str, ctx: Context) -> str:
     """Load a local kit into the session. Must be called before any kit operations.
 
-    Accepts an absolute path to a kit folder containing .semio/kit.db, a JSON file, or a folder containing kit_metabolism.json.
+    Accepts an absolute path to a kit folder containing .semio/kit.db, a JSON file, or a folder containing metabolism.kit.semio.json.
     """
     try:
         kit = _load_kit_from_path(path)

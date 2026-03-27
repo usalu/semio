@@ -49350,7 +49350,7 @@ if (typeof document !== "undefined" && document.getElementById("root") && !isVsc
 // #region 🔖Tests
 if (typeof process !== "undefined" && process.release && process.release.name === "node" && typeof (globalThis as any).__vitest_worker__ === "undefined") {
   const { expect, test } = await import(/* @vite-ignore */ "@playwright" + "/test");
-  const MetabolismKitData = (await import(/* @vite-ignore */ "@semio/assets/semio/kit_metabolism.json", { assert: { type: "json" } })).default;
+  const MetabolismKitData = (await import(/* @vite-ignore */ "@semio/assets/semio/metabolism.kit.semio.json", { assert: { type: "json" } })).default;
   const { readFile } = await import(/* @vite-ignore */ "node" + ":fs/promises");
   const path = await import(/* @vite-ignore */ "node" + ":path");
   const { fileURLToPath } = await import(/* @vite-ignore */ "node" + ":url");

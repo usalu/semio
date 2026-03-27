@@ -246,7 +246,7 @@ func TestRoundtrip(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 
 		var kit Kit
-		loadJSON(t, "kit_metabolism.json", &kit)
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 		data, err := SerializeKit(kit)
 		if err != nil {
@@ -296,7 +296,7 @@ func TestRoundtrip(t *testing.T) {
 func TestDesignModel(t *testing.T) {
 	t.Run("Model selection cases from shared semio assets", func(t *testing.T) {
 		var payload modelSelectionAsset
-		loadJSON(t, "model_selection.json", &payload)
+		loadJSON(t, "model.selection.semio.json", &payload)
 		for _, testCase := range payload.Cases {
 			models := make([]Model, 0, len(testCase.Models))
 			for _, model := range testCase.Models {
@@ -330,7 +330,7 @@ func TestDesignModel(t *testing.T) {
 
 func TestKitFilterDesign(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 	var expected Kit
 	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
@@ -445,7 +445,7 @@ func TestKitFilterDesign(t *testing.T) {
 
 func TestFlatten(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
 		t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
@@ -479,17 +479,17 @@ func TestChange(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 		t.Run("Kit + Change.Forward = DiffedKit & DiffedKit + Change.Backward = Kit", func(t *testing.T) {
 			var kitOriginal Kit
-			loadJSON(t, "kit_metabolism.json", &kitOriginal)
+			loadJSON(t, "metabolism.kit.semio.json", &kitOriginal)
 			kitOriginal.Designs = FilterDesignsWithoutParent(kitOriginal.Designs)
 
 			var kitDiff KitDiff
-			loadJSON(t, "diff_kit_metabolism.json", &kitDiff)
+			loadJSON(t, "metabolism.kit.diff.semio.json", &kitDiff)
 
 			var kitDiffInverted KitDiff
-			loadJSON(t, "diff_kit_metabolism_inverted.json", &kitDiffInverted)
+			loadJSON(t, "metabolism.kit.diff.inverted.semio.json", &kitDiffInverted)
 
 			var kitDiffed Kit
-			loadJSON(t, "kit_metabolism_diffed.json", &kitDiffed)
+			loadJSON(t, "metabolism.kit.diffed.semio.json", &kitDiffed)
 
 			change := GetKitChange(kitOriginal, kitDiffed, nil, nil)
 
@@ -518,7 +518,7 @@ func TestValidation(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 		t.Run("Metabolism Kit -> Validate = Empty report", func(t *testing.T) {
 			var validKit Kit
-			loadJSON(t, "kit_metabolism.json", &validKit)
+			loadJSON(t, "metabolism.kit.semio.json", &validKit)
 			validResult := ValidateKit(validKit)
 			if HasErrors(validResult) {
 				t.Errorf("Valid kit should not have errors, got %d problems", len(validResult.Problems))
@@ -529,12 +529,12 @@ func TestValidation(t *testing.T) {
 	t.Run("Invalid", func(t *testing.T) {
 		t.Run("Invalid Kit -> Validate = Invalid Report", func(t *testing.T) {
 			var invalidKit Kit
-			loadJSON(t, "kit_invalid.json", &invalidKit)
+			loadJSON(t, "invalid.kit.semio.json", &invalidKit)
 			result := ValidateKit(invalidKit)
 			serializedResult := ToValidationResult(result)
 
 			var expected ValidationResultSerialized
-			loadJSON(t, "validation.json", &expected)
+			loadJSON(t, "validation.semio.json", &expected)
 
 			if !AreValidationResultsEqual(serializedResult, expected) {
 				t.Errorf("Validation mismatch. Got %d problems, expected %d",
@@ -548,7 +548,7 @@ func TestDesignQualitySum(t *testing.T) {
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
 		t.Run("Sum Effective Floor Area", func(t *testing.T) {
 			var kit Kit
-			loadJSON(t, "kit_metabolism.json", &kit)
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
 			var designGuid string
 			for _, d := range kit.Designs {
 				if d.Name == "Nakagin Capsule Tower" && d.Parent == nil {
@@ -579,7 +579,7 @@ func TestDesignQualitySum(t *testing.T) {
 
 func TestExportDesignModel(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 	if design == nil {
@@ -663,7 +663,7 @@ func TestExportDesignModel(t *testing.T) {
 
 func TestExportDesignModelSceneGraphReport(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 	if design == nil {
 		t.Fatal("Nakagin Capsule Tower design not found")
@@ -728,7 +728,7 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 		t.Fatalf("failed to write go model-kpi report: %v", err)
 	}
 
-	canonicalPath := filepath.Join(AssetsPath, "model-kpi-nakagin.json")
+	canonicalPath := filepath.Join(AssetsPath, "nakagin.kpi.model.semio.json")
 	canonicalData, err := os.ReadFile(canonicalPath)
 	if err != nil {
 		t.Fatalf("failed to read canonical model-kpi asset: %v", err)
@@ -761,7 +761,7 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 func TestMetaShallow(t *testing.T) {
 	t.Run("KitMeta from conversion", func(t *testing.T) {
 		var kit Kit
-		loadJSON(t, "kit_metabolism.json", &kit)
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
 		meta := ToKitMeta(kit)
 		if meta.Guid != kit.Guid {
 			t.Errorf("KitMeta.Guid = %q, want %q", meta.Guid, kit.Guid)
@@ -776,7 +776,7 @@ func TestMetaShallow(t *testing.T) {
 
 	t.Run("KitShallow from conversion", func(t *testing.T) {
 		var kit Kit
-		loadJSON(t, "kit_metabolism.json", &kit)
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
 		shallow := ToKitShallow(kit)
 		if shallow.Guid != kit.Guid {
 			t.Errorf("KitShallow.Guid = %q, want %q", shallow.Guid, kit.Guid)
@@ -1277,7 +1277,7 @@ func TestKitWorkflowKinds(t *testing.T) {
 
 func TestFilterKit(t *testing.T) {
 	var kit Kit
-	loadJSON(t, "kit_metabolism.json", &kit)
+	loadJSON(t, "metabolism.kit.semio.json", &kit)
 	designGuid := "9a890dd4-0a9c-48ac-920a-9e62666465ef"
 	var expected Kit
 	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)

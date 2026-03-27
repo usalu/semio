@@ -9670,7 +9670,7 @@ mod tests {
 
         #[test]
         fn metabolism() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let json = serialize_kit(&kit).unwrap();
             let restored = deserialize_kit(&json).unwrap();
             assert!(
@@ -9726,10 +9726,10 @@ mod tests {
 
         #[test]
         fn model_selection_from_shared_semio_assets() {
-            let path = Path::new(ASSETS_DIR).join("model_selection.json");
-            let data = fs::read_to_string(&path).expect("Failed to read model_selection.json");
+            let path = Path::new(ASSETS_DIR).join("model.selection.semio.json");
+            let data = fs::read_to_string(&path).expect("Failed to read model.selection.semio.json");
             let payload: ModelSelectionAsset =
-                serde_json::from_str(&data).expect("Failed to deserialize model_selection.json");
+                serde_json::from_str(&data).expect("Failed to deserialize model.selection.semio.json");
 
             for case in payload.cases {
                 let models: Vec<Model> = case
@@ -9775,7 +9775,7 @@ mod tests {
 
         #[test]
         fn nakagin_capsule_tower_filter_produces_expected_subset() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let expected = load_kit("nakagin-capsule-tower.filtered.kit.semio.json");
             let design = kit
                 .designs
@@ -9907,7 +9907,7 @@ mod tests {
 
         #[test]
         fn nakagin_capsule_tower_filter_preserves_metadata() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -9927,7 +9927,7 @@ mod tests {
 
         #[test]
         fn glob_filters_types_by_name_include() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let filtered = filter_kit(&kit, &KitFilter {
                 types: Some(GlobFilter { include: Some(vec!["Capsule*".to_string()]), exclude: None }),
                 ..Default::default()
@@ -9941,7 +9941,7 @@ mod tests {
 
         #[test]
         fn glob_filters_types_by_name_exclude() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let total_types = kit.types.as_ref().map(|v| v.len()).unwrap_or(0);
             let filtered = filter_kit(&kit, &KitFilter {
                 types: Some(GlobFilter { include: None, exclude: Some(vec!["Capsule*".to_string()]) }),
@@ -9956,7 +9956,7 @@ mod tests {
 
         #[test]
         fn empty_filter_returns_kit_unchanged() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let filtered = filter_kit(&kit, &KitFilter::default());
             assert_eq!(
                 filtered.types.as_ref().map(|v| v.len()),
@@ -9970,7 +9970,7 @@ mod tests {
 
         #[test]
         fn combines_design_guid_with_glob_filters() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit.designs.as_ref()
                 .and_then(|designs| designs.iter().find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none()))
                 .expect("Nakagin Capsule Tower design not found");
@@ -10046,7 +10046,7 @@ mod tests {
             fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap())
                 .expect("Failed to write report");
 
-            let canonical_path = std::path::Path::new(ASSETS_DIR).join("model-kpi-nakagin.json");
+            let canonical_path = std::path::Path::new(ASSETS_DIR).join("nakagin.kpi.model.semio.json");
             let canonical_bytes =
                 fs::read(&canonical_path).expect("read canonical model-kpi asset");
             let canonical: serde_json::Value =
@@ -10084,7 +10084,7 @@ mod tests {
 
             #[test]
             fn kit_flatten_diff_apply_flat() {
-                let kit = load_kit("kit_metabolism.json");
+                let kit = load_kit("metabolism.kit.semio.json");
                 test_flatten_design(&kit, &["Nakagin Capsule Tower"]);
             }
 
@@ -10093,7 +10093,7 @@ mod tests {
 
                 #[test]
                 fn kit_flatten_diff_apply_flat() {
-                    let kit = load_kit("kit_metabolism.json");
+                    let kit = load_kit("metabolism.kit.semio.json");
                     test_flatten_design(&kit, &["Nakagin Capsule Tower", "Slanted"]);
                 }
             }
@@ -10103,7 +10103,7 @@ mod tests {
 
                 #[test]
                 fn kit_flatten_diff_apply_flat() {
-                    let kit = load_kit("kit_metabolism.json");
+                    let kit = load_kit("metabolism.kit.semio.json");
                     test_flatten_design(&kit, &["Nakagin Capsule Tower", "Twisted"]);
                 }
             }
@@ -10113,7 +10113,7 @@ mod tests {
 
                 #[test]
                 fn kit_flatten_diff_apply_flat() {
-                    let kit = load_kit("kit_metabolism.json");
+                    let kit = load_kit("metabolism.kit.semio.json");
                     test_flatten_design(&kit, &["Nakagin Capsule Tower", "Dancing"]);
                 }
             }
@@ -10124,7 +10124,7 @@ mod tests {
 
             #[test]
             fn kit_flatten_diff_apply_flat() {
-                let kit = load_kit("kit_metabolism.json");
+                let kit = load_kit("metabolism.kit.semio.json");
                 test_flatten_design(&kit, &["Capsule Dream"]);
             }
         }
@@ -10144,12 +10144,12 @@ mod tests {
 
             #[test]
             fn kit_change_forward_backward_inverse_behavior() {
-                let mut kit_original = load_kit("kit_metabolism.json");
+                let mut kit_original = load_kit("metabolism.kit.semio.json");
                 if let Some(designs) = kit_original.designs.take() {
                     kit_original.designs =
                         Some(designs.into_iter().filter(|d| d.parent.is_none()).collect());
                 }
-                let kit_diffed = load_kit("kit_metabolism_diffed.json");
+                let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
 
                 let change = get_kit_change(&kit_original, &kit_diffed);
 
@@ -10189,7 +10189,7 @@ mod tests {
 
             #[test]
             fn metabolism_kit_validate_empty_report() {
-                let kit = load_kit("kit_metabolism.json");
+                let kit = load_kit("metabolism.kit.semio.json");
                 let result = validate_kit(&kit);
                 assert!(result.problems.is_empty());
             }
@@ -10200,9 +10200,9 @@ mod tests {
 
             #[test]
             fn invalid_kit_validate_invalid_report() {
-                let kit = load_kit("kit_invalid.json");
+                let kit = load_kit("invalid.kit.semio.json");
                 let result = validate_kit(&kit);
-                let expected = load_validation_result("validation.json");
+                let expected = load_validation_result("validation.semio.json");
                 assert_eq!(
                     result.problems.len(),
                     expected.problems.len(),
@@ -10224,7 +10224,7 @@ mod tests {
 
             #[test]
             fn sum_effective_floor_area() {
-                let kit = load_kit("kit_metabolism.json");
+                let kit = load_kit("metabolism.kit.semio.json");
                 let design = kit
                     .designs
                     .as_ref()
@@ -10258,7 +10258,7 @@ mod tests {
 
         #[test]
         fn glb_format_valid_header() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -10288,7 +10288,7 @@ mod tests {
 
         #[test]
         fn gltf_format_valid_json() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -10313,7 +10313,7 @@ mod tests {
 
         #[test]
         fn invalid_format_returns_error() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -10333,7 +10333,7 @@ mod tests {
 
         #[test]
         fn export_scene_graph_report() {
-            let kit = load_kit("kit_metabolism.json");
+            let kit = load_kit("metabolism.kit.semio.json");
             let design = kit
                 .designs
                 .as_ref()
@@ -10435,7 +10435,7 @@ mod tests {
 
     #[test]
     fn kit_to_meta_to_shallow() {
-        let kit = load_kit("kit_metabolism.json");
+        let kit = load_kit("metabolism.kit.semio.json");
         let meta = kit.to_meta();
         assert_eq!(meta.name, kit.name);
         assert_eq!(meta.guid, kit.guid);

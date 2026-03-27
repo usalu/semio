@@ -15566,7 +15566,7 @@ def _test_find_design(kit: dict, name: str, parent_name: str = None) -> dict:
 
 
 def _test_flatten(design_name, parent_name=None):
-    kit_dict = _test_load_json("kit_metabolism.json")
+    kit_dict = _test_load_json("metabolism.kit.semio.json")
     design = _test_find_design(kit_dict, design_name, parent_name)
 
     expected_design = next(
@@ -15688,7 +15688,7 @@ def _test_create_glb_blob(vertices: list[tuple[float, float, float]], faces: lis
 class TestRoundtrip:
     class TestMetabolism:
         def test_roundtrip(self):
-            kit_dict = _test_load_json("kit_metabolism.json")
+            kit_dict = _test_load_json("metabolism.kit.semio.json")
             serialized = json.dumps(kit_dict)
             deserialized = json.loads(serialized)
             assert areKitsDictEqual(kit_dict, deserialized), "JSON -> Memory -> JSON: serialized and deserialized kit should be equal"
@@ -15847,11 +15847,11 @@ class TestFlatten:
 class TestChange:
     class TestMetabolism:
         def test_kit_change_forward_backward_inverse_behavior(self):
-            kit_original = _test_load_json("kit_metabolism.json")
+            kit_original = _test_load_json("metabolism.kit.semio.json")
             kit_original["designs"] = [d for d in kit_original.get("designs", []) if not d.get("parent")]
-            kit_diff = _test_load_json("diff_kit_metabolism.json")
-            kit_diff_inverted = _test_load_json("diff_kit_metabolism_inverted.json")
-            kit_diffed = _test_load_json("kit_metabolism_diffed.json")
+            kit_diff = _test_load_json("metabolism.kit.diff.semio.json")
+            kit_diff_inverted = _test_load_json("metabolism.kit.diff.inverted.semio.json")
+            kit_diffed = _test_load_json("metabolism.kit.diffed.semio.json")
 
             change = getKitChange(kit_original, kit_diffed)
             computed_diff = getKitDiffDict(kit_original, kit_diffed)
@@ -15869,21 +15869,21 @@ class TestChange:
 class TestValidation:
     class TestMetabolism:
         def test_metabolism_kit_validate_empty_report(self):
-            valid_kit = _test_load_json("kit_metabolism.json")
+            valid_kit = _test_load_json("metabolism.kit.semio.json")
             valid_result = validateKitDict(valid_kit)
             assert not valid_result.hasErrors()
 
     class TestInvalid:
         def test_invalid_kit_validate_invalid_report(self):
-            invalid_kit = _test_load_json("kit_invalid.json")
+            invalid_kit = _test_load_json("invalid.kit.semio.json")
             result = validateKitDict(invalid_kit)
-            expected = parseValidationResult(json.dumps(_test_load_json("validation.json")))
+            expected = parseValidationResult(json.dumps(_test_load_json("validation.semio.json")))
             assert areValidationResultsEqual(result, expected)
 
 
 class TestDesignModel:
     def test_model_selection_from_shared_semio_assets(self):
-        payload = _test_load_json("model_selection.json")
+        payload = _test_load_json("model.selection.semio.json")
         for case in payload.get("cases", []):
             models = [
                 {
@@ -15900,7 +15900,7 @@ class TestDesignModel:
 
 class TestKitFilterDesign:
     def test_nakagin_capsule_tower_filter_produces_expected_subset(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         expected = _test_load_json("nakagin-capsule-tower.filtered.kit.semio.json")
         design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
 
@@ -15936,7 +15936,7 @@ class TestKitFilterDesign:
                     assert any(port.get("guid") == connector_guid for port in filtered.get("ports", []))
 
     def test_nakagin_capsule_tower_filter_preserves_metadata(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
 
         filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
@@ -15946,7 +15946,7 @@ class TestKitFilterDesign:
         assert filtered.get("version") == kit_dict.get("version")
 
     def test_glob_filters_types_by_name_include(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         filtered = KitData(kit_dict).filter_kit({"types": {"include": ["Capsule*"]}}).to_dict()
         types = filtered.get("types", [])
         assert len(types) > 0
@@ -15954,7 +15954,7 @@ class TestKitFilterDesign:
             assert fnmatch.fnmatch(t["name"].lower(), "capsule*")
 
     def test_glob_filters_types_by_name_exclude(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         total_types = len(kit_dict.get("types", []))
         filtered = KitData(kit_dict).filter_kit({"types": {"exclude": ["Capsule*"]}}).to_dict()
         types = filtered.get("types", [])
@@ -15963,13 +15963,13 @@ class TestKitFilterDesign:
             assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
 
     def test_empty_filter_returns_kit_unchanged(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         filtered = KitData(kit_dict).filter_kit({}).to_dict()
         assert len(filtered.get("types", [])) == len(kit_dict.get("types", []))
         assert len(filtered.get("designs", [])) == len(kit_dict.get("designs", []))
 
     def test_combines_design_guid_with_glob_filters(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
         design_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
         combined_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"], "types": {"exclude": ["Capsule*"]}}).to_dict()
@@ -15981,7 +15981,7 @@ class TestKitFilterDesign:
 class TestDesignQualitySum:
     class TestNakaginCapsuleTower:
         def test_sum_effective_floor_area(self):
-            kit_dict = _test_load_json("kit_metabolism.json")
+            kit_dict = _test_load_json("metabolism.kit.semio.json")
             design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
             quality = next(q for q in kit_dict.get("qualities", []) if q.get("name") == "effective floor area")
             result = sumQualityInDesignDict(kit_dict, design["guid"], quality["guid"])
@@ -15990,7 +15990,7 @@ class TestDesignQualitySum:
 
 class TestExportDesignModel:
     def test_export_glb_returns_valid_glb(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".glb")
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -15999,7 +15999,7 @@ class TestExportDesignModel:
         assert struct.unpack("<I", result[8:12])[0] == len(result)
 
     def test_export_gltf_returns_valid_json(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".gltf")
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -16008,12 +16008,12 @@ class TestExportDesignModel:
         assert "scenes" in parsed
 
     def test_export_invalid_format_raises(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         with pytest.raises(ValueError, match="Unsupported export format"):
             export_design_model(kit_dict, "Nakagin Capsule Tower", ".invalid")
 
     def test_export_scene_graph_report(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".gltf")
         parsed = json.loads(result.decode("utf-8"))
         assert "nodes" in parsed
@@ -16022,7 +16022,7 @@ class TestExportDesignModel:
         (REPORTS_EXPORT_DIR / "py.gltf").write_bytes(result)
 
     def test_export_ifc_returns_valid_ifc(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -16035,14 +16035,14 @@ class TestExportDesignModel:
         assert "IFCBUILDINGSTOREY" in ifc_text
 
     def test_export_ifc_contains_types_and_occurrences(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCBUILDINGELEMENTPROXYTYPE" in ifc_text
         assert "IFCBUILDINGELEMENTPROXY(" in ifc_text
 
     def test_export_ifc_contains_mesh_geometry(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCSHAPEREPRESENTATION" in ifc_text
@@ -16109,7 +16109,7 @@ class TestExportDesignModel:
         assert not any(abs(x) < 1e-6 and y > 0 and abs(z) < 1e-6 for x, y, z in coordinates)
 
     def test_export_ifc_contains_ports_and_connections(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCDISTRIBUTIONPORT" in ifc_text
@@ -16119,7 +16119,7 @@ class TestExportDesignModel:
     def test_export_ifc_roundtrip_with_ifcopenshell(self):
         import ifcopenshell
 
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         projects = ifc.by_type("IfcProject")
@@ -16148,7 +16148,7 @@ class TestExportDesignModel:
     def test_export_ifc_layer_spatial_hierarchy(self):
         import ifcopenshell
 
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         # IfcProject -> IfcSite -> IfcBuilding -> IfcBuildingStorey
@@ -16178,7 +16178,7 @@ class TestExportDesignModel:
         assert len(types_with_rep) > 0
 
     def test_export_ifc_report(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
         REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
         (REPORTS_EXPORT_DIR / "py.ifc").write_bytes(result)
@@ -16196,7 +16196,7 @@ class TestGetGeometricInsightsForModel:
         data = geometric_insights_to_report_dict(insights)
         (REPORTS_MODEL_KPI_DIR / "py.json").write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
 
-        canonical_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "model-kpi-nakagin.json")
+        canonical_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin.kpi.model.semio.json")
         with open(canonical_path, "r", encoding="utf-8") as f:
             canonical = json.load(f)
         for key, expected in canonical.items():
@@ -16337,7 +16337,7 @@ class TestKitToMetaShallow:
     """Tests for converting a full kit dict to meta and shallow representations."""
 
     def test_kit_to_meta_shallow(self):
-        kit_dict = _test_load_json("kit_metabolism.json")
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
         expected_meta = _test_load_json("metabolism.meta.kit.semio.json")
         expected_shallow = _test_load_json("metabolism.shallow.kit.semio.json")
 
@@ -16426,8 +16426,8 @@ def _bench(name: str, func):
 
 
 def benchmark_main():
-    kit_metabolism = _test_load_kit("kit_metabolism.json")
-    kit_invalid = _test_load_kit("kit_invalid.json")
+    kit_metabolism = _test_load_kit("metabolism.kit.semio.json")
+    kit_invalid = _test_load_kit("invalid.kit.semio.json")
 
     kit_obj = Kit.parse(kit_metabolism)
 
@@ -16442,8 +16442,8 @@ def benchmark_main():
 
     _bench("Roundtrip/Metabolism", test_roundtrip)
 
-    diff_forward = _test_load_json("diff_kit_metabolism.json")
-    diff_inverse = _test_load_json("diff_kit_metabolism_inverted.json")
+    diff_forward = _test_load_json("metabolism.kit.diff.semio.json")
+    diff_inverse = _test_load_json("metabolism.kit.diff.inverted.semio.json")
 
     def test_diff_metabolism():
         k2 = applyKitDiffDict(kit_metabolism, diff_forward)

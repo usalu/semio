@@ -91,8 +91,8 @@ func findDesign(kit Kit, name string, parentName string) Design {
 }
 
 func main() {
-	kitMetabolism := loadKit("kit_metabolism.json")
-	kitInvalid := loadKit("kit_invalid.json")
+	kitMetabolism := loadKit("metabolism.kit.semio.json")
+	kitInvalid := loadKit("invalid.kit.semio.json")
 
 	bench("Roundtrip/Metabolism", func() {
 
@@ -115,8 +115,8 @@ func main() {
 		os.Remove("temp_benchmark_metabolism.zip")
 	})
 
-	diffForward := loadKitDiff("diff_kit_metabolism.json")
-	diffInverse := loadKitDiff("diff_kit_metabolism_inverted.json")
+	diffForward := loadKitDiff("metabolism.kit.diff.semio.json")
+	diffInverse := loadKitDiff("metabolism.kit.diff.inverted.semio.json")
 	bench("Diff/Metabolism", func() {
 		k2 := ApplyKitDiff(kitMetabolism, diffForward)
 		ApplyKitDiff(k2, diffInverse)

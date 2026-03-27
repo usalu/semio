@@ -14277,7 +14277,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       };
       await fs.writeFile(resolve(reportsDir, "js.json"), JSON.stringify(report, null, 2), "utf8");
 
-      const canonicalPath = resolve(__dirname, "../assets/semio/model-kpi-nakagin.json");
+      const canonicalPath = resolve(__dirname, "../assets/semio/nakagin.kpi.model.semio.json");
       const canonical = JSON.parse(await fs.readFile(canonicalPath, "utf8"));
       const skipKeys = new Set(["centroid", "total_surface_area"]);
       for (const key of Object.keys(canonical)) {
@@ -15177,10 +15177,10 @@ async function bench(name: string, fn: () => Promise<void> | void) {
 
 // Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
 async function runBenchmarks() {
-  const DiffForward = (await import("@semio/assets/semio/diff_kit_metabolism.json")).default;
-  const DiffInverse = (await import("@semio/assets/semio/diff_kit_metabolism_inverted.json")).default;
-  const BenchMetabolismKit = (await import("@semio/assets/semio/kit_metabolism.json")).default;
-  const BenchInvalidKit = (await import("@semio/assets/semio/kit_invalid.json")).default;
+  const DiffForward = (await import("@semio/assets/semio/metabolism.kit.diff.semio.json")).default;
+  const DiffInverse = (await import("@semio/assets/semio/metabolism.kit.diff.inverted.semio.json")).default;
+  const BenchMetabolismKit = (await import("@semio/assets/semio/metabolism.kit.semio.json")).default;
+  const BenchInvalidKit = (await import("@semio/assets/semio/invalid.kit.semio.json")).default;
 
   const kitMetabolism = BenchMetabolismKit as unknown as Kit;
   const kitInvalid = BenchInvalidKit as unknown as Kit;
