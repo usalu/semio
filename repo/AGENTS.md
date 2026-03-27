@@ -18,6 +18,8 @@
 
 ### Languages, Trackers
 
+## 🧮 Algorithms
+
 ## 🛠️ Mechanisms
 
 ### 🪪 Identification
@@ -864,8 +866,6 @@ changes:
 - 🟥762🟩847➕85
 - 👤semio🟥211🟩156➖55
 ```
-
-## 🧮 Algorithms
 
 ## 📛 Entities
 

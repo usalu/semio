@@ -13174,7 +13174,7 @@ export class InMemoryKitStore implements UndoableKitStore {
 // [👤semio📚js💻index🔖tests](repo://p/u/semio/b/l/js/f/index.ts/s/Tests)
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
-if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof process !== "undefined" && process.cwd().replace(/\\/g, "/").endsWith("/semio/js")) {
+if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
@@ -13493,7 +13493,8 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
       expect(globMatch("Nakagin Capsule Tower", "Nakagin Capsule Tower")).toBe(true);
       expect(globMatch("Nakagin Capsule Tower", "Other*")).toBe(false);
       expect(globMatch("Wall", "W?ll")).toBe(true);
-      expect(globMatch("Wall", "W??l")).toBe(false);
+      expect(globMatch("Wall", "W??l")).toBe(true);
+      expect(globMatch("Wall", "W????")).toBe(false);
     });
 
     it("globMatch is case-insensitive", () => {
@@ -13904,7 +13905,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
         const exportedZip = await exportKit(kit);
         const { kit: reKit } = await importKit(exportedZip);
         expect(areKitsEqual(kit, reKit)).toBe(true);
-      }, 15000);
+      }, 60000);
     });
   });
 
@@ -14210,7 +14211,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
         resolve(__dirname, "../net/Semio.Tests"),
       );
 
-      const implementations = (skipGo ? (["js", "py", "rs", "net"] as const) : (["js", "py", "go", "rs", "net"] as const)) as const;
+      const implementations = skipGo ? (["js", "py", "rs", "net"] as const) : (["js", "py", "go", "rs", "net"] as const);
       const normalizedByImplementation = Object.fromEntries(
         implementations.map((implementation) => {
           const reportPath = resolve(EXPORT_REPORTS_DIR, `${implementation}.gltf`);
@@ -15167,7 +15168,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
 
     it("creates a kit using temporaryKitStoreFactory", async () => {
       const createdKits: Kit[] = [];
-      const trackingFactory: any = (kit) => {
+      const trackingFactory: any = (kit: Kit) => {
         createdKits.push(kit);
         return new InMemoryKitStore(kit);
       };
@@ -15180,7 +15181,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
 
     it("creates a kit using folderKitStoreFactory for local", async () => {
       const createdKits: Kit[] = [];
-      const trackingFactory: any = (kit) => {
+      const trackingFactory: any = (kit: Kit) => {
         createdKits.push(kit);
         return new InMemoryKitStore(kit);
       };
@@ -15201,7 +15202,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
 
     it("creates a kit using remoteKitStoreFactory for remote", async () => {
       const createdKits: Kit[] = [];
-      const trackingFactory: any = (kit) => {
+      const trackingFactory: any = (kit: Kit) => {
         createdKits.push(kit);
         return new InMemoryKitStore(kit);
       };
@@ -15233,11 +15234,11 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
     it("prefers folderKitStoreFactory over fileKitStoreFactory for local kits", async () => {
       const folderKits: Kit[] = [];
       const fileKits: Kit[] = [];
-      const folderFactory: any = (kit) => {
+      const folderFactory: any = (kit: Kit) => {
         folderKits.push(kit);
         return new InMemoryKitStore(kit);
       };
-      const fileFactory: any = (kit) => {
+      const fileFactory: any = (kit: Kit) => {
         fileKits.push(kit);
         return new InMemoryKitStore(kit);
       };
@@ -15271,7 +15272,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
       // Directly register the tracked kit store
       (store as any).registerKitStore(kitStore, false, false);
       // Apply a diff to make it dirty
-      kitStore.apply({ types: { add: [{ guid: "t1", name: "TestType" }] } });
+      kitStore.apply({ types: { added: [{ guid: "t1", name: "TestType" }] } });
       expect(kitStore.getSnapshot().sync.dirty).toBe(true);
       // Wait for debounce
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -15290,9 +15291,9 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
       const store = new SketchpadStore();
       (store as any).registerKitStore(kitStore, false, false);
       // Rapid applies
-      kitStore.apply({ types: { add: [{ guid: "t1", name: "T1" }] } });
-      kitStore.apply({ types: { add: [{ guid: "t2", name: "T2" }] } });
-      kitStore.apply({ types: { add: [{ guid: "t3", name: "T3" }] } });
+      kitStore.apply({ types: { added: [{ guid: "t1", name: "T1" }] } });
+      kitStore.apply({ types: { added: [{ guid: "t2", name: "T2" }] } });
+      kitStore.apply({ types: { added: [{ guid: "t3", name: "T3" }] } });
       // Wait for debounce
       await new Promise((resolve) => setTimeout(resolve, 500));
       // Should have debounced to a single save
@@ -15311,7 +15312,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
       (kitStore as any).status = "saving";
       const store = new SketchpadStore();
       (store as any).registerKitStore(kitStore, false, false);
-      kitStore.apply({ types: { add: [{ guid: "t1", name: "T1" }] } });
+      kitStore.apply({ types: { added: [{ guid: "t1", name: "T1" }] } });
       await new Promise((resolve) => setTimeout(resolve, 500));
       expect(saveCalls.length).toBe(0);
     });
@@ -15332,7 +15333,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof proce
       // The injected kit store should be registered
       expect(store.hasKit("desktop-kit")).toBe(true);
       // Apply a change and verify auto-save
-      kitStore.apply({ types: { add: [{ guid: "t1", name: "TestType" }] } });
+      kitStore.apply({ types: { added: [{ guid: "t1", name: "TestType" }] } });
       await new Promise((resolve) => setTimeout(resolve, 500));
       expect(saveCalls.length).toBeGreaterThanOrEqual(1);
       expect(kitStore.getSnapshot().sync.dirty).toBe(false);

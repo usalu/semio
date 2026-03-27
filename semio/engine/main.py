@@ -1941,6 +1941,10 @@ async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
 
 mcp = FastMCP("semio", stateless_http=False, json_response=True)
 
+_APP_RESOURCE_URI = "ui://semio/design-viewer"
+_APP_RESOURCE_META = {"ui": {"resourceUri": _APP_RESOURCE_URI}, "ui/resourceUri": _APP_RESOURCE_URI}
+_APP_HTML_PATH = os.path.join(os.path.dirname(__file__), "dist", "mcp-app.html")
+
 # Session-scoped state. Keyed by session id for isolation.
 _mcp_session_kits: dict[int, dict[str, typing.Any]] = {}
 _mcp_session_designs: dict[int, dict[str, typing.Any]] = {}
@@ -2715,7 +2719,7 @@ def add_current_design_connection(
         return {"error": str(e)}
 
 
-@mcp.tool(meta={"ui": {"resourceUri": "ui://semio/design-viewer"}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def start_working_in_design(guid: str, ctx: Context) -> str:
     """Select a design by GUID within the current kit. Requires start_working_in_local_kit to have been called first."""
     try:
@@ -2942,9 +2946,8 @@ def clear_current_selection(ctx: Context) -> dict:
 # MCP App Tools MUST expose 8 user-facing design visualization/selection intents as MCP tools.
 # All tools return pre-computed diagram data as JSON text content following the official MCP Apps protocol.
 # Tools declare _meta.ui.resourceUri so that MCP hosts render the design viewer app.
-
-_APP_RESOURCE_URI = "ui://semio/design-viewer"
-_APP_HTML_PATH = os.path.join(os.path.dirname(__file__), "dist", "mcp-app.html")
+# Both nested (_meta.ui.resourceUri) and flat (_meta["ui/resourceUri"]) keys are required for
+# host compatibility, matching the registerAppTool normalization from @modelcontextprotocol/ext-apps/server.
 
 
 def _build_kit_artifact_data(kit: dict) -> dict:
@@ -3051,13 +3054,15 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
         elif guid in modified_piece_guids:
             status = "modified"
         center = pdata.get("center", {"u": 0, "v": 0})
-        points.append({
-            "guid": guid,
-            "id": pdata.get("id", ""),
-            "u": center.get("u", 0),
-            "v": center.get("v", 0),
-            "status": status,
-        })
+        points.append(
+            {
+                "guid": guid,
+                "id": pdata.get("id", ""),
+                "u": center.get("u", 0),
+                "v": center.get("v", 0),
+                "status": status,
+            }
+        )
 
     # Build lines from connections
     connections = design.get("connections", [])
@@ -3086,14 +3091,16 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
             status = "added"
         elif guid in modified_conn_guids:
             status = "modified"
-        lines.append({
-            "guid": guid,
-            "sourceU": source_center.get("u", 0),
-            "sourceV": source_center.get("v", 0),
-            "targetU": target_center.get("u", 0),
-            "targetV": target_center.get("v", 0),
-            "status": status,
-        })
+        lines.append(
+            {
+                "guid": guid,
+                "sourceU": source_center.get("u", 0),
+                "sourceV": source_center.get("v", 0),
+                "targetU": target_center.get("u", 0),
+                "targetV": target_center.get("v", 0),
+                "status": status,
+            }
+        )
 
     return {"points": points, "lines": lines}
 
@@ -3133,7 +3140,7 @@ def design_viewer_resource() -> str:
     return """<!doctype html><html><body><p>MCP App not built. Run: npm run build:mcp-app in semio/engine</p></body></html>"""
 
 
-@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def show_design(ctx: Context) -> str:
     """Show the current design as a 2D diagram. Requires an active kit and design session."""
     try:
@@ -3142,7 +3149,7 @@ def show_design(ctx: Context) -> str:
         return json.dumps({"error": str(e)})
 
 
-@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def show_diagram(ctx: Context) -> str:
     """Show the current design as a 2D diagram only. Requires an active kit and design session."""
     try:
@@ -3151,7 +3158,7 @@ def show_diagram(ctx: Context) -> str:
         return json.dumps({"error": str(e)})
 
 
-@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def show_scene(ctx: Context) -> str:
     """Show the current design as a 2D diagram (3D not available in MCP app). Requires an active kit and design session."""
     try:
@@ -3160,7 +3167,7 @@ def show_scene(ctx: Context) -> str:
         return json.dumps({"error": str(e)})
 
 
-@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def show_diff(ctx: Context, design_diff: dict | None = None) -> str:
     """Show a diff of the current design as a 2D diagram with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
     try:
@@ -3169,7 +3176,7 @@ def show_diff(ctx: Context, design_diff: dict | None = None) -> str:
         return json.dumps({"error": str(e)})
 
 
-@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> str:
     """Show a diff of the current design as a 2D diagram only with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
     try:
@@ -3178,7 +3185,7 @@ def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> str:
         return json.dumps({"error": str(e)})
 
 
-@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def select_pieces(ctx: Context) -> str:
     """Open a piece selection view where only pieces can be selected. Requires an active kit and design session."""
     try:
@@ -3194,7 +3201,7 @@ def select_pieces(ctx: Context) -> str:
         return json.dumps({"error": str(e)})
 
 
-@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def select_connections(ctx: Context) -> str:
     """Open a connection selection view where only connections can be selected. Requires an active kit and design session."""
     try:
@@ -3210,7 +3217,7 @@ def select_connections(ctx: Context) -> str:
         return json.dumps({"error": str(e)})
 
 
-@mcp.tool(meta={"ui": {"resourceUri": _APP_RESOURCE_URI}})
+@mcp.tool(meta=_APP_RESOURCE_META)
 def select_pieces_and_connections(ctx: Context) -> str:
     """Open a combined selection view where both pieces and connections can be selected. Requires an active kit and design session."""
     try:

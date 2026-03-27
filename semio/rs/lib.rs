@@ -5104,6 +5104,87 @@ pub fn get_design_change(before: &Design, after: &Design) -> DesignChange {
 // [👤semio📚rs💻semio🔖filter](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter)
 // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
+/// Glob filter with include and exclude patterns for name-based entity filtering.
+/// If include is non-empty, only names matching at least one include pattern are kept.
+/// Names matching any exclude pattern are always removed.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct GlobFilter {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exclude: Option<Vec<String>>,
+}
+
+/// General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct KitFilter {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub design_guid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_tags: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub designs: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub types: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ports: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub files: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub concepts: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qualities: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authors: Option<GlobFilter>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folders: Option<GlobFilter>,
+}
+
+/// Matches a name against a glob pattern supporting * (any chars) and ? (single char). Case-insensitive.
+pub fn glob_match(name: &str, pattern: &str) -> bool {
+    let name_lower = name.to_lowercase();
+    let pattern_lower = pattern.to_lowercase();
+    let name_bytes = name_lower.as_bytes();
+    let pattern_bytes = pattern_lower.as_bytes();
+
+    fn matches(name: &[u8], pattern: &[u8]) -> bool {
+        match (name.len(), pattern.len()) {
+            (0, 0) => true,
+            (_, 0) => false,
+            (0, _) => pattern.iter().all(|&c| c == b'*'),
+            _ => {
+                if pattern[0] == b'*' {
+                    matches(name, &pattern[1..]) || matches(&name[1..], pattern)
+                } else if pattern[0] == b'?' || pattern[0] == name[0] {
+                    matches(&name[1..], &pattern[1..])
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
+    matches(name_bytes, pattern_bytes)
+}
+
+/// Checks if a name passes a GlobFilter. Returns true if filter is None or name matches.
+pub fn matches_glob_filter(name: &str, filter: Option<&GlobFilter>) -> bool {
+    let Some(filter) = filter else { return true };
+    if let Some(include) = &filter.include {
+        if !include.is_empty() && !include.iter().any(|p| glob_match(name, p)) {
+            return false;
+        }
+    }
+    if let Some(exclude) = &filter.exclude {
+        if exclude.iter().any(|p| glob_match(name, p)) {
+            return false;
+        }
+    }
+    true
+}
+
 fn select_best_model_for_filter(models: &[Model], selected_tag_guids: &[String]) -> Option<Model> {
     if models.is_empty() {
         return None;
@@ -5163,11 +5244,11 @@ fn select_best_model_for_filter(models: &[Model], selected_tag_guids: &[String])
     Some(best_model)
 }
 
-/// Filters a kit to only include entities related to a specific design.
+/// Internal design-based transitive kit filtering.
 /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
 /// files not used by selected models, and keeps at most one model per type according to the optional tags.
-/// [👤semio📚rs💻semio🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit_with_design)
-pub fn filter_kit_with_design(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
+/// [👤semio📚rs💻semio🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit_by_design)
+fn filter_kit_by_design(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
     let design = match find_design_in_kit(kit, design_guid) {
         Some(design) => design,
         None => {
@@ -5437,6 +5518,69 @@ pub fn filter_kit_with_design(kit: &Kit, design_guid: &str, tags: Option<&[Strin
         attributes: kit.attributes.clone(),
         created_at: kit.created_at.clone(),
         updated_at: kit.updated_at.clone(),
+    }
+}
+
+/// General-purpose kit filter. Combines optional design-based transitive filtering with glob-based name filtering.
+/// When design_guid is set, first performs transitive design-scoped subset extraction.
+/// Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
+/// [👤semio📚rs💻semio🔖filter🛠️filterkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit)
+pub fn filter_kit(kit: &Kit, filter: &KitFilter) -> Kit {
+    let base = if let Some(design_guid) = &filter.design_guid {
+        filter_kit_by_design(kit, design_guid, filter.model_tags.as_deref())
+    } else {
+        kit.clone()
+    };
+
+    let has_glob_filters = filter.designs.is_some() || filter.types.is_some() || filter.ports.is_some() ||
+        filter.files.is_some() || filter.tags.is_some() || filter.concepts.is_some() ||
+        filter.qualities.is_some() || filter.authors.is_some() || filter.folders.is_some();
+
+    if !has_glob_filters {
+        return base;
+    }
+
+    Kit {
+        guid: base.guid,
+        name: base.name,
+        version: base.version,
+        description: base.description,
+        icon: base.icon,
+        image: base.image,
+        preview: base.preview,
+        remote: base.remote,
+        homepage: base.homepage,
+        license: base.license,
+        types: Some(base.types.as_deref().unwrap_or(&[]).iter()
+            .filter(|t| matches_glob_filter(&t.name, filter.types.as_ref()))
+            .cloned().collect()),
+        designs: Some(base.designs.as_deref().unwrap_or(&[]).iter()
+            .filter(|d| matches_glob_filter(&d.name, filter.designs.as_ref()))
+            .cloned().collect()),
+        ports: Some(base.ports.as_deref().unwrap_or(&[]).iter()
+            .filter(|p| matches_glob_filter(&p.name, filter.ports.as_ref()))
+            .cloned().collect()),
+        files: Some(base.files.as_deref().unwrap_or(&[]).iter()
+            .filter(|f| matches_glob_filter(&f.name, filter.files.as_ref()))
+            .cloned().collect()),
+        tags: Some(base.tags.as_deref().unwrap_or(&[]).iter()
+            .filter(|t| matches_glob_filter(&t.name, filter.tags.as_ref()))
+            .cloned().collect()),
+        concepts: Some(base.concepts.as_deref().unwrap_or(&[]).iter()
+            .filter(|c| matches_glob_filter(&c.name, filter.concepts.as_ref()))
+            .cloned().collect()),
+        qualities: Some(base.qualities.as_deref().unwrap_or(&[]).iter()
+            .filter(|q| matches_glob_filter(&q.name, filter.qualities.as_ref()))
+            .cloned().collect()),
+        folders: Some(base.folders.as_deref().unwrap_or(&[]).iter()
+            .filter(|f| matches_glob_filter(&f.name, filter.folders.as_ref()))
+            .cloned().collect()),
+        authors: Some(base.authors.as_deref().unwrap_or(&[]).iter()
+            .filter(|a| matches_glob_filter(&a.name, filter.authors.as_ref()))
+            .cloned().collect()),
+        attributes: base.attributes,
+        created_at: base.created_at,
+        updated_at: base.updated_at,
     }
 }
 
@@ -9643,7 +9787,7 @@ mod tests {
                 })
                 .expect("Nakagin Capsule Tower design not found");
 
-            let filtered = filter_kit_with_design(&kit, &design.guid, None);
+            let filtered = filter_kit(&kit, &KitFilter { design_guid: Some(design.guid.clone()), ..Default::default() });
 
             assert_eq!(
                 filtered.designs.as_ref().map(|v| v.len()).unwrap_or(0),
@@ -9774,11 +9918,75 @@ mod tests {
                 })
                 .expect("Nakagin Capsule Tower design not found");
 
-            let filtered = filter_kit_with_design(&kit, &design.guid, None);
+            let filtered = filter_kit(&kit, &KitFilter { design_guid: Some(design.guid.clone()), ..Default::default() });
 
             assert_eq!(filtered.guid, kit.guid);
             assert_eq!(filtered.name, kit.name);
             assert_eq!(filtered.version, kit.version);
+        }
+
+        #[test]
+        fn glob_filters_types_by_name_include() {
+            let kit = load_kit("kit_metabolism.json");
+            let filtered = filter_kit(&kit, &KitFilter {
+                types: Some(GlobFilter { include: Some(vec!["Capsule*".to_string()]), exclude: None }),
+                ..Default::default()
+            });
+            let types = filtered.types.as_ref().unwrap();
+            assert!(!types.is_empty());
+            for t in types {
+                assert!(glob_match(&t.name, "Capsule*"), "Type {} should match Capsule*", t.name);
+            }
+        }
+
+        #[test]
+        fn glob_filters_types_by_name_exclude() {
+            let kit = load_kit("kit_metabolism.json");
+            let total_types = kit.types.as_ref().map(|v| v.len()).unwrap_or(0);
+            let filtered = filter_kit(&kit, &KitFilter {
+                types: Some(GlobFilter { include: None, exclude: Some(vec!["Capsule*".to_string()]) }),
+                ..Default::default()
+            });
+            let types = filtered.types.as_ref().unwrap();
+            assert!(types.len() < total_types);
+            for t in types {
+                assert!(!glob_match(&t.name, "Capsule*"), "Type {} should have been excluded", t.name);
+            }
+        }
+
+        #[test]
+        fn empty_filter_returns_kit_unchanged() {
+            let kit = load_kit("kit_metabolism.json");
+            let filtered = filter_kit(&kit, &KitFilter::default());
+            assert_eq!(
+                filtered.types.as_ref().map(|v| v.len()),
+                kit.types.as_ref().map(|v| v.len())
+            );
+            assert_eq!(
+                filtered.designs.as_ref().map(|v| v.len()),
+                kit.designs.as_ref().map(|v| v.len())
+            );
+        }
+
+        #[test]
+        fn combines_design_guid_with_glob_filters() {
+            let kit = load_kit("kit_metabolism.json");
+            let design = kit.designs.as_ref()
+                .and_then(|designs| designs.iter().find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none()))
+                .expect("Nakagin Capsule Tower design not found");
+            let design_filtered = filter_kit(&kit, &KitFilter {
+                design_guid: Some(design.guid.clone()),
+                ..Default::default()
+            });
+            let combined_filtered = filter_kit(&kit, &KitFilter {
+                design_guid: Some(design.guid.clone()),
+                types: Some(GlobFilter { include: None, exclude: Some(vec!["Capsule*".to_string()]) }),
+                ..Default::default()
+            });
+            assert!(
+                combined_filtered.types.as_ref().map(|v| v.len()).unwrap_or(0) <
+                design_filtered.types.as_ref().map(|v| v.len()).unwrap_or(0)
+            );
         }
     }
 

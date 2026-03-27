@@ -27,6 +27,7 @@ import copy
 import dataclasses
 import datetime
 import enum
+import fnmatch
 import json
 import os
 import pathlib
@@ -6327,11 +6328,70 @@ class Kit(
             return len(model_tag_guids & sel) / len(union)
         return max(filtered, key=jaccard)
 
-    def filter_kit_with_design(self: "Kit", design_guid: str, tags: typing.Optional[list[str]] = None) -> "Kit":
+    @staticmethod
+    def _matches_glob_filter(name: str, glob_filter: typing.Optional[dict] = None) -> bool:
+        """Checks if a name passes a glob filter with include/exclude patterns.
+        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️matchesglobfilter](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/_matches_glob_filter)
+        """
+        if glob_filter is None:
+            return True
+        include = glob_filter.get("include") or []
+        exclude = glob_filter.get("exclude") or []
+        if include and not any(fnmatch.fnmatch(name.lower(), p.lower()) for p in include):
+            return False
+        if any(fnmatch.fnmatch(name.lower(), p.lower()) for p in exclude):
+            return False
+        return True
+
+    def filter_kit(self: "Kit", filter_spec: dict) -> "Kit":
+        """General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.
+        When design_guid is set, first performs transitive design-scoped subset extraction.
+        Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
+        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/filter_kit)
+        """
+        design_guid = filter_spec.get("design_guid")
+        model_tags = filter_spec.get("model_tags")
+
+        if design_guid:
+            base = self._filter_kit_by_design(design_guid, model_tags)
+        else:
+            base = self
+
+        glob_keys = ["designs", "types", "ports", "files", "tags", "concepts", "qualities", "authors", "folders"]
+        has_glob_filters = any(filter_spec.get(k) is not None for k in glob_keys)
+        if not has_glob_filters:
+            return base
+
+        result = copy.copy(base)
+
+        if filter_spec.get("types") is not None:
+            result.types = [t for t in (base.types or []) if Kit._matches_glob_filter(t.name, filter_spec["types"])]
+        if filter_spec.get("designs") is not None:
+            result.designs = [d for d in (base.designs or []) if Kit._matches_glob_filter(d.name, filter_spec["designs"])]
+        if filter_spec.get("ports") is not None:
+            result.ports = [p for p in (base.ports or []) if Kit._matches_glob_filter(p.name, filter_spec["ports"])]
+        if filter_spec.get("files") is not None:
+            result.files_ = [f for f in (base.files_ or []) if Kit._matches_glob_filter(f.name, filter_spec["files"])]
+        if filter_spec.get("tags") is not None:
+            if hasattr(base, "tags_") and base.tags_ is not None:
+                result.tags_ = [t for t in base.tags_ if Kit._matches_glob_filter(t.name, filter_spec["tags"])]
+        if filter_spec.get("concepts") is not None:
+            if hasattr(base, "concepts_") and base.concepts_ is not None:
+                result.concepts_ = [c for c in base.concepts_ if Kit._matches_glob_filter(c.name, filter_spec["concepts"])]
+        if filter_spec.get("qualities") is not None:
+            result.qualities = [q for q in (base.qualities or []) if Kit._matches_glob_filter(q.name, filter_spec["qualities"])]
+        if filter_spec.get("authors") is not None:
+            result.authors_ = [a for a in (base.authors_ or []) if Kit._matches_glob_filter(a.name, filter_spec["authors"])]
+        if filter_spec.get("folders") is not None:
+            result.folders_ = [f for f in (base.folders_ or []) if Kit._matches_glob_filter(f.name, filter_spec["folders"])]
+
+        return result
+
+    def _filter_kit_by_design(self: "Kit", design_guid: str, tags: typing.Optional[list[str]] = None) -> "Kit":
         """Filters a kit to only include entities related to a specific design.
         Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
         files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
-        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/filter_kit_with_design)
+        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/_filter_kit_by_design)
         """
         design = self.find_design_by_guid(design_guid)
         pieces = design.pieces or []
@@ -11322,7 +11382,51 @@ class KitData:
     def to_dict(self) -> dict:
         return self._data
 
-    def filter_kit_with_design(self, design_guid: str, tags: typing.Optional[list[str]] = None) -> "KitData":
+    def filter_kit(self, filter_spec: dict) -> "KitData":
+        """General-purpose kit filter with glob support.
+        [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️kitdata🛠️filterkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/KitData/filter_kit)
+        """
+        design_guid = filter_spec.get("design_guid")
+        tags = filter_spec.get("model_tags")
+
+        if design_guid:
+            base = self._filter_kit_by_design(design_guid, tags)
+        else:
+            base = self
+
+        base_data = base._data if isinstance(base, KitData) else base
+        glob_keys = ["designs", "types", "ports", "files", "tags", "concepts", "qualities", "authors", "folders"]
+        has_glob_filters = any(filter_spec.get(k) is not None for k in glob_keys)
+        if not has_glob_filters:
+            return KitData(base_data) if base is self else base
+
+        import fnmatch as _fnmatch
+
+        def _matches(name: str, glob_filter: typing.Optional[dict]) -> bool:
+            if glob_filter is None:
+                return True
+            include = glob_filter.get("include") or []
+            exclude = glob_filter.get("exclude") or []
+            if include and not any(_fnmatch.fnmatch(name.lower(), p.lower()) for p in include):
+                return False
+            if any(_fnmatch.fnmatch(name.lower(), p.lower()) for p in exclude):
+                return False
+            return True
+
+        filtered = dict(base_data)
+        entity_key_map = {
+            "types": "name", "designs": "name", "ports": "name",
+            "files": "name", "tags": "name", "concepts": "name",
+            "qualities": "name", "authors": "name", "folders": "name",
+        }
+        for entity_key, name_key in entity_key_map.items():
+            spec = filter_spec.get(entity_key)
+            if spec is not None:
+                filtered[entity_key] = [e for e in filtered.get(entity_key, []) if _matches(e.get(name_key, ""), spec)]
+
+        return KitData(filtered)
+
+    def _filter_kit_by_design(self, design_guid: str, tags: typing.Optional[list[str]] = None) -> "KitData":
         kit = self._data
         design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
         if design is None:
@@ -15800,7 +15904,7 @@ class TestKitFilterDesign:
         expected = _test_load_json("nakagin-capsule-tower.filtered.kit.semio.json")
         design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
 
-        filtered = KitData(kit_dict).filter_kit_with_design(design["guid"]).to_dict()
+        filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
 
         assert len(filtered.get("designs", [])) == len(expected.get("designs", []))
         assert len(filtered.get("types", [])) == len(expected.get("types", []))
@@ -15835,11 +15939,43 @@ class TestKitFilterDesign:
         kit_dict = _test_load_json("kit_metabolism.json")
         design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
 
-        filtered = KitData(kit_dict).filter_kit_with_design(design["guid"]).to_dict()
+        filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
 
         assert filtered.get("guid") == kit_dict.get("guid")
         assert filtered.get("name") == kit_dict.get("name")
         assert filtered.get("version") == kit_dict.get("version")
+
+    def test_glob_filters_types_by_name_include(self):
+        kit_dict = _test_load_json("kit_metabolism.json")
+        filtered = KitData(kit_dict).filter_kit({"types": {"include": ["Capsule*"]}}).to_dict()
+        types = filtered.get("types", [])
+        assert len(types) > 0
+        for t in types:
+            assert fnmatch.fnmatch(t["name"].lower(), "capsule*")
+
+    def test_glob_filters_types_by_name_exclude(self):
+        kit_dict = _test_load_json("kit_metabolism.json")
+        total_types = len(kit_dict.get("types", []))
+        filtered = KitData(kit_dict).filter_kit({"types": {"exclude": ["Capsule*"]}}).to_dict()
+        types = filtered.get("types", [])
+        assert len(types) < total_types
+        for t in types:
+            assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
+
+    def test_empty_filter_returns_kit_unchanged(self):
+        kit_dict = _test_load_json("kit_metabolism.json")
+        filtered = KitData(kit_dict).filter_kit({}).to_dict()
+        assert len(filtered.get("types", [])) == len(kit_dict.get("types", []))
+        assert len(filtered.get("designs", [])) == len(kit_dict.get("designs", []))
+
+    def test_combines_design_guid_with_glob_filters(self):
+        kit_dict = _test_load_json("kit_metabolism.json")
+        design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
+        design_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
+        combined_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"], "types": {"exclude": ["Capsule*"]}}).to_dict()
+        assert len(combined_filtered.get("types", [])) < len(design_filtered.get("types", []))
+        for t in combined_filtered.get("types", []):
+            assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
 
 
 class TestDesignQualitySum:

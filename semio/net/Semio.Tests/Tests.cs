@@ -620,7 +620,7 @@ public class Tests
             var expected = Tests.LoadAsset<Kit>("nakagin-capsule-tower.filtered.kit.semio.json");
             var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
 
-            var filtered = Kit.FilterKitWithDesign(kit, design.Guid);
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid });
 
             Assert.Equal(expected.Designs?.Count ?? 0, filtered.Designs?.Count ?? 0);
             Assert.Equal(expected.Types?.Count ?? 0, filtered.Types?.Count ?? 0);
@@ -665,7 +665,7 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("kit_metabolism.json");
             var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
 
-            var filtered = Kit.FilterKitWithDesign(kit, design.Guid);
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid });
 
             Assert.Equal(kit.Guid, filtered.Guid);
             Assert.Equal(kit.Name, filtered.Name);

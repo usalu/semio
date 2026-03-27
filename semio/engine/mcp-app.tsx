@@ -104,7 +104,9 @@ const KitArtifactSelect: React.FC<{
                 <input type="checkbox" checked={selectedDesignGuids.has(d.guid)} onChange={() => toggle("design", d.guid)} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name || d.guid}</div>
-                  <div style={{ fontSize: 11, opacity: 0.7 }}>{d.variant || "default"} · {d.view || "default"}</div>
+                  <div style={{ fontSize: 11, opacity: 0.7 }}>
+                    {d.variant || "default"} · {d.view || "default"}
+                  </div>
                 </div>
               </label>
             ))}
@@ -136,7 +138,9 @@ const KitArtifactSelect: React.FC<{
                 <input type="checkbox" checked={selectedPortGuids.has(p.guid)} onChange={() => toggle("port", p.guid)} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name || p.guid}</div>
-                  <div style={{ fontSize: 11, opacity: 0.7 }}>{p.port || "default"} · {p.mandatory ? "mandatory" : "optional"}</div>
+                  <div style={{ fontSize: 11, opacity: 0.7 }}>
+                    {p.port || "default"} · {p.mandatory ? "mandatory" : "optional"}
+                  </div>
                 </div>
               </label>
             ))}
@@ -236,25 +240,58 @@ const McpDesignViewer: React.FC = () => {
   const panOriginRef = React.useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const [isPanning, setIsPanning] = React.useState(false);
   const appRef = React.useRef<McpAppInstance | null>(null);
+  const [debugState, setDebugState] = React.useState("mounting");
+
+  console.error("[DEBUG] McpDesignViewer render, isInIframe:", window.parent !== window);
 
   const { app, isConnected, error } = useApp({
     appInfo: { name: "semio design viewer", version: "1.0.0" },
     capabilities: {},
     onAppCreated: (a: McpAppInstance) => {
+      console.error("[DEBUG] onAppCreated called");
+      setDebugState("app-created");
       appRef.current = a;
       a.ontoolresult = (result: unknown) => {
+        console.error("[DEBUG] ontoolresult fired, result type:", typeof result);
+        console.error("[DEBUG] ontoolresult raw:", JSON.stringify(result).slice(0, 500));
         const parsed = parseMcpToolResult(result);
+        console.error("[DEBUG] parseMcpToolResult returned:", parsed ? `points=${parsed.points.length}, lines=${parsed.lines.length}` : "null");
         if (parsed) {
           setPayload(parsed);
           setSelectedPieces(new Set());
           setSelectedConnections(new Set());
           setArtifactSelection({ designGuids: [], typeGuids: [], portGuids: [] });
+          setDebugState(`loaded:${parsed.points.length}p/${parsed.lines.length}l`);
+        } else {
+          setDebugState("parse-failed");
         }
       };
+      a.ontoolinput = (params: unknown) => {
+        console.error("[DEBUG] ontoolinput fired:", JSON.stringify(params).slice(0, 500));
+        setDebugState("tool-input-received");
+      };
+      a.ontoolcancelled = (params: { reason?: string }) => {
+        console.error("[DEBUG] ontoolcancelled fired:", params.reason);
+        setDebugState(`cancelled:${params.reason ?? "unknown"}`);
+      };
       a.onteardown = async () => ({});
-      a.onerror = console.error;
+      a.onerror = (err: unknown) => {
+        console.error("[DEBUG] app.onerror:", err);
+        setDebugState(`error:${err}`);
+      };
     },
   });
+
+  // Track connection state changes
+  React.useEffect(() => {
+    console.error("[DEBUG] useApp state: isConnected=", isConnected, "error=", error?.message, "app=", !!app);
+    if (isConnected && app) {
+      setDebugState((prev) => (prev === "app-created" ? "connected" : prev));
+    }
+    if (error) {
+      setDebugState(`connect-error:${error.message}`);
+    }
+  }, [isConnected, error, app]);
 
   // Apply host theme CSS variables (background, text colors, fonts, etc.)
   useHostStyles(app, app?.getHostContext());
@@ -314,7 +351,7 @@ const McpDesignViewer: React.FC = () => {
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (appRef.current) {
       appRef.current.updateModelContext({
-        data: [
+        content: [
           {
             type: "text" as const,
             text: JSON.stringify({
@@ -332,7 +369,7 @@ const McpDesignViewer: React.FC = () => {
   const sendKitArtifactSelectionUpdate = React.useCallback((next: KitArtifactSelectSelection) => {
     if (!appRef.current) return;
     appRef.current.updateModelContext({
-      data: [
+      content: [
         {
           type: "text" as const,
           text: JSON.stringify({
@@ -379,43 +416,19 @@ const McpDesignViewer: React.FC = () => {
     sendSelectionUpdate(new Set(), new Set());
   }, [sendSelectionUpdate]);
 
-  if (error) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-danger, #dc2626)" }}>
-        <p>Error: {error.message}</p>
-      </div>
-    );
-  }
-
-  if (!isConnected || !app) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
-        <p>Connecting to host…</p>
-      </div>
-    );
-  }
-
-  if (!payload || !bounds) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
-        <p>Waiting for design data…</p>
-      </div>
-    );
-  }
-
-  const pieceSelectionEnabled = payload.capabilities?.pieceSelection ?? false;
-  const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
+  const pieceSelectionEnabled = payload?.capabilities?.pieceSelection ?? false;
+  const connectionSelectionEnabled = payload?.capabilities?.connectionSelection ?? false;
 
   const drawW = Math.max(size.width - PADDING * 2, 1);
   const drawH = Math.max(size.height - PADDING * 2, 1);
-  const scale = Math.min(drawW / bounds.width, drawH / bounds.height);
-  const offsetX = (size.width - bounds.width * scale) / 2;
-  const offsetY = (size.height - bounds.height * scale) / 2;
+  const scale = bounds ? Math.min(drawW / bounds.width, drawH / bounds.height) : 1;
+  const offsetX = bounds ? (size.width - bounds.width * scale) / 2 : 0;
+  const offsetY = bounds ? (size.height - bounds.height * scale) / 2 : 0;
   const cx = size.width / 2;
   const cy = size.height / 2;
 
-  const toPixelX = (u: number) => cx + pan.x + zoom * (offsetX + (u - bounds.minU) * scale - cx);
-  const toPixelY = (v: number) => cy + pan.y + zoom * (offsetY + (-v - bounds.minV) * scale - cy);
+  const toPixelX = (u: number) => (bounds ? cx + pan.x + zoom * (offsetX + (u - bounds.minU) * scale - cx) : 0);
+  const toPixelY = (v: number) => (bounds ? cy + pan.y + zoom * (offsetY + (-v - bounds.minV) * scale - cy) : 0);
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -472,97 +485,137 @@ const McpDesignViewer: React.FC = () => {
     setPan({ x: -fitZoom * (targetCx - cx), y: -fitZoom * (targetCy - cy) });
   };
 
+  // Overlay content for loading/error states (container div always rendered for ResizeObserver)
+  let overlayContent: React.ReactNode = null;
+  if (error) {
+    overlayContent = (
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#dc2626", zIndex: 20 }}>
+        <p>Error: {error.message}</p>
+      </div>
+    );
+  } else if (!isConnected || !app) {
+    overlayContent = (
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#737373", zIndex: 20 }}>
+        <p>Connecting to host…</p>
+      </div>
+    );
+  } else if (!payload || !bounds) {
+    overlayContent = (
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#737373", zIndex: 20 }}>
+        <p>Waiting for design data…</p>
+      </div>
+    );
+  }
+
+  // [DEBUG] visible state banner
+  const debugBanner = (
+    <div style={{ position: "absolute", bottom: 4, left: 4, fontSize: 10, fontFamily: "monospace", color: "#888", zIndex: 30, pointerEvents: "none" }}>
+      {debugState} | {size.width}x{size.height} | {isConnected ? "connected" : "disconnected"} | {payload ? `${payload.points.length}p/${payload.lines.length}l` : "no-data"}
+    </div>
+  );
+
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100vh", position: "relative", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-primary, currentColor)" }} onDoubleClick={handleDoubleClick} onWheel={handleWheel}>
-      {payload.kitArtifacts && (
-        <div style={{ position: "absolute", left: 12, top: 12, right: 12, pointerEvents: "none", zIndex: 10 }}>
-          <div style={{ pointerEvents: "auto", maxHeight: "38vh", overflow: "auto" }}>
-            <KitArtifactSelect
-              data={payload.kitArtifacts}
-              selection={artifactSelection}
-              onSelectionChange={(next) => {
-                setArtifactSelection(next);
-                sendKitArtifactSelectionUpdate(next);
-              }}
-              title="Kit Artifacts"
-              className="rounded-md border border-border bg-background/90 p-3 backdrop-blur"
-            />
-          </div>
-        </div>
+    <div
+      ref={containerRef}
+      style={{ width: "100%", height: "100vh", position: "relative", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-primary, currentColor)" }}
+      onDoubleClick={handleDoubleClick}
+      onWheel={handleWheel}
+    >
+      {debugBanner}
+      {overlayContent}
+      {payload && bounds && (
+        <>
+          {payload.kitArtifacts && (
+            <div style={{ position: "absolute", left: 12, top: 12, right: 12, pointerEvents: "none", zIndex: 10 }}>
+              <div style={{ pointerEvents: "auto", maxHeight: "38vh", overflow: "auto" }}>
+                <KitArtifactSelect
+                  data={payload.kitArtifacts}
+                  selection={artifactSelection}
+                  onSelectionChange={(next) => {
+                    setArtifactSelection(next);
+                    sendKitArtifactSelectionUpdate(next);
+                  }}
+                  title="Kit Artifacts"
+                  className="rounded-md border border-border bg-background/90 p-3 backdrop-blur"
+                />
+              </div>
+            </div>
+          )}
+          <svg
+            aria-label="Design Diagram"
+            role="img"
+            style={{
+              width: "100%",
+              height: "100%",
+              overflow: "visible",
+              color: "var(--foreground)",
+              cursor: isPanning ? "grabbing" : "grab",
+              touchAction: "none",
+            }}
+            onClick={handleSvgClick}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerEnd}
+            onPointerCancel={handlePointerEnd}
+          >
+            {payload.lines.map((line) => {
+              const sel = selectedConnections.has(line.guid);
+              const hov = hoveredConnection === line.guid;
+              return (
+                <line
+                  key={line.guid}
+                  x1={toPixelX(line.sourceU)}
+                  y1={toPixelY(line.sourceV)}
+                  x2={toPixelX(line.targetU)}
+                  y2={toPixelY(line.targetV)}
+                  stroke={interactiveColor(line.status, sel, hov)}
+                  strokeLinecap="round"
+                  strokeOpacity={sel || hov ? 1 : line.status === "default" ? 0.45 : 0.8}
+                  strokeWidth={(sel ? STROKE_WIDTH + 1.5 : hov ? STROKE_WIDTH + 0.75 : STROKE_WIDTH) * zoom}
+                  pointerEvents="stroke"
+                  style={{ cursor: connectionSelectionEnabled ? "pointer" : "default" }}
+                  onClick={
+                    connectionSelectionEnabled
+                      ? (e) => {
+                          e.stopPropagation();
+                          toggleConnection(line.guid);
+                        }
+                      : undefined
+                  }
+                  onPointerEnter={() => setHoveredConnection(line.guid)}
+                  onPointerLeave={() => setHoveredConnection((prev) => (prev === line.guid ? null : prev))}
+                />
+              );
+            })}
+            {payload.points.map((point) => {
+              const sel = selectedPieces.has(point.guid);
+              const hov = hoveredPiece === point.guid;
+              return (
+                <circle
+                  key={point.guid}
+                  cx={toPixelX(point.u)}
+                  cy={toPixelY(point.v)}
+                  r={(sel ? PIECE_RADIUS + 0.75 : hov ? PIECE_RADIUS + 0.35 : PIECE_RADIUS) * zoom}
+                  fill={statusColor(point.status)}
+                  stroke={sel || hov ? interactiveColor(point.status, sel, hov) : "none"}
+                  strokeWidth={(sel ? 1.5 : hov ? 1 : 0) * zoom}
+                  style={{ cursor: pieceSelectionEnabled ? "pointer" : "default" }}
+                  onClick={
+                    pieceSelectionEnabled
+                      ? (e) => {
+                          e.stopPropagation();
+                          togglePiece(point.guid);
+                        }
+                      : undefined
+                  }
+                  onPointerEnter={() => setHoveredPiece(point.guid)}
+                  onPointerLeave={() => setHoveredPiece((prev) => (prev === point.guid ? null : prev))}
+                />
+              );
+            })}
+          </svg>
+        </>
       )}
-      <svg
-        aria-label="Design Diagram"
-        role="img"
-        style={{
-          width: "100%",
-          height: "100%",
-          overflow: "visible",
-          color: "var(--foreground)",
-          cursor: isPanning ? "grabbing" : "grab",
-          touchAction: "none",
-        }}
-        onClick={handleSvgClick}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        onPointerCancel={handlePointerEnd}
-      >
-        {payload.lines.map((line) => {
-          const sel = selectedConnections.has(line.guid);
-          const hov = hoveredConnection === line.guid;
-          return (
-            <line
-              key={line.guid}
-              x1={toPixelX(line.sourceU)}
-              y1={toPixelY(line.sourceV)}
-              x2={toPixelX(line.targetU)}
-              y2={toPixelY(line.targetV)}
-              stroke={interactiveColor(line.status, sel, hov)}
-              strokeLinecap="round"
-              strokeOpacity={sel || hov ? 1 : line.status === "default" ? 0.45 : 0.8}
-              strokeWidth={(sel ? STROKE_WIDTH + 1.5 : hov ? STROKE_WIDTH + 0.75 : STROKE_WIDTH) * zoom}
-              pointerEvents="stroke"
-              style={{ cursor: connectionSelectionEnabled ? "pointer" : "default" }}
-              onClick={
-                connectionSelectionEnabled
-                  ? (e) => {
-                      e.stopPropagation();
-                      toggleConnection(line.guid);
-                    }
-                  : undefined
-              }
-              onPointerEnter={() => setHoveredConnection(line.guid)}
-              onPointerLeave={() => setHoveredConnection((prev) => (prev === line.guid ? null : prev))}
-            />
-          );
-        })}
-        {payload.points.map((point) => {
-          const sel = selectedPieces.has(point.guid);
-          const hov = hoveredPiece === point.guid;
-          return (
-            <circle
-              key={point.guid}
-              cx={toPixelX(point.u)}
-              cy={toPixelY(point.v)}
-              r={(sel ? PIECE_RADIUS + 0.75 : hov ? PIECE_RADIUS + 0.35 : PIECE_RADIUS) * zoom}
-              fill={statusColor(point.status)}
-              stroke={sel || hov ? interactiveColor(point.status, sel, hov) : "none"}
-              strokeWidth={(sel ? 1.5 : hov ? 1 : 0) * zoom}
-              style={{ cursor: pieceSelectionEnabled ? "pointer" : "default" }}
-              onClick={
-                pieceSelectionEnabled
-                  ? (e) => {
-                      e.stopPropagation();
-                      togglePiece(point.guid);
-                    }
-                  : undefined
-              }
-              onPointerEnter={() => setHoveredPiece(point.guid)}
-              onPointerLeave={() => setHoveredPiece((prev) => (prev === point.guid ? null : prev))}
-            />
-          );
-        })}
-      </svg>
     </div>
   );
 };

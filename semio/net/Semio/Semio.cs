@@ -6955,13 +6955,62 @@ public class Kit : Entity<Kit>
     // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter)
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
+    /// <summary>Glob filter with include and exclude patterns for name-based entity filtering.</summary>
+    public class GlobFilter
+    {
+        public List<string>? Include { get; set; }
+        public List<string>? Exclude { get; set; }
+    }
+
+    /// <summary>General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.</summary>
+    public class KitFilter
+    {
+        public string? DesignGuid { get; set; }
+        public string[]? ModelTags { get; set; }
+        public GlobFilter? Designs { get; set; }
+        public GlobFilter? Types { get; set; }
+        public GlobFilter? Ports { get; set; }
+        public GlobFilter? Files { get; set; }
+        public GlobFilter? Tags { get; set; }
+        public GlobFilter? Concepts { get; set; }
+        public GlobFilter? Qualities { get; set; }
+        public GlobFilter? Authors { get; set; }
+        public GlobFilter? Folders { get; set; }
+    }
+
+    /// <summary>Matches a name against a glob pattern supporting * and ?. Case-insensitive.</summary>
+    public static bool GlobMatch(string name, string pattern)
+    {
+        var regexStr = "^";
+        foreach (var c in pattern)
+        {
+            regexStr += c switch
+            {
+                '*' => ".*",
+                '?' => ".",
+                _ => System.Text.RegularExpressions.Regex.Escape(c.ToString())
+            };
+        }
+        regexStr += "$";
+        return System.Text.RegularExpressions.Regex.IsMatch(name, regexStr, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    }
+
+    /// <summary>Checks if a name passes a GlobFilter.</summary>
+    public static bool MatchesGlobFilter(string name, GlobFilter? filter)
+    {
+        if (filter == null) return true;
+        if (filter.Include is { Count: > 0 } && !filter.Include.Any(p => GlobMatch(name, p))) return false;
+        if (filter.Exclude is { Count: > 0 } && filter.Exclude.Any(p => GlobMatch(name, p))) return false;
+        return true;
+    }
+
     /// <summary>Filters a kit to only include entities related to a specific design.</summary>
     /// <remarks>
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
     /// files not used by selected models, and keeps at most one model per type according to the optional tags.
-    /// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter🛠️filterkitwithdesign](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter/d/i/FilterKitWithDesign)
+    /// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter/d/i/FilterKitByDesign)
     /// </remarks>
-    public static Kit FilterKitWithDesign(Kit kit, string designGuid, string[]? tags = null)
+    private static Kit FilterKitByDesign(Kit kit, string designGuid, string[]? tags = null)
     {
         var design = (kit.Designs ?? new List<Design>()).FirstOrDefault(d => d.Guid == designGuid);
         if (design == null) return new Kit { Guid = kit.Guid, Name = kit.Name, Version = kit.Version };
@@ -7081,6 +7130,49 @@ public class Kit : Entity<Kit>
             Attributes = kit.Attributes,
             CreatedAt = kit.CreatedAt,
             UpdatedAt = kit.UpdatedAt,
+        };
+    }
+
+    /// <summary>General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.</summary>
+    /// <remarks>
+    /// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter🛠️filterkit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter/d/i/FilterKit)
+    /// </remarks>
+    public static Kit FilterKit(Kit kit, KitFilter filter)
+    {
+        var baseKit = !string.IsNullOrEmpty(filter.DesignGuid)
+            ? FilterKitByDesign(kit, filter.DesignGuid, filter.ModelTags)
+            : kit;
+
+        var hasGlobFilters = filter.Designs != null || filter.Types != null || filter.Ports != null ||
+            filter.Files != null || filter.Tags != null || filter.Concepts != null ||
+            filter.Qualities != null || filter.Authors != null || filter.Folders != null;
+
+        if (!hasGlobFilters) return baseKit;
+
+        return new Kit
+        {
+            Guid = baseKit.Guid,
+            Name = baseKit.Name,
+            Version = baseKit.Version,
+            Description = baseKit.Description,
+            Icon = baseKit.Icon,
+            Image = baseKit.Image,
+            Preview = baseKit.Preview,
+            Remote = baseKit.Remote,
+            Homepage = baseKit.Homepage,
+            License = baseKit.License,
+            Types = (baseKit.Types ?? new List<Type>()).Where(t => MatchesGlobFilter(t.Name, filter.Types)).ToList(),
+            Designs = (baseKit.Designs ?? new List<Design>()).Where(d => MatchesGlobFilter(d.Name, filter.Designs)).ToList(),
+            Ports = (baseKit.Ports ?? new List<Port>()).Where(p => MatchesGlobFilter(p.Name, filter.Ports)).ToList(),
+            Files = (baseKit.Files ?? new List<File>()).Where(f => MatchesGlobFilter(f.Name, filter.Files)).ToList(),
+            Tags = (baseKit.Tags ?? new List<Tag>()).Where(t => MatchesGlobFilter(t.Name, filter.Tags)).ToList(),
+            Concepts = (baseKit.Concepts ?? new List<Concept>()).Where(c => MatchesGlobFilter(c.Name, filter.Concepts)).ToList(),
+            Qualities = (baseKit.Qualities ?? new List<Quality>()).Where(q => MatchesGlobFilter(q.Name, filter.Qualities)).ToList(),
+            Folders = (baseKit.Folders ?? new List<Folder>()).Where(f => MatchesGlobFilter(f.Name, filter.Folders)).ToList(),
+            Authors = (baseKit.Authors ?? new List<Author>()).Where(a => MatchesGlobFilter(a.Name, filter.Authors)).ToList(),
+            Attributes = baseKit.Attributes,
+            CreatedAt = baseKit.CreatedAt,
+            UpdatedAt = baseKit.UpdatedAt,
         };
     }
 

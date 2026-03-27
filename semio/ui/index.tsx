@@ -193,29 +193,16 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
   const computedDefaultData = React.useMemo(() => defaultData ?? derivedData, [defaultData, derivedData]);
 
   const [resolvedData, setResolvedData] = useInteractiveControllableValue<KitArtifactSelectData>(data, computedDefaultData, onDataChange);
-  const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(
-    selection,
-    normalizeKitArtifactSelectSelection(defaultSelection),
-    onSelectionChange,
-  );
+  const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeKitArtifactSelectSelection(defaultSelection), onSelectionChange);
 
   const effectiveData = effectiveDataEnabled ? resolvedData : {};
   const effectiveDesigns = designDataEnabled ? (effectiveData.designs ?? []) : [];
   const effectiveTypes = typeDataEnabled ? (effectiveData.types ?? []) : [];
   const effectivePorts = portDataEnabled ? (effectiveData.ports ?? []) : [];
 
-  const selectedDesignGuids = React.useMemo(
-    () => new Set(effectiveSelectionEnabled && designSelectionEnabled ? (resolvedSelection.designGuids ?? []) : []),
-    [designSelectionEnabled, effectiveSelectionEnabled, resolvedSelection.designGuids],
-  );
-  const selectedTypeGuids = React.useMemo(
-    () => new Set(effectiveSelectionEnabled && typeSelectionEnabled ? (resolvedSelection.typeGuids ?? []) : []),
-    [effectiveSelectionEnabled, resolvedSelection.typeGuids, typeSelectionEnabled],
-  );
-  const selectedPortGuids = React.useMemo(
-    () => new Set(effectiveSelectionEnabled && portSelectionEnabled ? (resolvedSelection.portGuids ?? []) : []),
-    [effectiveSelectionEnabled, portSelectionEnabled, resolvedSelection.portGuids],
-  );
+  const selectedDesignGuids = React.useMemo(() => new Set(effectiveSelectionEnabled && designSelectionEnabled ? (resolvedSelection.designGuids ?? []) : []), [designSelectionEnabled, effectiveSelectionEnabled, resolvedSelection.designGuids]);
+  const selectedTypeGuids = React.useMemo(() => new Set(effectiveSelectionEnabled && typeSelectionEnabled ? (resolvedSelection.typeGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.typeGuids, typeSelectionEnabled]);
+  const selectedPortGuids = React.useMemo(() => new Set(effectiveSelectionEnabled && portSelectionEnabled ? (resolvedSelection.portGuids ?? []) : []), [effectiveSelectionEnabled, portSelectionEnabled, resolvedSelection.portGuids]);
 
   const setNextSelection = React.useCallback(
     (next: { designGuids?: string[]; typeGuids?: string[]; portGuids?: string[] }) => {
@@ -250,16 +237,7 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
         portGuids: Array.from(nextPorts),
       });
     },
-    [
-      designSelectionEnabled,
-      effectiveSelectionEnabled,
-      portSelectionEnabled,
-      resolvedSelection.designGuids,
-      resolvedSelection.portGuids,
-      resolvedSelection.typeGuids,
-      setNextSelection,
-      typeSelectionEnabled,
-    ],
+    [designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, resolvedSelection.designGuids, resolvedSelection.portGuids, resolvedSelection.typeGuids, setNextSelection, typeSelectionEnabled],
   );
 
   const clear = React.useCallback(() => {
@@ -297,21 +275,10 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
           <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Designs</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
             {effectiveDesigns.map((d) => (
-              <label
-                key={d.guid}
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
-                className="rounded-md border border-border px-3 py-2 hover:bg-muted/40"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedDesignGuids.has(d.guid)}
-                  disabled={!effectiveSelectionEnabled || !designSelectionEnabled}
-                  onChange={() => toggle("design", d.guid)}
-                />
+              <label key={d.guid} style={{ display: "flex", alignItems: "center", gap: 8 }} className="rounded-md border border-border px-3 py-2 hover:bg-muted/40">
+                <input type="checkbox" checked={selectedDesignGuids.has(d.guid)} disabled={!effectiveSelectionEnabled || !designSelectionEnabled} onChange={() => toggle("design", d.guid)} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {d.name || d.guid}
-                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name || d.guid}</div>
                   <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {d.variant || "default"} · {d.view || "default"}
                   </div>
@@ -327,24 +294,11 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
           <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Types</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
             {effectiveTypes.map((t) => (
-              <label
-                key={t.guid}
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
-                className="rounded-md border border-border px-3 py-2 hover:bg-muted/40"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedTypeGuids.has(t.guid)}
-                  disabled={!effectiveSelectionEnabled || !typeSelectionEnabled}
-                  onChange={() => toggle("type", t.guid)}
-                />
+              <label key={t.guid} style={{ display: "flex", alignItems: "center", gap: 8 }} className="rounded-md border border-border px-3 py-2 hover:bg-muted/40">
+                <input type="checkbox" checked={selectedTypeGuids.has(t.guid)} disabled={!effectiveSelectionEnabled || !typeSelectionEnabled} onChange={() => toggle("type", t.guid)} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {t.name || t.guid}
-                  </div>
-                  <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {t.variant || "default"}
-                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.name || t.guid}</div>
+                  <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.variant || "default"}</div>
                 </div>
               </label>
             ))}
@@ -357,21 +311,10 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
           <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Ports</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
             {effectivePorts.map((p) => (
-              <label
-                key={p.guid}
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
-                className="rounded-md border border-border px-3 py-2 hover:bg-muted/40"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedPortGuids.has(p.guid)}
-                  disabled={!effectiveSelectionEnabled || !portSelectionEnabled}
-                  onChange={() => toggle("port", p.guid)}
-                />
+              <label key={p.guid} style={{ display: "flex", alignItems: "center", gap: 8 }} className="rounded-md border border-border px-3 py-2 hover:bg-muted/40">
+                <input type="checkbox" checked={selectedPortGuids.has(p.guid)} disabled={!effectiveSelectionEnabled || !portSelectionEnabled} onChange={() => toggle("port", p.guid)} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {p.name || p.guid}
-                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name || p.guid}</div>
                   <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {p.port || "default"} · {p.mandatory ? "mandatory" : "optional"}
                   </div>
@@ -1332,8 +1275,7 @@ export const Vec3: React.FC<Vec3Props> = ({
   const updateAxis = React.useCallback(
     (axis: "u" | "v" | "w", rawValue: number) => {
       const parsedValue = Number.isFinite(rawValue) ? rawValue : 0;
-      const clampedValue =
-        axis === "u" ? clampVec3Axis(parsedValue, minU, maxU) : axis === "v" ? clampVec3Axis(parsedValue, minV, maxV) : clampVec3Axis(parsedValue, minW, maxW);
+      const clampedValue = axis === "u" ? clampVec3Axis(parsedValue, minU, maxU) : axis === "v" ? clampVec3Axis(parsedValue, minV, maxV) : clampVec3Axis(parsedValue, minW, maxW);
       const nextVec: Vec3Value = { ...currentVec, [axis]: clampedValue };
 
       if (axis === "u" && hasUPartialControl) setResolvedU(clampedValue);
@@ -1345,15 +1287,7 @@ export const Vec3: React.FC<Vec3Props> = ({
     [currentVec, hasUPartialControl, hasVPartialControl, hasWPartialControl, maxU, maxV, maxW, minU, minV, minW, setResolvedU, setResolvedV, setResolvedVec, setResolvedW],
   );
 
-  const renderAxisRow = (
-    axis: "u" | "v" | "w",
-    label: string,
-    value: number,
-    min: number,
-    max: number,
-    axisDisplayEnabled: boolean,
-    axisSelectionEnabled: boolean,
-  ) => {
+  const renderAxisRow = (axis: "u" | "v" | "w", label: string, value: number, min: number, max: number, axisDisplayEnabled: boolean, axisSelectionEnabled: boolean) => {
     if (!axisDisplayEnabled) return null;
     const canSelect = selectionEnabled && axisSelectionEnabled;
 
@@ -1362,19 +1296,7 @@ export const Vec3: React.FC<Vec3Props> = ({
         <label htmlFor={`${id}-${axis}`} className="text-xs font-semibold uppercase text-muted-foreground">
           {label}
         </label>
-        {canSelect ? (
-          <input
-            id={`${id}-${axis}`}
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={value}
-            onChange={(event) => updateAxis(axis, Number(event.target.value))}
-          />
-        ) : (
-          <div className="h-2 rounded-full bg-muted/60" />
-        )}
+        {canSelect ? <input id={`${id}-${axis}`} type="range" min={min} max={max} step={step} value={value} onChange={(event) => updateAxis(axis, Number(event.target.value))} /> : <div className="h-2 rounded-full bg-muted/60" />}
         <input
           type="number"
           min={min}
@@ -2258,6 +2180,7 @@ export const McpDesignViewer: React.FC = () => {
           setSelectedConnections(new Set());
         }
       };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
@@ -2266,26 +2189,23 @@ export const McpDesignViewer: React.FC = () => {
   // Apply host theme CSS variables (background, text colors, fonts, etc.)
   useHostStyles(app, app?.getHostContext());
 
-  const sendSelectionUpdate = React.useCallback(
-    (pieces: Set<string>, connections: Set<string>) => {
-      if (appRef.current) {
-        appRef.current.updateModelContext({
-          data: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({
-                selectionChange: {
-                  pieceGuids: Array.from(pieces),
-                  connectionGuids: Array.from(connections),
-                },
-              }),
-            },
-          ],
-        });
-      }
-    },
-    [],
-  );
+  const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
+    if (appRef.current) {
+      appRef.current.updateModelContext({
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({
+              selectionChange: {
+                pieceGuids: Array.from(pieces),
+                connectionGuids: Array.from(connections),
+              },
+            }),
+          },
+        ],
+      });
+    }
+  }, []);
 
   if (error) {
     return (
@@ -2317,7 +2237,20 @@ export const McpDesignViewer: React.FC = () => {
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <SemioDiagram
-        kit={{ types: [], designs: [{ guid: "__mcp__", pieces: payload.points.map((p) => ({ guid: p.guid, id: p.id, center: { u: p.u, v: p.v } })), connections: payload.lines.map((l) => ({ guid: l.guid, connected: { piece: { guid: payload.points.find((p) => p.u === l.sourceU && p.v === l.sourceV)?.guid ?? "" } }, connecting: { piece: { guid: payload.points.find((p) => p.u === l.targetU && p.v === l.targetV)?.guid ?? "" } } })) }] }}
+        kit={{
+          types: [],
+          designs: [
+            {
+              guid: "__mcp__",
+              pieces: payload.points.map((p) => ({ guid: p.guid, id: p.id, center: { u: p.u, v: p.v } })),
+              connections: payload.lines.map((l) => ({
+                guid: l.guid,
+                connected: { piece: { guid: payload.points.find((p) => p.u === l.sourceU && p.v === l.sourceV)?.guid ?? "" } },
+                connecting: { piece: { guid: payload.points.find((p) => p.u === l.targetU && p.v === l.targetV)?.guid ?? "" } },
+              })),
+            },
+          ],
+        }}
         designGuid="__mcp__"
         selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
         pieceSelectionEnabled={pieceSelectionEnabled}
