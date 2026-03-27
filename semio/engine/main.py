@@ -3113,11 +3113,14 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
     design_guid = design.get("guid")
 
     diagram_data = _build_diagram_data(kit, design_guid, design_diff)
+    diagram_data["mode"] = mode
     diagram_data["capabilities"] = capabilities or {
         "pieceSelection": mode in ("select-pieces", "select-pieces-and-connections"),
         "connectionSelection": mode in ("select-connections", "select-pieces-and-connections"),
     }
     diagram_data["kitArtifacts"] = _build_kit_artifact_data(kit)
+    diagram_data["design"] = design
+    diagram_data["kit"] = kit
 
     return diagram_data
 

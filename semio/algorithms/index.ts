@@ -5,4 +5,4 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-export { AlgorithmApp, useAlgorithm, WindowKind, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "@semio/ui";
+export { AlgorithmApp, createIpoAlgorithmLayout, useAlgorithm, WindowKind, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "@semio/ui";

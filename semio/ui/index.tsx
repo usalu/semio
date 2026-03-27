@@ -2701,11 +2701,14 @@ interface McpDiagramLine {
 export interface McpDiagramPayload {
   points: McpDiagramPoint[];
   lines: McpDiagramLine[];
+  mode?: string;
   capabilities?: {
     pieceSelection?: boolean;
     connectionSelection?: boolean;
   };
   kitArtifacts?: KitData;
+  design?: Design;
+  kit?: Kit;
 }
 
 // #endregion 🔖McpApp Types
@@ -3025,15 +3028,39 @@ export const McpDesignViewer: React.FC = () => {
     );
   }
 
+  const selectionProps = {
+    selectionEnabled: pieceSelectionEnabled || connectionSelectionEnabled,
+    pieceSelectionEnabled,
+    connectionSelectionEnabled,
+    selection: {
+      pieceGuids: Array.from(selectedPieces),
+      connectionGuids: Array.from(selectedConnections),
+    },
+    onSelectionChange: (next: DiagramSelection) => {
+      const nextPieces = new Set(next.pieceGuids ?? []);
+      const nextConns = new Set(next.connectionGuids ?? []);
+      setSelectedPieces(nextPieces);
+      setSelectedConnections(nextConns);
+      sendSelectionUpdate(nextPieces, nextConns);
+    },
+  };
+
+  const mode = payload.mode ?? "show-diagram";
+
+  if ((mode === "show-design" || mode === "show-scene") && payload.design) {
+    return (
+      <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+        {mode === "show-design" ? (
+          <SemioDesign design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} />
+        ) : (
+          <SemioScene design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-      {payload.kitArtifacts && (
-        <div style={{ position: "absolute", left: 12, top: 12, right: 12, pointerEvents: "none", zIndex: 10 }}>
-          <div style={{ pointerEvents: "auto", maxHeight: "38vh", overflow: "auto" }}>
-            <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit Artifacts" />
-          </div>
-        </div>
-      )}
       <SemioDiagram
         design={
           {
@@ -3046,20 +3073,7 @@ export const McpDesignViewer: React.FC = () => {
             })),
           } as unknown as Design
         }
-        selectionEnabled={pieceSelectionEnabled || connectionSelectionEnabled}
-        pieceSelectionEnabled={pieceSelectionEnabled}
-        connectionSelectionEnabled={connectionSelectionEnabled}
-        selection={{
-          pieceGuids: Array.from(selectedPieces),
-          connectionGuids: Array.from(selectedConnections),
-        }}
-        onSelectionChange={(next) => {
-          const nextPieces = new Set(next.pieceGuids ?? []);
-          const nextConns = new Set(next.connectionGuids ?? []);
-          setSelectedPieces(nextPieces);
-          setSelectedConnections(nextConns);
-          sendSelectionUpdate(nextPieces, nextConns);
-        }}
+        {...selectionProps}
       />
     </div>
   );
@@ -3714,7 +3728,21 @@ if (import.meta.vitest) {
 // DesignDiffOutput (Diagram with diff, no selection), DesignOutput (Diagram with no diff, no selection).
 // Summary: Standardized algorithm IPO shell using typed WindowKind-based windows.
 
-import { TreeRow, TreeSection, UI, WindowKind, cn, createDefaultLayout, type FooterItem, type SidePanelTabConfig, type UIAppConfig, type UIWindowKindDefinition } from "@elements/ui/elements";
+import {
+  TreeRow,
+  TreeSection,
+  UI,
+  WindowKind,
+  cn,
+  createDefaultLayout,
+  createWindowLayout,
+  type FooterItem,
+  type SidePanelTabConfig,
+  type UIAppConfig,
+  type UIWindowKindDefinition,
+  type UIWindowLayout,
+  type UIWindowLayoutStackNode,
+} from "@elements/ui/elements";
 import { AlertCircleIcon, DetailsIcon, PieceIcon } from "@semio/assets/icons";
 
 /**
@@ -3898,16 +3926,56 @@ export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWin
   });
 }
 
-export function createAlgorithmLayout(windows: AlgorithmWindowDef[], defaultLayout?: AlgorithmAppProps["defaultLayout"]) {
-  return (
-    defaultLayout ??
-    createDefaultLayout(
-      windows.map((windowDef) => windowDef.id),
+/**
+ * Builds the standard IPO canvas layout: one column for all input window kinds (tab stack),
+ * one for diff output, one for final design output. Matches the semio UI shell used in elements/UI stories.
+ */
+export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindowLayout {
+  const inputKinds = new Set<WindowKind>([WindowKind.VEC_INPUT, WindowKind.PIECES_SELECTION_INPUT]);
+  const inputWindows = windows.filter((w) => inputKinds.has(w.kind));
+  const diffWindow = windows.find((w) => w.kind === WindowKind.DESIGN_DIFF_OUTPUT);
+  const outputWindow = windows.find((w) => w.kind === WindowKind.DESIGN_OUTPUT);
+
+  const columns: UIWindowLayoutStackNode[] = [];
+  if (inputWindows.length > 0) {
+    columns.push({
+      kind: "stack",
+      children: inputWindows.map((w) => createWindowLayout(w.id, w.label ?? w.id)),
+    });
+  }
+  if (diffWindow) {
+    columns.push({
+      kind: "stack",
+      children: [createWindowLayout(diffWindow.id, diffWindow.label ?? diffWindow.id)],
+    });
+  }
+  if (outputWindow) {
+    columns.push({
+      kind: "stack",
+      children: [createWindowLayout(outputWindow.id, outputWindow.label ?? outputWindow.id)],
+    });
+  }
+
+  const count = columns.length;
+  if (count === 0) {
+    return createDefaultLayout(
+      windows.map((w) => w.id),
       "row",
       undefined,
-      windows.map((windowDef) => windowDef.label ?? windowDef.id),
-    )
-  );
+      windows.map((w) => w.label ?? w.id),
+    );
+  }
+
+  const size = Math.round((100 / count) * 100) / 100;
+  columns.forEach((c) => {
+    c.size = size;
+  });
+
+  return { root: { kind: "row", children: columns } };
+}
+
+export function createAlgorithmLayout(windows: AlgorithmWindowDef[], defaultLayout?: AlgorithmAppProps["defaultLayout"]) {
+  return defaultLayout ?? createIpoAlgorithmLayout(windows);
 }
 
 // #region 🔖AlgorithmDetailsPanel
@@ -3927,19 +3995,19 @@ const AlgorithmDetailsPanel: React.FC = () => {
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Design section */}
       <TreeSection id="algorithm.details.design" label="Design" icon={<DetailsIcon size={14} />} defaultOpen={true}>
-        <TreeRow id="algorithm.details.design.name">
+        <TreeRow id="algorithm.details.design.name" label={null}>
           <div className="flex items-center justify-between w-full px-2 py-0.5">
             <span className="text-xs text-muted-foreground">name</span>
             <span className="text-xs font-mono truncate max-w-32">{design?.name ?? "—"}</span>
           </div>
         </TreeRow>
-        <TreeRow id="algorithm.details.design.pieces">
+        <TreeRow id="algorithm.details.design.pieces" label={null}>
           <div className="flex items-center justify-between w-full px-2 py-0.5">
             <span className="text-xs text-muted-foreground">pieces</span>
             <span className="text-xs font-mono">{allPieces.length}</span>
           </div>
         </TreeRow>
-        <TreeRow id="algorithm.details.design.connections">
+        <TreeRow id="algorithm.details.design.connections" label={null}>
           <div className="flex items-center justify-between w-full px-2 py-0.5">
             <span className="text-xs text-muted-foreground">connections</span>
             <span className="text-xs font-mono">{design?.connections?.length ?? 0}</span>
@@ -3950,13 +4018,13 @@ const AlgorithmDetailsPanel: React.FC = () => {
       {/* Vec section (only if vec is present) */}
       {ctx.vec && (
         <TreeSection id="algorithm.details.vec" label="Vec" icon={<DetailsIcon size={14} />} defaultOpen={true}>
-          <TreeRow id="algorithm.details.vec.u">
+          <TreeRow id="algorithm.details.vec.u" label={null}>
             <div className="flex items-center justify-between w-full px-2 py-0.5">
               <span className="text-xs text-muted-foreground">u</span>
               <span className="text-xs font-mono">{ctx.vec.u}</span>
             </div>
           </TreeRow>
-          <TreeRow id="algorithm.details.vec.v">
+          <TreeRow id="algorithm.details.vec.v" label={null}>
             <div className="flex items-center justify-between w-full px-2 py-0.5">
               <span className="text-xs text-muted-foreground">v</span>
               <span className="text-xs font-mono">{ctx.vec.v}</span>
@@ -3968,12 +4036,12 @@ const AlgorithmDetailsPanel: React.FC = () => {
       {/* Selection section */}
       <TreeSection id="algorithm.details.selection" label={`Selection (${selectedPieces.length})`} icon={<PieceIcon size={14} />} defaultOpen={true}>
         {selectedPieces.length === 0 ? (
-          <TreeRow id="algorithm.details.selection.empty">
+          <TreeRow id="algorithm.details.selection.empty" label={null}>
             <div className="px-2 py-1 text-xs text-muted-foreground italic">No pieces selected</div>
           </TreeRow>
         ) : (
           selectedPieces.map((piece) => (
-            <TreeRow key={piece.guid} id={`algorithm.details.selection.${piece.guid}`}>
+            <TreeRow key={piece.guid} id={`algorithm.details.selection.${piece.guid}`} label={null}>
               <div className="flex items-center justify-between w-full px-2 py-0.5">
                 <span className="text-xs truncate max-w-24">{piece.name ?? piece.guid.slice(0, 8)}</span>
                 <span className="text-xs text-muted-foreground font-mono">{piece.type?.guid.slice(0, 8) ?? "—"}</span>
@@ -3985,32 +4053,32 @@ const AlgorithmDetailsPanel: React.FC = () => {
 
       {/* Output section */}
       <TreeSection id="algorithm.details.output" label="Output" icon={<DetailsIcon size={14} />} defaultOpen={true}>
-        <TreeRow id="algorithm.details.output.status">
+        <TreeRow id="algorithm.details.output.status" label={null}>
           <div className="flex items-center justify-between w-full px-2 py-0.5">
             <span className="text-xs text-muted-foreground">status</span>
             <span className={cn("text-xs font-mono", ctx.error ? "text-destructive" : "text-success")}>{ctx.error ? "error" : "ok"}</span>
           </div>
         </TreeRow>
         {ctx.error && (
-          <TreeRow id="algorithm.details.output.error">
+          <TreeRow id="algorithm.details.output.error" label={null}>
             <div className="px-2 py-1 text-xs text-destructive wrap-break-word">{ctx.error}</div>
           </TreeRow>
         )}
         {ctx.designDiff && (
           <>
-            <TreeRow id="algorithm.details.output.diff.added">
+            <TreeRow id="algorithm.details.output.diff.added" label={null}>
               <div className="flex items-center justify-between w-full px-2 py-0.5">
                 <span className="text-xs text-muted-foreground">added</span>
                 <span className="text-xs font-mono text-success">{ctx.designDiff.pieces?.added?.length ?? 0}</span>
               </div>
             </TreeRow>
-            <TreeRow id="algorithm.details.output.diff.removed">
+            <TreeRow id="algorithm.details.output.diff.removed" label={null}>
               <div className="flex items-center justify-between w-full px-2 py-0.5">
                 <span className="text-xs text-muted-foreground">removed</span>
                 <span className="text-xs font-mono text-destructive">{ctx.designDiff.pieces?.removed?.length ?? 0}</span>
               </div>
             </TreeRow>
-            <TreeRow id="algorithm.details.output.diff.updated">
+            <TreeRow id="algorithm.details.output.diff.updated" label={null}>
               <div className="flex items-center justify-between w-full px-2 py-0.5">
                 <span className="text-xs text-muted-foreground">updated</span>
                 <span className="text-xs font-mono text-warning">{(ctx.designDiff.pieces?.updated as any[])?.length ?? 0}</span>
@@ -4181,10 +4249,46 @@ if (algorithmVitest) {
         root: {
           kind: "row",
           children: [
-            { kind: "stack", children: [{ kind: "window", windowKindId: "drag-vec", title: "Vec" }] },
-            { kind: "stack", children: [{ kind: "window", windowKindId: "drag-input", title: "Input" }] },
-            { kind: "stack", children: [{ kind: "window", windowKindId: "drag-diff", title: "Diff" }] },
-            { kind: "stack", children: [{ kind: "window", windowKindId: "drag-output", title: "Output" }] },
+            {
+              kind: "stack",
+              size: 33.33,
+              children: [
+                { kind: "window", windowKindId: "drag-vec", title: "Vec" },
+                { kind: "window", windowKindId: "drag-input", title: "Input" },
+              ],
+            },
+            {
+              kind: "stack",
+              size: 33.33,
+              children: [{ kind: "window", windowKindId: "drag-diff", title: "Diff" }],
+            },
+            {
+              kind: "stack",
+              size: 33.33,
+              children: [{ kind: "window", windowKindId: "drag-output", title: "Output" }],
+            },
+          ],
+        },
+      });
+
+      const twoPane: AlgorithmWindowDef[] = [
+        { id: "flatten-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
+        { id: "flatten-output", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
+      ];
+      expect(createIpoAlgorithmLayout(twoPane)).toEqual({
+        root: {
+          kind: "row",
+          children: [
+            {
+              kind: "stack",
+              size: 50,
+              children: [{ kind: "window", windowKindId: "flatten-diff", title: "Diff" }],
+            },
+            {
+              kind: "stack",
+              size: 50,
+              children: [{ kind: "window", windowKindId: "flatten-output", title: "Output" }],
+            },
           ],
         },
       });

@@ -1,8 +1,8 @@
 {
   "title": "Unify Selection Windows as UI Components",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor semio algorithms window kinds so selection-specific windows are semio/ui component specializations instead of separate bespoke window kinds. Piece selection should be implemented as a Diagram variant with restricted selection behavior, and the same pattern should apply to related selection windows. Update existing implementation and extend existing tests only; do not add new test files.",
-  "summary": "Fixed the MCP app black screen issue caused by missing Tailwind CSS processing in the Vite build pipeline.\n\nRoot cause: The MCP app's Vite config lacked the `@tailwindcss/vite` plugin, the entry point didn't import the CSS file, and Tailwind v4's scanner couldn't find utility class usage because it only scans from the CSS entry file's directory.\n\nThree fixes applied:\n1. Added `@tailwindcss/vite` plugin to `vite.mcp-app.config.ts`\n2. Added `import \"@semio/ui/globals.css\"` to `mcp-app.tsx` entry point\n3. Added `@source` directives to `semio/ui/globals.css` to tell Tailwind v4 scanner where to find class usage across `semio/ui/` and `elements/ui/`\n\nThe rebuilt `dist/mcp-app.html` grew from 802KB to 2441KB and now includes all Tailwind utility classes, theme CSS variables, and component styles. All 164 engine tests pass.",
+  "summary": "Fixed algorithm shell UX: TreeItem now respects explicit null labels (TreeRow label prop) so details panel rows no longer show raw i18n keys. Added createIpoAlgorithmLayout grouping VEC_INPUT+PIECES_SELECTION_INPUT in one tab stack with DESIGN_DIFF_OUTPUT and DESIGN_OUTPUT columns (~IPO layout). TreeRow forwards label; createAlgorithmLayout defaults to IPO layout. Exported createIpoAlgorithmLayout from algorithms bundle. Vitest: 134 passed in semio/ui.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1124"
   },

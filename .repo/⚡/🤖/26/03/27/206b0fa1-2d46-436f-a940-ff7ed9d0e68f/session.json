@@ -7304,6 +7304,37 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "6a54567586a7b95df16cb1d04bf6b2df0782a508",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-27T19:41:28Z",
+        "session": "206b0fa1-2d46-436f-a940-ff7ed9d0e68f",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/206b0fa1-2d46-436f-a940-ff7ed9d0e68f/206b0fa1-2d46-436f-a940-ff7ed9d0e68f.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "206b0fa1-2d46-436f-a940-ff7ed9d0e68f",
+          "generation_id": "c8c6b161-445b-446b-b0ff-614a0c99f9bc",
+          "model": "default",
+          "session_id": "206b0fa1-2d46-436f-a940-ff7ed9d0e68f",
+          "reason": "user_close",
+          "duration_ms": 0,
+          "is_background_agent": false,
+          "final_status": "completed",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2.6.21",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/206b0fa1-2d46-436f-a940-ff7ed9d0e68f/206b0fa1-2d46-436f-a940-ff7ed9d0e68f.jsonl"
+        }
+      },
+      "response": {}
     }
   ]
 }

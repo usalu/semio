@@ -15003,7 +15003,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   onBranchChange,
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
-  const resolvedLabel = label ?? localizedLabel;
+  const resolvedLabel = label !== undefined ? label : localizedLabel;
   assertNoNestedTreeSections(children, "TreeItem");
   if (sortable && sortableId) {
     return (
@@ -15238,15 +15238,17 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
  * Leaf form row combining TreeItem and TreeContent into [Indent][Label][Control].
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treerow](repo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-ROW)
  **/
-export const TreeRow: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: (event: React.MouseEvent) => void; onDoubleClick?: (event: React.MouseEvent) => void; actions?: TreeSectionAction[] }> = ({
-  children,
-  className,
-  id,
-  onClick,
-  onDoubleClick,
-  actions,
-}) => (
-  <TreeItem className={className} id={id} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
+export const TreeRow: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+  /** When set (including explicit `null`), overrides useLabel(id) for the row title. Use `null` for content-only rows. */
+  label?: React.ReactNode;
+  onClick?: (event: React.MouseEvent) => void;
+  onDoubleClick?: (event: React.MouseEvent) => void;
+  actions?: TreeSectionAction[];
+}> = ({ children, className, id, label, onClick, onDoubleClick, actions }) => (
+  <TreeItem className={className} id={id} label={label} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
     {children}
   </TreeItem>
 );
