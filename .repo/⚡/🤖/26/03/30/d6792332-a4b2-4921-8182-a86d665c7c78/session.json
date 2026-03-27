@@ -1,0 +1,75 @@
+{
+  "id": "d6792332-a4b2-4921-8182-a86d665c7c78",
+  "uri": "repo://session/d6792332-a4b2-4921-8182-a86d665c7c78",
+  "client": "claude-code",
+  "second": "2026-03-30T08:25:38Z",
+  "checkpoint": "b78258a7cd889e6d8ffec950119634f742217c75",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d6792332-a4b2-4921-8182-a86d665c7c78.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "b78258a7cd889e6d8ffec950119634f742217c75",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-03-30T08:25:38Z",
+        "session": "d6792332-a4b2-4921-8182-a86d665c7c78",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d6792332-a4b2-4921-8182-a86d665c7c78.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "d6792332-a4b2-4921-8182-a86d665c7c78",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d6792332-a4b2-4921-8182-a86d665c7c78.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionStart",
+          "source": "startup"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "b78258a7cd889e6d8ffec950119634f742217c75",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-03-30T08:26:33Z",
+        "session": "d6792332-a4b2-4921-8182-a86d665c7c78",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d6792332-a4b2-4921-8182-a86d665c7c78.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "d6792332-a4b2-4921-8182-a86d665c7c78",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d6792332-a4b2-4921-8182-a86d665c7c78.jsonl",
+          "cwd": "/workspaces/semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "UserPromptSubmit",
+          "prompt": "\u003cide_opened_file\u003eThe user opened the file /workspaces/semio/repo/tutorials/Details panel.md in the IDE. This may or may not be related to the current task.\u003c/ide_opened_file\u003e\nadd kiro cli with all trusted permissions to run and debug and follow the naming and exsiting structure"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "b78258a7cd889e6d8ffec950119634f742217c75",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-30T08:58:32Z",
+        "session": "d6792332-a4b2-4921-8182-a86d665c7c78",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d6792332-a4b2-4921-8182-a86d665c7c78.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "d6792332-a4b2-4921-8182-a86d665c7c78",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d6792332-a4b2-4921-8182-a86d665c7c78.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

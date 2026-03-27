@@ -259,13 +259,6 @@ for bin in typescript-language-server pyright-langserver pyright; do
   src="$(npm bin -g 2>/dev/null)/$bin"
   [ -f "$src" ] && sudo ln -sf "$src" "/usr/local/bin/$bin" && echo "✅ Linked $bin" || echo "⚠️  Could not link $bin"
 done
-echo "Installing C# LSP server..."
-if dotnet tool install -g csharp-ls; then
-  sudo ln -sf "$HOME/.dotnet/tools/csharp-ls" /usr/local/bin/csharp-ls
-  echo "✅ csharp-ls installed."
-else
-  echo "⚠️  csharp-ls installation failed, but continuing..."
-fi
 #endregion 🔖KiroLsp
 #region 🔖Playwright
 echo "Installing Playwright browsers..."

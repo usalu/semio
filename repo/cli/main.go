@@ -8820,6 +8820,7 @@ var AllowedClients = []string{
 	"antigravity",
 	"antigravity-chat",
 	"droid",
+	"kiro-cli",
 }
 
 // NormalizeLLMSlug MUST be idempotent for already-normalized values.
@@ -12412,6 +12413,67 @@ func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "antigravity-chat", ConfigPath: ""}
 }
 
+// KiroCliEditorProvider holds the data fields for a kiro cli editor provider record.
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️kiroclieditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/KiroCliEditorProvider)
+type KiroCliEditorProvider struct{}
+
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
+// Kind holds the data fields for a Kind record.
+// Kind MUST perform the Kind operation.
+func (p *KiroCliEditorProvider) Kind() string { return "kiro-cli" }
+
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
+// Configure holds the data fields for a Configure record.
+// Configure MUST perform the Configure operation.
+func (p *KiroCliEditorProvider) Configure(repoRoot string) error {
+	content, err := p.GenerateHookConfig(repoRoot)
+	if err != nil {
+		return err
+	}
+	mapping := p.HookMapping()
+	targetPath := filepath.Join(repoRoot, mapping.ConfigPath)
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(targetPath, []byte(content), 0644)
+}
+
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
+// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// ResolveNativeEvent MUST perform the ResolveNativeEvent operation.
+func (p *KiroCliEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
+	return resolveKiroCliEvent(nativeEvent, toolKind)
+}
+
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
+// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// FormatHookOutput MUST perform the FormatHookOutput operation.
+func (p *KiroCliEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
+	out, _ := json.Marshal(result)
+	return string(out)
+}
+
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
+// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// NativeEventFromHookEvent MUST perform the NativeEventFromHookEvent operation.
+func (p *KiroCliEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
+	return ""
+}
+
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
+// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// GenerateHookConfig MUST perform the GenerateHookConfig operation.
+func (p *KiroCliEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
+	return generateKiroCliConfig(repoRoot)
+}
+
+// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
+// HookMapping holds the data fields for a HookMapping record.
+// HookMapping MUST perform the HookMapping operation.
+func (p *KiroCliEditorProvider) HookMapping() EditorHookMapping {
+	return EditorHookMapping{Client: "kiro-cli", ConfigPath: ".kiro/agents/semio.json"}
+}
+
 // #endregion 🔖Editor Providers
 
 // #region 🔖Provider Registry
@@ -12431,6 +12493,7 @@ func AllEditorProviders() []EditorProvider {
 		&DroidEditorProvider{},
 		&CodexEditorProvider{},
 		&AntigravityEditorProvider{},
+		&KiroCliEditorProvider{},
 	}
 }
 
@@ -39902,9 +39965,41 @@ func generateDroidConfig(repoRoot string) (string, error) {
 	return string(out) + "\n", nil
 }
 
-// #endregion 🔖Configure
+// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatekirocliconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateKiroCliConfig)
+// generateKiroCliConfig holds the data fields for a generateKiroCliConfig record.
+// generateKiroCliConfig MUST perform the generateKiroCliConfig operation.
+func generateKiroCliConfig(repoRoot string) (string, error) {
+	c := "./repo/cli/cli"
+	existing := make(map[string]interface{})
+	agentPath := filepath.Join(repoRoot, ".kiro", "agents", "semio.json")
+	if data, err := os.ReadFile(agentPath); err == nil {
+		_ = json.Unmarshal(data, &existing)
+	}
+	existing["hooks"] = map[string]interface{}{
+		"agentSpawn": []map[string]interface{}{
+			{"command": fmt.Sprintf("%s hook agentSpawn kiro-cli", c)},
+		},
+		"userPromptSubmit": []map[string]interface{}{
+			{"command": fmt.Sprintf("%s hook userPromptSubmit kiro-cli", c)},
+		},
+		"preToolUse": []map[string]interface{}{
+			{"command": fmt.Sprintf("%s hook preToolUse kiro-cli", c)},
+		},
+		"postToolUse": []map[string]interface{}{
+			{"command": fmt.Sprintf("%s hook postToolUse kiro-cli", c)},
+		},
+		"stop": []map[string]interface{}{
+			{"command": fmt.Sprintf("%s hook stop kiro-cli", c)},
+		},
+	}
+	out, err := json.MarshalIndent(existing, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(out) + "\n", nil
+}
 
-// #region 🔖Update Command
+// #endregion 🔖Configure
 
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command)
 // Update command implementation for dependency updates.
@@ -44026,6 +44121,26 @@ func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent,
 		return HookAgentToolPlanUpdatingEnded, "", nil
 	default:
 		return "", "", fmt.Errorf("unknown native event %q for claude-compatible", nativeEvent)
+	}
+}
+
+// resolveKiroCliEvent maps a Kiro CLI native event to a neutral HookEvent.
+// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvekiroclievent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveKiroCliEvent)
+// resolveKiroCliEvent MUST perform the resolveKiroCliEvent operation.
+func resolveKiroCliEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
+	switch nativeEvent {
+	case "agentSpawn":
+		return HookAgentStarted, "", nil
+	case "stop":
+		return HookAgentEnded, "", nil
+	case "userPromptSubmit":
+		return HookAgentPromptSubmitting, "", nil
+	case "preToolUse":
+		return resolvePreToolUse(kind), "", nil
+	case "postToolUse":
+		return resolvePostToolUse(kind), "", nil
+	default:
+		return "", "", fmt.Errorf("unknown native event %q for kiro-cli", nativeEvent)
 	}
 }
 

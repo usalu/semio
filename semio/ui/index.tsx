@@ -35,6 +35,7 @@ import {
   type DesignDiff,
   type File as SemioFile,
   type Kit,
+  type Model,
   type Piece,
   type Plane,
   type Type as SemioKind,
@@ -975,7 +976,7 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
     .map(({ piece, status }) => {
       const kindGuid = piece.type?.guid;
       const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
-      const selectedModel = kind?.models?.length ? selectBestModel(kind.models as SemioKind["models"], []) : undefined;
+      const selectedModel = kind?.models?.length ? selectBestModel(kind.models as Model[], []) : undefined;
       const file = selectedModel?.file?.guid ? filesByGuid.get(selectedModel.file.guid) : undefined;
       return {
         piece,
@@ -1681,8 +1682,8 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 
 // #endregion 🔖Design
 
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+if ((import.meta as any).vitest) {
+  const { describe, expect, it } = (import.meta as any).vitest;
 
   const testPlane: Plane = {
     origin: { x: 0, y: 0, z: 0 },

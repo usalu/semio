@@ -18,8 +18,8 @@
   "scripts": {
     "dev": "storybook dev -p 6006 --exact-port --host 0.0.0.0 --no-open --debug",
     "build": "storybook build",
-    "lint": "eslint --max-warnings 0 --config index.tsx .",
-    "test": "vitest run --config index.tsx --passWithNoTests"
+    "lint": "eslint --max-warnings 0 --config eslint.config.ts .",
+    "test": "vitest run --config vitest.config.ts --passWithNoTests"
   },
   "targets": {
     "lint": {
