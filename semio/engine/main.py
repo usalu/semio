@@ -54,7 +54,7 @@ import starlette.applications
 import starlette_graphene3
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
-from mcp.types import CallToolResult, TextContent
+from mcp.types import CallToolResult, EmbeddedResource, TextContent, TextResourceContents
 
 try:
     import openai  # type: ignore
@@ -2010,23 +2010,36 @@ def _hydrate_design_from_kit_disk_if_shallow(design: dict[str, typing.Any], kit_
         return design
     try:
         base = pathlib.Path(kit_source).resolve()
-        search_root = base.parent if base.is_file() else base if base.is_dir() else None
-        if search_root is None or not search_root.is_dir():
+        search_roots: list[pathlib.Path] = []
+        if base.is_file():
+            search_roots.append(base.parent)
+        elif base.is_dir():
+            search_roots.append(base)
+            search_roots.append(base.parent)
+        else:
             return design
+        seen_dirs: set[pathlib.Path] = set()
         best: dict[str, typing.Any] | None = None
         best_piece_count = -1
-        for candidate in sorted(search_root.glob("*.design.semio.json")):
-            try:
-                with open(candidate, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-            except OSError:
+        for search_root in search_roots:
+            if not search_root.is_dir():
                 continue
-            if not isinstance(data, dict) or data.get("guid") != design_guid:
+            rp = search_root.resolve()
+            if rp in seen_dirs:
                 continue
-            n = len(data.get("pieces") or [])
-            if n > best_piece_count:
-                best_piece_count = n
-                best = data
+            seen_dirs.add(rp)
+            for candidate in sorted(search_root.glob("*.design.semio.json")):
+                try:
+                    with open(candidate, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                except OSError:
+                    continue
+                if not isinstance(data, dict) or data.get("guid") != design_guid:
+                    continue
+                n = len(data.get("pieces") or [])
+                if n > best_piece_count:
+                    best_piece_count = n
+                    best = data
         if best is not None:
             return best
     except OSError:
@@ -2081,7 +2094,10 @@ def _sync_session_design_and_type(sid: int | None):
         if synced_design is None:
             _mcp_session_designs.pop(sid, None)
         else:
-            _mcp_session_designs[sid] = synced_design
+            cur_n = len((current_design.get("pieces") or []))
+            sync_n = len((synced_design.get("pieces") or []))
+            if sync_n >= cur_n:
+                _mcp_session_designs[sid] = synced_design
     current_type = _mcp_session_types.get(sid)
     if current_type is not None:
         type_guid = current_type.get("guid")
@@ -2963,10 +2979,23 @@ def clear_current_selection(ctx: Context) -> dict:
 
 
 def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = False) -> CallToolResult:
-    """Build tools/call result with structuredContent so MCP App hosts can hydrate the iframe without relying on text-only content."""
+    """Build tools/call result with structuredContent so MCP App hosts can hydrate the iframe without relying on text-only content.
+    Duplicates JSON in an EmbeddedResource so hosts that truncate structuredContent or the first text block may still deliver the full payload via the resource contents.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️asmcpapptoolresult](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_as_mcp_app_tool_result)
+    """
     text = json.dumps(payload)
     return CallToolResult(
-        content=[TextContent(type="text", text=text)],
+        content=[
+            TextContent(type="text", text=text),
+            EmbeddedResource(
+                type="resource",
+                resource=TextResourceContents(
+                    uri="semio://mcp-app/tool-payload",
+                    mimeType="application/json",
+                    text=text,
+                ),
+            ),
+        ],
         structuredContent=payload,
         isError=is_error,
     )

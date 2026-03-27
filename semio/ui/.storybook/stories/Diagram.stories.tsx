@@ -88,4 +88,34 @@ export const FeaturesDisabled: Story = {
   render: (args) => frame(<Diagram {...args} />),
 };
 
+export const ZoomToDesign: Story = {
+  args: {
+    design: nakaginDesign,
+    designDiff,
+    zoomTarget: "design",
+    title: "Zoom To Design",
+  },
+  render: (args) => frame(<Diagram {...args} />),
+};
+
+export const ZoomToDiff: Story = {
+  args: {
+    design: nakaginDesign,
+    designDiff,
+    zoomTarget: "diff",
+    title: "Zoom To Diff",
+  },
+  render: (args) => frame(<Diagram {...args} />),
+};
+
+export const ZoomNone: Story = {
+  args: {
+    design: nakaginDesign,
+    designDiff,
+    zoomTarget: "none",
+    title: "Zoom None",
+  },
+  render: (args) => frame(<Diagram {...args} />),
+};
+
 // #endregion 🔖Diagram

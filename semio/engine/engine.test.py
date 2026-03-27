@@ -1054,6 +1054,16 @@ class TestMcp:
         d = engine._get_session_design(mock_ctx)
         assert len(d.get("pieces", [])) > 50
 
+    def test_hydrate_design_searches_parent_of_folder_kit(self):
+        """*.design.semio.json for Nakagin lives next to the metabolism folder, not inside it."""
+        shallow = {"guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef", "name": "Nakagin Capsule Tower", "pieces": []}
+        out = engine._hydrate_design_from_kit_disk_if_shallow(
+            shallow,
+            str(METABOLISM_DIR),
+            "9a890dd4-0a9c-48ac-920a-9e62666465ef",
+        )
+        assert len(out.get("pieces", [])) > 50
+
     def test_show_diff_returns_diagram_json(self, kitMetabolismJson: dict):
         """show_diff returns diagram data and default capabilities in structuredContent."""
         mock_ctx = type("MockCtx", (), {"session": object()})()

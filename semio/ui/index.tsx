@@ -2391,6 +2391,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   designDiff,
   defaultDesignDiff,
   diffEnabled = true,
+  zoomTarget,
   selection,
   defaultSelection,
   selectionEnabled = true,
@@ -2417,6 +2418,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
     return buildSceneSnapshot(design, effectiveDiff);
   }, [design, resolvedDesignDiff, diffEnabled]);
+  const effectiveZoomTarget: ZoomTarget = zoomTarget ?? (diffEnabled && resolvedDesignDiff ? "diff" : "design");
 
   const effectivePieceSelectionEnabled = selectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = selectionEnabled && connectionSelectionEnabled;
@@ -2495,7 +2497,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   return (
     <div className={`h-full w-full ${className}`} aria-label={title}>
       <ThreeCanvas onPointerMissed={clearSelection} orthographic frameloop="demand" camera={{ zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 }} style={{ width: "100%", height: "100%" }}>
-        <SceneInnerContent showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange}>
+        <SceneInnerContent showGrid={showGrid} showGizmo={showGizmo} zoomTarget={effectiveZoomTarget} snapshot={snapshot} camera={camera} onCameraChange={onCameraChange}>
           {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
             <SceneConnection
               key={connection.guid}
@@ -2571,6 +2573,7 @@ export interface SemioDesignProps {
   designDiff?: DesignDiff;
   defaultDesignDiff?: DesignDiff;
   diffEnabled?: boolean;
+  zoomTarget?: ZoomTarget;
   selection?: DiagramSelection;
   defaultSelection?: DiagramSelection;
   selectionEnabled?: boolean;
@@ -2600,6 +2603,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   designDiff,
   defaultDesignDiff,
   diffEnabled = true,
+  zoomTarget,
   selection,
   defaultSelection,
   selectionEnabled = true,
@@ -2651,6 +2655,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
             kit={kit}
             designDiff={resolvedDesignDiff}
             diffEnabled={diffEnabled}
+            zoomTarget={zoomTarget}
             selection={resolvedSelection}
             hover={resolvedHover}
             selectionEnabled={selectionEnabled}
@@ -2676,6 +2681,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
           design={design}
           designDiff={resolvedDesignDiff}
           diffEnabled={diffEnabled}
+          zoomTarget={zoomTarget}
           selection={resolvedSelection}
           selectionEnabled={selectionEnabled}
           pieceSelectionEnabled={pieceSelectionEnabled}
@@ -2966,6 +2972,19 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
       const b = block as { type?: string; text?: string; resource?: { text?: string } };
       if (b.type === "text" && typeof b.text === "string") textParts.push(b.text);
       if (b.type === "resource" && b.resource && typeof b.resource.text === "string") textParts.push(b.resource.text);
+      if (!b.type && b.resource && typeof b.resource.text === "string") textParts.push(b.resource.text);
+    }
+    for (const seg of textParts) {
+      const t = seg.trim();
+      if (t.length === 0) continue;
+      try {
+        const parsed = JSON.parse(t) as unknown;
+        if (parsed && typeof parsed === "object") {
+          candidates.push(normalizeMcpDiagramPayload(parsed as Record<string, unknown>));
+        }
+      } catch {
+        /* ignore */
+      }
     }
     const joined = textParts.join("").trim();
     if (joined.length > 0) {
@@ -3564,6 +3583,27 @@ if (import.meta.vitest) {
         content: [{ type: "text", text: JSON.stringify(full) }],
       });
       expect(r?.design?.pieces?.length).toBe(30);
+    });
+
+    it("parses each content block as JSON (text + EmbeddedResource duplicate from engine)", () => {
+      const stub = {
+        points: [],
+        lines: [],
+        mode: "show-design",
+        design: { guid: "dg", pieces: [{ guid: "p0" }], connections: [] },
+        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] },
+      };
+      const full = {
+        ...stub,
+        design: { guid: "dg", pieces: Array.from({ length: 20 }, (_, i) => ({ guid: `p${i}` })), connections: [] },
+      };
+      const r = parseDiagramPayloadFromToolResult({
+        content: [
+          { type: "text", text: JSON.stringify(stub) },
+          { type: "resource", resource: { uri: "semio://mcp-app/tool-payload", mimeType: "application/json", text: JSON.stringify(full) } },
+        ],
+      });
+      expect(r?.design?.pieces?.length).toBe(20);
     });
   });
 
