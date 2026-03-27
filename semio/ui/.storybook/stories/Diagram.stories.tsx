@@ -1,7 +1,7 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Diagram.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly (no kit/designGuid).
-// Summary: Diagram stories: Default, Diff, Selection, Controlled, FeaturesDisabled.
+// Summary: Diagram stories: Default, Diff, Selection, FeaturesDisabled, NakginDiff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
@@ -10,6 +10,7 @@ import { SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+import nakginDiffDesign from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
 // #region 🔖Data
 
@@ -103,23 +104,6 @@ export const Selection: Story = {
   render: (args) => frame(<Diagram {...args} />),
 };
 
-export const Controlled: Story = {
-  args: {
-    design: nakaginDesign,
-    designDiff,
-    title: "Controlled",
-  },
-  render: (args) => {
-    const [selection, setSelection] = React.useState({
-      pieceGuids: [modifiedPiece.guid],
-      connectionGuids: [modifiedConnection.guid],
-    });
-    const [zoom, setZoom] = React.useState(1);
-    const [pan, setPan] = React.useState({ x: 0, y: 0 });
-    return frame(<Diagram {...args} selection={selection} onSelectionChange={setSelection} zoom={zoom} onZoomChange={setZoom} pan={pan} onPanChange={setPan} />);
-  },
-};
-
 export const FeaturesDisabled: Story = {
   args: {
     design: nakaginDesign,
@@ -129,6 +113,17 @@ export const FeaturesDisabled: Story = {
     panEnabled: false,
     zoomEnabled: false,
     title: "Features Disabled",
+  },
+  render: (args) => frame(<Diagram {...args} />),
+};
+
+export const NakginDiff: Story = {
+  args: {
+    design: nakaginDesign,
+    designDiff: nakginDiffDesign as any,
+    diffEnabled: true,
+    selectionEnabled: false,
+    title: "Nakgin Diff",
   },
   render: (args) => frame(<Diagram {...args} />),
 };

@@ -44,6 +44,7 @@ export { default as TambourMetaType } from "./semio/tambour.meta.type.semio.json
 export { default as TambourShallowType } from "./semio/tambour.shallow.type.semio.json";
 export { default as NakaginCapsuleTowerMetaDesign } from "./semio/nakagin-capsule-tower.meta.design.semio.json";
 export { default as NakaginCapsuleTowerShallowDesign } from "./semio/nakagin-capsule-tower.shallow.design.semio.json";
+export { default as NakginCapsuleTowerDiffDesign } from "./semio/nakgin-capsule-tower.diff.design.semio.json";
 
 /**
  * Metabolism kit types array

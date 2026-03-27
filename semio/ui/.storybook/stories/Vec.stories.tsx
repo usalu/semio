@@ -1,14 +1,12 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Vec.stories.tsx
-// Specs: One component per stories file. First story is Default with max features and minimal setup. Fully controlled 2D vector input.
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Default story is uncontrolled.
 // Summary: Vec stories: Default, NoAxes, NoOrigin, PositiveDomain, Large.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
 import { Vec, type VecValue } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
-
 // #region 🔖Vec
 
 const meta = {
@@ -24,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 
 const defaultArgs = {
   id: "vec-default",
-  vec: { u: 0.3, v: 0.5 } as VecValue,
+  defaultVec: { u: 0.3, v: 0.5 } as VecValue,
   minU: -1,
   maxU: 1,
   minV: -1,
@@ -32,62 +30,27 @@ const defaultArgs = {
   showAxes: true,
   showOrigin: true,
   size: 120,
-  onVecChange: () => {},
   className: "",
 };
 
 export const Default: Story = {
   args: defaultArgs,
-  render: (args) => {
-    const [vec, setVec] = useState(args.vec);
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <Vec {...args} vec={vec} onVecChange={setVec} />
-        <span className="text-xs text-muted-foreground">
-          u: {vec.u.toFixed(2)}, v: {vec.v.toFixed(2)}
-        </span>
-      </div>
-    );
-  },
 };
 
 export const NoAxes: Story = {
   args: { ...defaultArgs, id: "vec-no-axes", showAxes: false },
-  render: (args) => {
-    const [vec, setVec] = useState(args.vec);
-    return <Vec {...args} vec={vec} onVecChange={setVec} />;
-  },
 };
 
 export const NoOrigin: Story = {
   args: { ...defaultArgs, id: "vec-no-origin", showOrigin: false },
-  render: (args) => {
-    const [vec, setVec] = useState(args.vec);
-    return <Vec {...args} vec={vec} onVecChange={setVec} />;
-  },
 };
 
 export const PositiveDomain: Story = {
-  args: { ...defaultArgs, id: "vec-positive-domain", minU: 0, maxU: 10, minV: 0, maxV: 10, vec: { u: 5, v: 5 } },
-  render: (args) => {
-    const [vec, setVec] = useState(args.vec);
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <Vec {...args} vec={vec} onVecChange={setVec} />
-        <span className="text-xs text-muted-foreground">
-          u: {vec.u.toFixed(1)}, v: {vec.v.toFixed(1)}
-        </span>
-      </div>
-    );
-  },
+  args: { ...defaultArgs, id: "vec-positive-domain", minU: 0, maxU: 10, minV: 0, maxV: 10, defaultVec: { u: 5, v: 5 } },
 };
 
 export const Large: Story = {
   args: { ...defaultArgs, id: "vec-large", size: 200 },
-  render: (args) => {
-    const [vec, setVec] = useState(args.vec);
-    return <Vec {...args} vec={vec} onVecChange={setVec} />;
-  },
 };
 
 // #endregion 🔖Vec

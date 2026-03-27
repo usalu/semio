@@ -1,7 +1,7 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Scene.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly. Kit is optional for 3D models.
-// Summary: Scene stories: Default, Diff, Selection, Controlled, FeaturesDisabled.
+// Summary: Scene stories: Default, Diff, Selection, FeaturesDisabled, NakginDiff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
@@ -10,6 +10,7 @@ import { SemioScene as Scene } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+import nakginDiffDesign from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
 // #region 🔖Data
 
@@ -110,18 +111,6 @@ export const Selection: Story = {
   render: (args) => frame(<Scene {...args} />),
 };
 
-export const Controlled: Story = {
-  args: {
-    design: nakaginDesign,
-    kit: minimalKit,
-    title: "Controlled",
-  },
-  render: (args) => {
-    const [selection, setSelection] = React.useState({ pieceGuids: [firstPieceGuid] });
-    return frame(<Scene {...args} selection={selection} onSelectionChange={setSelection} />);
-  },
-};
-
 export const FeaturesDisabled: Story = {
   args: {
     design: nakaginDesign,
@@ -131,6 +120,18 @@ export const FeaturesDisabled: Story = {
     selectionEnabled: false,
     diffEnabled: false,
     title: "Features Disabled",
+  },
+  render: (args) => frame(<Scene {...args} />),
+};
+
+export const NakginDiff: Story = {
+  args: {
+    design: nakaginDesign,
+    kit: minimalKit,
+    designDiff: nakginDiffDesign as any,
+    diffEnabled: true,
+    selectionEnabled: false,
+    title: "Nakgin Diff",
   },
   render: (args) => frame(<Scene {...args} />),
 };

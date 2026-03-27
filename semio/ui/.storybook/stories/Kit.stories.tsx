@@ -1,12 +1,11 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Kit.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses the shallow kit prop directly.
-// Summary: Kit stories: Default, Controlled, DesignsOnly, TypesOnly, PortsOnly, SelectionDisabled, DataDisabled, OpenArtifact.
+// Summary: Kit stories: Default, DesignsOnly, TypesOnly, PortsOnly, SelectionDisabled, DataDisabled, OpenArtifact.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
 import type { Kit as SemioKit } from "@semio/js";
-import type { KitSelection } from "@semio/ui";
 import { SemioKit as Kit } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -36,25 +35,6 @@ const frame = (node: React.ReactNode) => <div className="w-96 rounded-md border 
 export const Default: Story = {
   args: { kit },
   render: (args) => frame(<Kit {...args} />),
-};
-
-export const Controlled: Story = {
-  args: { kit },
-  render: (args) => {
-    const [selection, setSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [] });
-    const [lastOpened, setLastOpened] = React.useState("Nothing opened yet");
-    return frame(
-      <div className="grid gap-3">
-        <Kit
-          {...args}
-          selection={selection}
-          onSelectionChange={setSelection}
-          onOpenArtifact={(artifact) => setLastOpened(`${artifact.kind}:${artifact.label}`)}
-        />
-        <div className="text-xs text-muted-foreground">{lastOpened}</div>
-      </div>,
-    );
-  },
 };
 
 export const DesignsOnly: Story = {
