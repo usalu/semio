@@ -2995,12 +2995,24 @@ def _build_kit_artifact_data(kit: dict) -> dict:
     }
     if kit.get("guid"):
         meta["guid"] = kit.get("guid")
+    for key in ("description", "createdAt", "updatedAt", "homepage", "remote", "preview", "icon", "image", "license"):
+        value = kit.get(key)
+        if value:
+            meta[key] = value
     designs = []
     for d in kit.get("designs", []) or []:
         guid = d.get("guid")
         if not guid:
             continue
-        designs.append({"guid": guid, "name": d.get("name", ""), "variant": d.get("variant", ""), "view": d.get("view", "")})
+        design_payload = {"guid": guid, "name": d.get("name", ""), "variant": d.get("variant", ""), "view": d.get("view", "")}
+        parent = d.get("parent")
+        if isinstance(parent, dict) and parent.get("guid"):
+            design_payload["parent"] = {"guid": parent.get("guid")}
+        for key in ("description", "createdAt", "updatedAt", "unit", "icon", "image"):
+            value = d.get(key)
+            if value:
+                design_payload[key] = value
+        designs.append(design_payload)
 
     types = []
     ports = []
@@ -3008,7 +3020,15 @@ def _build_kit_artifact_data(kit: dict) -> dict:
         t_guid = t.get("guid")
         if not t_guid:
             continue
-        types.append({"guid": t_guid, "name": t.get("name", ""), "variant": t.get("variant", "")})
+        type_payload = {"guid": t_guid, "name": t.get("name", ""), "variant": t.get("variant", "")}
+        parent = t.get("parent")
+        if isinstance(parent, dict) and parent.get("guid"):
+            type_payload["parent"] = {"guid": parent.get("guid")}
+        for key in ("description", "createdAt", "updatedAt", "icon", "image"):
+            value = t.get(key)
+            if value:
+                type_payload[key] = value
+        types.append(type_payload)
         for c in t.get("connectors", []) or []:
             c_guid = c.get("guid")
             if not c_guid:
@@ -3019,7 +3039,7 @@ def _build_kit_artifact_data(kit: dict) -> dict:
                     "typeGuid": t_guid,
                     "id": c.get("id", ""),
                     "port": c.get("port", ""),
-                    "name": c.get("id", "") or c.get("port", "") or "port",
+                    "name": c.get("name", "") or c.get("id", "") or c.get("port", "") or "port",
                     "description": c.get("description", ""),
                     "mandatory": bool(c.get("mandatory", False)),
                 }

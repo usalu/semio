@@ -6049,6 +6049,73 @@ text {
             diff.Connections = new ConnectionsDiff { Updated = connectionUpdates };
         return diff;
     }
+
+    /// <summary>
+    /// Deletes pieces and connections from a design, returning a DesignDiff.
+    /// Removes stale connections referencing deleted pieces.
+    /// Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+    /// </summary>
+    public static DesignDiff DeletePiecesAndConnectionsInDesign(Design design, List<string> pieceGuids, List<string> connectionGuids)
+    {
+        var deletedPieceSet = new HashSet<string>(pieceGuids);
+
+        // Find stale connections: connections referencing any deleted piece
+        var staleConnectionGuids = new HashSet<string>();
+        foreach (var conn in design.Connections)
+        {
+            if (deletedPieceSet.Contains(conn.Connected.Piece.Guid) ||
+                deletedPieceSet.Contains(conn.Connecting.Piece.Guid))
+            {
+                staleConnectionGuids.Add(conn.Guid);
+            }
+        }
+
+        // All removed connections = explicit + stale
+        var allRemovedConnectionGuids = new HashSet<string>(connectionGuids);
+        allRemovedConnectionGuids.UnionWith(staleConnectionGuids);
+
+        // Find pieces that become fixed: pieces whose parent connection was removed
+        // and are not themselves being deleted
+        // A piece becomes fixed when the connection where it is the "connecting" side is removed
+        // and it has no other remaining parent connection
+        var fixedPieceGuids = new List<string>();
+        foreach (var connGuid in allRemovedConnectionGuids)
+        {
+            var conn = design.Connections.FirstOrDefault(c => c.Guid == connGuid);
+            if (conn == null) continue;
+            var connectingGuid = conn.Connecting.Piece.Guid;
+            if (deletedPieceSet.Contains(connectingGuid)) continue;
+            // Check if this piece has another parent connection not in the removed set
+            var hasOtherParent = design.Connections.Any(c =>
+                c.Connecting.Piece.Guid == connectingGuid &&
+                !allRemovedConnectionGuids.Contains(c.Guid));
+            if (!hasOtherParent && !fixedPieceGuids.Contains(connectingGuid))
+                fixedPieceGuids.Add(connectingGuid);
+        }
+
+        // Build the diff
+        var piecesRemoved = pieceGuids.Select(g => new PieceId { Guid = g }).ToList();
+        var piecesUpdated = fixedPieceGuids.Select(g => new PieceDiffUpdate
+        {
+            Piece = new PieceId { Guid = g },
+            Diff = new PieceDiff
+            {
+                Plane = new Plane(),
+                Center = new Coord()
+            }
+        }).ToList();
+        var connectionsRemoved = allRemovedConnectionGuids
+            .OrderBy(g => g)
+            .Select(g => new ConnectionId { Guid = g })
+            .ToList();
+
+        var diff = new DesignDiff();
+        if (piecesRemoved.Count > 0 || piecesUpdated.Count > 0)
+            diff.Pieces = new PiecesDiff { Removed = piecesRemoved, Updated = piecesUpdated };
+        if (connectionsRemoved.Count > 0)
+            diff.Connections = new ConnectionsDiff { Removed = connectionsRemoved };
+        return diff;
+    }
 }
 
 #endregion 🔖Design

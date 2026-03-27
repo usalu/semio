@@ -1,0 +1,178 @@
+{
+  "pieces": {
+    "removed": [
+      {
+        "guid": "8ade0ad2-14e3-469d-822b-6ba08b4f2f2b"
+      }
+    ],
+    "updated": [
+      {
+        "piece": {
+          "guid": "0a23d9c7-b75b-4166-8730-351367df9f8a"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "1972af01-10c0-4da2-8267-d6672c8778c7"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "30f83909-7eb7-4452-8f67-9eef2175895e"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "5bdc7584-ecc5-4a6b-85db-af82e511154e"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "64f3e610-3dd8-4a9b-8f14-734e9af77777"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "6bd6036e-dd1d-4ef6-9e34-090ff050dba4"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "859638d9-270f-413a-bfb0-b9400a3e21b7"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "8ed7926a-3736-4812-941c-2471de6efb8b"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      },
+      {
+        "piece": {
+          "guid": "dc6e7ac6-1515-46ca-9e94-248988badc0f"
+        },
+        "diff": {
+          "plane": {
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "xAxis": { "x": 1, "y": 0, "z": 0 },
+            "yAxis": { "x": 0, "y": 1, "z": 0 }
+          },
+          "center": { "u": 0, "v": 0 }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "removed": [
+      {
+        "guid": "0a12e032-9aab-4123-988d-09640201cd55"
+      },
+      {
+        "guid": "3ad4df7b-fb12-4f9e-8386-c7b05dacc154"
+      },
+      {
+        "guid": "6508cb13-4e76-423c-9b9f-9af3e7a95a15"
+      },
+      {
+        "guid": "83a1f2a6-6245-4353-86e9-8307dbc84dc2"
+      },
+      {
+        "guid": "8684b51c-94f5-4a50-be16-526ac8e0892a"
+      },
+      {
+        "guid": "93ae02a6-289b-4842-a84e-aa938e96c74c"
+      },
+      {
+        "guid": "b116a04b-b77b-4ba0-87de-4199d0bfe21c"
+      },
+      {
+        "guid": "ce3a78f3-5b31-4cf6-ab16-66d84fea2de6"
+      },
+      {
+        "guid": "d97b2857-6057-49cb-b524-2463f3eb0ec0"
+      },
+      {
+        "guid": "e0c95c39-0f0b-405c-ad90-2870ddd655f6"
+      },
+      {
+        "guid": "f6944242-1eae-415d-bc17-d2c891850199"
+      }
+    ]
+  }
+}

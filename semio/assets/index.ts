@@ -36,6 +36,8 @@ export { default as MetabolismKitDiffed } from "./semio/metabolism.kit.diffed.se
 export { default as MetabolismMetaKit } from "./semio/metabolism.meta.kit.semio.json";
 export { default as MetabolismShallowKit } from "./semio/metabolism.shallow.kit.semio.json";
 export { default as ModelSelectionCases } from "./semio/model.selection.semio.json";
+export { default as NakaginCapsuleTowerDeletedDesignDiff } from "./semio/nakagin-capsule-tower.deleted.design.diff.semio.json";
+export { default as NakaginCapsuleTowerDeletedSelection } from "./semio/nakagin-capsule-tower.deleted.selection.semio.json";
 export { default as MetabolismKitFilteredNakaginCapsuleTower, default as NakaginCapsuleTowerFilteredKit } from "./semio/nakagin-capsule-tower.filtered.kit.semio.json";
 export { default as NakaginCapsuleTowerMetaDesign } from "./semio/nakagin-capsule-tower.meta.design.semio.json";
 export { default as NakaginCapsuleTowerShallowDesign } from "./semio/nakagin-capsule-tower.shallow.design.semio.json";

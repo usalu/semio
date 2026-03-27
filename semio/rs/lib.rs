@@ -5068,6 +5068,115 @@ pub fn inverse_design_diff(original: &Design, forward: &DesignDiff) -> DesignDif
     get_design_diff(&after, original)
 }
 
+/// Deletes pieces and connections from a design, returning a DesignDiff.
+/// Removes stale connections referencing deleted pieces.
+/// Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+/// [👤semio📚rs💻semio🔖kitchangehelpers🛠️deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/delete_pieces_and_connections_in_design)
+pub fn delete_pieces_and_connections_in_design(
+    design: &Design,
+    piece_guids: &[String],
+    connection_guids: &[String],
+) -> DesignDiff {
+    let deleted_piece_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
+    let connections = design.connections.as_deref().unwrap_or(&[]);
+
+    // Find stale connections: connections referencing any deleted piece
+    let mut stale_connection_guids: HashSet<String> = HashSet::new();
+    for conn in connections {
+        if deleted_piece_set.contains(conn.connected.piece.guid.as_str())
+            || deleted_piece_set.contains(conn.connecting.piece.guid.as_str())
+        {
+            stale_connection_guids.insert(conn.guid.clone());
+        }
+    }
+
+    // All removed connections = explicit + stale
+    let mut all_removed_connection_guids: HashSet<String> =
+        connection_guids.iter().cloned().collect();
+    all_removed_connection_guids.extend(stale_connection_guids);
+
+    // Find pieces that become fixed: pieces whose parent connection was removed
+    // and are not themselves being deleted.
+    // A piece becomes fixed when the connection where it is the "connecting" side is removed
+    // and it has no other remaining parent connection.
+    let mut fixed_piece_guids: Vec<String> = Vec::new();
+    for conn_guid in &all_removed_connection_guids {
+        let conn = match connections.iter().find(|c| &c.guid == conn_guid) {
+            Some(c) => c,
+            None => continue,
+        };
+        let connecting_guid = &conn.connecting.piece.guid;
+        if deleted_piece_set.contains(connecting_guid.as_str()) {
+            continue;
+        }
+        // Check if this piece has another parent connection not in the removed set
+        let has_other_parent = connections.iter().any(|c| {
+            c.connecting.piece.guid == *connecting_guid
+                && !all_removed_connection_guids.contains(&c.guid)
+        });
+        if !has_other_parent && !fixed_piece_guids.contains(connecting_guid) {
+            fixed_piece_guids.push(connecting_guid.clone());
+        }
+    }
+
+    // Build the diff
+    let pieces_removed: Vec<RemovedItem> = piece_guids
+        .iter()
+        .map(|g| RemovedItem { guid: g.clone() })
+        .collect();
+    let pieces_updated: Vec<DiffUpdate<PieceDiff>> = fixed_piece_guids
+        .iter()
+        .map(|g| DiffUpdate {
+            key: "piece".to_string(),
+            guid: g.clone(),
+            diff: PieceDiff {
+                guid: g.clone(),
+                plane: Some(Some(Plane::default())),
+                center: Some(Some(Coord::default())),
+                ..Default::default()
+            },
+        })
+        .collect();
+    let mut sorted_removed_connections: Vec<String> =
+        all_removed_connection_guids.into_iter().collect();
+    sorted_removed_connections.sort();
+    let connections_removed: Vec<RemovedItem> = sorted_removed_connections
+        .iter()
+        .map(|g| RemovedItem { guid: g.clone() })
+        .collect();
+
+    let mut diff = DesignDiff {
+        guid: design.guid.clone(),
+        ..Default::default()
+    };
+
+    if !pieces_removed.is_empty() || !pieces_updated.is_empty() {
+        diff.pieces = Some(CollectionDiff {
+            removed: if pieces_removed.is_empty() {
+                None
+            } else {
+                Some(pieces_removed)
+            },
+            updated: if pieces_updated.is_empty() {
+                None
+            } else {
+                Some(pieces_updated)
+            },
+            added: None,
+        });
+    }
+
+    if !connections_removed.is_empty() {
+        diff.connections = Some(CollectionDiff {
+            removed: Some(connections_removed),
+            updated: None,
+            added: None,
+        });
+    }
+
+    diff
+}
+
 /// Computes a reversible KitChange from two kit states.
 /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getkitchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_kit_change)
 pub fn get_kit_change(before: &Kit, after: &Kit) -> KitChange {
@@ -5532,9 +5641,15 @@ pub fn filter_kit(kit: &Kit, filter: &KitFilter) -> Kit {
         kit.clone()
     };
 
-    let has_glob_filters = filter.designs.is_some() || filter.types.is_some() || filter.ports.is_some() ||
-        filter.files.is_some() || filter.tags.is_some() || filter.concepts.is_some() ||
-        filter.qualities.is_some() || filter.authors.is_some() || filter.folders.is_some();
+    let has_glob_filters = filter.designs.is_some()
+        || filter.types.is_some()
+        || filter.ports.is_some()
+        || filter.files.is_some()
+        || filter.tags.is_some()
+        || filter.concepts.is_some()
+        || filter.qualities.is_some()
+        || filter.authors.is_some()
+        || filter.folders.is_some();
 
     if !has_glob_filters {
         return base;
@@ -5551,33 +5666,87 @@ pub fn filter_kit(kit: &Kit, filter: &KitFilter) -> Kit {
         remote: base.remote,
         homepage: base.homepage,
         license: base.license,
-        types: Some(base.types.as_deref().unwrap_or(&[]).iter()
-            .filter(|t| matches_glob_filter(&t.name, filter.types.as_ref()))
-            .cloned().collect()),
-        designs: Some(base.designs.as_deref().unwrap_or(&[]).iter()
-            .filter(|d| matches_glob_filter(&d.name, filter.designs.as_ref()))
-            .cloned().collect()),
-        ports: Some(base.ports.as_deref().unwrap_or(&[]).iter()
-            .filter(|p| matches_glob_filter(&p.name, filter.ports.as_ref()))
-            .cloned().collect()),
-        files: Some(base.files.as_deref().unwrap_or(&[]).iter()
-            .filter(|f| matches_glob_filter(&f.name, filter.files.as_ref()))
-            .cloned().collect()),
-        tags: Some(base.tags.as_deref().unwrap_or(&[]).iter()
-            .filter(|t| matches_glob_filter(&t.name, filter.tags.as_ref()))
-            .cloned().collect()),
-        concepts: Some(base.concepts.as_deref().unwrap_or(&[]).iter()
-            .filter(|c| matches_glob_filter(&c.name, filter.concepts.as_ref()))
-            .cloned().collect()),
-        qualities: Some(base.qualities.as_deref().unwrap_or(&[]).iter()
-            .filter(|q| matches_glob_filter(&q.name, filter.qualities.as_ref()))
-            .cloned().collect()),
-        folders: Some(base.folders.as_deref().unwrap_or(&[]).iter()
-            .filter(|f| matches_glob_filter(&f.name, filter.folders.as_ref()))
-            .cloned().collect()),
-        authors: Some(base.authors.as_deref().unwrap_or(&[]).iter()
-            .filter(|a| matches_glob_filter(&a.name, filter.authors.as_ref()))
-            .cloned().collect()),
+        types: Some(
+            base.types
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|t| matches_glob_filter(&t.name, filter.types.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        designs: Some(
+            base.designs
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|d| matches_glob_filter(&d.name, filter.designs.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        ports: Some(
+            base.ports
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|p| matches_glob_filter(&p.name, filter.ports.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        files: Some(
+            base.files
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|f| matches_glob_filter(&f.name, filter.files.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        tags: Some(
+            base.tags
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|t| matches_glob_filter(&t.name, filter.tags.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        concepts: Some(
+            base.concepts
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|c| matches_glob_filter(&c.name, filter.concepts.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        qualities: Some(
+            base.qualities
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|q| matches_glob_filter(&q.name, filter.qualities.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        folders: Some(
+            base.folders
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|f| matches_glob_filter(&f.name, filter.folders.as_ref()))
+                .cloned()
+                .collect(),
+        ),
+        authors: Some(
+            base.authors
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .filter(|a| matches_glob_filter(&a.name, filter.authors.as_ref()))
+                .cloned()
+                .collect(),
+        ),
         attributes: base.attributes,
         created_at: base.created_at,
         updated_at: base.updated_at,
@@ -5760,8 +5929,10 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
 
                         piece_planes.insert(neighbor_guid, new_matrix);
                         piece_centers.insert(neighbor_guid, child_center);
-                        let parent_path = piece_paths.get(current_guid).cloned().unwrap_or_default();
-                        piece_paths.insert(neighbor_guid, format!("{},{}", parent_path, neighbor_guid));
+                        let parent_path =
+                            piece_paths.get(current_guid).cloned().unwrap_or_default();
+                        piece_paths
+                            .insert(neighbor_guid, format!("{},{}", parent_path, neighbor_guid));
                         visited.insert(neighbor_guid);
                         queue.push_back(neighbor_guid);
                     }
@@ -5791,15 +5962,18 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
             };
 
             if plane_needs_update || center_needs_update {
-                let path_attr = piece_paths.get(piece.guid.as_str()).map(|path| {
-                    CollectionDiff {
-                        added: Some(vec![
-                            Attribute { guid: guid(), key: "semio.path".to_string(), value: Some(path.clone()), definition: None },
-                        ]),
+                let path_attr = piece_paths
+                    .get(piece.guid.as_str())
+                    .map(|path| CollectionDiff {
+                        added: Some(vec![Attribute {
+                            guid: guid(),
+                            key: "semio.path".to_string(),
+                            value: Some(path.clone()),
+                            definition: None,
+                        }]),
                         removed: None,
                         updated: None,
-                    }
-                });
+                    });
                 updated_pieces.push(DiffUpdate {
                     key: "piece".to_string(),
                     guid: piece.guid.clone(),
@@ -8915,7 +9089,12 @@ fn hydrate_kit_file_blobs(kit: &mut Kit, files: &HashMap<String, Vec<u8>>) {
     let file_paths: Vec<String> = kit
         .files
         .as_ref()
-        .map(|kit_files| kit_files.iter().map(|file| zip_roundtrip::build_file_path(kit, file)).collect())
+        .map(|kit_files| {
+            kit_files
+                .iter()
+                .map(|file| zip_roundtrip::build_file_path(kit, file))
+                .collect()
+        })
         .unwrap_or_default();
 
     if let Some(kit_files) = kit.files.as_mut() {
@@ -8961,7 +9140,10 @@ fn remap_kit_file_bytes(
     let mut before_paths_by_guid = HashMap::new();
     if let Some(before_files_meta) = &before_kit.files {
         for file in before_files_meta {
-            before_paths_by_guid.insert(file.guid.clone(), zip_roundtrip::build_file_path(before_kit, file));
+            before_paths_by_guid.insert(
+                file.guid.clone(),
+                zip_roundtrip::build_file_path(before_kit, file),
+            );
         }
     }
 
@@ -9037,9 +9219,12 @@ fn import_kit_from_zip_bytes(zip_bytes: &[u8]) -> Result<zip_roundtrip::KitImpor
         .write_all(zip_bytes)
         .map_err(|error| io_semio_error("Failed to write temporary zip file", error))?;
 
-    let temp_path = temp_file.path().to_str().ok_or(SemioError::InvalidOperation {
-        message: "Temporary zip path is not valid UTF-8".to_string(),
-    })?;
+    let temp_path = temp_file
+        .path()
+        .to_str()
+        .ok_or(SemioError::InvalidOperation {
+            message: "Temporary zip path is not valid UTF-8".to_string(),
+        })?;
 
     zip_roundtrip::import_kit_from_zip(temp_path)
 }
@@ -9129,8 +9314,9 @@ pub fn export_folder_kit(
 
     let database_path = metadata_path.join(KIT_FOLDER_DATABASE_FILENAME);
     if database_path.exists() {
-        std::fs::remove_file(&database_path)
-            .map_err(|error| io_semio_error("Failed to replace existing folder kit database", error))?;
+        std::fs::remove_file(&database_path).map_err(|error| {
+            io_semio_error("Failed to replace existing folder kit database", error)
+        })?;
     }
     let database_path_str = database_path.to_str().ok_or(SemioError::InvalidOperation {
         message: "Folder kit database path is not valid UTF-8".to_string(),
@@ -9141,8 +9327,9 @@ pub fn export_folder_kit(
     for (relative_path, data) in resolved_files {
         let asset_path = root_path.join(&relative_path);
         if let Some(parent) = asset_path.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|error| io_semio_error("Failed to create folder kit asset directory", error))?;
+            std::fs::create_dir_all(parent).map_err(|error| {
+                io_semio_error("Failed to create folder kit asset directory", error)
+            })?;
         }
         std::fs::write(&asset_path, data)
             .map_err(|error| io_semio_error("Failed to write folder kit asset file", error))?;
@@ -9164,9 +9351,11 @@ pub fn import_remote_kit(url: &str) -> Result<zip_roundtrip::KitImportResult> {
         .get(reqwest::header::CONTENT_TYPE)
         .and_then(|value| value.to_str().ok())
         .map(|value| value.to_string());
-    let response = response.error_for_status().map_err(|error| SemioError::Database {
-        message: format!("Remote kit request failed for {}: {}", url, error),
-    })?;
+    let response = response
+        .error_for_status()
+        .map_err(|error| SemioError::Database {
+            message: format!("Remote kit request failed for {}: {}", url, error),
+        })?;
     let bytes = response.bytes().map_err(|error| SemioError::Database {
         message: format!("Failed to read remote kit body from {}: {}", url, error),
     })?;
@@ -9742,9 +9931,10 @@ mod tests {
         #[test]
         fn model_selection_from_shared_semio_assets() {
             let path = Path::new(ASSETS_DIR).join("model.selection.semio.json");
-            let data = fs::read_to_string(&path).expect("Failed to read model.selection.semio.json");
-            let payload: ModelSelectionAsset =
-                serde_json::from_str(&data).expect("Failed to deserialize model.selection.semio.json");
+            let data =
+                fs::read_to_string(&path).expect("Failed to read model.selection.semio.json");
+            let payload: ModelSelectionAsset = serde_json::from_str(&data)
+                .expect("Failed to deserialize model.selection.semio.json");
 
             for case in payload.cases {
                 let models: Vec<Model> = case
@@ -9802,7 +9992,13 @@ mod tests {
                 })
                 .expect("Nakagin Capsule Tower design not found");
 
-            let filtered = filter_kit(&kit, &KitFilter { design_guid: Some(design.guid.clone()), ..Default::default() });
+            let filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    design_guid: Some(design.guid.clone()),
+                    ..Default::default()
+                },
+            );
 
             assert_eq!(
                 filtered.designs.as_ref().map(|v| v.len()).unwrap_or(0),
@@ -9933,7 +10129,13 @@ mod tests {
                 })
                 .expect("Nakagin Capsule Tower design not found");
 
-            let filtered = filter_kit(&kit, &KitFilter { design_guid: Some(design.guid.clone()), ..Default::default() });
+            let filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    design_guid: Some(design.guid.clone()),
+                    ..Default::default()
+                },
+            );
 
             assert_eq!(filtered.guid, kit.guid);
             assert_eq!(filtered.name, kit.name);
@@ -9943,14 +10145,24 @@ mod tests {
         #[test]
         fn glob_filters_types_by_name_include() {
             let kit = load_kit("metabolism.kit.semio.json");
-            let filtered = filter_kit(&kit, &KitFilter {
-                types: Some(GlobFilter { include: Some(vec!["Capsule*".to_string()]), exclude: None }),
-                ..Default::default()
-            });
+            let filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    types: Some(GlobFilter {
+                        include: Some(vec!["Capsule*".to_string()]),
+                        exclude: None,
+                    }),
+                    ..Default::default()
+                },
+            );
             let types = filtered.types.as_ref().unwrap();
             assert!(!types.is_empty());
             for t in types {
-                assert!(glob_match(&t.name, "Capsule*"), "Type {} should match Capsule*", t.name);
+                assert!(
+                    glob_match(&t.name, "Capsule*"),
+                    "Type {} should match Capsule*",
+                    t.name
+                );
             }
         }
 
@@ -9958,14 +10170,24 @@ mod tests {
         fn glob_filters_types_by_name_exclude() {
             let kit = load_kit("metabolism.kit.semio.json");
             let total_types = kit.types.as_ref().map(|v| v.len()).unwrap_or(0);
-            let filtered = filter_kit(&kit, &KitFilter {
-                types: Some(GlobFilter { include: None, exclude: Some(vec!["Capsule*".to_string()]) }),
-                ..Default::default()
-            });
+            let filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    types: Some(GlobFilter {
+                        include: None,
+                        exclude: Some(vec!["Capsule*".to_string()]),
+                    }),
+                    ..Default::default()
+                },
+            );
             let types = filtered.types.as_ref().unwrap();
             assert!(types.len() < total_types);
             for t in types {
-                assert!(!glob_match(&t.name, "Capsule*"), "Type {} should have been excluded", t.name);
+                assert!(
+                    !glob_match(&t.name, "Capsule*"),
+                    "Type {} should have been excluded",
+                    t.name
+                );
             }
         }
 
@@ -9986,21 +10208,40 @@ mod tests {
         #[test]
         fn combines_design_guid_with_glob_filters() {
             let kit = load_kit("metabolism.kit.semio.json");
-            let design = kit.designs.as_ref()
-                .and_then(|designs| designs.iter().find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none()))
+            let design = kit
+                .designs
+                .as_ref()
+                .and_then(|designs| {
+                    designs
+                        .iter()
+                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                })
                 .expect("Nakagin Capsule Tower design not found");
-            let design_filtered = filter_kit(&kit, &KitFilter {
-                design_guid: Some(design.guid.clone()),
-                ..Default::default()
-            });
-            let combined_filtered = filter_kit(&kit, &KitFilter {
-                design_guid: Some(design.guid.clone()),
-                types: Some(GlobFilter { include: None, exclude: Some(vec!["Capsule*".to_string()]) }),
-                ..Default::default()
-            });
+            let design_filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    design_guid: Some(design.guid.clone()),
+                    ..Default::default()
+                },
+            );
+            let combined_filtered = filter_kit(
+                &kit,
+                &KitFilter {
+                    design_guid: Some(design.guid.clone()),
+                    types: Some(GlobFilter {
+                        include: None,
+                        exclude: Some(vec!["Capsule*".to_string()]),
+                    }),
+                    ..Default::default()
+                },
+            );
             assert!(
-                combined_filtered.types.as_ref().map(|v| v.len()).unwrap_or(0) <
-                design_filtered.types.as_ref().map(|v| v.len()).unwrap_or(0)
+                combined_filtered
+                    .types
+                    .as_ref()
+                    .map(|v| v.len())
+                    .unwrap_or(0)
+                    < design_filtered.types.as_ref().map(|v| v.len()).unwrap_or(0)
             );
         }
     }
@@ -10061,7 +10302,8 @@ mod tests {
             fs::write(&report_path, serde_json::to_vec_pretty(&report).unwrap())
                 .expect("Failed to write report");
 
-            let canonical_path = std::path::Path::new(ASSETS_DIR).join("nakagin.kpi.model.semio.json");
+            let canonical_path =
+                std::path::Path::new(ASSETS_DIR).join("nakagin.kpi.model.semio.json");
             let canonical_bytes =
                 fs::read(&canonical_path).expect("read canonical model-kpi asset");
             let canonical: serde_json::Value =
@@ -10191,6 +10433,155 @@ mod tests {
     }
 
     // #endregion 🔖Change Tests
+
+    // #region 🔖Delete Tests
+    // [👤semio📚rs💻semio🔖tests🔖deletetests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Delete%20Tests)
+    // Delete Tests MUST verify delete_pieces_and_connections_in_design functionality.
+
+    mod delete {
+        use super::*;
+
+        #[test]
+        fn nakagin_capsule_tower_delete_third_tambour_and_first_small_tower_connection() {
+            let kit = load_kit("metabolism.kit.semio.json");
+            let designs = kit.designs.as_ref().expect("Kit has no designs");
+            let design = designs
+                .iter()
+                .find(|d| d.name == "nakagin capsule tower")
+                .expect("Design 'nakagin capsule tower' not found");
+
+            // Load selection
+            let selection_path =
+                Path::new(ASSETS_DIR).join("nakagin-capsule-tower.deleted.selection.semio.json");
+            let selection_data =
+                fs::read_to_string(&selection_path).expect("Failed to read selection asset");
+            let selection: serde_json::Value =
+                serde_json::from_str(&selection_data).expect("Failed to parse selection");
+            let piece_guids: Vec<String> = selection["pieces"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| p["guid"].as_str().unwrap().to_string())
+                .collect();
+            let connection_guids: Vec<String> = selection["connections"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|c| c["guid"].as_str().unwrap().to_string())
+                .collect();
+
+            // Load expected diff
+            let diff_path =
+                Path::new(ASSETS_DIR).join("nakagin-capsule-tower.deleted.design.diff.semio.json");
+            let diff_data = fs::read_to_string(&diff_path).expect("Failed to read diff asset");
+            let expected_diff: DesignDiff =
+                serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
+
+            // Compute diff
+            let computed_diff =
+                delete_pieces_and_connections_in_design(design, &piece_guids, &connection_guids);
+
+            // Verify removed pieces
+            let computed_removed = computed_diff
+                .pieces
+                .as_ref()
+                .and_then(|p| p.removed.as_ref())
+                .expect("No removed pieces in computed diff");
+            let expected_removed = expected_diff
+                .pieces
+                .as_ref()
+                .and_then(|p| p.removed.as_ref())
+                .expect("No removed pieces in expected diff");
+            assert_eq!(
+                computed_removed.len(),
+                expected_removed.len(),
+                "Removed pieces count mismatch"
+            );
+            for (c, e) in computed_removed.iter().zip(expected_removed.iter()) {
+                assert_eq!(c.guid, e.guid, "Removed piece guid mismatch");
+            }
+
+            // Verify updated (fixed) pieces
+            let computed_updated = computed_diff
+                .pieces
+                .as_ref()
+                .and_then(|p| p.updated.as_ref())
+                .expect("No updated pieces in computed diff");
+            let expected_updated = expected_diff
+                .pieces
+                .as_ref()
+                .and_then(|p| p.updated.as_ref())
+                .expect("No updated pieces in expected diff");
+            assert_eq!(
+                computed_updated.len(),
+                expected_updated.len(),
+                "Updated pieces count mismatch: computed {} vs expected {}",
+                computed_updated.len(),
+                expected_updated.len()
+            );
+            let mut computed_guids: Vec<&str> =
+                computed_updated.iter().map(|u| u.guid.as_str()).collect();
+            computed_guids.sort();
+            let mut expected_guids: Vec<&str> =
+                expected_updated.iter().map(|u| u.guid.as_str()).collect();
+            expected_guids.sort();
+            assert_eq!(
+                computed_guids, expected_guids,
+                "Updated piece guids mismatch"
+            );
+            for u in computed_updated {
+                let flat_plane = Plane::default();
+                let zero_center = Coord::default();
+                let plane = u.diff.plane.as_ref().unwrap().as_ref().unwrap();
+                let center = u.diff.center.as_ref().unwrap().as_ref().unwrap();
+                assert!(
+                    planes_equal(plane, &flat_plane),
+                    "Fixed piece {} should have flat plane",
+                    u.guid
+                );
+                assert!(
+                    float_eq(center.u, zero_center.u) && float_eq(center.v, zero_center.v),
+                    "Fixed piece {} should have zero center",
+                    u.guid
+                );
+            }
+
+            // Verify removed connections
+            let computed_conn_removed = computed_diff
+                .connections
+                .as_ref()
+                .and_then(|c| c.removed.as_ref())
+                .expect("No removed connections in computed diff");
+            let expected_conn_removed = expected_diff
+                .connections
+                .as_ref()
+                .and_then(|c| c.removed.as_ref())
+                .expect("No removed connections in expected diff");
+            assert_eq!(
+                computed_conn_removed.len(),
+                expected_conn_removed.len(),
+                "Removed connections count mismatch: computed {} vs expected {}",
+                computed_conn_removed.len(),
+                expected_conn_removed.len()
+            );
+            let mut computed_conn_guids: Vec<&str> = computed_conn_removed
+                .iter()
+                .map(|r| r.guid.as_str())
+                .collect();
+            computed_conn_guids.sort();
+            let mut expected_conn_guids: Vec<&str> = expected_conn_removed
+                .iter()
+                .map(|r| r.guid.as_str())
+                .collect();
+            expected_conn_guids.sort();
+            assert_eq!(
+                computed_conn_guids, expected_conn_guids,
+                "Removed connection guids mismatch"
+            );
+        }
+    }
+
+    // #endregion 🔖Delete Tests
 
     // #region 🔖Validation Tests
     // [👤semio📚rs💻semio🔖tests🔖validationtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Validation%20Tests)
@@ -10642,14 +11033,18 @@ mod tests {
 
         fn spawn_test_http_server(routes: Vec<TestHttpRoute>) -> (String, thread::JoinHandle<()>) {
             let listener = TcpListener::bind("127.0.0.1:0").expect("bind test http listener");
-            let address = listener.local_addr().expect("get test http listener address");
+            let address = listener
+                .local_addr()
+                .expect("get test http listener address");
             let handle = thread::spawn(move || {
                 for _ in 0..routes.len() {
                     let (mut stream, _) = listener.accept().expect("accept test http connection");
                     let mut request_line = String::new();
                     {
                         let mut reader = BufReader::new(stream.try_clone().expect("clone stream"));
-                        reader.read_line(&mut request_line).expect("read request line");
+                        reader
+                            .read_line(&mut request_line)
+                            .expect("read request line");
                     }
                     let request_path = request_line
                         .split_whitespace()
@@ -10816,19 +11211,46 @@ mod tests {
     #[test]
     fn test_kit_kind_serialization() {
         assert_eq!(serde_json::to_string(&KitKind::File).unwrap(), "\"file\"");
-        assert_eq!(serde_json::to_string(&KitKind::Folder).unwrap(), "\"folder\"");
-        assert_eq!(serde_json::to_string(&KitKind::Archive).unwrap(), "\"archive\"");
-        assert_eq!(serde_json::to_string(&KitKind::Remote).unwrap(), "\"remote\"");
-        assert_eq!(serde_json::to_string(&KitKind::Temporary).unwrap(), "\"temporary\"");
+        assert_eq!(
+            serde_json::to_string(&KitKind::Folder).unwrap(),
+            "\"folder\""
+        );
+        assert_eq!(
+            serde_json::to_string(&KitKind::Archive).unwrap(),
+            "\"archive\""
+        );
+        assert_eq!(
+            serde_json::to_string(&KitKind::Remote).unwrap(),
+            "\"remote\""
+        );
+        assert_eq!(
+            serde_json::to_string(&KitKind::Temporary).unwrap(),
+            "\"temporary\""
+        );
     }
 
     #[test]
     fn test_kit_kind_deserialization() {
-        assert_eq!(serde_json::from_str::<KitKind>("\"file\"").unwrap(), KitKind::File);
-        assert_eq!(serde_json::from_str::<KitKind>("\"folder\"").unwrap(), KitKind::Folder);
-        assert_eq!(serde_json::from_str::<KitKind>("\"archive\"").unwrap(), KitKind::Archive);
-        assert_eq!(serde_json::from_str::<KitKind>("\"remote\"").unwrap(), KitKind::Remote);
-        assert_eq!(serde_json::from_str::<KitKind>("\"temporary\"").unwrap(), KitKind::Temporary);
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"file\"").unwrap(),
+            KitKind::File
+        );
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"folder\"").unwrap(),
+            KitKind::Folder
+        );
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"archive\"").unwrap(),
+            KitKind::Archive
+        );
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"remote\"").unwrap(),
+            KitKind::Remote
+        );
+        assert_eq!(
+            serde_json::from_str::<KitKind>("\"temporary\"").unwrap(),
+            KitKind::Temporary
+        );
     }
 
     #[test]

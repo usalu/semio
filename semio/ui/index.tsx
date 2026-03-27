@@ -854,6 +854,8 @@ const MAX_DIAGRAM_ZOOM = 12;
 const DIAGRAM_ZOOM_STEP = 0.0015;
 const MIN_DIAGRAM_SPAN = 1;
 
+export type ZoomTarget = "design" | "diff" | "none";
+
 type DiagramEntityStatus = "default" | "removed" | "added" | "modified";
 
 export interface DiagramSelection {
@@ -876,6 +878,7 @@ export interface SemioDiagramProps {
   designDiff?: DesignDiff;
   defaultDesignDiff?: DesignDiff;
   diffEnabled?: boolean;
+  zoomTarget?: ZoomTarget;
   selection?: DiagramSelection;
   defaultSelection?: DiagramSelection;
   selectionEnabled?: boolean;
@@ -1100,6 +1103,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   designDiff,
   defaultDesignDiff,
   diffEnabled,
+  zoomTarget,
   selection,
   defaultSelection,
   selectionEnabled,
@@ -1159,10 +1163,13 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const centerY = size.height / 2;
   const toBasePixelX = (u: number) => offsetX + (u - snapshot.minU) * scale;
   const toBasePixelY = (y: number) => offsetY + (y - snapshot.minY) * scale;
+  const effectiveZoomTarget: ZoomTarget = zoomTarget ?? (effectiveDiffEnabled && resolvedDesignDiff ? "diff" : "design");
   const fittedViewport = React.useMemo(() => {
-    const changedPoints = effectiveDiffEnabled ? snapshot.points.filter((point) => point.status !== "default") : [];
-    const changedLinePoints = effectiveDiffEnabled ? snapshot.lines.filter((line) => line.status !== "default").flatMap((line) => [line.source, line.target]) : [];
-    const targetBounds = buildDiagramBounds([...changedPoints, ...changedLinePoints]) ?? {
+    if (effectiveZoomTarget === "none") return { zoom: defaultZoom ?? DEFAULT_DIAGRAM_ZOOM, pan: defaultPan ?? { x: 0, y: 0 } };
+    const diffPoints = snapshot.points.filter((point) => point.status !== "default");
+    const diffLinePoints = snapshot.lines.filter((line) => line.status !== "default").flatMap((line) => [line.source, line.target]);
+    const hasDiffEntities = diffPoints.length > 0 || diffLinePoints.length > 0;
+    const targetBounds = (effectiveZoomTarget === "diff" && hasDiffEntities ? buildDiagramBounds([...diffPoints, ...diffLinePoints]) : null) ?? {
       minU: snapshot.minU,
       maxU: snapshot.maxU,
       minY: snapshot.minY,
@@ -1189,7 +1196,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
         y: -zoomToFit * (targetCenterY - centerY),
       },
     };
-  }, [centerX, centerY, defaultPan, defaultZoom, drawableHeight, drawableWidth, effectiveDiffEnabled, offsetX, offsetY, scale, snapshot]);
+  }, [centerX, centerY, defaultPan, defaultZoom, drawableHeight, drawableWidth, effectiveZoomTarget, offsetX, offsetY, scale, snapshot]);
   const applyViewportX = (x: number) => centerX + resolvedPan.x + resolvedZoom * (x - centerX);
   const applyViewportY = (y: number) => centerY + resolvedPan.y + resolvedZoom * (y - centerY);
   const toPixelX = (u: number) => applyViewportX(toBasePixelX(u));
@@ -1209,13 +1216,13 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   }, [fittedPanX, fittedPanY, fittedZoom, isPanControlled, isZoomControlled, setResolvedPan, setResolvedZoom]);
 
   const handleWheel = React.useCallback(
-    (event: React.WheelEvent<HTMLDivElement>) => {
+    (event: WheelEvent) => {
       if (!zoomEnabled) return;
       event.preventDefault();
-      if (size.width <= 0 || size.height <= 0) return;
+      if (size.width <= 0 || size.height <= 0 || !ref.current) return;
       const nextZoom = Math.min(MAX_DIAGRAM_ZOOM, Math.max(MIN_DIAGRAM_ZOOM, resolvedZoom * Math.exp(-event.deltaY * DIAGRAM_ZOOM_STEP)));
       if (Math.abs(nextZoom - resolvedZoom) < 0.0001) return;
-      const rect = event.currentTarget.getBoundingClientRect();
+      const rect = ref.current.getBoundingClientRect();
       const cursorX = event.clientX - rect.left;
       const cursorY = event.clientY - rect.top;
       const baseX = centerX + (cursorX - centerX - resolvedPan.x) / resolvedZoom;
@@ -1226,8 +1233,15 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
         y: cursorY - centerY - nextZoom * (baseY - centerY),
       });
     },
-    [centerX, centerY, resolvedPan.x, resolvedPan.y, resolvedZoom, setResolvedPan, setResolvedZoom, size.height, size.width, zoomEnabled],
+    [centerX, centerY, resolvedPan.x, resolvedPan.y, resolvedZoom, setResolvedPan, setResolvedZoom, size.height, size.width, zoomEnabled, ref],
   );
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.addEventListener("wheel", handleWheel, { passive: false });
+    return () => element.removeEventListener("wheel", handleWheel);
+  }, [handleWheel, ref]);
 
   const handleDoubleClick = React.useCallback(() => {
     if (!zoomEnabled && !panEnabled) return;
@@ -1354,7 +1368,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   );
 
   return (
-    <div ref={ref} className={`h-full w-full ${className}`} onDoubleClick={handleDoubleClick} onWheel={handleWheel}>
+    <div ref={ref} className={`h-full w-full ${className}`} onDoubleClick={handleDoubleClick}>
       <svg
         aria-label={title}
         className="h-full w-full overflow-visible text-foreground"
@@ -2250,6 +2264,7 @@ export interface SemioSceneProps {
   designDiff?: DesignDiff;
   defaultDesignDiff?: DesignDiff;
   diffEnabled?: boolean;
+  zoomTarget?: ZoomTarget;
   selection?: DiagramSelection;
   defaultSelection?: DiagramSelection;
   selectionEnabled?: boolean;
@@ -2275,12 +2290,14 @@ export interface SemioSceneProps {
 interface SceneInnerContentProps {
   showGrid: boolean;
   showGizmo: boolean;
+  zoomTarget: ZoomTarget;
+  snapshot: SceneSnapshot;
   camera?: Camera;
   onCameraChange?: (camera: Camera) => void;
   children?: React.ReactNode;
 }
 
-const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGizmo, camera: initialCamera, onCameraChange, children }) => {
+const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGizmo, zoomTarget, snapshot, camera: initialCamera, onCameraChange, children }) => {
   const { camera: threeCamera } = useThree();
   const controlsRef = React.useRef<any>(null);
   const isUpdatingCameraRef = React.useRef(false);
@@ -2313,9 +2330,25 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
     } else {
       requestAnimationFrame(() => {
         if (!controlsRef.current) return;
-        threeCamera.position.set(10, 10, 10);
-        threeCamera.up.set(0, 1, 0);
-        controlsRef.current.target.set(0, 0, 0);
+        const targetPieces = zoomTarget === "none" ? [] : zoomTarget === "diff" ? snapshot.pieces.filter((a) => a.status !== "default") : snapshot.pieces;
+        const origins = targetPieces.filter((a) => a.piece.plane).map((a) => toSceneVector(a.piece.plane!.origin));
+        if (origins.length > 0) {
+          const box = new THREE.Box3();
+          origins.forEach((o) => box.expandByPoint(o));
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          const size = new THREE.Vector3();
+          box.getSize(size);
+          const maxDim = Math.max(size.x, size.y, size.z, 1);
+          const dist = maxDim * 1.5;
+          threeCamera.position.set(center.x + dist, center.y + dist, center.z + dist);
+          threeCamera.up.set(0, 1, 0);
+          controlsRef.current.target.copy(center);
+        } else {
+          threeCamera.position.set(10, 10, 10);
+          threeCamera.up.set(0, 1, 0);
+          controlsRef.current.target.set(0, 0, 0);
+        }
         threeCamera.updateProjectionMatrix();
         controlsRef.current.update();
         setTimeout(() => {
@@ -2324,7 +2357,7 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
       });
     }
     cameraRestoredRef.current = true;
-  }, [initialCamera, threeCamera]);
+  }, [initialCamera, threeCamera, zoomTarget, snapshot]);
 
   const handleEnd = React.useCallback(() => {
     if (isUpdatingCameraRef.current || !onCameraChange || !controlsRef.current) return;
@@ -2963,6 +2996,7 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
  * - Connects to MCP host via useApp hook with PostMessageTransport.
  * - Receives pre-computed diagram points/lines from tool results via ontoolresult callback.
  * - Renders {@link SemioDesign} when `mode` is `show-design`, {@link SemioScene} when `show-scene`, otherwise {@link SemioDiagram}.
+ * - Refetches `show_design` via {@link McpApp.callServerTool} on a staggered schedule — hosts often pass a truncated `structuredContent` blob (one piece / one diagram node) while the engine has the full design in-session.
  * - Sends selection changes back to host via updateModelContext.
  **/
 export const McpDesignViewer: React.FC = () => {
@@ -2971,16 +3005,63 @@ export const McpDesignViewer: React.FC = () => {
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
   const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [] });
   const appRef = React.useRef<McpApp | null>(null);
+  const tryRefetchRef = React.useRef<() => void>(() => {});
+  const lastDiagramPayloadScoreRef = React.useRef<number>(-1);
+
+  const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
+    setPayload((cur) => {
+      if (!cur) return p;
+      return scoreMcpDiagramPayload(p) > scoreMcpDiagramPayload(cur) ? p : cur;
+    });
+  }, []);
+
+  React.useEffect(() => {
+    if (!payload) return;
+    const s = scoreMcpDiagramPayload(payload);
+    if (s !== lastDiagramPayloadScoreRef.current) {
+      lastDiagramPayloadScoreRef.current = s;
+      setSelectedPieces(new Set());
+      setSelectedConnections(new Set());
+      setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
+    }
+  }, [payload]);
+
+  const tryRefetchDesignFromServer = React.useCallback(async () => {
+    const client = appRef.current;
+    if (!client) return;
+    try {
+      const result = await client.callServerTool({ name: "show_design", arguments: {} });
+      const p = parseDiagramPayloadFromToolResult(result);
+      if (p) mergeDiagramPayload(p);
+    } catch {
+      /* Host may not proxy tools/call to the server for this session. */
+    }
+  }, [mergeDiagramPayload]);
+
+  React.useEffect(() => {
+    tryRefetchRef.current = () => {
+      void tryRefetchDesignFromServer();
+    };
+  }, [tryRefetchDesignFromServer]);
 
   const { app, isConnected, error } = useApp({
     appInfo: { name: "semio design viewer", version: "1.0.0" },
     capabilities: {},
     onAppCreated: (a) => {
       appRef.current = a;
+      a.ontoolinput = () => {
+        tryRefetchRef.current();
+      };
+      a.ontoolinputpartial = () => {
+        tryRefetchRef.current();
+      };
+      a.onhostcontextchanged = () => {
+        tryRefetchRef.current();
+      };
       a.ontoolresult = (result) => {
         const parsed = parseDiagramPayloadFromToolResult(result);
         if (parsed) {
-          applyDiagramPayload(parsed);
+          mergeDiagramPayload(parsed);
         }
       };
       a.ontoolcancelled = () => {};
@@ -2991,27 +3072,26 @@ export const McpDesignViewer: React.FC = () => {
 
   useHostStyles(app, app?.getHostContext());
 
-  const applyDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
-    setPayload(p);
-    setSelectedPieces(new Set());
-    setSelectedConnections(new Set());
-    setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
-  }, []);
-
   React.useEffect(() => {
     if (!app) return;
     const h = app.getHostContext() as Record<string, unknown> | undefined;
     if (!h) return;
+    let best: McpDiagramPayload | null = null;
     for (const k of ["toolResult", "lastToolResult", "toolExecutionResult", "initialToolResult", "pendingToolResult"]) {
       const v = h[k];
       if (v === undefined) continue;
       const p = parseDiagramPayloadFromToolResult(v);
-      if (p) {
-        applyDiagramPayload(p);
-        return;
-      }
+      if (p && (!best || scoreMcpDiagramPayload(p) > scoreMcpDiagramPayload(best))) best = p;
     }
-  }, [app, applyDiagramPayload]);
+    if (best) mergeDiagramPayload(best);
+  }, [app, mergeDiagramPayload]);
+
+  React.useEffect(() => {
+    if (!app || !isConnected) return;
+    const delays = [0, 50, 150, 400, 1200, 2500, 5000, 8000, 15000];
+    const ids = delays.map((d) => setTimeout(() => tryRefetchRef.current(), d));
+    return () => ids.forEach(clearTimeout);
+  }, [app, isConnected]);
 
   // Sync MCP host theme with semio's .dark class convention.
   const mcpTheme = useDocumentTheme();
@@ -3831,6 +3911,7 @@ import {
   type UIAppConfig,
   type UIWindowKindDefinition,
   type UIWindowLayout,
+  type UIWindowLayoutAxisNode,
   type UIWindowLayoutStackNode,
 } from "@elements/ui/elements";
 import { AlertCircleIcon, DetailsIcon, PieceIcon } from "@semio/assets/icons";
@@ -4026,8 +4107,31 @@ export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindo
   const diffWindow = windows.find((w) => w.kind === WindowKind.DESIGN_DIFF_OUTPUT);
   const outputWindow = windows.find((w) => w.kind === WindowKind.DESIGN_OUTPUT);
 
-  const columns: UIWindowLayoutStackNode[] = [];
-  if (inputWindows.length > 0) {
+  const columns: Array<UIWindowLayoutAxisNode | UIWindowLayoutStackNode> = [];
+  if (inputWindows.length > 1) {
+    // Multiple input windows: arrange as a column with VEC_INPUT at 20% and others at 80%.
+    const vecWindows = inputWindows.filter((w) => w.kind === WindowKind.VEC_INPUT);
+    const otherInputWindows = inputWindows.filter((w) => w.kind !== WindowKind.VEC_INPUT);
+    const inputRows: UIWindowLayoutStackNode[] = [];
+    if (vecWindows.length > 0) {
+      inputRows.push({
+        kind: "stack",
+        size: 20,
+        children: vecWindows.map((w) => createWindowLayout(w.id, w.label ?? w.id)),
+      });
+    }
+    if (otherInputWindows.length > 0) {
+      inputRows.push({
+        kind: "stack",
+        size: 80,
+        children: otherInputWindows.map((w) => createWindowLayout(w.id, w.label ?? w.id)),
+      });
+    }
+    columns.push({
+      kind: "column",
+      children: inputRows,
+    });
+  } else if (inputWindows.length === 1) {
     columns.push({
       kind: "stack",
       children: inputWindows.map((w) => createWindowLayout(w.id, w.label ?? w.id)),
@@ -4340,11 +4444,19 @@ if (algorithmVitest) {
           kind: "row",
           children: [
             {
-              kind: "stack",
+              kind: "column",
               size: 33.33,
               children: [
-                { kind: "window", windowKindId: "drag-vec", title: "Vec" },
-                { kind: "window", windowKindId: "drag-input", title: "Input" },
+                {
+                  kind: "stack",
+                  size: 20,
+                  children: [{ kind: "window", windowKindId: "drag-vec", title: "Vec" }],
+                },
+                {
+                  kind: "stack",
+                  size: 80,
+                  children: [{ kind: "window", windowKindId: "drag-input", title: "Input" }],
+                },
               ],
             },
             {

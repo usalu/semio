@@ -616,9 +616,48 @@ class TestMcp:
         assert isinstance(result, CallToolResult)
         payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
+        assert payload["kitArtifacts"]["name"] == "Metabolism"
+        assert payload["kitArtifacts"].get("version") == "r25.07-1"
+        flat_variant = next(design for design in payload["kitArtifacts"]["designs"] if design.get("guid") == "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf")
+        assert flat_variant.get("parent") == {"guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"}
+        root_design = next(design for design in payload["kitArtifacts"]["designs"] if design.get("guid") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
+        assert "Japanese Metabolism" in root_design.get("description", "")
+        assert root_design.get("image") == "images/nakagin-capsule-tower.png"
+        ellipsoid = next(kind for kind in payload["kitArtifacts"]["types"] if kind.get("guid") == "4ca3b87b-cd76-4228-9f7e-1459b711f0ab")
+        assert ellipsoid.get("parent") == {"guid": "71749140-9db9-43f6-bd81-d89011667b80"}
+        assert ellipsoid.get("name") == "Ellipsoid"
         kit = engine._mcp_session_kits[id(mock_ctx.session)]
         assert "designs" in kit
         assert any(design.get("name") == "Nakagin Capsule Tower" for design in kit.get("designs", []))
+
+    def test_build_kit_artifact_data_preserves_parent_dependencies(self):
+        """_build_kit_artifact_data keeps nested design and type parent refs for breadcrumb chains."""
+        payload = engine._build_kit_artifact_data(
+            {
+                "guid": "kit-guid",
+                "name": "Metabolism",
+                "version": "1",
+                "description": "Kit description",
+                "homepage": "https://example.com/kit",
+                "designs": [
+                    {"guid": "root-design", "name": "Root", "description": "Root design", "image": "root.png"},
+                    {"guid": "child-design", "name": "Child", "parent": {"guid": "root-design"}, "createdAt": "2026-03-27T00:00:00Z"},
+                ],
+                "types": [
+                    {"guid": "root-kind", "name": "Root Kind"},
+                    {"guid": "child-kind", "name": "Child Kind", "parent": {"guid": "root-kind"}, "description": "Child kind", "connectors": []},
+                ],
+            }
+        )
+
+        assert payload["description"] == "Kit description"
+        assert payload["homepage"] == "https://example.com/kit"
+        assert payload["designs"][0]["description"] == "Root design"
+        assert payload["designs"][0]["image"] == "root.png"
+        assert payload["designs"][1]["parent"] == {"guid": "root-design"}
+        assert payload["designs"][1]["createdAt"] == "2026-03-27T00:00:00Z"
+        assert payload["types"][1]["parent"] == {"guid": "root-kind"}
+        assert payload["types"][1]["description"] == "Child kind"
 
     def test_start_working_in_local_kit_clears_design_and_type(self):
         """start_working_in_local_kit clears any previously set design and type."""

@@ -1,10 +1,11 @@
 {
   "title": "Block Git Commands in Script Interpreters",
-  "status": "closed",
+  "status": "open",
   "summary": "Created `nakgin-capsule-tower.diff.design.semio.json` — a comprehensive design diff for the Nakagin Capsule Tower with 5 operations: (1) Remove the last storey (f10 tambour + 8 capsules + capital) from the larger tower (c1), removing 10 pieces and 10 connections. (2) Reconnect a new capital piece to tambour f9 of c1. (3) Add a new base with a tambour on top and one capsule, with connecting connections. (4) Update all 7 capsules in the third storey (f2) of the smaller tower (c0) with renovated descriptions. (5) Replace capsule cs_sl0_d2_t_f4_b_c0 with a bridge in the fifth storey. Exported from `@semio/assets` as `NakginCapsuleTowerDiffDesign`. Added NakginDiff stories to Diagram, Scene, and Design storybook files.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪433ba041e2d449dd983f41a0b3e83961",
-    "⚪076dd8347d2046ad81f672419dad0547"
+    "⚪076dd8347d2046ad81f672419dad0547",
+    "⚪bd48fc516f9a4eb4b03f4a29f31d93e1"
   ]
 }

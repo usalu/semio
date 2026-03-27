@@ -572,6 +572,54 @@ public class Tests
         }
     }
 
+    public class Delete
+    {
+        [Fact]
+        public void Nakagin_Capsule_Tower_Delete_Third_Tambour_And_First_Small_Tower_Connection()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var selection = Tests.LoadAsset<Design>("nakagin-capsule-tower.deleted.selection.semio.json");
+            var expectedDiff = Tests.LoadAsset<DesignDiff>("nakagin-capsule-tower.deleted.design.diff.semio.json");
+
+            var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
+            var connectionGuids = selection.Connections.Select(c => c.Guid).ToList();
+            var computedDiff = Design.DeletePiecesAndConnectionsInDesign(design, pieceGuids, connectionGuids);
+
+            // Verify removed pieces
+            Assert.NotNull(computedDiff.Pieces);
+            Assert.Equal(expectedDiff.Pieces!.Removed.Count, computedDiff.Pieces!.Removed.Count);
+            var expectedRemovedPieces = new HashSet<string>(expectedDiff.Pieces.Removed.Select(r => r.Guid));
+            foreach (var r in computedDiff.Pieces.Removed)
+                Assert.True(expectedRemovedPieces.Contains(r.Guid), $"Unexpected removed piece {r.Guid}");
+
+            // Verify updated (fixed) pieces
+            Assert.Equal(expectedDiff.Pieces.Updated.Count, computedDiff.Pieces.Updated.Count);
+            var expectedUpdatedMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
+            foreach (var u in computedDiff.Pieces.Updated)
+            {
+                Assert.True(expectedUpdatedMap.ContainsKey(u.Piece.Guid), $"Unexpected piece update for {u.Piece.Guid}");
+                var expected = expectedUpdatedMap[u.Piece.Guid];
+                Assert.NotNull(u.Diff!.Plane);
+                Assert.NotNull(expected!.Plane);
+                Assert.Equal(expected.Plane!.Origin.X, u.Diff.Plane!.Origin.X, 3);
+                Assert.Equal(expected.Plane.Origin.Y, u.Diff.Plane.Origin.Y, 3);
+                Assert.Equal(expected.Plane.Origin.Z, u.Diff.Plane.Origin.Z, 3);
+                Assert.NotNull(u.Diff.Center);
+                Assert.NotNull(expected.Center);
+                Assert.Equal(expected.Center!.U, u.Diff.Center!.U, 3);
+                Assert.Equal(expected.Center.V, u.Diff.Center.V, 3);
+            }
+
+            // Verify removed connections
+            Assert.NotNull(computedDiff.Connections);
+            Assert.Equal(expectedDiff.Connections!.Removed.Count, computedDiff.Connections!.Removed.Count);
+            var expectedRemovedConns = new HashSet<string>(expectedDiff.Connections.Removed.Select(r => r.Guid));
+            foreach (var r in computedDiff.Connections.Removed)
+                Assert.True(expectedRemovedConns.Contains(r.Guid), $"Unexpected removed connection {r.Guid}");
+        }
+    }
+
     public class DesignModel
     {
         private static Model? SelectBestModelLikeSemioTs(List<Model> models, List<string> selectedTagGuids)

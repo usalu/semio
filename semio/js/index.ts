@@ -6376,20 +6376,72 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
 };
 
 /**
+ * Deletes pieces and connections from a design, returning a DesignDiff.
+ * Removes stale connections referencing deleted pieces.
+ * Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+ * [👤semio📚js💻semio🔖design🪨deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/deletePiecesAndConnectionsInDesign)
+ **/
+export const deletePiecesAndConnectionsInDesign = (design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiff => {
+  const deletedPieceSet = new Set(pieceGuids);
+  const connections = design.connections ?? [];
+
+  // Find stale connections: connections referencing any deleted piece
+  const staleConnectionGuids = new Set<string>();
+  for (const conn of connections) {
+    if (deletedPieceSet.has(conn.connected.piece.guid) || deletedPieceSet.has(conn.connecting.piece.guid)) {
+      staleConnectionGuids.add(conn.guid);
+    }
+  }
+
+  // All removed connections = explicit + stale
+  const allRemovedConnectionGuids = new Set([...connectionGuids, ...staleConnectionGuids]);
+
+  // Find pieces that become fixed
+  const fixedPieceGuids: string[] = [];
+  for (const connGuid of allRemovedConnectionGuids) {
+    const conn = connections.find((c) => c.guid === connGuid);
+    if (!conn) continue;
+    const connectingGuid = conn.connecting.piece.guid;
+    if (deletedPieceSet.has(connectingGuid)) continue;
+    // Check if this piece has another parent connection not in the removed set
+    const hasOtherParent = connections.some((c) => c.connecting.piece.guid === connectingGuid && !allRemovedConnectionGuids.has(c.guid));
+    if (!hasOtherParent && !fixedPieceGuids.includes(connectingGuid)) {
+      fixedPieceGuids.push(connectingGuid);
+    }
+  }
+
+  const flatPlane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+  const zeroCenter: Coord = { u: 0, v: 0 };
+
+  const diff: DesignDiff = {};
+
+  const piecesRemoved = pieceGuids.map((guid) => ({ guid }));
+  const piecesUpdated = fixedPieceGuids.map((guid) => ({
+    piece: { guid },
+    diff: { plane: flatPlane, center: zeroCenter },
+  }));
+  if (piecesRemoved.length > 0 || piecesUpdated.length > 0) {
+    diff.pieces = {};
+    if (piecesRemoved.length > 0) diff.pieces.removed = piecesRemoved;
+    if (piecesUpdated.length > 0) diff.pieces.updated = piecesUpdated;
+  }
+
+  const connectionsRemoved = [...allRemovedConnectionGuids].sort().map((guid) => ({ guid }));
+  if (connectionsRemoved.length > 0) {
+    diff.connections = { removed: connectionsRemoved };
+  }
+
+  return diff;
+};
+
+/**
  * Removes a PiecesAndConnectionsFromDesign element.
  * MUST remove the element from the collection.
  * [👤semio📚js💻semio🔖design🪨removepiecesandconnectionsfromdesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/removePiecesAndConnectionsFromDesign)
  **/
 export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignChange => {
   const design = findDesignInKit(kit, designId);
-  const forward: DesignDiff = {
-    pieces: {
-      removed: pieceIds.map((guid) => ({ guid })),
-    },
-    connections: {
-      removed: connectionIds.map((guid) => ({ guid })),
-    },
-  };
+  const forward = deletePiecesAndConnectionsInDesign(design, pieceIds, connectionIds);
   const backward = inverseDesignDiff(design, forward);
   return { forward, backward };
 };
@@ -10252,20 +10304,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-                }
+                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+              }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-                }
+                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+              }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -10380,54 +10432,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-          return {
-            guid: row.guid,
-            key: row.key,
-            name: row.name,
-            kind: row.kind || undefined,
-            defaultValue: row.default_value ?? undefined,
-            formula: toUndefined(row.formula),
-            defaultSiUnit: toUndefined(row.default_si_unit),
-            defaultImperialUnit: toUndefined(row.default_imperial_unit),
-            min: row.min_value ?? undefined,
-            minExcluded: row.min_excluded ? true : undefined,
-            max: row.max_value ?? undefined,
-            maxExcluded: row.max_excluded ? true : undefined,
-            canScale: row.can_scale ? true : undefined,
-            uri: toUndefined(row.definition),
-            benchmarks: benchmarks.map((b: any) => {
-              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-              return {
-                guid: b.guid,
-                name: b.name,
-                icon: toUndefined(b.icon),
-                min: b.min_value ?? undefined,
-                minExcluded: b.min_excluded ? true : undefined,
-                max: b.max_value ?? undefined,
-                maxExcluded: b.max_excluded ? true : undefined,
-                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-              };
-            }),
-            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-          };
-        })
+        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+        return {
+          guid: row.guid,
+          key: row.key,
+          name: row.name,
+          kind: row.kind || undefined,
+          defaultValue: row.default_value ?? undefined,
+          formula: toUndefined(row.formula),
+          defaultSiUnit: toUndefined(row.default_si_unit),
+          defaultImperialUnit: toUndefined(row.default_imperial_unit),
+          min: row.min_value ?? undefined,
+          minExcluded: row.min_excluded ? true : undefined,
+          max: row.max_value ?? undefined,
+          maxExcluded: row.max_excluded ? true : undefined,
+          canScale: row.can_scale ? true : undefined,
+          uri: toUndefined(row.definition),
+          benchmarks: benchmarks.map((b: any) => {
+            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+            return {
+              guid: b.guid,
+              name: b.name,
+              icon: toUndefined(b.icon),
+              min: b.min_value ?? undefined,
+              minExcluded: b.min_excluded ? true : undefined,
+              max: b.max_value ?? undefined,
+              maxExcluded: b.max_excluded ? true : undefined,
+              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+            };
+          }),
+          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+        };
+      })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          remote: toUndefined(row.remote_url),
-          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-          size: row.size ?? undefined,
-          hash: toUndefined(row.hash),
-          createdAt: row.created,
-          updatedAt: row.updated,
-        }))
+        guid: row.guid,
+        name: row.name,
+        remote: toUndefined(row.remote_url),
+        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+        size: row.size ?? undefined,
+        hash: toUndefined(row.hash),
+        createdAt: row.created,
+        updatedAt: row.updated,
+      }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -10443,10 +10495,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          email: toUndefined(row.email),
-        }))
+        guid: row.guid,
+        name: row.name,
+        email: toUndefined(row.email),
+      }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -11709,7 +11761,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch {}
+      } catch { }
     }
   }
 
@@ -12733,7 +12785,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch {}
+      } catch { }
     });
   });
   return problems;
@@ -13212,6 +13264,8 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     TambourShallowType,
     NakaginCapsuleTowerMetaDesign,
     NakaginCapsuleTowerShallowDesign,
+    NakaginCapsuleTowerDeletedDesignDiff,
+    NakaginCapsuleTowerDeletedSelection,
   } = await import("@semio/assets");
   const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
   type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
@@ -14005,12 +14059,54 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
   });
 
+  describe("Delete", () => {
+    it("Nakagin Capsule Tower delete third tambour and first small tower connection", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const selection = NakaginCapsuleTowerDeletedSelection as unknown as Design;
+      const expectedDiff = NakaginCapsuleTowerDeletedDesignDiff as any;
+
+      const pieceGuids = (selection.pieces ?? []).map((p) => p.guid);
+      const connectionGuids = (selection.connections ?? []).map((c) => c.guid);
+      const computedDiff = deletePiecesAndConnectionsInDesign(design, pieceGuids, connectionGuids);
+
+      // Verify removed pieces
+      const computedRemovedPieces = (computedDiff.pieces?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
+      const expectedRemovedPieces = (expectedDiff.pieces?.removed ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
+      expect(computedRemovedPieces.length).toBe(expectedRemovedPieces.length);
+      for (let i = 0; i < computedRemovedPieces.length; i++) {
+        expect(computedRemovedPieces[i].guid).toBe(expectedRemovedPieces[i].guid);
+      }
+
+      // Verify updated (fixed) pieces
+      const computedUpdated = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
+      const expectedUpdated = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
+      expect(computedUpdated.length).toBe(expectedUpdated.length);
+      for (let i = 0; i < computedUpdated.length; i++) {
+        expect(computedUpdated[i].piece.guid).toBe(expectedUpdated[i].piece.guid);
+        expect(computedUpdated[i].diff.plane?.origin?.x).toBe(0);
+        expect(computedUpdated[i].diff.plane?.origin?.y).toBe(0);
+        expect(computedUpdated[i].diff.plane?.origin?.z).toBe(0);
+        expect(computedUpdated[i].diff.center?.u).toBe(0);
+        expect(computedUpdated[i].diff.center?.v).toBe(0);
+      }
+
+      // Verify removed connections
+      const computedRemovedConns = (computedDiff.connections?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
+      const expectedRemovedConns = (expectedDiff.connections?.removed ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
+      expect(computedRemovedConns.length).toBe(expectedRemovedConns.length);
+      for (let i = 0; i < computedRemovedConns.length; i++) {
+        expect(computedRemovedConns[i].guid).toBe(expectedRemovedConns[i].guid);
+      }
+    });
+  });
+
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
