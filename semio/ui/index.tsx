@@ -45,6 +45,7 @@ import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF 
 import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { Button, Section, ToggleGroup } from "@elements/ui/elements";
 
 // #region 🔖ControllableState
 // Specs: Semio UI components MUST support controlled/uncontrolled and partial/full control.
@@ -252,80 +253,85 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
     setResolvedData(derivedData);
   }, [data, derivedData, effectiveDataEnabled, onDataChange, setResolvedData]);
 
+  const headerStats = React.useMemo(() => {
+    const parts: string[] = [];
+    if (designDataEnabled) parts.push(`${effectiveDesigns.length} designs`);
+    if (typeDataEnabled) parts.push(`${effectiveTypes.length} types`);
+    if (portDataEnabled) parts.push(`${effectivePorts.length} ports`);
+    return parts.join(" · ");
+  }, [designDataEnabled, effectiveDesigns.length, portDataEnabled, effectivePorts.length, typeDataEnabled, effectiveTypes.length]);
+
+  const designItems = React.useMemo(
+    () =>
+      effectiveDesigns.map((d) => ({
+        value: d.guid,
+        text: d.name || d.guid,
+        id: d.guid,
+      })),
+    [effectiveDesigns],
+  );
+  const typeItems = React.useMemo(
+    () =>
+      effectiveTypes.map((t) => ({
+        value: t.guid,
+        text: t.name || t.guid,
+        id: t.guid,
+      })),
+    [effectiveTypes],
+  );
+  const portItems = React.useMemo(
+    () =>
+      effectivePorts.map((p) => ({
+        value: p.guid,
+        text: p.name || p.guid,
+        id: p.guid,
+      })),
+    [effectivePorts],
+  );
+
   return (
-    <div className={className} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <div style={{ fontWeight: 600 }}>{title}</div>
-          <div style={{ fontSize: 12, opacity: 0.7 }}>
-            {effectiveDesigns.length} designs · {effectiveTypes.length} types · {effectivePorts.length} ports
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={clear}
-          disabled={!effectiveSelectionEnabled}
-          className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
-        >
-          Clear
-        </button>
+    <Section title={title} className={className}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div>{headerStats}</div>
+        <Button onClick={clear} disabled={!effectiveSelectionEnabled} text="Clear" />
       </div>
 
       {designDataEnabled && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Designs</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
-            {effectiveDesigns.map((d) => (
-              <label key={d.guid} style={{ display: "flex", alignItems: "center", gap: 8 }} className="rounded-md border border-border px-3 py-2 hover:bg-muted/40">
-                <input type="checkbox" checked={selectedDesignGuids.has(d.guid)} disabled={!effectiveSelectionEnabled || !designSelectionEnabled} onChange={() => toggle("design", d.guid)} />
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name || d.guid}</div>
-                  <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {d.variant || "default"} · {d.view || "default"}
-                  </div>
-                </div>
-              </label>
-            ))}
-          </div>
-        </div>
+        <Section title="Designs">
+          <ToggleGroup
+            kind="multiple"
+            value={effectiveSelectionEnabled && designSelectionEnabled ? (resolvedSelection.designGuids ?? []) : []}
+            onValueChange={(next) => setNextSelection({ designGuids: next as string[], typeGuids: resolvedSelection.typeGuids, portGuids: resolvedSelection.portGuids })}
+            disabled={!effectiveSelectionEnabled || !designSelectionEnabled}
+            items={designItems}
+          />
+        </Section>
       )}
 
       {typeDataEnabled && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Types</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
-            {effectiveTypes.map((t) => (
-              <label key={t.guid} style={{ display: "flex", alignItems: "center", gap: 8 }} className="rounded-md border border-border px-3 py-2 hover:bg-muted/40">
-                <input type="checkbox" checked={selectedTypeGuids.has(t.guid)} disabled={!effectiveSelectionEnabled || !typeSelectionEnabled} onChange={() => toggle("type", t.guid)} />
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.name || t.guid}</div>
-                  <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.variant || "default"}</div>
-                </div>
-              </label>
-            ))}
-          </div>
-        </div>
+        <Section title="Types">
+          <ToggleGroup
+            kind="multiple"
+            value={effectiveSelectionEnabled && typeSelectionEnabled ? (resolvedSelection.typeGuids ?? []) : []}
+            onValueChange={(next) => setNextSelection({ designGuids: resolvedSelection.designGuids, typeGuids: next as string[], portGuids: resolvedSelection.portGuids })}
+            disabled={!effectiveSelectionEnabled || !typeSelectionEnabled}
+            items={typeItems}
+          />
+        </Section>
       )}
 
       {portDataEnabled && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>Ports</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 6 }}>
-            {effectivePorts.map((p) => (
-              <label key={p.guid} style={{ display: "flex", alignItems: "center", gap: 8 }} className="rounded-md border border-border px-3 py-2 hover:bg-muted/40">
-                <input type="checkbox" checked={selectedPortGuids.has(p.guid)} disabled={!effectiveSelectionEnabled || !portSelectionEnabled} onChange={() => toggle("port", p.guid)} />
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name || p.guid}</div>
-                  <div style={{ fontSize: 11, opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {p.port || "default"} · {p.mandatory ? "mandatory" : "optional"}
-                  </div>
-                </div>
-              </label>
-            ))}
-          </div>
-        </div>
+        <Section title="Ports">
+          <ToggleGroup
+            kind="multiple"
+            value={effectiveSelectionEnabled && portSelectionEnabled ? (resolvedSelection.portGuids ?? []) : []}
+            onValueChange={(next) => setNextSelection({ designGuids: resolvedSelection.designGuids, typeGuids: resolvedSelection.typeGuids, portGuids: next as string[] })}
+            disabled={!effectiveSelectionEnabled || !portSelectionEnabled}
+            items={portItems}
+          />
+        </Section>
       )}
-    </div>
+    </Section>
   );
 };
 
@@ -1477,26 +1483,45 @@ const toScenePieceMatrix = (plane: Plane): THREE.Matrix4 => {
 
 interface ScenePieceModelProps {
   modelSource: string;
+  status: DiagramEntityStatus;
   isSelected: boolean;
   isHovered: boolean;
 }
 
-const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, isSelected, isHovered }) => {
+const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, isSelected, isHovered }) => {
   const gltf = useGLTF(modelSource);
   const clone = React.useMemo(() => cloneSkeleton(gltf.scene), [gltf.scene]);
+  const isRemoved = status === "removed";
+  const isDiffed = status !== "default";
 
   React.useEffect(() => {
+    const statusColor = isDiffed ? getSceneComputedColor(getEntityStatusColor(status).replace("var(", "").replace(")", "")) : null;
+    const selectedColor = isSelected ? getSceneComputedColor(getInteractiveEntityColor(status, true, false).replace("var(", "").replace(")", "")) : null;
+    const hoveredColor = isHovered ? getSceneComputedColor(getInteractiveEntityColor(status, false, true).replace("var(", "").replace(")", "")) : null;
     clone.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       materials.forEach((material) => {
         if (!material || !("emissive" in material)) return;
-        const emissiveMaterial = material as THREE.MeshStandardMaterial;
-        emissiveMaterial.emissive.set(isSelected ? "#3b82f6" : isHovered ? "#60a5fa" : "#000000");
-        emissiveMaterial.emissiveIntensity = isSelected ? 0.35 : isHovered ? 0.15 : 0;
+        const mat = material as THREE.MeshStandardMaterial;
+        if (isSelected && selectedColor) {
+          mat.emissive.set(selectedColor);
+          mat.emissiveIntensity = 0.35;
+        } else if (isHovered && hoveredColor) {
+          mat.emissive.set(hoveredColor);
+          mat.emissiveIntensity = 0.15;
+        } else if (isDiffed && statusColor) {
+          mat.emissive.set(statusColor);
+          mat.emissiveIntensity = 0.4;
+        } else {
+          mat.emissive.set("#000000");
+          mat.emissiveIntensity = 0;
+        }
+        mat.transparent = isRemoved;
+        mat.opacity = isRemoved ? 0.35 : 1;
       });
     });
-  }, [clone, isHovered, isSelected]);
+  }, [clone, status, isDiffed, isRemoved, isHovered, isSelected]);
 
   return <Clone object={clone} />;
 };
@@ -1525,6 +1550,7 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
 
   const color = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
   const edgeColor = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
+  const isRemoved = status === "removed";
 
   if (!matrix) return null;
 
@@ -1556,13 +1582,13 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
       {canRenderModel && modelSource ? (
         <group onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
           <React.Suspense fallback={null}>
-            <ScenePieceModel modelSource={modelSource} isSelected={isSelected} isHovered={isHovered} />
+            <ScenePieceModel modelSource={modelSource} status={status} isSelected={isSelected} isHovered={isHovered} />
           </React.Suspense>
         </group>
       ) : (
         <mesh onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
           <boxGeometry args={[SCENE_BOX_SIZE, SCENE_BOX_SIZE, SCENE_BOX_SIZE]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0} transparent={isRemoved} opacity={isRemoved ? 0.35 : 1} />
           <Edges scale={1.001} color={edgeColor} />
         </mesh>
       )}
@@ -1628,7 +1654,7 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
   return (
     <mesh name={connection.guid} position={transform.midpoint} quaternion={transform.quaternion} onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
       <cylinderGeometry args={[radius, radius, transform.length, 12]} />
-      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.2 : 0.05} />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.2 : 0.05} transparent={status === "removed"} opacity={status === "removed" ? 0.35 : 1} />
     </mesh>
   );
 };

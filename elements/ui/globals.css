@@ -349,6 +349,11 @@
     --destructive-bg: var(--color-light-8-9);
     --destructive-foreground: var(--color-danger);
     --destructive-border: var(--color-danger);
+    --color-new: var(--success-border);
+    --color-modified: var(--warning-border);
+    --color-removed: var(--destructive-border);
+    --color-changed-selected: var(--accent);
+    --color-changed-hovered: var(--accent-secondary);
     --cursor-default: url("../../semio/assets/cursors/cursor.svg") 0 0, default;
     --cursor-pointer: url("../../semio/assets/cursors/cursor_pointer.svg") 0 0, pointer;
     --cursor-grab: url("../../semio/assets/cursors/cursor_grab.svg") 0 0, grab;
