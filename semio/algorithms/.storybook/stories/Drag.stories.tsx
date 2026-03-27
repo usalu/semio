@@ -5,6 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
+import { applyDesignDiff, flattenDesign } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -14,6 +15,9 @@ import { useAlgorithmLanguage } from "../withLanguage";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
 const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
+const flattenChange = flattenDesign(metabolismKit as any, rawDesign.guid);
+const baseDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces }) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "drag-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },
@@ -25,7 +29,6 @@ const WINDOWS: AlgorithmWindowDef[] = [
 function DragFrame() {
   const language = useAlgorithmLanguage();
   const kit = metabolismKit as any;
-  const baseDesign = React.useMemo(() => (kit.designs ?? []).find((design: any) => design.guid === nakaginCapsuleTowerDesignGuid) as any, [kit]);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
   const [vec, setVec] = React.useState({ u: 1, v: -2 });
 

@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { getDesignDiff, type Connection, type Design, type Piece } from "@semio/js";
+import { applyDesignDiff, flattenDesign, getDesignDiff, type Connection, type Design, type Kit, type Piece } from "@semio/js";
 import { SemioDesign as DesignView } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -13,7 +13,9 @@ import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
 // #region 🔖Data
 
-const nakaginDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
+const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
+const flattenChange = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
+const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces });
 const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
 
 const connectionCounts = new Map<string, number>();

@@ -268,13 +268,9 @@ const addKitMetaEntry = (entries: Array<{ label: string; value: string }>, label
   entries.push({ label, value });
 };
 
-const getKitArtifactHref = (value: Partial<KitData & KitDesignData & KitKindData>): string | undefined =>
-  value.view ?? value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;
+const getKitArtifactHref = (value: Partial<KitData & KitDesignData & KitKindData>): string | undefined => value.view ?? value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;
 
-const buildKitHierarchy = (
-  data: KitData,
-  options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean },
-): KitHierarchy => {
+const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean }): KitHierarchy => {
   const rootKey = "scope:kit";
   const kitKey = "kit:root";
   const designGroupKey = "group:designs";
@@ -454,13 +450,16 @@ const getKitNodePath = (hierarchy: KitHierarchy, nodeKey: string | undefined): K
   return path;
 };
 
-const getKitSiblingNodes = (hierarchy: KitHierarchy, node: KitHierarchyNode): KitHierarchyNode[] => {
-  if (!node.parentKey) return [];
-  const siblingKeys = hierarchy.childKeysByParentKey.get(node.parentKey) ?? [];
-  return siblingKeys
+const getKitChildNodes = (hierarchy: KitHierarchy, node: KitHierarchyNode): KitHierarchyNode[] => {
+  const childKeys = hierarchy.childKeysByParentKey.get(node.key) ?? [];
+  return childKeys
     .map((key) => hierarchy.nodesByKey.get(key))
     .filter((value): value is KitHierarchyNode => Boolean(value))
-    .sort((left, right) => left.label.localeCompare(right.label));
+    .sort((left, right) => {
+      if (left.kind === "group" && right.kind !== "group") return -1;
+      if (left.kind !== "group" && right.kind === "group") return 1;
+      return left.label.localeCompare(right.label);
+    });
 };
 
 const getKitNodeSelection = (node: KitHierarchyNode): KitSelection => {
@@ -489,6 +488,79 @@ const getDefaultKitNodeKey = (hierarchy: KitHierarchy): string => {
     if (firstChildKey) return firstChildKey;
   }
   return "kit:root";
+};
+
+const getReadableKitMetaLabel = (label: string, value: string): string => {
+  if (label === "Guid") return "ID";
+  if (label === "Connector Id") return "Connector";
+  if (label === "Mandatory") return value === "true" ? "Required" : "Optional";
+  if (label === "Created") return "Created";
+  if (label === "Updated") return "Updated";
+  return label;
+};
+
+const truncateKitText = (value: string, maxLength = 48): string => {
+  const normalizedValue = value.replace(/\s+/g, " ").trim();
+  if (normalizedValue.length <= maxLength) return normalizedValue;
+  return `${normalizedValue.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+};
+
+const isKitUrlLabel = (label: string): boolean => ["Homepage", "Remote", "View", "Preview", "Image", "Icon"].includes(label);
+
+const formatKitRelativeTime = (value: string): string => {
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) return value;
+  const diffMs = timestamp - Date.now();
+  const absMs = Math.abs(diffMs);
+  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ["year", 1000 * 60 * 60 * 24 * 365],
+    ["month", 1000 * 60 * 60 * 24 * 30],
+    ["week", 1000 * 60 * 60 * 24 * 7],
+    ["day", 1000 * 60 * 60 * 24],
+    ["hour", 1000 * 60 * 60],
+    ["minute", 1000 * 60],
+  ];
+  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+  for (const [unit, unitMs] of units) {
+    if (absMs >= unitMs) return formatter.format(Math.round(diffMs / unitMs), unit);
+  }
+  return "just now";
+};
+
+const getKitMetaDisplay = (entry: { label: string; value: string }): { text: string; href?: string } => {
+  const readableLabel = getReadableKitMetaLabel(entry.label, entry.value);
+  if (readableLabel === "Required" || readableLabel === "Optional") {
+    return { text: readableLabel };
+  }
+  if (isKitUrlLabel(entry.label)) {
+    return { text: readableLabel, href: entry.value };
+  }
+  if (entry.label === "Created" || entry.label === "Updated") {
+    return { text: `${readableLabel} ${formatKitRelativeTime(entry.value)}` };
+  }
+  return { text: `${readableLabel}: ${entry.value}` };
+};
+
+const getVisibleKitMetadata = (node: KitHierarchyNode): Array<{ label: string; value: string }> =>
+  node.metadata.filter((entry) => {
+    if (entry.label === "Kind") return false;
+    if (entry.label === "Guid") return false;
+    if (entry.label === "Connector Id") return false;
+    if (entry.label === "Unit") return false;
+    if (entry.label === "Name" && entry.value === node.label) return false;
+    if (entry.label === "Mandatory" && entry.value === "false") return false;
+    if (entry.label === "Description" && entry.value === node.summary) return false;
+    return true;
+  });
+
+const getSecondaryKitMetadata = (node: KitHierarchyNode): Array<{ label: string; value: string }> => node.metadata.filter((entry) => entry.label === "Created" || entry.label === "Updated");
+
+const getKitTitle = (data: KitData, fallbackTitle: string): string => {
+  const name = data.name?.trim();
+  const version = data.version?.trim();
+  if (name && version) return `${name} · ${version}`;
+  if (name) return name;
+  return fallbackTitle;
 };
 
 export const SemioKit: React.FC<KitProps> = ({
@@ -537,10 +609,6 @@ export const SemioKit: React.FC<KitProps> = ({
     [designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, setResolvedSelection, typeSelectionEnabled],
   );
 
-  const clear = React.useCallback(() => {
-    setNextSelection({ designGuids: [], typeGuids: [], portGuids: [] });
-  }, [setNextSelection]);
-
   // If kit changes and data is uncontrolled, adopt derived data.
   React.useEffect(() => {
     if (!effectiveDataEnabled) return;
@@ -588,7 +656,8 @@ export const SemioKit: React.FC<KitProps> = ({
   }, [focusedNodeKey, hierarchy, selectedNodeKey]);
 
   const focusedNode = hierarchy.nodesByKey.get(focusedNodeKey) ?? hierarchy.nodesByKey.get(getDefaultKitNodeKey(hierarchy))!;
-  const path = React.useMemo(() => getKitNodePath(hierarchy, focusedNode.key), [focusedNode.key, hierarchy]);
+  const path = React.useMemo(() => getKitNodePath(hierarchy, focusedNode.key).filter((node) => node.kind !== "scope" && node.kind !== "kit"), [focusedNode.key, hierarchy]);
+  const resolvedTitle = React.useMemo(() => getKitTitle(effectiveData, title), [effectiveData, title]);
 
   const focusNode = React.useCallback(
     (nodeKey: string) => {
@@ -604,9 +673,19 @@ export const SemioKit: React.FC<KitProps> = ({
     [designSelectionEnabled, effectiveSelectionEnabled, hierarchy.nodesByKey, portSelectionEnabled, setNextSelection, typeSelectionEnabled],
   );
 
-  const breadcrumbItems = React.useMemo(
-    () =>
-      path.map((node) => ({
+  const breadcrumbItems = React.useMemo(() => {
+    const rootOptions = (hierarchy.childKeysByParentKey.get("kit:root") ?? [])
+      .map((key) => hierarchy.nodesByKey.get(key))
+      .filter((node): node is KitHierarchyNode => Boolean(node))
+      .map((node) => ({ label: node.label, href: node.key, id: node.guid }));
+
+    return [
+      {
+        content: <span style={{ display: "inline-block", width: 1, overflow: "hidden" }}>&nbsp;</span>,
+        options: rootOptions,
+        onNavigate: focusNode,
+      },
+      ...path.map((node) => ({
         id: node.guid,
         content: (
           <button
@@ -624,11 +703,11 @@ export const SemioKit: React.FC<KitProps> = ({
             {node.label}
           </button>
         ),
-        options: getKitSiblingNodes(hierarchy, node).map((sibling) => ({ label: sibling.label, href: sibling.key, id: sibling.guid })),
+        options: getKitChildNodes(hierarchy, node).map((child) => ({ label: child.label, href: child.key, id: child.guid })),
         onNavigate: focusNode,
       })),
-    [focusNode, focusedNode.key, hierarchy, path],
-  );
+    ];
+  }, [focusNode, focusedNode.key, hierarchy, path]);
 
   const openArtifact = React.useCallback(() => {
     if (focusedNode.kind === "scope" || focusedNode.kind === "group") return;
@@ -642,43 +721,121 @@ export const SemioKit: React.FC<KitProps> = ({
   }, [focusedNode, onOpenArtifact]);
 
   const canOpenArtifact = focusedNode.kind !== "scope" && focusedNode.kind !== "group" && (Boolean(onOpenArtifact) || Boolean(focusedNode.href));
+  const visibleMetadata = React.useMemo(() => getVisibleKitMetadata(focusedNode), [focusedNode]);
+  const secondaryMetadata = React.useMemo(() => getSecondaryKitMetadata(focusedNode), [focusedNode]);
+  const descriptionEntry = React.useMemo(() => visibleMetadata.find((entry) => entry.label === "Description"), [visibleMetadata]);
+  const detailMetadata = React.useMemo(() => visibleMetadata.filter((entry) => entry.label !== "Description" && entry.label !== "Created" && entry.label !== "Updated"), [visibleMetadata]);
+  const renderedBreadcrumbItems = React.useMemo(
+    () => breadcrumbItems.filter((item, index) => index < breadcrumbItems.length - 1 || (item.options?.length ?? 0) > 0),
+    [breadcrumbItems],
+  );
 
   return (
-    <Section title={title} className={className}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <div>{headerStats}</div>
-        <Button onClick={clear} disabled={!effectiveSelectionEnabled} text="Clear" />
-      </div>
+    <Section title={resolvedTitle} className={className}>
+      <div style={{ display: "grid", gap: 6 }}>
+        <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.2 }}>{headerStats}</div>
 
-      <Section title="Hierarchy">
-        <Breadcrumb items={breadcrumbItems} />
-      </Section>
+        <Breadcrumb items={renderedBreadcrumbItems} />
 
-      <Section title="Metadata">
-        <div style={{ display: "grid", gap: 8 }}>
-          {focusedNode.summary ? <div style={{ fontSize: 12, opacity: 0.75 }}>{focusedNode.summary}</div> : null}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {focusedNode.metadata.length === 0 ? <div style={{ fontSize: 12, opacity: 0.7 }}>No metadata available.</div> : null}
-            {focusedNode.metadata.map((entry) => (
-              <div
-                key={`${focusedNode.key}:${entry.label}`}
-                style={{
-                  minWidth: 120,
-                  border: "1px solid var(--border, rgba(0,0,0,0.12))",
-                  borderRadius: 8,
-                  padding: "6px 10px",
-                  background: "var(--card, rgba(255,255,255,0.7))",
-                }}
-              >
-                <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.7 }}>{entry.label}</div>
-                <div style={{ fontSize: 13, fontWeight: 600, wordBreak: "break-word" }}>{entry.value}</div>
-              </div>
+        {secondaryMetadata.length > 0 ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, opacity: 0.58, lineHeight: 1.1 }}>
+            {secondaryMetadata.map((entry) => (
+              <span key={`${focusedNode.key}:${entry.label}`}>{getKitMetaDisplay(entry).text}</span>
             ))}
           </div>
-        </div>
-      </Section>
+        ) : null}
 
-      <Button onClick={openArtifact} disabled={!canOpenArtifact} text="Open Artifact" />
+        {descriptionEntry ? (
+          <div
+            title={descriptionEntry.value}
+            style={{
+              fontSize: 12,
+              lineHeight: 1.35,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: "vertical",
+            }}
+          >
+            {descriptionEntry.value}
+          </div>
+        ) : focusedNode.summary ? (
+          <div
+            title={focusedNode.summary}
+            style={{
+              fontSize: 12,
+              lineHeight: 1.35,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: "vertical",
+            }}
+          >
+            {focusedNode.summary}
+          </div>
+        ) : null}
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {detailMetadata.length === 0 ? <div style={{ fontSize: 12, opacity: 0.7 }}>No metadata available.</div> : null}
+          {detailMetadata.map((entry) => {
+            const display = getKitMetaDisplay(entry);
+            const truncatedText = truncateKitText(display.text, 40);
+            return (
+              <div
+                key={`${focusedNode.key}:${entry.label}`}
+                title={display.text}
+                style={{
+                  border: "1px solid var(--border, rgba(0,0,0,0.12))",
+                  borderRadius: 6,
+                  padding: "3px 8px",
+                  background: "var(--card, rgba(255,255,255,0.7))",
+                  lineHeight: 1.1,
+                  fontSize: 12,
+                  whiteSpace: "nowrap",
+                  maxWidth: "100%",
+                  overflow: "hidden",
+                }}
+              >
+                {display.href ? (
+                  <a
+                    href={display.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    style={{
+                      opacity: 0.82,
+                      textDecoration: "underline",
+                      display: "inline-block",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      verticalAlign: "bottom",
+                    }}
+                  >
+                    {truncatedText}
+                  </a>
+                ) : (
+                  <span
+                    style={{
+                      opacity: 0.82,
+                      display: "inline-block",
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      verticalAlign: "bottom",
+                    }}
+                  >
+                    {truncatedText}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <Button onClick={openArtifact} disabled={!canOpenArtifact} text="Open Artifact" className="w-full" />
+      </div>
     </Section>
   );
 };
@@ -2782,6 +2939,23 @@ if (import.meta.vitest) {
       );
 
       expect(getKitNodePath(hierarchy, "kind:l").map((node) => node.label)).toEqual(["Kit", "Metabolism", "Types", "Capsule", "Ellipsoid", "L"]);
+    });
+
+    it("exposes child nodes from each breadcrumb step instead of sibling nodes", () => {
+      const hierarchy = buildKitHierarchy(
+        {
+          name: "Metabolism",
+          types: [
+            { guid: "capsule", name: "Capsule" },
+            { guid: "ellipsoid", name: "Ellipsoid", parent: { guid: "capsule" } },
+            { guid: "balcony", name: "Balcony", parent: { guid: "capsule" } },
+          ],
+        },
+        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true },
+      );
+
+      expect(getKitChildNodes(hierarchy, hierarchy.nodesByKey.get("kind:capsule")!).map((node) => node.label)).toEqual(["Balcony", "Ellipsoid"]);
+      expect(getKitChildNodes(hierarchy, hierarchy.nodesByKey.get("kind:ellipsoid")!)).toEqual([]);
     });
 
     it("attaches ports beneath their resolved kind parent and derives port selection", () => {

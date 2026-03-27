@@ -5,6 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
+import { applyDesignDiff, flattenDesign } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -12,7 +13,9 @@ import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, Wind
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
-const nakaginDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef") as any;
+const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef") as any;
+const flattenChange = flattenDesign(metabolismKit as any, rawDesign.guid);
+const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces }) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "move-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },

@@ -5,6 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
+import { applyDesignDiff, flattenDesign } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -13,6 +14,9 @@ import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, Wind
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
 const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
+const flattenChange = flattenDesign(metabolismKit as any, rawDesign.guid);
+const baseDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces }) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "delete-input", kind: WindowKind.PIECES_SELECTION_INPUT, label: "Input" },
@@ -22,7 +26,6 @@ const WINDOWS: AlgorithmWindowDef[] = [
 
 function DeleteFrame() {
   const kit = metabolismKit as any;
-  const baseDesign = React.useMemo(() => (kit.designs ?? []).find((design: any) => design.guid === nakaginCapsuleTowerDesignGuid) as any, [kit]);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
 
   React.useEffect(() => {
