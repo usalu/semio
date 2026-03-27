@@ -8181,7 +8181,8 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 for p in updatedPieces
                 if p["guid"] in piecePlanes
             ]
-        }
+        },
+        "_piecePaths": piecePaths,
     }
 
 
@@ -8307,21 +8308,24 @@ def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
 
 def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
     """Returns metadata for all pieces in a design.
-    Each entry contains plane, center, fixedPieceId, parentPieceId, and depth.
+    Each entry contains plane, center, fixedPieceId, parentPieceId, depth, and path.
     [👤semio📚py💻semio🔖domain🔖kitoperations🛠️piecesmetadatadict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/d/i/piecesMetadataDict)
     """
     design = _findDesignInKitDict(kit, design_guid)
     flatten_diff = flattenDesignDict(kit, design_guid)
+    piece_paths = flatten_diff.pop("_piecePaths", {})
     flat_design = _applyDesignDiffDict(design, flatten_diff)
     result = {}
     for p in flat_design.get("pieces", []):
         guid = p.get("guid", "")
+        path_raw = piece_paths.get(guid, guid)
         result[guid] = {
             "plane": p.get("plane"),
             "center": p.get("center", {"u": 0, "v": 0}),
             "fixedPieceId": findAttributeValueDict(p, "semio.fixedPieceId", guid) or guid,
             "parentPieceId": findAttributeValueDict(p, "semio.parentPieceId", None),
             "depth": int(findAttributeValueDict(p, "semio.depth", "0") or "0"),
+            "path": [s for s in path_raw.split(",") if s],
         }
     return result
 

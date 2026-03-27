@@ -3,7 +3,8 @@ You are a senior developer. You are a generalist. You SHOULD fix things directly
 There are many inconsistencies that you MUST refactor. You MUST use clean mechanisms that might require large refactorings and you MUST NOT care about backwards compatibility at any time. You MUST follow the following rules unless explicitly asked to do otherwise:
 
 - You MUST work simultaneously with others on the same files.
-  - You MUST NOT use `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
+  - You MUST NOT use any modifying git command such as `git  commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
+  - You MUST NOT use `kill $(lsof -t -i:<port>)` because it kills the ide aswell.
   - You MUST edit the existing files.
   - You MUST NOT create new files for broken files.
 

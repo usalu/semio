@@ -609,10 +609,14 @@ export const SemioKit: React.FC<KitProps> = ({
     [designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, setResolvedSelection, typeSelectionEnabled],
   );
 
-  // If kit changes and data is uncontrolled, adopt derived data.
+  // If kit changes and data is uncontrolled, adopt derived data from `kit`.
+  // When `data` is set without `onDataChange`, {@link useInteractiveControllableValue} is still "uncontrolled"
+  // (isControlled requires both props); without this guard we would overwrite synced `data` with `{}` from
+  // {@link buildKitDataFromKit}(undefined) — breaking MCP viewers that pass `data={payload.kitArtifacts}` only.
   React.useEffect(() => {
     if (!effectiveDataEnabled) return;
     if (data !== undefined && onDataChange !== undefined) return;
+    if (data !== undefined) return;
     setResolvedData(derivedData);
   }, [data, derivedData, effectiveDataEnabled, onDataChange, setResolvedData]);
 
@@ -2707,11 +2711,28 @@ export interface McpDiagramPayload {
 // #endregion 🔖McpApp Types
 
 /**
+ * True when `kitArtifacts` is missing usable data (hosts may send a shell object after stripping nested arrays).
+ * [👤semio📚ui💻index🔖mcpapp🛠️isemptykitartifactsdata](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/isEmptyKitArtifactsData)
+ **/
+const isEmptyKitArtifactsData = (ka: unknown): boolean => {
+  if (ka === null || ka === undefined) return true;
+  if (typeof ka !== "object" || Array.isArray(ka)) return true;
+  const o = ka as Record<string, unknown>;
+  const name = typeof o.name === "string" ? o.name.trim() : "";
+  const guid = typeof o.guid === "string" ? o.guid.trim() : "";
+  const d = Array.isArray(o.designs) ? o.designs.length : 0;
+  const t = Array.isArray(o.types) ? o.types.length : 0;
+  const p = Array.isArray(o.ports) ? o.ports.length : 0;
+  return name.length === 0 && guid.length === 0 && d === 0 && t === 0 && p === 0;
+};
+
+/**
  * Normalizes a loose object into {@link McpDiagramPayload} when it carries kit/diagram data.
  * Hosts may send only {@link McpDiagramPayload.kitArtifacts} or omit empty arrays.
  **/
 const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPayload | null => {
-  const hasKit = raw.kitArtifacts !== undefined && raw.kitArtifacts !== null && typeof raw.kitArtifacts === "object";
+  const kitObj = raw.kitArtifacts;
+  const hasKit = kitObj !== undefined && kitObj !== null && typeof kitObj === "object" && !Array.isArray(kitObj) && !isEmptyKitArtifactsData(kitObj);
   const hasDiagram = Array.isArray(raw.points) && Array.isArray(raw.lines);
   if (!hasKit && !hasDiagram) return null;
   return {
@@ -2720,6 +2741,79 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
     capabilities: raw.capabilities as McpDiagramPayload["capabilities"],
     kitArtifacts: hasKit ? (raw.kitArtifacts as KitData) : undefined,
   };
+};
+
+/**
+ * Prefer the richest tool payload when hosts duplicate data in `structuredContent` (often truncated) and `content` text (full JSON).
+ * [👤semio📚ui💻index🔖mcpapp🛠️scoremcpdiagrampayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/scoreMcpDiagramPayload)
+ **/
+const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
+  let s = 0;
+  const diagramShape = Array.isArray(p.points) && Array.isArray(p.lines);
+  if (diagramShape) s += 1;
+  s += p.points.length + p.lines.length;
+  const ka = p.kitArtifacts;
+  if (ka) {
+    s += (ka.designs?.length ?? 0) * 10 + (ka.types?.length ?? 0) * 10 + (ka.ports?.length ?? 0);
+    if (typeof ka.name === "string" && ka.name.trim().length > 0) s += 50;
+    if (typeof ka.guid === "string" && ka.guid.trim().length > 0) s += 10;
+  }
+  return s;
+};
+
+const bestMcpDiagramPayload = (candidates: Array<McpDiagramPayload | null | undefined>): McpDiagramPayload | null => {
+  let best: McpDiagramPayload | null = null;
+  let bestScore = -1;
+  for (const c of candidates) {
+    if (!c) continue;
+    const sc = scoreMcpDiagramPayload(c);
+    if (sc > bestScore) {
+      bestScore = sc;
+      best = c;
+    }
+  }
+  return bestScore >= 0 ? best : null;
+};
+
+/**
+ * True when {@link McpKitViewer} has enough {@link KitData} to render SemioKit (not a stripped host shell).
+ * [👤semio📚ui💻index🔖mcpapp🛠️iskitviewerpayloadsufficient](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/isKitViewerPayloadSufficient)
+ **/
+const isKitViewerPayloadSufficient = (p: McpDiagramPayload | null): boolean => {
+  if (!p?.kitArtifacts) return false;
+  return !isEmptyKitArtifactsData(p.kitArtifacts);
+};
+
+/**
+ * Some MCP hosts never send `ui/notifications/tool-input` with arguments; the path may only appear nested in host context.
+ * [👤semio📚ui💻index🔖mcpapp🛠️deepfindkittoolarguments](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/deepFindKitToolArguments)
+ **/
+const deepFindKitToolArguments = (obj: unknown, depth = 0): Record<string, unknown> | null => {
+  if (depth > 12 || obj === null || typeof obj !== "object") return null;
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const r = deepFindKitToolArguments(item, depth + 1);
+      if (r) return r;
+    }
+    return null;
+  }
+  const rec = obj as Record<string, unknown>;
+  if (typeof rec.path === "string" && rec.path.trim().length > 0) {
+    return { path: rec.path.trim() };
+  }
+  if (
+    typeof rec.serverUrl === "string" &&
+    typeof rec.kitUri === "string" &&
+    rec.serverUrl.trim().length > 0 &&
+    rec.kitUri.trim().length > 0
+  ) {
+    return { serverUrl: rec.serverUrl.trim(), kitUri: rec.kitUri.trim() };
+  }
+  for (const v of Object.values(rec)) {
+    const r = deepFindKitToolArguments(v, depth + 1);
+    if (r) return r;
+  }
+  return null;
 };
 
 /**
@@ -2758,21 +2852,21 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
     r = params as Record<string, unknown>;
   }
 
+  const candidates: Array<McpDiagramPayload | null | undefined> = [];
+
   const structured = r.structuredContent;
   if (structured !== undefined && structured !== null) {
     if (typeof structured === "string") {
       try {
         const parsed = JSON.parse(structured) as unknown;
         if (parsed && typeof parsed === "object") {
-          const n = normalizeMcpDiagramPayload(parsed as Record<string, unknown>);
-          if (n) return n;
+          candidates.push(normalizeMcpDiagramPayload(parsed as Record<string, unknown>));
         }
       } catch {
         /* ignore */
       }
     } else if (typeof structured === "object" && !Array.isArray(structured)) {
-      const n = normalizeMcpDiagramPayload(structured as Record<string, unknown>);
-      if (n) return n;
+      candidates.push(normalizeMcpDiagramPayload(structured as Record<string, unknown>));
     }
   }
 
@@ -2790,18 +2884,18 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
       try {
         const parsed = JSON.parse(joined) as unknown;
         if (parsed && typeof parsed === "object") {
-          const n = normalizeMcpDiagramPayload(parsed as Record<string, unknown>);
-          if (n) return n;
+          candidates.push(normalizeMcpDiagramPayload(parsed as Record<string, unknown>));
         }
       } catch {
-        /* fall through to deep search */
+        /* fall through */
       }
     }
   }
 
-  const direct = normalizeMcpDiagramPayload(r);
-  if (direct) return direct;
-  return deepFindDiagramPayload(r);
+  candidates.push(normalizeMcpDiagramPayload(r));
+  candidates.push(deepFindDiagramPayload(r));
+
+  return bestMcpDiagramPayload(candidates);
 };
 
 /**
@@ -2987,7 +3081,17 @@ export const McpKitViewer: React.FC = () => {
   const gotPayloadRef = React.useRef(false);
   const tryRefetchRef = React.useRef<() => void>(() => {});
 
+  const mergeKitToolArguments = React.useCallback((): Record<string, unknown> | null => {
+    const client = appRef.current;
+    const fromRef = toolInputArgsRef.current;
+    const ctx = client?.getHostContext();
+    const extracted = deepFindKitToolArguments(ctx);
+    if (!fromRef && !extracted) return null;
+    return { ...(extracted ?? {}), ...(fromRef ?? {}) };
+  }, []);
+
   const applyKitPayload = React.useCallback((p: McpDiagramPayload) => {
+    if (!isKitViewerPayloadSufficient(p)) return;
     gotPayloadRef.current = true;
     setPayload(p);
     setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
@@ -2996,8 +3100,8 @@ export const McpKitViewer: React.FC = () => {
   const tryRefetchKitFromServer = React.useCallback(async () => {
     const client = appRef.current;
     if (!client || gotPayloadRef.current) return;
-    const args = toolInputArgsRef.current;
-    if (!args) return;
+    const args = mergeKitToolArguments();
+    if (!args || Object.keys(args).length === 0) return;
     let toolName = client.getHostContext()?.toolInfo?.tool?.name;
     if (!toolName && typeof (args as { path?: unknown }).path === "string") {
       toolName = "start_working_in_local_kit";
@@ -3018,7 +3122,7 @@ export const McpKitViewer: React.FC = () => {
     } catch {
       /* Host may not proxy tools/call to the server for this session. */
     }
-  }, [applyKitPayload]);
+  }, [applyKitPayload, mergeKitToolArguments]);
 
   React.useEffect(() => {
     tryRefetchRef.current = () => {
@@ -3033,6 +3137,15 @@ export const McpKitViewer: React.FC = () => {
       appRef.current = a;
       a.ontoolinput = (params) => {
         toolInputArgsRef.current = params.arguments ?? null;
+        tryRefetchRef.current();
+      };
+      a.ontoolinputpartial = (params) => {
+        const prev = toolInputArgsRef.current ?? {};
+        const next = params.arguments ?? {};
+        toolInputArgsRef.current = { ...prev, ...next };
+        tryRefetchRef.current();
+      };
+      a.onhostcontextchanged = () => {
         tryRefetchRef.current();
       };
       a.ontoolresult = (result) => {
@@ -3057,7 +3170,7 @@ export const McpKitViewer: React.FC = () => {
       const v = h[k];
       if (v === undefined) continue;
       const p = parseDiagramPayloadFromToolResult(v);
-      if (p) {
+      if (p && isKitViewerPayloadSufficient(p)) {
         applyKitPayload(p);
         return;
       }
@@ -3066,7 +3179,7 @@ export const McpKitViewer: React.FC = () => {
 
   React.useEffect(() => {
     if (!app || !isConnected) return;
-    const delays = [0, 50, 150, 400, 1200];
+    const delays = [0, 50, 150, 400, 1200, 2500, 5000, 8000, 15000];
     const ids = delays.map((d) => setTimeout(() => tryRefetchRef.current(), d));
     return () => ids.forEach(clearTimeout);
   }, [app, isConnected]);
@@ -3234,12 +3347,75 @@ if (import.meta.vitest) {
       expect(r?.kitArtifacts?.name).toBe("Deep");
     });
 
+    it("prefers full text content JSON when structuredContent kitArtifacts is a stripped shell", () => {
+      const stripped = {
+        points: [],
+        lines: [],
+        capabilities: { pieceSelection: false, connectionSelection: false },
+        kitArtifacts: { designs: [], types: [], ports: [] },
+      };
+      const full = {
+        points: [],
+        lines: [],
+        capabilities: { pieceSelection: false, connectionSelection: false },
+        kitArtifacts: {
+          name: "Metabolism",
+          version: "1",
+          designs: [{ guid: "d1", name: "D", variant: "", view: "" }],
+          types: [{ guid: "t1", name: "T", variant: "" }],
+          ports: [],
+        },
+      };
+      const r = parseDiagramPayloadFromToolResult({
+        structuredContent: stripped,
+        content: [{ type: "text", text: JSON.stringify(full) }],
+      });
+      expect(r?.kitArtifacts?.name).toBe("Metabolism");
+      expect(r?.kitArtifacts?.designs?.length).toBe(1);
+    });
+
     it("reads text from embedded resource content blocks", () => {
       const payload = { points: [], lines: [], kitArtifacts: { name: "Res", designs: [], types: [], ports: [] } };
       const r = parseDiagramPayloadFromToolResult({
         content: [{ type: "resource", resource: { uri: "x", mimeType: "text/plain", text: JSON.stringify(payload) } }],
       });
       expect(r?.kitArtifacts?.name).toBe("Res");
+    });
+  });
+
+  describe("deepFindKitToolArguments", () => {
+    it("finds path in nested host-like objects", () => {
+      expect(deepFindKitToolArguments({ a: { b: { path: "  /semio/metabolism  " } } })).toEqual({ path: "/semio/metabolism" });
+    });
+
+    it("prefers serverUrl+kitUri when present", () => {
+      expect(
+        deepFindKitToolArguments({
+          toolInfo: { serverUrl: "http://x", kitUri: "kit://y" },
+        }),
+      ).toEqual({ serverUrl: "http://x", kitUri: "kit://y" });
+    });
+  });
+
+  describe("isKitViewerPayloadSufficient", () => {
+    it("rejects stripped shell kitArtifacts", () => {
+      expect(
+        isKitViewerPayloadSufficient({
+          points: [],
+          lines: [],
+          kitArtifacts: { designs: [], types: [], ports: [] },
+        }),
+      ).toBe(false);
+    });
+
+    it("accepts kit with name or non-empty lists", () => {
+      expect(
+        isKitViewerPayloadSufficient({
+          points: [],
+          lines: [],
+          kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        }),
+      ).toBe(true);
     });
   });
 

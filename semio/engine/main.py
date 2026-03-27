@@ -2305,7 +2305,7 @@ def get_design_change(before: dict, after: dict) -> dict:
 
 
 def pieces_metadata(kit: dict, design_guid: str) -> dict:
-    """Get metadata for all pieces in a design including plane, center, fixedPieceId, parentPieceId, and depth."""
+    """Get metadata for all pieces in a design including plane, center, fixedPieceId, parentPieceId, depth, and path."""
     try:
         return piecesMetadataDict(kit, design_guid)
     except Exception as e:

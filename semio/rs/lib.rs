@@ -5598,6 +5598,7 @@ pub struct FlattenedPiece {
     pub plane: Plane,
     pub type_guid: Option<String>,
     pub design_guid: Option<String>,
+    pub path: Vec<String>,
 }
 
 /// <summary>flatten_design holds the data fields for a flatten_design record.</summary>
