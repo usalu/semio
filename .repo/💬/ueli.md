@@ -113,6 +113,7 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+Extend pieces metadata with the path that was during flatten (all pieces from root until the piece). You MUST implement it for all programming languages
 
 Create a new asset called `nakgin-capsule-tower.diff.design.semio.json`
 The diff should should

@@ -7777,6 +7777,7 @@ export type PieceMetadata = {
   fixedPieceId: string;
   parentPieceId: string | null;
   depth: number;
+  path: string[];
 };
 
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {

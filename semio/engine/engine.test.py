@@ -29,6 +29,7 @@ import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
+from mcp.types import CallToolResult
 from starlette.testclient import TestClient
 
 _engine_path = str(pathlib.Path(__file__).parent / "main.py")
@@ -36,6 +37,14 @@ _engine_spec = _ilu.spec_from_file_location("engine", _engine_path)
 engine = _ilu.module_from_spec(_engine_spec)
 _sys.modules["engine"] = engine
 _engine_spec.loader.exec_module(engine)
+
+
+def _mcp_app_tool_payload(result: object) -> dict:
+    """Unpack kit/design MCP app tool returns (CallToolResult with structuredContent)."""
+    assert isinstance(result, CallToolResult), result
+    assert result.structuredContent is not None
+    return result.structuredContent
+
 
 # endregion Imports
 
@@ -225,6 +234,24 @@ class TestGraphQL:
 class TestMcp:
     def test_mcp_instance_exists(self):
         assert engine.mcp is not None
+
+    def test_mcp_kit_tools_reference_kit_viewer_resource(self):
+        """Kit-loading tools declare ui://semio/kit-viewer; diagram tools use design-viewer."""
+        tools = {t.name: t for t in engine.mcp._tool_manager.list_tools()}
+        for name in ("start_working_in_local_kit", "start_new_kit", "start_working_in_remote_kit"):
+            assert tools[name].meta["ui"]["resourceUri"] == "ui://semio/kit-viewer"
+        assert tools["show_design"].meta["ui"]["resourceUri"] == "ui://semio/design-viewer"
+
+    def test_mcp_app_html_resources_include_ui_csp_meta(self):
+        """MCP App HTML resources expose _meta.ui.csp so hosts allow network access to the engine (see .repo/✍️/mcp-app.md)."""
+        resources = {str(r.uri): r for r in engine.mcp._resource_manager.list_resources()}
+        for uri in ("ui://semio/design-viewer", "ui://semio/kit-viewer"):
+            r = resources[uri]
+            assert r.meta is not None
+            csp = r.meta.get("ui", {}).get("csp")
+            assert csp is not None
+            assert isinstance(csp.get("connectDomains"), list) and len(csp["connectDomains"]) > 0
+            assert r.meta.get("ui/csp") is csp
 
     def test_mcp_tool_surface_keeps_only_allowed_prefixes(self):
         names = sorted(tool.name for tool in engine.mcp._tool_manager.list_tools())
@@ -567,8 +594,8 @@ class TestMcp:
         """start_working_in_local_kit loads kit from metabolism JSON path."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
-        assert isinstance(result, str)
-        payload = json.loads(result)
+        assert isinstance(result, CallToolResult)
+        payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
         assert id(mock_ctx.session) in engine._mcp_session_kits
 
@@ -576,8 +603,8 @@ class TestMcp:
         """start_working_in_local_kit loads kit from folder containing metabolism.kit.semio.json."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(ASSETS_DIR), mock_ctx)
-        assert isinstance(result, str)
-        payload = json.loads(result)
+        assert isinstance(result, CallToolResult)
+        payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
         kit = engine._mcp_session_kits[id(mock_ctx.session)]
         assert "designs" in kit
@@ -586,8 +613,8 @@ class TestMcp:
         """start_working_in_local_kit loads kit from a folder backed by .semio/kit.db."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(METABOLISM_DIR), mock_ctx)
-        assert isinstance(result, str)
-        payload = json.loads(result)
+        assert isinstance(result, CallToolResult)
+        payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
         kit = engine._mcp_session_kits[id(mock_ctx.session)]
         assert "designs" in kit
@@ -619,8 +646,8 @@ class TestMcp:
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         result = engine.start_working_in_design(design["guid"], mock_ctx)
-        assert isinstance(result, str)
-        payload = json.loads(result)
+        assert isinstance(result, CallToolResult)
+        payload = _mcp_app_tool_payload(result)
         assert "points" in payload and "lines" in payload
         assert "kitArtifacts" in payload
         assert "designs" in payload["kitArtifacts"]
@@ -632,8 +659,9 @@ class TestMcp:
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine._mcp_session_kits[id(mock_ctx.session)] = kitMetabolismJson
         result = engine.start_working_in_design("nonexistent-guid", mock_ctx)
-        assert isinstance(result, str)
-        payload = json.loads(result)
+        assert isinstance(result, CallToolResult)
+        assert result.isError is True
+        payload = _mcp_app_tool_payload(result)
         assert "error" in payload
 
     def test_read_current_design(self, kitMetabolismJson: dict):
@@ -774,8 +802,8 @@ class TestMcp:
         expected_design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
 
         started_kit = engine.start_new_kit("Temporary Kit", "1.0.0", mock_ctx)
-        assert isinstance(started_kit, str)
-        started_kit_payload = json.loads(started_kit)
+        assert isinstance(started_kit, CallToolResult)
+        started_kit_payload = _mcp_app_tool_payload(started_kit)
         assert "kitArtifacts" in started_kit_payload
 
         started_transaction = engine.start_transaction(mock_ctx)
@@ -939,15 +967,15 @@ class TestMcp:
         assert sel == {"pieceGuids": [], "connectionGuids": []}
 
     def test_show_design_returns_diagram_json(self, kitMetabolismJson: dict):
-        """show_design returns JSON string with points, lines, and capabilities."""
+        """show_design returns CallToolResult with points, lines, and capabilities in structuredContent."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_design(mock_ctx)
-        assert isinstance(result, str)
-        data = json.loads(result)
+        assert isinstance(result, CallToolResult)
+        data = _mcp_app_tool_payload(result)
         assert "points" in data
         assert "lines" in data
         assert "capabilities" in data
@@ -962,45 +990,45 @@ class TestMcp:
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_diagram(mock_ctx)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         assert "points" in data
         assert "lines" in data
 
     def test_show_scene_returns_diagram_json(self, kitMetabolismJson: dict):
-        """show_scene returns JSON string with diagram data."""
+        """show_scene returns diagram data in structuredContent."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_scene(mock_ctx)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         assert "points" in data
         assert "lines" in data
 
     def test_show_diff_returns_diagram_json(self, kitMetabolismJson: dict):
-        """show_diff returns JSON string with diagram data and default capabilities."""
+        """show_diff returns diagram data and default capabilities in structuredContent."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_diff(mock_ctx)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         assert "points" in data
         assert "lines" in data
         assert data["capabilities"]["pieceSelection"] is False
         assert data["capabilities"]["connectionSelection"] is False
 
     def test_show_diagram_diff_returns_diagram_json(self, kitMetabolismJson: dict):
-        """show_diagram_diff returns JSON string with diagram data."""
+        """show_diagram_diff returns diagram data in structuredContent."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_diagram_diff(mock_ctx)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         assert "points" in data
         assert "lines" in data
 
@@ -1013,7 +1041,7 @@ class TestMcp:
         engine.start_working_in_design(design["guid"], mock_ctx)
         diff = {"pieces": {"added": [{"guid": "new-piece", "id": "added-1", "center": {"u": 10, "v": 20}}]}}
         result = engine.show_diff(mock_ctx, design_diff=diff)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         added_guids = [p["guid"] for p in data["points"] if p.get("status") == "added"]
         assert "new-piece" in added_guids
 
@@ -1025,7 +1053,7 @@ class TestMcp:
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.select_pieces(mock_ctx)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         assert data["capabilities"]["pieceSelection"] is True
         assert data["capabilities"]["connectionSelection"] is False
 
@@ -1037,7 +1065,7 @@ class TestMcp:
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.select_connections(mock_ctx)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         assert data["capabilities"]["pieceSelection"] is False
         assert data["capabilities"]["connectionSelection"] is True
 
@@ -1049,12 +1077,12 @@ class TestMcp:
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.select_pieces_and_connections(mock_ctx)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         assert data["capabilities"]["pieceSelection"] is True
         assert data["capabilities"]["connectionSelection"] is True
 
     def test_app_tools_require_kit_and_design(self):
-        """All app tools return error JSON string when kit or design is not set."""
+        """All app tools return CallToolResult with error in structuredContent when kit or design is not set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = id(mock_ctx.session)
         # Ensure clean state
@@ -1062,8 +1090,9 @@ class TestMcp:
         engine._mcp_session_designs.pop(sid, None)
         for tool_fn in (engine.show_design, engine.show_diagram, engine.show_scene, engine.select_pieces, engine.select_connections, engine.select_pieces_and_connections):
             result = tool_fn(mock_ctx)
-            assert isinstance(result, str), f"{tool_fn.__name__} should return str"
-            data = json.loads(result)
+            assert isinstance(result, CallToolResult), f"{tool_fn.__name__} should return CallToolResult"
+            assert result.isError is True, f"{tool_fn.__name__} should signal error"
+            data = _mcp_app_tool_payload(result)
             assert "error" in data, f"{tool_fn.__name__} should require kit+design"
 
     def test_show_design_points_have_required_fields(self, kitMetabolismJson: dict):
@@ -1074,7 +1103,7 @@ class TestMcp:
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         engine.start_working_in_design(design["guid"], mock_ctx)
         result = engine.show_design(mock_ctx)
-        data = json.loads(result)
+        data = _mcp_app_tool_payload(result)
         for point in data["points"]:
             assert "guid" in point
             assert "id" in point
@@ -1114,6 +1143,15 @@ class TestAppEndpoint:
         response = client.get("/app/design-viewer")
         html = response.text
         assert 'id="root"' in html
+
+    def test_app_kit_viewer_returns_html(self):
+        """GET /app/kit-viewer returns the built MCP App HTML that mounts McpKitViewer from @semio/ui."""
+        client = TestClient(engine.rest)
+        response = client.get("/app/kit-viewer")
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert "semio kit viewer" in response.text
+        assert 'data-mcp-viewer="kit"' in response.text
 
 
 # endregion MCP Tests
@@ -1669,8 +1707,8 @@ class TestMcpRemoteKit:
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert isinstance(result, str)
-            payload = json.loads(result)
+            assert isinstance(result, CallToolResult)
+            payload = _mcp_app_tool_payload(result)
             assert "kitArtifacts" in payload
             sid = id(mock_ctx.session)
             assert sid in engine._mcp_session_kits
@@ -1684,8 +1722,9 @@ class TestMcpRemoteKit:
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert isinstance(result, str)
-            assert "error" in json.loads(result)
+            assert isinstance(result, CallToolResult)
+            assert result.isError is True
+            assert "error" in _mcp_app_tool_payload(result)
 
     def test_start_working_in_remote_kit_connection_error(self, tmp_path):
         """start_working_in_remote_kit returns error on connection failure."""
@@ -1694,8 +1733,9 @@ class TestMcpRemoteKit:
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert isinstance(result, str)
-            assert "error" in json.loads(result)
+            assert isinstance(result, CallToolResult)
+            assert result.isError is True
+            assert "error" in _mcp_app_tool_payload(result)
 
     def test_start_working_in_remote_kit_clears_previous_state(self, tmp_path):
         """start_working_in_remote_kit clears design, type, and sets mode to remote."""
@@ -1720,8 +1760,8 @@ class TestMcpRemoteKit:
         """start_working_in_local_kit sets session mode to local."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
-        assert isinstance(result, str)
-        payload = json.loads(result)
+        assert isinstance(result, CallToolResult)
+        payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
         sid = id(mock_ctx.session)
         assert engine._mcp_session_kit_mode[sid] == "local"
@@ -1783,8 +1823,8 @@ class TestMcpRemoteKit:
 
         # start_working_in_design works for remote kits
         result = engine.start_working_in_design("d1", mock_ctx)
-        assert isinstance(result, str)
-        payload = json.loads(result)
+        assert isinstance(result, CallToolResult)
+        payload = _mcp_app_tool_payload(result)
         assert "points" in payload and "lines" in payload
         assert "kitArtifacts" in payload
 

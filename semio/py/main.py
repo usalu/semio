@@ -8085,6 +8085,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         return {}
     pieceMap = {p["guid"]: dict(p) for p in pieces}
     piecePlanes: dict[str, dict] = {}
+    piecePaths: dict[str, str] = {}
     G = buildPieceGraph(design)
     components = list(networkx.connected_components(G))
     for component in components:
@@ -8099,6 +8100,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         if rootNode is None:
             continue
         rootPiece = pieceMap[rootNode]
+        piecePaths[rootNode] = rootNode
         if rootPiece.get("plane"):
             piecePlanes[rootNode] = rootPiece["plane"]
         else:
@@ -8158,6 +8160,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 "v": round(childV / TOLERANCE) * TOLERANCE,
             }
             pieceMap[childId]["center"] = childCenter
+            piecePaths[childId] = piecePaths.get(parentId, parentId) + "," + childId
     updatedPieces = []
     for piece in pieces:
         newPiece = dict(piece)

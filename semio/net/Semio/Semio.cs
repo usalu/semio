@@ -7291,7 +7291,8 @@ public class Kit : Entity<Kit>
             var updatedRootPiece = SetAttributes(rootPiece, new[]
             {
                 ("semio.fixedPieceId", rootPiece.Guid),
-                ("semio.depth", "0")
+                ("semio.depth", "0"),
+                ("semio.path", rootPiece.Guid)
             });
             pieceMap[rootNode] = updatedRootPiece;
 
@@ -7374,6 +7375,7 @@ public class Kit : Entity<Kit>
 
                 var childCenter = new Coord { U = (float)Math.Round(childU), V = (float)Math.Round(childV) };
                 var fixedPieceId = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.fixedPieceId")?.Value ?? "";
+                var parentPath = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.path")?.Value ?? "";
 
                 childPiece.Plane = childPlane;
                 childPiece.Center = childCenter;
@@ -7382,7 +7384,8 @@ public class Kit : Entity<Kit>
                 {
                     ("semio.fixedPieceId", fixedPieceId),
                     ("semio.parentPieceId", parentPiece.Guid),
-                    ("semio.depth", depths[childId].ToString())
+                    ("semio.depth", depths[childId].ToString()),
+                    ("semio.path", parentPath + "," + childPiece.Guid)
                 });
                 pieceMap[childId] = flatChildPiece;
             };

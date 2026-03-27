@@ -9,11 +9,11 @@
 
 // #endregion 🔖Header
 
+import mdx from "@mdx-js/rollup";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import tailwindcss from "@tailwindcss/vite";
-import mdx from "@mdx-js/rollup";
-import path from "path";
 
 // #region 🔖ZodJitlessPlugin
 // Specs: Zod v4 (dependency of @modelcontextprotocol/ext-apps) uses `new Function()`
@@ -29,16 +29,10 @@ function zodJitlessPlugin(): Plugin {
     transform(code, id) {
       if (!id.includes("zod")) return;
       if (id.endsWith("core/util.js") || id.endsWith("core/util.mjs")) {
-        return code.replace(
-          /export const allowsEval[\s\S]*?}\);/,
-          "export const allowsEval = { get value() { return false; } };",
-        );
+        return code.replace(/export const allowsEval[\s\S]*?}\);/, "export const allowsEval = { get value() { return false; } };");
       }
       if (id.endsWith("core/doc.js") || id.endsWith("core/doc.mjs")) {
-        return code.replace(
-          /compile\(\)\s*\{[\s\S]*?return new F\([^)]*\);\s*\}/,
-          "compile() { return () => {}; }",
-        );
+        return code.replace(/compile\(\)\s*\{[\s\S]*?return new F\([^)]*\);\s*\}/, "compile() { return () => {}; }");
       }
       return undefined;
     },
@@ -48,13 +42,17 @@ function zodJitlessPlugin(): Plugin {
 // #endregion 🔖ZodJitlessPlugin
 
 // #region 🔖StubHeavyDepsPlugin
-// Specs: The MCP App only uses SemioDiagram (SVG) and SemioKit from @semio/ui.
-// Three.js, cytoscape, sql.js, jszip, and other heavy deps are not needed.
-// This plugin resolves them to empty stubs to keep the bundle small.
-// Summary: Vite plugin stubbing heavy deps unused by the MCP App.
+// Specs: semio/ui/index.tsx imports 3D and semio-assets modules at module scope.
+// Stubbing those modules keeps the MCP App bundle small, but the stubs must be JSON-safe
+// (so Vite doesn't try to parse stubbed `*.json` as real JSON).
+// Summary: Stub heavy deps + semio assets (JSON-safe) to keep the MCP App fast and reliable.
 
 const STUB_EMPTY = path.resolve(__dirname, "stubs/empty.js");
-const STUBBED_PREFIXES = ["three", "@react-three", "cytoscape", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout", "@semio/js", "@semio/assets"];
+// NOTE: Do NOT stub `three` / `@react-three/*`.
+// `semio/ui/index.tsx` imports named exports at module scope and an ESM stub
+// that doesn't provide those exact exports can crash the bundle before React mounts.
+// We only stub semio assets and unrelated heavy deps.
+const STUBBED_PREFIXES = ["@semio/assets", "cytoscape", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
 function stubHeavyDepsPlugin(): Plugin {
   return {
@@ -62,7 +60,16 @@ function stubHeavyDepsPlugin(): Plugin {
     enforce: "pre",
     resolveId(source) {
       for (const prefix of STUBBED_PREFIXES) {
-        if (source === prefix || source.startsWith(prefix + "/")) return { id: "\0stub:" + source, syntheticNamedExports: true };
+        if (source === prefix || source.startsWith(prefix + "/")) {
+          // Vite applies its JSON plugin based on file extension; ensure stub ids don't end with ".json".
+          if (source.endsWith(".json")) {
+            return {
+              id: "\0stub-json:" + source.slice(0, -5),
+              syntheticNamedExports: true,
+            };
+          }
+          return { id: "\0stub:" + source, syntheticNamedExports: true };
+        }
       }
       if (source === "i18next") return path.resolve(__dirname, "stubs/i18next.js");
       if (source === "i18next-browser-languagedetector") return { id: "\0stub:" + source, syntheticNamedExports: true };
@@ -71,7 +78,8 @@ function stubHeavyDepsPlugin(): Plugin {
       return null;
     },
     load(id) {
-      if (id.startsWith("\0stub:")) return "const noop = () => noop; noop.prototype = {}; export default new Proxy(noop, { get: (_, p) => p === '__esModule' ? true : p === 'default' ? noop : noop });\n";
+      if (id.startsWith("\0stub-json:")) return "export default {};\n";
+      if (id.startsWith("\0stub:")) return "const noop = () => noop; noop.prototype = {}; export default new Proxy(noop, { get: (_, p) => (p === '__esModule' ? true : p === 'default' ? noop : noop) });\n";
       return null;
     },
   };

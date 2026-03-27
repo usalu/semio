@@ -2707,19 +2707,101 @@ export interface McpDiagramPayload {
 // #endregion 🔖McpApp Types
 
 /**
- * Parses the MCP tool result content to extract the McpDiagramPayload.
- * [👤semio📚ui💻index🔖mcpapp🛠️parsemcptoolresult](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/parseMcpToolResult)
+ * Normalizes a loose object into {@link McpDiagramPayload} when it carries kit/diagram data.
+ * Hosts may send only {@link McpDiagramPayload.kitArtifacts} or omit empty arrays.
  **/
-const parseMcpToolResult = (result: unknown): McpDiagramPayload | null => {
-  if (!result || typeof result !== "object") return null;
-  const r = result as { content?: Array<{ type: string; text?: string }> };
-  const textContent = r.content?.find((c) => c.type === "text");
-  if (!textContent?.text) return null;
-  try {
-    return JSON.parse(textContent.text) as McpDiagramPayload;
-  } catch {
+const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPayload | null => {
+  const hasKit = raw.kitArtifacts !== undefined && raw.kitArtifacts !== null && typeof raw.kitArtifacts === "object";
+  const hasDiagram = Array.isArray(raw.points) && Array.isArray(raw.lines);
+  if (!hasKit && !hasDiagram) return null;
+  return {
+    points: Array.isArray(raw.points) ? (raw.points as McpDiagramPayload["points"]) : [],
+    lines: Array.isArray(raw.lines) ? (raw.lines as McpDiagramPayload["lines"]) : [],
+    capabilities: raw.capabilities as McpDiagramPayload["capabilities"],
+    kitArtifacts: hasKit ? (raw.kitArtifacts as KitData) : undefined,
+  };
+};
+
+/**
+ * Deep-scans nested objects for a payload shape (some hosts nest JSON under extra keys).
+ * [👤semio📚ui💻index🔖mcpapp🛠️deepfinddiagrampayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/deepFindDiagramPayload)
+ **/
+const deepFindDiagramPayload = (obj: unknown, depth = 0): McpDiagramPayload | null => {
+  if (depth > 12 || obj === null || typeof obj !== "object") return null;
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const found = deepFindDiagramPayload(item, depth + 1);
+      if (found) return found;
+    }
     return null;
   }
+  const rec = obj as Record<string, unknown>;
+  const direct = normalizeMcpDiagramPayload(rec);
+  if (direct) return direct;
+  for (const v of Object.values(rec)) {
+    const found = deepFindDiagramPayload(v, depth + 1);
+    if (found) return found;
+  }
+  return null;
+};
+
+/**
+ * Parses MCP `CallToolResult` (or host copies) into {@link McpDiagramPayload}.
+ * Supports `content` text blocks and `structuredContent` (used by several MCP hosts instead of text).
+ * [👤semio📚ui💻index🔖mcpapp🛠️parsediagrampayloadfromtoolresult](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/parseDiagramPayloadFromToolResult)
+ **/
+export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPayload | null => {
+  if (!result || typeof result !== "object") return null;
+  let r = result as Record<string, unknown>;
+  const params = r.params;
+  if (params && typeof params === "object" && ("content" in params || "structuredContent" in params)) {
+    r = params as Record<string, unknown>;
+  }
+
+  const structured = r.structuredContent;
+  if (structured !== undefined && structured !== null) {
+    if (typeof structured === "string") {
+      try {
+        const parsed = JSON.parse(structured) as unknown;
+        if (parsed && typeof parsed === "object") {
+          const n = normalizeMcpDiagramPayload(parsed as Record<string, unknown>);
+          if (n) return n;
+        }
+      } catch {
+        /* ignore */
+      }
+    } else if (typeof structured === "object" && !Array.isArray(structured)) {
+      const n = normalizeMcpDiagramPayload(structured as Record<string, unknown>);
+      if (n) return n;
+    }
+  }
+
+  const content = r.content;
+  if (Array.isArray(content)) {
+    const textParts: string[] = [];
+    for (const block of content) {
+      if (!block || typeof block !== "object") continue;
+      const b = block as { type?: string; text?: string; resource?: { text?: string } };
+      if (b.type === "text" && typeof b.text === "string") textParts.push(b.text);
+      if (b.type === "resource" && b.resource && typeof b.resource.text === "string") textParts.push(b.resource.text);
+    }
+    const joined = textParts.join("").trim();
+    if (joined.length > 0) {
+      try {
+        const parsed = JSON.parse(joined) as unknown;
+        if (parsed && typeof parsed === "object") {
+          const n = normalizeMcpDiagramPayload(parsed as Record<string, unknown>);
+          if (n) return n;
+        }
+      } catch {
+        /* fall through to deep search */
+      }
+    }
+  }
+
+  const direct = normalizeMcpDiagramPayload(r);
+  if (direct) return direct;
+  return deepFindDiagramPayload(r);
 };
 
 /**
@@ -2747,12 +2829,9 @@ export const McpDesignViewer: React.FC = () => {
     onAppCreated: (a) => {
       appRef.current = a;
       a.ontoolresult = (result) => {
-        const parsed = parseMcpToolResult(result);
+        const parsed = parseDiagramPayloadFromToolResult(result);
         if (parsed) {
-          setPayload(parsed);
-          setSelectedPieces(new Set());
-          setSelectedConnections(new Set());
-          setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
+          applyDiagramPayload(parsed);
         }
       };
       a.ontoolcancelled = () => {};
@@ -2762,6 +2841,28 @@ export const McpDesignViewer: React.FC = () => {
   });
 
   useHostStyles(app, app?.getHostContext());
+
+  const applyDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
+    setPayload(p);
+    setSelectedPieces(new Set());
+    setSelectedConnections(new Set());
+    setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
+  }, []);
+
+  React.useEffect(() => {
+    if (!app) return;
+    const h = app.getHostContext() as Record<string, unknown> | undefined;
+    if (!h) return;
+    for (const k of ["toolResult", "lastToolResult", "toolExecutionResult", "initialToolResult", "pendingToolResult"]) {
+      const v = h[k];
+      if (v === undefined) continue;
+      const p = parseDiagramPayloadFromToolResult(v);
+      if (p) {
+        applyDiagramPayload(p);
+        return;
+      }
+    }
+  }, [app, applyDiagramPayload]);
 
   // Sync MCP host theme with semio's .dark class convention.
   const mcpTheme = useDocumentTheme();
@@ -2871,6 +2972,200 @@ export const McpDesignViewer: React.FC = () => {
 };
 
 /**
+ * MCP App kit viewer: renders only {@link SemioKit} from tool results (kit artifact payload).
+ * Used when the MCP host loads `ui://semio/kit-viewer` after kit-scoped tools such as start_working_in_local_kit.
+ * [👤semio📚ui💻index🔖mcpapp🛠️mcpkitviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpKitViewer)
+ *
+ * Specs:
+ * - Same host connection as {@link McpDesignViewer} but no diagram; kit selection sync only.
+ **/
+export const McpKitViewer: React.FC = () => {
+  const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
+  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [] });
+  const appRef = React.useRef<McpApp | null>(null);
+  const toolInputArgsRef = React.useRef<Record<string, unknown> | null>(null);
+  const gotPayloadRef = React.useRef(false);
+  const tryRefetchRef = React.useRef<() => void>(() => {});
+
+  const applyKitPayload = React.useCallback((p: McpDiagramPayload) => {
+    gotPayloadRef.current = true;
+    setPayload(p);
+    setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
+  }, []);
+
+  const tryRefetchKitFromServer = React.useCallback(async () => {
+    const client = appRef.current;
+    if (!client || gotPayloadRef.current) return;
+    const args = toolInputArgsRef.current;
+    if (!args) return;
+    let toolName = client.getHostContext()?.toolInfo?.tool?.name;
+    if (!toolName && typeof (args as { path?: unknown }).path === "string") {
+      toolName = "start_working_in_local_kit";
+    }
+    if (!toolName && typeof (args as { name?: unknown }).name === "string" && typeof (args as { version?: unknown }).version === "string") {
+      toolName = "start_new_kit";
+    }
+    if (!toolName && typeof (args as { serverUrl?: unknown }).serverUrl === "string" && typeof (args as { kitUri?: unknown }).kitUri === "string") {
+      toolName = "start_working_in_remote_kit";
+    }
+    if (!toolName) return;
+    const kitTools = new Set(["start_working_in_local_kit", "start_new_kit", "start_working_in_remote_kit"]);
+    if (!kitTools.has(toolName)) return;
+    try {
+      const result = await client.callServerTool({ name: toolName, arguments: args });
+      const p = parseDiagramPayloadFromToolResult(result);
+      if (p) applyKitPayload(p);
+    } catch {
+      /* Host may not proxy tools/call to the server for this session. */
+    }
+  }, [applyKitPayload]);
+
+  React.useEffect(() => {
+    tryRefetchRef.current = () => {
+      void tryRefetchKitFromServer();
+    };
+  }, [tryRefetchKitFromServer]);
+
+  const { app, isConnected, error } = useApp({
+    appInfo: { name: "semio kit viewer", version: "1.0.0" },
+    capabilities: {},
+    onAppCreated: (a) => {
+      appRef.current = a;
+      a.ontoolinput = (params) => {
+        toolInputArgsRef.current = params.arguments ?? null;
+        tryRefetchRef.current();
+      };
+      a.ontoolresult = (result) => {
+        const parsed = parseDiagramPayloadFromToolResult(result);
+        if (parsed) {
+          applyKitPayload(parsed);
+        }
+      };
+      a.ontoolcancelled = () => {};
+      a.onteardown = async () => ({});
+      a.onerror = console.error;
+    },
+  });
+
+  useHostStyles(app, app?.getHostContext());
+
+  React.useEffect(() => {
+    if (!app) return;
+    const h = app.getHostContext() as Record<string, unknown> | undefined;
+    if (!h) return;
+    for (const k of ["toolResult", "lastToolResult", "toolExecutionResult", "initialToolResult", "pendingToolResult"]) {
+      const v = h[k];
+      if (v === undefined) continue;
+      const p = parseDiagramPayloadFromToolResult(v);
+      if (p) {
+        applyKitPayload(p);
+        return;
+      }
+    }
+  }, [app, applyKitPayload]);
+
+  React.useEffect(() => {
+    if (!app || !isConnected) return;
+    const delays = [0, 50, 150, 400, 1200];
+    const ids = delays.map((d) => setTimeout(() => tryRefetchRef.current(), d));
+    return () => ids.forEach(clearTimeout);
+  }, [app, isConnected]);
+
+  const mcpTheme = useDocumentTheme();
+  React.useEffect(() => {
+    const el = document.documentElement;
+    if (mcpTheme === "dark") {
+      el.classList.add("dark");
+    } else {
+      el.classList.remove("dark");
+    }
+  }, [mcpTheme]);
+
+  const sendKitSelectionUpdate = React.useCallback((next: KitSelection) => {
+    if (!appRef.current) return;
+    appRef.current.updateModelContext({
+      content: [{ type: "text" as const, text: JSON.stringify({ kitArtifactSelectionChange: { designGuids: next.designGuids ?? [], typeGuids: next.typeGuids ?? [], portGuids: next.portGuids ?? [] } }) }],
+    });
+  }, []);
+
+  const handleKitSelectionChange = React.useCallback(
+    (next: KitSelection) => {
+      setKitSelection(next);
+      sendKitSelectionUpdate(next);
+    },
+    [sendKitSelectionUpdate],
+  );
+
+  const shellStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "100dvh",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: 16,
+    textAlign: "center",
+    fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)",
+    backgroundColor: "var(--color-background-primary, #1e1e1e)",
+    /* Fixed fallbacks: some hosts set CSS variables to values that hide text in the MCP sandbox. */
+    color: "var(--color-text-primary, #e5e5e5)",
+  };
+
+  const mutedStyle: React.CSSProperties = {
+    color: "#a3a3a3",
+  };
+
+  if (error) {
+    return (
+      <div style={{ ...shellStyle, color: "#f87171" }}>
+        <p>Error: {error.message}</p>
+      </div>
+    );
+  }
+
+  if (!isConnected || !app) {
+    return (
+      <div style={shellStyle}>
+        <p style={mutedStyle}>Connecting to host…</p>
+      </div>
+    );
+  }
+
+  if (!payload) {
+    return (
+      <div style={shellStyle}>
+        <p style={mutedStyle}>Waiting for kit data…</p>
+      </div>
+    );
+  }
+
+  if (!payload.kitArtifacts) {
+    return (
+      <div style={shellStyle}>
+        <p style={mutedStyle}>No kit artifact data in tool result.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="min-h-0"
+      style={{
+        minHeight: "100dvh",
+        width: "100%",
+        overflow: "auto",
+        padding: 12,
+        boxSizing: "border-box",
+        backgroundColor: "var(--color-background-primary, #1e1e1e)",
+        color: "var(--color-text-primary, #fafafa)",
+      }}
+    >
+      <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit" className="min-h-0 text-foreground" />
+    </div>
+  );
+};
+
+/**
  * Mount the MCP design viewer as a standalone app.
  * Call this from the entry point TSX file after importing react-dom/client.
  * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpdesignviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpDesignViewer)
@@ -2885,10 +3180,68 @@ export const mountMcpDesignViewer = (createRoot: (container: HTMLElement) => { r
   );
 };
 
+/**
+ * Mount the MCP kit viewer (SemioKit only) as a standalone app.
+ * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpkitviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpKitViewer)
+ **/
+export const mountMcpKitViewer = (createRoot: (container: HTMLElement) => { render: (element: React.ReactNode) => void }) => {
+  const root = document.getElementById("root");
+  if (!root) throw new Error("Missing #root element");
+  createRoot(root).render(
+    <React.StrictMode>
+      <McpKitViewer />
+    </React.StrictMode>,
+  );
+};
+
 // #endregion 🔖McpApp
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
+
+  describe("parseDiagramPayloadFromToolResult", () => {
+    it("parses JSON from MCP text content blocks", () => {
+      const payload = { points: [], lines: [], kitArtifacts: { name: "K", designs: [], types: [], ports: [] } };
+      const r = parseDiagramPayloadFromToolResult({
+        content: [{ type: "text", text: JSON.stringify(payload) }],
+      });
+      expect(r?.kitArtifacts?.name).toBe("K");
+    });
+
+    it("parses structuredContent object (hosts that omit text content)", () => {
+      const inner = { points: [], lines: [], kitArtifacts: { name: "S", designs: [{ guid: "d1", name: "D" }], types: [], ports: [] } };
+      const r = parseDiagramPayloadFromToolResult({ structuredContent: inner });
+      expect(r?.kitArtifacts?.designs?.[0]?.guid).toBe("d1");
+    });
+
+    it("parses structuredContent JSON string", () => {
+      const inner = { points: [], lines: [], capabilities: {}, kitArtifacts: { designs: [], types: [], ports: [] } };
+      const r = parseDiagramPayloadFromToolResult({ structuredContent: JSON.stringify(inner) });
+      expect(r?.points).toEqual([]);
+    });
+
+    it("unwraps notification params", () => {
+      const payload = { points: [], lines: [], kitArtifacts: { name: "P", designs: [], types: [], ports: [] } };
+      const r = parseDiagramPayloadFromToolResult({
+        params: { content: [{ type: "text", text: JSON.stringify(payload) }] },
+      });
+      expect(r?.kitArtifacts?.name).toBe("P");
+    });
+
+    it("reads nested kit payload under arbitrary host keys", () => {
+      const inner = { points: [], lines: [], kitArtifacts: { name: "Deep", designs: [], types: [], ports: [] } };
+      const r = parseDiagramPayloadFromToolResult({ wrapper: { data: inner } });
+      expect(r?.kitArtifacts?.name).toBe("Deep");
+    });
+
+    it("reads text from embedded resource content blocks", () => {
+      const payload = { points: [], lines: [], kitArtifacts: { name: "Res", designs: [], types: [], ports: [] } };
+      const r = parseDiagramPayloadFromToolResult({
+        content: [{ type: "resource", resource: { uri: "x", mimeType: "text/plain", text: JSON.stringify(payload) } }],
+      });
+      expect(r?.kitArtifacts?.name).toBe("Res");
+    });
+  });
 
   const testPlane: Plane = {
     origin: { x: 0, y: 0, z: 0 },

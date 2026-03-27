@@ -5668,6 +5668,7 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
 
     let mut piece_planes: HashMap<&str, Matrix4<f64>> = HashMap::with_capacity(pieces.len());
     let mut piece_centers: HashMap<&str, Coord> = HashMap::with_capacity(pieces.len());
+    let mut piece_paths: HashMap<&str, String> = HashMap::with_capacity(pieces.len());
     let mut visited: HashSet<&str> = HashSet::with_capacity(pieces.len());
     let mut queue: VecDeque<&str> = VecDeque::with_capacity(pieces.len());
 
@@ -5686,6 +5687,7 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
 
             let initial_center = piece.center.clone().unwrap_or(Coord { u: 0.0, v: 0.0 });
             piece_centers.insert(piece.guid.as_str(), initial_center);
+            piece_paths.insert(piece.guid.as_str(), piece.guid.clone());
 
             visited.insert(piece.guid.as_str());
             queue.push_back(piece.guid.as_str());
@@ -5757,6 +5759,8 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
 
                         piece_planes.insert(neighbor_guid, new_matrix);
                         piece_centers.insert(neighbor_guid, child_center);
+                        let parent_path = piece_paths.get(current_guid).cloned().unwrap_or_default();
+                        piece_paths.insert(neighbor_guid, format!("{},{}", parent_path, neighbor_guid));
                         visited.insert(neighbor_guid);
                         queue.push_back(neighbor_guid);
                     }
@@ -5786,6 +5790,15 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
             };
 
             if plane_needs_update || center_needs_update {
+                let path_attr = piece_paths.get(piece.guid.as_str()).map(|path| {
+                    CollectionDiff {
+                        added: Some(vec![
+                            Attribute { guid: guid(), key: "semio.path".to_string(), value: Some(path.clone()), definition: None },
+                        ]),
+                        removed: None,
+                        updated: None,
+                    }
+                });
                 updated_pieces.push(DiffUpdate {
                     key: "piece".to_string(),
                     guid: piece.guid.clone(),
@@ -5801,6 +5814,7 @@ pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
                         } else {
                             None
                         },
+                        attributes: path_attr,
                         ..Default::default()
                     },
                 });

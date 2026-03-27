@@ -6592,6 +6592,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
     const updatedRootPiece = setAttributes(rootPiece, [
       { key: "semio.fixedPieceId", value: rootPiece.guid },
       { key: "semio.depth", value: "0" },
+      { key: "semio.path", value: rootPiece.guid },
     ]);
     pieceMap[rootNode.id()] = updatedRootPiece;
     let rootPlane: Plane;
@@ -6710,6 +6711,10 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
             {
               key: "semio.depth",
               value: depth.toString(),
+            },
+            {
+              key: "semio.path",
+              value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid,
             },
           ],
         );
@@ -8544,6 +8549,7 @@ export const piecesMetadata = (
     fixedPieceId: string;
     parentPieceId: string | null;
     depth: number;
+    path: string[];
   }
 > => {
   const design = findDesignInKit(kit, designGuid);
@@ -8555,6 +8561,10 @@ export const piecesMetadata = (
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
+  const paths = flatDesign.pieces?.map((p) => {
+    const raw = findAttributeValue(p, "semio.path", p.guid);
+    return raw ? raw.split(",").filter(Boolean) : [p.guid!];
+  });
   return new Map(
     flatDesign.pieces?.map((p, index) => [
       p.guid,
@@ -8564,6 +8574,7 @@ export const piecesMetadata = (
         fixedPieceId: fixedPieceIds![index],
         parentPieceId: parentPieceIds![index],
         depth: depths![index],
+        path: paths![index],
       },
     ]),
   );

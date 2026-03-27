@@ -9813,10 +9813,12 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 	}
 
 	visited := make(map[string]bool)
+	piecePaths := make(map[string]string)
 	var bfs func(rootGuid string)
 	bfs = func(rootGuid string) {
 		queue := []string{rootGuid}
 		visited[rootGuid] = true
+		piecePaths[rootGuid] = rootGuid
 		rootPiece := pieceMap[rootGuid]
 		if rootPiece.Plane != nil {
 			piecePlanes[rootGuid] = rootPiece.Plane
@@ -9906,6 +9908,7 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 
 				childCenter := &Coord{U: roundFloat(childU, 6), V: roundFloat(childV, 6)}
 				neighborPiece.Center = childCenter
+				piecePaths[neighbor.neighborGuid] = piecePaths[currentGuid] + "," + neighbor.neighborGuid
 
 				queue = append(queue, neighbor.neighborGuid)
 			}
@@ -9950,6 +9953,12 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 		}
 
 		if hasChanges {
+			if path, ok := piecePaths[piece.Guid]; ok {
+				pathValue := path
+				diff.Attributes = &AttributesDiff{
+					Added: []Attribute{{Guid: Guid(), Key: "semio.path", Value: &pathValue}},
+				}
+			}
 			updatedPieces = append(updatedPieces, struct {
 				Piece PieceId   `json:"piece"`
 				Diff  PieceDiff `json:"diff"`

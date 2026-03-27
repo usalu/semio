@@ -167,35 +167,6 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🌐sites📖docs",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npx nx dev semio/sites/docs",
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "astro",
-          "endsPattern": "http://localhost:4321/"
-        }
-      },
-      "cwd": "${workspaceFolder}",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:4321)",
-        "uriFormat": "%s"
-      }
-    },
-    {
       "name": "🛠️dev👤semio🌐sites🎛️play",
       "type": "node",
       "request": "launch",

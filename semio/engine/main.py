@@ -54,6 +54,7 @@ import starlette.applications
 import starlette_graphene3
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
+from mcp.types import CallToolResult, TextContent
 
 try:
     import openai  # type: ignore
@@ -1493,6 +1494,18 @@ def _build_design_viewer_html() -> str:
     return """<!doctype html><html><body><p>MCP App not built. Run: npm run build:mcp-app in semio/engine</p></body></html>"""
 
 
+def _build_kit_viewer_html() -> str:
+    """Build the embeddable kit viewer HTML (SemioKit-only MCP shell) from the same bundle as the design viewer.
+    Sets #root data-mcp-viewer to kit so mcp-app.tsx mounts McpKitViewer from @semio/ui.
+    Callers MUST use the returned HTML for the /app/kit-viewer endpoint and ui://semio/kit-viewer resource.
+    [👤semio📚engine💻engine🔖rest🛠️buildkitviewerhtml](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_build_kit_viewer_html)
+    """
+    html = _build_design_viewer_html()
+    if "MCP App not built" in html:
+        return html.replace("MCP App not built", "MCP kit app not built", 1)
+    return html.replace('data-mcp-viewer="design"', 'data-mcp-viewer="kit"', 1).replace("<title>semio design viewer</title>", "<title>semio kit viewer</title>", 1)
+
+
 @rest.get("/app/design-viewer")
 async def app_design_viewer() -> fastapi.Response:
     """Return the embeddable design viewer HTML shell.
@@ -1501,6 +1514,20 @@ async def app_design_viewer() -> fastapi.Response:
     """
     return fastapi.Response(
         content=_build_design_viewer_html(),
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:;",
+        },
+    )
+
+
+@rest.get("/app/kit-viewer")
+async def app_kit_viewer() -> fastapi.Response:
+    """Return the embeddable kit viewer HTML shell (SemioKit from @semio/ui).
+    [👤semio📚engine💻engine🔖rest🛠️appkitviewer](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/app_kit_viewer)
+    """
+    return fastapi.Response(
+        content=_build_kit_viewer_html(),
         media_type="text/html",
         headers={
             "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:;",
@@ -1868,7 +1895,22 @@ mcp = FastMCP("semio", stateless_http=False, json_response=True)
 
 _APP_RESOURCE_URI = "ui://semio/design-viewer"
 _APP_RESOURCE_META = {"ui": {"resourceUri": _APP_RESOURCE_URI}, "ui/resourceUri": _APP_RESOURCE_URI}
-_APP_HTML_PATH = os.path.join(os.path.dirname(__file__), "dist", "mcp-app.html")
+_KIT_APP_RESOURCE_URI = "ui://semio/kit-viewer"
+_KIT_APP_RESOURCE_META = {"ui": {"resourceUri": _KIT_APP_RESOURCE_URI}, "ui/resourceUri": _KIT_APP_RESOURCE_URI}
+
+
+def _mcp_app_html_resource_meta() -> dict[str, typing.Any]:
+    """Resource _meta for MCP App HTML: hosts apply _meta.ui.csp to the sandbox (see .repo/✍️/mcp-app.md)."""
+    origins = [
+        f"http://127.0.0.1:{PORT}",
+        f"http://localhost:{PORT}",
+        f"http://[::1]:{PORT}",
+        f"ws://127.0.0.1:{PORT}",
+        f"ws://localhost:{PORT}",
+    ]
+    csp = {"connectDomains": origins, "resourceDomains": origins}
+    return {"ui": {"csp": csp}, "ui/csp": csp}
+
 
 # Session-scoped state. Keyed by session id for isolation.
 _mcp_session_kits: dict[int, dict[str, typing.Any]] = {}
@@ -2115,8 +2157,8 @@ def _rollback_session_transaction(sid: int):
     _sync_session_design_and_type(sid)
 
 
-@mcp.tool(meta=_APP_RESOURCE_META)
-def start_working_in_local_kit(path: str, ctx: Context) -> str:
+@mcp.tool(meta=_KIT_APP_RESOURCE_META)
+def start_working_in_local_kit(path: str, ctx: Context) -> CallToolResult:
     """Load a local kit into the session. Must be called before any kit operations.
 
     Accepts an absolute path to a kit folder containing .semio/kit.db, a JSON file, or a folder containing metabolism.kit.semio.json.
@@ -2131,11 +2173,11 @@ def start_working_in_local_kit(path: str, ctx: Context) -> str:
         _mcp_session_kit_source[sid] = path
         return _build_kit_only_app_response(kit)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool(meta=_APP_RESOURCE_META)
-def start_new_kit(name: str, version: str, ctx: Context) -> str:
+@mcp.tool(meta=_KIT_APP_RESOURCE_META)
+def start_new_kit(name: str, version: str, ctx: Context) -> CallToolResult:
     """Create a new in-memory kit for the session with the given name and version."""
     try:
         sid = _session_id(ctx)
@@ -2154,11 +2196,11 @@ def start_new_kit(name: str, version: str, ctx: Context) -> str:
         _mcp_session_kit_source[sid] = "<memory>"
         return _build_kit_only_app_response(kit)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool(meta=_APP_RESOURCE_META)
-def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> str:
+@mcp.tool(meta=_KIT_APP_RESOURCE_META)
+def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> CallToolResult:
     """Load a remote kit into the session. Requires a prior login call. Must be called before any kit operations."""
     try:
         kit = _load_kit_from_remote(serverUrl, kitUri)
@@ -2170,7 +2212,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> st
         _mcp_session_kit_source[sid] = f"{serverUrl}/api/kits/{encode(kitUri)}"
         return _build_kit_only_app_response(kit)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 # region MCP Auth Tools
@@ -2645,18 +2687,18 @@ def add_current_design_connection(
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def start_working_in_design(guid: str, ctx: Context) -> str:
+def start_working_in_design(guid: str, ctx: Context) -> CallToolResult:
     """Select a design by GUID within the current kit. Requires start_working_in_local_kit to have been called first."""
     try:
         kit = _get_session_kit(ctx)
         design = next((d for d in kit.get("designs", []) if d.get("guid") == guid), None)
         if design is None:
-            return json.dumps({"error": f"Design with guid {guid} not found in kit."})
+            return _as_mcp_app_tool_result({"error": f"Design with guid {guid} not found in kit."}, is_error=True)
         sid = _session_id(ctx)
         _mcp_session_designs[sid] = design
         return _build_app_response("show-design", ctx)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 def _read_current_design(ctx: Context) -> dict:
@@ -2868,20 +2910,46 @@ def clear_current_selection(ctx: Context) -> dict:
 
 # region MCP App Tools
 # [👤semio📚engine💻engine🔖mcp🔖mcpapptools](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools)
-# MCP App Tools MUST expose 8 user-facing design visualization/selection intents as MCP tools.
-# All tools return pre-computed diagram data as JSON text content following the official MCP Apps protocol.
-# Tools declare _meta.ui.resourceUri so that MCP hosts render the design viewer app.
+# MCP App Tools MUST expose design visualization/selection intents as MCP tools.
+# Diagram and kit tools return CallToolResult with text content and structuredContent (MCP Apps template in .repo/✍️/mcp-app.md).
+# Kit-loading tools declare ui://semio/kit-viewer; diagram tools declare ui://semio/design-viewer.
 # Both nested (_meta.ui.resourceUri) and flat (_meta["ui/resourceUri"]) keys are required for
 # host compatibility, matching the registerAppTool normalization from @modelcontextprotocol/ext-apps/server.
 
 
-def _build_kit_only_app_response(kit: dict) -> str:
-    """Build MCP Apps protocol tool response with kit artifact data only (no diagram)."""
-    return json.dumps({"points": [], "lines": [], "capabilities": {"pieceSelection": False, "connectionSelection": False}, "kitArtifacts": _build_kit_artifact_data(kit)})
+def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = False) -> CallToolResult:
+    """Build tools/call result with structuredContent so MCP App hosts can hydrate the iframe without relying on text-only content."""
+    text = json.dumps(payload)
+    return CallToolResult(
+        content=[TextContent(type="text", text=text)],
+        structuredContent=payload,
+        isError=is_error,
+    )
+
+
+def _build_kit_only_app_payload(kit: dict) -> dict[str, typing.Any]:
+    """Serializable kit viewer payload (diagram lists empty; kitArtifacts populated)."""
+    return {
+        "points": [],
+        "lines": [],
+        "capabilities": {"pieceSelection": False, "connectionSelection": False},
+        "kitArtifacts": _build_kit_artifact_data(kit),
+    }
+
+
+def _build_kit_only_app_response(kit: dict) -> CallToolResult:
+    """MCP Apps kit-viewer tool response with kit artifact data only (no diagram)."""
+    return _as_mcp_app_tool_result(_build_kit_only_app_payload(kit))
 
 
 def _build_kit_artifact_data(kit: dict) -> dict:
     """Build a minimal kit artifact payload for UI selection (designs, types, connectors)."""
+    meta: dict = {
+        "name": kit.get("name") or "",
+        "version": kit.get("version") or "",
+    }
+    if kit.get("guid"):
+        meta["guid"] = kit.get("guid")
     designs = []
     for d in kit.get("designs", []) or []:
         guid = d.get("guid")
@@ -2912,7 +2980,10 @@ def _build_kit_artifact_data(kit: dict) -> dict:
                 }
             )
 
-    return {"designs": designs, "types": types, "ports": ports}
+    meta["designs"] = designs
+    meta["types"] = types
+    meta["ports"] = ports
+    return meta
 
 
 def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = None) -> dict:
@@ -3035,10 +3106,8 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
     return {"points": points, "lines": lines}
 
 
-def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> str:
-    """Build MCP Apps protocol tool response with pre-computed diagram data as JSON text.
-    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️buildappresponse](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_app_response)
-    """
+def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> dict[str, typing.Any]:
+    """Pre-computed diagram + kit artifact dict for design-viewer tools."""
     kit = _get_session_kit(ctx)
     design = _get_session_design(ctx)
     design_guid = design.get("guid")
@@ -3050,7 +3119,14 @@ def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabil
     }
     diagram_data["kitArtifacts"] = _build_kit_artifact_data(kit)
 
-    return json.dumps(diagram_data)
+    return diagram_data
+
+
+def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> CallToolResult:
+    """MCP Apps design-viewer tool response with pre-computed diagram data and structuredContent.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️buildappresponse](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_app_response)
+    """
+    return _as_mcp_app_tool_result(_build_app_payload(mode, ctx, design_diff=design_diff, capabilities=capabilities))
 
 
 @mcp.resource(
@@ -3058,6 +3134,7 @@ def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabil
     name="semio design viewer",
     description="Interactive SVG diagram viewer for semio designs. Renders piece-connection diagrams with pan, zoom, and selection support.",
     mime_type="text/html;profile=mcp-app",
+    meta=_mcp_app_html_resource_meta(),
 )
 def design_viewer_resource() -> str:
     """Serve the MCP App design viewer HTML built from @semio/ui.
@@ -3066,53 +3143,67 @@ def design_viewer_resource() -> str:
     return _build_design_viewer_html()
 
 
+@mcp.resource(
+    _KIT_APP_RESOURCE_URI,
+    name="semio kit viewer",
+    description="Kit artifact browser for semio kits. Renders SemioKit (designs, kinds, connectors) from @semio/ui.",
+    mime_type="text/html;profile=mcp-app",
+    meta=_mcp_app_html_resource_meta(),
+)
+def kit_viewer_resource() -> str:
+    """Serve the MCP kit viewer HTML (SemioKit-only shell) built from @semio/ui.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️kitviewerresource](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/kit_viewer_resource)
+    """
+    return _build_kit_viewer_html()
+
+
 @mcp.tool(meta=_APP_RESOURCE_META)
-def show_design(ctx: Context) -> str:
+def show_design(ctx: Context) -> CallToolResult:
     """Show the current design as a 2D diagram. Requires an active kit and design session."""
     try:
         return _build_app_response("show-design", ctx)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def show_diagram(ctx: Context) -> str:
+def show_diagram(ctx: Context) -> CallToolResult:
     """Show the current design as a 2D diagram only. Requires an active kit and design session."""
     try:
         return _build_app_response("show-diagram", ctx)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def show_scene(ctx: Context) -> str:
+def show_scene(ctx: Context) -> CallToolResult:
     """Show the current design as a 2D diagram (3D not available in MCP app). Requires an active kit and design session."""
     try:
         return _build_app_response("show-scene", ctx)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def show_diff(ctx: Context, design_diff: dict | None = None) -> str:
+def show_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
     """Show a diff of the current design as a 2D diagram with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
     try:
         return _build_app_response("show-diff", ctx, design_diff=design_diff)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> str:
+def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
     """Show a diff of the current design as a 2D diagram only with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
     try:
         return _build_app_response("show-diagram-diff", ctx, design_diff=design_diff)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def select_pieces(ctx: Context) -> str:
+def select_pieces(ctx: Context) -> CallToolResult:
     """Open a piece selection view where only pieces can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
@@ -3124,11 +3215,11 @@ def select_pieces(ctx: Context) -> str:
             },
         )
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def select_connections(ctx: Context) -> str:
+def select_connections(ctx: Context) -> CallToolResult:
     """Open a connection selection view where only connections can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
@@ -3140,11 +3231,11 @@ def select_connections(ctx: Context) -> str:
             },
         )
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def select_pieces_and_connections(ctx: Context) -> str:
+def select_pieces_and_connections(ctx: Context) -> CallToolResult:
     """Open a combined selection view where both pieces and connections can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
@@ -3156,7 +3247,7 @@ def select_pieces_and_connections(ctx: Context) -> str:
             },
         )
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
 # endregion MCP App Tools
