@@ -91,15 +91,15 @@ export * from "@elements/ui/elements";
 
 // #endregion 🔖Exports
 
-// #region 🔖KitArtifactSelect
-// Specs: KitArtifactSelect provides a kit-scoped artifact picker (designs, types, ports/connectors)
+// #region 🔖Kit
+// Specs: Kit provides a kit-scoped artifact picker (designs, types, ports/connectors)
 // with the standard Semio UI controllable-state pattern: partial/full controlled/uncontrolled for
 // both available data and selection. It supports partial/full select via per-group enable flags.
 // Summary: Kit artifact selector with controllable data + selection and group enable constraints.
 
-export type KitArtifactSelectGroupKind = "design" | "type" | "port";
+export type KitGroupKind = "design" | "type" | "port";
 
-export interface KitArtifactSelectPort {
+export interface KitPort {
   guid: string;
   typeGuid: string;
   id?: string;
@@ -109,27 +109,27 @@ export interface KitArtifactSelectPort {
   mandatory?: boolean;
 }
 
-export interface KitArtifactSelectData {
+export interface KitData {
   designs?: Array<Pick<Design, "guid" | "name" | "variant" | "view">>;
   types?: Array<Pick<SemioKind, "guid" | "name" | "variant">>;
-  ports?: KitArtifactSelectPort[];
+  ports?: KitPort[];
 }
 
-export interface KitArtifactSelectSelection {
+export interface KitSelection {
   designGuids?: string[];
   typeGuids?: string[];
   portGuids?: string[];
 }
 
-export interface KitArtifactSelectProps {
+export interface KitProps {
   kit?: Kit;
-  data?: KitArtifactSelectData;
-  defaultData?: KitArtifactSelectData;
-  onDataChange?: (data: KitArtifactSelectData) => void;
+  data?: KitData;
+  defaultData?: KitData;
+  onDataChange?: (data: KitData) => void;
 
-  selection?: KitArtifactSelectSelection;
-  defaultSelection?: KitArtifactSelectSelection;
-  onSelectionChange?: (selection: KitArtifactSelectSelection) => void;
+  selection?: KitSelection;
+  defaultSelection?: KitSelection;
+  onSelectionChange?: (selection: KitSelection) => void;
 
   selectionEnabled?: boolean;
   designSelectionEnabled?: boolean;
@@ -145,17 +145,17 @@ export interface KitArtifactSelectProps {
   className?: string;
 }
 
-const normalizeKitArtifactSelectSelection = (selection?: KitArtifactSelectSelection): KitArtifactSelectSelection => ({
+const normalizeKitSelection = (selection?: KitSelection): KitSelection => ({
   designGuids: selection?.designGuids ?? [],
   typeGuids: selection?.typeGuids ?? [],
   portGuids: selection?.portGuids ?? [],
 });
 
-const buildKitArtifactSelectDataFromKit = (kit: Kit | undefined): KitArtifactSelectData => {
+const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
   if (!kit) return {};
   const designs = (kit.designs ?? []).map((d) => ({ guid: d.guid, name: d.name, variant: d.variant, view: d.view }));
   const types = (kit.types ?? []).map((t) => ({ guid: t.guid, name: t.name, variant: t.variant }));
-  const ports: KitArtifactSelectPort[] = (kit.types ?? []).flatMap((t) =>
+  const ports: KitPort[] = (kit.types ?? []).flatMap((t) =>
     (t.connectors ?? []).map((c) => ({
       guid: c.guid,
       typeGuid: t.guid,
@@ -169,7 +169,7 @@ const buildKitArtifactSelectDataFromKit = (kit: Kit | undefined): KitArtifactSel
   return { designs, types, ports };
 };
 
-export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
+export const SemioKit: React.FC<KitProps> = ({
   kit,
   data,
   defaultData,
@@ -191,11 +191,11 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
   const effectiveDataEnabled = dataEnabled ?? true;
   const effectiveSelectionEnabled = selectionEnabled ?? true;
 
-  const derivedData = React.useMemo(() => buildKitArtifactSelectDataFromKit(kit), [kit]);
+  const derivedData = React.useMemo(() => buildKitDataFromKit(kit), [kit]);
   const computedDefaultData = React.useMemo(() => defaultData ?? derivedData, [defaultData, derivedData]);
 
-  const [resolvedData, setResolvedData] = useInteractiveControllableValue<KitArtifactSelectData>(data, computedDefaultData, onDataChange);
-  const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeKitArtifactSelectSelection(defaultSelection), onSelectionChange);
+  const [resolvedData, setResolvedData] = useInteractiveControllableValue<KitData>(data, computedDefaultData, onDataChange);
+  const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeKitSelection(defaultSelection), onSelectionChange);
 
   const effectiveData = effectiveDataEnabled ? resolvedData : {};
   const effectiveDesigns = designDataEnabled ? (effectiveData.designs ?? []) : [];
@@ -219,7 +219,7 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
   );
 
   const toggle = React.useCallback(
-    (group: KitArtifactSelectGroupKind, guid: string) => {
+    (group: KitGroupKind, guid: string) => {
       if (!effectiveSelectionEnabled) return;
       if (group === "design" && !designSelectionEnabled) return;
       if (group === "type" && !typeSelectionEnabled) return;
@@ -335,7 +335,7 @@ export const KitArtifactSelect: React.FC<KitArtifactSelectProps> = ({
   );
 };
 
-// #endregion 🔖KitArtifactSelect
+// #endregion 🔖Kit
 
 // #region 🔖Diagram
 

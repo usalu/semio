@@ -2190,8 +2190,8 @@ def _rollback_session_transaction(sid: int):
     _sync_session_design_and_type(sid)
 
 
-@mcp.tool()
-def start_working_in_local_kit(path: str, ctx: Context) -> dict:
+@mcp.tool(meta=_APP_RESOURCE_META)
+def start_working_in_local_kit(path: str, ctx: Context) -> str:
     """Load a local kit into the session. Must be called before any kit operations.
 
     Accepts an absolute path to a kit folder containing .semio/kit.db, a JSON file, or a folder containing kit_metabolism.json.
@@ -2204,13 +2204,13 @@ def start_working_in_local_kit(path: str, ctx: Context) -> dict:
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
         _mcp_session_kit_source[sid] = path
-        return {"ok": True, "mode": "local", "path": path}
+        return _build_kit_only_app_response(kit)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def start_new_kit(name: str, version: str, ctx: Context) -> dict:
+@mcp.tool(meta=_APP_RESOURCE_META)
+def start_new_kit(name: str, version: str, ctx: Context) -> str:
     """Create a new in-memory kit for the session with the given name and version."""
     try:
         sid = _session_id(ctx)
@@ -2227,13 +2227,13 @@ def start_new_kit(name: str, version: str, ctx: Context) -> dict:
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "local"
         _mcp_session_kit_source[sid] = "<memory>"
-        return {"ok": True, "name": name, "version": version}
+        return _build_kit_only_app_response(kit)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
-@mcp.tool()
-def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> dict:
+@mcp.tool(meta=_APP_RESOURCE_META)
+def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> str:
     """Load a remote kit into the session. Requires a prior login call. Must be called before any kit operations."""
     try:
         kit = _load_kit_from_remote(serverUrl, kitUri)
@@ -2243,9 +2243,9 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> di
         _mcp_session_types.pop(sid, None)
         _mcp_session_kit_mode[sid] = "remote"
         _mcp_session_kit_source[sid] = f"{serverUrl}/api/kits/{encode(kitUri)}"
-        return {"ok": True, "mode": "remote", "serverUrl": serverUrl, "kitUri": kitUri}
+        return _build_kit_only_app_response(kit)
     except Exception as e:
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)})
 
 
 # region MCP Auth Tools
@@ -2948,6 +2948,11 @@ def clear_current_selection(ctx: Context) -> dict:
 # Tools declare _meta.ui.resourceUri so that MCP hosts render the design viewer app.
 # Both nested (_meta.ui.resourceUri) and flat (_meta["ui/resourceUri"]) keys are required for
 # host compatibility, matching the registerAppTool normalization from @modelcontextprotocol/ext-apps/server.
+
+
+def _build_kit_only_app_response(kit: dict) -> str:
+    """Build MCP Apps protocol tool response with kit artifact data only (no diagram)."""
+    return json.dumps({"points": [], "lines": [], "capabilities": {"pieceSelection": False, "connectionSelection": False}, "kitArtifacts": _build_kit_artifact_data(kit)})
 
 
 def _build_kit_artifact_data(kit: dict) -> dict:

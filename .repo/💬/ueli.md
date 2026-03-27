@@ -32,6 +32,9 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## 🧰repo⌨️cli
 
+Whenever invoking this command, regardless of the port, the container is being killed aswell stopping all running work. Make sure that the agent hooks deny this and give a meaningful reason.
+kill $(lsof -t -i:9876)
+
 We are building a general tool that abstracts source control managment tools like git.
 It should provide task-focused and simplified
 The workflow in git is:
@@ -103,8 +106,8 @@ semio:
 
 There should be a new semio ui component for vector which lets you select or display a 3d vector. Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.
 
-There should be a new semio ui component for kit which lets you select kit artifacts (designs, types, ports). Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components.
-In semio engine mcp: When calling start_working_design then call that app with that component.
+There should be a new semio ui component for kit which lets you select kit artifacts (designs, types, ports). Make sure to implement partial/full controlled/uncontrolled mode and partial/full select (only designs, only types, only ports, etc) same contraint as for all semio ui components. The component works with shallow kit.
+In semio engine mcp: When calling start working in kit then call that app with that component.
 
 Make sure the semio engine mcp app works correctly with semio ui.
 Currently when invoking show_design after calling start_working_in_local_kit(workspaces/semio/semio/assets/semio/metabolism) and start_working_in_design(9a890dd4-0a9c-48ac-920a-9e62666465ef) the ui hangs and is not rendering the diagram

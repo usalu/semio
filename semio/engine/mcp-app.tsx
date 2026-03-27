@@ -500,11 +500,11 @@ const McpDesignViewer: React.FC = () => {
       </div>
     );
   } else if (!payload || !bounds) {
-    overlayContent = (
+    overlayContent = !payload ? (
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#737373", zIndex: 20 }}>
         <p>Waiting for design data…</p>
       </div>
-    );
+    ) : null;
   }
 
   // [DEBUG] visible state banner
@@ -523,6 +523,19 @@ const McpDesignViewer: React.FC = () => {
     >
       {debugBanner}
       {overlayContent}
+      {payload && payload.kitArtifacts && !bounds && (
+        <div style={{ position: "absolute", left: 12, top: 12, right: 12, bottom: 12, overflow: "auto", zIndex: 10 }}>
+          <KitArtifactSelect
+            data={payload.kitArtifacts}
+            selection={artifactSelection}
+            onSelectionChange={(next) => {
+              setArtifactSelection(next);
+              sendKitArtifactSelectionUpdate(next);
+            }}
+            title="Kit Artifacts"
+          />
+        </div>
+      )}
       {payload && bounds && (
         <>
           {payload.kitArtifacts && (

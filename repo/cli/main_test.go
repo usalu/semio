@@ -15967,6 +15967,8 @@ func TestIsToolBlocked(t *testing.T) {
 		{"ksh git reset blocked", "run_in_terminal", `ksh -c "git reset --hard"`, true},
 		{"xargs git stash blocked", "run_in_terminal", "xargs git stash", true},
 		{"python git status allowed", "run_in_terminal", `python3 -c "import subprocess; subprocess.call(['git', 'status'])"`, false},
+		{"kill lsof port blocked", "terminal", "kill $(lsof -t -i:9876)", true},
+		{"kill -9 lsof port blocked", "terminal", "kill -9 $(lsof -t -i:3000)", true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -16068,6 +16070,9 @@ func TestIsCommandSegmentBlocked(t *testing.T) {
 		{"xargs git stash", true},
 		{"xargs git checkout", true},
 		{"xargs git status", false},
+		// kill+lsof port killing is denied (can terminate devcontainer).
+		{"kill $(lsof -t -i:9876)", true},
+		{"kill -9 $(lsof -t -i:9876)", true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.segment, func(t *testing.T) {

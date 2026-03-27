@@ -567,15 +567,18 @@ class TestMcp:
         """start_working_in_local_kit loads kit from metabolism JSON path."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
-        assert result.get("ok") is True
-        assert "kit_metabolism" in result.get("path", "")
+        assert isinstance(result, str)
+        payload = json.loads(result)
+        assert "kitArtifacts" in payload
         assert id(mock_ctx.session) in engine._mcp_session_kits
 
     def test_start_working_in_local_kit_loads_from_folder(self):
         """start_working_in_local_kit loads kit from folder containing kit_metabolism.json."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(ASSETS_DIR), mock_ctx)
-        assert result.get("ok") is True
+        assert isinstance(result, str)
+        payload = json.loads(result)
+        assert "kitArtifacts" in payload
         kit = engine._mcp_session_kits[id(mock_ctx.session)]
         assert "designs" in kit
 
@@ -583,8 +586,9 @@ class TestMcp:
         """start_working_in_local_kit loads kit from a folder backed by .semio/kit.db."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(METABOLISM_DIR), mock_ctx)
-        assert result.get("ok") is True
-        assert result.get("path") == str(METABOLISM_DIR)
+        assert isinstance(result, str)
+        payload = json.loads(result)
+        assert "kitArtifacts" in payload
         kit = engine._mcp_session_kits[id(mock_ctx.session)]
         assert "designs" in kit
         assert any(design.get("name") == "Nakagin Capsule Tower" for design in kit.get("designs", []))
@@ -770,7 +774,9 @@ class TestMcp:
         expected_design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
 
         started_kit = engine.start_new_kit("Temporary Kit", "1.0.0", mock_ctx)
-        assert started_kit.get("ok") is True
+        assert isinstance(started_kit, str)
+        started_kit_payload = json.loads(started_kit)
+        assert "kitArtifacts" in started_kit_payload
 
         started_transaction = engine.start_transaction(mock_ctx)
         assert started_transaction.get("ok") is True
@@ -1667,10 +1673,9 @@ class TestMcpRemoteKit:
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert result["ok"] is True
-            assert result["mode"] == "remote"
-            assert result["serverUrl"] == "https://server.com"
-            assert result["kitUri"] == "my-kit"
+            assert isinstance(result, str)
+            payload = json.loads(result)
+            assert "kitArtifacts" in payload
             sid = id(mock_ctx.session)
             assert sid in engine._mcp_session_kits
             assert engine._mcp_session_kit_mode[sid] == "remote"
@@ -1683,7 +1688,8 @@ class TestMcpRemoteKit:
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert "error" in result
+            assert isinstance(result, str)
+            assert "error" in json.loads(result)
 
     def test_start_working_in_remote_kit_connection_error(self, tmp_path):
         """start_working_in_remote_kit returns error on connection failure."""
@@ -1692,7 +1698,8 @@ class TestMcpRemoteKit:
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
             result = engine.start_working_in_remote_kit("https://server.com", "my-kit", mock_ctx)
-            assert "error" in result
+            assert isinstance(result, str)
+            assert "error" in json.loads(result)
 
     def test_start_working_in_remote_kit_clears_previous_state(self, tmp_path):
         """start_working_in_remote_kit clears design, type, and sets mode to remote."""
@@ -1717,8 +1724,9 @@ class TestMcpRemoteKit:
         """start_working_in_local_kit sets session mode to local."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
-        assert result.get("ok") is True
-        assert result.get("mode") == "local"
+        assert isinstance(result, str)
+        payload = json.loads(result)
+        assert "kitArtifacts" in payload
         sid = id(mock_ctx.session)
         assert engine._mcp_session_kit_mode[sid] == "local"
 

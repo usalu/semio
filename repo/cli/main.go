@@ -11287,13 +11287,21 @@ type SandboxProvider interface {
 	Kind() string
 }
 
+// EditorHookMapping is a compatibility alias for editor hook configuration metadata.
+// It intentionally aliases `ClientHookMapping` so editor providers can define only the fields they need
+// (Client, ConfigPath) while keeping the richer mapping used by `configure`.
+type EditorHookMapping = ClientHookMapping
+
 // EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
 // [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️editorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/EditorProvider)
 type EditorProvider interface {
 	Kind() string
+	Configure(repoRoot string) error
 	ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error)
 	FormatHookOutput(hookEventName string, result HookResult) string
 	NativeEventFromHookEvent(event HookEvent, parentInfo string) string
+	GenerateHookConfig(repoRoot string) (string, error)
+	HookMapping() EditorHookMapping
 }
 
 // #endregion 🔖Provider Interfaces
@@ -44712,6 +44720,11 @@ var blockedGitVerbs = map[string]bool{
 	"switch": true, "tag": true, "clean": true,
 }
 
+// blockedKillLsofPortPattern matches kill commands that use lsof to select a TCP port PID.
+// This is intentionally denied because in containerized environments the matched PID can be critical (e.g. PID 1),
+// causing the entire devcontainer to terminate and stopping all running work.
+var blockedKillLsofPortPattern = regexp.MustCompile(`(?i)\bkill\b[\s\S]*\$\(\s*lsof\b[\s\S]*-t[\s\S]*-i\s*:\s*\d+[\s\S]*\)`)
+
 // blockedGitVerbPattern matches any blocked git verb in inline code strings (shell-style invocation).
 var blockedGitVerbPattern = regexp.MustCompile(`(?i)\bgit\s+(add|branch|checkout|cherry-pick|clone|commit|config|fetch|init|merge|mv|pull|push|rebase|remote|reset|restore|revert|rm|stash|switch|tag|clean)\b`)
 
@@ -44735,6 +44748,9 @@ func isCommandSegmentBlocked(segment string) (bool, string) {
 		return false, ""
 	}
 	lower := strings.ToLower(segment)
+	if blockedKillLsofPortPattern.MatchString(lower) {
+		return true, "blocked: kill $(lsof -t -i:PORT); this can match PID 1 in containers and terminate the devcontainer, stopping all running work"
+	}
 	allowedPrefixes := []string{"grep ", "rg ", "ripgrep ", "echo ", "printf ", "ls ", "pwd", "cat ", "sed ", "awk "}
 	for _, prefix := range allowedPrefixes {
 		if strings.HasPrefix(lower, prefix) {
