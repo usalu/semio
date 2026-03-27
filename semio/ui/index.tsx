@@ -22,6 +22,9 @@
 
 // #endregion 🔖Header
 
+import { Button, Section, ToggleGroup } from "@elements/ui/elements";
+import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
 import {
   applyDesignDiff,
   planeToMatrix,
@@ -31,19 +34,16 @@ import {
   type Connection,
   type Design,
   type DesignDiff,
-  type File as SemioFile,
   type Kit,
   type Piece,
   type Plane,
-  type Vector as SemioVector,
+  type File as SemioFile,
   type Type as SemioKind,
+  type Vector as SemioVector,
 } from "@semio/js";
-import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
-import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { Button, Section, ToggleGroup } from "@elements/ui/elements";
 
 // #region 🔖ControllableState
 // Specs: Semio UI components MUST support controlled/uncontrolled and partial/full control.
@@ -149,6 +149,22 @@ const normalizeKitSelection = (selection?: KitSelection): KitSelection => ({
   portGuids: selection?.portGuids ?? [],
 });
 
+const getReferenceGuid = (value: unknown): string | undefined => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "guid" in value && typeof value.guid === "string") return value.guid;
+  return undefined;
+};
+
+const getReferenceLabel = (value: unknown): string | undefined => {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    if ("name" in value && typeof value.name === "string" && value.name.length > 0) return value.name;
+    if ("id" in value && typeof value.id === "string" && value.id.length > 0) return value.id;
+    if ("guid" in value && typeof value.guid === "string" && value.guid.length > 0) return value.guid;
+  }
+  return undefined;
+};
+
 const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
   if (!kit) return {};
   const designs = (kit.designs ?? []).map((d) => ({ guid: d.guid, name: d.name, variant: d.variant, view: d.view }));
@@ -158,8 +174,8 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
       guid: c.guid,
       typeGuid: t.guid,
       id: c.id,
-      port: c.port,
-      name: c.id || c.port || "port",
+      port: getReferenceGuid(c.port),
+      name: c.id || getReferenceLabel(c.port) || "port",
       description: c.description,
       mandatory: c.mandatory,
     })),
@@ -2137,8 +2153,8 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 // (points and lines) from tool results as JSON text content. Renders pure SVG diagram.
 // Summary: MCP App React component for rendering semio diagrams inside MCP host iframes.
 
-import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
+import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 
 // #region 🔖McpApp Types
 
@@ -2355,6 +2371,68 @@ if (import.meta.vitest) {
     yAxis: { x: 0, y: 1, z: 0 },
   };
 
+  describe("buildKitDataFromKit", () => {
+    it("normalizes connector port references into string labels instead of raw guid objects", () => {
+      const data = buildKitDataFromKit({
+        guid: "kit-guid",
+        name: "Kit",
+        version: "1",
+        types: [
+          {
+            guid: "kind-guid",
+            name: "Kind",
+            connectors: [
+              {
+                guid: "connector-guid",
+                id: "",
+                port: { guid: "port-guid" },
+              },
+              {
+                guid: "named-connector-guid",
+                port: { guid: "named-port-guid", name: "Named Port" },
+              },
+            ],
+          },
+        ],
+      } as unknown as Kit);
+
+      expect(data.ports).toEqual([
+        {
+          guid: "connector-guid",
+          typeGuid: "kind-guid",
+          id: "",
+          port: "port-guid",
+          name: "port-guid",
+          description: undefined,
+          mandatory: undefined,
+        },
+        {
+          guid: "named-connector-guid",
+          typeGuid: "kind-guid",
+          id: undefined,
+          port: "named-port-guid",
+          name: "Named Port",
+          description: undefined,
+          mandatory: undefined,
+        },
+      ]);
+    });
+
+    it("returns shallow kit kinds without requiring connector expansion", () => {
+      const data = buildKitDataFromKit({
+        guid: "kit-guid",
+        name: "Kit",
+        version: "1",
+        types: [{ guid: "kind-guid", name: "Kind" }],
+        designs: [{ guid: "design-guid", name: "Design" }],
+      } as unknown as Kit);
+
+      expect(data.types).toEqual([{ guid: "kind-guid", name: "Kind", variant: undefined }]);
+      expect(data.designs).toEqual([{ guid: "design-guid", name: "Design", variant: undefined, view: undefined }]);
+      expect(data.ports).toEqual([]);
+    });
+  });
+
   describe("buildScenePieceAssets", () => {
     it("selects the untagged default model when no tags are requested", () => {
       const kit = {
@@ -2519,8 +2597,8 @@ if (import.meta.vitest) {
 // DesignDiffOutput (Diagram with diff, no selection), DesignOutput (Diagram with no diff, no selection).
 // Summary: Standardized algorithm IPO shell using typed WindowKind-based windows.
 
-import { WindowKind, createDefaultLayout, type UIAppConfig, type UIWindowKindDefinition, type SidePanelTabConfig, type FooterItem, UI, TreeSection, TreeRow, cn } from "@elements/ui/elements";
-import { DetailsIcon, PieceIcon, AlertCircleIcon } from "@semio/assets/icons";
+import { TreeRow, TreeSection, UI, WindowKind, cn, createDefaultLayout, type FooterItem, type SidePanelTabConfig, type UIAppConfig, type UIWindowKindDefinition } from "@elements/ui/elements";
+import { AlertCircleIcon, DetailsIcon, PieceIcon } from "@semio/assets/icons";
 
 /**
  * Context value for algorithm state shared across windows.

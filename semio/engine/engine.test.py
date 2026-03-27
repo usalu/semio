@@ -1094,13 +1094,12 @@ class TestMcp:
 
 class TestAppEndpoint:
     def test_app_design_viewer_returns_html(self):
-        """GET /app/design-viewer returns an HTML page with sandboxed iframe support."""
+        """GET /app/design-viewer returns the built MCP App HTML that uses @semio/ui."""
         client = TestClient(engine.rest)
         response = client.get("/app/design-viewer")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
         assert "semio design viewer" in response.text
-        assert "postMessage" in response.text
 
     def test_app_design_viewer_csp_header(self):
         """The app endpoint includes Content-Security-Policy allowing iframe embedding."""
@@ -1110,14 +1109,11 @@ class TestAppEndpoint:
         assert "frame-ancestors *" in response.headers["content-security-policy"]
 
     def test_app_design_viewer_html_structure(self):
-        """The HTML contains root element, message handler, and ready signal."""
+        """The HTML contains root element for the React MCP App from @semio/ui."""
         client = TestClient(engine.rest)
         response = client.get("/app/design-viewer")
         html = response.text
         assert 'id="root"' in html
-        assert "semio:init" in html
-        assert "semio:ready" in html
-        assert "semio:selectionChange" in html
 
 
 # endregion MCP Tests

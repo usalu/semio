@@ -12,7 +12,7 @@ import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, Wind
 
 import metabolismKit from "../../../assets/semio/kit_metabolism.json";
 
-const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const nakaginDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef") as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "cluster-input", kind: WindowKind.PIECES_SELECTION_INPUT, label: "Input" },
@@ -22,18 +22,17 @@ const WINDOWS: AlgorithmWindowDef[] = [
 
 function ClusterFrame() {
   const kit = metabolismKit as any;
-  const baseDesign = React.useMemo(() => (kit.designs ?? []).find((design: any) => design.guid === nakaginCapsuleTowerDesignGuid) as any, [kit]);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     if (selectedPieceGuids.length > 0) return;
-    setSelectedPieceGuids((baseDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
-  }, [baseDesign, selectedPieceGuids.length]);
+    setSelectedPieceGuids((nakaginDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
+  }, [selectedPieceGuids.length]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      designGuid: nakaginCapsuleTowerDesignGuid,
+      design: nakaginDesign,
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       designDiff:
@@ -46,9 +45,8 @@ function ClusterFrame() {
               },
               connections: { updated: [] },
             },
-      diffKit: kit,
-      outputKit: kit,
-      outputDesignGuid: nakaginCapsuleTowerDesignGuid,
+      diffDesign: nakaginDesign,
+      outputDesign: nakaginDesign,
       error: selectedPieceGuids.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
     }),
     [kit, selectedPieceGuids],

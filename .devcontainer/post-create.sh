@@ -67,6 +67,10 @@ FONTCONFIG
 #endregion 🔖EmojiFonts
 #region 🔖Startup
 echo "Setting up semio development environment..."
+#region 🔖Ripgrep
+echo "Installing ripgrep..."
+sudo apt-get update && sudo apt-get install -y ripgrep
+#endregion 🔖Ripgrep
 #endregion 🔖Startup
 #region 🔖GitKrakenCliHelpers
 install_gitkraken_desktop() {

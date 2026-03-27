@@ -76,6 +76,8 @@ TODO: Add roomie to discord for verification
 
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
 
+Remove all tasks.json and integrate it directly into launch.json
+
 elements ui and semio ui MUST NOT have any dependency to sketchpad. Further make sure that all test dependencies etc are not bundled in the build. Same for tests assets such as semio asset metabolism.
 
 Something in the repo is spuriously stashing.
@@ -181,6 +183,36 @@ You MUST implement and test for all programming languages.
 All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
 
+## 👤semio📚ui
+
+semio ui:
+semio ui storybook:\
+Use nakagin-capsule-tower from the semio assets metabolism as example for all designs. Make sure the depedency doesnt leak into the final build and i
+s only dev only
+
+Refactor everything cleanly.
+
+- semio ui MUST use general ui elements/configs from elements/ui
+- All stories MUST have same naming patterns etc (First story is always Default which has the maximum of features with minimal setup)
+- All components MUST use the minimal data possible (e.g. Diagram only needs design, Scene only needs filtered kit with only one model and file per type etc,)
+- All stories MUST work. e.g. Kit is not working
+- Design, Diagram, Scene MUST have equal api and Story layout and naming
+
+Create a new Vec component that takes a vec and displays the vector xy input with visible origin and axes. Optionally take minU, maxU, minV, maxV, showAxes, showOrigin, `onVecChange(vec)`
+
+Create a new PiecesSelection component where you can select pieces with `onPieceSelect(piece)` which is triggered when the circle on the piece diagram is selected. It should be Digram
+
+Extend the diagram component:
+
+- Optionally take a design diff. The diff colors pieces and connections in the diagram. 3 extra colors: removed, added, modified
+- Optionally take a selection (piece guids and connection guids)
+- Add callbacks `onPieceClick(piece)`, `onConnectionClick(connection)`
+
+Create a Diagram component that shows a minimal diagram of the design that can be displayed e.g. in a mini map.
+Use small filled circles for pieces and clean lines for connections (circles on top of lines, lines go center to center). Use flattenDesign for absolute placements. Fit the Diagram to the size to the div container. Add story for for Nakagin Capsule Tower to storybook.
+
+Create a new bundle semio/ui that holds reusable ui components. Make sure that all general ui dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.
+
 ## 👤semio🖱️algorithms
 
 The purpose of algorithms is to to have a ui to test all algorithms for all implementations (ts, python, rust, go).
@@ -210,32 +242,6 @@ e.g. Drag has as input: Vec and PieceSelection, diff: Diagram with diff, output:
 Add a language decorator to the algorithms storybook. Make sure that all native implementations are used to calculate.
 
 Add PieceSelection which is a Diagram component that only works for selecting pieces.
-
-## 👤semio📚ui
-
-semio ui:
-Refactor everything cleanly.
-
-- semio ui MUST use general ui elements/configs from elements/ui
-- All stories MUST have same naming patterns etc (First story is always Default which has the maximum of features with minimal setup)
-- All components MUST use the minimal data possible (e.g. Diagram only needs design, Scene only needs filtered kit with only one model and file per type etc,)
-- All stories MUST work. e.g. Kit is not working
-- Design, Diagram, Scene MUST have equal api and Story layout and naming
-
-Create a new Vec component that takes a vec and displays the vector xy input with visible origin and axes. Optionally take minU, maxU, minV, maxV, showAxes, showOrigin, `onVecChange(vec)`
-
-Create a new PiecesSelection component where you can select pieces with `onPieceSelect(piece)` which is triggered when the circle on the piece diagram is selected. It should be Digram
-
-Extend the diagram component:
-
-- Optionally take a design diff. The diff colors pieces and connections in the diagram. 3 extra colors: removed, added, modified
-- Optionally take a selection (piece guids and connection guids)
-- Add callbacks `onPieceClick(piece)`, `onConnectionClick(connection)`
-
-Create a Diagram component that shows a minimal diagram of the design that can be displayed e.g. in a mini map.
-Use small filled circles for pieces and clean lines for connections (circles on top of lines, lines go center to center). Use flattenDesign for absolute placements. Fit the Diagram to the size to the div container. Add story for for Nakagin Capsule Tower to storybook.
-
-Create a new bundle semio/ui that holds reusable ui components. Make sure that all general ui dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.
 
 ## 👤semio⌨️engine
 

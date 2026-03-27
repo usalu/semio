@@ -1,20 +1,20 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Vector.stories.tsx
-// Specs: One component per stories file with default and constrained-variant stories.
-// Summary: Showcases Vector with full/partial controlled and display/select constrained modes.
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Fully controlled with all three axes.
+// Summary: Vector stories: Default, Uncontrolled, PartialAxisControl, PartialSelectionAndDisplay.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import type { Meta, StoryObj } from "@storybook/react";
 import { Vector, type VectorValue } from "@semio/ui";
+import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
+
+// #region 🔖Vector
 
 const meta = {
   title: "semio/Vector",
   component: Vector,
-  parameters: {
-    layout: "centered",
-  },
+  parameters: { layout: "centered" },
   tags: ["autodocs"],
 } satisfies Meta<typeof Vector>;
 
@@ -24,9 +24,9 @@ type Story = StoryObj<typeof meta>;
 
 const defaultValue: VectorValue = { x: 0.2, y: -0.4, z: 0.7 };
 
-export const FullControlled: Story = {
+export const Default: Story = {
   args: {
-    id: "vector-full-controlled",
+    id: "vector-default",
     minX: -1,
     maxX: 1,
     minY: -1,
@@ -48,9 +48,9 @@ export const FullControlled: Story = {
   },
 };
 
-export const FullUncontrolled: Story = {
+export const Uncontrolled: Story = {
   args: {
-    id: "vector-full-uncontrolled",
+    id: "vector-uncontrolled",
     defaultVector: defaultValue,
     minX: -10,
     maxX: 10,
@@ -97,3 +97,5 @@ export const PartialSelectionAndDisplay: Story = {
     zDisplayEnabled: false,
   },
 };
+
+// #endregion 🔖Vector

@@ -19,6 +19,7 @@
 
 import { Level, LevelProvider, Textarea, getLevelBgClass } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
+import { nakagin } from "../nakagin";
 
 // #region 🔖Textarea
 const meta = {
@@ -38,7 +39,7 @@ const defaultArgs = {
   id: "textarea-default",
   placeholder: "Describe the design configuration, spatial relationships, and architectural intent...",
   placeholderId: "textarea.placeholder",
-  defaultValue: "The Nakagin Capsule Tower features 140 prefabricated capsules attached to two concrete cores. Each capsule is a self-contained living unit with standardized connection points.",
+  defaultValue: nakagin.description.slice(0, 140),
   rows: 4,
   lazy: true,
   showLabel: true,

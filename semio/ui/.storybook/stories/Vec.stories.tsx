@@ -1,21 +1,20 @@
 // #region 🔖Header
 // 💻 semio/ui/.storybook/stories/Vec.stories.tsx
-// Specs: One component per stories file with default and domain-variant stories.
-// Summary: Showcases the Vec 2D vector input with draggable handle, axes, and origin.
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Fully controlled 2D vector input.
+// Summary: Vec stories: Default, NoAxes, NoOrigin, PositiveDomain, Large.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import type { Meta, StoryObj } from "@storybook/react";
 import { Vec, type VecValue } from "@semio/ui";
+import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
 // #region 🔖Vec
+
 const meta = {
   title: "semio/Vec",
   component: Vec,
-  parameters: {
-    layout: "centered",
-  },
+  parameters: { layout: "centered" },
   tags: ["autodocs"],
 } satisfies Meta<typeof Vec>;
 

@@ -35,6 +35,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+import { architects } from "../nakagin";
+
 interface Person {
   id: string;
   name: string;
@@ -43,13 +45,7 @@ interface Person {
   email: string;
 }
 
-const sampleData: Person[] = [
-  { id: "1", name: "Kisho Kurokawa", icon: "https://github.com/shadcn.png", role: "Lead Architect", email: "kisho@metabolism.jp" },
-  { id: "2", name: "Kenzo Tange", role: "Urban Planner", email: "kenzo@tange.jp" },
-  { id: "3", name: "Fumihiko Maki", role: "Architect", email: "fumihiko@maki.jp" },
-  { id: "4", name: "Arata Isozaki", role: "Design Director", email: "arata@isozaki.jp" },
-  { id: "5", name: "Kiyonori Kikutake", role: "Marine Architect", email: "kiyonori@kikutake.jp" },
-];
+const sampleData: Person[] = architects.map((a) => ({ ...a }));
 
 export const WithAvatars: Story = {
   args: { columns: [], data: [] },
