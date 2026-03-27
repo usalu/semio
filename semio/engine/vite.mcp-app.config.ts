@@ -11,6 +11,7 @@
 
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import tailwindcss from "@tailwindcss/vite";
 import mdx from "@mdx-js/rollup";
 import path from "path";
 
@@ -91,7 +92,7 @@ export default defineConfig({
       },
     },
   },
-  plugins: [stubHeavyDepsPlugin(), mdx(), zodJitlessPlugin(), viteSingleFile()],
+  plugins: [stubHeavyDepsPlugin(), tailwindcss(), mdx(), zodJitlessPlugin(), viteSingleFile()],
   esbuild: {
     jsx: "automatic",
   },

@@ -725,10 +725,7 @@ export const SemioKit: React.FC<KitProps> = ({
   const secondaryMetadata = React.useMemo(() => getSecondaryKitMetadata(focusedNode), [focusedNode]);
   const descriptionEntry = React.useMemo(() => visibleMetadata.find((entry) => entry.label === "Description"), [visibleMetadata]);
   const detailMetadata = React.useMemo(() => visibleMetadata.filter((entry) => entry.label !== "Description" && entry.label !== "Created" && entry.label !== "Updated"), [visibleMetadata]);
-  const renderedBreadcrumbItems = React.useMemo(
-    () => breadcrumbItems.filter((item, index) => index < breadcrumbItems.length - 1 || (item.options?.length ?? 0) > 0),
-    [breadcrumbItems],
-  );
+  const renderedBreadcrumbItems = React.useMemo(() => breadcrumbItems.filter((item, index) => index < breadcrumbItems.length - 1 || (item.options?.length ?? 0) > 0), [breadcrumbItems]);
 
   return (
     <Section title={resolvedTitle} className={className}>
@@ -998,8 +995,7 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
     }
   });
 
-  const points = Array.from(pointMap.values());
-  const pointsByGuid = new Map(points.map((point) => [point.guid, point]));
+  const pointsByGuid = new Map(Array.from(pointMap.values()).map((point) => [point.guid, point]));
   const lineMap = new Map<string, DiagramLine>();
   const upsertLine = (connection: Connection, status: DiagramEntityStatus) => {
     if (!connection.guid) return;
@@ -1033,6 +1029,8 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
   });
 
   const lines = Array.from(lineMap.values());
+
+  const points = Array.from(pointMap.values());
   const minU = points.length > 0 ? Math.min(...points.map((point) => point.u)) : -0.5;
   const maxU = points.length > 0 ? Math.max(...points.map((point) => point.u)) : 0.5;
   const minY = points.length > 0 ? Math.min(...points.map((point) => -point.v)) : -0.5;
@@ -1853,6 +1851,7 @@ const resolveSceneColor = (cssValue: string, fallback: string): string => {
 };
 const SEMIO_TO_THREE_BASIS = toThreeRotation();
 const THREE_TO_SEMIO_BASIS = SEMIO_TO_THREE_BASIS.clone().invert();
+const SCENE_SEMIO_COLOR = "#ff344f";
 
 interface ScenePieceAsset {
   piece: Piece;
@@ -1979,8 +1978,15 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
     }
   });
 
+  for (const { connection, status } of connectionMap.values()) {
+    if (status === "default") continue;
+    const childGuid = connection.connecting.piece.guid;
+    const asset = pieceMap.get(childGuid);
+    if (asset && asset.status === "default") asset.status = "modified";
+  }
+
   return {
-    pieces,
+    pieces: Array.from(pieceMap.values()),
     connections: Array.from(connectionMap.values()),
   };
 };
@@ -1999,7 +2005,19 @@ interface ScenePieceModelProps {
 
 const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, isSelected, isHovered }) => {
   const gltf = useGLTF(modelSource);
-  const clone = React.useMemo(() => cloneSkeleton(gltf.scene), [gltf.scene]);
+  const semioColor = React.useMemo(() => resolveSceneColor("var(--color-primary)", SCENE_SEMIO_COLOR), []);
+  const clone = React.useMemo(() => {
+    const cloned = cloneSkeleton(gltf.scene);
+    cloned.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      if (Array.isArray(object.material)) {
+        object.material = object.material.map((m) => m.clone());
+      } else if (object.material) {
+        object.material = object.material.clone();
+      }
+    });
+    return cloned;
+  }, [gltf.scene]);
 
   React.useEffect(() => {
     const isDiffed = status !== "default";
@@ -2011,8 +2029,12 @@ const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, 
       if (!(object instanceof THREE.Mesh)) return;
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       materials.forEach((material) => {
-        if (!material || !("emissive" in material)) return;
+        if (!material || !("color" in material)) return;
         const mat = material as THREE.MeshStandardMaterial;
+
+        // Set the base color to semio color, ignoring imported colors
+        mat.color.set(semioColor);
+
         if (isSelected && selectedColor) {
           mat.emissive.set(selectedColor);
           mat.emissiveIntensity = 0.35;
@@ -2030,7 +2052,7 @@ const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, 
         mat.opacity = isRemoved ? 0.35 : 1;
       });
     });
-  }, [clone, status, isHovered, isSelected]);
+  }, [clone, status, isHovered, isSelected, semioColor]);
 
   return <Clone object={clone} />;
 };
@@ -2048,6 +2070,7 @@ interface ScenePieceProps {
 }
 
 const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, modelSource, isSelected, isHovered, onPointerEnter, onPointerLeave, onClick }) => {
+  const semioColor = React.useMemo(() => resolveSceneColor("var(--color-primary)", SCENE_SEMIO_COLOR), []);
   const defaultColor = React.useMemo(() => resolveSceneColor(getEntityStatusColor(status), "#888888"), [status]);
   const activeColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6"), [status]);
   const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
@@ -2057,7 +2080,7 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
     return toScenePieceMatrix(piece.plane as Plane);
   }, [piece.plane]);
 
-  const color = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
+  const emissiveColor = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
   const edgeColor = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
   const isRemoved = status === "removed";
 
@@ -2097,7 +2120,7 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
       ) : (
         <mesh onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
           <boxGeometry args={[SCENE_BOX_SIZE, SCENE_BOX_SIZE, SCENE_BOX_SIZE]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0} transparent={isRemoved} opacity={isRemoved ? 0.35 : 1} />
+          <meshStandardMaterial color={semioColor} emissive={emissiveColor} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0} transparent={isRemoved} opacity={isRemoved ? 0.35 : 1} />
           <Edges scale={1.001} color={edgeColor} />
         </mesh>
       )}
@@ -2645,7 +2668,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 // Summary: MCP App React component for rendering semio diagrams inside MCP host iframes.
 
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
-import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
+import { useApp, useDocumentTheme, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 
 // #region 🔖McpApp Types
 
@@ -2740,6 +2763,17 @@ export const McpDesignViewer: React.FC = () => {
 
   useHostStyles(app, app?.getHostContext());
 
+  // Sync MCP host theme with semio's .dark class convention.
+  const mcpTheme = useDocumentTheme();
+  React.useEffect(() => {
+    const el = document.documentElement;
+    if (mcpTheme === "dark") {
+      el.classList.add("dark");
+    } else {
+      el.classList.remove("dark");
+    }
+  }, [mcpTheme]);
+
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (appRef.current) {
       appRef.current.updateModelContext({
@@ -2790,7 +2824,7 @@ export const McpDesignViewer: React.FC = () => {
 
   if (!hasDiagram && payload.kitArtifacts) {
     return (
-      <div style={{ width: "100%", height: "100vh", overflow: "auto", padding: 12 }}>
+      <div style={{ width: "100%", height: "100vh", overflow: "auto", padding: 12, background: "var(--base, var(--color-background-primary, #ffffff))", color: "var(--foreground)" }}>
         <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit Artifacts" />
       </div>
     );

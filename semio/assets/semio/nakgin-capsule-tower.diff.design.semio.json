@@ -125,6 +125,10 @@
             "z": 0
           }
         },
+        "center": {
+          "u": 8,
+          "v": 0
+        },
         "description": "new extension base"
       },
       {

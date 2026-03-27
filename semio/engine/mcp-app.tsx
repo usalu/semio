@@ -8,6 +8,7 @@
 
 // #endregion 🔖Header
 
+import "@semio/ui/globals.css";
 import { createRoot } from "react-dom/client";
 import { mountMcpDesignViewer } from "@semio/ui";
 
