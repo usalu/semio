@@ -17740,6 +17740,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         deleteKeyCode={deleteKeyCode}
         panOnDrag={panOnDrag}
         panOnScroll={panOnScroll}
+        preventScrolling={true}
         selectionOnDrag={selectionOnDrag}
         selectionMode={selectionMode}
         zoomOnScroll={zoomOnScroll}

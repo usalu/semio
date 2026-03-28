@@ -2324,6 +2324,124 @@ type DesignChange = Change[Design, DesignDiff]
 // KitChange holds the data fields for a KitChange record.
 type KitChange = Change[Kit, KitDiff]
 
+// [👤semio📚go💻semio🔖kit🛠️deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/DeletePiecesAndConnectionsInDesign)
+// DeletePiecesAndConnectionsInDesign deletes pieces and connections from a design, returning a DesignDiff.
+// Removes stale connections referencing deleted pieces.
+// Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+func DeletePiecesAndConnectionsInDesign(design Design, pieceGuids []string, connectionGuids []string) DesignDiff {
+	deletedPieceSet := make(map[string]bool)
+	for _, g := range pieceGuids {
+		deletedPieceSet[g] = true
+	}
+
+	// Find stale connections: connections referencing any deleted piece
+	staleConnectionGuids := make(map[string]bool)
+	for _, conn := range design.Connections {
+		if deletedPieceSet[conn.Connected.Piece.Guid] || deletedPieceSet[conn.Connecting.Piece.Guid] {
+			staleConnectionGuids[conn.Guid] = true
+		}
+	}
+
+	// All removed connections = explicit + stale
+	allRemovedConnectionGuids := make(map[string]bool)
+	for _, g := range connectionGuids {
+		allRemovedConnectionGuids[g] = true
+	}
+	for g := range staleConnectionGuids {
+		allRemovedConnectionGuids[g] = true
+	}
+
+	// Find pieces that become fixed
+	fixedPieceGuids := []string{}
+	fixedPieceSet := make(map[string]bool)
+	for connGuid := range allRemovedConnectionGuids {
+		var conn *Connection
+		for i := range design.Connections {
+			if design.Connections[i].Guid == connGuid {
+				conn = &design.Connections[i]
+				break
+			}
+		}
+		if conn == nil {
+			continue
+		}
+		connectingGuid := conn.Connecting.Piece.Guid
+		if deletedPieceSet[connectingGuid] {
+			continue
+		}
+		// Check if this piece has another parent connection not in the removed set
+		hasOtherParent := false
+		for _, c := range design.Connections {
+			if c.Connecting.Piece.Guid == connectingGuid && !allRemovedConnectionGuids[c.Guid] {
+				hasOtherParent = true
+				break
+			}
+		}
+		if !hasOtherParent && !fixedPieceSet[connectingGuid] {
+			fixedPieceGuids = append(fixedPieceGuids, connectingGuid)
+			fixedPieceSet[connectingGuid] = true
+		}
+	}
+
+	// Build the diff
+	var piecesRemoved []PieceId
+	for _, g := range pieceGuids {
+		piecesRemoved = append(piecesRemoved, PieceId{Guid: g})
+	}
+
+	zero := 0.0
+	one := 1.0
+	flatPlaneDiff := &PlaneDiff{
+		Origin: &PointDiff{X: &zero, Y: &zero, Z: &zero},
+		XAxis:  &VectorDiff{X: &one, Y: &zero, Z: &zero},
+		YAxis:  &VectorDiff{X: &zero, Y: &one, Z: &zero},
+	}
+	zeroCenterDiff := &CoordDiff{U: &zero, V: &zero}
+
+	var piecesUpdated []struct {
+		Piece PieceId   `json:"piece"`
+		Diff  PieceDiff `json:"diff"`
+	}
+	for _, g := range fixedPieceGuids {
+		piecesUpdated = append(piecesUpdated, struct {
+			Piece PieceId   `json:"piece"`
+			Diff  PieceDiff `json:"diff"`
+		}{
+			Piece: PieceId{Guid: g},
+			Diff: PieceDiff{
+				Plane:  flatPlaneDiff,
+				Center: zeroCenterDiff,
+			},
+		})
+	}
+
+	// Sort removed connections by guid
+	sortedConnectionGuids := make([]string, 0, len(allRemovedConnectionGuids))
+	for g := range allRemovedConnectionGuids {
+		sortedConnectionGuids = append(sortedConnectionGuids, g)
+	}
+	sort.Strings(sortedConnectionGuids)
+	var connectionsRemoved []ConnectionId
+	for _, g := range sortedConnectionGuids {
+		connectionsRemoved = append(connectionsRemoved, ConnectionId{Guid: g})
+	}
+
+	diff := DesignDiff{}
+	if len(piecesRemoved) > 0 || len(piecesUpdated) > 0 {
+		diff.Pieces = &PiecesDiff{
+			Removed: piecesRemoved,
+			Updated: piecesUpdated,
+		}
+	}
+	if len(connectionsRemoved) > 0 {
+		diff.Connections = &ConnectionsDiff{
+			Removed: connectionsRemoved,
+		}
+	}
+
+	return diff
+}
+
 // [👤semio📚go💻semio🔖kit🛠️getdesignchange](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/GetDesignChange)
 // GetDesignChange holds the data fields for a GetDesignChange record.
 // GetDesignChange MUST perform the GetDesignChange operation.

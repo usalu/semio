@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { applyDesignDiff, flattenDesign } from "@semio/js";
+import { applyDesignDiff, deletePiecesAndConnectionsInDesign, flattenDesign } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -33,17 +33,21 @@ function DeleteFrame() {
     setSelectedPieceGuids((baseDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
   }, [baseDesign, selectedPieceGuids.length]);
 
+  const designDiff = React.useMemo(() => (selectedPieceGuids.length > 0 ? deletePiecesAndConnectionsInDesign(baseDesign, selectedPieceGuids, []) : undefined), [selectedPieceGuids]);
+
+  const outputDesign = React.useMemo(() => (designDiff ? applyDesignDiff(baseDesign, designDiff) : baseDesign), [designDiff]);
+
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
       design: baseDesign,
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
-      designDiff: { pieces: { removed: selectedPieceGuids.map((guid) => ({ guid })) }, connections: { updated: [] } },
-      outputDesign: baseDesign,
+      designDiff,
+      outputDesign,
       error: selectedPieceGuids.length === 0 ? "Select at least one piece to delete." : undefined,
     }),
-    [baseDesign, kit, selectedPieceGuids],
+    [baseDesign, kit, selectedPieceGuids, designDiff, outputDesign],
   );
 
   return <AlgorithmApp id="delete" label="Delete" windows={WINDOWS} context={context} className="h-full w-full" />;

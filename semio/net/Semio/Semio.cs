@@ -11012,7 +11012,7 @@ public static class FolderKit
         {
             if (string.IsNullOrEmpty(file.Blob)) continue;
             var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
-                ? file.Blob[(file.Blob.IndexOf(',') + 1)..]
+                ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
                 : file.Blob;
             files[BuildFilePath(kit, file)] = Convert.FromBase64String(blobData);
         }

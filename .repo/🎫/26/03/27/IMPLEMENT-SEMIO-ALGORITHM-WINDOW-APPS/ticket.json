@@ -2,13 +2,14 @@
   "title": "Implement Semio Algorithm Window Apps",
   "status": "open",
   "description": "Every algorithm should be a elements/ui/UI with an AlgorithmApp and semio ui for the window kinds. WindowKinds: VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput. Drag: VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput. Delete: PiecesSelectionInput, DesignDiffOutput, DesignOutput. etc.",
-  "summary": "Fixed all type errors in the semio algorithm window app infrastructure. Updated KitData interface to remove obsolete variant/view properties from Design/Type picks. Fixed connector.id to connector.name alignment with current schema. Added required icon property to ToggleGroup items. Fixed AlgorithmWindowKind type narrowing in createAlgorithmWindowKinds. Fixed Kit and Design type casts. Added vitest/importMeta to tsconfig types for both semio/ui and semio/algorithms. Updated inline tests to match current schema. Fixed pre-existing createUICanvasAsyncLifecycle double-dispose bug in elements/ui. All 8 elements/ui tests, 119 semio/ui tests, and 107 semio/js tests pass.",
+  "summary": "Implemented deletePiecesAndConnectionsInDesign across all 5 programming languages (C#, TypeScript, Rust, Python, Go). The function takes a design, list of piece GUIDs, and list of connection GUIDs to delete, then returns a DesignDiff that: (1) removes the specified pieces, (2) removes stale connections referencing deleted pieces, (3) updates pieces that become fixed (parent connection removed) with flat plane and zero center. Created test assets for nakagin capsule tower deletion scenario (third tambour of large tower + first connection of small tower). Refactored existing removePiecesAndConnectionsFromDesign in TypeScript to use the new function. Fixed pre-existing net48 Range syntax error in Semio.cs. All tests pass across all languages.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1138"
   },
   "goal": "🎯r2603",
   "sessions": [
     "⚪faf07075e3054f9980d44ea1e29006b3",
-    "⚪7425b6ca8f924fe5aba708587bb67a64"
+    "⚪7425b6ca8f924fe5aba708587bb67a64",
+    "⚪c14d72777d704d3a91bbacdd0eacd41f"
   ]
 }

@@ -6319,6 +6319,7 @@ class Kit(
                 filtered.append(m)
         if not filtered:
             return None
+
         def jaccard(m):
             model_tag_guids = {t.guid for t in (getattr(m, "tags", None) or [])}
             sel = set(resolved_tag_guids)
@@ -6326,6 +6327,7 @@ class Kit(
             if not union:
                 return 0.0
             return len(model_tag_guids & sel) / len(union)
+
         return max(filtered, key=jaccard)
 
     @staticmethod
@@ -6357,7 +6359,17 @@ class Kit(
         else:
             base = self
 
-        glob_keys = ["designs", "types", "ports", "files", "tags", "concepts", "qualities", "authors", "folders"]
+        glob_keys = [
+            "designs",
+            "types",
+            "ports",
+            "files",
+            "tags",
+            "concepts",
+            "qualities",
+            "authors",
+            "folders",
+        ]
         has_glob_filters = any(filter_spec.get(k) is not None for k in glob_keys)
         if not has_glob_filters:
             return base
@@ -6419,7 +6431,7 @@ class Kit(
 
         all_tags = list(getattr(self, "tags_", None) or []) if hasattr(self, "tags_") else []
         resolved_tag_guids: list[str] = []
-        for tag_value in (tags or []):
+        for tag_value in tags or []:
             found = False
             for tag in all_tags:
                 if tag.guid == tag_value:
@@ -6440,7 +6452,7 @@ class Kit(
         used_folder_names: set[str] = set()
 
         def collect_quality_from_props(props):
-            for prop in (props or []):
+            for prop in props or []:
                 if hasattr(prop, "quality") and prop.quality and hasattr(prop.quality, "guid"):
                     used_quality_guids.add(prop.quality.guid)
 
@@ -6451,15 +6463,15 @@ class Kit(
                 continue
             if getattr(t, "folder", None):
                 used_folder_names.add(t.folder)
-            for connector in (t.connectors or []):
+            for connector in t.connectors or []:
                 if connector.port and connector.port.guid:
                     used_port_guids.add(connector.port.guid)
                 collect_quality_from_props(getattr(connector, "props", None))
             collect_quality_from_props(getattr(t, "props", None))
-            for author_id in (getattr(t, "authors", None) or []):
+            for author_id in getattr(t, "authors", None) or []:
                 if hasattr(author_id, "guid"):
                     used_author_guids.add(author_id.guid)
-            for concept_id in (getattr(t, "concepts", None) or []):
+            for concept_id in getattr(t, "concepts", None) or []:
                 if hasattr(concept_id, "guid"):
                     used_concept_guids.add(concept_id.guid)
 
@@ -6470,24 +6482,24 @@ class Kit(
                     selected_models[type_guid] = best
                     if hasattr(best, "file") and best.file and hasattr(best.file, "guid"):
                         used_file_guids.add(best.file.guid)
-                    for tag_id in (getattr(best, "tags", None) or []):
+                    for tag_id in getattr(best, "tags", None) or []:
                         used_tag_guids.add(tag_id.guid)
 
         for piece in pieces:
             collect_quality_from_props(getattr(piece, "props", None))
 
-        for concept_id in (getattr(design, "concepts", None) or []):
+        for concept_id in getattr(design, "concepts", None) or []:
             if hasattr(concept_id, "guid"):
                 used_concept_guids.add(concept_id.guid)
-        for author_id in (getattr(design, "authors", None) or []):
+        for author_id in getattr(design, "authors", None) or []:
             if hasattr(author_id, "guid"):
                 used_author_guids.add(author_id.guid)
 
         port_snapshot = list(used_port_guids)
         for port_guid in port_snapshot:
-            for port in (self.ports or []):
+            for port in self.ports or []:
                 if port.guid == port_guid:
-                    for compat in (getattr(port, "compatiblePorts", None) or getattr(port, "compatible_ports", None) or []):
+                    for compat in getattr(port, "compatiblePorts", None) or getattr(port, "compatible_ports", None) or []:
                         if hasattr(compat, "guid"):
                             used_port_guids.add(compat.guid)
 
@@ -6495,6 +6507,7 @@ class Kit(
             used_tag_guids.add(tag_guid)
 
         import copy
+
         result = copy.copy(self)
         result.types = []
         for t in all_types:
@@ -11209,6 +11222,66 @@ class KitChange(Change):
     pass
 
 
+def deletePiecesAndConnectionsInDesignDict(design: dict, pieceGuids: list[str], connectionGuids: list[str]) -> dict:
+    """Deletes pieces and connections from a design dict, returning a DesignDiff dict.
+    Removes stale connections referencing deleted pieces.
+    Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️deletepiecesandconnectionsindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/deletePiecesAndConnectionsInDesignDict)
+    """
+    deletedPieceSet = set(pieceGuids)
+    connections = design.get("connections", [])
+
+    # Find stale connections: connections referencing any deleted piece
+    staleConnectionGuids = set()
+    for conn in connections:
+        connectedGuid = conn.get("connected", {}).get("piece", {}).get("guid", "")
+        connectingGuid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+        if connectedGuid in deletedPieceSet or connectingGuid in deletedPieceSet:
+            staleConnectionGuids.add(conn["guid"])
+
+    # All removed connections = explicit + stale
+    allRemovedConnectionGuids = set(connectionGuids) | staleConnectionGuids
+
+    # Find pieces that become fixed
+    fixedPieceGuids: list[str] = []
+    for connGuid in allRemovedConnectionGuids:
+        conn = next((c for c in connections if c["guid"] == connGuid), None)
+        if conn is None:
+            continue
+        connectingGuid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+        if connectingGuid in deletedPieceSet:
+            continue
+        # Check if this piece has another parent connection not in the removed set
+        hasOtherParent = any(c.get("connecting", {}).get("piece", {}).get("guid", "") == connectingGuid and c["guid"] not in allRemovedConnectionGuids for c in connections)
+        if not hasOtherParent and connectingGuid not in fixedPieceGuids:
+            fixedPieceGuids.append(connectingGuid)
+
+    flatPlane = {
+        "origin": {"x": 0, "y": 0, "z": 0},
+        "xAxis": {"x": 1, "y": 0, "z": 0},
+        "yAxis": {"x": 0, "y": 1, "z": 0},
+    }
+    zeroCenter = {"u": 0, "v": 0}
+
+    diff: dict = {}
+
+    piecesRemoved = [{"guid": g} for g in pieceGuids]
+    piecesUpdated = [{"piece": {"guid": g}, "diff": {"plane": flatPlane, "center": zeroCenter}} for g in fixedPieceGuids]
+    if piecesRemoved or piecesUpdated:
+        piecesDiff: dict = {}
+        if piecesRemoved:
+            piecesDiff["removed"] = piecesRemoved
+        if piecesUpdated:
+            piecesDiff["updated"] = piecesUpdated
+        diff["pieces"] = piecesDiff
+
+    connectionsRemoved = [{"guid": g} for g in sorted(allRemovedConnectionGuids)]
+    if connectionsRemoved:
+        diff["connections"] = {"removed": connectionsRemoved}
+
+    return diff
+
+
 def getDesignChange(
     before: dict,
     after: dict,
@@ -11402,7 +11475,17 @@ class KitData:
             base = self
 
         base_data = base._data if isinstance(base, KitData) else base
-        glob_keys = ["designs", "types", "ports", "files", "tags", "concepts", "qualities", "authors", "folders"]
+        glob_keys = [
+            "designs",
+            "types",
+            "ports",
+            "files",
+            "tags",
+            "concepts",
+            "qualities",
+            "authors",
+            "folders",
+        ]
         has_glob_filters = any(filter_spec.get(k) is not None for k in glob_keys)
         if not has_glob_filters:
             return KitData(base_data) if base is self else base
@@ -11422,9 +11505,15 @@ class KitData:
 
         filtered = dict(base_data)
         entity_key_map = {
-            "types": "name", "designs": "name", "ports": "name",
-            "files": "name", "tags": "name", "concepts": "name",
-            "qualities": "name", "authors": "name", "folders": "name",
+            "types": "name",
+            "designs": "name",
+            "ports": "name",
+            "files": "name",
+            "tags": "name",
+            "concepts": "name",
+            "qualities": "name",
+            "authors": "name",
+            "folders": "name",
         }
         for entity_key, name_key in entity_key_map.items():
             spec = filter_spec.get(entity_key)
@@ -11437,7 +11526,13 @@ class KitData:
         kit = self._data
         design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
         if design is None:
-            return KitData({"guid": kit.get("guid"), "name": kit.get("name", ""), "version": kit.get("version", "")})
+            return KitData(
+                {
+                    "guid": kit.get("guid"),
+                    "name": kit.get("name", ""),
+                    "version": kit.get("version", ""),
+                }
+            )
 
         used_type_guids: set[str] = set()
         used_design_guids: set[str] = {design_guid}
@@ -11462,7 +11557,10 @@ class KitData:
 
         resolved_tag_guids: list[str] = []
         for tag_value in tags or []:
-            by_guid = next((tag for tag in kit.get("tags", []) if tag.get("guid") == tag_value), None)
+            by_guid = next(
+                (tag for tag in kit.get("tags", []) if tag.get("guid") == tag_value),
+                None,
+            )
             if by_guid is not None:
                 resolved_tag_guids.append(by_guid["guid"])
                 continue
@@ -11537,13 +11635,31 @@ class KitData:
             if author.get("guid"):
                 used_author_guids.add(author["guid"])
         for port_guid in list(used_port_guids):
-            port = next((candidate for candidate in kit.get("ports", []) if candidate.get("guid") == port_guid), None)
+            port = next(
+                (candidate for candidate in kit.get("ports", []) if candidate.get("guid") == port_guid),
+                None,
+            )
             for compatible in (port or {}).get("compatiblePorts", []):
                 if compatible.get("guid"):
                     used_port_guids.add(compatible["guid"])
         used_tag_guids.update(resolved_tag_guids)
 
-        filtered = {key: value for key, value in kit.items() if key not in {"types", "designs", "ports", "files", "tags", "concepts", "qualities", "authors", "folders"}}
+        filtered = {
+            key: value
+            for key, value in kit.items()
+            if key
+            not in {
+                "types",
+                "designs",
+                "ports",
+                "files",
+                "tags",
+                "concepts",
+                "qualities",
+                "authors",
+                "folders",
+            }
+        }
         filtered["types"] = []
         for type_item in kit.get("types", []):
             if type_item.get("guid") not in used_type_guids:
@@ -11951,11 +12067,7 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
             if payload_design.get("guid") not in seen_design_guids:
                 designs.append(copy.deepcopy(payload_design))
 
-        result = {
-            key: copy.deepcopy(value)
-            for key, value in payload_dict.items()
-            if key not in {"types", "designs"}
-        }
+        result = {key: copy.deepcopy(value) for key, value in payload_dict.items() if key not in {"types", "designs"}}
         result.update(
             {
                 "guid": kit_row["guid"],
@@ -13638,7 +13750,12 @@ def _export_ifc_from_dict(
         ifc_type = _get_layer_ifc_type(layer)
         if ifc_type == "IfcBuilding":
             building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name=layer_path)
-            _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
+            _ifc_api.run(
+                "aggregate.assign_object",
+                ifc,
+                relating_object=site,
+                products=[building],
+            )
             ifc_buildings[layer_path] = building
             if default_building is None:
                 default_building = building
@@ -13646,10 +13763,20 @@ def _export_ifc_from_dict(
             parts = layer_path.rsplit("/", 1)
             parent_path = parts[0] if len(parts) > 1 else ""
             storey_name = parts[-1] if len(parts) > 1 else layer_path
-            storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name=storey_name)
+            storey = _ifc_api.run(
+                "root.create_entity",
+                ifc,
+                ifc_class="IfcBuildingStorey",
+                name=storey_name,
+            )
             parent_building = ifc_buildings.get(parent_path)
             if parent_building is not None:
-                _ifc_api.run("aggregate.assign_object", ifc, relating_object=parent_building, products=[storey])
+                _ifc_api.run(
+                    "aggregate.assign_object",
+                    ifc,
+                    relating_object=parent_building,
+                    products=[storey],
+                )
             ifc_storeys[layer_path] = storey
             try:
                 storey_number = int(storey_name)
@@ -13662,10 +13789,20 @@ def _export_ifc_from_dict(
     # Fallback: create default building and storey if no layers define them
     if default_building is None:
         default_building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
-        _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[default_building])
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=site,
+            products=[default_building],
+        )
     if default_storey is None:
         default_storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
-        _ifc_api.run("aggregate.assign_object", ifc, relating_object=default_building, products=[default_storey])
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=default_building,
+            products=[default_storey],
+        )
     # endregion Step 1
 
     # region Step 2: Piece-to-storey mapping from piece names
@@ -13850,7 +13987,12 @@ def _export_ifc_from_dict(
             _ifc_api.run("geometry.edit_object_placement", ifc, product=occurrence, matrix=mat)
 
         # Assign piece to the correct storey based on its floor number
-        _ifc_api.run("spatial.assign_container", ifc, relating_structure=_piece_storey(piece_name), products=[occurrence])
+        _ifc_api.run(
+            "spatial.assign_container",
+            ifc,
+            relating_structure=_piece_storey(piece_name),
+            products=[occurrence],
+        )
 
         # Piece-level pset for piece attributes
         piece_props: dict[str, typing.Any] = {}
@@ -14077,7 +14219,12 @@ def _export_ifc_from_entities(
         ifc_type_val = _get_layer_ifc_type_entity(layer)
         if ifc_type_val == "IfcBuilding":
             building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name=layer_name)
-            _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[building])
+            _ifc_api.run(
+                "aggregate.assign_object",
+                ifc,
+                relating_object=site,
+                products=[building],
+            )
             ifc_buildings[layer_name] = building
             if default_building is None:
                 default_building = building
@@ -14085,10 +14232,20 @@ def _export_ifc_from_entities(
             parts = layer_name.rsplit("/", 1)
             parent_name = parts[0] if len(parts) > 1 else ""
             storey_label = parts[-1] if len(parts) > 1 else layer_name
-            storey_ent = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name=storey_label)
+            storey_ent = _ifc_api.run(
+                "root.create_entity",
+                ifc,
+                ifc_class="IfcBuildingStorey",
+                name=storey_label,
+            )
             parent_building = ifc_buildings.get(parent_name)
             if parent_building is not None:
-                _ifc_api.run("aggregate.assign_object", ifc, relating_object=parent_building, products=[storey_ent])
+                _ifc_api.run(
+                    "aggregate.assign_object",
+                    ifc,
+                    relating_object=parent_building,
+                    products=[storey_ent],
+                )
             ifc_storeys[layer_name] = storey_ent
             try:
                 storey_by_number[int(storey_label)] = storey_ent
@@ -14099,10 +14256,20 @@ def _export_ifc_from_entities(
 
     if default_building is None:
         default_building = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuilding", name="Building")
-        _ifc_api.run("aggregate.assign_object", ifc, relating_object=site, products=[default_building])
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=site,
+            products=[default_building],
+        )
     if default_storey is None:
         default_storey = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcBuildingStorey", name="Storey")
-        _ifc_api.run("aggregate.assign_object", ifc, relating_object=default_building, products=[default_storey])
+        _ifc_api.run(
+            "aggregate.assign_object",
+            ifc,
+            relating_object=default_building,
+            products=[default_storey],
+        )
     # endregion Step 1
 
     # region Step 2: Piece-to-storey mapping
@@ -14197,7 +14364,12 @@ def _export_ifc_from_entities(
             _ifc_api.run("geometry.edit_object_placement", ifc, product=occurrence, matrix=mat)
 
         # Assign piece to the correct storey based on its floor number
-        _ifc_api.run("spatial.assign_container", ifc, relating_structure=_piece_storey_entity(piece_name), products=[occurrence])
+        _ifc_api.run(
+            "spatial.assign_container",
+            ifc,
+            relating_structure=_piece_storey_entity(piece_name),
+            products=[occurrence],
+        )
         ifc_occurrences[piece.id_] = occurrence
 
         # Connectors as ports
@@ -14710,13 +14882,25 @@ AttributeMeta = typing.TypedDict(
 
 TagMeta = typing.TypedDict(
     "TagMeta",
-    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str], "order": typing.NotRequired[int]},
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "order": typing.NotRequired[int],
+    },
 )
 """TagMeta is identical to Tag (no list fields to omit)."""
 
 ConceptMeta = typing.TypedDict(
     "ConceptMeta",
-    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str], "order": typing.NotRequired[int]},
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "order": typing.NotRequired[int],
+    },
 )
 """ConceptMeta is identical to Concept (no list fields to omit)."""
 
@@ -14799,13 +14983,23 @@ QualityMeta = typing.TypedDict(
 
 PortMeta = typing.TypedDict(
     "PortMeta",
-    {"guid": str, "name": str, "description": typing.NotRequired[str], "icon": typing.NotRequired[str]},
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+    },
 )
 """PortMeta is Port without attributes."""
 
 ModelMeta = typing.TypedDict(
     "ModelMeta",
-    {"guid": str, "file": typing.NotRequired[dict], "name": typing.NotRequired[str], "description": typing.NotRequired[str]},
+    {
+        "guid": str,
+        "file": typing.NotRequired[dict],
+        "name": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
 )
 """ModelMeta is Model without tags and attributes."""
 
@@ -14858,7 +15052,12 @@ PieceMeta = typing.TypedDict(
 
 GroupMeta = typing.TypedDict(
     "GroupMeta",
-    {"guid": str, "name": typing.NotRequired[str], "color": typing.NotRequired[str], "description": typing.NotRequired[str]},
+    {
+        "guid": str,
+        "name": typing.NotRequired[str],
+        "color": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
 )
 """GroupMeta is Group without pieces and attributes."""
 
@@ -15058,23 +15257,134 @@ def _extract_scalar_fields(d: dict, keys: list[str]) -> dict:
 _ATTRIBUTE_META_KEYS = ["guid", "name", "value", "definition"]
 _TAG_META_KEYS = ["guid", "name", "description", "icon", "order"]
 _CONCEPT_META_KEYS = ["guid", "name", "description", "icon", "order"]
-_STAT_META_KEYS = ["guid", "key", "unit", "min", "minExcluded", "max", "maxExcluded", "createdAt", "updatedAt"]
+_STAT_META_KEYS = [
+    "guid",
+    "key",
+    "unit",
+    "min",
+    "minExcluded",
+    "max",
+    "maxExcluded",
+    "createdAt",
+    "updatedAt",
+]
 _PROP_META_KEYS = ["guid", "key", "value", "unit"]
 _AUTHOR_META_KEYS = ["guid", "name", "email"]
-_FILE_META_KEYS = ["guid", "name", "remote", "folder", "size", "hash", "createdAt", "updatedAt"]
+_FILE_META_KEYS = [
+    "guid",
+    "name",
+    "remote",
+    "folder",
+    "size",
+    "hash",
+    "createdAt",
+    "updatedAt",
+]
 _FOLDER_META_KEYS = ["guid", "name", "parent", "description", "createdAt", "updatedAt"]
-_QUALITY_META_KEYS = ["guid", "key", "name", "kind", "defaultValue", "formula", "defaultSiUnit", "defaultImperialUnit", "min", "minExcluded", "max", "maxExcluded", "canScale", "uri"]
+_QUALITY_META_KEYS = [
+    "guid",
+    "key",
+    "name",
+    "kind",
+    "defaultValue",
+    "formula",
+    "defaultSiUnit",
+    "defaultImperialUnit",
+    "min",
+    "minExcluded",
+    "max",
+    "maxExcluded",
+    "canScale",
+    "uri",
+]
 _PORT_META_KEYS = ["guid", "name", "description", "icon"]
 _MODEL_META_KEYS = ["guid", "file", "name", "description"]
-_CONNECTOR_META_KEYS = ["guid", "point", "direction", "t", "name", "description", "mandatory", "port"]
+_CONNECTOR_META_KEYS = [
+    "guid",
+    "point",
+    "direction",
+    "t",
+    "name",
+    "description",
+    "mandatory",
+    "port",
+]
 _LAYER_META_KEYS = ["guid", "name", "isHidden", "isLocked", "color", "description"]
-_PIECE_META_KEYS = ["guid", "name", "type", "designPiece", "plane", "center", "scale", "mirrorPlane", "isHidden", "isLocked", "color", "description"]
+_PIECE_META_KEYS = [
+    "guid",
+    "name",
+    "type",
+    "designPiece",
+    "plane",
+    "center",
+    "scale",
+    "mirrorPlane",
+    "isHidden",
+    "isLocked",
+    "color",
+    "description",
+]
 _GROUP_META_KEYS = ["guid", "name", "color", "description"]
-_CONNECTION_META_KEYS = ["guid", "connected", "connecting", "gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v", "description"]
+_CONNECTION_META_KEYS = [
+    "guid",
+    "connected",
+    "connecting",
+    "gap",
+    "shift",
+    "rise",
+    "rotation",
+    "turn",
+    "tilt",
+    "u",
+    "v",
+    "description",
+]
 
-_TYPE_META_KEYS = ["guid", "name", "parent", "description", "icon", "image", "folder", "unit", "stock", "isAbstract", "virtual", "createdAt", "updatedAt"]
-_DESIGN_META_KEYS = ["guid", "name", "parent", "description", "icon", "image", "variant", "view", "unit", "folder", "isAbstract", "activeLayer", "createdAt", "updatedAt"]
-_KIT_META_KEYS = ["guid", "name", "version", "description", "icon", "image", "preview", "remote", "homepage", "license", "createdAt", "updatedAt"]
+_TYPE_META_KEYS = [
+    "guid",
+    "name",
+    "parent",
+    "description",
+    "icon",
+    "image",
+    "folder",
+    "unit",
+    "stock",
+    "isAbstract",
+    "virtual",
+    "createdAt",
+    "updatedAt",
+]
+_DESIGN_META_KEYS = [
+    "guid",
+    "name",
+    "parent",
+    "description",
+    "icon",
+    "image",
+    "variant",
+    "view",
+    "unit",
+    "folder",
+    "isAbstract",
+    "activeLayer",
+    "createdAt",
+    "updatedAt",
+]
+_KIT_META_KEYS = [
+    "guid",
+    "name",
+    "version",
+    "description",
+    "icon",
+    "image",
+    "preview",
+    "remote",
+    "homepage",
+    "license",
+    "createdAt",
+    "updatedAt",
+]
 
 
 def attributeToMeta(d: dict) -> AttributeMeta:
@@ -15369,7 +15679,24 @@ def _test_load_kit(filename: str) -> dict:
     data = _test_load_json(filename)
     if "guid" in data and "uri" not in data:
         data["uri"] = data["guid"]
-    for key in ["types", "designs", "files", "folders", "authors", "concepts", "models", "connectors", "pieces", "connections", "layers", "groups", "stats", "ports", "qualities", "attributes"]:
+    for key in [
+        "types",
+        "designs",
+        "files",
+        "folders",
+        "authors",
+        "concepts",
+        "models",
+        "connectors",
+        "pieces",
+        "connections",
+        "layers",
+        "groups",
+        "stats",
+        "ports",
+        "qualities",
+        "attributes",
+    ]:
         if key not in data or data[key] is None:
             data[key] = []
     for collection in ["types", "designs", "folders"]:
@@ -15390,7 +15717,7 @@ def _test_load_kit(filename: str) -> dict:
                     if "url" not in m or m["url"] is None:
                         m["url"] = ""
                     if "tags" in m and isinstance(m["tags"], list):
-                        new_tags = [tag["guid"] if isinstance(tag, dict) and "guid" in tag else tag for tag in m["tags"]]
+                        new_tags = [(tag["guid"] if isinstance(tag, dict) and "guid" in tag else tag) for tag in m["tags"]]
                         m["tags"] = new_tags
                     elif "tags" not in m:
                         m["tags"] = []
@@ -15622,7 +15949,13 @@ def _test_select_best_model_like_semio_ts(models: list[dict[str, typing.Any]], s
     filtered_models = [model for model in models if _test_contains_all_tags(model, selected_tag_guids)]
     if len(filtered_models) == 0:
         return None
-    indexed_scores = [_test_jaccard_tag_guids([t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])], selected_tag_guids) for model in filtered_models]
+    indexed_scores = [
+        _test_jaccard_tag_guids(
+            [t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])],
+            selected_tag_guids,
+        )
+        for model in filtered_models
+    ]
     max_score = max(indexed_scores)
     max_score_index = indexed_scores.index(max_score)
     return filtered_models[max_score_index]
@@ -15633,7 +15966,10 @@ def _test_create_glb_blob(vertices: list[tuple[float, float, float]], faces: lis
         padding = (-len(data)) % 4
         return data + fill * padding
 
-    position_bytes = struct.pack("<" + "f" * (len(vertices) * 3), *(value for vertex in vertices for value in vertex))
+    position_bytes = struct.pack(
+        "<" + "f" * (len(vertices) * 3),
+        *(value for vertex in vertices for value in vertex),
+    )
     index_values = [index for face in faces for index in face]
     index_bytes = struct.pack("<" + "H" * len(index_values), *index_values)
     position_bytes = _pad4(position_bytes, b"\x00")
@@ -15652,8 +15988,18 @@ def _test_create_glb_blob(vertices: list[tuple[float, float, float]], faces: lis
             "asset": {"version": "2.0"},
             "buffers": [{"byteLength": len(binary_chunk)}],
             "bufferViews": [
-                {"buffer": 0, "byteOffset": 0, "byteLength": position_length, "target": 34962},
-                {"buffer": 0, "byteOffset": position_length, "byteLength": index_length, "target": 34963},
+                {
+                    "buffer": 0,
+                    "byteOffset": 0,
+                    "byteLength": position_length,
+                    "target": 34962,
+                },
+                {
+                    "buffer": 0,
+                    "byteOffset": position_length,
+                    "byteLength": index_length,
+                    "target": 34963,
+                },
             ],
             "accessors": [
                 {
@@ -15802,8 +16148,14 @@ class TestRoundtrip:
                 assert areKitsDictEqual(kit_dict, imported_zip.to_dict())
                 assert imported_zip_files == files
 
-                edited_json = edit_remote_kit(json_uri, _test_build_workflow_diff("Workflow Remote Json Edited", "asset-remote-json.txt"))
-                edited_zip = edit_remote_kit(zip_uri, _test_build_workflow_diff("Workflow Remote Zip Edited", "asset-remote-zip.txt"))
+                edited_json = edit_remote_kit(
+                    json_uri,
+                    _test_build_workflow_diff("Workflow Remote Json Edited", "asset-remote-json.txt"),
+                )
+                edited_zip = edit_remote_kit(
+                    zip_uri,
+                    _test_build_workflow_diff("Workflow Remote Zip Edited", "asset-remote-zip.txt"),
+                )
 
                 roundtrip_json, json_files = import_remote_kit(json_uri)
                 roundtrip_zip, zip_files = import_remote_kit(zip_uri)
@@ -15823,7 +16175,10 @@ class TestRoundtrip:
 
         def test_temporary_kit_edit_via_diff(self):
             kit_dict = _test_build_workflow_kit()
-            edited = edit_temporary_kit(KitData(kit_dict), _test_build_workflow_diff("Workflow Temp Edited", "asset-temp.txt"))
+            edited = edit_temporary_kit(
+                KitData(kit_dict),
+                _test_build_workflow_diff("Workflow Temp Edited", "asset-temp.txt"),
+            )
 
             assert edited.name == "Workflow Temp Edited"
             assert edited.to_dict()["files"][0]["name"] == "asset-temp.txt"
@@ -15871,6 +16226,51 @@ class TestChange:
             assert areKitsDictEqual(applied_forward, kit_diffed)
             applied_inverse = applyKitDiffDict(kit_diffed, change.backward)
             assert areKitsDictEqual(applied_inverse, kit_original)
+
+
+class TestDelete:
+    class TestNakaginCapsuleTower:
+        def test_delete_third_tambour_and_first_small_tower_connection(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower")
+            selection = _test_load_json("nakagin-capsule-tower.deleted.selection.semio.json")
+            expected_diff = _test_load_json("nakagin-capsule-tower.deleted.design.diff.semio.json")
+
+            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+
+            computed_diff = deletePiecesAndConnectionsInDesignDict(design, piece_guids, connection_guids)
+
+            # Verify removed pieces
+            computed_removed = computed_diff.get("pieces", {}).get("removed", [])
+            expected_removed = expected_diff.get("pieces", {}).get("removed", [])
+            assert len(computed_removed) == len(expected_removed), f"Removed pieces count mismatch: {len(computed_removed)} vs {len(expected_removed)}"
+            for c, e in zip(computed_removed, expected_removed):
+                assert c["guid"] == e["guid"], f"Removed piece guid mismatch: {c['guid']} vs {e['guid']}"
+
+            # Verify updated (fixed) pieces
+            computed_updated = computed_diff.get("pieces", {}).get("updated", [])
+            expected_updated = expected_diff.get("pieces", {}).get("updated", [])
+            assert len(computed_updated) == len(expected_updated), f"Updated pieces count mismatch: {len(computed_updated)} vs {len(expected_updated)}"
+            computed_guids = sorted(u.get("piece", {}).get("guid", "") for u in computed_updated)
+            expected_guids = sorted(u.get("piece", {}).get("guid", "") for u in expected_updated)
+            assert computed_guids == expected_guids, f"Updated piece guids mismatch"
+            for u in computed_updated:
+                diff = u["diff"]
+                plane = diff["plane"]
+                center = diff["center"]
+                assert plane["origin"] == {"x": 0, "y": 0, "z": 0}
+                assert plane["xAxis"] == {"x": 1, "y": 0, "z": 0}
+                assert plane["yAxis"] == {"x": 0, "y": 1, "z": 0}
+                assert center == {"u": 0, "v": 0}
+
+            # Verify removed connections
+            computed_conn_removed = computed_diff.get("connections", {}).get("removed", [])
+            expected_conn_removed = expected_diff.get("connections", {}).get("removed", [])
+            assert len(computed_conn_removed) == len(expected_conn_removed), f"Removed connections count mismatch: {len(computed_conn_removed)} vs {len(expected_conn_removed)}"
+            computed_conn_guids = sorted(r["guid"] for r in computed_conn_removed)
+            expected_conn_guids = sorted(r["guid"] for r in expected_conn_removed)
+            assert computed_conn_guids == expected_conn_guids, "Removed connection guids mismatch"
 
 
 class TestValidation:
@@ -15924,7 +16324,10 @@ class TestKitFilterDesign:
         assert len(filtered_design.get("pieces", [])) == len(design.get("pieces", []))
 
         for expected_type in expected.get("types", []):
-            filtered_type = next((t for t in filtered.get("types", []) if t.get("guid") == expected_type.get("guid")), None)
+            filtered_type = next(
+                (t for t in filtered.get("types", []) if t.get("guid") == expected_type.get("guid")),
+                None,
+            )
             assert filtered_type is not None
             assert len(filtered_type.get("models", [])) == len(expected_type.get("models", []))
 
@@ -16400,7 +16803,12 @@ class TestKitKind:
             assert kind == kind.value
 
     def test_kit_kind_file_roundtrip(self):
-        kit_dict = {"name": "FileTest", "uri": "file:///test.json", "types": [], "designs": []}
+        kit_dict = {
+            "name": "FileTest",
+            "uri": "file:///test.json",
+            "types": [],
+            "designs": [],
+        }
         kit = Kit.parse(kit_dict)
         assert kit.name == "FileTest"
         assert kit.uri == "file:///test.json"

@@ -10447,8 +10447,8 @@ mod tests {
             let designs = kit.designs.as_ref().expect("Kit has no designs");
             let design = designs
                 .iter()
-                .find(|d| d.name == "nakagin capsule tower")
-                .expect("Design 'nakagin capsule tower' not found");
+                .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                .expect("Design 'Nakagin Capsule Tower' not found");
 
             // Load selection
             let selection_path =
@@ -10470,27 +10470,27 @@ mod tests {
                 .map(|c| c["guid"].as_str().unwrap().to_string())
                 .collect();
 
-            // Load expected diff
+            // Load expected diff as JSON value (no guid field required)
             let diff_path =
                 Path::new(ASSETS_DIR).join("nakagin-capsule-tower.deleted.design.diff.semio.json");
             let diff_data = fs::read_to_string(&diff_path).expect("Failed to read diff asset");
-            let expected_diff: DesignDiff =
+            let expected_json: serde_json::Value =
                 serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
 
             // Compute diff
             let computed_diff =
                 delete_pieces_and_connections_in_design(design, &piece_guids, &connection_guids);
 
+            // Serialize computed diff to JSON for comparison
+            let computed_json: serde_json::Value =
+                serde_json::to_value(&computed_diff).expect("Failed to serialize computed diff");
+
             // Verify removed pieces
-            let computed_removed = computed_diff
-                .pieces
-                .as_ref()
-                .and_then(|p| p.removed.as_ref())
+            let computed_removed = computed_json["pieces"]["removed"]
+                .as_array()
                 .expect("No removed pieces in computed diff");
-            let expected_removed = expected_diff
-                .pieces
-                .as_ref()
-                .and_then(|p| p.removed.as_ref())
+            let expected_removed = expected_json["pieces"]["removed"]
+                .as_array()
                 .expect("No removed pieces in expected diff");
             assert_eq!(
                 computed_removed.len(),
@@ -10498,19 +10498,15 @@ mod tests {
                 "Removed pieces count mismatch"
             );
             for (c, e) in computed_removed.iter().zip(expected_removed.iter()) {
-                assert_eq!(c.guid, e.guid, "Removed piece guid mismatch");
+                assert_eq!(c["guid"], e["guid"], "Removed piece guid mismatch");
             }
 
             // Verify updated (fixed) pieces
-            let computed_updated = computed_diff
-                .pieces
-                .as_ref()
-                .and_then(|p| p.updated.as_ref())
+            let computed_updated = computed_json["pieces"]["updated"]
+                .as_array()
                 .expect("No updated pieces in computed diff");
-            let expected_updated = expected_diff
-                .pieces
-                .as_ref()
-                .and_then(|p| p.updated.as_ref())
+            let expected_updated = expected_json["pieces"]["updated"]
+                .as_array()
                 .expect("No updated pieces in expected diff");
             assert_eq!(
                 computed_updated.len(),
@@ -10519,43 +10515,42 @@ mod tests {
                 computed_updated.len(),
                 expected_updated.len()
             );
-            let mut computed_guids: Vec<&str> =
-                computed_updated.iter().map(|u| u.guid.as_str()).collect();
+            let mut computed_guids: Vec<&str> = computed_updated
+                .iter()
+                .map(|u| u["piece"]["guid"].as_str().unwrap())
+                .collect();
             computed_guids.sort();
-            let mut expected_guids: Vec<&str> =
-                expected_updated.iter().map(|u| u.guid.as_str()).collect();
+            let mut expected_guids: Vec<&str> = expected_updated
+                .iter()
+                .map(|u| u["piece"]["guid"].as_str().unwrap())
+                .collect();
             expected_guids.sort();
             assert_eq!(
                 computed_guids, expected_guids,
                 "Updated piece guids mismatch"
             );
             for u in computed_updated {
-                let flat_plane = Plane::default();
-                let zero_center = Coord::default();
-                let plane = u.diff.plane.as_ref().unwrap().as_ref().unwrap();
-                let center = u.diff.center.as_ref().unwrap().as_ref().unwrap();
-                assert!(
-                    planes_equal(plane, &flat_plane),
-                    "Fixed piece {} should have flat plane",
-                    u.guid
-                );
-                assert!(
-                    float_eq(center.u, zero_center.u) && float_eq(center.v, zero_center.v),
-                    "Fixed piece {} should have zero center",
-                    u.guid
-                );
+                let plane = &u["diff"]["plane"];
+                let center = &u["diff"]["center"];
+                assert_eq!(plane["origin"]["x"], 0.0, "flat plane origin x");
+                assert_eq!(plane["origin"]["y"], 0.0, "flat plane origin y");
+                assert_eq!(plane["origin"]["z"], 0.0, "flat plane origin z");
+                assert_eq!(plane["xAxis"]["x"], 1.0, "flat plane xAxis x");
+                assert_eq!(plane["xAxis"]["y"], 0.0, "flat plane xAxis y");
+                assert_eq!(plane["xAxis"]["z"], 0.0, "flat plane xAxis z");
+                assert_eq!(plane["yAxis"]["x"], 0.0, "flat plane yAxis x");
+                assert_eq!(plane["yAxis"]["y"], 1.0, "flat plane yAxis y");
+                assert_eq!(plane["yAxis"]["z"], 0.0, "flat plane yAxis z");
+                assert_eq!(center["u"], 0.0, "zero center u");
+                assert_eq!(center["v"], 0.0, "zero center v");
             }
 
             // Verify removed connections
-            let computed_conn_removed = computed_diff
-                .connections
-                .as_ref()
-                .and_then(|c| c.removed.as_ref())
+            let computed_conn_removed = computed_json["connections"]["removed"]
+                .as_array()
                 .expect("No removed connections in computed diff");
-            let expected_conn_removed = expected_diff
-                .connections
-                .as_ref()
-                .and_then(|c| c.removed.as_ref())
+            let expected_conn_removed = expected_json["connections"]["removed"]
+                .as_array()
                 .expect("No removed connections in expected diff");
             assert_eq!(
                 computed_conn_removed.len(),
@@ -10566,12 +10561,12 @@ mod tests {
             );
             let mut computed_conn_guids: Vec<&str> = computed_conn_removed
                 .iter()
-                .map(|r| r.guid.as_str())
+                .map(|r| r["guid"].as_str().unwrap())
                 .collect();
             computed_conn_guids.sort();
             let mut expected_conn_guids: Vec<&str> = expected_conn_removed
                 .iter()
-                .map(|r| r.guid.as_str())
+                .map(|r| r["guid"].as_str().unwrap())
                 .collect();
             expected_conn_guids.sort();
             assert_eq!(

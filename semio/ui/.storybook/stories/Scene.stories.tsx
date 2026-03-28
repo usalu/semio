@@ -99,4 +99,37 @@ export const FeaturesDisabled: Story = {
   render: (args) => frame(<Scene {...args} />),
 };
 
+export const ZoomToDesign: Story = {
+  args: {
+    design: nakaginDesign,
+    kit: minimalKit,
+    designDiff,
+    zoomTarget: "design",
+    title: "Zoom To Design",
+  },
+  render: (args) => frame(<Scene {...args} />),
+};
+
+export const ZoomToDiff: Story = {
+  args: {
+    design: nakaginDesign,
+    kit: minimalKit,
+    designDiff,
+    zoomTarget: "diff",
+    title: "Zoom To Diff",
+  },
+  render: (args) => frame(<Scene {...args} />),
+};
+
+export const ZoomNone: Story = {
+  args: {
+    design: nakaginDesign,
+    kit: minimalKit,
+    designDiff,
+    zoomTarget: "none",
+    title: "Zoom None",
+  },
+  render: (args) => frame(<Scene {...args} />),
+};
+
 // #endregion 🔖Scene

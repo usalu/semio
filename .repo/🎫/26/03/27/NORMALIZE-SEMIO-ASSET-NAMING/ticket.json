@@ -2,11 +2,13 @@
   "title": "Normalize Semio Asset Naming",
   "status": "open",
   "description": "Normalize all semio asset filenames to clean dot-separated naming (e.g. metabolism.kit.semio.json), and update all code references accordingly. Ensure build/tests still work.",
+  "summary": "Implemented deletePiecesAndConnectionsInDesign across all 5 programming languages (C#, TypeScript, Rust, Python, Go). The function takes a design, list of piece GUIDs, and list of connection GUIDs to delete, then returns a DesignDiff that: (1) removes the specified pieces, (2) removes stale connections referencing deleted pieces, (3) updates pieces that become fixed (parent connection removed) with flat plane and zero center. Created test assets for nakagin capsule tower deletion scenario (third tambour of large tower + first connection of small tower). Refactored existing removePiecesAndConnectionsFromDesign in TypeScript to use the new function. Fixed pre-existing net48 Range syntax error in Semio.cs. All tests pass across all languages.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1129"
   },
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪7b347d1a446b4ed19c5aaf0115565a28"
+    "⚪7b347d1a446b4ed19c5aaf0115565a28",
+    "⚪b3ecf657b72340cc93c6c99a7283398b"
   ]
 }

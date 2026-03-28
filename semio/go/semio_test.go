@@ -27,6 +27,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -509,6 +510,115 @@ func TestChange(t *testing.T) {
 			appliedInverse := ApplyKitDiff(kitDiffed, change.Backward)
 			if !AreKitsEqual(appliedInverse, kitOriginal) {
 				t.Error("DiffedKit + InverseDiff should equal original Kit")
+			}
+		})
+	})
+}
+
+func TestDelete(t *testing.T) {
+	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
+		t.Run("Delete Third Tambour And First Small Tower Connection", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+			var design *Design
+			for i := range kit.Designs {
+				if kit.Designs[i].Name == "Nakagin Capsule Tower" {
+					design = &kit.Designs[i]
+					break
+				}
+			}
+			if design == nil {
+				t.Fatal("Design 'nakagin capsule tower' not found")
+			}
+
+			// Load selection
+			type Selection struct {
+				Pieces      []PieceId      `json:"pieces"`
+				Connections []ConnectionId `json:"connections"`
+			}
+			var selection Selection
+			loadJSON(t, "nakagin-capsule-tower.deleted.selection.semio.json", &selection)
+
+			pieceGuids := make([]string, len(selection.Pieces))
+			for i, p := range selection.Pieces {
+				pieceGuids[i] = p.Guid
+			}
+			connectionGuids := make([]string, len(selection.Connections))
+			for i, c := range selection.Connections {
+				connectionGuids[i] = c.Guid
+			}
+
+			// Load expected diff
+			var expectedDiff DesignDiff
+			loadJSON(t, "nakagin-capsule-tower.deleted.design.diff.semio.json", &expectedDiff)
+
+			// Compute diff
+			computedDiff := DeletePiecesAndConnectionsInDesign(*design, pieceGuids, connectionGuids)
+
+			// Verify removed pieces
+			if computedDiff.Pieces == nil {
+				t.Fatal("No pieces diff in computed result")
+			}
+			if expectedDiff.Pieces == nil {
+				t.Fatal("No pieces diff in expected result")
+			}
+			if len(computedDiff.Pieces.Removed) != len(expectedDiff.Pieces.Removed) {
+				t.Fatalf("Removed pieces count mismatch: %d vs %d",
+					len(computedDiff.Pieces.Removed), len(expectedDiff.Pieces.Removed))
+			}
+			for i, c := range computedDiff.Pieces.Removed {
+				if c.Guid != expectedDiff.Pieces.Removed[i].Guid {
+					t.Errorf("Removed piece guid mismatch at %d: %s vs %s", i, c.Guid, expectedDiff.Pieces.Removed[i].Guid)
+				}
+			}
+
+			// Verify updated (fixed) pieces
+			if len(computedDiff.Pieces.Updated) != len(expectedDiff.Pieces.Updated) {
+				t.Fatalf("Updated pieces count mismatch: %d vs %d",
+					len(computedDiff.Pieces.Updated), len(expectedDiff.Pieces.Updated))
+			}
+			computedGuids := make([]string, len(computedDiff.Pieces.Updated))
+			for i, u := range computedDiff.Pieces.Updated {
+				computedGuids[i] = u.Piece.Guid
+			}
+			expectedGuids := make([]string, len(expectedDiff.Pieces.Updated))
+			for i, u := range expectedDiff.Pieces.Updated {
+				expectedGuids[i] = u.Piece.Guid
+			}
+			sort.Strings(computedGuids)
+			sort.Strings(expectedGuids)
+			for i := range computedGuids {
+				if computedGuids[i] != expectedGuids[i] {
+					t.Errorf("Updated piece guid mismatch at %d: %s vs %s", i, computedGuids[i], expectedGuids[i])
+				}
+			}
+
+			// Verify removed connections
+			if computedDiff.Connections == nil {
+				t.Fatal("No connections diff in computed result")
+			}
+			if expectedDiff.Connections == nil {
+				t.Fatal("No connections diff in expected result")
+			}
+			if len(computedDiff.Connections.Removed) != len(expectedDiff.Connections.Removed) {
+				t.Fatalf("Removed connections count mismatch: %d vs %d",
+					len(computedDiff.Connections.Removed), len(expectedDiff.Connections.Removed))
+			}
+			computedConnGuids := make([]string, len(computedDiff.Connections.Removed))
+			for i, r := range computedDiff.Connections.Removed {
+				computedConnGuids[i] = r.Guid
+			}
+			expectedConnGuids := make([]string, len(expectedDiff.Connections.Removed))
+			for i, r := range expectedDiff.Connections.Removed {
+				expectedConnGuids[i] = r.Guid
+			}
+			sort.Strings(computedConnGuids)
+			sort.Strings(expectedConnGuids)
+			for i := range computedConnGuids {
+				if computedConnGuids[i] != expectedConnGuids[i] {
+					t.Errorf("Removed connection guid mismatch at %d: %s vs %s", i, computedConnGuids[i], expectedConnGuids[i])
+				}
 			}
 		})
 	})
