@@ -29,13 +29,9 @@ const WINDOWS: AlgorithmWindowDef[] = [
 function DragFrame() {
   const language = useAlgorithmLanguage();
   const kit = metabolismKit as any;
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
+  const initialSelection = React.useMemo(() => (baseDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid), []);
+  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(initialSelection);
   const [vec, setVec] = React.useState({ u: 1, v: -2 });
-
-  React.useEffect(() => {
-    if (selectedPieceGuids.length > 0) return;
-    setSelectedPieceGuids((baseDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
-  }, [baseDesign, selectedPieceGuids.length]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({

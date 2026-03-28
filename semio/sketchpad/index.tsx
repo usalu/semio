@@ -37781,7 +37781,7 @@ const ModelDesign: FC = () => {
       .map((piece) => ({
         guid: piece.guid,
         plane: piece.plane,
-        isTransformable: !piece.isLocked && piece.plane !== undefined,
+        isTransformable: !piece.isLocked && piece.plane !== undefined && piece.center !== undefined,
       }));
   }, [selection.pieces, flatDesign?.pieces]);
 

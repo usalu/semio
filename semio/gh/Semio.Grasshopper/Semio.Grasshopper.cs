@@ -11223,7 +11223,7 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
 
             foreach (var p in pieces)
             {
-                if (p.Plane != null)
+                if (p.Plane != null && p.Center != null)
                 {
                     piecePlanes[p.Guid] = p.Plane;
                     visited.Add(p.Guid);

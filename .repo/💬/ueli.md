@@ -113,7 +113,10 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
-Create a deletePiecesAndConnectionsInDesign(pieces:Guid[], connections:Guid[]):DesignDiff function that returns the correct diff (e.g. remove all stale connections besides the pieces, apply the flat plane and center to the pieces that are suddenly fixed because their parent connection has been removed).
+
+Fixed pieces MUST have a plane and a center simultaneously. Currently some programming languages/code/docs/algorithms/tests only assumes planes.
+You MUST refactor/extend it everywhere.
+
 Refactor all existing code to use this.
 Create a test-case where you delete the third tambour of the large tower and the first connection from the tambour of the small tower with two assets:
 `nakagin-capsule-tower.deleted.design.diff.semio.json`
@@ -207,6 +210,9 @@ There MUST be only one schema, no migrations or legacy api support.
 ## 👤semio📚ui
 
 semio ui:
+The scene diff shows a lot deleted pieces which are not deleted.
+Only modified pieces are different to diagram. The difference is that child pieces of modified connections are are also displayed as modified because connections are otherwise invisible in the scene.
+
 semio ui storybook:
 Use nakagin-capsule-tower from the semio assets metabolism as example for all designs. Make sure the depedency doesnt leak into the final build and is only dev only.
 

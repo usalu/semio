@@ -26,13 +26,9 @@ const WINDOWS: AlgorithmWindowDef[] = [
 
 function MoveFrame() {
   const kit = metabolismKit as any;
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
+  const initialSelection = React.useMemo(() => (nakaginDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid), []);
+  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(initialSelection);
   const [vec, setVec] = React.useState({ u: 1, v: -2 });
-
-  React.useEffect(() => {
-    if (selectedPieceGuids.length > 0) return;
-    setSelectedPieceGuids((nakaginDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
-  }, [selectedPieceGuids.length]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({

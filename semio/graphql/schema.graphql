@@ -843,12 +843,12 @@ input PieceInputNode {
   description: String = ""
 
   """
-  ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
+  ◳ The optional plane of the piece. Fixed pieces MUST have both plane and center set simultaneously.
   """
   plane: PlaneInputNode = null
 
   """
-  📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
+  📺 The optional center of the piece in the diagram. Fixed pieces MUST have both plane and center set simultaneously.
   """
   center: CoordInputNode = null
 

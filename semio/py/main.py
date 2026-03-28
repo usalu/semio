@@ -7782,17 +7782,25 @@ def buildPieceGraph(design: Design | dict) -> networkx.Graph:
 
 def findFixedPieces(design: Design | dict) -> list[str]:
     """Find all pieces that are fixed in the design hierarchy.
-    findFixedPieces MUST return pieces that have no incoming connections.
+    findFixedPieces MUST return pieces that have both plane and center defined.
     [👤semio📚py💻semio🔖domain🔖validation🔖graphoperations🛠️findfixedpieces](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Graph%20Operations/d/i/findFixedPieces)
     """
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
     result = []
     for p in pieces:
         if isinstance(p, dict):
-            if p.get("plane") is not None:
+            hasPlane = p.get("plane") is not None
+            hasCenter = p.get("center") is not None
+            if hasPlane != hasCenter:
+                raise ValueError(f"Piece {p.get('guid')} has inconsistent plane and center")
+            if hasPlane:
                 result.append(p["guid"])
         else:
-            if p.plane is not None:
+            hasPlane = p.plane is not None
+            hasCenter = p.center is not None
+            if hasPlane != hasCenter:
+                raise ValueError(f"Piece {p.guid} has inconsistent plane and center")
+            if hasPlane:
                 result.append(p.guid)
     return result
 
@@ -8105,7 +8113,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         rootNode = None
         for nodeId in component:
             piece = pieceMap.get(nodeId)
-            if piece and piece.get("plane") is not None:
+            if piece and piece.get("plane") is not None and piece.get("center") is not None:
                 rootNode = nodeId
                 break
         if rootNode is None and component:
@@ -8114,7 +8122,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
             continue
         rootPiece = pieceMap[rootNode]
         piecePaths[rootNode] = rootNode
-        if rootPiece.get("plane"):
+        if rootPiece.get("plane") and rootPiece.get("center") is not None:
             piecePlanes[rootNode] = rootPiece["plane"]
         else:
             piecePlanes[rootNode] = {
@@ -13145,7 +13153,7 @@ def export_design_model(
             piece_guid = piece.get("guid")
             if piece_guid is None:
                 continue
-            if piece.get("plane") is not None:
+            if piece.get("plane") is not None and piece.get("center") is not None:
                 piece_planes[piece_guid] = piece.get("plane")
                 visited.add(piece_guid)
                 queue.append(piece_guid)
@@ -13350,7 +13358,7 @@ def export_design_model(
 
     queue: list[str] = []
     for p in pieces:
-        if p.plane is not None:
+        if p.plane is not None and p.center is not None:
             piece_planes[p.id_] = p.plane
             visited.add(p.id_)
             queue.append(p.id_)

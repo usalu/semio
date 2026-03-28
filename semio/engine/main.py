@@ -41,6 +41,7 @@ import signal
 import sqlite3
 import sys
 import typing
+import uuid
 import zipfile
 
 import fastapi
@@ -1535,6 +1536,15 @@ async def app_kit_viewer() -> fastapi.Response:
     )
 
 
+@rest.get("/app/payload/{token}")
+async def app_payload(token: str) -> fastapi.responses.JSONResponse:
+    """Return the full MCP app payload by token. Used by MCP app iframes to bypass host truncation."""
+    payload = _mcp_app_payloads.get(token)
+    if payload is None:
+        return fastapi.responses.JSONResponse({"error": "Payload not found or expired"}, status_code=404)
+    return fastapi.responses.JSONResponse(payload, headers={"Access-Control-Allow-Origin": "*"})
+
+
 @rest.get("/kits/{encodedKitUri}")
 async def kit(
     request: fastapi.Request,
@@ -1922,6 +1932,7 @@ _mcp_session_transactions: dict[int, Transaction] = {}
 _mcp_session_transaction_rollback: set[int] = set()
 _mcp_session_selection: dict[int, dict[str, list[str]]] = {}
 _mcp_session_camera: dict[int, dict[str, typing.Any]] = {}
+_mcp_app_payloads: dict[str, dict[str, typing.Any]] = {}
 
 
 def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
@@ -2980,10 +2991,15 @@ def clear_current_selection(ctx: Context) -> dict:
 
 def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = False) -> CallToolResult:
     """Build tools/call result with structuredContent so MCP App hosts can hydrate the iframe without relying on text-only content.
-    Duplicates JSON in an EmbeddedResource so hosts that truncate structuredContent or the first text block may still deliver the full payload via the resource contents.
+    Stores the full payload server-side and includes a fetchUrl so the MCP app iframe can bypass host truncation.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️asmcpapptoolresult](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_as_mcp_app_tool_result)
     """
-    text = json.dumps(payload)
+    token = uuid.uuid4().hex
+    _mcp_app_payloads[token] = payload
+    fetch_url = f"http://localhost:{PORT}/api/app/payload/{token}"
+    lightweight = {k: v for k, v in payload.items() if k not in ("design", "kit")}
+    lightweight["fetchUrl"] = fetch_url
+    text = json.dumps(lightweight)
     return CallToolResult(
         content=[
             TextContent(type="text", text=text),
@@ -2996,7 +3012,7 @@ def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = 
                 ),
             ),
         ],
-        structuredContent=payload,
+        structuredContent=lightweight,
         isError=is_error,
     )
 

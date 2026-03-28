@@ -25,12 +25,8 @@ const WINDOWS: AlgorithmWindowDef[] = [
 
 function ClusterFrame() {
   const kit = metabolismKit as any;
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    if (selectedPieceGuids.length > 0) return;
-    setSelectedPieceGuids((nakaginDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
-  }, [selectedPieceGuids.length]);
+  const initialSelection = React.useMemo(() => (nakaginDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid), []);
+  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(initialSelection);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({

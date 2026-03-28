@@ -23,7 +23,7 @@
 // #endregion 🔖Header
 
 import { Breadcrumb, Button, Section } from "@elements/ui/elements";
-import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Bounds, Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useBounds, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
 import {
   applyDesignDiff,
@@ -1152,6 +1152,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const { ref, size } = useElementSize<HTMLDivElement>();
   const panPointerIdRef = React.useRef<number | null>(null);
   const panOriginRef = React.useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  const didPanDragRef = React.useRef(false);
   const [isPanning, setIsPanning] = React.useState(false);
   const innerPadding = padding;
   const drawableWidth = Math.max(size.width - innerPadding * 2, 1);
@@ -1265,6 +1266,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
         panX: resolvedPan.x,
         panY: resolvedPan.y,
       };
+      didPanDragRef.current = false;
       setIsPanning(true);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
@@ -1303,6 +1305,11 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
 
   const handleSvgClick = React.useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
+      // Suppress deselection after a pan drag.
+      if (didPanDragRef.current) {
+        didPanDragRef.current = false;
+        return;
+      }
       // Only clear selection if clicking on the SVG background (not on child elements)
       if (event.target === event.currentTarget) {
         clearSelection();
@@ -1316,6 +1323,9 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
       if (panPointerIdRef.current !== event.pointerId) return;
       const deltaX = event.clientX - panOriginRef.current.x;
       const deltaY = event.clientY - panOriginRef.current.y;
+      if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+        didPanDragRef.current = true;
+      }
       setResolvedPan({
         x: panOriginRef.current.panX + deltaX,
         y: panOriginRef.current.panY + deltaY,
@@ -1324,14 +1334,23 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
     [setResolvedPan],
   );
 
-  const handlePointerEnd = React.useCallback((event: React.PointerEvent<SVGSVGElement>) => {
-    if (panPointerIdRef.current !== event.pointerId) return;
-    panPointerIdRef.current = null;
-    setIsPanning(false);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  }, []);
+  const handlePointerEnd = React.useCallback(
+    (event: React.PointerEvent<SVGSVGElement>) => {
+      if (panPointerIdRef.current !== event.pointerId) return;
+      panPointerIdRef.current = null;
+      setIsPanning(false);
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      // Deselect on background click (no drag). Pointer capture suppresses the
+      // click event, so we handle deselection here instead of in handleSvgClick.
+      if (!didPanDragRef.current) {
+        clearSelection();
+      }
+      didPanDragRef.current = false;
+    },
+    [clearSelection],
+  );
 
   const selectPiece = React.useCallback(
     (pieceGuid: string) => {
@@ -1911,7 +1930,7 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
   const kindsByGuid = new Map((kit.types ?? []).map((kind) => [kind.guid, kind] as const));
   const filesByGuid = new Map((kit.files ?? []).map((file) => [file.guid, file] as const));
   return pieces
-    .filter(({ piece }) => piece.plane)
+    .filter(({ piece }) => piece.plane && piece.center)
     .map(({ piece, status }) => {
       const kindGuid = piece.type?.guid;
       const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
@@ -1942,8 +1961,11 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
 
   const pieceMap = new Map<string, ScenePieceAsset>();
   const upsertPiece = (piece: Piece, status: DiagramEntityStatus) => {
-    if (!piece.guid || !piece.plane) return;
-    pieceMap.set(piece.guid, { piece, status });
+    if (!piece.guid) return;
+    const existing = pieceMap.get(piece.guid);
+    const resolvedPiece = piece.plane && piece.center ? piece : existing?.piece ? { ...existing.piece, ...piece, plane: existing.piece.plane, center: existing.piece.center } : undefined;
+    if (!resolvedPiece?.plane || !resolvedPiece?.center) return;
+    pieceMap.set(piece.guid, { piece: resolvedPiece, status });
   };
 
   (flatBaseDesign.pieces ?? []).forEach((piece) => {
@@ -1970,7 +1992,7 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
     if (!connection.guid) return;
     const sourcePiece = piecesByGuid.get(connection.connected.piece.guid);
     const targetPiece = piecesByGuid.get(connection.connecting.piece.guid);
-    if (!sourcePiece?.plane || !targetPiece?.plane) return;
+    if (!sourcePiece?.plane || !targetPiece?.plane || !sourcePiece?.center || !targetPiece?.center) return;
     connectionMap.set(connection.guid, {
       connection,
       sourcePiece,
@@ -2094,9 +2116,9 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
   const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
 
   const matrix = React.useMemo(() => {
-    if (!piece.plane) return null;
+    if (!piece.plane || !piece.center) return null;
     return toScenePieceMatrix(piece.plane as Plane);
-  }, [piece.plane]);
+  }, [piece.plane, piece.center]);
 
   const emissiveColor = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
   const edgeColor = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
@@ -2163,8 +2185,8 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
   const activeColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6"), [status]);
   const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
 
-  const start = React.useMemo(() => (sourcePiece.plane ? toSceneVector(sourcePiece.plane.origin) : null), [sourcePiece.plane]);
-  const end = React.useMemo(() => (targetPiece.plane ? toSceneVector(targetPiece.plane.origin) : null), [targetPiece.plane]);
+  const start = React.useMemo(() => (sourcePiece.plane && sourcePiece.center ? toSceneVector(sourcePiece.plane.origin) : null), [sourcePiece.plane, sourcePiece.center]);
+  const end = React.useMemo(() => (targetPiece.plane && targetPiece.center ? toSceneVector(targetPiece.plane.origin) : null), [targetPiece.plane, targetPiece.center]);
   const transform = React.useMemo(() => {
     if (!start || !end) return null;
     const direction = end.clone().sub(start);
@@ -2297,6 +2319,30 @@ interface SceneInnerContentProps {
   children?: React.ReactNode;
 }
 
+const buildSceneZoomBox = (snapshot: SceneSnapshot, zoomTarget: ZoomTarget): THREE.Box3 | null => {
+  if (zoomTarget === "none") return null;
+  const pieces = zoomTarget === "diff" ? snapshot.pieces.filter((a) => a.status !== "default") : snapshot.pieces;
+  const origins = pieces.filter((a) => a.piece.plane && a.piece.center).map((a) => toSceneVector(a.piece.plane!.origin));
+  if (origins.length === 0) return zoomTarget === "diff" ? buildSceneZoomBox(snapshot, "design") : null;
+  const box = new THREE.Box3();
+  origins.forEach((o) => box.expandByPoint(o));
+  return box;
+};
+
+const SceneAutoFit: React.FC<{ zoomTarget: ZoomTarget; snapshot: SceneSnapshot }> = ({ zoomTarget, snapshot }) => {
+  const bounds = useBounds();
+  const fittedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (fittedRef.current) return;
+    const box = buildSceneZoomBox(snapshot, zoomTarget);
+    if (box) {
+      bounds.refresh(box).clip().fit();
+    }
+    fittedRef.current = true;
+  }, [bounds, snapshot, zoomTarget]);
+  return null;
+};
+
 const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGizmo, zoomTarget, snapshot, camera: initialCamera, onCameraChange, children }) => {
   const { camera: threeCamera } = useThree();
   const controlsRef = React.useRef<any>(null);
@@ -2313,51 +2359,25 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
 
   React.useEffect(() => {
     if (!threeCamera || !controlsRef.current || cameraRestoredRef.current) return;
-    isUpdatingCameraRef.current = true;
-    if (initialCamera) {
-      requestAnimationFrame(() => {
-        if (!controlsRef.current) return;
-        threeCamera.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
-        threeCamera.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
-        const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
-        controlsRef.current.target.copy(target);
-        threeCamera.updateProjectionMatrix();
-        controlsRef.current.update();
-        setTimeout(() => {
-          isUpdatingCameraRef.current = false;
-        }, 300);
-      });
-    } else {
-      requestAnimationFrame(() => {
-        if (!controlsRef.current) return;
-        const targetPieces = zoomTarget === "none" ? [] : zoomTarget === "diff" ? snapshot.pieces.filter((a) => a.status !== "default") : snapshot.pieces;
-        const origins = targetPieces.filter((a) => a.piece.plane).map((a) => toSceneVector(a.piece.plane!.origin));
-        if (origins.length > 0) {
-          const box = new THREE.Box3();
-          origins.forEach((o) => box.expandByPoint(o));
-          const center = new THREE.Vector3();
-          box.getCenter(center);
-          const size = new THREE.Vector3();
-          box.getSize(size);
-          const maxDim = Math.max(size.x, size.y, size.z, 1);
-          const dist = maxDim * 1.5;
-          threeCamera.position.set(center.x + dist, center.y + dist, center.z + dist);
-          threeCamera.up.set(0, 1, 0);
-          controlsRef.current.target.copy(center);
-        } else {
-          threeCamera.position.set(10, 10, 10);
-          threeCamera.up.set(0, 1, 0);
-          controlsRef.current.target.set(0, 0, 0);
-        }
-        threeCamera.updateProjectionMatrix();
-        controlsRef.current.update();
-        setTimeout(() => {
-          isUpdatingCameraRef.current = false;
-        }, 300);
-      });
+    if (!initialCamera) {
+      cameraRestoredRef.current = true;
+      return;
     }
+    isUpdatingCameraRef.current = true;
+    requestAnimationFrame(() => {
+      if (!controlsRef.current) return;
+      threeCamera.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
+      threeCamera.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
+      const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
+      controlsRef.current.target.copy(target);
+      threeCamera.updateProjectionMatrix();
+      controlsRef.current.update();
+      setTimeout(() => {
+        isUpdatingCameraRef.current = false;
+      }, 300);
+    });
     cameraRestoredRef.current = true;
-  }, [initialCamera, threeCamera, zoomTarget, snapshot]);
+  }, [initialCamera, threeCamera]);
 
   const handleEnd = React.useCallback(() => {
     if (isUpdatingCameraRef.current || !onCameraChange || !controlsRef.current) return;
@@ -2378,7 +2398,10 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
     <>
       <OrbitControls ref={controlsRef} enableDamping={false} onEnd={handleEnd} />
       <ambientLight intensity={1} />
-      {children}
+      <Bounds maxDuration={0.5} margin={1.2}>
+        {children}
+        {!initialCamera && zoomTarget !== "none" && <SceneAutoFit zoomTarget={zoomTarget} snapshot={snapshot} />}
+      </Bounds>
       <SceneGrid show={showGrid} />
       <SceneGizmo show={showGizmo} />
     </>
@@ -2630,7 +2653,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   const hasPlanes = React.useMemo(() => {
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
     const nextDesign = effectiveDiff ? applyDesignDiff(design, effectiveDiff) : design;
-    return (nextDesign.pieces ?? []).some((p) => p.plane);
+    return (nextDesign.pieces ?? []).some((p) => p.plane && p.center);
   }, [design, resolvedDesignDiff, diffEnabled]);
 
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
@@ -2748,6 +2771,7 @@ export interface McpDiagramPayload {
   kitArtifacts?: KitData;
   design?: Design;
   kit?: Kit;
+  fetchUrl?: string;
 }
 
 // #endregion 🔖McpApp Types
@@ -2778,12 +2802,11 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
   const hasDiagram = Array.isArray(raw.points) && Array.isArray(raw.lines);
   const mode = typeof raw.mode === "string" ? raw.mode : undefined;
   const designRaw = raw.design;
-  const hasDesign =
-    designRaw !== undefined && designRaw !== null && typeof designRaw === "object" && !Array.isArray(designRaw);
+  const hasDesign = designRaw !== undefined && designRaw !== null && typeof designRaw === "object" && !Array.isArray(designRaw);
   const kitRaw = raw.kit;
-  const hasFullKit =
-    kitRaw !== undefined && kitRaw !== null && typeof kitRaw === "object" && !Array.isArray(kitRaw);
-  if (!hasKit && !hasDiagram && !hasDesign) return null;
+  const hasFullKit = kitRaw !== undefined && kitRaw !== null && typeof kitRaw === "object" && !Array.isArray(kitRaw);
+  const fetchUrl = typeof raw.fetchUrl === "string" ? raw.fetchUrl : undefined;
+  if (!hasKit && !hasDiagram && !hasDesign && !fetchUrl) return null;
   return {
     points: Array.isArray(raw.points) ? (raw.points as McpDiagramPayload["points"]) : [],
     lines: Array.isArray(raw.lines) ? (raw.lines as McpDiagramPayload["lines"]) : [],
@@ -2792,6 +2815,7 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
     mode,
     design: hasDesign ? (designRaw as Design) : undefined,
     kit: hasFullKit ? (kitRaw as Kit) : undefined,
+    fetchUrl,
   };
 };
 
@@ -2834,10 +2858,7 @@ const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
  * After scoring, take the richest `design` among all parse candidates (same tool result, different channels).
  * [👤semio📚ui💻index🔖mcpapp🛠️mergerichestdesignfromcandidates](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mergeRichestDesignFromCandidates)
  **/
-const mergeRichestDesignFromCandidates = (
-  candidates: Array<McpDiagramPayload | null | undefined>,
-  best: McpDiagramPayload | null,
-): McpDiagramPayload | null => {
+const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | null | undefined>, best: McpDiagramPayload | null): McpDiagramPayload | null => {
   if (!best) return null;
   let bestDesign = best.design;
   let bestScore = mcpDesignRichness({ ...best, design: bestDesign });
@@ -2895,12 +2916,7 @@ const deepFindKitToolArguments = (obj: unknown, depth = 0): Record<string, unkno
   if (typeof rec.path === "string" && rec.path.trim().length > 0) {
     return { path: rec.path.trim() };
   }
-  if (
-    typeof rec.serverUrl === "string" &&
-    typeof rec.kitUri === "string" &&
-    rec.serverUrl.trim().length > 0 &&
-    rec.kitUri.trim().length > 0
-  ) {
+  if (typeof rec.serverUrl === "string" && typeof rec.kitUri === "string" && rec.serverUrl.trim().length > 0 && rec.kitUri.trim().length > 0) {
     return { serverUrl: rec.serverUrl.trim(), kitUri: rec.kitUri.trim() };
   }
   for (const v of Object.values(rec)) {
@@ -3033,6 +3049,25 @@ export const McpDesignViewer: React.FC = () => {
       return scoreMcpDiagramPayload(p) > scoreMcpDiagramPayload(cur) ? p : cur;
     });
   }, []);
+
+  const fetchedUrlsRef = React.useRef<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (!payload?.fetchUrl || fetchedUrlsRef.current.has(payload.fetchUrl)) return;
+    const url = payload.fetchUrl;
+    fetchedUrlsRef.current.add(url);
+    (async () => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const full = (await res.json()) as Record<string, unknown>;
+        const p = normalizeMcpDiagramPayload(full);
+        if (p) mergeDiagramPayload(p);
+      } catch {
+        /* Engine may not be reachable from iframe. */
+      }
+    })();
+  }, [payload?.fetchUrl, mergeDiagramPayload]);
 
   React.useEffect(() => {
     if (!payload) return;
@@ -3192,11 +3227,7 @@ export const McpDesignViewer: React.FC = () => {
   if ((mode === "show-design" || mode === "show-scene") && payload.design) {
     return (
       <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-        {mode === "show-design" ? (
-          <SemioDesign design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} />
-        ) : (
-          <SemioScene design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} />
-        )}
+        {mode === "show-design" ? <SemioDesign design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} /> : <SemioScene design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} />}
       </div>
     );
   }
@@ -3648,6 +3679,7 @@ if (import.meta.vitest) {
     xAxis: { x: 1, y: 0, z: 0 },
     yAxis: { x: 0, y: 1, z: 0 },
   };
+  const testCenter: Coord = { u: 0, v: 0 };
 
   describe("buildKitDataFromKit", () => {
     it("normalizes connector port references into string labels instead of raw guid objects", () => {
@@ -3792,7 +3824,7 @@ if (import.meta.vitest) {
         ],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane } as Piece, status: "default" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
 
       expect(assets[0]?.modelSource).toBe("data:model/gltf-binary;base64,BBB");
       expect(assets[0]?.modelName).toBe("default.glb");
@@ -3816,7 +3848,7 @@ if (import.meta.vitest) {
         ],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane } as Piece, status: "modified" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "modified" }]);
 
       expect(assets[0]?.modelSource).toBe("data:model/gltf-binary;base64,AAA");
       expect(assets[0]?.modelName).toBe("first.glb");
@@ -3829,7 +3861,7 @@ if (import.meta.vitest) {
         files: [{ guid: "file-1", name: "missing.glb" }],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane } as Piece, status: "added" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "added" }]);
 
       expect(assets).toHaveLength(1);
       expect(assets[0]?.modelSource).toBeUndefined();
@@ -3924,6 +3956,55 @@ if (import.meta.vitest) {
         ["connection-a", "modified"],
         ["connection-b", "added"],
       ]);
+    });
+
+    it("keeps existing scene pieces when the next diff version has no plane and only promotes changed connection children to modified", () => {
+      const pieceA = {
+        guid: "piece-a",
+        type: { guid: "kind-1" },
+        plane: testPlane,
+        center: { u: 0, v: 0 },
+      } as unknown as Piece;
+      const pieceB = {
+        guid: "piece-b",
+        type: { guid: "kind-1" },
+        plane: { ...testPlane, origin: { x: 2, y: 0, z: 0 } },
+        center: { u: 2, v: 0 },
+      } as unknown as Piece;
+
+      const connectionA = {
+        guid: "connection-a",
+        connected: { piece: { guid: "piece-a" } },
+        connecting: { piece: { guid: "piece-b" } },
+      } as unknown as Connection;
+
+      const design = {
+        guid: "design-1",
+        pieces: [pieceA, pieceB],
+        connections: [connectionA],
+      } as unknown as Design;
+
+      const diff = {
+        pieces: {
+          removed: [{ guid: "piece-b" }],
+          added: [{ ...pieceB, plane: undefined }],
+        },
+        connections: {
+          updated: [{ connection: { guid: "connection-a" }, diff: {} }],
+        },
+      } as unknown as DesignDiff;
+
+      const snapshot = buildSceneSnapshot(design, diff);
+      const pieceStatuses = new Map(snapshot.pieces.map((asset) => [asset.piece.guid, asset.status] as const));
+
+      expect(pieceStatuses).toEqual(
+        new Map([
+          ["piece-a", "default"],
+          ["piece-b", "added"],
+        ]),
+      );
+      expect(snapshot.pieces.find((asset) => asset.piece.guid === "piece-b")?.piece.plane).toEqual(pieceB.plane);
+      expect(snapshot.connections.map((asset) => [asset.connection.guid, asset.status])).toEqual([["connection-a", "modified"]]);
     });
   });
 }
@@ -4070,7 +4151,8 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
       onSelectionChange: (next: PieceSelectionState) => context.onSelectedPieceGuidsChange?.(next.pieceGuids ?? []),
       selectionEnabled: true,
       diffEnabled: false,
-      panEnabled: false,
+      zoomTarget: "design" as ZoomTarget,
+      panEnabled: true,
       zoomEnabled: true,
     }),
     render: renderAlgorithmFullWindow,
@@ -4085,6 +4167,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
       design: context.diffDesign ?? context.design,
       designDiff: context.designDiff,
       diffEnabled: true,
+      zoomTarget: "design" as ZoomTarget,
       selectionEnabled: false,
     }),
     render: renderAlgorithmDiffWindow,
@@ -4098,6 +4181,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     createProps: (context) => ({
       design: context.outputDesign,
       diffEnabled: false,
+      zoomTarget: "design" as ZoomTarget,
       selectionEnabled: false,
     }),
     render: renderAlgorithmFullWindow,

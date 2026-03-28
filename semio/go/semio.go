@@ -9938,7 +9938,7 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 		visited[rootGuid] = true
 		piecePaths[rootGuid] = rootGuid
 		rootPiece := pieceMap[rootGuid]
-		if rootPiece.Plane != nil {
+		if rootPiece.Plane != nil && rootPiece.Center != nil {
 			piecePlanes[rootGuid] = rootPiece.Plane
 		} else {
 			identityPlane := Plane{
@@ -10735,7 +10735,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		visited[rootGuid] = true
 		rootPieceGuids = append(rootPieceGuids, rootGuid)
 		rootPiece := pieceMap[rootGuid]
-		if rootPiece.Plane != nil {
+		if rootPiece.Plane != nil && rootPiece.Center != nil {
 			piecePlanes[rootGuid] = rootPiece.Plane
 		} else {
 			p := Plane{

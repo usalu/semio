@@ -1,11 +1,12 @@
 {
   "title": "Block Git Commands in Script Interpreters",
   "status": "closed",
-  "summary": "Changed createIpoAlgorithmLayout so that multiple input window kinds (e.g. VEC_INPUT + PIECES_SELECTION_INPUT in drag) are arranged as a column with two rows (20% vec, 80% design input) instead of being stacked as tabs. Single input windows remain as a stack. Updated test expectations to match. All 137 semio/ui tests pass.",
+  "summary": "Fixed background click deselection when panning is enabled. setPointerCapture in handlePointerDown suppresses the subsequent click event, so handleSvgClick never fires. Moved the deselect-on-background-click logic into handlePointerEnd — when no drag occurred (didPanDragRef is false), clearSelection is called. Also kept the previous fix: replaced useEffect-based initial selection with useState initializer across all algorithm stories to prevent re-triggering.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪433ba041e2d449dd983f41a0b3e83961",
     "⚪076dd8347d2046ad81f672419dad0547",
-    "⚪bd48fc516f9a4eb4b03f4a29f31d93e1"
+    "⚪bd48fc516f9a4eb4b03f4a29f31d93e1",
+    "⚪2da4c512ed874d8595299ec864919b11"
   ]
 }

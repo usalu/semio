@@ -717,7 +717,7 @@ A [`connection`](#-connection-) can have [`attributes`](#%EF%B8%8F-attribute-) a
 
 A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and [`attributes`](#%EF%B8%8F-attribute-) 📐
 
-A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#-plane-)) or _linked_ (with a [`connection`](#-connection-)) 📐
+A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#-plane-) and a **center**) or _linked_ (with a [`connection`](#-connection-)) 📐
 
 A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
 
@@ -1108,16 +1108,16 @@ $$
 
 That is, a piece instantiates either a type or a design.
 
-A piece is **fixed** iff its plane is defined:
+A piece is **fixed** iff its plane and center are defined:
 
 $$
-\operatorname{fixed}(p) \iff plane(p)\neq \bot.
+\operatorname{fixed}(p) \iff plane(p)\neq \bot \land center(p)\neq \bot.
 $$
 
 A piece is **linked** iff it is not fixed:
 
 $$
-\operatorname{linked}(p) \iff plane(p)=\bot.
+\operatorname{linked}(p) \iff plane(p)=\bot \land center(p)=\bot.
 $$
 
 A side of a connection is

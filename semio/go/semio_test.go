@@ -593,6 +593,22 @@ func TestDelete(t *testing.T) {
 					t.Errorf("Updated piece guid mismatch at %d: %s vs %s", i, computedGuids[i], expectedGuids[i])
 				}
 			}
+			// Verify updated pieces have both plane and center
+			for _, u := range computedDiff.Pieces.Updated {
+				if u.Diff.Plane == nil {
+					t.Errorf("Updated piece %s missing plane", u.Piece.Guid)
+				}
+				if u.Diff.Center == nil {
+					t.Errorf("Updated piece %s missing center", u.Piece.Guid)
+				} else {
+					if *u.Diff.Center.U != 0.0 {
+						t.Errorf("Updated piece %s center U should be 0, got %f", u.Piece.Guid, *u.Diff.Center.U)
+					}
+					if *u.Diff.Center.V != 0.0 {
+						t.Errorf("Updated piece %s center V should be 0, got %f", u.Piece.Guid, *u.Diff.Center.V)
+					}
+				}
+			}
 
 			// Verify removed connections
 			if computedDiff.Connections == nil {

@@ -7346,7 +7346,7 @@ public class Kit : Entity<Kit>
             var roots = component.Where(nodeId =>
             {
                 var piece = pieceMap.TryGetValue(nodeId, out var p) ? p : null;
-                return piece?.Plane != null;
+                return piece?.Plane != null && piece?.Center != null;
             }).ToList();
 
             var rootNode = roots.Count > 0 ? roots[0] : (component.Count > 0 ? component[0] : null);
@@ -7621,7 +7621,7 @@ public class Kit : Entity<Kit>
 
         foreach (var p in pieces)
         {
-            if (p.Plane != null)
+            if (p.Plane != null && p.Center != null)
             {
                 piecePlanes[p.Guid] = p.Plane;
                 visited.Add(p.Guid);

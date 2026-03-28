@@ -26,12 +26,8 @@ const WINDOWS: AlgorithmWindowDef[] = [
 
 function DeleteFrame() {
   const kit = metabolismKit as any;
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    if (selectedPieceGuids.length > 0) return;
-    setSelectedPieceGuids((baseDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
-  }, [baseDesign, selectedPieceGuids.length]);
+  const initialSelection = React.useMemo(() => (baseDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid), []);
+  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(initialSelection);
 
   const designDiff = React.useMemo(() => (selectedPieceGuids.length > 0 ? deletePiecesAndConnectionsInDesign(baseDesign, selectedPieceGuids, []) : undefined), [selectedPieceGuids]);
 
