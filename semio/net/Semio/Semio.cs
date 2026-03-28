@@ -6053,9 +6053,9 @@ text {
     /// <summary>
     /// Deletes pieces and connections from a design, returning a DesignDiff.
     /// Removes stale connections referencing deleted pieces.
-    /// Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+    /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
     /// </summary>
-    public static DesignDiff DeletePiecesAndConnectionsInDesign(Design design, List<string> pieceGuids, List<string> connectionGuids)
+    public static DesignDiff DeletePiecesAndConnectionsInDesign(Kit kit, Design design, List<string> pieceGuids, List<string> connectionGuids)
     {
         var deletedPieceSet = new HashSet<string>(pieceGuids);
 
@@ -6095,14 +6095,40 @@ text {
 
         // Build the diff
         var piecesRemoved = pieceGuids.Select(g => new PieceId { Guid = g }).ToList();
-        var piecesUpdated = fixedPieceGuids.Select(g => new PieceDiffUpdate
+
+        // Flatten the design to get absolute plane and center for each piece
+        var flatResult = Kit.FlattenDesign(kit, design.Guid);
+        var flatPieceMap = new Dictionary<string, (Plane? Plane, Coord? Center)>();
+        foreach (var piece in design.Pieces)
         {
-            Piece = new PieceId { Guid = g },
-            Diff = new PieceDiff
+            if (piece.Plane != null)
+                flatPieceMap[piece.Guid] = (piece.Plane, piece.Center);
+        }
+        if (flatResult.Pieces?.Updated != null)
+        {
+            foreach (var update in flatResult.Pieces.Updated)
             {
-                Plane = new Plane(),
-                Center = new Coord()
+                var existing = flatPieceMap.ContainsKey(update.Piece.Guid)
+                    ? flatPieceMap[update.Piece.Guid]
+                    : ((Plane?)null, (Coord?)null);
+                if (update.Diff?.Plane != null) existing.Item1 = update.Diff.Plane;
+                if (update.Diff?.Center != null) existing.Item2 = update.Diff.Center;
+                flatPieceMap[update.Piece.Guid] = existing;
             }
+        }
+
+        var piecesUpdated = fixedPieceGuids.Select(g =>
+        {
+            var flat = flatPieceMap.ContainsKey(g) ? flatPieceMap[g] : ((Plane?)null, (Coord?)null);
+            return new PieceDiffUpdate
+            {
+                Piece = new PieceId { Guid = g },
+                Diff = new PieceDiff
+                {
+                    Plane = flat.Item1 ?? new Plane(),
+                    Center = flat.Item2 ?? new Coord()
+                }
+            };
         }).ToList();
         var connectionsRemoved = allRemovedConnectionGuids
             .OrderBy(g => g)
@@ -7440,7 +7466,7 @@ public class Kit : Entity<Kit>
                     }
                 }
 
-                var childCenter = new Coord { U = (float)Math.Round(childU), V = (float)Math.Round(childV) };
+                var childCenter = new Coord { U = (float)Math.Round(childU, 6), V = (float)Math.Round(childV, 6) };
                 var fixedPieceId = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.fixedPieceId")?.Value ?? "";
                 var parentPath = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.path")?.Value ?? "";
 

@@ -37,6 +37,7 @@ import multiprocessing
 import os
 import pathlib
 import shutil
+import subprocess
 import signal
 import sqlite3
 import sys
@@ -52,6 +53,7 @@ import lark
 import pydantic
 import requests
 import starlette.applications
+import starlette.middleware.cors
 import starlette_graphene3
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
@@ -153,6 +155,7 @@ from semio_core import (
     changeValues,
     createClusteredDesignDict,
     decode,
+    deletePiecesAndConnectionsInDesignDict,
     encode,
     expandDesignPiecesDict,
     findAttributeValueDict,
@@ -1480,6 +1483,137 @@ graphqlSchema = graphene.Schema(
 # Rest MUST expose kit, type, design, and assistant endpoints via FastAPI.
 
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
+
+rest.add_middleware(
+    starlette.middleware.cors.CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class NativeAlgorithmExecuteBody(pydantic.BaseModel):
+    """Request body for POST /api/native-algorithms/execute.
+    [👤semio📚engine💻engine🔖rest🛠️nativealgorithmexecutebody](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/NativeAlgorithmExecuteBody)
+    """
+
+    language: typing.Literal["python", "go", "rust"]
+    operation: typing.Literal["flatten", "delete"]
+    kit: dict[str, typing.Any]
+    design: dict[str, typing.Any]
+    designGuid: str
+    pieceGuids: list[str] = []
+    connectionGuids: list[str] = []
+
+
+def _semio_repo_root() -> pathlib.Path:
+    """Return the semio/ directory containing go, rs, py bundles.
+    [👤semio📚engine💻engine🔖rest🛠️semioreporoot](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_semio_repo_root)
+    """
+    return pathlib.Path(__file__).resolve().parent.parent
+
+
+def _python_native_flatten_to_design_change(kit: dict[str, typing.Any], design_guid: str) -> dict[str, typing.Any]:
+    """Map flattenDesignDict output to a DesignChange-shaped dict for the algorithms adapter.
+    [👤semio📚engine💻engine🔖rest🛠️pythonnativeflattentodesignchange](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_python_native_flatten_to_design_change)
+    """
+    raw = flattenDesignDict(kit, design_guid)
+    updates: list[dict[str, typing.Any]] = []
+    for u in raw.get("pieces", {}).get("updated", []):
+        pid = u.get("id")
+        diff = u.get("diff", {})
+        if pid:
+            updates.append({"piece": {"guid": pid}, "diff": diff})
+    forward: dict[str, typing.Any] = {}
+    if updates:
+        forward["pieces"] = {"updated": updates}
+    return {"forward": forward, "backward": {}}
+
+
+def _go_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
+    """Run semio/go/cmd/nativebridge and return parsed JSON result.
+    [👤semio📚engine💻engine🔖rest🛠️gonativebridge](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_go_native_bridge)
+    """
+    go_root = _semio_repo_root() / "go"
+    proc = subprocess.run(
+        ["go", "run", "./cmd/nativebridge"],
+        cwd=str(go_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=300,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "go native bridge failed")
+    out = json.loads(proc.stdout.decode("utf-8"))
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "go native bridge error"))
+    result = out.get("result")
+    if operation == "flatten":
+        return {"forward": result, "backward": {}}
+    return result
+
+
+def _rust_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
+    """Run semio/rs native_bridge and return parsed JSON result.
+    [👤semio📚engine💻engine🔖rest🛠️rustnativebridge](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_rust_native_bridge)
+    """
+    rs_root = _semio_repo_root() / "rs"
+    proc = subprocess.run(
+        ["cargo", "run", "-q", "--bin", "native_bridge"],
+        cwd=str(rs_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=600,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "rust native bridge failed")
+    out = json.loads(proc.stdout.decode("utf-8"))
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "rust native bridge error"))
+    return out.get("result")
+
+
+def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
+    """Dispatch native algorithm execution by language and operation.
+    [👤semio📚engine💻engine🔖rest🛠️dispatchnativealgorithm](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_dispatch_native_algorithm)
+    """
+    kit = body.kit
+    design = body.design
+    dg = body.designGuid
+    lang = body.language
+    op = body.operation
+    bridge_payload: dict[str, typing.Any] = {
+        "op": op,
+        "kit": kit,
+        "design": design,
+        "designGuid": dg,
+        "pieceGuids": list(body.pieceGuids),
+        "connectionGuids": list(body.connectionGuids),
+    }
+    if lang == "python":
+        if op == "flatten":
+            return _python_native_flatten_to_design_change(kit, dg)
+        return deletePiecesAndConnectionsInDesignDict(design, list(body.pieceGuids), list(body.connectionGuids))
+    if lang == "go":
+        return _go_native_bridge(bridge_payload, op)
+    if lang == "rust":
+        return _rust_native_bridge(bridge_payload, op)
+    raise RuntimeError(f"unsupported native language: {lang}")
+
+
+@rest.post("/native-algorithms/execute")
+async def native_algorithms_execute(body: NativeAlgorithmExecuteBody) -> fastapi.responses.JSONResponse:
+    """Execute flatten or delete in python, go, or rust native stacks (typescript runs in the browser).
+    [👤semio📚engine💻engine🔖rest🛠️nativealgorithmsexecute](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/native_algorithms_execute)
+    """
+    try:
+        result = _dispatch_native_algorithm(body)
+        return fastapi.responses.JSONResponse(content={"result": result})
+    except Exception as e:
+        return fastapi.responses.JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 def _build_design_viewer_html() -> str:
@@ -2990,16 +3124,13 @@ def clear_current_selection(ctx: Context) -> dict:
 
 
 def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = False) -> CallToolResult:
-    """Build tools/call result with structuredContent so MCP App hosts can hydrate the iframe without relying on text-only content.
-    Stores the full payload server-side and includes a fetchUrl so the MCP app iframe can bypass host truncation.
+    """Build tools/call result with full payload in text content and a fetchUrl fallback for hosts that truncate.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️asmcpapptoolresult](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_as_mcp_app_tool_result)
     """
     token = uuid.uuid4().hex
     _mcp_app_payloads[token] = payload
-    fetch_url = f"http://localhost:{PORT}/api/app/payload/{token}"
-    lightweight = {k: v for k, v in payload.items() if k not in ("design", "kit")}
-    lightweight["fetchUrl"] = fetch_url
-    text = json.dumps(lightweight)
+    payload["fetchUrl"] = f"http://localhost:{PORT}/api/app/payload/{token}"
+    text = json.dumps(payload)
     return CallToolResult(
         content=[
             TextContent(type="text", text=text),
@@ -3012,7 +3143,7 @@ def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = 
                 ),
             ),
         ],
-        structuredContent=lightweight,
+        structuredContent=payload,
         isError=is_error,
     )
 

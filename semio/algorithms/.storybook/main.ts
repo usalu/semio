@@ -59,6 +59,13 @@ const config: StorybookConfig = {
       "@semio/algorithms": algorithmsEntryPath,
     };
     config.server = config.server || {};
+    config.server.proxy = {
+      ...(config.server.proxy || {}),
+      "/api": {
+        target: "http://127.0.0.1:2507",
+        changeOrigin: true,
+      },
+    };
     config.server.fs = {
       ...(config.server.fs || {}),
       allow: Array.from(new Set([...(config.server.fs?.allow || []), repoRootPath])),

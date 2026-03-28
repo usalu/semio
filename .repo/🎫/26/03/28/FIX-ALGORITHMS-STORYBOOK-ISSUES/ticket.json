@@ -1,0 +1,9 @@
+{
+  "title": "Fix Algorithms Storybook Issues",
+  "status": "open",
+  "description": "Fix multiple issues in semio algorithms storybook: native code decorator not called, drag behavior incorrect for selected pieces, flatten missing input design (output design is not the flat design), and delete story null error (Cannot read properties of null reading 'pieces').",
+  "goal": "🎯algorithms",
+  "sessions": [
+    "⚪787b6d9311a34e93abad560464841924"
+  ]
+}

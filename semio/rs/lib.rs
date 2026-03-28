@@ -5070,9 +5070,10 @@ pub fn inverse_design_diff(original: &Design, forward: &DesignDiff) -> DesignDif
 
 /// Deletes pieces and connections from a design, returning a DesignDiff.
 /// Removes stale connections referencing deleted pieces.
-/// Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+/// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
 /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/delete_pieces_and_connections_in_design)
 pub fn delete_pieces_and_connections_in_design(
+    kit: &Kit,
     design: &Design,
     piece_guids: &[String],
     connection_guids: &[String],
@@ -5119,22 +5120,56 @@ pub fn delete_pieces_and_connections_in_design(
         }
     }
 
-    // Build the diff
+    // Build the diff - flatten the design to get absolute plane and center for each piece
+    let flat_change = flatten_design(kit, &design.guid);
+    let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
+    if let Some(pieces) = &design.pieces {
+        for piece in pieces {
+            if let Some(plane) = &piece.plane {
+                flat_piece_map.insert(
+                    piece.guid.clone(),
+                    (Some(plane.clone()), piece.center.clone()),
+                );
+            }
+        }
+    }
+    if let Some(pieces_diff) = &flat_change.forward.pieces {
+        if let Some(updates) = &pieces_diff.updated {
+            for update in updates {
+                let entry = flat_piece_map
+                    .entry(update.guid.clone())
+                    .or_insert((None, None));
+                if let Some(Some(plane)) = &update.diff.plane {
+                    entry.0 = Some(plane.clone());
+                }
+                if let Some(Some(center)) = &update.diff.center {
+                    entry.1 = Some(center.clone());
+                }
+            }
+        }
+    }
+
     let pieces_removed: Vec<RemovedItem> = piece_guids
         .iter()
         .map(|g| RemovedItem { guid: g.clone() })
         .collect();
     let pieces_updated: Vec<DiffUpdate<PieceDiff>> = fixed_piece_guids
         .iter()
-        .map(|g| DiffUpdate {
-            key: "piece".to_string(),
-            guid: g.clone(),
-            diff: PieceDiff {
+        .map(|g| {
+            let (flat_plane, flat_center) = flat_piece_map
+                .get(g)
+                .cloned()
+                .unwrap_or((Some(Plane::default()), Some(Coord::default())));
+            DiffUpdate {
+                key: "piece".to_string(),
                 guid: g.clone(),
-                plane: Some(Some(Plane::default())),
-                center: Some(Some(Coord::default())),
-                ..Default::default()
-            },
+                diff: PieceDiff {
+                    guid: g.clone(),
+                    plane: Some(flat_plane),
+                    center: Some(flat_center),
+                    ..Default::default()
+                },
+            }
         })
         .collect();
     let mut sorted_removed_connections: Vec<String> =
@@ -10478,8 +10513,12 @@ mod tests {
                 serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
 
             // Compute diff
-            let computed_diff =
-                delete_pieces_and_connections_in_design(design, &piece_guids, &connection_guids);
+            let computed_diff = delete_pieces_and_connections_in_design(
+                &kit,
+                design,
+                &piece_guids,
+                &connection_guids,
+            );
 
             // Serialize computed diff to JSON for comparison
             let computed_json: serde_json::Value =
@@ -10530,19 +10569,51 @@ mod tests {
                 "Updated piece guids mismatch"
             );
             for u in computed_updated {
+                let guid = u["piece"]["guid"].as_str().unwrap();
                 let plane = &u["diff"]["plane"];
                 let center = &u["diff"]["center"];
-                assert_eq!(plane["origin"]["x"], 0.0, "flat plane origin x");
-                assert_eq!(plane["origin"]["y"], 0.0, "flat plane origin y");
-                assert_eq!(plane["origin"]["z"], 0.0, "flat plane origin z");
-                assert_eq!(plane["xAxis"]["x"], 1.0, "flat plane xAxis x");
-                assert_eq!(plane["xAxis"]["y"], 0.0, "flat plane xAxis y");
-                assert_eq!(plane["xAxis"]["z"], 0.0, "flat plane xAxis z");
-                assert_eq!(plane["yAxis"]["x"], 0.0, "flat plane yAxis x");
-                assert_eq!(plane["yAxis"]["y"], 1.0, "flat plane yAxis y");
-                assert_eq!(plane["yAxis"]["z"], 0.0, "flat plane yAxis z");
-                assert_eq!(center["u"], 0.0, "zero center u");
-                assert_eq!(center["v"], 0.0, "zero center v");
+                // Find matching expected entry
+                let expected_entry = expected_updated
+                    .iter()
+                    .find(|e| e["piece"]["guid"].as_str().unwrap() == guid)
+                    .expect(&format!("Expected entry for piece {}", guid));
+                let exp_plane = &expected_entry["diff"]["plane"];
+                let exp_center = &expected_entry["diff"]["center"];
+                let tol = 0.001;
+                assert!(
+                    (plane["origin"]["x"].as_f64().unwrap()
+                        - exp_plane["origin"]["x"].as_f64().unwrap())
+                    .abs()
+                        < tol,
+                    "plane origin x mismatch for {}",
+                    guid
+                );
+                assert!(
+                    (plane["origin"]["y"].as_f64().unwrap()
+                        - exp_plane["origin"]["y"].as_f64().unwrap())
+                    .abs()
+                        < tol,
+                    "plane origin y mismatch for {}",
+                    guid
+                );
+                assert!(
+                    (plane["origin"]["z"].as_f64().unwrap()
+                        - exp_plane["origin"]["z"].as_f64().unwrap())
+                    .abs()
+                        < tol,
+                    "plane origin z mismatch for {}",
+                    guid
+                );
+                assert!(
+                    (center["u"].as_f64().unwrap() - exp_center["u"].as_f64().unwrap()).abs() < tol,
+                    "center u mismatch for {}",
+                    guid
+                );
+                assert!(
+                    (center["v"].as_f64().unwrap() - exp_center["v"].as_f64().unwrap()).abs() < tol,
+                    "center v mismatch for {}",
+                    guid
+                );
             }
 
             // Verify removed connections

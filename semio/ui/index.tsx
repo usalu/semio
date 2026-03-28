@@ -3232,6 +3232,14 @@ export const McpDesignViewer: React.FC = () => {
     );
   }
 
+  if ((mode === "show-design" || mode === "show-scene") && !payload.design && payload.fetchUrl) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
+        <p>Loading {mode === "show-design" ? "design" : "scene"}…</p>
+      </div>
+    );
+  }
+
   const hasDiagram = payload.points.length > 0;
 
   if (!hasDiagram && payload.kitArtifacts) {

@@ -241,6 +241,19 @@ Create a new bundle semio/ui that holds reusable ui components. Make sure that a
 
 ## 👤semio🖱️algorithms
 
+semio algorithms:
+
+A lot is not working:
+
+- make sure the native code is called with the storybook decorator
+- drag is not working correctly
+  If a selected piece is a descendent of another selected piece then it is ignored. Othwerwise add the drag offset to the the parent connection.
+  fixed selected pieces get center offset.
+- flatten is missing input design (ready only). The output design is not the flat design from flatten design.
+- delete story is not loading
+
+Write a small adapter that calls into the native functions of the respective implementations in the native programming language. Expose it over a rest interface. Make sure the storybook uses this correctly when using the programming lanugage decorator. Just one file. Integrate it, so it works end-to-end.
+
 The purpose of algorithms is to to have a ui to test all algorithms for all implementations (ts, python, rust, go).
 
 Algorithms:

@@ -554,7 +554,7 @@ func TestDelete(t *testing.T) {
 			loadJSON(t, "nakagin-capsule-tower.deleted.design.diff.semio.json", &expectedDiff)
 
 			// Compute diff
-			computedDiff := DeletePiecesAndConnectionsInDesign(*design, pieceGuids, connectionGuids)
+			computedDiff := DeletePiecesAndConnectionsInDesign(&kit, *design, pieceGuids, connectionGuids)
 
 			// Verify removed pieces
 			if computedDiff.Pieces == nil {
@@ -593,19 +593,44 @@ func TestDelete(t *testing.T) {
 					t.Errorf("Updated piece guid mismatch at %d: %s vs %s", i, computedGuids[i], expectedGuids[i])
 				}
 			}
-			// Verify updated pieces have both plane and center
+			// Verify updated pieces have both plane and center matching expected
+			expectedUpdatedMap := make(map[string]PieceDiff)
+			for _, u := range expectedDiff.Pieces.Updated {
+				expectedUpdatedMap[u.Piece.Guid] = u.Diff
+			}
 			for _, u := range computedDiff.Pieces.Updated {
 				if u.Diff.Plane == nil {
 					t.Errorf("Updated piece %s missing plane", u.Piece.Guid)
 				}
 				if u.Diff.Center == nil {
 					t.Errorf("Updated piece %s missing center", u.Piece.Guid)
-				} else {
-					if *u.Diff.Center.U != 0.0 {
-						t.Errorf("Updated piece %s center U should be 0, got %f", u.Piece.Guid, *u.Diff.Center.U)
+				}
+				exp, ok := expectedUpdatedMap[u.Piece.Guid]
+				if !ok {
+					t.Errorf("Unexpected updated piece %s", u.Piece.Guid)
+					continue
+				}
+				if u.Diff.Plane != nil && exp.Plane != nil {
+					tolerance := 0.001
+					if u.Diff.Plane.Origin != nil && exp.Plane.Origin != nil {
+						if math.Abs(*u.Diff.Plane.Origin.X-*exp.Plane.Origin.X) > tolerance {
+							t.Errorf("Updated piece %s plane origin x: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.X, *exp.Plane.Origin.X)
+						}
+						if math.Abs(*u.Diff.Plane.Origin.Y-*exp.Plane.Origin.Y) > tolerance {
+							t.Errorf("Updated piece %s plane origin y: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.Y, *exp.Plane.Origin.Y)
+						}
+						if math.Abs(*u.Diff.Plane.Origin.Z-*exp.Plane.Origin.Z) > tolerance {
+							t.Errorf("Updated piece %s plane origin z: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.Z, *exp.Plane.Origin.Z)
+						}
 					}
-					if *u.Diff.Center.V != 0.0 {
-						t.Errorf("Updated piece %s center V should be 0, got %f", u.Piece.Guid, *u.Diff.Center.V)
+				}
+				if u.Diff.Center != nil && exp.Center != nil {
+					tolerance := 0.001
+					if math.Abs(*u.Diff.Center.U-*exp.Center.U) > tolerance {
+						t.Errorf("Updated piece %s center U: got %f, expected %f", u.Piece.Guid, *u.Diff.Center.U, *exp.Center.U)
+					}
+					if math.Abs(*u.Diff.Center.V-*exp.Center.V) > tolerance {
+						t.Errorf("Updated piece %s center V: got %f, expected %f", u.Piece.Guid, *u.Diff.Center.V, *exp.Center.V)
 					}
 				}
 			}

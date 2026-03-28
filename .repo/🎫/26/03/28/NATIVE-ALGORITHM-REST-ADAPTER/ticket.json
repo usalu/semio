@@ -1,0 +1,13 @@
+{
+  "title": "Native Algorithm Rest Adapter",
+  "status": "closed",
+  "description": "Add nativeAlgorithmAdapter.ts in semio/algorithms calling REST for python/go/rust and @semio/js for ts; wire Storybook language decorator and engine FastAPI routes end-to-end.",
+  "summary": "Added semio/algorithms/nativeAlgorithmAdapter.ts routing TypeScript to @semio/js and other languages to POST /api/native-algorithms/execute. Engine FastAPI now exposes that route with CORS, Python semio_core dispatch, and Go/Rust subprocess bridges (cmd/nativebridge, cargo native_bridge). Storybook proxies /api to the engine and Delete/Flatten stories load flatten/delete via the adapter using the language toolbar.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1163"
+  },
+  "goal": "🎯algorithms🎯nativerest",
+  "sessions": [
+    "⚪90a0921e322240539a2086e26cd2eeb1"
+  ]
+}

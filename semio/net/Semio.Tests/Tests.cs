@@ -584,7 +584,7 @@ public class Tests
 
             var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
             var connectionGuids = selection.Connections.Select(c => c.Guid).ToList();
-            var computedDiff = Design.DeletePiecesAndConnectionsInDesign(design, pieceGuids, connectionGuids);
+            var computedDiff = Design.DeletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
 
             // Verify removed pieces
             Assert.NotNull(computedDiff.Pieces);

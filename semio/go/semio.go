@@ -2327,8 +2327,8 @@ type KitChange = Change[Kit, KitDiff]
 // [👤semio📚go💻semio🔖kit🛠️deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/go/f/semio.go/s/Kit/d/i/DeletePiecesAndConnectionsInDesign)
 // DeletePiecesAndConnectionsInDesign deletes pieces and connections from a design, returning a DesignDiff.
 // Removes stale connections referencing deleted pieces.
-// Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
-func DeletePiecesAndConnectionsInDesign(design Design, pieceGuids []string, connectionGuids []string) DesignDiff {
+// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
+func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) DesignDiff {
 	deletedPieceSet := make(map[string]bool)
 	for _, g := range pieceGuids {
 		deletedPieceSet[g] = true
@@ -2389,9 +2389,19 @@ func DeletePiecesAndConnectionsInDesign(design Design, pieceGuids []string, conn
 		piecesRemoved = append(piecesRemoved, PieceId{Guid: g})
 	}
 
+	// Flatten the design to get absolute plane and center for each piece.
+	// FlattenDesign modifies Center in-place but stores Plane only in the diff,
+	// so we apply the diff to get a fully correct flattened design.
+	flatDiff := FlattenDesign(kit, design.Guid)
+	flatDesign := ApplyDesignDiff(design, flatDiff)
+	flatPieceMap := make(map[string]*Piece)
+	for i := range flatDesign.Pieces {
+		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
+	}
+
 	zero := 0.0
 	one := 1.0
-	flatPlaneDiff := &PlaneDiff{
+	identityPlaneDiff := &PlaneDiff{
 		Origin: &PointDiff{X: &zero, Y: &zero, Z: &zero},
 		XAxis:  &VectorDiff{X: &one, Y: &zero, Z: &zero},
 		YAxis:  &VectorDiff{X: &zero, Y: &one, Z: &zero},
@@ -2403,14 +2413,32 @@ func DeletePiecesAndConnectionsInDesign(design Design, pieceGuids []string, conn
 		Diff  PieceDiff `json:"diff"`
 	}
 	for _, g := range fixedPieceGuids {
+		planeDiff := identityPlaneDiff
+		centerDiff := zeroCenterDiff
+		if flatPiece, ok := flatPieceMap[g]; ok {
+			if flatPiece.Plane != nil {
+				ox, oy, oz := flatPiece.Plane.Origin.X, flatPiece.Plane.Origin.Y, flatPiece.Plane.Origin.Z
+				xax, xay, xaz := flatPiece.Plane.XAxis.X, flatPiece.Plane.XAxis.Y, flatPiece.Plane.XAxis.Z
+				yax, yay, yaz := flatPiece.Plane.YAxis.X, flatPiece.Plane.YAxis.Y, flatPiece.Plane.YAxis.Z
+				planeDiff = &PlaneDiff{
+					Origin: &PointDiff{X: &ox, Y: &oy, Z: &oz},
+					XAxis:  &VectorDiff{X: &xax, Y: &xay, Z: &xaz},
+					YAxis:  &VectorDiff{X: &yax, Y: &yay, Z: &yaz},
+				}
+			}
+			if flatPiece.Center != nil {
+				cu, cv := flatPiece.Center.U, flatPiece.Center.V
+				centerDiff = &CoordDiff{U: &cu, V: &cv}
+			}
+		}
 		piecesUpdated = append(piecesUpdated, struct {
 			Piece PieceId   `json:"piece"`
 			Diff  PieceDiff `json:"diff"`
 		}{
 			Piece: PieceId{Guid: g},
 			Diff: PieceDiff{
-				Plane:  flatPlaneDiff,
-				Center: zeroCenterDiff,
+				Plane:  planeDiff,
+				Center: centerDiff,
 			},
 		})
 	}
@@ -9930,6 +9958,17 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 		}{srcGuid, conn})
 	}
 
+	// Save original centers before BFS modifies pieces in-place.
+	// pieceMap shares pointers with design.Pieces, so after BFS
+	// piece.Center and pieceMap[guid].Center are the same pointer.
+	originalCenters := make(map[string]*Coord)
+	for _, p := range design.Pieces {
+		if p.Center != nil {
+			c := *p.Center
+			originalCenters[p.Guid] = &c
+		}
+	}
+
 	visited := make(map[string]bool)
 	piecePaths := make(map[string]string)
 	var bfs func(rootGuid string)
@@ -10064,7 +10103,8 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 
 		pieceFromMap := pieceMap[piece.Guid]
 		if pieceFromMap.Center != nil {
-			if piece.Center == nil || pieceFromMap.Center.U != piece.Center.U || pieceFromMap.Center.V != piece.Center.V {
+			origCenter := originalCenters[piece.Guid]
+			if origCenter == nil || pieceFromMap.Center.U != origCenter.U || pieceFromMap.Center.V != origCenter.V {
 				diff.Center = &CoordDiff{U: &pieceFromMap.Center.U, V: &pieceFromMap.Center.V}
 				hasChanges = true
 			}

@@ -184,6 +184,7 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
+  elementUiI18n as i18n,
   Input,
   InteractionProvider,
   Layout as LayoutComponent,
@@ -252,7 +253,6 @@ import {
   useCommandHotkey,
   useDraggable,
   useDroppable,
-  elementUiI18n as i18n,
   useFBX,
   useGLTF,
   useTranslatedHotkey as useHotkey,
@@ -345,14 +345,12 @@ import {
   WorkbenchIcon,
 } from "../assets/icons";
 import { createSyncDocFactory, isSyncArray, isSyncMap, type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent } from "../studio/studio";
-export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
-export { createDefaultLayout, deduplicateWindowLayout, layoutNodeToGoldenLayoutConfig, parseWindowLayout, stringifyWindowLayout, WindowKind };
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
-export { Canvas, HorizontalWindows, VerticalWindows };
-export { SectionSpecificity, Window };
+export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
+export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
-import { importKit as importKitArchive } from "@semio/js";
 import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+import { importKit as importKitArchive } from "@semio/js";
 // #endregion 🔖Imports
 
 // #region 🔖Shared
@@ -49259,14 +49257,13 @@ export { FeedbackIcon };
 
 // --- Combined from index.tsx and index.ts ---
 
+import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
 import type { KitJsonFileAdapter } from "../studio/studio";
 import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-import type { BlobAssetStore, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
 import "./globals.css";
 
-export type { BlobAssetStore, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
-export { JsonFileKitStore, createJsonFileKitStore };
-export type { KitJsonFileAdapter };
+export { createJsonFileKitStore, JsonFileKitStore };
+export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
 
 appRegistry.register(designConfig);
 appRegistry.register(docsConfig);

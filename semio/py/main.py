@@ -11230,10 +11230,10 @@ class KitChange(Change):
     pass
 
 
-def deletePiecesAndConnectionsInDesignDict(design: dict, pieceGuids: list[str], connectionGuids: list[str]) -> dict:
+def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGuids: list[str]) -> dict:
     """Deletes pieces and connections from a design dict, returning a DesignDiff dict.
     Removes stale connections referencing deleted pieces.
-    Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+    Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️deletepiecesandconnectionsindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/deletePiecesAndConnectionsInDesignDict)
     """
     deletedPieceSet = set(pieceGuids)
@@ -11271,10 +11271,29 @@ def deletePiecesAndConnectionsInDesignDict(design: dict, pieceGuids: list[str], 
     }
     zeroCenter = {"u": 0, "v": 0}
 
+    # Flatten the design to get absolute plane and center for each piece
+    flatResult = flattenDesignDict(kit, design.get("guid", ""))
+    flatPieceMap: dict[str, dict] = {}
+    for piece in design.get("pieces", []):
+        if piece.get("plane"):
+            flatPieceMap[piece["guid"]] = {"plane": piece["plane"], "center": piece.get("center")}
+    for update in flatResult.get("pieces", {}).get("updated", []):
+        guid = update.get("piece", {}).get("guid", update.get("id", ""))
+        existing = flatPieceMap.get(guid, {})
+        diff = update.get("diff", {})
+        if diff.get("plane"):
+            existing["plane"] = diff["plane"]
+        if diff.get("center"):
+            existing["center"] = diff["center"]
+        flatPieceMap[guid] = existing
+
     diff: dict = {}
 
     piecesRemoved = [{"guid": g} for g in pieceGuids]
-    piecesUpdated = [{"piece": {"guid": g}, "diff": {"plane": flatPlane, "center": zeroCenter}} for g in fixedPieceGuids]
+    piecesUpdated = []
+    for g in fixedPieceGuids:
+        flat = flatPieceMap.get(g, {})
+        piecesUpdated.append({"piece": {"guid": g}, "diff": {"plane": flat.get("plane", flatPlane), "center": flat.get("center", zeroCenter)}})
     if piecesRemoved or piecesUpdated:
         piecesDiff: dict = {}
         if piecesRemoved:
@@ -16247,7 +16266,7 @@ class TestDelete:
             piece_guids = [p["guid"] for p in selection.get("pieces", [])]
             connection_guids = [c["guid"] for c in selection.get("connections", [])]
 
-            computed_diff = deletePiecesAndConnectionsInDesignDict(design, piece_guids, connection_guids)
+            computed_diff = deletePiecesAndConnectionsInDesignDict(kit, design, piece_guids, connection_guids)
 
             # Verify removed pieces
             computed_removed = computed_diff.get("pieces", {}).get("removed", [])
@@ -16263,14 +16282,16 @@ class TestDelete:
             computed_guids = sorted(u.get("piece", {}).get("guid", "") for u in computed_updated)
             expected_guids = sorted(u.get("piece", {}).get("guid", "") for u in expected_updated)
             assert computed_guids == expected_guids, f"Updated piece guids mismatch"
-            for u in computed_updated:
-                diff = u["diff"]
-                plane = diff["plane"]
-                center = diff["center"]
-                assert plane["origin"] == {"x": 0, "y": 0, "z": 0}
-                assert plane["xAxis"] == {"x": 1, "y": 0, "z": 0}
-                assert plane["yAxis"] == {"x": 0, "y": 1, "z": 0}
-                assert center == {"u": 0, "v": 0}
+            computed_sorted = sorted(computed_updated, key=lambda u: u.get("piece", {}).get("guid", ""))
+            expected_sorted = sorted(expected_updated, key=lambda u: u.get("piece", {}).get("guid", ""))
+            for cu, eu in zip(computed_sorted, expected_sorted):
+                cd = cu["diff"]
+                ed = eu["diff"]
+                assert abs(cd["plane"]["origin"]["x"] - ed["plane"]["origin"]["x"]) < 0.001
+                assert abs(cd["plane"]["origin"]["y"] - ed["plane"]["origin"]["y"]) < 0.001
+                assert abs(cd["plane"]["origin"]["z"] - ed["plane"]["origin"]["z"]) < 0.001
+                assert abs(cd["center"]["u"] - ed["center"]["u"]) < 0.001
+                assert abs(cd["center"]["v"] - ed["center"]["v"]) < 0.001
 
             # Verify removed connections
             computed_conn_removed = computed_diff.get("connections", {}).get("removed", [])

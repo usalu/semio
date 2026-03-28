@@ -30,51 +30,12 @@
         },
         "diff": {
           "name": "Base",
-          "stock": 2147483647,
-          "virtual": false,
-          "unit": "m",
+          "description": "A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
           "icon": "icons/base.svg",
           "image": "images/base.png",
-          "description": "A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
-          "models": {
-            "added": [
-              {
-                "guid": "c1b9624e-51ed-459c-8f9c-497e39768cc3",
-                "file": {
-                  "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
-                },
-                "tags": [
-                  {
-                    "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
-                  }
-                ],
-                "name": "base"
-              }
-            ],
-            "removed": [
-              {
-                "guid": "019caa00-0000-7000-a000-000000000001"
-              }
-            ],
-            "updated": [
-              {
-                "model": {
-                  "guid": "c2aded58-7995-4ea5-b990-91bd44482bcb"
-                },
-                "diff": {
-                  "name": "base_1to500",
-                  "tags": [
-                    {
-                      "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
-                    },
-                    {
-                      "guid": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6"
-                    }
-                  ]
-                }
-              }
-            ]
-          },
+          "unit": "m",
+          "stock": 2147483647,
+          "virtual": false,
           "connectors": {
             "added": [
               {
@@ -120,8 +81,8 @@
                 "diff": {
                   "name": "c1",
                   "description": "The center of the west rectangular core (an elevator and a staircase around it).",
-                  "mandatory": false,
                   "t": 0.125,
+                  "mandatory": false,
                   "point": {
                     "x": -28.6,
                     "y": -27.7,
@@ -139,6 +100,45 @@
                       }
                     ]
                   }
+                }
+              }
+            ]
+          },
+          "models": {
+            "added": [
+              {
+                "guid": "c1b9624e-51ed-459c-8f9c-497e39768cc3",
+                "file": {
+                  "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
+                },
+                "tags": [
+                  {
+                    "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                  }
+                ],
+                "name": "base"
+              }
+            ],
+            "removed": [
+              {
+                "guid": "019caa00-0000-7000-a000-000000000001"
+              }
+            ],
+            "updated": [
+              {
+                "model": {
+                  "guid": "c2aded58-7995-4ea5-b990-91bd44482bcb"
+                },
+                "diff": {
+                  "name": "base_1to500",
+                  "tags": [
+                    {
+                      "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
+                    },
+                    {
+                      "guid": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6"
+                    }
+                  ]
                 }
               }
             ]
@@ -7014,7 +7014,7 @@
               "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
             },
             "value": "2349.53",
-            "unit": "m²"
+            "unit": "m\u00b2"
           },
           {
             "guid": "10ffebf8-08b9-4336-8048-ebe517995cea",
@@ -7022,7 +7022,7 @@
               "guid": "65d42370-990c-533d-a2ed-386714af2f46"
             },
             "value": "22.890446",
-            "unit": "kgCO2e/m²a"
+            "unit": "kgCO2e/m\u00b2a"
           },
           {
             "guid": "ab2254b4-8b33-4c8d-a935-21450d9e6541",
@@ -7030,7 +7030,7 @@
               "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
             },
             "value": "2.0311e+7",
-            "unit": "€"
+            "unit": "\u20ac"
           },
           {
             "guid": "41509944-6a7f-42a1-8e42-b3d0c784e98f",
@@ -7038,7 +7038,7 @@
               "guid": "eded115b-256c-5752-8756-923d0aecf8fd"
             },
             "value": "2.2088e+6",
-            "unit": "€/a"
+            "unit": "\u20ac/a"
           },
           {
             "guid": "2f5d203d-bacb-479e-9ac7-fb393d609614",
@@ -7054,7 +7054,7 @@
               "guid": "cebf60ec-cdac-50be-947a-227fbe6ffae7"
             },
             "value": "276616.911111",
-            "unit": "€/a"
+            "unit": "\u20ac/a"
           },
           {
             "guid": "3bb54d02-d519-4dd4-96b6-c8286cdbc929",
@@ -7070,7 +7070,7 @@
               "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
             },
             "value": "2.4854e+6",
-            "unit": "€/a"
+            "unit": "\u20ac/a"
           },
           {
             "guid": "65b8d53e-2637-43de-a1e6-0fa108859284",
@@ -7078,7 +7078,7 @@
               "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
             },
             "value": "232534",
-            "unit": "€/a"
+            "unit": "\u20ac/a"
           },
           {
             "guid": "2f7abca4-ed29-4909-9154-6f2cea5f48d2",
@@ -7086,7 +7086,7 @@
               "guid": "aed5edc4-5c23-5d5e-852b-e8670ad517ee"
             },
             "value": "99.440124",
-            "unit": "kWh/m²a"
+            "unit": "kWh/m\u00b2a"
           },
           {
             "guid": "7b5eece9-5177-493e-a981-8a01564b5354",
@@ -7094,7 +7094,7 @@
               "guid": "6d49703d-3f1a-5657-be01-bb9893094695"
             },
             "value": "44082.911111",
-            "unit": "€/a"
+            "unit": "\u20ac/a"
           },
           {
             "guid": "53a3625c-3448-402c-b0b8-79d86677aa8e",
@@ -7128,7 +7128,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuilding"
+                "value": "IfcBuilding",
+                "guid": "5610e832-e56c-4139-b17e-3d329cc2d866"
               }
             ]
           },
@@ -7138,7 +7139,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "51f16e24-4640-421e-bd77-a6de4e67c7bd"
               }
             ]
           },
@@ -7148,7 +7150,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "3d48d6b9-52a1-44ff-b851-8515d7dbbdb0"
               }
             ]
           },
@@ -7158,7 +7161,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "c4a7dae0-15a5-487b-8027-70812122d53d"
               }
             ]
           },
@@ -7168,7 +7172,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "450b50ab-905f-45c9-bd3c-eac25d04caa6"
               }
             ]
           },
@@ -7178,7 +7183,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "a4d4ad88-4b85-4552-b0f8-517ad810f922"
               }
             ]
           },
@@ -7188,7 +7194,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "7ec1ecfa-896b-4a11-a1da-cde0ea64594c"
               }
             ]
           },
@@ -7198,7 +7205,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "948b304e-f992-40a3-ac17-7f55e2a8b505"
               }
             ]
           },
@@ -7208,7 +7216,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "907bf6b8-8b0f-403d-9a2e-d995f4a32db9"
               }
             ]
           },
@@ -7218,7 +7227,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "ba75448d-e8ea-430c-92a0-755698d49218"
               }
             ]
           },
@@ -7228,7 +7238,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "aee3204c-2554-44ce-a6fd-09e98c6564a2"
               }
             ]
           },
@@ -7238,7 +7249,8 @@
             "attributes": [
               {
                 "key": "ifc.type",
-                "value": "IfcBuildingStorey"
+                "value": "IfcBuildingStorey",
+                "guid": "416c0cd2-758d-422b-b970-8ebe067b0775"
               }
             ]
           }
@@ -7257,10 +7269,10 @@
         },
         "diff": {
           "name": "Capsule Dream",
-          "unit": "m",
+          "description": "A wild dream of capsule towers.",
           "icon": "icons/capsule-dream.svg",
           "image": "images/capsule-dream.png",
-          "description": "A wild dream of capsule towers.",
+          "unit": "m",
           "authors": [
             {
               "guid": "5c2e7719-dec3-4f21-9c47-b7081410219a"
@@ -7312,9 +7324,9 @@
                 },
                 "diff": {
                   "name": "Nakagin Capsule Tower,,,br_sl0_d2_t_f2_b_c0",
+                  "description": "",
                   "isHidden": false,
-                  "isLocked": false,
-                  "description": ""
+                  "isLocked": false
                 }
               }
             ]

@@ -6378,10 +6378,10 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
 /**
  * Deletes pieces and connections from a design, returning a DesignDiff.
  * Removes stale connections referencing deleted pieces.
- * Updates pieces that become fixed (parent connection removed) with flat plane and zero center.
+ * Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
  * [👤semio📚js💻semio🔖design🪨deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Design/d/i/deletePiecesAndConnectionsInDesign)
  **/
-export const deletePiecesAndConnectionsInDesign = (design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiff => {
+export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiff => {
   const deletedPieceSet = new Set(pieceGuids);
   const connections = design.connections ?? [];
 
@@ -6410,16 +6410,32 @@ export const deletePiecesAndConnectionsInDesign = (design: Design, pieceGuids: s
     }
   }
 
-  const flatPlane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+  // Flatten the design to get absolute plane and center for each piece
+  const flatChange = flattenDesign(kit, design.guid);
+  const flatPieceMap: { [guid: string]: { plane?: Plane; center?: Coord } } = {};
+  for (const piece of design.pieces ?? []) {
+    if (piece.plane) flatPieceMap[piece.guid] = { plane: piece.plane, center: piece.center };
+  }
+  for (const update of flatChange.forward.pieces?.updated ?? []) {
+    const existing = flatPieceMap[update.piece.guid] ?? {};
+    if (update.diff.plane) existing.plane = update.diff.plane;
+    if (update.diff.center) existing.center = update.diff.center;
+    flatPieceMap[update.piece.guid] = existing;
+  }
+
+  const identityPlane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
   const zeroCenter: Coord = { u: 0, v: 0 };
 
   const diff: DesignDiff = {};
 
   const piecesRemoved = pieceGuids.map((guid) => ({ guid }));
-  const piecesUpdated = fixedPieceGuids.map((guid) => ({
-    piece: { guid },
-    diff: { plane: flatPlane, center: zeroCenter },
-  }));
+  const piecesUpdated = fixedPieceGuids.map((guid) => {
+    const flat = flatPieceMap[guid];
+    return {
+      piece: { guid },
+      diff: { plane: flat?.plane ?? identityPlane, center: flat?.center ?? zeroCenter },
+    };
+  });
   if (piecesRemoved.length > 0 || piecesUpdated.length > 0) {
     diff.pieces = {};
     if (piecesRemoved.length > 0) diff.pieces.removed = piecesRemoved;
@@ -14068,7 +14084,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
       const pieceGuids = (selection.pieces ?? []).map((p) => p.guid);
       const connectionGuids = (selection.connections ?? []).map((c) => c.guid);
-      const computedDiff = deletePiecesAndConnectionsInDesign(design, pieceGuids, connectionGuids);
+      const computedDiff = deletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
 
       // Verify removed pieces
       const computedRemovedPieces = (computedDiff.pieces?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
@@ -14084,11 +14100,11 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(computedUpdated.length).toBe(expectedUpdated.length);
       for (let i = 0; i < computedUpdated.length; i++) {
         expect(computedUpdated[i].piece.guid).toBe(expectedUpdated[i].piece.guid);
-        expect(computedUpdated[i].diff.plane?.origin?.x).toBe(0);
-        expect(computedUpdated[i].diff.plane?.origin?.y).toBe(0);
-        expect(computedUpdated[i].diff.plane?.origin?.z).toBe(0);
-        expect(computedUpdated[i].diff.center?.u).toBe(0);
-        expect(computedUpdated[i].diff.center?.v).toBe(0);
+        expect(computedUpdated[i].diff.plane?.origin?.x).toBeCloseTo(expectedUpdated[i].diff.plane.origin.x, 3);
+        expect(computedUpdated[i].diff.plane?.origin?.y).toBeCloseTo(expectedUpdated[i].diff.plane.origin.y, 3);
+        expect(computedUpdated[i].diff.plane?.origin?.z).toBeCloseTo(expectedUpdated[i].diff.plane.origin.z, 3);
+        expect(computedUpdated[i].diff.center?.u).toBeCloseTo(expectedUpdated[i].diff.center.u, 3);
+        expect(computedUpdated[i].diff.center?.v).toBeCloseTo(expectedUpdated[i].diff.center.v, 3);
       }
 
       // Verify removed connections
