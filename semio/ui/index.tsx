@@ -2871,20 +2871,22 @@ const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
  **/
 const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | null | undefined>, best: McpDiagramPayload | null): McpDiagramPayload | null => {
   if (!best) return null;
-  let bestDesign = best.design;
-  let bestScore = mcpDesignRichness({ ...best, design: bestDesign });
+  let merged = best;
+  let bestDesignScore = mcpDesignRichness(best);
   for (const c of candidates) {
-    if (!c?.design) continue;
-    const score = mcpDesignRichness({ ...best, design: c.design });
-    if (score > bestScore) {
-      bestScore = score;
-      bestDesign = c.design;
+    if (!c) continue;
+    if (c.design) {
+      const score = mcpDesignRichness({ ...best, design: c.design });
+      if (score > bestDesignScore) {
+        bestDesignScore = score;
+        merged = { ...merged, design: c.design };
+      }
     }
+    if (!merged.fetchUrl && c.fetchUrl) merged = { ...merged, fetchUrl: c.fetchUrl };
+    if (!merged.kit && c.kit) merged = { ...merged, kit: c.kit };
+    if (!merged.mode && c.mode) merged = { ...merged, mode: c.mode };
   }
-  if (bestDesign !== best.design) {
-    return { ...best, design: bestDesign };
-  }
-  return best;
+  return merged;
 };
 
 const bestMcpDiagramPayload = (candidates: Array<McpDiagramPayload | null | undefined>): McpDiagramPayload | null => {

@@ -1,7 +1,7 @@
 // #region 🔖Header
-// 💻 semio/go/cmd/nativebridge/main.go
-// Specs: Read JSON op+payload from stdin; write JSON result for engine native-algorithms REST.
-// Summary: CLI bridge invoking semio.FlattenDesign and semio.DeletePiecesAndConnectionsInDesign.
+// 💻 semio/algorithms/native-bridges/go/main.go
+// Specs: Read JSON op+payload from stdin; write JSON {ok,result,error} to stdout.
+// Summary: Go native bridge for algorithms Storybook proxy using semio/go library only.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
@@ -46,6 +46,7 @@ func main() {
 		writeErr("parse kit: " + err.Error())
 		return
 	}
+
 	switch req.Op {
 	case "flatten":
 		diff := semio.FlattenDesign(&kit, req.DesignGuid)

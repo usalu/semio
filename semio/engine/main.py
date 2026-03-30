@@ -3147,10 +3147,13 @@ def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = 
     """
     token = uuid.uuid4().hex
     _mcp_app_payloads[token] = payload
-    payload["fetchUrl"] = f"http://localhost:{PORT}/api/app/payload/{token}"
+    fetch_url = f"http://localhost:{PORT}/api/app/payload/{token}"
+    payload["fetchUrl"] = fetch_url
     text = json.dumps(payload)
+    hint = json.dumps({"fetchUrl": fetch_url, "mode": payload.get("mode"), "points": [], "lines": []})
     return CallToolResult(
         content=[
+            TextContent(type="text", text=hint),
             TextContent(type="text", text=text),
             EmbeddedResource(
                 type="resource",

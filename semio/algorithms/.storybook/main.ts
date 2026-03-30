@@ -6,9 +6,9 @@
 // #endregion 🔖Header
 
 import type { StorybookConfig } from "@storybook/react-vite";
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import net from "node:net";
+import { Buffer } from "node:buffer";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "path";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -27,95 +27,127 @@ const algorithmsEntryPath = resolve(__dirname, "../index.ts");
 const semioUiEntryPath = resolve(__dirname, "../../ui/index.tsx");
 const semioJsEntryPath = resolve(__dirname, "../../js/index.ts");
 
-function isPortOpen(host: string, port: number, timeoutMs: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = new net.Socket();
-    const done = (value: boolean) => {
-      try {
-        socket.destroy();
-      } catch {}
-      resolve(value);
-    };
-    socket.setTimeout(timeoutMs);
-    socket.once("connect", () => done(true));
-    socket.once("timeout", () => done(false));
-    socket.once("error", () => done(false));
-    socket.connect(port, host);
-  });
-}
-
-function createEnsureNativeSemioProxyDevServerPlugin(options: { readonly host: string; readonly port: number; readonly repoRootPath: string }) {
-  const { host, port, repoRootPath } = options;
-
-  let proc: ChildProcessWithoutNullStreams | undefined;
-  let starting: Promise<void> | undefined;
-
-  async function ensureStarted(): Promise<void> {
-    if (await isPortOpen(host, port, 250)) return;
-    if (proc) return;
-    if (starting) return starting;
-
-    starting = (async () => {
-      if (await isPortOpen(host, port, 250)) return;
-
-      // Storybook should be able to execute native algorithms without requiring the semio engine.
-      // We scope this to algorithms Storybook so it does not affect the original implementations.
-      // eslint-disable-next-line no-console
-      console.log(`[DEBUG] semio/algorithms: starting semio native proxy dev server on ${host}:${port}`);
-
-      proc = spawn("uv", ["run", "python", "-c", "import main; main.start_native_algorithms_rest()"], {
-        cwd: resolve(repoRootPath, "semio/py"),
-        env: {
-          ...process.env,
-          HOST: "0.0.0.0",
-          PORT: String(port),
-        },
-        stdio: "pipe",
-      });
-
-      proc.stdout.on("data", (buf) => {
-        // eslint-disable-next-line no-console
-        console.log(String(buf).trimEnd());
-      });
-      proc.stderr.on("data", (buf) => {
-        // eslint-disable-next-line no-console
-        console.error(String(buf).trimEnd());
-      });
-      proc.on("exit", (code, signal) => {
-        // eslint-disable-next-line no-console
-        console.log(`[DEBUG] semio/algorithms: native proxy dev server exited (code=${code}, signal=${signal})`);
-        proc = undefined;
-        starting = undefined;
-      });
-
-      // Wait for port to become available (best-effort).
-      const deadlineMs = Date.now() + 20_000;
-      while (Date.now() < deadlineMs) {
-        if (await isPortOpen(host, port, 250)) return;
-        await new Promise((r) => setTimeout(r, 250));
-      }
-    })();
-
-    try {
-      await starting;
-    } finally {
-      starting = undefined;
-    }
-  }
-
+function createNativeAlgorithmsProxyPlugin(options: { readonly repoRootPath: string }) {
+  const { repoRootPath } = options;
   return {
-    name: "semio:ensure-native-semio-proxy-dev-server",
+    name: "semio:algorithms-native-algorithms-proxy",
     apply: "serve",
-    async configureServer(server: any) {
-      await ensureStarted();
-      server.httpServer?.once?.("close", () => {
-        if (!proc) return;
-        // eslint-disable-next-line no-console
-        console.log("[DEBUG] semio/algorithms: stopping native proxy dev server");
+    configureServer(server: any) {
+      server.middlewares.use("/api/native-algorithms/execute", async (req: any, res: any, next: any) => {
         try {
-          proc.kill("SIGTERM");
-        } catch {}
-        proc = undefined;
+          if ((req.method || "").toUpperCase() !== "POST") return next();
+
+          const chunks: Buffer[] = [];
+          for await (const c of req) chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c));
+          const rawBody = Buffer.concat(chunks).toString("utf-8");
+          const body = JSON.parse(rawBody || "{}") as {
+            language?: "python" | "go" | "rust" | "csharp";
+            operation?: "flatten" | "delete";
+            kit?: unknown;
+            design?: unknown;
+            designGuid?: string;
+            pieceGuids?: unknown;
+            connectionGuids?: unknown;
+          };
+
+          const language = body.language ?? "python";
+          const operation = body.operation ?? "flatten";
+
+          const bridgePayload = {
+            op: operation,
+            kit: body.kit ?? {},
+            design: body.design ?? {},
+            designGuid: body.designGuid ?? "",
+            pieceGuids: Array.isArray(body.pieceGuids) ? body.pieceGuids : [],
+            connectionGuids: Array.isArray(body.connectionGuids) ? body.connectionGuids : [],
+          };
+
+          let result: unknown;
+          if (language === "python") {
+            const py = spawnSync(
+              "uv",
+              [
+                "run",
+                "python",
+                "-c",
+                [
+                  "import json,sys",
+                  "import main",
+                  "body=json.load(sys.stdin)",
+                  "op=body.get('op')",
+                  "kit=body.get('kit') or {}",
+                  "design=body.get('design') or {}",
+                  "dg=body.get('designGuid') or ''",
+                  "pg=body.get('pieceGuids') or []",
+                  "cg=body.get('connectionGuids') or []",
+                  "if op=='flatten': out=main.flattenDesignDict(kit,dg)",
+                  "elif op=='delete': out=main.deletePiecesAndConnectionsInDesignDict(kit,design,pg,cg)",
+                  "else: raise Exception('unknown op: '+str(op))",
+                  "print(json.dumps({'ok': True, 'result': out}))",
+                ].join(";"),
+              ],
+              {
+                cwd: resolve(repoRootPath, "semio/py"),
+                input: JSON.stringify(bridgePayload),
+                encoding: "utf-8",
+              },
+            );
+            if (py.status !== 0) throw new Error((py.stderr || py.stdout || "python native bridge failed").trim());
+            const out = JSON.parse(py.stdout || "{}") as { ok?: boolean; result?: unknown; error?: string };
+            if (!out.ok) throw new Error(out.error || "python native bridge error");
+            if (operation === "flatten") result = { forward: out.result, backward: {} };
+            else result = out.result;
+          } else if (language === "go") {
+            const go = spawnSync("go", ["run", "."], {
+              cwd: resolve(repoRootPath, "semio/algorithms/native-bridges/go"),
+              input: JSON.stringify(bridgePayload),
+              env: { ...process.env, GOWORK: "off" },
+              encoding: "utf-8",
+            });
+            if (go.status !== 0) throw new Error((go.stderr || "go native bridge failed").trim());
+            const out = JSON.parse(go.stdout || "{}") as { ok?: boolean; result?: unknown; error?: string };
+            if (!out.ok) throw new Error(out.error || "go native bridge error");
+            if (operation === "flatten") result = { forward: out.result, backward: {} };
+            else result = out.result;
+          } else if (language === "rust") {
+            const rs = spawnSync("cargo", ["run", "-q"], {
+              cwd: resolve(repoRootPath, "semio/algorithms/native-bridges/rs"),
+              input: JSON.stringify({ ...bridgePayload, design: operation === "delete" ? bridgePayload.design : undefined }),
+              encoding: "utf-8",
+            });
+            if (rs.status !== 0) throw new Error((rs.stderr || "rust native bridge failed").trim());
+            const out = JSON.parse(rs.stdout || "{}") as { ok?: boolean; result?: unknown; error?: string };
+            if (!out.ok) throw new Error(out.error || "rust native bridge error");
+            if (operation === "flatten") result = { forward: out.result, backward: {} };
+            else result = out.result;
+          } else if (language === "csharp") {
+            const cs = spawnSync("dotnet", ["run", "--project", "./csharp-native-bridge.csproj", "-q"], {
+              cwd: resolve(repoRootPath, "semio/algorithms/native-bridges/csharp"),
+              input: JSON.stringify(bridgePayload),
+              encoding: "utf-8",
+            });
+            if (cs.status !== 0) throw new Error((cs.stderr || "csharp native bridge failed").trim());
+            const out = JSON.parse(
+              String(cs.stdout || "")
+                .split("\n")
+                .reverse()
+                .find((l) => l.trim().startsWith("{")) || "{}",
+            ) as { ok?: boolean; result?: unknown; error?: string };
+            if (!out.ok) throw new Error(out.error || "csharp native bridge error");
+            if (operation === "flatten") result = { forward: out.result, backward: {} };
+            else result = out.result;
+          } else {
+            throw new Error(`unsupported language: ${language}`);
+          }
+
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ result }));
+        } catch (e: any) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: String(e?.message ?? e) }));
+        }
       });
     },
   };
@@ -155,13 +187,7 @@ const config: StorybookConfig = {
       "@semio/algorithms": algorithmsEntryPath,
     };
     config.server = config.server || {};
-    config.server.proxy = {
-      ...(config.server.proxy || {}),
-      "/api": {
-        target: "http://127.0.0.1:2507",
-        changeOrigin: true,
-      },
-    };
+    config.server.proxy = config.server.proxy || {};
     config.server.fs = {
       ...(config.server.fs || {}),
       allow: Array.from(new Set([...(config.server.fs?.allow || []), repoRootPath])),
@@ -196,13 +222,7 @@ const config: StorybookConfig = {
       }),
     );
 
-    config.plugins.push(
-      createEnsureNativeSemioProxyDevServerPlugin({
-        host: "127.0.0.1",
-        port: 2507,
-        repoRootPath,
-      }),
-    );
+    config.plugins.push(createNativeAlgorithmsProxyPlugin({ repoRootPath }));
 
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
