@@ -5,5 +5,6 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-export { AlgorithmApp, createIpoAlgorithmLayout, useAlgorithm, WindowKind, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "@semio/ui";
-export { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage, type NativeAlgorithmOperation, type NativeAlgorithmExecutePayload } from "./nativeAlgorithmAdapter";
+export { AlgorithmApp, WindowKind, createIpoAlgorithmLayout, useAlgorithm, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "@semio/ui";
+export { nativeDeletePieces, nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmExecutePayload, type NativeAlgorithmLanguage, type NativeAlgorithmOperation } from "./nativeAlgorithmAdapter";
+

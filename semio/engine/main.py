@@ -3360,7 +3360,33 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
         "connectionSelection": mode in ("select-connections", "select-pieces-and-connections"),
     }
     diagram_data["kitArtifacts"] = _build_kit_artifact_data(kit)
-    diagram_data["design"] = design
+
+    try:
+        flatten_result = flattenDesignDict(kit, design_guid)
+        flatten_by_guid: dict[str, dict] = {}
+        for update in flatten_result.get("pieces", {}).get("updated", []):
+            pid = update.get("id")
+            if pid:
+                flatten_by_guid[pid] = update.get("diff", {})
+        enriched_pieces = []
+        for p in design.get("pieces", []):
+            guid = p.get("guid")
+            flat = flatten_by_guid.get(guid) if guid else None
+            if flat:
+                ep = dict(p)
+                if flat.get("plane") and not ep.get("plane"):
+                    ep["plane"] = flat["plane"]
+                if flat.get("center") and not ep.get("center"):
+                    ep["center"] = flat["center"]
+                enriched_pieces.append(ep)
+            else:
+                enriched_pieces.append(p)
+        enriched_design = dict(design)
+        enriched_design["pieces"] = enriched_pieces
+    except Exception:
+        enriched_design = design
+
+    diagram_data["design"] = enriched_design
     diagram_data["kit"] = kit
 
     return diagram_data

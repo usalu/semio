@@ -1,23 +1,23 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx
 // Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Drag story using real Diagram-based algorithm windows from @semio/ui.
+// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { applyDesignDiff, flattenDesign } from "@semio/js";
+import type { DesignChange, DesignDiff } from "@semio/js";
+import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
-import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, WindowKind } from "../../index";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
+import { nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
 import { useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
 const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
-const flattenChange = flattenDesign(metabolismKit as any, rawDesign.guid);
-const baseDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces }) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "drag-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },
@@ -27,29 +27,62 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function DragFrame() {
-  const language = useAlgorithmLanguage();
+  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
-  const initialSelection = React.useMemo(() => (baseDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid), []);
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(initialSelection);
+  const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
+  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
+  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
   const [vec, setVec] = React.useState({ u: 1, v: -2 });
+  const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
+      if (cancelled) return;
+      setFlattenChange(fc);
+      const bd = applyDesignDiff(rawDesign, { pieces: fc.forward.pieces }) as any;
+      setBaseDesign(bd);
+      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [kit, language]);
+
+  React.useEffect(() => {
+    if (!baseDesign) return;
+    let cancelled = false;
+    void (async () => {
+      if (selectedPieceGuids.length === 0) {
+        if (!cancelled) setDesignDiff(undefined);
+        return;
+      }
+      const diff = await nativeDragPieces(baseDesign, selectedPieceGuids, vec, language);
+      if (!cancelled) setDesignDiff(diff);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [baseDesign, selectedPieceGuids, vec, language]);
+
+  const outputDesign = React.useMemo(() => (designDiff && baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: baseDesign,
+      design: baseDesign ?? rawDesign,
       vec,
       onVecChange: setVec,
       vecMin: { u: -10, v: -10 },
       vecMax: { u: 10, v: 10 },
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
-      designDiff: {
-        pieces: { updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: { center: { ...vec }, language } })) },
-        connections: { updated: [] },
-      },
-      outputDesign: baseDesign,
+      designDiff,
+      outputDesign,
+      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? "Select at least one piece to drag." : undefined,
     }),
-    [baseDesign, kit, language, selectedPieceGuids, vec],
+    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],
   );
 
   return <AlgorithmApp id="drag" label="Drag" windows={WINDOWS} context={context} className="h-full w-full" />;

@@ -5,12 +5,12 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import type { Design, DesignChange, DesignDiff, Kit } from "@semio/js";
+import type { Coord, Design, DesignChange, DesignDiff, Kit } from "@semio/js";
 
 /** Language toolbar values; MUST stay aligned with `.storybook/withLanguage` AlgorithmLanguage. */
 export type NativeAlgorithmLanguage = "ts" | "python" | "rust" | "go";
 
-export type NativeAlgorithmOperation = "flatten" | "delete";
+export type NativeAlgorithmOperation = "flatten" | "delete" | "drag";
 
 export interface NativeAlgorithmExecutePayload {
   readonly operation: NativeAlgorithmOperation;
@@ -124,4 +124,15 @@ export async function nativeDeletePieces(kit: Kit, design: Design, pieceGuids: r
     connectionGuids: [...connectionGuids],
   });
   return asDesignDiff(raw);
+}
+
+/**
+ * Runs drag-pieces in TypeScript using dragPiecesInDesign from @semio/js.
+ * Drag is a pure geometric operation that runs in-process regardless of language selection.
+ * [👤semio📚algorithms💻nativealgorithmadapter🛠️nativedragpieces](repo://p/u/semio/b/l/algorithms/f/nativeAlgorithmAdapter.ts/s/Native/d/i/nativeDragPieces)
+ */
+export async function nativeDragPieces(design: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<DesignDiff> {
+  const { dragPiecesInDesign } = await import("@semio/js");
+  const piecesDesign: Design = { guid: design.guid, name: design.name, pieces: (design.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
+  return dragPiecesInDesign(design, piecesDesign, offset);
 }

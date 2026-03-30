@@ -5,12 +5,12 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { applyDesignDiff } from "@semio/js";
 import type { DesignChange } from "@semio/js";
+import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
-import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, WindowKind } from "../../index";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
 import { nativeDeletePieces, nativeFlattenDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
 import { useAlgorithmLanguage } from "../withLanguage";
 
@@ -64,7 +64,7 @@ function DeleteFrame() {
     };
   }, [kit, baseDesign, selectedPieceGuids, language]);
 
-  const outputDesign = React.useMemo(() => (designDiff && baseDesign ? applyDesignDiff(baseDesign, designDiff) : baseDesign), [designDiff, baseDesign]);
+  const outputDesign = React.useMemo(() => (designDiff && baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({

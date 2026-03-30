@@ -1,21 +1,23 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Move.stories.tsx
 // Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Move story using real Diagram-based algorithm windows from @semio/ui.
+// Summary: Move story using nativeFlattenDesign with the Storybook language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { applyDesignDiff, flattenDesign } from "@semio/js";
+import type { DesignChange } from "@semio/js";
+import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
-import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, WindowKind } from "../../index";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
+import { nativeFlattenDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
+import { useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
-const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef") as any;
-const flattenChange = flattenDesign(metabolismKit as any, rawDesign.guid);
-const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces }) as any;
+const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "move-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },
@@ -25,25 +27,47 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function MoveFrame() {
+  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
-  const initialSelection = React.useMemo(() => (nakaginDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid), []);
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(initialSelection);
+  const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
+  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
+  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
   const [vec, setVec] = React.useState({ u: 1, v: -2 });
+
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
+      if (cancelled) return;
+      setFlattenChange(fc);
+      const bd = applyDesignDiff(rawDesign, { pieces: fc.forward.pieces }) as any;
+      setBaseDesign(bd);
+      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [kit, language]);
+
+  const designDiff = React.useMemo(() => (selectedPieceGuids.length > 0 ? { pieces: { updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: { center: { ...vec } } })) } } : undefined), [selectedPieceGuids, vec]);
+
+  const outputDesign = React.useMemo(() => (designDiff && baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: nakaginDesign,
+      design: baseDesign ?? rawDesign,
       vec,
       onVecChange: setVec,
       vecMin: { u: -10, v: -10 },
       vecMax: { u: 10, v: 10 },
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
-      designDiff: { pieces: { updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: { center: { ...vec } } })) } },
-      outputDesign: nakaginDesign,
+      designDiff,
+      outputDesign,
+      error: !flattenChange || !baseDesign ? `Loading move preview (${language})…` : selectedPieceGuids.length === 0 ? "Select at least one piece to move." : undefined,
     }),
-    [kit, selectedPieceGuids, vec],
+    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],
   );
 
   return <AlgorithmApp id="move" label="Move" windows={WINDOWS} context={context} className="h-full w-full" />;

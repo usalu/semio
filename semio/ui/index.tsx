@@ -4083,7 +4083,7 @@ export interface AlgorithmWindowDef {
   label?: string;
 }
 
-type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT;
+type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.DESIGN_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT;
 
 type AlgorithmUiComponentId = "semio/ui:Vec" | "semio/ui:PieceSelection" | "semio/ui:Diagram";
 
@@ -4165,6 +4165,20 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     }),
     render: renderAlgorithmFullWindow,
   },
+  [WindowKind.DESIGN_INPUT]: {
+    uiComponentId: "semio/ui:Diagram",
+    selectionEnabled: false,
+    diffEnabled: false,
+    usesPieceSelection: false,
+    component: SemioDiagram,
+    createProps: (context) => ({
+      design: context.design,
+      diffEnabled: false,
+      zoomTarget: "design" as ZoomTarget,
+      selectionEnabled: false,
+    }),
+    render: renderAlgorithmFullWindow,
+  },
   [WindowKind.DESIGN_DIFF_OUTPUT]: {
     uiComponentId: "semio/ui:Diagram",
     selectionEnabled: false,
@@ -4234,7 +4248,7 @@ export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWin
  * one for diff output, one for final design output. Matches the semio UI shell used in elements/UI stories.
  */
 export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindowLayout {
-  const inputKinds = new Set<WindowKind>([WindowKind.VEC_INPUT, WindowKind.PIECES_SELECTION_INPUT]);
+  const inputKinds = new Set<WindowKind>([WindowKind.VEC_INPUT, WindowKind.PIECES_SELECTION_INPUT, WindowKind.DESIGN_INPUT]);
   const inputWindows = windows.filter((w) => inputKinds.has(w.kind));
   const diffWindow = windows.find((w) => w.kind === WindowKind.DESIGN_DIFF_OUTPUT);
   const outputWindow = windows.find((w) => w.kind === WindowKind.DESIGN_OUTPUT);
@@ -4520,6 +4534,7 @@ if (algorithmVitest) {
     it("recognizes the canonical algorithm window kinds", () => {
       expect(isAlgorithmWindowKind(WindowKind.VEC_INPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.PIECES_SELECTION_INPUT)).toBe(true);
+      expect(isAlgorithmWindowKind(WindowKind.DESIGN_INPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.DESIGN_DIFF_OUTPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.DESIGN_OUTPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.TABLE)).toBe(false);
@@ -4532,6 +4547,13 @@ if (algorithmVitest) {
         selectionEnabled: true,
         diffEnabled: false,
         usesPieceSelection: true,
+      });
+      expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_INPUT)).toMatchObject({
+        kind: WindowKind.DESIGN_INPUT,
+        uiComponentId: "semio/ui:Diagram",
+        selectionEnabled: false,
+        diffEnabled: false,
+        usesPieceSelection: false,
       });
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_DIFF_OUTPUT)).toMatchObject({
         kind: WindowKind.DESIGN_DIFF_OUTPUT,
@@ -4552,6 +4574,7 @@ if (algorithmVitest) {
     it("maps algorithm selection and output windows to shared semio/ui components", () => {
       expect(getAlgorithmWindowBehavior(WindowKind.VEC_INPUT)?.component).toBe(Vec);
       expect(getAlgorithmWindowBehavior(WindowKind.PIECES_SELECTION_INPUT)?.component).toBe(PieceSelection);
+      expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_INPUT)?.component).toBe(SemioDiagram);
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_DIFF_OUTPUT)?.component).toBe(SemioDiagram);
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_OUTPUT)?.component).toBe(SemioDiagram);
     });

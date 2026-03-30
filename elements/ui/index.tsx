@@ -10,7 +10,6 @@
 
 // #region 🔖Imports
 
-import "@xyflow/react/dist/style.css";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
@@ -18,22 +17,52 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import * as React from "react";
-import * as ResizablePrimitive from "react-resizable-panels";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import * as THREE from "three";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TogglePrimitive from "@radix-ui/react-toggle";
+import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
+import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import * as dagre from "dagre";
 import Fuse, { type FuseResult } from "fuse.js";
-import LanguageDetector from "i18next-browser-languagedetector";
 import i18next from "i18next";
-import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
+import LanguageDetector from "i18next-browser-languagedetector";
+import * as React from "react";
+import * as ResizablePrimitive from "react-resizable-panels";
+import * as THREE from "three";
 
+import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Slot } from "@radix-ui/react-slot";
+import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
+import {
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  ConnectionMode,
+  getBezierPath,
+  Handle,
+  MiniMap,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
+} from "@xyflow/react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { ClassValue, clsx } from "clsx";
+import { Command as CommandPrimitive } from "cmdk";
+import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
+import type { LucideIcon } from "lucide-react";
 import {
   Plus as AddIcon,
   AlertCircle as AlertCircleIcon,
@@ -60,45 +89,15 @@ import {
   ArrowRight as NavigateForwardIcon,
   ArrowUp as NavigateUpIcon,
   Minus as RemoveIcon,
-  SearchIcon as SearchIcon,
+  SearchIcon,
   TriangleAlert as TriangleAlertIcon,
   GraduationCap as TutorialIcon,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import {
-  applyNodeChanges,
-  Background,
-  BackgroundVariant,
-  BaseEdge,
-  ConnectionMode,
-  getBezierPath,
-  Handle,
-  MiniMap,
-  Position,
-  ReactFlow,
-  ReactFlowProvider,
-  SelectionMode,
-  useInternalNode,
-  useReactFlow,
-  useStoreApi,
-  ViewportPortal,
-} from "@xyflow/react";
-import { CSS } from "@dnd-kit/utilities";
-import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
-import { ClassValue, clsx } from "clsx";
-import { Command as CommandPrimitive } from "cmdk";
-import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
-import { Link, useNavigate } from "react-router";
-import { Slot } from "@radix-ui/react-slot";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { createPortal } from "react-dom";
-import { cva, type VariantProps } from "class-variance-authority";
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { initReactI18next, useTranslation } from "react-i18next";
-import { twMerge } from "tailwind-merge";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useState } from "react";
+import { initReactI18next, useTranslation } from "react-i18next";
+import { Link, useNavigate } from "react-router";
+import { twMerge } from "tailwind-merge";
 // #endregion Imports
 
 // #region Utilities
@@ -18954,6 +18953,7 @@ export enum WindowKind {
   WORKBENCH = "workbench",
   VEC_INPUT = "vec-input",
   PIECES_SELECTION_INPUT = "pieces-selection-input",
+  DESIGN_INPUT = "design-input",
   DESIGN_DIFF_OUTPUT = "design-diff-output",
   DESIGN_OUTPUT = "design-output",
 }

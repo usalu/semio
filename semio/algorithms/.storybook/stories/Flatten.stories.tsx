@@ -1,16 +1,16 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Flatten.stories.tsx
-// Specs: Uses the AlgorithmApp shell with DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
+// Specs: Uses the AlgorithmApp shell with DESIGN_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
 // Summary: Flatten story using nativeFlattenDesign with the Storybook language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import { applyDesignDiff } from "@semio/js";
 import type { DesignChange } from "@semio/js";
+import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
-import { AlgorithmApp, type AlgorithmContextValue, type AlgorithmWindowDef, WindowKind } from "../../index";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
 import { nativeFlattenDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
 import { useAlgorithmLanguage } from "../withLanguage";
 
@@ -20,6 +20,7 @@ const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
+  { id: "flatten-input", kind: WindowKind.DESIGN_INPUT, label: "Input" },
   { id: "flatten-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
   { id: "flatten-output", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];
@@ -39,7 +40,7 @@ function FlattenFrame() {
     };
   }, [kit, language]);
 
-  const baseDesign = React.useMemo(() => {
+  const flatDesign = React.useMemo(() => {
     if (!change?.forward?.pieces) return rawDesign;
     return applyDesignDiff(rawDesign, { pieces: change.forward.pieces }) as any;
   }, [change]);
@@ -47,13 +48,13 @@ function FlattenFrame() {
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: baseDesign,
+      design: rawDesign,
       selectedPieceGuids: [],
       designDiff: change?.forward,
-      outputDesign: baseDesign,
+      outputDesign: flatDesign,
       error: !change ? `Loading flatten (${language})…` : undefined,
     }),
-    [kit, baseDesign, change, language],
+    [kit, flatDesign, change, language],
   );
 
   return <AlgorithmApp id="flatten" label="Flatten" windows={WINDOWS} context={context} className="h-full w-full" />;
