@@ -51,6 +51,7 @@ const preview: Preview = {
           { value: AlgorithmLanguage.PYTHON, title: "Python", icon: "python" },
           { value: AlgorithmLanguage.RUST, title: "Rust", icon: "code-fork" },
           { value: AlgorithmLanguage.GO, title: "Go", icon: "terminal" },
+          { value: AlgorithmLanguage.CSHARP, title: "C#", icon: "code" },
         ],
         dynamicTitle: true,
       },

@@ -1679,6 +1679,23 @@ async def app_payload(token: str) -> fastapi.responses.JSONResponse:
     return fastapi.responses.JSONResponse(payload, headers={"Access-Control-Allow-Origin": "*"})
 
 
+@rest.get("/app/files/{file_guid}")
+async def app_file(file_guid: str) -> fastapi.Response:
+    """Serve a kit file blob by guid. Used by MCP app iframes to load 3D models."""
+    blob = _mcp_app_file_blobs.get(file_guid)
+    if blob is None:
+        return fastapi.Response(content="File not found", status_code=404)
+    if blob.startswith("data:"):
+        parts = blob.split(",", 1)
+        header = parts[0]
+        encoded = parts[1] if len(parts) > 1 else ""
+        mime = header.split(":")[1].split(";")[0] if ":" in header else "application/octet-stream"
+        import base64
+        return fastapi.Response(content=base64.b64decode(encoded), media_type=mime, headers={"Access-Control-Allow-Origin": "*"})
+    import base64
+    return fastapi.Response(content=base64.b64decode(blob), media_type="application/octet-stream", headers={"Access-Control-Allow-Origin": "*"})
+
+
 @rest.get("/kits/{encodedKitUri}")
 async def kit(
     request: fastapi.Request,
@@ -2067,6 +2084,7 @@ _mcp_session_transaction_rollback: set[int] = set()
 _mcp_session_selection: dict[int, dict[str, list[str]]] = {}
 _mcp_session_camera: dict[int, dict[str, typing.Any]] = {}
 _mcp_app_payloads: dict[str, dict[str, typing.Any]] = {}
+_mcp_app_file_blobs: dict[str, str] = {}
 
 
 def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
@@ -3387,7 +3405,11 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
         enriched_design = design
 
     diagram_data["design"] = enriched_design
-    diagram_data["kit"] = kit
+
+    kit_for_ui = copy.deepcopy(kit)
+    for f in kit_for_ui.get("files", []):
+        f.pop("blob", None)
+    diagram_data["kit"] = kit_for_ui
 
     return diagram_data
 

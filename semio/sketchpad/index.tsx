@@ -35746,6 +35746,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       selChangeCountRef.current++;
       if (isDraggingNodeRef.current || isPanningRef.current) return;
       if (isSyncingSelectionRef.current) return;
+      if (!isLassoingRef.current) return;
 
       const selectedPieceGuids = nodes.filter((n) => n.id.startsWith("piece-")).map((n) => getPieceIdFromNode(n as DiagramNode));
 
@@ -36285,8 +36286,13 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         ctrlKey: event.ctrlKey === true,
         metaKey: event.metaKey === true,
       });
-      if (compositionKind === "replace" && isNodeSelected) pendingSelectionRef.current = null;
-      else pendingSelectionRef.current = { pieceId, compositionKind };
+      
+      let updatedSelectedIds = currentSelectedIds;
+      if (!(compositionKind === "replace" && isNodeSelected)) {
+        updatedSelectedIds = applySelectionComposition(currentSelectedIds, [pieceId], compositionKind);
+        if (setSelection) setSelection({ ...(selectionRef.current || {}), pieces: updatedSelectedIds });
+      }
+      pendingSelectionRef.current = null;
 
       dragPositionRef.current = { x: node.position.x, y: node.position.y };
       dragStartPositionRef.current = { x: node.position.x, y: node.position.y };
@@ -36294,7 +36300,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       isDraggingRef.current = true;
       isDraggingNodeRef.current = true;
       suppressEdgeRecomputeRef.current = true;
-      const dragRoots = new Set(isNodeSelected && currentSelectedIds.length > 0 ? currentSelectedIds : [pieceId]);
+      const dragRoots = new Set(updatedSelectedIds.length > 0 ? updatedSelectedIds : [pieceId]);
       const descendants = getDownstreamDescendants(metadata, dragRoots);
       dragDescendantsRef.current = descendants;
       const offsets = new Map<string, { dx: number; dy: number }>();
@@ -36313,7 +36319,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragDescendantNodeIdsRef.current = descNodeIds;
       const diagramEl = document.querySelector(`[data-diagram-id="${diagramId}"]`);
       if (diagramEl) (diagramEl as HTMLElement).dataset.dragging = "true";
-      const selectedIds = new Set(isNodeSelected && currentSelectedIds.length > 0 ? currentSelectedIds : [pieceId]);
+      const selectedIds = new Set(dragRoots);
       const selected: DiagramNode[] = [];
       const nonSelected: DiagramNode[] = [];
       for (const n of nodes) {
@@ -36327,7 +36333,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       designStore?.setDraggingPieces(allDraggedIds);
       setTimeout(() => transaction?.start(), 0);
     },
-    [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId, designStore],
+    [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId, designStore, setSelection],
   );
 
   const isDraggingRef = useRef(false);
@@ -36870,7 +36876,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const savedDescendantOffsets = dragDescendantOffsetsRef.current;
       dragSelectedNodesRef.current = [];
       dragNonSelectedNodesRef.current = [];
-      const pendingSelection = pendingSelectionRef.current;
       const currentSelection = selectionRef.current;
       pendingSelectionRef.current = null;
       pendingPieceUpdatesRef.current = [];
@@ -36879,10 +36884,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragDescendantOffsetsRef.current = new Map();
       dragDescendantNodeIdsRef.current = new Map();
       designStore?.clearDraggingPieces();
-      if (pendingSelection) {
-        const { pieceId, compositionKind } = pendingSelection;
-        if (setSelection) setTimeout(() => setSelection({ ...(currentSelection || {}), pieces: applySelectionComposition(currentSelection?.pieces, [pieceId], compositionKind) }), 650);
-      }
       const finalX = node.position.x;
       const finalY = node.position.y;
       const draggedPieceId = getPieceIdFromNode(node);
@@ -37144,7 +37145,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               edgesFocusable={true}
               nodesDraggable={true}
               autoPanOnNodeDrag={false}
-              selectNodesOnDrag={false}
               minZoom={0.1}
               defaultZoom={1}
               maxZoom={12}

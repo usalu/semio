@@ -1934,8 +1934,19 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
     .map(({ piece, status }) => {
       const kindGuid = piece.type?.guid;
       const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
-      const selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
-      const file = selectedModel?.file?.guid ? filesByGuid.get(selectedModel.file.guid) : undefined;
+      let file: SemioFile | undefined;
+      let selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
+      if (selectedModel?.file?.guid) file = filesByGuid.get(selectedModel.file.guid);
+      if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.models?.length) {
+        for (const m of kind.models) {
+          const f = m.file?.guid ? filesByGuid.get(m.file.guid) : undefined;
+          if (f && isSceneGltfSource(getSceneFileSource(f), f.name)) {
+            selectedModel = m;
+            file = f;
+            break;
+          }
+        }
+      }
       return {
         piece,
         status,
@@ -2336,7 +2347,7 @@ const SceneAutoFit: React.FC<{ zoomTarget: ZoomTarget; snapshot: SceneSnapshot }
     if (fittedRef.current) return;
     const box = buildSceneZoomBox(snapshot, zoomTarget);
     if (box) {
-      bounds.refresh(box).clip().fit();
+      bounds.refresh(box).fit();
     }
     fittedRef.current = true;
   }, [bounds, snapshot, zoomTarget]);
@@ -3224,14 +3235,6 @@ export const McpDesignViewer: React.FC = () => {
 
   const mode = payload.mode ?? "show-diagram";
 
-  if ((mode === "show-design" || mode === "show-scene") && payload.design) {
-    return (
-      <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-        {mode === "show-design" ? <SemioDesign design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} /> : <SemioScene design={payload.design as Design} kit={payload.kit as Kit} {...selectionProps} />}
-      </div>
-    );
-  }
-
   if ((mode === "show-design" || mode === "show-scene") && !payload.design && payload.fetchUrl) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
@@ -4083,9 +4086,9 @@ export interface AlgorithmWindowDef {
   label?: string;
 }
 
-type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.DESIGN_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT;
+type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.DESIGN_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT | WindowKind.SCENE;
 
-type AlgorithmUiComponentId = "semio/ui:Vec" | "semio/ui:PieceSelection" | "semio/ui:Diagram";
+type AlgorithmUiComponentId = "semio/ui:Vec" | "semio/ui:PieceSelection" | "semio/ui:Diagram" | "semio/ui:Scene";
 
 interface AlgorithmWindowBehavior {
   kind: AlgorithmWindowKind;
@@ -4208,6 +4211,21 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     }),
     render: renderAlgorithmFullWindow,
   },
+  [WindowKind.SCENE]: {
+    uiComponentId: "semio/ui:Scene",
+    selectionEnabled: false,
+    diffEnabled: false,
+    usesPieceSelection: false,
+    component: SemioScene,
+    createProps: (context) => ({
+      design: context.outputDesign,
+      kit: context.kit,
+      diffEnabled: false,
+      zoomTarget: "design" as ZoomTarget,
+      selectionEnabled: false,
+    }),
+    render: renderAlgorithmFullWindow,
+  },
 };
 
 const createAlgorithmWindowRenderer = (kind: AlgorithmWindowKind): React.FC => {
@@ -4251,7 +4269,7 @@ export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindo
   const inputKinds = new Set<WindowKind>([WindowKind.VEC_INPUT, WindowKind.PIECES_SELECTION_INPUT, WindowKind.DESIGN_INPUT]);
   const inputWindows = windows.filter((w) => inputKinds.has(w.kind));
   const diffWindow = windows.find((w) => w.kind === WindowKind.DESIGN_DIFF_OUTPUT);
-  const outputWindow = windows.find((w) => w.kind === WindowKind.DESIGN_OUTPUT);
+  const outputWindow = windows.find((w) => w.kind === WindowKind.DESIGN_OUTPUT || w.kind === WindowKind.SCENE);
 
   const columns: Array<UIWindowLayoutAxisNode | UIWindowLayoutStackNode> = [];
   if (inputWindows.length > 1) {
@@ -4537,6 +4555,7 @@ if (algorithmVitest) {
       expect(isAlgorithmWindowKind(WindowKind.DESIGN_INPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.DESIGN_DIFF_OUTPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.DESIGN_OUTPUT)).toBe(true);
+      expect(isAlgorithmWindowKind(WindowKind.SCENE)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.TABLE)).toBe(false);
     });
 
@@ -4569,6 +4588,13 @@ if (algorithmVitest) {
         diffEnabled: false,
         usesPieceSelection: false,
       });
+      expect(getAlgorithmWindowBehavior(WindowKind.SCENE)).toMatchObject({
+        kind: WindowKind.SCENE,
+        uiComponentId: "semio/ui:Scene",
+        selectionEnabled: false,
+        diffEnabled: false,
+        usesPieceSelection: false,
+      });
     });
 
     it("maps algorithm selection and output windows to shared semio/ui components", () => {
@@ -4577,6 +4603,7 @@ if (algorithmVitest) {
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_INPUT)?.component).toBe(SemioDiagram);
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_DIFF_OUTPUT)?.component).toBe(SemioDiagram);
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_OUTPUT)?.component).toBe(SemioDiagram);
+      expect(getAlgorithmWindowBehavior(WindowKind.SCENE)?.component).toBe(SemioScene);
     });
 
     it("builds window definitions and the default algorithm layout from the declared windows", () => {

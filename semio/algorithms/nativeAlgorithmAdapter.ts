@@ -8,7 +8,7 @@
 import type { Coord, Design, DesignChange, DesignDiff, Kit } from "@semio/js";
 
 /** Language toolbar values; MUST stay aligned with `.storybook/withLanguage` AlgorithmLanguage. */
-export type NativeAlgorithmLanguage = "ts" | "python" | "rust" | "go";
+export type NativeAlgorithmLanguage = "ts" | "python" | "rust" | "go" | "csharp";
 
 export type NativeAlgorithmOperation = "flatten" | "delete" | "drag";
 

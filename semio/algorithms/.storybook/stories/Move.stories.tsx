@@ -23,7 +23,7 @@ const WINDOWS: AlgorithmWindowDef[] = [
   { id: "move-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },
   { id: "move-input", kind: WindowKind.PIECES_SELECTION_INPUT, label: "Input" },
   { id: "move-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
-  { id: "move-output", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
+  { id: "move-output", kind: WindowKind.SCENE, label: "Output" },
 ];
 
 function MoveFrame() {
@@ -40,7 +40,7 @@ function MoveFrame() {
       const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
       setFlattenChange(fc);
-      const bd = applyDesignDiff(rawDesign, { pieces: fc.forward.pieces }) as any;
+      const bd = applyDesignDiff(rawDesign, fc.forward) as any;
       setBaseDesign(bd);
       setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
     })();

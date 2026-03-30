@@ -41,8 +41,8 @@ function FlattenFrame() {
   }, [kit, language]);
 
   const flatDesign = React.useMemo(() => {
-    if (!change?.forward?.pieces) return rawDesign;
-    return applyDesignDiff(rawDesign, { pieces: change.forward.pieces }) as any;
+    if (!change?.forward) return rawDesign;
+    return applyDesignDiff(rawDesign, change.forward) as any;
   }, [change]);
 
   const context: AlgorithmContextValue = React.useMemo(

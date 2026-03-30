@@ -1,0 +1,12 @@
+{
+  "title": "Fix TypeScript Errors in Index Files",
+  "status": "open",
+  "description": "Fix pre-existing TypeScript errors: missing variant/view properties on schema types, missing id on locator type, missing Coord type, and KitKindData requiring variant.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1179"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪70322d0073bb49209cf960e927a61a20"
+  ]
+}

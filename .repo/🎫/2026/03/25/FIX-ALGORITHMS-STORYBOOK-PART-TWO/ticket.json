@@ -1,0 +1,14 @@
+{
+  "title": "Fix Algorithms Storybook Part Two",
+  "status": "closed",
+  "summary": "Fixed all four algorithms storybook issues:\n\n1. **Cluster crash fix**: Removed invalid `connections: { updated: [] }` from designDiff and changed `applyDesignDiff(rawDesign, { pieces: fc.forward.pieces })` to `applyDesignDiff(rawDesign, fc.forward)` to apply the full flatten diff including connection removals.\n\n2. **Flatten input/diff/output fix**: Changed `applyDesignDiff(rawDesign, { pieces: change.forward.pieces })` to `applyDesignDiff(rawDesign, change.forward)` so the flat output design correctly includes connection removals (not just piece updates). The diff window now shows both updated pieces and removed connections.\n\n3. **C# language support**: Added `\"csharp\"` to `NativeAlgorithmLanguage` type, `CSHARP = \"csharp\"` to `AlgorithmLanguage` enum, and added C# to the Storybook language toolbar. All non-TS languages route through the engine REST endpoint equally.\n\n4. **Move Scene output**: Added `WindowKind.SCENE` to `AlgorithmWindowKind` type with a new `AlgorithmWindowBehavior` that renders `SemioScene` for 3D output. Updated Move story to use `WindowKind.SCENE` for its output window. Updated `createIpoAlgorithmLayout` to recognize SCENE as an output window kind. Added tests for the new SCENE behavior.\n\n5. **All stories (Cluster, Delete, Drag, Move)**: Fixed to use full `fc.forward` instead of `{ pieces: fc.forward.pieces }` when applying flatten change, ensuring connections are properly removed in the flattened base design.\n\nAll 108 vitest tests pass. No TypeScript errors.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪433ba041e2d449dd983f41a0b3e83961",
+    "⚪076dd8347d2046ad81f672419dad0547",
+    "⚪bd48fc516f9a4eb4b03f4a29f31d93e1",
+    "⚪2da4c512ed874d8595299ec864919b11",
+    "⚪eb0e05cebcd44fd5a4dc6137250f9cb2",
+    "⚪a5ee2672349d4437a40ec23b7bfdd996"
+  ]
+}

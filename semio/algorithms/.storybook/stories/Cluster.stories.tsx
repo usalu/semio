@@ -38,7 +38,7 @@ function ClusterFrame() {
       const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
       setFlattenChange(fc);
-      const bd = applyDesignDiff(rawDesign, { pieces: fc.forward.pieces }) as any;
+      const bd = applyDesignDiff(rawDesign, fc.forward) as any;
       setBaseDesign(bd);
       setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
     })();
@@ -56,7 +56,6 @@ function ClusterFrame() {
               added: [{ guid: `cluster-${selectedPieceGuids.length}`, name: `Clustered (${selectedPieceGuids.length} pieces)` }],
               updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: {} })),
             },
-            connections: { updated: [] },
           },
     [selectedPieceGuids],
   );

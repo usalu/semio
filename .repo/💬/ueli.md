@@ -242,8 +242,19 @@ Create a new bundle semio/ui that holds reusable ui components. Make sure that a
 ## 👤semio🖱️algorithms
 
 semio algorithms:
+The drag algorithm is not working correctly.
+It MUST be:
+Fixed selected pieces get center offset If a selected piece is a descendent of another selected piece then it is ignored. Othwerwise add the drag offset to the the parent connection. Due to the flatten algorithm all children will update automatically.
+Currently it shows:
+On a fixed pieces only the fixed piece is dragged without the children. This shouldnt be possible. When the fixed piece all children should be dragged along.
+On a descendent piece only the descendent piece, the center is moved to the origin plus the drag offset. Instead the parrent connection MUST be modified only.
 
 A lot is not working:
+
+- The delete typescript story is perfect. But all other programming languages are not showing the same thing. C# is still missing completly.
+- Flatten input is just showing one piece. The flatten diff is not showing the removed connections. The output is not the flat design.
+- Move story is a 3d move, not in the diagram. The output MUST be scene only
+- Cluster is not compyling at all
 
 - make sure the native code is called with the storybook decorator
 - drag is not working correctly

@@ -6,7 +6,9 @@
 // #endregion 🔖Header
 
 import type { StorybookConfig } from "@storybook/react-vite";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { createRequire } from "node:module";
+import net from "node:net";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "path";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -24,6 +26,100 @@ const elementsUiEntryPath = resolve(elementsUiDir, "index.tsx");
 const algorithmsEntryPath = resolve(__dirname, "../index.ts");
 const semioUiEntryPath = resolve(__dirname, "../../ui/index.tsx");
 const semioJsEntryPath = resolve(__dirname, "../../js/index.ts");
+
+function isPortOpen(host: string, port: number, timeoutMs: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    const done = (value: boolean) => {
+      try {
+        socket.destroy();
+      } catch {}
+      resolve(value);
+    };
+    socket.setTimeout(timeoutMs);
+    socket.once("connect", () => done(true));
+    socket.once("timeout", () => done(false));
+    socket.once("error", () => done(false));
+    socket.connect(port, host);
+  });
+}
+
+function createEnsureNativeSemioProxyDevServerPlugin(options: { readonly host: string; readonly port: number; readonly repoRootPath: string }) {
+  const { host, port, repoRootPath } = options;
+
+  let proc: ChildProcessWithoutNullStreams | undefined;
+  let starting: Promise<void> | undefined;
+
+  async function ensureStarted(): Promise<void> {
+    if (await isPortOpen(host, port, 250)) return;
+    if (proc) return;
+    if (starting) return starting;
+
+    starting = (async () => {
+      if (await isPortOpen(host, port, 250)) return;
+
+      // Storybook should be able to execute native algorithms without requiring the semio engine.
+      // We scope this to algorithms Storybook so it does not affect the original implementations.
+      // eslint-disable-next-line no-console
+      console.log(`[DEBUG] semio/algorithms: starting semio native proxy dev server on ${host}:${port}`);
+
+      proc = spawn("uv", ["run", "python", "-c", "import main; main.start_native_algorithms_rest()"], {
+        cwd: resolve(repoRootPath, "semio/py"),
+        env: {
+          ...process.env,
+          HOST: "0.0.0.0",
+          PORT: String(port),
+        },
+        stdio: "pipe",
+      });
+
+      proc.stdout.on("data", (buf) => {
+        // eslint-disable-next-line no-console
+        console.log(String(buf).trimEnd());
+      });
+      proc.stderr.on("data", (buf) => {
+        // eslint-disable-next-line no-console
+        console.error(String(buf).trimEnd());
+      });
+      proc.on("exit", (code, signal) => {
+        // eslint-disable-next-line no-console
+        console.log(`[DEBUG] semio/algorithms: native proxy dev server exited (code=${code}, signal=${signal})`);
+        proc = undefined;
+        starting = undefined;
+      });
+
+      // Wait for port to become available (best-effort).
+      const deadlineMs = Date.now() + 20_000;
+      while (Date.now() < deadlineMs) {
+        if (await isPortOpen(host, port, 250)) return;
+        await new Promise((r) => setTimeout(r, 250));
+      }
+    })();
+
+    try {
+      await starting;
+    } finally {
+      starting = undefined;
+    }
+  }
+
+  return {
+    name: "semio:ensure-native-semio-proxy-dev-server",
+    apply: "serve",
+    async configureServer(server: any) {
+      await ensureStarted();
+      server.httpServer?.once?.("close", () => {
+        if (!proc) return;
+        // eslint-disable-next-line no-console
+        console.log("[DEBUG] semio/algorithms: stopping native proxy dev server");
+        try {
+          proc.kill("SIGTERM");
+        } catch {}
+        proc = undefined;
+      });
+    },
+  };
+}
 
 function getAbsolutePath(value: string): string {
   try {
@@ -97,6 +193,14 @@ const config: StorybookConfig = {
       mdx.default({
         remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
         rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
+      }),
+    );
+
+    config.plugins.push(
+      createEnsureNativeSemioProxyDevServerPlugin({
+        host: "127.0.0.1",
+        port: 2507,
+        repoRootPath,
       }),
     );
 

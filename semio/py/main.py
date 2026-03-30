@@ -12032,9 +12032,18 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
             connectors_by_type.setdefault(row["type_guid"], []).append(connector)
 
         models_by_type: dict[str, list[dict]] = {}
+        model_tags_by_model: dict[str, list[dict]] = {}
+        try:
+            for row in cursor.execute("SELECT * FROM model_tag ORDER BY model_guid").fetchall():
+                r = dict(row)
+                model_tags_by_model.setdefault(r["model_guid"], []).append({"guid": r["tag_guid"]})
+        except sqlite3.OperationalError:
+            pass
+
         for row in cursor.execute("SELECT * FROM model ORDER BY guid").fetchall():
             model = _parse_model_from_sqlite(dict(row))
             model["file"] = {"guid": model["file"]} if model.get("file") else None
+            model["tags"] = model_tags_by_model.get(row["guid"], [])
             models_by_type.setdefault(row["type_guid"], []).append(model)
 
         types: list[dict] = []
@@ -12094,7 +12103,37 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
             if payload_design.get("guid") not in seen_design_guids:
                 designs.append(copy.deepcopy(payload_design))
 
-        result = {key: copy.deepcopy(value) for key, value in payload_dict.items() if key not in {"types", "designs"}}
+        folders: list[dict] = []
+        try:
+            for row in cursor.execute("SELECT * FROM folder ORDER BY guid").fetchall():
+                r = dict(row)
+                folder_dict: dict = {"guid": r.get("guid"), "name": r.get("name")}
+                if r.get("parent_guid"):
+                    folder_dict["parent"] = {"guid": r["parent_guid"]}
+                folders.append(folder_dict)
+        except sqlite3.OperationalError:
+            pass
+
+        files: list[dict] = []
+        try:
+            for row in cursor.execute("SELECT * FROM file ORDER BY guid").fetchall():
+                r = dict(row)
+                file_dict: dict = {"guid": r.get("guid"), "name": r.get("name")}
+                if r.get("mime"):
+                    file_dict["mime"] = r["mime"]
+                if r.get("size"):
+                    file_dict["size"] = r["size"]
+                if r.get("hash"):
+                    file_dict["hash"] = r["hash"]
+                if r.get("remote_url"):
+                    file_dict["remote"] = r["remote_url"]
+                if r.get("folder_guid"):
+                    file_dict["folder"] = {"guid": r["folder_guid"]}
+                files.append(file_dict)
+        except sqlite3.OperationalError:
+            pass
+
+        result = {key: copy.deepcopy(value) for key, value in payload_dict.items() if key not in {"types", "designs", "folders", "files"}}
         result.update(
             {
                 "guid": kit_row["guid"],
@@ -12109,6 +12148,8 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
                 "license": kit_row["license"],
                 "types": types,
                 "designs": designs,
+                "folders": folders,
+                "files": files,
             }
         )
         return result
@@ -16945,3 +16986,198 @@ if __name__ == "__main__":
     benchmark_main()
 
 # endregion Benchmark
+
+
+# region Native Algorithms Rest
+# [👤semio📚py💻semio🔖nativealgorithmsrest](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest)
+# Specs: Expose native algorithm execution (python/go/rust/csharp) via FastAPI without semio/engine.
+# Summary: Starts a lightweight REST server for POST /api/native-algorithms/execute used by semio/algorithms Storybook proxy.
+
+
+class NativeAlgorithmExecuteBody(pydantic.BaseModel):
+    """Request body for POST /api/native-algorithms/execute.
+    Specs: language selects the native runtime; operation selects algorithm; kit+design are semio JSON.
+    [👤semio📚py💻semio🔖nativealgorithmsrest🛠️nativealgorithmexecutebody](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/NativeAlgorithmExecuteBody)
+    """
+
+    language: typing.Literal["python", "go", "rust", "csharp"]
+    operation: typing.Literal["flatten", "delete"]
+    kit: dict[str, typing.Any]
+    design: dict[str, typing.Any]
+    designGuid: str
+    pieceGuids: list[str] = []
+    connectionGuids: list[str] = []
+
+
+def _semio_repo_root() -> pathlib.Path:
+    """Return the semio/ directory containing go, rs, net, py bundles.
+    [👤semio📚py💻semio🔖nativealgorithmsrest🛠️semioreporoot](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/_semio_repo_root)
+    """
+
+    return pathlib.Path(__file__).resolve().parent.parent
+
+
+def _python_native_flatten_to_design_change(kit: dict[str, typing.Any], design_guid: str) -> dict[str, typing.Any]:
+    """Map flattenDesignDict output to a DesignChange-shaped dict for the algorithms adapter.
+    [👤semio📚py💻semio🔖nativealgorithmsrest🛠️pythonnativeflattentodesignchange](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/_python_native_flatten_to_design_change)
+    """
+
+    raw = flattenDesignDict(kit, design_guid)
+    updates: list[dict[str, typing.Any]] = []
+    for u in raw.get("pieces", {}).get("updated", []):
+        pid = u.get("id")
+        diff = u.get("diff", {})
+        if pid:
+            updates.append({"piece": {"guid": pid}, "diff": diff})
+    forward: dict[str, typing.Any] = {}
+    if updates:
+        forward["pieces"] = {"updated": updates}
+    return {"forward": forward, "backward": {}}
+
+
+def _go_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
+    """Run semio/go/cmd/nativebridge and return parsed JSON result.
+    [👤semio📚py💻semio🔖nativealgorithmsrest🛠️gonativebridge](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/_go_native_bridge)
+    """
+
+    import subprocess
+
+    go_root = _semio_repo_root() / "go"
+    proc = subprocess.run(
+        ["go", "run", "./cmd/nativebridge"],
+        cwd=str(go_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=300,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "go native bridge failed")
+    out = json.loads(proc.stdout.decode("utf-8"))
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "go native bridge error"))
+    result = out.get("result")
+    if operation == "flatten":
+        return {"forward": result, "backward": {}}
+    return result
+
+
+def _rust_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """Run semio/rs native_bridge and return parsed JSON result.
+    [👤semio📚py💻semio🔖nativealgorithmsrest🛠️rustnativebridge](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/_rust_native_bridge)
+    """
+
+    import subprocess
+
+    rs_root = _semio_repo_root() / "rs"
+    proc = subprocess.run(
+        ["cargo", "run", "-q", "--bin", "native_bridge"],
+        cwd=str(rs_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=600,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "rust native bridge failed")
+    out = json.loads(proc.stdout.decode("utf-8"))
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "rust native bridge error"))
+    return out.get("result")
+
+
+def _csharp_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
+    """Run Semio.Benchmark as a stdin/stdout native bridge and return parsed JSON result.
+    [👤semio📚py💻semio🔖nativealgorithmsrest🛠️csharpnativebridge](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/_csharp_native_bridge)
+    """
+
+    import subprocess
+
+    net_root = _semio_repo_root() / "net"
+    proc = subprocess.run(
+        ["dotnet", "run", "--project", "Semio.Benchmark/Semio.Benchmark.csproj", "--", "--native-bridge"],
+        cwd=str(net_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=600,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "csharp native bridge failed")
+    out = json.loads(proc.stdout.decode("utf-8"))
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "csharp native bridge error"))
+    result = out.get("result")
+    if operation == "flatten":
+        return {"forward": result, "backward": {}}
+    return result
+
+
+def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
+    """Dispatch native algorithm execution by language and operation (no semio/engine).
+    [👤semio📚py💻semio🔖nativealgorithmsrest🛠️dispatchnativealgorithm](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/_dispatch_native_algorithm)
+    """
+
+    kit = body.kit
+    design = body.design
+    dg = body.designGuid
+    lang = body.language
+    op = body.operation
+    bridge_payload: dict[str, typing.Any] = {
+        "op": op,
+        "kit": kit,
+        "design": design,
+        "designGuid": dg,
+        "pieceGuids": list(body.pieceGuids),
+        "connectionGuids": list(body.connectionGuids),
+    }
+    if lang == "python":
+        if op == "flatten":
+            return _python_native_flatten_to_design_change(kit, dg)
+        return deletePiecesAndConnectionsInDesignDict(kit, design, list(body.pieceGuids), list(body.connectionGuids))
+    if lang == "go":
+        return _go_native_bridge(bridge_payload, op)
+    if lang == "rust":
+        result = _rust_native_bridge(bridge_payload)
+        if op == "flatten":
+            return {"forward": result, "backward": {}}
+        return result
+    if lang == "csharp":
+        return _csharp_native_bridge(bridge_payload, op)
+    raise RuntimeError(f"unsupported native language: {lang}")
+
+
+def start_native_algorithms_rest() -> None:
+    """Start the native-algorithms REST server on HOST:PORT.
+    [👤semio📚py💻semio🔖nativealgorithmsrest🛠️startnativealgorithmsrest](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/start_native_algorithms_rest)
+    """
+
+    import uvicorn
+    from fastapi.middleware.cors import CORSMiddleware
+
+    app = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    @app.post("/api/native-algorithms/execute")
+    async def native_algorithms_execute(body: NativeAlgorithmExecuteBody) -> fastapi.responses.JSONResponse:
+        """Execute flatten or delete in python/go/rust/csharp native stacks.
+        [👤semio📚py💻semio🔖nativealgorithmsrest🛠️nativealgorithmsexecute](repo://p/u/semio/b/l/py/f/semio.py/s/Native%20Algorithms%20Rest/d/i/native_algorithms_execute)
+        """
+
+        try:
+            result = _dispatch_native_algorithm(body)
+            return fastapi.responses.JSONResponse(content={"result": result})
+        except Exception as e:
+            return fastapi.responses.JSONResponse(content={"error": str(e)}, status_code=500)
+
+    uvicorn.run(app, host=HOST, port=PORT, log_level="info")
+
+
+# endregion Native Algorithms Rest

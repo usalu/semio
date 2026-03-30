@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Semio;
+using Newtonsoft.Json.Linq;
 
 namespace Semio.Benchmark;
 
@@ -69,6 +70,12 @@ class Program
 
     static void Main(string[] args)
     {
+        if (args.Length > 0 && args.Contains("--native-bridge"))
+        {
+            RunNativeBridge();
+            return;
+        }
+
         var kitMetabolism = LoadAsset<Kit>("metabolism.kit.semio.json");
         var kitInvalid = LoadAsset<Kit>("invalid.kit.semio.json");
         var diffForward = LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
@@ -131,4 +138,78 @@ class Program
             SemioValidator.ValidateKit(kitMetabolism);
         });
     }
+
+    #region 🔖Native Bridge
+    // [👤semio📚net🛅semiobenchmark💻program🔖nativebridge](repo://p/u/semio/b/l/net/fd/req/Semio.Benchmark/f/Program.cs/s/Native%20Bridge)
+    // Specs: When invoked with --native-bridge, read JSON from stdin and write {ok,result,error} to stdout.
+    // Summary: Provides a csharp native bridge for semio/algorithms native-algorithms REST (without semio/engine).
+
+    class BridgeRequest
+    {
+        [JsonProperty("op")] public string Op { get; set; } = "";
+        [JsonProperty("kit")] public JToken Kit { get; set; } = new JObject();
+        [JsonProperty("design")] public JToken Design { get; set; } = new JObject();
+        [JsonProperty("designGuid")] public string DesignGuid { get; set; } = "";
+        [JsonProperty("pieceGuids")] public List<string> PieceGuids { get; set; } = new();
+        [JsonProperty("connectionGuids")] public List<string> ConnectionGuids { get; set; } = new();
+    }
+
+    class BridgeResponse
+    {
+        [JsonProperty("ok")] public bool Ok { get; set; }
+        [JsonProperty("result")] public JToken? Result { get; set; }
+        [JsonProperty("error")] public string? Error { get; set; }
+    }
+
+    static void RunNativeBridge()
+    {
+        try
+        {
+            var input = Console.In.ReadToEnd();
+            var req = JsonConvert.DeserializeObject<BridgeRequest>(input);
+            if (req == null) throw new Exception("parse request: null");
+
+            var kit = req.Kit.ToObject<Kit>();
+            if (kit == null) throw new Exception("parse kit: null");
+
+            switch (req.Op)
+            {
+                case "flatten":
+                {
+                    var diff = Kit.FlattenDesign(kit, req.DesignGuid);
+                    WriteOk(JToken.FromObject(diff));
+                    return;
+                }
+                case "delete":
+                {
+                    var design = req.Design.ToObject<Design>();
+                    if (design == null) throw new Exception("parse design: null");
+                    var diff = Design.DeletePiecesAndConnectionsInDesign(kit, design, req.PieceGuids ?? new List<string>(), req.ConnectionGuids ?? new List<string>());
+                    WriteOk(JToken.FromObject(diff));
+                    return;
+                }
+                default:
+                    WriteErr("unknown op: " + req.Op);
+                    return;
+            }
+        }
+        catch (Exception e)
+        {
+            WriteErr(e.Message);
+        }
+    }
+
+    static void WriteOk(JToken result)
+    {
+        var resp = new BridgeResponse { Ok = true, Result = result, Error = null };
+        Console.Out.WriteLine(JsonConvert.SerializeObject(resp));
+    }
+
+    static void WriteErr(string msg)
+    {
+        var resp = new BridgeResponse { Ok = false, Result = null, Error = msg };
+        Console.Out.WriteLine(JsonConvert.SerializeObject(resp));
+    }
+
+    #endregion 🔖Native Bridge
 }
