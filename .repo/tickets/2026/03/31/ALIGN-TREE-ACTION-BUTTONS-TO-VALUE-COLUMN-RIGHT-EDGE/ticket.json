@@ -1,0 +1,11 @@
+{
+  "id": "2026/03/31/ALIGN-TREE-ACTION-BUTTONS-TO-VALUE-COLUMN-RIGHT-EDGE",
+  "title": "Align Tree Action Buttons to Value Column Right Edge",
+  "status": "closed",
+  "goal": "sketchpadimprovements",
+  "client": "claude-code",
+  "llm": "sonnet-4-5",
+  "prompt": "In the sketchpad details panel, TreeSection and TreeItem add/remove action buttons (AddIcon/RemoveIcon) need to sit flush with the right edge of the property value field column (160px wide). Currently they are placed inside the label content area of TreeAlignedRow and drift/misalign across nested groups. The fix should be generic for all collection nodes in the right-side property inspector.",
+  "summary": "In elements/ui/index.tsx, refactored TreeSection, TreeItem (default layout), and SortableTreeItem to place action buttons (AddIcon/RemoveIcon) in a dedicated right column aligned with the 160px value column when isTree=true. When isTree=true and actions.length>0, the row container becomes a CSS grid with gridTemplateColumns: minmax(0,1fr) 160px, and actions are rendered in the right column outside TreeAlignedRow. Added 3 new tests. All 17 tests pass.",
+  "files": ["/workspaces/semio/elements/ui/index.tsx"]
+}

@@ -25,6 +25,7 @@
 
 export {
   Plus as AddIcon,
+  Copy as CopyIcon,
   AlertCircle as AlertCircleIcon,
   ArrowLeft as ArrowLeftIcon,
   Award as AwardIcon,

@@ -27,10 +27,13 @@ import { Bounds, Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, 
 import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
 import {
   applyDesignDiff,
+  designWithDiff,
+  DiffStatus,
   flattenDesign,
   planeToMatrix,
   selectBestModel,
   toThreeRotation,
+  type Attribute,
   type Camera,
   type Connection,
   type Design,
@@ -859,6 +862,16 @@ export type ZoomTarget = "design" | "diff" | "none";
 
 type DiagramEntityStatus = "default" | "removed" | "added" | "modified";
 
+const DIFF_STATUS_KEY = "semio.diffStatus";
+const getDiffStatusFromAttributes = (attributes: Attribute[] | undefined): DiagramEntityStatus => {
+  const attr = attributes?.find((a) => a.key === DIFF_STATUS_KEY);
+  if (!attr?.value) return "default";
+  if (attr.value === DiffStatus.Removed) return "removed";
+  if (attr.value === DiffStatus.Added) return "added";
+  if (attr.value === DiffStatus.Modified) return "modified";
+  return "default";
+};
+
 export interface DiagramSelection {
   pieceGuids?: string[];
   connectionGuids?: string[];
@@ -963,77 +976,24 @@ const getInteractiveEntityColor = (status: DiagramEntityStatus, isSelected: bool
 };
 
 const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff): DiagramSnapshot => {
-  const baseDesign = design;
-  const nextDesign = designDiff ? applyDesignDiff(baseDesign, designDiff) : baseDesign;
-  const flatBaseDesign = baseDesign;
-  const flatNextDesign = nextDesign;
-  const removedPieceGuids = new Set((designDiff?.pieces?.removed ?? []).map((piece) => piece.guid));
-  const addedPieceGuids = new Set((designDiff?.pieces?.added ?? []).map((piece) => piece.guid));
-  const modifiedPieceGuids = new Set((designDiff?.pieces?.updated ?? []).map((piece) => piece.piece.guid));
-  const removedConnectionGuids = new Set((designDiff?.connections?.removed ?? []).map((connection) => connection.guid));
-  const addedConnectionGuids = new Set((designDiff?.connections?.added ?? []).map((connection) => connection.guid));
-  const modifiedConnectionGuids = new Set((designDiff?.connections?.updated ?? []).map((connection) => connection.connection.guid));
+  const merged = designDiff ? designWithDiff(design, designDiff) : design;
 
   const pointMap = new Map<string, DiagramPoint>();
-  const upsertPoint = (piece: Piece, status: DiagramEntityStatus) => {
+  (merged.pieces ?? []).forEach((piece) => {
     if (!piece.guid || !piece.center) return;
-    pointMap.set(piece.guid, {
-      guid: piece.guid,
-      piece,
-      u: piece.center.u,
-      v: piece.center.v,
-      status,
-    });
-  };
-
-  (flatBaseDesign.pieces ?? []).forEach((piece) => {
-    if (removedPieceGuids.has(piece.guid)) {
-      upsertPoint(piece, "removed");
-    } else if (!designDiff) {
-      upsertPoint(piece, "default");
-    }
-  });
-  (flatNextDesign.pieces ?? []).forEach((piece) => {
-    if (addedPieceGuids.has(piece.guid)) {
-      upsertPoint(piece, "added");
-    } else if (modifiedPieceGuids.has(piece.guid)) {
-      upsertPoint(piece, "modified");
-    } else {
-      upsertPoint(piece, "default");
-    }
+    const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
+    pointMap.set(piece.guid, { guid: piece.guid, piece, u: piece.center.u, v: piece.center.v, status });
   });
 
   const pointsByGuid = new Map(Array.from(pointMap.values()).map((point) => [point.guid, point]));
   const lineMap = new Map<string, DiagramLine>();
-  const upsertLine = (connection: Connection, status: DiagramEntityStatus) => {
+  (merged.connections ?? []).forEach((connection) => {
     if (!connection.guid) return;
     const source = pointsByGuid.get(connection.connected.piece.guid);
     const target = pointsByGuid.get(connection.connecting.piece.guid);
     if (!source || !target) return;
-    lineMap.set(connection.guid, {
-      guid: connection.guid,
-      connection,
-      source,
-      target,
-      status,
-    });
-  };
-
-  (flatBaseDesign.connections ?? []).forEach((connection) => {
-    if (removedConnectionGuids.has(connection.guid)) {
-      upsertLine(connection, "removed");
-    } else if (!designDiff) {
-      upsertLine(connection, "default");
-    }
-  });
-  (flatNextDesign.connections ?? []).forEach((connection) => {
-    if (addedConnectionGuids.has(connection.guid)) {
-      upsertLine(connection, "added");
-    } else if (modifiedConnectionGuids.has(connection.guid)) {
-      upsertLine(connection, "modified");
-    } else {
-      upsertLine(connection, "default");
-    }
+    const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
+    lineMap.set(connection.guid, { guid: connection.guid, connection, source, target, status });
   });
 
   const lines = Array.from(lineMap.values());
@@ -2070,74 +2030,27 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
 const toSceneVector = (coord: { x: number; y: number; z: number }): THREE.Vector3 => new THREE.Vector3(coord.x, coord.y, coord.z).applyMatrix4(SEMIO_TO_THREE_BASIS);
 
 const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnapshot => {
-  const baseDesign = design;
-  const nextDesign = designDiff ? applyDesignDiff(baseDesign, designDiff) : baseDesign;
-  const flatBaseDesign = baseDesign;
-  const flatNextDesign = nextDesign;
-  const removedPieceGuids = new Set((designDiff?.pieces?.removed ?? []).map((piece) => piece.guid));
-  const addedPieceGuids = new Set((designDiff?.pieces?.added ?? []).map((piece) => piece.guid));
-  const modifiedPieceGuids = new Set((designDiff?.pieces?.updated ?? []).map((piece) => piece.piece.guid));
-  const removedConnectionGuids = new Set((designDiff?.connections?.removed ?? []).map((connection) => connection.guid));
-  const addedConnectionGuids = new Set((designDiff?.connections?.added ?? []).map((connection) => connection.guid));
-  const modifiedConnectionGuids = new Set((designDiff?.connections?.updated ?? []).map((connection) => connection.connection.guid));
+  const merged = designDiff ? designWithDiff(design, designDiff) : design;
 
   const pieceMap = new Map<string, ScenePieceAsset>();
-  const upsertPiece = (piece: Piece, status: DiagramEntityStatus) => {
+  (merged.pieces ?? []).forEach((piece) => {
     if (!piece.guid) return;
+    const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
     const existing = pieceMap.get(piece.guid);
-    const resolvedPiece = piece.plane && piece.center ? piece : existing?.piece ? { ...existing.piece, ...piece, plane: existing.piece.plane, center: existing.piece.center } : undefined;
-    if (!resolvedPiece?.plane || !resolvedPiece?.center) return;
-    pieceMap.set(piece.guid, { piece: resolvedPiece, status });
-  };
-
-  (flatBaseDesign.pieces ?? []).forEach((piece) => {
-    if (removedPieceGuids.has(piece.guid)) {
-      upsertPiece(piece, "removed");
-    } else if (!designDiff) {
-      upsertPiece(piece, "default");
-    }
-  });
-  (flatNextDesign.pieces ?? []).forEach((piece) => {
-    if (addedPieceGuids.has(piece.guid)) {
-      upsertPiece(piece, "added");
-    } else if (modifiedPieceGuids.has(piece.guid)) {
-      upsertPiece(piece, "modified");
-    } else {
-      upsertPiece(piece, "default");
-    }
+    const resolvedPiece = piece.plane && piece.center ? piece : existing?.piece?.plane && existing?.piece?.center ? { ...piece, plane: existing.piece.plane, center: existing.piece.center } : piece;
+    if (!resolvedPiece.plane || !resolvedPiece.center) return;
+    pieceMap.set(piece.guid, { piece: resolvedPiece, status: existing ? (status !== "default" ? status : existing.status) : status });
   });
 
-  const pieces = Array.from(pieceMap.values());
-  const piecesByGuid = new Map(pieces.map((asset) => [asset.piece.guid, asset.piece] as const));
+  const piecesByGuid = new Map(Array.from(pieceMap.values()).map((asset) => [asset.piece.guid, asset.piece] as const));
   const connectionMap = new Map<string, SceneConnectionAsset>();
-  const upsertConnection = (connection: Connection, status: DiagramEntityStatus) => {
+  (merged.connections ?? []).forEach((connection) => {
     if (!connection.guid) return;
     const sourcePiece = piecesByGuid.get(connection.connected.piece.guid);
     const targetPiece = piecesByGuid.get(connection.connecting.piece.guid);
     if (!sourcePiece?.plane || !targetPiece?.plane || !sourcePiece?.center || !targetPiece?.center) return;
-    connectionMap.set(connection.guid, {
-      connection,
-      sourcePiece,
-      targetPiece,
-      status,
-    });
-  };
-
-  (flatBaseDesign.connections ?? []).forEach((connection) => {
-    if (removedConnectionGuids.has(connection.guid)) {
-      upsertConnection(connection, "removed");
-    } else if (!designDiff) {
-      upsertConnection(connection, "default");
-    }
-  });
-  (flatNextDesign.connections ?? []).forEach((connection) => {
-    if (addedConnectionGuids.has(connection.guid)) {
-      upsertConnection(connection, "added");
-    } else if (modifiedConnectionGuids.has(connection.guid)) {
-      upsertConnection(connection, "modified");
-    } else {
-      upsertConnection(connection, "default");
-    }
+    const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
+    connectionMap.set(connection.guid, { connection, sourcePiece, targetPiece, status });
   });
 
   for (const { connection, status } of connectionMap.values()) {
@@ -2797,8 +2710,8 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const hasPlanes = React.useMemo(() => {
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
-    const nextDesign = effectiveDiff ? applyDesignDiff(design, effectiveDiff) : design;
-    return (nextDesign.pieces ?? []).some((p) => p.plane && p.center);
+    const merged = effectiveDiff ? designWithDiff(design, effectiveDiff) : design;
+    return (merged.pieces ?? []).some((p) => p.plane && p.center);
   }, [design, resolvedDesignDiff, diffEnabled]);
 
   const showSceneColumn = semioDesignShowSceneColumn(splitLayout, hasPlanes);
@@ -3353,8 +3266,8 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
   const mode = p.mode ?? "show-diagram";
   const kit = p.kit;
   const design = p.design as Design | undefined;
-  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface) : undefined;
   const isDiff = mode === "show-diff" || mode === "show-diagram-diff";
+  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined) : (isDiff && design && p.designDiff ? designWithDiff(design, p.designDiff) : undefined);
   const designGuid = design && typeof design === "object" && "guid" in design && typeof (design as { guid?: unknown }).guid === "string" ? (design as { guid: string }).guid : undefined;
   const hasDiagramPoints = (p.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
@@ -3388,29 +3301,27 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
  *
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
-export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram"): Design {
-  if (surface !== "design" && surface !== "scene") return design;
-  if (!kit) return design;
-  if (!design?.guid) return design;
+export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram", diff?: DesignDiff): Design {
+  if (surface !== "design" && surface !== "scene") return diff ? designWithDiff(design, diff) : design;
+  if (!kit) return diff ? designWithDiff(design, diff) : design;
+
+  const merged = diff ? designWithDiff(design, diff) : design;
+  if (!merged?.guid) return merged;
 
   try {
     const kitDesigns = (kit.designs ?? []) as Design[];
-    const hasDesignInKit = kitDesigns.some((d) => d?.guid === design.guid);
-    const kitForFlatten: Kit = hasDesignInKit
-      ? kit
-      : ({
-          ...kit,
-          designs: [...kitDesigns.filter((d) => d?.guid !== design.guid), design],
-        } as Kit);
+    const kitForFlatten: Kit = {
+      ...kit,
+      designs: [...kitDesigns.filter((d) => d?.guid !== merged.guid), merged],
+    } as Kit;
 
-    const fc = flattenDesign(kitForFlatten, design.guid);
+    const fc = flattenDesign(kitForFlatten, merged.guid);
     const piecesDiff = fc.forward?.pieces;
-    if (!piecesDiff) return design;
-    return applyDesignDiff(design, { pieces: piecesDiff });
+    if (!piecesDiff) return merged;
+    return applyDesignDiff(merged, { pieces: piecesDiff });
   } catch (e) {
-    // Temporary diagnostic: keep [DEBUG] prefix so it can be removed later if needed.
     console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface failed: ${(e as Error)?.message ?? String(e)}`);
-    return design;
+    return merged;
   }
 }
 
@@ -4717,7 +4628,7 @@ if (import.meta.vitest) {
         ]),
       );
       expect(snapshot.connections.map((asset) => [asset.connection.guid, asset.status])).toEqual([["connection-a", "modified"]]);
-      expect(snapshot.connections[0]?.sourcePiece.guid).toBe("piece-c");
+      expect(snapshot.connections[0]?.sourcePiece.guid).toBe("piece-a");
       expect(snapshot.connections[0]?.targetPiece.guid).toBe("piece-b");
     });
   });

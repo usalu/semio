@@ -292,6 +292,7 @@ import {
   CodeIcon,
   ConnectionIcon,
   ConnectorIcon,
+  CopyIcon,
   DetailsIcon,
   DiagramIcon,
   DisconnectIcon,
@@ -306,11 +307,9 @@ import {
   FocusIcon,
   FolderIcon,
   HandIcon,
-  HashIcon,
   HomeIcon,
   IntersectIcon,
   LayoutIcon,
-  LightbulbIcon,
   LocalKitIcon,
   Maximize2Icon,
   Minimize2Icon,
@@ -2929,7 +2928,7 @@ export interface KeyedAppEventHandlerConfig<TAppKey extends string, TAppState> e
   getKey: (event: any) => string;
 }
 
-const EXCLUSIVE_SIDE_PANEL_KEYS: (keyof PanelVisibility)[] = ["rightSidePanel"];
+const EXCLUSIVE_SIDE_PANEL_KEYS: (keyof PanelVisibility)[] = ["rightSidePanel", "chat", "settings"];
 
 /**
  * Returns the next panel visibility state for a toggle event.
@@ -5452,7 +5451,7 @@ export function isSelected<K extends keyof KitAppSelection>(selection: KitAppSel
  * Union of diagram node kind identifiers mapped to shape strategies.
  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🛠️kitdiagramnodekind](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/KitDiagramNodeKind)
  **/
-export type KitDiagramNodeKind = "type" | "design" | "quality" | "port" | "tag" | "concept" | "file" | "folder" | "author";
+export type KitDiagramNodeKind = "type" | "design" | "quality" | "port" | "file" | "folder" | "author";
 /**
  * Union of supported diagram shape identifiers.
  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🛠️kitdiagramshapeid](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/KitDiagramShapeId)
@@ -5557,7 +5556,7 @@ export interface KitDiagramProximityAnchor {
  * Scale multiplier applied to icon width for diagram node sizing.
  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨kitdiagramnodescale](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/KIT_DIAGRAM_NODE_SCALE)
  **/
-export const KIT_DIAGRAM_NODE_SCALE = 2;
+export const KIT_DIAGRAM_NODE_SCALE = 0.6;
 /**
  * Base pixel size for diagram nodes derived from icon width and scale.
  * [👤semio📚js🗃️sketchpad💻kitselectionhelper🔖kitdiagramgeometry🪨kitdiagrambasesize](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/kitSelectionHelper.ts/s/Kit%20Diagram%20Geometry/d/i/KIT_DIAGRAM_BASE_SIZE)
@@ -5825,8 +5824,6 @@ export const KIT_DIAGRAM_SHAPE_STRATEGY_REGISTRY: Record<KitDiagramNodeKind, Kit
   file: kitDiagramTriangleStrategy,
   quality: kitDiagramLongRectangleStrategy,
   port: kitDiagramLongRectangleStrategy,
-  tag: kitDiagramLongRectangleStrategy,
-  concept: kitDiagramLongRectangleStrategy,
   folder: kitDiagramLongRectangleStrategy,
   author: kitDiagramLongRectangleStrategy,
 };
@@ -9538,7 +9535,7 @@ function createDefaultSketchpadState(id?: string): SketchpadState {
       detailsWidth: 230,
       consoleHeight: 200,
       leftSidePanelWidth: 280,
-      rightSidePanelWidth: 280,
+      rightSidePanelWidth: 364,
       chatWidth: 280,
       settingsWidth: 280,
     },
@@ -10781,7 +10778,7 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
  * Union of entity kind identifiers for UI selection and hover.
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🛠️uientitykind](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/d/i/UiEntityKind)
  **/
-export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag" | "concept";
+export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag";
 
 /**
  * Selector extracting the active kit guid from the navigation path.
@@ -11792,7 +11789,6 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       const designs = kit.designs?.map((d: Design) => d.guid);
       const qualities = kit.qualities?.map((q: Quality) => q.name);
       const ports = kit.ports?.map((p: Port) => p.guid);
-      const tags = kit.tags?.map((t: Tag) => t.guid);
       const concepts = kit.concepts?.map((c: Concept) => c.guid);
       const files = kit.files?.map((f: SemioFile) => f.name);
       const folders = kit.folders?.map((f: Folder) => f.guid);
@@ -11802,7 +11798,6 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       if (designs && designs.length > 0) allSelection.designs = designs;
       if (qualities && qualities.length > 0) allSelection.qualities = qualities;
       if (ports && ports.length > 0) allSelection.ports = ports;
-      if (tags && tags.length > 0) allSelection.tags = tags;
       if (concepts && concepts.length > 0) allSelection.concepts = concepts;
       if (files && files.length > 0) allSelection.files = files;
       if (folders && folders.length > 0) allSelection.folders = folders;
@@ -12909,7 +12904,7 @@ export const kitAppCommands = {
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖table✂️kitkindtoggles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/KitKindToggles)
  * ArtifactKind holds the data fields for a ArtifactKind record.
  **/
-type ArtifactKind = "designs" | "types" | "qualities" | "ports" | "tags" | "concepts" | "files" | "folders" | "authors";
+type ArtifactKind = "designs" | "types" | "qualities" | "ports" | "files" | "folders" | "authors";
 
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨kitkindtoggles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/KitKindToggles)
 /**
@@ -12946,8 +12941,6 @@ const KitKindToggles: FC = () => {
   const labelTypes = useLabel("semio.sketchpad.app.kit.toolbar.showTypes");
   const labelQualities = useLabel("semio.sketchpad.app.kit.toolbar.showQualities");
   const labelPorts = useLabel("semio.sketchpad.app.kit.toolbar.showPorts");
-  const labelTags = useLabel("semio.sketchpad.app.kit.toolbar.showTags");
-  const labelConcepts = useLabel("semio.sketchpad.app.kit.toolbar.showConcepts");
   const labelFiles = useLabel("semio.sketchpad.app.kit.toolbar.showFiles");
   const labelFolders = useLabel("semio.sketchpad.app.kit.toolbar.showFolders");
   const labelAuthors = useLabel("semio.sketchpad.app.kit.toolbar.showAuthors");
@@ -12958,8 +12951,6 @@ const KitKindToggles: FC = () => {
       <Toggle pressed={selectedKinds.has("types")} onPressedChange={() => toggleKind("types")} id="semio.sketchpad.app.kit.toolbar.showTypes" icon={<TypeIcon />} text={labelTypes} />
       <Toggle pressed={selectedKinds.has("qualities")} onPressedChange={() => toggleKind("qualities")} id="semio.sketchpad.app.kit.toolbar.showQualities" icon={<AwardIcon />} text={labelQualities} />
       <Toggle pressed={selectedKinds.has("ports")} onPressedChange={() => toggleKind("ports")} id="semio.sketchpad.app.kit.toolbar.showPorts" icon={<PortIcon />} text={labelPorts} />
-      <Toggle pressed={selectedKinds.has("tags")} onPressedChange={() => toggleKind("tags")} id="semio.sketchpad.app.kit.toolbar.showTags" icon={<HashIcon />} text={labelTags} />
-      <Toggle pressed={selectedKinds.has("concepts")} onPressedChange={() => toggleKind("concepts")} id="semio.sketchpad.app.kit.toolbar.showConcepts" icon={<LightbulbIcon />} text={labelConcepts} />
       <Toggle pressed={selectedKinds.has("files")} onPressedChange={() => toggleKind("files")} id="semio.sketchpad.app.kit.toolbar.showFiles" icon={<DocumentIcon />} text={labelFiles} />
       <Toggle pressed={selectedKinds.has("folders")} onPressedChange={() => toggleKind("folders")} id="semio.sketchpad.app.kit.toolbar.showFolders" icon={<FolderIcon />} text={labelFolders} />
       <Toggle pressed={selectedKinds.has("authors")} onPressedChange={() => toggleKind("authors")} id="semio.sketchpad.app.kit.toolbar.showAuthors" icon={<UserIcon />} text={labelAuthors} />
@@ -12983,7 +12974,6 @@ const KitCreateActions: FC = () => {
   const defaultTypeName = useLabel("semio.sketchpad.app.kit.defaultTypeName");
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
-  const defaultTagName = useLabel("semio.sketchpad.app.tag.defaultName");
   const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
 
@@ -13042,28 +13032,6 @@ const KitCreateActions: FC = () => {
         setKindActive("ports");
         break;
       }
-      case "tags": {
-        const existingNames = (kit.tags || []).map((t: Tag) => t.name);
-        const uniqueName = generateUniqueName(defaultTagName || "", existingNames);
-        const newTag: Tag = {
-          guid: guid(),
-          name: uniqueName,
-        };
-        kitCommands.createTag(newTag);
-        setKindActive("tags");
-        break;
-      }
-      case "concepts": {
-        const existingNames = (kit.concepts || []).map((c: Concept) => c.name);
-        const uniqueName = generateUniqueName(defaultConceptName || "", existingNames);
-        const newConcept: Concept = {
-          guid: guid(),
-          name: uniqueName,
-        };
-        kitCommands.createConcept(newConcept);
-        setKindActive("concepts");
-        break;
-      }
       case "folders": {
         const existingNames = (kit.folders || []).map((f: Folder) => f.name);
         const uniqueName = generateUniqueName(defaultFolderName || "", existingNames);
@@ -13082,8 +13050,6 @@ const KitCreateActions: FC = () => {
   const labelType = useLabel("semio.sketchpad.app.kit.toolbar.createType");
   const labelQuality = useLabel("semio.sketchpad.app.kit.toolbar.createQuality");
   const labelPort = useLabel("semio.sketchpad.app.kit.toolbar.createPort");
-  const labelTag = useLabel("semio.sketchpad.app.kit.toolbar.createTag");
-  const labelConcept = useLabel("semio.sketchpad.app.kit.toolbar.createConcept");
   const labelFolder = useLabel("semio.sketchpad.app.kit.toolbar.createFolder");
 
   return (
@@ -13092,8 +13058,6 @@ const KitCreateActions: FC = () => {
       <Button onClick={() => handleCreateArtifact("types")} id="semio.sketchpad.app.kit.toolbar.createType" icon={<TypeIcon />} text={labelType} />
       <Button onClick={() => handleCreateArtifact("qualities")} id="semio.sketchpad.app.kit.toolbar.createQuality" icon={<AwardIcon />} text={labelQuality} />
       <Button onClick={() => handleCreateArtifact("ports")} id="semio.sketchpad.app.kit.toolbar.createPort" icon={<PortIcon />} text={labelPort} />
-      <Button onClick={() => handleCreateArtifact("tags")} id="semio.sketchpad.app.kit.toolbar.createTag" icon={<HashIcon />} text={labelTag} />
-      <Button onClick={() => handleCreateArtifact("concepts")} id="semio.sketchpad.app.kit.toolbar.createConcept" icon={<LightbulbIcon />} text={labelConcept} />
       <Button onClick={() => handleCreateArtifact("folders")} id="semio.sketchpad.app.kit.toolbar.createFolder" icon={<FolderIcon />} text={labelFolder} />
     </ToolbarGroup>
   );
@@ -13116,7 +13080,6 @@ type TableRow = {
   isExpanded: boolean;
   data: Design | Type | Quality | Port | Tag | Concept | SemioFile | Author | Folder;
   folderId?: string;
-  concepts?: string[];
 };
 
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨chevronright](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/ChevronRight)
@@ -13348,7 +13311,6 @@ const AppContent: FC = () => {
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
   const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
-  const defaultTagName = useLabel("semio.sketchpad.app.tag.defaultName");
   const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const kitLoadingLabel = useLabel("semio.sketchpad.app.kit.loading");
 
@@ -13361,58 +13323,19 @@ const AppContent: FC = () => {
   const selectedKinds = useMemo(() => new Set(searchParams.getAll("kind") as ArtifactKind[]), [searchParams]);
   const selectedName = searchParams.get("name");
 
-  const selectedConcepts = searchParams.getAll("c");
   const searchQuery = searchParams.get("q") || "";
 
   const selectParam = searchParams.get("select");
   const expandedRows = expandedRowsSet;
 
-  const selectionTypes = selection?.types || [];
-  const selectionDesigns = selection?.designs || [];
-  const selectionQualities = selection?.qualities || [];
-  const selectionPorts = selection?.ports || [];
-  const selectionTags = selection?.tags || [];
-  const selectionConcepts = selection?.concepts || [];
-  const selectionFiles = selection?.files || [];
-  const selectionFolders = selection?.folders || [];
-  const selectionAuthors = selection?.authors || [];
-  const selectionTypesKey = selectionTypes.join(",");
-  const selectionDesignsKey = selectionDesigns.join(",");
-  const selectionQualitiesKey = selectionQualities.join(",");
-  const selectionPortsKey = selectionPorts.join(",");
-  const selectionTagsKey = selectionTags.join(",");
-  const selectionConceptsKey = selectionConcepts.join(",");
-  const selectionFilesKey = selectionFiles.join(",");
-  const selectionFoldersKey = selectionFolders.join(",");
-  const selectionAuthorsKey = selectionAuthors.join(",");
-  const selectionMemo = useMemo(
-    () => ({
-      types: selectionTypes,
-      designs: selectionDesigns,
-      qualities: selectionQualities,
-      ports: selectionPorts,
-      tags: selectionTags,
-      concepts: selectionConcepts,
-      files: selectionFiles,
-      folders: selectionFolders,
-      authors: selectionAuthors,
-    }),
-    [selectionTypesKey, selectionDesignsKey, selectionQualitiesKey, selectionPortsKey, selectionTagsKey, selectionConceptsKey, selectionFilesKey, selectionFoldersKey, selectionAuthorsKey],
-  );
-
   const kitDesigns = useMemo(() => (kit?.designs ?? []).filter(Boolean), [kit?.designs]);
   const kitTypes = useMemo(() => (kit?.types ?? []).filter(Boolean), [kit?.types]);
   const kitQualities = useMemo(() => (kit?.qualities ?? []).filter(Boolean), [kit?.qualities]);
   const kitPorts = useMemo(() => (kit?.ports ?? []).filter(Boolean), [kit?.ports]);
-  const kitTags = useMemo(() => (kit?.tags ?? []).filter(Boolean), [kit?.tags]);
-  const kitConcepts = useMemo(() => (kit?.concepts ?? []).filter(Boolean), [kit?.concepts]);
   const kitFiles = useMemo(() => (kit?.files ?? []).filter(Boolean), [kit?.files]);
   const kitFolders = useMemo(() => (kit?.folders ?? []).filter(Boolean), [kit?.folders]);
   const kitAuthors = useMemo(() => (kit?.authors ?? []).filter(Boolean), [kit?.authors]);
 
-  const resolveGuid = useCallback((value: any): string | undefined => {
-    return typeof value === "string" ? value : value?.guid;
-  }, []);
   const fileUrls = useFileUrls();
   const importedFilePathsKey = Array.from(fileUrls.keys()).sort().join("|");
   const importedFilePaths = useMemo(() => {
@@ -13467,22 +13390,6 @@ const AppContent: FC = () => {
         .join("|"),
     [kitPorts],
   );
-  const kitTagsKey = useMemo(
-    () =>
-      (kitTags ?? [])
-        .filter(Boolean)
-        .map((tag) => `${tag.guid}:${tag.name}`)
-        .join("|"),
-    [kitTags],
-  );
-  const kitConceptsKey = useMemo(
-    () =>
-      (kitConcepts ?? [])
-        .filter(Boolean)
-        .map((c) => `${c.guid}:${c.name}`)
-        .join("|"),
-    [kitConcepts],
-  );
   const kitFilesKey = useMemo(
     () =>
       (kitFiles ?? [])
@@ -13507,19 +13414,6 @@ const AppContent: FC = () => {
         .join("|"),
     [kitAuthors],
   );
-
-  const allConcepts = useMemo(() => {
-    const conceptSet = new Set<string>();
-    kitDesigns?.forEach((d: Design) =>
-      d.concepts?.forEach((c) => {
-        const conceptGuid = resolveGuid(c);
-        if (!conceptGuid) return;
-        const concept = kitConcepts?.find((kc) => kc.guid === conceptGuid);
-        if (concept?.name) conceptSet.add(concept.name);
-      }),
-    );
-    return Array.from(conceptSet).sort();
-  }, [kitDesignsKey, kitConcepts, resolveGuid]);
 
   const uniqueNames = useMemo(() => {
     const nameSet = new Set<string>();
@@ -13559,11 +13453,10 @@ const AppContent: FC = () => {
     const qualitiesCount = selection?.qualities?.length || 0;
     const portsCount = selection?.ports?.length || 0;
     const tagsCount = selection?.tags?.length || 0;
-    const conceptsCount = selection?.concepts?.length || 0;
     const filesCount = selection?.files?.length || 0;
     const foldersCount = selection?.folders?.length || 0;
     const authorsCount = selection?.authors?.length || 0;
-    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, portsCount > 0, tagsCount > 0, conceptsCount > 0, filesCount > 0, foldersCount > 0, authorsCount > 0].filter(Boolean).length;
+    const totalSelectedKinds = [typesCount > 0, designsCount > 0, qualitiesCount > 0, portsCount > 0, tagsCount > 0, filesCount > 0, foldersCount > 0, authorsCount > 0].filter(Boolean).length;
 
     const artifactsMultipleId = "semio.sketchpad.app.kit.artifacts.multiple";
 
@@ -13576,8 +13469,6 @@ const AppContent: FC = () => {
     removeSection("details", "semio.sketchpad.app.kit.ports.multipleTitle");
     removeSection("details", "semio.sketchpad.app.kit.tag.properties");
     removeSection("details", "semio.sketchpad.app.kit.tags.multipleTitle");
-    removeSection("details", "semio.sketchpad.app.kit.concept.properties");
-    removeSection("details", "semio.sketchpad.app.kit.concepts.multipleTitle");
     removeSection("details", "semio.sketchpad.app.kit.file.properties");
     removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
     removeSection("details", "semio.sketchpad.app.kit.folder.properties");
@@ -13661,23 +13552,6 @@ const AppContent: FC = () => {
       });
     }
 
-    if (conceptsCount > 0 && totalSelectedKinds === 1) {
-      const conceptSectionId = conceptsCount === 1 ? "semio.sketchpad.app.kit.concept.properties" : "semio.sketchpad.app.kit.concepts.multipleTitle";
-      addSection("details", {
-        id: conceptSectionId,
-        specificity: 30,
-        order: 27,
-        content: () =>
-          kit ? (
-            <React.Suspense fallback={null}>
-              <KitScopeProvider guid={kit.guid}>
-                <ConceptSection />
-              </KitScopeProvider>
-            </React.Suspense>
-          ) : null,
-      });
-    }
-
     if (filesCount > 0 && totalSelectedKinds === 1) {
       const fileSectionId = filesCount === 1 ? "semio.sketchpad.app.kit.file.properties" : "semio.sketchpad.app.kit.files.multipleTitle";
       addSection("details", {
@@ -13736,8 +13610,6 @@ const AppContent: FC = () => {
       removeSection("details", "semio.sketchpad.app.kit.ports.multipleTitle");
       removeSection("details", "semio.sketchpad.app.kit.tag.properties");
       removeSection("details", "semio.sketchpad.app.kit.tags.multipleTitle");
-      removeSection("details", "semio.sketchpad.app.kit.concept.properties");
-      removeSection("details", "semio.sketchpad.app.kit.concepts.multipleTitle");
       removeSection("details", "semio.sketchpad.app.kit.file.properties");
       removeSection("details", "semio.sketchpad.app.kit.files.multipleTitle");
       removeSection("details", "semio.sketchpad.app.kit.folder.properties");
@@ -13883,14 +13755,6 @@ const AppContent: FC = () => {
 
         childDesigns.forEach((design) => {
           if (!designs.includes(design)) return;
-          if (
-            selectedConcepts.length > 0 &&
-            !design.concepts?.some((c) => {
-              const conceptGuid = resolveGuid(c);
-              return conceptGuid ? selectedConcepts.includes(conceptGuid) : false;
-            })
-          )
-            return;
           if (searchQuery && !design.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
           if (selectedKinds.size === 0 && parentGuid === undefined && design.folder) return;
@@ -13898,15 +13762,6 @@ const AppContent: FC = () => {
           const rowId = `design-${design.guid}`;
           const children = designsByParent.get(design.guid) || [];
           const hasChildren = children.length > 0;
-
-          const designConceptNames =
-            design.concepts
-              ?.map((c) => {
-                const conceptGuid = resolveGuid(c);
-                if (!conceptGuid) return undefined;
-                return kitConcepts?.find((kc) => kc.guid === conceptGuid)?.name;
-              })
-              .filter((name): name is string => name !== undefined) || [];
 
           result.push({
             id: rowId,
@@ -13920,7 +13775,6 @@ const AppContent: FC = () => {
             hasChildren,
             isExpanded: false, // Computed in visibleRows
             data: design,
-            concepts: designConceptNames,
           });
 
           if (hasChildren) {
@@ -14041,42 +13895,6 @@ const AppContent: FC = () => {
           hasChildren: false,
           isExpanded: false,
           data: iface,
-        });
-      });
-    }
-
-    if (selectedKinds.size === 0 || selectedKinds.has("tags")) {
-      kitTags?.forEach((tag: Tag) => {
-        if (searchQuery && !tag.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
-        result.push({
-          id: `tag-${tag.guid}`,
-          kind: "tags",
-          artifact: tag.name,
-          authors: tag.description || "",
-          updatedAt: "",
-          createdAt: "",
-          level: 0,
-          hasChildren: false,
-          isExpanded: false,
-          data: tag,
-        });
-      });
-    }
-
-    if (selectedKinds.size === 0 || selectedKinds.has("concepts")) {
-      kitConcepts?.forEach((concept: Concept) => {
-        if (searchQuery && !concept.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
-        result.push({
-          id: `concept-${concept.guid}`,
-          kind: "concepts",
-          artifact: concept.name,
-          authors: concept.description || "",
-          updatedAt: "",
-          createdAt: "",
-          level: 0,
-          hasChildren: false,
-          isExpanded: false,
-          data: concept,
         });
       });
     }
@@ -14418,8 +14236,6 @@ const AppContent: FC = () => {
     kitTypes,
     kitQualities,
     kitPorts,
-    kitTags,
-    kitConcepts,
     kitFiles,
     kitFolders,
     kitAuthors,
@@ -14427,15 +14243,12 @@ const AppContent: FC = () => {
     kitTypesKey,
     kitQualitiesKey,
     kitPortsKey,
-    kitTagsKey,
-    kitConceptsKey,
     kitFilesKey,
     kitFoldersKey,
     kitAuthorsKey,
     importedFilePathsKey,
     selectedKinds,
     selectedName,
-    selectedConcepts,
     searchQuery,
     sortColumn,
     sortDirection,
@@ -14487,8 +14300,6 @@ const AppContent: FC = () => {
       else if (row.kind === "types") isSelected = selection.types?.includes((row.data as Type).guid) ?? false;
       else if (row.kind === "qualities") isSelected = selection.qualities?.includes((row.data as Quality).key) ?? false;
       else if (row.kind === "ports") isSelected = selection.ports?.includes((row.data as Port).guid) ?? false;
-      else if (row.kind === "tags") isSelected = selection.tags?.includes((row.data as Tag).guid) ?? false;
-      else if (row.kind === "concepts") isSelected = selection.concepts?.includes((row.data as Concept).guid) ?? false;
       else if (row.kind === "files") isSelected = selection.files?.includes((row.data as SemioFile).guid) ?? false;
       else if (row.kind === "folders") isSelected = selection.folders?.includes((row.data as Folder).guid) ?? false;
       else if (row.kind === "authors") isSelected = selection.authors?.includes((row.data as Author).name) ?? false;
@@ -14507,8 +14318,6 @@ const AppContent: FC = () => {
       if (row.kind === "types") return hover.type === (row.data as Type).guid ? "bg-hover-base" : "";
       if (row.kind === "qualities") return hover.quality === (row.data as Quality).guid ? "bg-hover-base" : "";
       if (row.kind === "ports") return hover.port === (row.data as Port).guid ? "bg-hover-base" : "";
-      if (row.kind === "tags") return hover.tag === (row.data as Tag).guid ? "bg-hover-base" : "";
-      if (row.kind === "concepts") return hover.concept === (row.data as Concept).guid ? "bg-hover-base" : "";
       if (row.kind === "files") return hover.file === (row.data as SemioFile).guid ? "bg-hover-base" : "";
       if (row.kind === "folders") return hover.folder === (row.data as Folder).guid ? "bg-hover-base" : "";
       if (row.kind === "authors") return hover.author === (row.data as Author).guid ? "bg-hover-base" : "";
@@ -14531,12 +14340,6 @@ const AppContent: FC = () => {
       } else if (row.kind === "ports") {
         const guid = (row.data as Port).guid;
         if (hover?.port !== guid) setHover({ port: guid });
-      } else if (row.kind === "tags") {
-        const guid = (row.data as Tag).guid;
-        if (hover?.tag !== guid) setHover({ tag: guid });
-      } else if (row.kind === "concepts") {
-        const guid = (row.data as Concept).guid;
-        if (hover?.concept !== guid) setHover({ concept: guid });
       } else if (row.kind === "files") {
         const guid = (row.data as SemioFile).guid;
         if (hover?.file !== guid) setHover({ file: guid });
@@ -14807,30 +14610,6 @@ const AppContent: FC = () => {
         setSelectionAction?.({ ports: [newPort.guid] });
         break;
       }
-      case "tags": {
-        const existingNames = (kit.tags || []).map((t: Tag) => t.name);
-        const uniqueName = generateUniqueName(defaultTagName || "", existingNames);
-        const newTag: Tag = {
-          guid: guid(),
-          name: uniqueName,
-        };
-        if (kitCommands) kitCommands.createTag(newTag);
-        setKind("tags");
-        setSelectionAction?.({ tags: [newTag.guid] });
-        break;
-      }
-      case "concepts": {
-        const existingNames = (kit.concepts || []).map((c: Concept) => c.name);
-        const uniqueName = generateUniqueName(defaultConceptName || "", existingNames);
-        const newConcept: Concept = {
-          guid: guid(),
-          name: uniqueName,
-        };
-        if (kitCommands) kitCommands.createConcept(newConcept);
-        setKind("concepts");
-        setSelectionAction?.({ concepts: [newConcept.guid] });
-        break;
-      }
       case "files": {
         // TODO: Implement file creation
         break;
@@ -14910,20 +14689,6 @@ const AppContent: FC = () => {
     setSearchParams(newParams);
   };
 
-  const toggleConcept = (concept: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    const currentConcepts = newParams.getAll("c");
-
-    if (currentConcepts.includes(concept)) {
-      newParams.delete("c");
-      currentConcepts.filter((c) => c !== concept).forEach((c) => newParams.append("c", c));
-    } else {
-      newParams.append("c", concept);
-    }
-
-    setSearchParams(newParams);
-  };
-
   const toggleName = (name: string) => {
     const newParams = new URLSearchParams(searchParams);
     if (selectedName === name) {
@@ -14980,8 +14745,6 @@ const AppContent: FC = () => {
           designs: Guid[];
           qualities: string[];
           ports: Guid[];
-          tags: Guid[];
-          concepts: Guid[];
           files: string[];
           folders: Guid[];
           authors: string[];
@@ -14990,8 +14753,6 @@ const AppContent: FC = () => {
           designs: [],
           qualities: [],
           ports: [],
-          tags: [],
-          concepts: [],
           files: [],
           folders: [],
           authors: [],
@@ -15002,8 +14763,6 @@ const AppContent: FC = () => {
           else if (r.kind === "designs") selectedByKind.designs.push((r.data as Design).guid);
           else if (r.kind === "qualities") selectedByKind.qualities.push((r.data as Quality).key);
           else if (r.kind === "ports") selectedByKind.ports.push((r.data as Port).guid);
-          else if (r.kind === "tags") selectedByKind.tags.push((r.data as Tag).guid);
-          else if (r.kind === "concepts") selectedByKind.concepts.push((r.data as Concept).guid);
           else if (r.kind === "files") selectedByKind.files.push((r.data as SemioFile).guid);
           else if (r.kind === "folders") selectedByKind.folders.push((r.data as Folder).guid);
           else if (r.kind === "authors") selectedByKind.authors.push((r.data as Author).name);
@@ -15029,12 +14788,6 @@ const AppContent: FC = () => {
         } else if (row.kind === "ports") {
           selectionKind = "ports";
           selectionValue = (row.data as Port).guid;
-        } else if (row.kind === "tags") {
-          selectionKind = "tags";
-          selectionValue = (row.data as Tag).guid;
-        } else if (row.kind === "concepts") {
-          selectionKind = "concepts";
-          selectionValue = (row.data as Concept).guid;
         } else if (row.kind === "files") {
           selectionKind = "files";
           selectionValue = (row.data as SemioFile).guid;
@@ -15064,10 +14817,6 @@ const AppContent: FC = () => {
           setSelectionAction?.({ qualities: [(row.data as Quality).key] });
         } else if (row.kind === "ports") {
           setSelectionAction?.({ ports: [(row.data as Port).guid] });
-        } else if (row.kind === "tags") {
-          setSelectionAction?.({ tags: [(row.data as Tag).guid] });
-        } else if (row.kind === "concepts") {
-          setSelectionAction?.({ concepts: [(row.data as Concept).guid] });
         } else if (row.kind === "files") {
           setSelectionAction?.({ files: [(row.data as SemioFile).guid] });
         } else if (row.kind === "folders") {
@@ -15220,15 +14969,6 @@ const AppContent: FC = () => {
                       {row.artifact}
                     </span>
                   </div>
-                  {row.concepts && row.concepts.length > 0 && (
-                    <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
-                      <div className="flex items-center gap-single px-single h-medium w-fit">
-                        {row.concepts.map((concept) => (
-                          <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.kit.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
-                        ))}
-                      </div>
-                    </Scrollable>
-                  )}
                   <div className="flex items-center gap-single shrink-0 ml-auto">
                     {(row.kind === "designs" || row.kind === "types") && (
                       <Action
@@ -15338,8 +15078,6 @@ const AppContent: FC = () => {
                         {row.kind === "types" && <TypeIcon />}
                         {row.kind === "qualities" && <AwardIcon />}
                         {row.kind === "ports" && <PortIcon />}
-                        {row.kind === "tags" && <HashIcon />}
-                        {row.kind === "concepts" && <LightbulbIcon />}
                         {row.kind === "files" && <DocumentIcon />}
                         {row.kind === "folders" && <FolderIcon />}
                         {row.kind === "authors" && <UserIcon />}
@@ -15390,15 +15128,6 @@ const AppContent: FC = () => {
                       {row.artifact}
                     </span>
                   </div>
-                  {row.concepts && row.concepts.length > 0 && (
-                    <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
-                      <div className="flex items-center gap-single px-single h-medium w-fit">
-                        {row.concepts.map((concept) => (
-                          <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.kit.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
-                        ))}
-                      </div>
-                    </Scrollable>
-                  )}
                   <div className="flex items-center gap-single shrink-0 ml-auto">
                     {(row.kind === "designs" || row.kind === "types") && (
                       <Action
@@ -15703,8 +15432,6 @@ const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data }) => {
     if (data.kind === "design") return hover.design === data.guid;
     if (data.kind === "quality") return hover.quality === data.guid;
     if (data.kind === "port") return hover.port === data.guid;
-    if (data.kind === "tag") return hover.tag === data.guid;
-    if (data.kind === "concept") return hover.concept === data.guid;
     if (data.kind === "file") return hover.file === data.guid;
     if (data.kind === "folder") return hover.folder === data.guid;
     if (data.kind === "author") return hover.author === data.guid;
@@ -15722,10 +15449,6 @@ const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data }) => {
         return selection.qualities?.includes(data.guid) ?? false;
       case "port":
         return selection.ports?.includes(data.guid) ?? false;
-      case "tag":
-        return selection.tags?.includes(data.guid) ?? false;
-      case "concept":
-        return selection.concepts?.includes(data.guid) ?? false;
       case "file":
         return selection.files?.includes(data.guid) ?? false;
       case "folder":
@@ -15818,8 +15541,7 @@ const KIT_DIAGRAM_PROXIMITY_CONNECT_DISTANCE = Math.max(KIT_DIAGRAM_DEFAULT_SHAP
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨iskitdiagramnodekind](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/isKitDiagramNodeKind)
  **/
-const isKitDiagramNodeKind = (value: string): value is KitDiagramNodeKind =>
-  value === "type" || value === "design" || value === "quality" || value === "port" || value === "tag" || value === "concept" || value === "file" || value === "folder" || value === "author";
+const isKitDiagramNodeKind = (value: string): value is KitDiagramNodeKind => value === "type" || value === "design" || value === "quality" || value === "port" || value === "file" || value === "folder" || value === "author";
 
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨toreactflowposition](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/toReactFlowPosition)
 /**
@@ -16014,7 +15736,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
   const nodes: Node<KitDiagramNode>[] = [];
   const edges: Edge[] = [];
 
-  const kindGroups: KitDiagramNodeKind[] = ["type", "design", "quality", "port", "tag", "concept", "file", "folder", "author"];
+  const kindGroups: KitDiagramNodeKind[] = ["type", "design", "quality", "port", "file", "folder", "author"];
 
   for (const kind of kindGroups) {
     let items: Array<{ guid: string; name: string; icon?: any; parentGuid?: string; concepts?: string[] }> = [];
@@ -16043,12 +15765,6 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
         break;
       case "port":
         items = (kit.ports ?? []).filter(Boolean).map((i) => ({ guid: i.guid, name: i.name, icon: i.icon }));
-        break;
-      case "tag":
-        items = (kit.tags ?? []).filter(Boolean).map((t) => ({ guid: t.guid, name: t.name, icon: t.icon }));
-        break;
-      case "concept":
-        items = (kit.concepts ?? []).filter(Boolean).map((c) => ({ guid: c.guid, name: c.name, icon: c.icon }));
         break;
       case "file":
         items = (kit.files ?? []).filter(Boolean).map((f) => ({ guid: f.guid, name: f.name, icon: getFileIcon(f.name), parentGuid: f.folder?.guid }));
@@ -16372,18 +16088,6 @@ const KitDiagramInner: FC = () => {
       }
     });
 
-    (kit.tags ?? []).filter(Boolean).forEach((t) => {
-      if ((!searchLower || t.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("tags"))) {
-        guids.add(t.guid);
-      }
-    });
-
-    (kit.concepts ?? []).filter(Boolean).forEach((c) => {
-      if ((!searchLower || c.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("concepts"))) {
-        guids.add(c.guid);
-      }
-    });
-
     const diagramFoldersByGuid = new Map((kit.folders ?? []).map((f) => [f.guid, f]));
     const getDiagramFolderStoragePath = (folderGuid?: string): string => {
       if (!folderGuid) return "";
@@ -16453,8 +16157,6 @@ const KitDiagramInner: FC = () => {
         else if (kind === "design") isSelected = selection?.designs?.includes(guid) ?? false;
         else if (kind === "quality") isSelected = selection?.qualities?.includes(guid) ?? false;
         else if (kind === "port") isSelected = selection?.ports?.includes(guid) ?? false;
-        else if (kind === "tag") isSelected = selection?.tags?.includes(guid) ?? false;
-        else if (kind === "concept") isSelected = selection?.concepts?.includes(guid) ?? false;
         else if (kind === "file") isSelected = selection?.files?.includes(guid) ?? false;
         else if (kind === "folder") isSelected = selection?.folders?.includes(guid) ?? false;
         else if (kind === "author") isSelected = selection?.authors?.includes(guid) ?? false;
@@ -16729,12 +16431,6 @@ const KitDiagramInner: FC = () => {
         } else if (kind === "port") {
           if (!newSelection.ports) newSelection.ports = [];
           newSelection.ports.push(guid);
-        } else if (kind === "tag") {
-          if (!newSelection.tags) newSelection.tags = [];
-          newSelection.tags.push(guid);
-        } else if (kind === "concept") {
-          if (!newSelection.concepts) newSelection.concepts = [];
-          newSelection.concepts.push(guid);
         } else if (kind === "file") {
           if (!newSelection.files) newSelection.files = [];
           newSelection.files.push(guid);
@@ -16767,8 +16463,6 @@ const KitDiagramInner: FC = () => {
       else if (kind === "design") setHover({ design: guid });
       else if (kind === "quality") setHover({ quality: guid });
       else if (kind === "port") setHover({ port: guid });
-      else if (kind === "tag") setHover({ tag: guid });
-      else if (kind === "concept") setHover({ concept: guid });
       else if (kind === "file") setHover({ file: guid });
       else if (kind === "folder") setHover({ folder: guid });
       else if (kind === "author") setHover({ author: guid });
@@ -17051,40 +16745,7 @@ const MultiWindowApp: FC = () => {
 
   useEffect(() => {
     if (appType !== "kit") return;
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.kit.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree
-            className="min-w-0 overflow-hidden p-double"
-            sections={[
-              {
-                id: "semio.sketchpad.app.kit.settings.content",
-                label: null,
-                content: (
-                  <>
-                    <KitEditorSettingsContent />
-                    <SketchpadSettingsContent />
-                  </>
-                ),
-              },
-            ]}
-          />
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.kit.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => <BasicChatPanel id="semio.sketchpad.app.kit.chat" title="Kit" />,
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.kit.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.kit.chat");
-    };
+    return () => {};
   }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const windowConfig: AppWindowConfig = useMemo(
@@ -17916,7 +17577,6 @@ export const MultipleArtifactsSection: FC = () => {
   const qualitiesCount = selection?.qualities?.length || 0;
   const portsCount = selection?.ports?.length || 0;
   const tagsCount = selection?.tags?.length || 0;
-  const conceptsCount = selection?.concepts?.length || 0;
   const filesCount = selection?.files?.length || 0;
   const authorsCount = selection?.authors?.length || 0;
   const kinds: string[] = [];
@@ -17925,7 +17585,6 @@ export const MultipleArtifactsSection: FC = () => {
   if (qualitiesCount > 0) kinds.push(t("semio.sketchpad.app.kit.qualities.multipleTitle", { count: qualitiesCount }));
   if (portsCount > 0) kinds.push(t("semio.sketchpad.app.kit.ports.multipleTitle", { count: portsCount }));
   if (tagsCount > 0) kinds.push(t("semio.sketchpad.app.kit.tags.multipleTitle", { count: tagsCount }));
-  if (conceptsCount > 0) kinds.push(t("semio.sketchpad.app.kit.concepts.multipleTitle", { count: conceptsCount }));
   if (filesCount > 0) kinds.push(t("semio.sketchpad.app.kit.files.multipleTitle", { count: filesCount }));
   if (authorsCount > 0) kinds.push(t("semio.sketchpad.app.kit.authors.multipleTitle", { count: authorsCount }));
   if (kinds.length <= 1) return null;
@@ -24552,6 +24211,8 @@ const PanelToggles: FC = ({}) => {
 
   const isLeftOpen = visiblePanels.leftSidePanel ?? false;
   const isRightOpen = visiblePanels.rightSidePanel ?? false;
+  const isChatOpen = visiblePanels.chat ?? false;
+  const isSettingsOpen = visiblePanels.settings ?? false;
 
   const handleLeftToggle = useCallback(() => {
     appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.leftSidePanel", "leftSidePanel");
@@ -24559,6 +24220,14 @@ const PanelToggles: FC = ({}) => {
 
   const handleRightToggle = useCallback(() => {
     appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.rightSidePanel", "rightSidePanel");
+  }, [appCommands]);
+
+  const handleChatToggle = useCallback(() => {
+    appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.chat", "chat");
+  }, [appCommands]);
+
+  const handleSettingsToggle = useCallback(() => {
+    appCommands?.togglePanel?.("semio.sketchpad.navbar.panelToggle.settings", "settings");
   }, [appCommands]);
 
   const LeftIcon = leftTabs[0]?.icon;
@@ -24572,6 +24241,8 @@ const PanelToggles: FC = ({}) => {
       {hasRightTabs && (
         <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="!border-0" icon={RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />} />
       )}
+      <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.chat" pressed={isChatOpen} onPressedChange={handleChatToggle} className="!border-0" icon={<ChatIcon size={16} />} />
+      <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.settings" pressed={isSettingsOpen} onPressedChange={handleSettingsToggle} className="!border-0" icon={<SettingsIcon size={16} />} />
     </div>
   );
 };
@@ -25878,6 +25549,9 @@ const LayoutWrapper: FC = () => {
     "[&_[data-slot='property-row']]:grid-cols-[96px_minmax(0,1fr)]",
     "[&_[data-slot='property-row']]:gap-x-[8px]",
     "[&_[data-slot='property-control']]:h-[22px]",
+    "[&_[data-slot='property-control']_[data-detail-panel-control='fill']]:w-full",
+    "[&_[data-slot='property-control']_[data-detail-panel-control='fill']]:min-w-0",
+    "[&_[data-slot='property-control']_[data-detail-panel-control='fit']]:max-w-full",
     "[&_[data-slot='property-control']:has(textarea[data-slot='textarea'])]:h-auto",
     "[&_[data-slot='property-label']]:min-w-0",
     "[&_[data-slot='property-label']]:px-0",
@@ -25894,16 +25568,17 @@ const LayoutWrapper: FC = () => {
     "[&_[data-slot='select-trigger']]:text-xs",
     "[&_[data-slot='select-trigger']_svg]:size-[12px]",
     "[&_[data-slot='stepper-group']]:h-[22px]",
-    "[&_[data-slot='stepper-group']]:w-[100px]",
+    "[&_[data-slot='stepper-group']]:w-full",
+    "[&_[data-slot='stepper-group']]:min-w-0",
     "[&_[data-slot='stepper-group']]:rounded-[3px]",
     "[&_[data-slot='stepper-minus']]:h-[22px]",
     "[&_[data-slot='stepper-minus']]:w-[22px]",
     "[&_[data-slot='stepper-plus']]:h-[22px]",
     "[&_[data-slot='stepper-plus']]:w-[22px]",
     "[&_[data-slot='stepper-group']_[data-slot='input']]:!h-[22px]",
-    "[&_[data-slot='stepper-group']_[data-slot='input']]:!w-[56px]",
-    "[&_[data-slot='stepper-group']_[data-slot='input']]:!min-w-[56px]",
-    "[&_[data-slot='stepper-group']_[data-slot='input']]:!px-0",
+    "[&_[data-slot='stepper-group']_[data-slot='input']]:!w-full",
+    "[&_[data-slot='stepper-group']_[data-slot='input']]:!min-w-0",
+    "[&_[data-slot='stepper-group']_[data-slot='input']]:!px-[6px]",
     "[&_[data-slot='slider-row']]:items-center",
     "[&_[data-slot='slider-row']]:gap-x-[8px]",
     "[&_[data-slot='slider-value']]:w-[28px]",
@@ -26104,22 +25779,139 @@ const LayoutWrapper: FC = () => {
                     }
                   : undefined
               }
-              rightSidePanel={
-                rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
-                  ? {
-                      position: "right" as const,
-                      visible: true,
-                      size: panelSizes.rightSidePanelWidth,
-                      onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
-                      tabs: rightSidePanelTabs,
-                      activeTabId: activeRightTabId,
-                      onActiveTabChange: setActiveRightTabId,
-                      minSize: 150,
-                      maxSize: 500,
-                      className: rightSidePanelElementSizingClassName,
-                    }
-                  : undefined
-              }
+              rightSidePanel={(() => {
+                if (panelVisibility.chat) {
+                  const chatTab: SidePanelTab = {
+                    id: `semio.sketchpad.app.${appType}.chat`,
+                    icon: ChatIcon,
+                    order: 0,
+                    content: () => {
+                      switch (appType) {
+                        case "home":
+                          return (
+                            <TreeStateProvider>
+                              <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.home.chat.content", label: null, content: <ChatPlaceholder /> }]} />
+                            </TreeStateProvider>
+                          );
+                        case "kit":
+                          return <BasicChatPanel id="semio.sketchpad.app.kit.chat" title="Kit" />;
+                        case "design":
+                          return <BasicChatPanel id="semio.sketchpad.app.design.chat" title="Design" />;
+                        case "type":
+                          return <BasicChatPanel id="semio.sketchpad.app.type.chat" title="Type" />;
+                        case "quality":
+                          return <BasicChatPanel id="semio.sketchpad.app.quality.chat" title="Quality" />;
+                        case "docs":
+                          return <BasicChatPanel id="semio.sketchpad.app.docs.chat" title="Docs" />;
+                        default:
+                          return <BasicChatPanel id={`semio.sketchpad.app.${appType}.chat`} title={appType} />;
+                      }
+                    },
+                  };
+                  return {
+                    position: "right" as const,
+                    visible: true,
+                    size: panelSizes.rightSidePanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                    tabs: [chatTab],
+                    activeTabId: chatTab.id,
+                    onActiveTabChange: () => {},
+                    minSize: 150,
+                    maxSize: 500,
+                    className: rightSidePanelElementSizingClassName,
+                  };
+                }
+                if (panelVisibility.settings) {
+                  const settingsTab: SidePanelTab = {
+                    id: `semio.sketchpad.app.${appType}.settings`,
+                    icon: SettingsIcon,
+                    order: 0,
+                    content: () => {
+                      switch (appType) {
+                        case "home":
+                          return (
+                            <TreeStateProvider>
+                              <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.home.settings.content", label: null, content: <SettingsContent /> }]} />
+                            </TreeStateProvider>
+                          );
+                        case "kit":
+                          return (
+                            <TreeStateProvider>
+                              <Tree
+                                className="min-w-0 overflow-hidden p-double"
+                                sections={[
+                                  {
+                                    id: "semio.sketchpad.app.kit.settings.content",
+                                    label: null,
+                                    content: (
+                                      <>
+                                        <KitEditorSettingsContent />
+                                        <SketchpadSettingsContent />
+                                      </>
+                                    ),
+                                  },
+                                ]}
+                              />
+                            </TreeStateProvider>
+                          );
+                        case "design":
+                          return (
+                            <TreeStateProvider>
+                              <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.design.settings.content", label: null, content: <DesignSettingsContent /> }]} />
+                            </TreeStateProvider>
+                          );
+                        case "type":
+                          return (
+                            <TreeStateProvider>
+                              <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.type.settings.content", label: null, content: <TypeSettingsContent /> }]} />
+                            </TreeStateProvider>
+                          );
+                        case "quality":
+                          return (
+                            <TreeStateProvider>
+                              <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.quality.settings.content", label: null, content: <QualitySettingsContent /> }]} />
+                            </TreeStateProvider>
+                          );
+                        case "docs":
+                          return (
+                            <TreeStateProvider>
+                              <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.docs.settings.content", label: null, content: <Settings /> }]} />
+                            </TreeStateProvider>
+                          );
+                        default:
+                          return <UtilityFallbackSettingsContent appType={appType} />;
+                      }
+                    },
+                  };
+                  return {
+                    position: "right" as const,
+                    visible: true,
+                    size: panelSizes.rightSidePanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                    tabs: [settingsTab],
+                    activeTabId: settingsTab.id,
+                    onActiveTabChange: () => {},
+                    minSize: 150,
+                    maxSize: 500,
+                    className: rightSidePanelElementSizingClassName,
+                  };
+                }
+                if (rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel) {
+                  return {
+                    position: "right" as const,
+                    visible: true,
+                    size: panelSizes.rightSidePanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                    tabs: rightSidePanelTabs,
+                    activeTabId: activeRightTabId,
+                    onActiveTabChange: setActiveRightTabId,
+                    minSize: 150,
+                    maxSize: 500,
+                    className: rightSidePanelElementSizingClassName,
+                  };
+                }
+                return undefined;
+              })()}
               toolbar={
                 panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "quality" || appType === "docs" ? (
                   toolbarSections.length > 0 ? (
@@ -26449,7 +26241,7 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖constants🪨artifactkinds](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Constants/d/i/artifactKinds)
  * artifactKinds holds the data fields for a artifactKinds record.
  **/
-const artifactKinds = ["designs", "types", "qualities", "ports", "tags", "concepts", "files", "folders", "authors"];
+const artifactKinds = ["designs", "types", "qualities", "ports", "files", "folders", "authors"];
 
 // #endregion Constants
 
@@ -26615,13 +26407,26 @@ export type KitAppSortDirection = "asc" | "desc";
 
 /**
  * Default force simulation settings for the Kit diagram layout.
+ * Tuned for the Kit app's relational artifact graph (types, designs, ports, etc.)
+ * with KIT_DIAGRAM_NODE_SCALE=0.6 (base ~30px nodes).
+ *
+ * chargeStrength:  -120  — Scaled down for smaller nodes. Provides enough repulsion
+ *                          to separate 30px nodes without excessive spread.
+ *                          Within slider range [-500, 0].
+ * linkDistance:       50  — Short link rest length matching smaller node footprint.
+ *                          Keeps connected nodes close for a compact graph.
+ * collideRadius:     ~18  — KIT_DIAGRAM_COLLIDE_RADIUS * 1.2, just above half the
+ *                          largest frame dimension (~30px). Prevents overlap with minimal gap.
+ * centerStrength:    0.12 — Slightly stronger centering to keep the smaller, lighter
+ *                          graph anchored near viewport center.
+ *
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖internalstatemanagement🪨defaultdiagramforcesettings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Internal%20State%20Management/d/i/kitDefaultDiagramForceSettings)
  **/
 export const kitDefaultDiagramForceSettings: DiagramForceSettings = {
-  chargeStrength: -15000,
-  linkDistance: 400,
-  collideRadius: KIT_DIAGRAM_COLLIDE_RADIUS * 1.5,
-  centerStrength: 0.1,
+  chargeStrength: -120,
+  linkDistance: 50,
+  collideRadius: KIT_DIAGRAM_COLLIDE_RADIUS * 1.2,
+  centerStrength: 0.12,
 };
 
 /**
@@ -30123,7 +29928,7 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
         if (areHoverStatesEqual(currentHover, hover)) return;
         store?.change({ hover: hover ?? {} });
         queueMicrotask(() => {
-          if (hover && (hover.pieces?.length || hover.connections?.length)) {
+          if (hover && (hover.pieces?.length || hover.connections?.length || hover.connectors?.length || hover.types?.length || hover.designs?.length)) {
             actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover });
           } else {
             actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid });
@@ -31004,16 +30809,55 @@ export function useDesignAppCommands(id?: DesignAppId) {
       clearFocus: (_origin: string) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid: undefined }),
       setDiagramCenter: (_origin: string, center: Coord) => actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } }),
       setDiagramScale: (_origin: string, scale: number) => actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitGuid, designGuid, scale }),
-      hoverPiece: (_origin: string, guid: Guid) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: [guid] } })),
-      hoverPieces: (_origin: string, guids: Guid[]) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { pieces: guids } })),
-      hoverConnection: (_origin: string, guid: Guid) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connections: [guid] } })),
-      hoverConnections: (_origin: string, guids: Guid[]) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connections: guids } })),
-      hoverPort: (_origin: string, pieceGuid: Guid, connectorGuid: Guid) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { connectors: [{ piece: pieceGuid, connector: connectorGuid }] } })),
-      hoverType: (_origin: string, guid: Guid) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { types: [guid] } })),
-      hoverTypes: (_origin: string, guids: Guid[]) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { types: guids } })),
-      hoverDesign: (_origin: string, guid: Guid) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { designs: [guid] } })),
-      hoverDesigns: (_origin: string, guids: Guid[]) => queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover: { designs: guids } })),
-      clearHover: (_origin: string) => queueMicrotask(() => actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid })),
+      hoverPiece: (_origin: string, guid: Guid) => {
+        const hover: DesignAppHover = { pieces: [guid] };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      hoverPieces: (_origin: string, guids: Guid[]) => {
+        const hover: DesignAppHover = { pieces: guids };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      hoverConnection: (_origin: string, guid: Guid) => {
+        const hover: DesignAppHover = { connections: [guid] };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      hoverConnections: (_origin: string, guids: Guid[]) => {
+        const hover: DesignAppHover = { connections: guids };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      hoverPort: (_origin: string, pieceGuid: Guid, connectorGuid: Guid) => {
+        const hover: DesignAppHover = { connectors: [{ piece: pieceGuid, connector: connectorGuid }] };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      hoverType: (_origin: string, guid: Guid) => {
+        const hover: DesignAppHover = { types: [guid] };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      hoverTypes: (_origin: string, guids: Guid[]) => {
+        const hover: DesignAppHover = { types: guids };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      hoverDesign: (_origin: string, guid: Guid) => {
+        const hover: DesignAppHover = { designs: [guid] };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      hoverDesigns: (_origin: string, guids: Guid[]) => {
+        const hover: DesignAppHover = { designs: guids };
+        store.change({ hover });
+        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      },
+      clearHover: (_origin: string) => {
+        store.change({ hover: {} });
+        queueMicrotask(() => actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid }));
+      },
       togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "DESIGN.TOGGLE_PANEL", kitGuid, designGuid, panel: panelKey }),
       setModelTagsForType: (_origin: string, typeGuid: Guid, tags: string[]) => {
         const current = store.snapshot().selectedModelTags ?? {};
@@ -31481,16 +31325,43 @@ function HoverPiecesProviderInner({ store, children }: { store: DesignStore; chi
   const hoverStoreRef = useRef<HoverPiecesStore | null>(null);
   if (!hoverStoreRef.current) hoverStoreRef.current = new HoverPiecesStore();
   const hoverStore = hoverStoreRef.current;
+  const actor = useSketchpadActorSafe();
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const syncKeyRef = useRef("");
+  syncKeyRef.current = `${kitScope?.guid ?? ""}:${designScope?.guid ?? ""}`;
+  const lastActorHoverRef = useRef<DesignAppHover | undefined>(undefined);
 
   useEffect(() => {
-    const update = () => {
-      const state = store.snapshot();
-      const result = computeHoverData(store, state);
+    const computeAndUpdate = (hover: DesignAppHover | undefined) => {
+      const result = computeHoverData(store, { hover } as DesignAppState);
       hoverStore.update(result);
     };
-    update();
-    return store.subscribe(update);
-  }, [store, hoverStore]);
+    const getActorHover = (): DesignAppHover | undefined => {
+      if (!actor) return undefined;
+      return actor.getSnapshot().context.designApps[syncKeyRef.current]?.hover;
+    };
+    const sync = () => {
+      const actorHover = getActorHover();
+      const storeHover = store.snapshot().hover;
+      const hover = actorHover ?? storeHover;
+      lastActorHoverRef.current = hover;
+      computeAndUpdate(hover);
+    };
+    const syncFromActor = () => {
+      const actorHover = getActorHover();
+      if (areHoverStatesEqual(lastActorHoverRef.current, actorHover)) return;
+      lastActorHoverRef.current = actorHover;
+      computeAndUpdate(actorHover);
+    };
+    sync();
+    const unsubStore = store.subscribe(sync);
+    const actorSub = actor?.subscribe(syncFromActor);
+    return () => {
+      unsubStore();
+      actorSub?.unsubscribe();
+    };
+  }, [store, hoverStore, actor]);
 
   return <HoverPiecesStoreContext.Provider value={hoverStore}>{children}</HoverPiecesStoreContext.Provider>;
 }
@@ -39302,7 +39173,7 @@ const DesignWindowApp: FC<AppProps> = () => {
     return (
       <TreeItem
         label={
-          <div className="flex items-center gap-single min-w-0">
+          <div className="flex items-center gap-double min-w-0">
             <DraggableAvatar
               ref={setNodeRef}
               dragRef={setNodeRef}
@@ -39313,6 +39184,7 @@ const DesignWindowApp: FC<AppProps> = () => {
               isHovered={false}
               shouldFade={isDragging}
               title={type.name}
+              avatarClassName="size-workbench"
               dataDragKind="type"
               dataDragGuid={type.guid}
             />
@@ -39327,26 +39199,37 @@ const DesignWindowApp: FC<AppProps> = () => {
           event.stopPropagation();
           if (kitGuid) navigateToType(kitGuid, type.guid);
         }}
-        actions={[
-          {
-            icon: <AddIcon size={12} />,
-            onClick: () => {
-              const center = { u: 0, v: 0 };
-              const worldX = (center.u - 6) / 0.3;
-              const worldZ = (center.v + 7) / 0.3;
-              const plane: Plane = { origin: { x: worldX, y: 0, z: worldZ }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
-              transaction?.start();
-              addPiece?.({ guid: guid(), type: { guid: type.guid }, center, plane });
-              transaction?.finalize();
-            },
-            id: "semio.sketchpad.app.design.panel.workbench.types.addPiece",
-          },
-          {
-            icon: <TypeIcon size={12} />,
-            onClick: () => onCreateChild(type),
-            id: "semio.sketchpad.common.duplicateType",
-          },
-        ]}
+        actions={
+          type.isAbstract
+            ? []
+            : [
+                {
+                  icon: <AddIcon size={12} />,
+                  onClick: () => {
+                    const center = { u: 6, v: -7 };
+                    const plane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+                    transaction?.start();
+                    addPiece?.({ guid: guid(), type: { guid: type.guid }, center, plane });
+                    transaction?.finalize();
+                  },
+                  id: "semio.sketchpad.app.design.panel.workbench.types.addPiece",
+                },
+                {
+                  icon: <CopyIcon size={12} />,
+                  onClick: () => {
+                    const newType: Type = {
+                      ...type,
+                      guid: guid(),
+                      name: `${type.name} Copy`,
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString(),
+                    };
+                    kitAppCommands.addType(newType);
+                  },
+                  id: "semio.sketchpad.app.design.panel.workbench.types.duplicateType",
+                },
+              ]
+        }
       >
         {children}
       </TreeItem>
@@ -39375,7 +39258,7 @@ const DesignWindowApp: FC<AppProps> = () => {
     return (
       <TreeItem
         label={
-          <div className={`flex items-center gap-single min-w-0 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
+          <div className={`flex items-center gap-double min-w-0 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
             <DraggableAvatar
               ref={setNodeRef}
               dragRef={setNodeRef}
@@ -39386,6 +39269,7 @@ const DesignWindowApp: FC<AppProps> = () => {
               isHovered={false}
               shouldFade={isDragging}
               title={disabled ? `${design.name} (same design family - cannot be used as design piece)` : design.name}
+              avatarClassName="size-workbench"
               dataDragKind="design"
               dataDragGuid={design.guid}
             />
@@ -39405,10 +39289,8 @@ const DesignWindowApp: FC<AppProps> = () => {
             icon: <AddIcon size={12} />,
             onClick: () => {
               if (disabled) return;
-              const center = { u: 0, v: 0 };
-              const worldX = (center.u - 6) / 0.3;
-              const worldZ = (center.v + 7) / 0.3;
-              const plane: Plane = { origin: { x: worldX, y: 0, z: worldZ }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+              const center = { u: 6, v: -7 };
+              const plane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
               transaction?.start();
               addPiece?.({ guid: guid(), design: { guid: design.guid }, center, plane });
               transaction?.finalize();
@@ -43034,26 +42916,7 @@ const TypeWindowApp: FC = () => {
 
   useEffect(() => {
     if (appType !== "type") return;
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.type.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.type.settings.content", label: null, content: <TypeSettingsContent /> }]} />
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.type.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => <BasicChatPanel id="semio.sketchpad.app.type.chat" title="Type" />,
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.type.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.type.chat");
-    };
+    return () => {};
   }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const defaultLayout = useMemo(
@@ -47366,26 +47229,7 @@ const DocsApp: FC = () => {
 
   useEffect(() => {
     if (appType !== "docs") return;
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.docs.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.docs.settings.content", label: null, content: <Settings /> }]} />
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.docs.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => <BasicChatPanel id="semio.sketchpad.app.docs.chat" title="Docs" />,
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.docs.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.docs.chat");
-    };
+    return () => {};
   }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const defaultLayout = useMemo(
@@ -48329,7 +48173,6 @@ type HomeTableRow = {
   docsPath?: string;
   icon?: string;
   isLoading?: boolean;
-  concepts?: string[];
 };
 
 // [👤semio📚js🗃️sketchpad💻home🔖app🪨hometablecontent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeTableContent)
@@ -48344,7 +48187,7 @@ const HomeTableContent: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const kits = useKits();
   const getKitKind = useGetKitKind();
-  const { createKit, navigateToKit, getKitSnapshot } = useSketchpadCommands();
+  const { createKit, navigateToKit } = useSketchpadCommands();
 
   const homeState = useHome() as any;
   const homeCommands = useHomeCommands();
@@ -48423,26 +48266,6 @@ const HomeTableContent: FC = () => {
     });
     return Array.from(versionSet).sort();
   }, [kits, selectedName]);
-
-  const allConcepts = useMemo(() => {
-    const conceptSet = new Set<string>();
-    kits.forEach((kitShallow) => {
-      const fullKit = getKitSnapshot(kitShallow.guid);
-      if (!fullKit) return;
-
-      kitShallow.concepts?.forEach((conceptEntry) => {
-        const conceptGuid = typeof conceptEntry === "string" ? conceptEntry : (conceptEntry as any).guid;
-        const concept = fullKit.concepts?.find((c) => c.guid === conceptGuid);
-        if (concept?.name) conceptSet.add(concept.name);
-      });
-    });
-    return Array.from(conceptSet).sort();
-  }, [kits, getKitSnapshot]);
-
-  const selectedConcepts = useMemo(() => {
-    const conceptsParam = searchParams.get("concepts");
-    return conceptsParam ? conceptsParam.split(",").filter(Boolean) : [];
-  }, [searchParams]);
 
   const rows = useMemo<HomeTableRow[]>(() => {
     const result: HomeTableRow[] = [];
@@ -48538,37 +48361,10 @@ const HomeTableContent: FC = () => {
       if (selectedName && kit.name !== selectedName) return;
       if (selectedVersion && (kit.version || "") !== selectedVersion) return;
 
-      if (selectedConcepts.length > 0) {
-        const fullKit = getKitSnapshot(kit.guid);
-        if (!fullKit) return;
-        const kitConceptNames =
-          kit.concepts
-            ?.map((conceptEntry) => {
-              const conceptGuid = typeof conceptEntry === "string" ? conceptEntry : (conceptEntry as any).guid;
-              return fullKit.concepts?.find((c) => c.guid === conceptGuid)?.name;
-            })
-            .filter((name): name is string => name !== undefined) || [];
-
-        if (!kitConceptNames.some((name) => selectedConcepts.includes(name))) return;
-      }
-
       const key = kit.name;
       if (!kitGroups.has(key)) kitGroups.set(key, []);
       kitGroups.get(key)!.push(kit);
     });
-
-    const resolveKitConcepts = (kit: KitShallow): string[] => {
-      const fullKit = getKitSnapshot(kit.guid);
-      if (!fullKit) return [];
-      return (
-        kit.concepts
-          ?.map((conceptEntry) => {
-            const conceptGuid = typeof conceptEntry === "string" ? conceptEntry : (conceptEntry as any).guid;
-            return fullKit.concepts?.find((c) => c.guid === conceptGuid)?.name;
-          })
-          .filter((name): name is string => name !== undefined) || []
-      );
-    };
 
     kitGroups.forEach((groupKits, name) => {
       const parentId = `kit-${name}`;
@@ -48588,7 +48384,6 @@ const HomeTableContent: FC = () => {
         updatedAt: formatDate(parentKit.updatedAt),
         createdAt: formatDate(parentKit.createdAt),
         kit: parentKit,
-        concepts: resolveKitConcepts(parentKit),
       });
 
       if (expandedRows.has(parentId) && hasChildren) {
@@ -48608,7 +48403,6 @@ const HomeTableContent: FC = () => {
             updatedAt: formatDate(kit.updatedAt),
             createdAt: formatDate(kit.createdAt),
             kit: kit,
-            concepts: resolveKitConcepts(kit),
           });
         });
       }
@@ -48759,22 +48553,6 @@ const HomeTableContent: FC = () => {
       newParams.delete("version");
     } else {
       newParams.set("version", version);
-    }
-    setSearchParams(newParams);
-  };
-
-  const toggleConcept = (concept: string) => {
-    const newParams = new URLSearchParams(searchParams);
-    const currentConcepts = newParams.get("concepts")?.split(",").filter(Boolean) || [];
-    if (currentConcepts.includes(concept)) {
-      const updated = currentConcepts.filter((c) => c !== concept);
-      if (updated.length > 0) {
-        newParams.set("concepts", updated.join(","));
-      } else {
-        newParams.delete("concepts");
-      }
-    } else {
-      newParams.set("concepts", [...currentConcepts, concept].join(","));
     }
     setSearchParams(newParams);
   };
@@ -48930,15 +48708,6 @@ const HomeTableContent: FC = () => {
                       <span className="text-left flex-1 min-w-0 truncate">{row.name}</span>
                       {isLoadingRow && <Spinner size="small" />}
                     </div>
-                    {row.concepts && row.concepts.length > 0 && (
-                      <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
-                        <div className="flex items-center gap-single px-single h-medium w-fit">
-                          {row.concepts.map((concept) => (
-                            <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.home.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
-                          ))}
-                        </div>
-                      </Scrollable>
-                    )}
                     <div className="flex items-center gap-single shrink-0 ml-auto">
                       {row.level === 0 && row.type !== "docs" && row.type !== "loading" && (
                         <Action
@@ -49049,15 +48818,6 @@ const HomeTableContent: FC = () => {
                   <span className="text-left min-w-0 truncate">{row.name}</span>
                   {row.isLoading && <Spinner size="small" />}
                 </div>
-                {row.concepts && row.concepts.length > 0 && (
-                  <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
-                    <div className="flex items-center gap-single px-single h-medium w-fit">
-                      {row.concepts.map((concept) => (
-                        <Action key={concept} onClick={() => toggleConcept(concept)} id={`semio.sketchpad.app.home.row.concept.${concept}`} text={concept} className={selectedConcepts.includes(concept) ? "bg-active-base" : ""} />
-                      ))}
-                    </div>
-                  </Scrollable>
-                )}
                 <div className="flex items-center gap-single shrink-0 ml-auto">
                   {row.level === 0 && row.type !== "docs" && row.type !== "loading" && (
                     <Action
@@ -49256,33 +49016,7 @@ const Home: FC = () => {
 
   useEffect(() => {
     if (appType !== "home") return;
-
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.home.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.home.settings.content", label: null, content: <SettingsContent /> }]} />
-        </TreeStateProvider>
-      ),
-    });
-
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.home.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.home.chat.content", label: null, content: <ChatPlaceholder /> }]} />
-        </TreeStateProvider>
-      ),
-    });
-
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.home.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.home.chat");
-    };
+    return () => {};
   }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const defaultLayout = useMemo(
@@ -50868,7 +50602,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     }, pieceGuid);
   }
 
-  async function getDesignPieces(page: PlaywrightPage, designGuid?: string): Promise<Array<{ guid: string; name?: string; plane: Plane | null; typeGuid: string | null }>> {
+  async function getDesignPieces(page: PlaywrightPage, designGuid?: string): Promise<Array<{ guid: string; name?: string; plane: Plane | null; center: { u: number; v: number } | null; typeGuid: string | null }>> {
     return await page.evaluate((targetDesignGuid) => {
       const store = (window as any).__SEMIO_STORE__;
       if (!store) return [];
@@ -50889,6 +50623,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         guid: piece.guid,
         name: piece.name,
         plane: piece.plane ?? null,
+        center: piece.center ?? null,
         typeGuid: typeof piece.type === "string" ? piece.type : (piece.type?.guid ?? piece.typeGuid ?? piece.kind?.guid ?? piece.kindGuid ?? null),
       }));
     }, designGuid);
@@ -51169,19 +50904,14 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   }
 
   async function expectDesignUtilityTabsInRightPanel(page: PlaywrightPage, appName: string): Promise<void> {
-    const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
-    if (!(await rightPanel.isVisible().catch(() => false))) return;
-    const designUtilityTabCount = await rightPanel
-      .locator('[data-slot="side-panel-tabs"] [id="semio.sketchpad.app.design.settings"], [data-slot="side-panel-tabs"] [id="semio.sketchpad.app.design.chat"]')
-      .count()
-      .catch(() => 0);
-    const designUtilityContentCount = await rightPanel
-      .locator('[id="semio.sketchpad.app.design.settings"], [id="semio.sketchpad.app.design.chat"]')
-      .count()
-      .catch(() => 0);
-    console.log(`[${appName}] Design utility tabs: tabs=${designUtilityTabCount}, content=${designUtilityContentCount}`);
-    expect(designUtilityTabCount).toBeGreaterThanOrEqual(2);
-    expect(designUtilityContentCount).toBeGreaterThanOrEqual(0);
+    // Chat and settings are now accessible through navbar toggles, not as tabs in right panel.
+    const chatToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.chat"]').first();
+    const settingsToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.settings"]').first();
+    const chatVisible = await chatToggle.isVisible().catch(() => false);
+    const settingsVisible = await settingsToggle.isVisible().catch(() => false);
+    console.log(`[${appName}] Navbar chat toggle visible: ${chatVisible}, settings toggle visible: ${settingsVisible}`);
+    expect(chatVisible).toBe(true);
+    expect(settingsVisible).toBe(true);
   }
 
   async function getMainPanelVisibleState(page: PlaywrightPage): Promise<{ left: boolean; right: boolean }> {
@@ -51719,9 +51449,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const portsToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showPorts"]');
       const hasPortsToggle = (await portsToggle.count().catch(() => 0)) > 0;
       console.log(`[Kit] Ports filter toggle visible: ${hasPortsToggle}`);
-      const tagsToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showTags"]');
-      const hasTagsToggle = (await tagsToggle.count().catch(() => 0)) > 0;
-      console.log(`[Kit] Tags filter toggle visible: ${hasTagsToggle}`);
       const filesToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showFiles"]');
       const hasFilesToggle = (await filesToggle.count().catch(() => 0)) > 0;
       console.log(`[Kit] Files filter toggle visible: ${hasFilesToggle}`);
@@ -53550,6 +53277,117 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           });
           console.log(`[Design] Store has types for duplicateType: ${hasAddChild}`);
           expect(hasAddChild).toBe(true);
+
+          // #region 🔖Workbench Add Piece
+          console.log("[Design] Testing workbench add piece button places piece at origin (0,0,0)");
+          const beforeAddButtonPieces = await getDesignPieces(page);
+          const beforeAddButtonCount = beforeAddButtonPieces.length;
+          await page.evaluate(
+            ({ typeGuid }: { typeGuid: string }) => {
+              const store = (window as any).__SEMIO_STORE__;
+              if (!store) return;
+              const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+              if (kitGuids.length === 0) return;
+              const designGuidMatch = window.location.pathname.match(/\/designs\/([^/]+)/);
+              const designGuid = designGuidMatch?.[1];
+              if (!designGuid) return;
+              const designAppStore = store.designApp?.(kitGuids[0], designGuid);
+              if (!designAppStore || typeof designAppStore.execute !== "function") return;
+              const pieceGuid = crypto.randomUUID();
+              designAppStore.execute("semio.designApp.addPiece", "semio.sketchpad.test.workbench.addPiece", {
+                guid: pieceGuid,
+                type: { guid: typeGuid },
+                center: { u: 6, v: -7 },
+                plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+              });
+            },
+            { typeGuid: sourceTypeGuidForPlus },
+          );
+          await expect.poll(async () => (await getDesignPieces(page)).length, { timeout: 10000 }).toBe(beforeAddButtonCount + 1);
+          const afterAddButtonPieces = await getDesignPieces(page);
+          const addedButtonPiece = afterAddButtonPieces.find((p) => !beforeAddButtonPieces.some((bp) => bp.guid === p.guid));
+          expect(addedButtonPiece).toBeTruthy();
+          expect(addedButtonPiece?.plane?.origin?.x ?? null).not.toBeNull();
+          expect(Math.abs(addedButtonPiece?.plane?.origin?.x ?? 999)).toBeLessThan(0.001);
+          expect(Math.abs(addedButtonPiece?.plane?.origin?.y ?? 999)).toBeLessThan(0.001);
+          expect(Math.abs(addedButtonPiece?.plane?.origin?.z ?? 999)).toBeLessThan(0.001);
+          expect(Math.abs((addedButtonPiece?.center?.u ?? 999) - 6)).toBeLessThan(0.001);
+          expect(Math.abs((addedButtonPiece?.center?.v ?? 999) - -7)).toBeLessThan(0.001);
+          console.log(`[Design] Add piece button: piece placed at origin (0,0,0) with center (6,-7) ✓`);
+          // #endregion 🔖Workbench Add Piece
+
+          // #region 🔖Workbench Duplicate Type
+          console.log("[Design] Testing workbench duplicate button clones type as sibling named 'typename Copy'");
+          const typeForDuplicate = await page.evaluate(
+            ({ typeGuid }: { typeGuid: string }) => {
+              const store = (window as any).__SEMIO_STORE__;
+              if (!store) return null;
+              const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+              if (kitGuids.length === 0) return null;
+              const kitStore = store.kit(kitGuids[0]);
+              if (!kitStore) return null;
+              const kit = kitStore.snapshot();
+              return (kit.types ?? []).find((t: any) => t.guid === typeGuid) ?? null;
+            },
+            { typeGuid: sourceTypeGuidForPlus },
+          );
+          expect(typeForDuplicate).toBeTruthy();
+          const typeName = typeForDuplicate?.name ?? "Unknown";
+          const beforeDuplicateTypeCount = await page.evaluate(() => {
+            const store = (window as any).__SEMIO_STORE__;
+            if (!store) return 0;
+            const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+            if (kitGuids.length === 0) return 0;
+            const kitStore = store.kit(kitGuids[0]);
+            if (!kitStore) return 0;
+            return (kitStore.snapshot().types ?? []).length;
+          });
+          await page.evaluate(
+            ({ sourceType, copyName }: { sourceType: any; copyName: string }) => {
+              const store = (window as any).__SEMIO_STORE__;
+              if (!store) return;
+              const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+              if (kitGuids.length === 0) return;
+              const kitStore = store.kit(kitGuids[0]);
+              if (!kitStore) return;
+              const newType = { ...sourceType, guid: crypto.randomUUID(), name: copyName, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+              kitStore.execute("semio.kit.createType", "semio.sketchpad.test.workbench.duplicateType", newType);
+            },
+            { sourceType: typeForDuplicate, copyName: `${typeName} Copy` },
+          );
+          await expect
+            .poll(
+              async () => {
+                const store = (window as any).__SEMIO_STORE__;
+                if (!store) return 0;
+                const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+                if (kitGuids.length === 0) return 0;
+                const kitStore = store.kit(kitGuids[0]);
+                if (!kitStore) return 0;
+                return (kitStore.snapshot().types ?? []).length;
+              },
+              { timeout: 10000 },
+            )
+            .toBe(beforeDuplicateTypeCount + 1);
+          const duplicatedType = await page.evaluate(
+            ({ copyName }: { copyName: string }) => {
+              const store = (window as any).__SEMIO_STORE__;
+              if (!store) return null;
+              const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+              if (kitGuids.length === 0) return null;
+              const kitStore = store.kit(kitGuids[0]);
+              if (!kitStore) return null;
+              return (kitStore.snapshot().types ?? []).find((t: any) => t.name === copyName) ?? null;
+            },
+            { copyName: `${typeName} Copy` },
+          );
+          expect(duplicatedType).toBeTruthy();
+          expect(duplicatedType?.name).toBe(`${typeName} Copy`);
+          const sourceParentGuid = typeof typeForDuplicate?.parent === "string" ? typeForDuplicate.parent : (typeForDuplicate?.parent?.guid ?? null);
+          const copyParentGuid = typeof duplicatedType?.parent === "string" ? duplicatedType.parent : (duplicatedType?.parent?.guid ?? null);
+          expect(copyParentGuid).toBe(sourceParentGuid);
+          console.log(`[Design] Duplicate type: '${typeName} Copy' created as sibling ✓`);
+          // #endregion 🔖Workbench Duplicate Type
         } else {
           console.log("[Design] No source type guid available for store add-piece verification, skipping");
         }
@@ -56953,30 +56791,32 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       await expectNoLegacyWindowTabs(page, "Design Utility Tabs");
       await expectOnlyLeftAndRightPanelTogglesInNavbar(page, "Design Utility Tabs");
-      const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
-      await expect(rightPanelToggle).toBeVisible({ timeout: 10000 });
+
+      // Click settings toggle in navbar
+      const settingsToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.settings"]');
+      await expect(settingsToggle).toBeVisible({ timeout: 10000 });
+      await settingsToggle.click();
+      await page.waitForTimeout(500);
+
       const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
-      if (!(await rightPanel.isVisible().catch(() => false))) {
-        await rightPanelToggle.click();
-      }
       await expect(rightPanel).toBeVisible({ timeout: 10000 });
-      const settingsTab = rightPanel.locator('[data-slot="side-panel-tabs"] [id="semio.sketchpad.app.design.settings"]').first();
-      await expect(settingsTab).toBeVisible({ timeout: 10000 });
-      await settingsTab.click();
-      await page.waitForTimeout(400);
 
       const settingsUnavailable = page.getByText("Settings not available").first();
       await expect(settingsUnavailable).toHaveCount(0);
-      await expect(page.locator('[id="semio.sketchpad.app.design.settings.panel.toolbar"]').first()).toBeVisible({ timeout: 10000 });
 
-      const chatTab = rightPanel.locator('[data-slot="side-panel-tabs"] [id="semio.sketchpad.app.design.chat"]').first();
-      await expect(chatTab).toBeVisible({ timeout: 10000 });
-      await chatTab.click();
-      await page.waitForTimeout(400);
+      // Click chat toggle in navbar
+      const chatToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.chat"]');
+      await expect(chatToggle).toBeVisible({ timeout: 10000 });
+      await chatToggle.click();
+      await page.waitForTimeout(500);
 
       const chatUnavailable = page.getByText("Chat not available").first();
       await expect(chatUnavailable).toHaveCount(0);
       await expect(page.locator('[data-panel="rightSidePanel"]').first()).toBeVisible({ timeout: 10000 });
+
+      // Close chat panel
+      await chatToggle.click();
+      await page.waitForTimeout(300);
     }
 
     // #region 🔖Design Undo Redo
@@ -57238,34 +57078,28 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
     // #region 🔖Settings Panel In All Apps
     async function verifySettingsPanelInApp(page: PlaywrightPage, appLabel: string, settingsTabId: string, settingsThemeId: string): Promise<void> {
-      // Open right panel if not visible
-      const rightPanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
-      const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
-      if (!(await rightPanel.isVisible().catch(() => false))) {
-        const hasToggle = await rightPanelToggle.isVisible({ timeout: 5000 }).catch(() => false);
-        if (hasToggle) {
-          await rightPanelToggle.click();
-          await page.waitForTimeout(500);
-        }
+      // Click navbar settings toggle to open settings panel
+      const settingsToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.settings"]');
+      const hasSettingsToggle = await settingsToggle.isVisible({ timeout: 5000 }).catch(() => false);
+      if (!hasSettingsToggle) {
+        console.log(`[${appLabel}] Settings toggle not available in navbar, skipping settings panel test`);
+        return;
       }
+      await settingsToggle.click();
+      await page.waitForTimeout(500);
+      const rightPanel = page.locator('[data-panel="rightSidePanel"]').first();
       const rightPanelVisible = await rightPanel.isVisible({ timeout: 5000 }).catch(() => false);
       if (!rightPanelVisible) {
-        console.log(`[${appLabel}] Right panel not available, skipping settings panel test`);
+        console.log(`[${appLabel}] Right panel not visible after settings toggle click`);
         return;
       }
-      // Click settings tab
-      const settingsTab = rightPanel.locator(`[data-slot="side-panel-tabs"] [id="${settingsTabId}"]`).first();
-      const hasSettingsTab = await settingsTab.isVisible({ timeout: 5000 }).catch(() => false);
-      if (!hasSettingsTab) {
-        console.log(`[${appLabel}] Settings tab not found: ${settingsTabId}`);
-        return;
-      }
-      await settingsTab.click();
-      await page.waitForTimeout(400);
       // Verify theme toggle is visible (not a placeholder)
       const themeToggle = page.locator(`[id="${settingsThemeId}"]`).first();
       await expect(themeToggle).toBeVisible({ timeout: 5000 });
       console.log(`[${appLabel}] Settings panel theme toggle visible: ${settingsThemeId}`);
+      // Close settings panel after verification
+      await settingsToggle.click();
+      await page.waitForTimeout(300);
     }
 
     test("Settings Panel In All Apps", async ({ page }) => {

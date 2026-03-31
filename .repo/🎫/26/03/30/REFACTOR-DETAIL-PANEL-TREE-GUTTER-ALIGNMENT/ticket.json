@@ -2,13 +2,14 @@
   "title": "Refactor Detail Panel Tree Gutter Alignment",
   "status": "closed",
   "description": "Refactor the semio sketchpad Details panel tree layout so TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, and property-layout tree items render with a dedicated hierarchy gutter and one shared content start column. Preserve TreeContext behavior, PanelSection usage, property row/value-column layout, actions, expand-collapse, drag reorder, and data model. Keep tree guides continuous across subtree height and independent from row gaps.",
-  "summary": "Reverted the over-flattened shared content-start alignment in the Details panel tree by restoring level-driven gutter widths and compact nested branch spacing in elements/ui. TreeContent, TreeItem, TreeSection, and sortable/property rows now keep hierarchy in the gutter, preserve continuous guide lines, and align controls locally per subtree instead of forcing one global vertical content line. Tuned the sketchpad right-side inspector slot spacing for a tighter Leva-style folder/control rhythm while keeping PanelSection registration, tree primitives, chevrons, widgets, add/remove actions, drag reordering, and the 160px value column intact. Verified with the elements/ui Vitest suite; sketchpad TypeScript checking still reports many unrelated pre-existing errors outside this change.",
+  "summary": "Increased the default right-side inspector width, made steppers fill the shared value column and always render their current numeric value, and normalized shared property-control stretching so nested inspector rows keep one consistent control width without flattening the tree.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1193"
   },
   "goal": "🎯sketchpadimprovements",
   "sessions": [
     "⚪94a7d4bb1939428084c8a6e57649bdf4",
-    "⚪ed13a23cd4144e0ebc87397de28db698"
+    "⚪ed13a23cd4144e0ebc87397de28db698",
+    "⚪8aeac7687f3f44f5b129d18bdb57109d"
   ]
 }

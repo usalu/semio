@@ -267,6 +267,7 @@
     --spacing-double: calc(2 * var(--spacing));
     --size-tiny: calc(3 * var(--spacing));
     --size-small: calc(5 * var(--spacing));
+    --size-workbench: calc(1.5 * var(--size-small));
     --size-medium: calc(7 * var(--spacing));
     --size-large: calc(9 * var(--spacing));
     --size-huge: calc(11 * var(--spacing));
@@ -929,6 +930,11 @@
 }
 @utility h-small {
   height: var(--size-small);
+}
+
+@utility size-workbench {
+  width: var(--size-workbench);
+  height: var(--size-workbench);
 }
 
 @utility size-medium {
