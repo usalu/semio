@@ -1567,16 +1567,7 @@ export const DiagramSelection: React.FC<DiagramSelectionProps> = ({ selection, d
   const mappedSelection = selection ? { pieceGuids: selection.pieceGuids ?? [], connectionGuids: selection.connectionGuids ?? [] } : undefined;
   const mappedDefaultSelection = defaultSelection ? { pieceGuids: defaultSelection.pieceGuids ?? [], connectionGuids: defaultSelection.connectionGuids ?? [] } : undefined;
 
-  return (
-    <SemioDiagram
-      {...rest}
-      pieceSelectionEnabled={true}
-      connectionSelectionEnabled={true}
-      selection={mappedSelection}
-      defaultSelection={mappedDefaultSelection}
-      onSelectionChange={onSelectionChange}
-    />
-  );
+  return <SemioDiagram {...rest} pieceSelectionEnabled={true} connectionSelectionEnabled={true} selection={mappedSelection} defaultSelection={mappedDefaultSelection} onSelectionChange={onSelectionChange} />;
 };
 
 // #endregion 🔖Selection
@@ -2973,8 +2964,7 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
   const hasFullKit = kitRaw !== undefined && kitRaw !== null && typeof kitRaw === "object" && !Array.isArray(kitRaw);
   const fetchUrl = typeof raw.fetchUrl === "string" ? raw.fetchUrl : undefined;
   const surfaceRaw = raw.surface;
-  const surface =
-    surfaceRaw === "design" || surfaceRaw === "scene" || surfaceRaw === "diagram" ? surfaceRaw : undefined;
+  const surface = surfaceRaw === "design" || surfaceRaw === "scene" || surfaceRaw === "diagram" ? surfaceRaw : undefined;
   if (!hasKit && !hasDiagram && !hasDesign && !fetchUrl && !surface) return null;
   return {
     points: Array.isArray(raw.points) ? (raw.points as McpDiagramPayload["points"]) : [],
@@ -3065,13 +3055,7 @@ const canDisplayKitArtifactsFallback = (mode: string | undefined, hasDiagram: bo
   if (hasDiagram) return false;
   /** Stale kit payloads score high; merged `design` may still leave `mode` as show-diagram — never show Kit when we have a design to render. */
   if (designGuid) return false;
-  return (
-    mode === "show-diagram" ||
-    mode === "show-diagram-diff" ||
-    mode === "select-pieces" ||
-    mode === "select-connections" ||
-    mode === "select-pieces-and-connections"
-  );
+  return mode === "show-diagram" || mode === "show-diagram-diff" || mode === "select-pieces" || mode === "select-connections" || mode === "select-pieces-and-connections";
 };
 
 /**
@@ -3100,7 +3084,7 @@ const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | 
     const mp = merged.points?.length ?? 0;
     const cp = c.points?.length ?? 0;
     if (cp > mp && Array.isArray(c.points)) {
-      merged = { ...merged, points: c.points, lines: Array.isArray(c.lines) ? c.lines : merged.lines ?? [] };
+      merged = { ...merged, points: c.points, lines: Array.isArray(c.lines) ? c.lines : (merged.lines ?? []) };
     }
   }
   /** Best-scoring candidate is often a stale kit shell (`show-diagram`); another channel may carry `show-design` + same design guid. */
@@ -3369,13 +3353,9 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
   const mode = p.mode ?? "show-diagram";
   const kit = p.kit;
   const design = p.design as Design | undefined;
-  const designFlat =
-    design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface) : undefined;
+  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface) : undefined;
   const isDiff = mode === "show-diff" || mode === "show-diagram-diff";
-  const designGuid =
-    design && typeof design === "object" && "guid" in design && typeof (design as { guid?: unknown }).guid === "string"
-      ? (design as { guid: string }).guid
-      : undefined;
+  const designGuid = design && typeof design === "object" && "guid" in design && typeof (design as { guid?: unknown }).guid === "string" ? (design as { guid: string }).guid : undefined;
   const hasDiagramPoints = (p.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
     guid: "__mcp__",
@@ -3387,8 +3367,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
     })),
   } as unknown as Design;
   const diagramDesign = design ?? fallbackDesign;
-  const forKitFallback =
-    surface === "diagram" && Boolean(p.kitArtifacts && canDisplayKitArtifactsFallback(p.mode, hasDiagramPoints, designGuid));
+  const forKitFallback = surface === "diagram" && Boolean(p.kitArtifacts && canDisplayKitArtifactsFallback(p.mode, hasDiagramPoints, designGuid));
   return {
     surface,
     design,
@@ -3409,11 +3388,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
  *
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
-export function mcpFlattenDesignForSemioSurface(
-  design: Design,
-  kit: Kit | undefined,
-  surface: "design" | "scene" | "diagram",
-): Design {
+export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram"): Design {
   if (surface !== "design" && surface !== "scene") return design;
   if (!kit) return design;
   if (!design?.guid) return design;
@@ -3643,13 +3618,7 @@ export const McpDesignViewer: React.FC = () => {
     }
     return (
       <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-        <SemioDesign
-          design={(vm.designFlat ?? vm.design) as Design}
-          kit={vm.kit}
-          designDiff={vm.isDiff ? vm.designDiff : undefined}
-          splitLayout="always"
-          {...selectionProps}
-        />
+        <SemioDesign design={(vm.designFlat ?? vm.design) as Design} kit={vm.kit} designDiff={vm.isDiff ? vm.designDiff : undefined} splitLayout="always" {...selectionProps} />
       </div>
     );
   }
@@ -4967,11 +4936,7 @@ const ALGORITHM_DIAGRAM_VIEWPORT_PRIORITY: Record<AlgorithmDiagramWindowKind, nu
   [WindowKind.DESIGN_OUTPUT]: 1,
 };
 
-const mergeAlgorithmDiagramViewportState = (
-  current: AlgorithmDiagramViewportState,
-  kind: AlgorithmDiagramWindowKind,
-  patch: Partial<Pick<AlgorithmDiagramViewportState, "pan" | "zoom">>,
-): AlgorithmDiagramViewportState => {
+const mergeAlgorithmDiagramViewportState = (current: AlgorithmDiagramViewportState, kind: AlgorithmDiagramWindowKind, patch: Partial<Pick<AlgorithmDiagramViewportState, "pan" | "zoom">>): AlgorithmDiagramViewportState => {
   const isInitialized = current.pan !== undefined && current.zoom !== undefined;
   if (isInitialized) {
     return { ...current, ...patch };
@@ -5595,11 +5560,7 @@ if (algorithmVitest) {
       const diffSeed = mergeAlgorithmDiagramViewportState({}, WindowKind.DESIGN_DIFF_OUTPUT, { zoom: 4 });
       const outputIgnored = mergeAlgorithmDiagramViewportState(diffSeed, WindowKind.DESIGN_OUTPUT, { zoom: 1.2 });
       const inputSeed = mergeAlgorithmDiagramViewportState(outputIgnored, WindowKind.DESIGN_INPUT, { pan: { x: 12, y: -6 } });
-      const syncedUpdate = mergeAlgorithmDiagramViewportState(
-        { pan: { x: 12, y: -6 }, zoom: 4, sourceKind: WindowKind.DESIGN_INPUT },
-        WindowKind.DESIGN_OUTPUT,
-        { pan: { x: -2, y: 9 } },
-      );
+      const syncedUpdate = mergeAlgorithmDiagramViewportState({ pan: { x: 12, y: -6 }, zoom: 4, sourceKind: WindowKind.DESIGN_INPUT }, WindowKind.DESIGN_OUTPUT, { pan: { x: -2, y: 9 } });
 
       expect(diffSeed).toMatchObject({ zoom: 4, sourceKind: WindowKind.DESIGN_DIFF_OUTPUT });
       expect(outputIgnored).toEqual(diffSeed);

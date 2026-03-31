@@ -1,0 +1,1611 @@
+{
+  "id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+  "uri": "repo://session/2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+  "client": "copilot-chat",
+  "second": "2026-03-26T09:09:34Z",
+  "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-03-26T09:09:34Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:09:34.197Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "prompt": "changes has been discarded. restore every single change",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-26T09:09:51Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:09:51.877Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "mcp_repo_ticket_reopen",
+          "tool_input": {
+            "path": "26/03/25/OPTIMIZE-SKETCHPAD-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER",
+            "prompt": "Changes were discarded. Restoring all optimizations: granular boolean selectors, DerivedNode equality, hover setter optimization, computeHoverData caching, clear hover guard, type app port hover.",
+            "llm": "opus-4-6",
+            "client": "copilot-chat"
+          },
+          "tool_use_id": "toolu_bdrk_01SXeuje1iFfrU1KXE9gzbZj__vscode-1774514533946",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-26T09:09:55Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:09:55.415Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "mcp_repo_ticket_reopen",
+          "tool_input": {
+            "path": "26/03/25/OPTIMIZE-SKETCHPAD-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER",
+            "prompt": "Changes were discarded. Restoring all optimizations: granular boolean selectors, DerivedNode equality, hover setter optimization, computeHoverData caching, clear hover guard, type app port hover.",
+            "llm": "opus-4-6",
+            "client": "copilot-chat"
+          },
+          "tool_response": "\n🔓 Ticket reopened: OPTIMIZE-SKETCHPAD-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER",
+          "tool_use_id": "toolu_bdrk_01SXeuje1iFfrU1KXE9gzbZj__vscode-1774514533946",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.plan.updating.starting",
+        "second": "2026-03-26T09:10:02Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:02.489Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "manage_todo_list",
+          "tool_input": {
+            "todoList": [
+              {
+                "id": 1,
+                "status": "in-progress",
+                "title": "Read current file state at all change points"
+              },
+              {
+                "id": 2,
+                "status": "not-started",
+                "title": "Restore DerivedNode equality optimization"
+              },
+              {
+                "id": 3,
+                "status": "not-started",
+                "title": "Restore clear hover guard"
+              },
+              {
+                "id": 4,
+                "status": "not-started",
+                "title": "Restore hover setter optimization"
+              },
+              {
+                "id": 5,
+                "status": "not-started",
+                "title": "Restore granular boolean selectors"
+              },
+              {
+                "id": 6,
+                "status": "not-started",
+                "title": "Restore computeHoverData optimization"
+              },
+              {
+                "id": 7,
+                "status": "not-started",
+                "title": "Restore type app port hover"
+              },
+              {
+                "id": 8,
+                "status": "not-started",
+                "title": "Verify build and close ticket"
+              }
+            ]
+          },
+          "tool_use_id": "toolu_bdrk_01DTbnRh652Q7CdQGZJNkHTt__vscode-1774514533947",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.plan.updating.ended",
+        "second": "2026-03-26T09:10:02Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:02.644Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "manage_todo_list",
+          "tool_input": {
+            "todoList": [
+              {
+                "id": 1,
+                "status": "in-progress",
+                "title": "Read current file state at all change points"
+              },
+              {
+                "id": 2,
+                "status": "not-started",
+                "title": "Restore DerivedNode equality optimization"
+              },
+              {
+                "id": 3,
+                "status": "not-started",
+                "title": "Restore clear hover guard"
+              },
+              {
+                "id": 4,
+                "status": "not-started",
+                "title": "Restore hover setter optimization"
+              },
+              {
+                "id": 5,
+                "status": "not-started",
+                "title": "Restore granular boolean selectors"
+              },
+              {
+                "id": 6,
+                "status": "not-started",
+                "title": "Restore computeHoverData optimization"
+              },
+              {
+                "id": 7,
+                "status": "not-started",
+                "title": "Restore type app port hover"
+              },
+              {
+                "id": 8,
+                "status": "not-started",
+                "title": "Verify build and close ticket"
+              }
+            ]
+          },
+          "tool_response": "Successfully wrote todo list\n\nWarning: Did you mean to update so many todos at the same time? Consider working on them one by one.",
+          "tool_use_id": "toolu_bdrk_01DTbnRh652Q7CdQGZJNkHTt__vscode-1774514533947",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:08Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:08.638Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "wc -l /workspaces/semio/semio/sketchpad/index.tsx",
+            "explanation": "Check current file size",
+            "goal": "Get file line count",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01MReqr5mAWnMt9WiEti4pTT__vscode-1774514533948",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:09Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:09.345Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "wc -l /workspaces/semio/semio/sketchpad/index.tsx",
+            "explanation": "Check current file size",
+            "goal": "Get file line count",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "55873 /workspaces/semio/semio/sketchpad/index.tsx",
+          "tool_use_id": "toolu_bdrk_01MReqr5mAWnMt9WiEti4pTT__vscode-1774514533948",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:18Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:18.035Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n \"class DerivedNode\\|getOrCreate\\|createClearHoverHandler\\|useDesignAppHover\\b\\|useDesignAppIsPieceHovered\\|useDesignAppIsPieceSelected\\|useDesignAppIsConnectionHovered\\|useDesignAppIsConnectionSelected\\|useDesignAppIsPortHovered\\|useDesignAppIsPiecePortSelected\\|useDesignAppSelectedConnector\\|computeHoverData\\|useTypeAppIsPortHovered\" semio/sketchpad/index.tsx | head -60",
+            "explanation": "Find current line numbers of all functions to restore",
+            "goal": "Locate all change points",
+            "isBackground": false,
+            "timeout": 10000
+          },
+          "tool_use_id": "toolu_bdrk_012UPf9QuAmHMzKsPh41PjnN__vscode-1774514533949",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:18Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:18.322Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 grep -n \"class DerivedNode\\|getOrCreate\\|createClearHoverHandler\\|useDesignAppHover\\b\\|useDesignAppIsPieceHovered\\|useDesignAppIsPieceSelected\\|useDesignAppIsConnectionHovered\\|useDesignAppIsConnectionSelected\\|useDesignAppIsPortHovered\\|useDesignAppIsPiecePortSelected\\|useDesignAppSelectedConnector\\|computeHoverData\\|useTypeAppIsPortHovered\" semio/sketchpad/index.tsx | head -60",
+            "explanation": "Find current line numbers of all functions to restore",
+            "goal": "Locate all change points",
+            "isBackground": false,
+            "timeout": 10000
+          },
+          "tool_response": "2230:export class DerivedNode\u003cT\u003e {\n2315:  getOrCreate\u003cT\u003e(key: string, deps: BaseDependency[], compute: () =\u003e T): DerivedNode\u003cT\u003e {\n2870: * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖syncxstatebridge🔖syncpathhelpers🔖derivedstore🔖appeventhandlerfactories🛠️createclearhoverhandler](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/SyncPath%20Helpers/s/Derived%20Store/s/App%20Event%20Handler%20Factories/d/i/createClearHoverHandler)\n2872:export function createClearHoverHandler\u003cTAppKey extends string, TAppState extends { hover?: any }\u003e(config: AppEventHandlerConfig\u003cTAppKey, TAppState\u003e): void {\n3239:  createClearHoverHandler(config);\n3729: * [👤semio📚js🗃️sketchpad💻shared🔖types🔖granularhooktypes🔖standardemptyconstants🔖enums🔖ports🔖fileprovider🔖appids🔖panel🔖appregistry🔖sketchpadstate🔖commands🔖store🔖completestate🔖window🔖tool🔖focus🔖footer🔖xstateintegration🔖xstatetypes🔖syncxstatebridge🔖syncpathhelpers🔖derivedstore🔖selectorfactorypattern🛠️getorcreateappstate](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/shared.ts/s/Types/s/Granular%20Hook%20Types/s/Standard%20Empty%20Constants/s/Enums/s/Ports/s/File%20Provider/s/App%20IDs/s/Panel/s/App%20Registry/s/Sketchpad%20State/s/Commands/s/Store/s/Complete%20State/s/Window/s/Tool/s/Focus/s/Footer/s/XState%20Integration/s/XState%20Types/s/Y.js-XState%20Bridge/s/SyncPath%20Helpers/s/Derived%20Store/s/Selector%20Factory%20Pattern/d/i/getOrCreateAppState)\n3731:export function getOrCreateAppState\u003cTState\u003e(context: Record\u003cstring, Record\u003cstring, TState\u003e\u003e, appKey: string, key: string, defaultFactory: () =\u003e TState): TState {\n3750:  useDesignAppHover: () =\u003e any;\n3751:  useDesignAppIsPieceHovered: (id?: DesignAppId, pieceId?: string) =\u003e boolean;\n3753:  useDesignAppIsConnectionHovered: (id?: DesignAppId, connectionId?: string) =\u003e boolean;\n3755:  useDesignAppIsPieceSelected: (id?: DesignAppId, pieceId?: string) =\u003e boolean;\n3756:  useDesignAppIsConnectionSelected: (id?: DesignAppId, connectionId?: string) =\u003e boolean;\n3775:  useDesignAppHover: () =\u003e undefined,\n3776:  useDesignAppIsPieceHovered: () =\u003e false,\n3778:  useDesignAppIsConnectionHovered: () =\u003e false,\n3780:  useDesignAppIsPieceSelected: () =\u003e false,\n3781:  useDesignAppIsConnectionSelected: () =\u003e false,\n7219:const getOrCreateKitFileState = (kitStore: KitStore): KitFileState =\u003e {\n7233:  const fileState = getOrCreateKitFileState(kitStore);\n7288:  const fileState = getOrCreateKitFileState(kitStore);\n7297:  const fileState = getOrCreateKitFileState(kitStore);\n7305:  return getOrCreateKitFileState(kitStore).provider ?? null;\n7309:  const fileState = getOrCreateKitFileState(kitStore);\n7336:  const fileState = getOrCreateKitFileState(kitStore);\n7363:  const fileState = getOrCreateKitFileState(kitStore);\n7486:    const fileState = getOrCreateKitFileState(this._kitStore);\n7517:    const fileState = getOrCreateKitFileState(this._kitStore);\n7580:const getOrCreateDomRoot = (element: HTMLElement): Root =\u003e {\n17945:  return useDesignAppIsPieceSelected(undefined, piece?.guid ?? \"\");\n17954:  return useDesignAppIsPieceHovered(undefined, pieceScope?.guid ?? \"\");\n18195:  return useDesignAppIsConnectionSelected(undefined, connectionScope?.guid ?? \"\");\n18204:  return useDesignAppIsConnectionHovered(undefined, connectionScope?.guid ?? \"\");\n19134:    nodeRef.current = derivedStore.getOrCreate(key, deps, compute);\n19813:    getOrCreateKitFileState(kitStore).providerFactory = this.resolveKitFileProviderFactory(local, remote);\n24716:            const root = getOrCreateDomRoot(domElement);\n29233:    useDesignAppHover,\n29234:    useDesignAppIsPieceHovered,\n29236:    useDesignAppIsConnectionHovered,\n29238:    useDesignAppIsPieceSelected,\n29239:    useDesignAppIsConnectionSelected,\n29782: * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignapphover](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppHover)\n29784:export function useDesignAppHover(): HookResult\u003cDesignAppHover | undefined\u003e {\n29841:  const [, setHover, canSetHover] = useDesignAppHover();\n29855:  const [, setHover, canSetHover] = useDesignAppHover();\n29869:  const [, setHover, canSetHover] = useDesignAppHover();\n29883:  const [, setHover, canSetHover] = useDesignAppHover();\n29897:  const [, setHover, canSetHover] = useDesignAppHover();\n29911:  const [, setHover, canSetHover] = useDesignAppHover();\n29925:  const [, setHover, canSetHover] = useDesignAppHover();\n31006: * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🛠️usedesignappispiecehovered](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/d/i/useDesignAppIsPieceHovered)\n31008:export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {\n31039: * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🪨computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/d/i/computeHoverData)\n31044:// [👤semio📚js🗃️sketchpad💻design🔖store🛠️computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)\n31046: * [👤semio📚js🗃️sketchpad💻design🔖store🪨computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)\n31047: * computeHoverData holds the data fields for a computeHoverData record.\n31049:function computeHoverData(store: DesignStore | null, state: DesignAppState): HoverPiecesContextValue {\n31103:    const result = computeHoverData(store, state);\n31161: * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🛠️usedesignappispieceselected](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/d/i/useDesignAppIsPieceSelected)\n31163:export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {\n31181:  const isSelected = useDesignAppIsPieceSelected(id, pieceId);",
+          "tool_use_id": "toolu_bdrk_012UPf9QuAmHMzKsPh41PjnN__vscode-1774514533949",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:23Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:23.888Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 2228,
+            "endLine": 2340
+          },
+          "tool_use_id": "toolu_bdrk_013b2eZowgmEkZWQDUNj2BVo__vscode-1774514533950",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:24Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:24.197Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 2228,
+            "endLine": 2340
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_013b2eZowgmEkZWQDUNj2BVo__vscode-1774514533950",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:28Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:28.229Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2910,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 2865
+          },
+          "tool_use_id": "toolu_bdrk_01FWUCasxY356tWywyn12Qk4__vscode-1774514533951",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:28Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:28.532Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2910,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 2865
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01FWUCasxY356tWywyn12Qk4__vscode-1774514533951",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:33Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:33.075Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 29860,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 29780
+          },
+          "tool_use_id": "toolu_bdrk_012P7F9PiWQq16C3i4HnVCSe__vscode-1774514533952",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:33Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:33.416Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 29860,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 29780
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_012P7F9PiWQq16C3i4HnVCSe__vscode-1774514533952",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:37Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:37.804Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 31120,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 31000
+          },
+          "tool_use_id": "toolu_bdrk_013x4X62Nu7HLN3h3wdYKyyk__vscode-1774514533953",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:38Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:38.120Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 31120,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 31000
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_013x4X62Nu7HLN3h3wdYKyyk__vscode-1774514533953",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:42Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:42.874Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 31220,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 31155
+          },
+          "tool_use_id": "toolu_bdrk_01K7jRRhV4ZGEDpj97X8W4Y1__vscode-1774514533954",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:43Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:43.228Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 31220,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 31155
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01K7jRRhV4ZGEDpj97X8W4Y1__vscode-1774514533954",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:50Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:50.438Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n \"export function useDesignAppIsConnectionHovered\\|export function useDesignAppIsConnectionSelected\\|export function useDesignAppIsPortHovered\\|export function useDesignAppIsPiecePortSelected\\|export function useDesignAppSelectedConnector\\|export function useTypeAppIsPortHovered\" /workspaces/semio/semio/sketchpad/index.tsx",
+            "explanation": "Find line numbers for all remaining hooks to restore",
+            "goal": "Locate remaining hooks",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01QLUUNNri19VGaF5fNACVQN__vscode-1774514533955",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:50Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:50.681Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n \"export function useDesignAppIsConnectionHovered\\|export function useDesignAppIsConnectionSelected\\|export function useDesignAppIsPortHovered\\|export function useDesignAppIsPiecePortSelected\\|export function useDesignAppSelectedConnector\\|export function useTypeAppIsPortHovered\" /workspaces/semio/semio/sketchpad/index.tsx",
+            "explanation": "Find line numbers for all remaining hooks to restore",
+            "goal": "Locate remaining hooks",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "31242:export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {\n31259:export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {\n31276:export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {\n31303:export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {\n31321:export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {\n39696:export function useTypeAppIsPortHovered(connectorId: string): HookResult\u003cboolean\u003e {",
+          "tool_use_id": "toolu_bdrk_01QLUUNNri19VGaF5fNACVQN__vscode-1774514533955",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:54Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:54.758Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 31350,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 31235
+          },
+          "tool_use_id": "toolu_bdrk_01CRFUVWfai11NhuCo9xr35h__vscode-1774514533956",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:55Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:55.036Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 31350,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 31235
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01CRFUVWfai11NhuCo9xr35h__vscode-1774514533956",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:10:59Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:59.494Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 39730,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 39690
+          },
+          "tool_use_id": "toolu_bdrk_01XQ58d9JHACN7dS5d8JBQC1__vscode-1774514533957",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:10:59Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:10:59.810Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 39730,
+            "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+            "startLine": 39690
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01XQ58d9JHACN7dS5d8JBQC1__vscode-1774514533957",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.plan.updating.starting",
+        "second": "2026-03-26T09:11:05Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:11:05.691Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "manage_todo_list",
+          "tool_input": {
+            "todoList": [
+              {
+                "id": 1,
+                "status": "completed",
+                "title": "Read current file state at all change points"
+              },
+              {
+                "id": 2,
+                "status": "in-progress",
+                "title": "Restore all optimizations"
+              },
+              {
+                "id": 3,
+                "status": "not-started",
+                "title": "Verify build and close ticket"
+              }
+            ]
+          },
+          "tool_use_id": "toolu_bdrk_0132px8pyd9WMhE3w7UhYTGH__vscode-1774514533958",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.plan.updating.ended",
+        "second": "2026-03-26T09:11:05Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:11:05.867Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "manage_todo_list",
+          "tool_input": {
+            "todoList": [
+              {
+                "id": 1,
+                "status": "completed",
+                "title": "Read current file state at all change points"
+              },
+              {
+                "id": 2,
+                "status": "in-progress",
+                "title": "Restore all optimizations"
+              },
+              {
+                "id": 3,
+                "status": "not-started",
+                "title": "Verify build and close ticket"
+              }
+            ]
+          },
+          "tool_response": "Successfully wrote todo list\n\nWarning: Did you mean to update so many todos at the same time? Consider working on them one by one.",
+          "tool_use_id": "toolu_bdrk_0132px8pyd9WMhE3w7UhYTGH__vscode-1774514533958",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-26T09:12:14Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:12:14.814Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "multi_replace_string_in_file",
+          "tool_input": {
+            "explanation": "Restore all performance optimizations: DerivedNode custom equality, clear hover guard, hover setter optimization, granular boolean selectors, computeHoverData caching, and type app port hover.",
+            "replacements": [
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export class DerivedNode\u003cT\u003e {\n  private deps: BaseDependency[];\n  private compute: () =\u003e T;\n  private value: T | undefined;\n  private valueJson?: string;\n  private subscribers = new Set\u003c() =\u003e void\u003e();\n  private unsubscribers: Disposable[] = [];\n  private initialized = false;\n  version: number = 0;\n\n  constructor(deps: BaseDependency[], compute: () =\u003e T) {\n    this.deps = deps;\n    this.compute = compute;\n  }",
+                "newString": "export class DerivedNode\u003cT\u003e {\n  private deps: BaseDependency[];\n  private compute: () =\u003e T;\n  private value: T | undefined;\n  private valueJson?: string;\n  private isEqual?: (a: T, b: T) =\u003e boolean;\n  private subscribers = new Set\u003c() =\u003e void\u003e();\n  private unsubscribers: Disposable[] = [];\n  private initialized = false;\n  version: number = 0;\n\n  constructor(deps: BaseDependency[], compute: () =\u003e T, isEqual?: (a: T, b: T) =\u003e boolean) {\n    this.deps = deps;\n    this.compute = compute;\n    this.isEqual = isEqual;\n  }"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "  private recompute() {\n    const next = this.compute();\n    const nextJson = JSON.stringify(next, DerivedNode.jsonReplacer);\n    if (nextJson !== this.valueJson) {\n      this.value = next;\n      this.valueJson = nextJson;\n      this.version++;\n      this.subscribers.forEach((cb) =\u003e cb());\n    }\n  }",
+                "newString": "  private recompute() {\n    const next = this.compute();\n    if (this.isEqual) {\n      if (this.value !== undefined \u0026\u0026 this.isEqual(this.value, next)) return;\n      this.value = next;\n      this.version++;\n      this.subscribers.forEach((cb) =\u003e cb());\n    } else {\n      const nextJson = JSON.stringify(next, DerivedNode.jsonReplacer);\n      if (nextJson !== this.valueJson) {\n        this.value = next;\n        this.valueJson = nextJson;\n        this.version++;\n        this.subscribers.forEach((cb) =\u003e cb());\n      }\n    }\n  }"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "  getOrCreate\u003cT\u003e(key: string, deps: BaseDependency[], compute: () =\u003e T): DerivedNode\u003cT\u003e {\n    if (!this.nodes.has(key)) {\n      this.nodes.set(key, new DerivedNode\u003cT\u003e(deps, compute));\n    }\n    return this.nodes.get(key)! as DerivedNode\u003cT\u003e;\n  }",
+                "newString": "  getOrCreate\u003cT\u003e(key: string, deps: BaseDependency[], compute: () =\u003e T, isEqual?: (a: T, b: T) =\u003e boolean): DerivedNode\u003cT\u003e {\n    if (!this.nodes.has(key)) {\n      this.nodes.set(key, new DerivedNode\u003cT\u003e(deps, compute, isEqual));\n    }\n    return this.nodes.get(key)! as DerivedNode\u003cT\u003e;\n  }"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "    guard: (context: any) =\u003e {\n      const app = context[config.appKey];\n      const hover = app?.hover;\n      return hover !== undefined \u0026\u0026 Object.keys(hover).some((k) =\u003e hover[k] !== undefined \u0026\u0026 (Array.isArray(hover[k]) ? hover[k].length \u003e 0 : true));\n    },",
+                "newString": "    guard: (context: any) =\u003e {\n      const app = context[config.appKey];\n      return app?.hover !== undefined;\n    },"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppHover(): HookResult\u003cDesignAppHover | undefined\u003e {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const designGuid = designScope?.guid ?? \"\";\n  const store = useDesignStore(identitySelector) as DesignStore | null;\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const value = useSelector(actor, selector);\n  const canSetEvent = useMemo(() =\u003e ({ type: \"DESIGN.SET_HOVER\" as const, kitGuid, designGuid, hover: {} }), [kitGuid, designGuid]);\n  const canSet = useSelector(actor, (snapshot) =\u003e snapshot.can(canSetEvent));\n  const setter = useMemo(() =\u003e {\n    if (!canSet) return undefined;\n    return (hover: DesignAppHover | undefined) =\u003e {\n      if (areHoverStatesEqual(value, hover)) return;\n      store?.change({ hover: hover ?? {} });\n      setTimeout(() =\u003e {\n        if (hover \u0026\u0026 (hover.pieces?.length || hover.connections?.length)) {\n          actor.send({ type: \"DESIGN.SET_HOVER\", kitGuid, designGuid, hover });\n        } else {\n          actor.send({ type: \"DESIGN.CLEAR_HOVER\", kitGuid, designGuid });\n        }\n      }, 0);\n    };\n  }, [actor, kitGuid, designGuid, canSet, value, store]);\n  return conditionalHookResult(canSet, value, setter);\n}",
+                "newString": "export function useDesignAppHover(): HookResult\u003cDesignAppHover | undefined\u003e {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const designGuid = designScope?.guid ?? \"\";\n  const store = useDesignStore(identitySelector) as DesignStore | null;\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const value = useSelector(actor, selector);\n  const valueRef = useRef(value);\n  valueRef.current = value;\n  const canSetEvent = useMemo(() =\u003e ({ type: \"DESIGN.SET_HOVER\" as const, kitGuid, designGuid, hover: {} }), [kitGuid, designGuid]);\n  const canSet = useSelector(actor, (snapshot) =\u003e snapshot.can(canSetEvent));\n  const pendingHoverRef = useRef\u003c{ hover: DesignAppHover | undefined; scheduled: boolean }\u003e({ hover: undefined, scheduled: false });\n  const setter = useMemo(() =\u003e {\n    if (!canSet) return undefined;\n    return (hover: DesignAppHover | undefined) =\u003e {\n      if (areHoverStatesEqual(valueRef.current, hover)) return;\n      store?.change({ hover: hover ?? {} });\n      pendingHoverRef.current.hover = hover;\n      if (!pendingHoverRef.current.scheduled) {\n        pendingHoverRef.current.scheduled = true;\n        queueMicrotask(() =\u003e {\n          const pendingHover = pendingHoverRef.current.hover;\n          pendingHoverRef.current.scheduled = false;\n          if (pendingHover \u0026\u0026 (pendingHover.pieces?.length || pendingHover.connections?.length || pendingHover.connectors?.length || pendingHover.types?.length || pendingHover.designs?.length)) {\n            actor.send({ type: \"DESIGN.SET_HOVER\", kitGuid, designGuid, hover: pendingHover });\n          } else {\n            actor.send({ type: \"DESIGN.CLEAR_HOVER\", kitGuid, designGuid });\n          }\n        });\n      }\n    };\n  }, [actor, kitGuid, designGuid, canSet, store]);\n  return conditionalHookResult(canSet, value, setter);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const hover = useSelector(actor, selector);\n  if (!pieceId) return false;\n  return hover?.pieces?.includes(pieceId) ?? false;\n}",
+                "newString": "export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.pieces?.includes(pieceId) ?? false,\n    [key, pieceId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const selection = useSelector(actor, selector);\n  if (!pieceId) return false;\n  return selection?.pieces?.includes(pieceId) ?? false;\n}",
+                "newString": "export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.pieces?.includes(pieceId) ?? false,\n    [key, pieceId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const hover = useSelector(actor, selector);\n  if (!connectionId) return false;\n  return hover?.connections?.includes(connectionId) ?? false;\n}",
+                "newString": "export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.connections?.includes(connectionId) ?? false,\n    [key, connectionId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const selection = useSelector(actor, selector);\n  if (!connectionId) return false;\n  return selection?.connections?.includes(connectionId) ?? false;\n}",
+                "newString": "export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.connections?.includes(connectionId) ?? false,\n    [key, connectionId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const hover = useSelector(actor, selector);\n  return hover?.connectors?.some((p) =\u003e p.piece === pieceId \u0026\u0026 p.connector === connectorId) ?? false;\n}",
+                "newString": "export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.connectors?.some((p: any) =\u003e p.piece === pieceId \u0026\u0026 p.connector === connectorId) ?? false,\n    [key, pieceId, connectorId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const selection = useSelector(actor, selector);\n  const connector = selection?.connectors?.[0];\n  if (!connector?.piece || !connector?.connector) return EMPTY_CONNECTOR;\n  return { piece: connector.piece, connector: connector.connector };\n}",
+                "newString": "export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e {\n      const connector = state.context.designApps[key]?.selection?.connectors?.[0];\n      if (!connector?.piece || !connector?.connector) return EMPTY_CONNECTOR;\n      return { piece: connector.piece, connector: connector.connector } as SelectedConnector;\n    },\n    [key],\n  );\n  const result = useSelector(actor, selector);\n  const stableRef = useRef\u003cSelectedConnector\u003e(result);\n  if (result === undefined) {\n    stableRef.current = undefined;\n  } else if (!stableRef.current || stableRef.current.piece !== result.piece || stableRef.current.connector !== result.connector) {\n    stableRef.current = result;\n  }\n  return stableRef.current;\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const designGuid = designScope?.guid ?? \"\";\n  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const selection = useSelector(actor, selector);\n  if (!connectorId) return false;\n  return selection?.connectors?.some((c) =\u003e c.piece === pieceId \u0026\u0026 c.connector === connectorId) ?? false;\n}",
+                "newString": "export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const designGuid = designScope?.guid ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.connectors?.some((c: any) =\u003e c.piece === pieceId \u0026\u0026 c.connector === connectorId) ?? false,\n    [key, pieceId, connectorId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "function computeHoverData(store: DesignStore | null, state: DesignAppState): HoverPiecesContextValue {\n  const hover = state.hover;\n  const transitivelyHoveredPieces = new Set\u003cstring\u003e();\n  const transitivelyHoveredTypes = new Set\u003cstring\u003e();\n\n  if (!hover) return { transitivelyHoveredPieces, transitivelyHoveredTypes };\n\n  hover.pieces?.forEach((pieceId) =\u003e transitivelyHoveredPieces.add(pieceId));\n\n  hover.types?.forEach((typeId) =\u003e transitivelyHoveredTypes.add(typeId));\n\n  if (store \u0026\u0026 (hover.types?.length || hover.designs?.length)) {\n    const design = store.design().snapshot();\n    design?.pieces?.forEach((piece) =\u003e {\n      if (piece.type \u0026\u0026 hover.types?.includes(piece.type.guid)) {\n        transitivelyHoveredPieces.add(piece.guid);\n      }\n      if (piece.design \u0026\u0026 hover.designs?.includes(piece.design.guid)) {\n        transitivelyHoveredPieces.add(piece.guid);\n      }\n    });\n  }\n\n  if (store \u0026\u0026 hover.pieces?.length) {\n    const design = store.design().snapshot();\n    hover.pieces.forEach((pieceId) =\u003e {\n      const piece = design?.pieces?.find((p) =\u003e p.guid === pieceId);\n      if (piece?.type?.guid) {\n        transitivelyHoveredTypes.add(piece.type.guid);\n      }\n    });\n  }\n\n  return { transitivelyHoveredPieces, transitivelyHoveredTypes };\n}",
+                "newString": "function computeHoverData(store: DesignStore | null, state: DesignAppState): HoverPiecesContextValue {\n  const hover = state.hover;\n  const transitivelyHoveredPieces = new Set\u003cstring\u003e();\n  const transitivelyHoveredTypes = new Set\u003cstring\u003e();\n\n  if (!hover) return { transitivelyHoveredPieces, transitivelyHoveredTypes };\n\n  hover.pieces?.forEach((pieceId) =\u003e transitivelyHoveredPieces.add(pieceId));\n\n  hover.types?.forEach((typeId) =\u003e transitivelyHoveredTypes.add(typeId));\n\n  if (store \u0026\u0026 (hover.types?.length || hover.designs?.length)) {\n    const hoverTypesSet = hover.types ? new Set(hover.types) : undefined;\n    const hoverDesignsSet = hover.designs ? new Set(hover.designs) : undefined;\n    const design = store.design().snapshot();\n    design?.pieces?.forEach((piece) =\u003e {\n      if (piece.type \u0026\u0026 hoverTypesSet?.has(piece.type.guid)) {\n        transitivelyHoveredPieces.add(piece.guid);\n      }\n      if (piece.design \u0026\u0026 hoverDesignsSet?.has(piece.design.guid)) {\n        transitivelyHoveredPieces.add(piece.guid);\n      }\n    });\n  }\n\n  if (store \u0026\u0026 hover.pieces?.length) {\n    const design = store.design().snapshot();\n    const pieceMap = new Map(design?.pieces?.map((p) =\u003e [p.guid, p]) ?? []);\n    hover.pieces.forEach((pieceId) =\u003e {\n      const piece = pieceMap.get(pieceId);\n      if (piece?.type?.guid) {\n        transitivelyHoveredTypes.add(piece.type.guid);\n      }\n    });\n  }\n\n  return { transitivelyHoveredPieces, transitivelyHoveredTypes };\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useTypeAppIsPortHovered(connectorId: string): HookResult\u003cboolean\u003e {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const typeScope = useTypeScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const typeGuid = typeScope?.guid ?? \"\";\n  const selector = useMemo(() =\u003e createTypeHoverSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);\n  const hover = useSelector(actor, selector);\n  const value = hover?.connector === connectorId;",
+                "newString": "export function useTypeAppIsPortHovered(connectorId: string): HookResult\u003cboolean\u003e {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const typeScope = useTypeScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const typeGuid = typeScope?.guid ?? \"\";\n  const key = `${kitGuid}/${typeGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.typeApps[key]?.hover?.connector === connectorId,\n    [key, connectorId],\n  );\n  const value = useSelector(actor, selector);"
+              }
+            ]
+          },
+          "tool_use_id": "toolu_bdrk_01QQruhMJFAGxaSWU7UkuXpN__vscode-1774514533959",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-26T09:12:15Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:12:15.601Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "multi_replace_string_in_file",
+          "tool_input": {
+            "explanation": "Restore all performance optimizations: DerivedNode custom equality, clear hover guard, hover setter optimization, granular boolean selectors, computeHoverData caching, and type app port hover.",
+            "replacements": [
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export class DerivedNode\u003cT\u003e {\n  private deps: BaseDependency[];\n  private compute: () =\u003e T;\n  private value: T | undefined;\n  private valueJson?: string;\n  private subscribers = new Set\u003c() =\u003e void\u003e();\n  private unsubscribers: Disposable[] = [];\n  private initialized = false;\n  version: number = 0;\n\n  constructor(deps: BaseDependency[], compute: () =\u003e T) {\n    this.deps = deps;\n    this.compute = compute;\n  }",
+                "newString": "export class DerivedNode\u003cT\u003e {\n  private deps: BaseDependency[];\n  private compute: () =\u003e T;\n  private value: T | undefined;\n  private valueJson?: string;\n  private isEqual?: (a: T, b: T) =\u003e boolean;\n  private subscribers = new Set\u003c() =\u003e void\u003e();\n  private unsubscribers: Disposable[] = [];\n  private initialized = false;\n  version: number = 0;\n\n  constructor(deps: BaseDependency[], compute: () =\u003e T, isEqual?: (a: T, b: T) =\u003e boolean) {\n    this.deps = deps;\n    this.compute = compute;\n    this.isEqual = isEqual;\n  }"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "  private recompute() {\n    const next = this.compute();\n    const nextJson = JSON.stringify(next, DerivedNode.jsonReplacer);\n    if (nextJson !== this.valueJson) {\n      this.value = next;\n      this.valueJson = nextJson;\n      this.version++;\n      this.subscribers.forEach((cb) =\u003e cb());\n    }\n  }",
+                "newString": "  private recompute() {\n    const next = this.compute();\n    if (this.isEqual) {\n      if (this.value !== undefined \u0026\u0026 this.isEqual(this.value, next)) return;\n      this.value = next;\n      this.version++;\n      this.subscribers.forEach((cb) =\u003e cb());\n    } else {\n      const nextJson = JSON.stringify(next, DerivedNode.jsonReplacer);\n      if (nextJson !== this.valueJson) {\n        this.value = next;\n        this.valueJson = nextJson;\n        this.version++;\n        this.subscribers.forEach((cb) =\u003e cb());\n      }\n    }\n  }"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "  getOrCreate\u003cT\u003e(key: string, deps: BaseDependency[], compute: () =\u003e T): DerivedNode\u003cT\u003e {\n    if (!this.nodes.has(key)) {\n      this.nodes.set(key, new DerivedNode\u003cT\u003e(deps, compute));\n    }\n    return this.nodes.get(key)! as DerivedNode\u003cT\u003e;\n  }",
+                "newString": "  getOrCreate\u003cT\u003e(key: string, deps: BaseDependency[], compute: () =\u003e T, isEqual?: (a: T, b: T) =\u003e boolean): DerivedNode\u003cT\u003e {\n    if (!this.nodes.has(key)) {\n      this.nodes.set(key, new DerivedNode\u003cT\u003e(deps, compute, isEqual));\n    }\n    return this.nodes.get(key)! as DerivedNode\u003cT\u003e;\n  }"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "    guard: (context: any) =\u003e {\n      const app = context[config.appKey];\n      const hover = app?.hover;\n      return hover !== undefined \u0026\u0026 Object.keys(hover).some((k) =\u003e hover[k] !== undefined \u0026\u0026 (Array.isArray(hover[k]) ? hover[k].length \u003e 0 : true));\n    },",
+                "newString": "    guard: (context: any) =\u003e {\n      const app = context[config.appKey];\n      return app?.hover !== undefined;\n    },"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppHover(): HookResult\u003cDesignAppHover | undefined\u003e {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const designGuid = designScope?.guid ?? \"\";\n  const store = useDesignStore(identitySelector) as DesignStore | null;\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const value = useSelector(actor, selector);\n  const canSetEvent = useMemo(() =\u003e ({ type: \"DESIGN.SET_HOVER\" as const, kitGuid, designGuid, hover: {} }), [kitGuid, designGuid]);\n  const canSet = useSelector(actor, (snapshot) =\u003e snapshot.can(canSetEvent));\n  const setter = useMemo(() =\u003e {\n    if (!canSet) return undefined;\n    return (hover: DesignAppHover | undefined) =\u003e {\n      if (areHoverStatesEqual(value, hover)) return;\n      store?.change({ hover: hover ?? {} });\n      setTimeout(() =\u003e {\n        if (hover \u0026\u0026 (hover.pieces?.length || hover.connections?.length)) {\n          actor.send({ type: \"DESIGN.SET_HOVER\", kitGuid, designGuid, hover });\n        } else {\n          actor.send({ type: \"DESIGN.CLEAR_HOVER\", kitGuid, designGuid });\n        }\n      }, 0);\n    };\n  }, [actor, kitGuid, designGuid, canSet, value, store]);\n  return conditionalHookResult(canSet, value, setter);\n}",
+                "newString": "export function useDesignAppHover(): HookResult\u003cDesignAppHover | undefined\u003e {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const designGuid = designScope?.guid ?? \"\";\n  const store = useDesignStore(identitySelector) as DesignStore | null;\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const value = useSelector(actor, selector);\n  const valueRef = useRef(value);\n  valueRef.current = value;\n  const canSetEvent = useMemo(() =\u003e ({ type: \"DESIGN.SET_HOVER\" as const, kitGuid, designGuid, hover: {} }), [kitGuid, designGuid]);\n  const canSet = useSelector(actor, (snapshot) =\u003e snapshot.can(canSetEvent));\n  const pendingHoverRef = useRef\u003c{ hover: DesignAppHover | undefined; scheduled: boolean }\u003e({ hover: undefined, scheduled: false });\n  const setter = useMemo(() =\u003e {\n    if (!canSet) return undefined;\n    return (hover: DesignAppHover | undefined) =\u003e {\n      if (areHoverStatesEqual(valueRef.current, hover)) return;\n      store?.change({ hover: hover ?? {} });\n      pendingHoverRef.current.hover = hover;\n      if (!pendingHoverRef.current.scheduled) {\n        pendingHoverRef.current.scheduled = true;\n        queueMicrotask(() =\u003e {\n          const pendingHover = pendingHoverRef.current.hover;\n          pendingHoverRef.current.scheduled = false;\n          if (pendingHover \u0026\u0026 (pendingHover.pieces?.length || pendingHover.connections?.length || pendingHover.connectors?.length || pendingHover.types?.length || pendingHover.designs?.length)) {\n            actor.send({ type: \"DESIGN.SET_HOVER\", kitGuid, designGuid, hover: pendingHover });\n          } else {\n            actor.send({ type: \"DESIGN.CLEAR_HOVER\", kitGuid, designGuid });\n          }\n        });\n      }\n    };\n  }, [actor, kitGuid, designGuid, canSet, store]);\n  return conditionalHookResult(canSet, value, setter);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const hover = useSelector(actor, selector);\n  if (!pieceId) return false;\n  return hover?.pieces?.includes(pieceId) ?? false;\n}",
+                "newString": "export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.pieces?.includes(pieceId) ?? false,\n    [key, pieceId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const selection = useSelector(actor, selector);\n  if (!pieceId) return false;\n  return selection?.pieces?.includes(pieceId) ?? false;\n}",
+                "newString": "export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.pieces?.includes(pieceId) ?? false,\n    [key, pieceId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const hover = useSelector(actor, selector);\n  if (!connectionId) return false;\n  return hover?.connections?.includes(connectionId) ?? false;\n}",
+                "newString": "export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.connections?.includes(connectionId) ?? false,\n    [key, connectionId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const selection = useSelector(actor, selector);\n  if (!connectionId) return false;\n  return selection?.connections?.includes(connectionId) ?? false;\n}",
+                "newString": "export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.connections?.includes(connectionId) ?? false,\n    [key, connectionId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const hover = useSelector(actor, selector);\n  return hover?.connectors?.some((p) =\u003e p.piece === pieceId \u0026\u0026 p.connector === connectorId) ?? false;\n}",
+                "newString": "export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.connectors?.some((p: any) =\u003e p.piece === pieceId \u0026\u0026 p.connector === connectorId) ?? false,\n    [key, pieceId, connectorId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const selection = useSelector(actor, selector);\n  const connector = selection?.connectors?.[0];\n  if (!connector?.piece || !connector?.connector) return EMPTY_CONNECTOR;\n  return { piece: connector.piece, connector: connector.connector };\n}",
+                "newString": "export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n  const designGuid = designScope?.guid ?? id?.design ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e {\n      const connector = state.context.designApps[key]?.selection?.connectors?.[0];\n      if (!connector?.piece || !connector?.connector) return EMPTY_CONNECTOR;\n      return { piece: connector.piece, connector: connector.connector } as SelectedConnector;\n    },\n    [key],\n  );\n  const result = useSelector(actor, selector);\n  const stableRef = useRef\u003cSelectedConnector\u003e(result);\n  if (result === undefined) {\n    stableRef.current = undefined;\n  } else if (!stableRef.current || stableRef.current.piece !== result.piece || stableRef.current.connector !== result.connector) {\n    stableRef.current = result;\n  }\n  return stableRef.current;\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const designGuid = designScope?.guid ?? \"\";\n  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n  const selection = useSelector(actor, selector);\n  if (!connectorId) return false;\n  return selection?.connectors?.some((c) =\u003e c.piece === pieceId \u0026\u0026 c.connector === connectorId) ?? false;\n}",
+                "newString": "export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const designScope = useDesignScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const designGuid = designScope?.guid ?? \"\";\n  const key = `${kitGuid}/${designGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.connectors?.some((c: any) =\u003e c.piece === pieceId \u0026\u0026 c.connector === connectorId) ?? false,\n    [key, pieceId, connectorId],\n  );\n  return useSelector(actor, selector);\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "function computeHoverData(store: DesignStore | null, state: DesignAppState): HoverPiecesContextValue {\n  const hover = state.hover;\n  const transitivelyHoveredPieces = new Set\u003cstring\u003e();\n  const transitivelyHoveredTypes = new Set\u003cstring\u003e();\n\n  if (!hover) return { transitivelyHoveredPieces, transitivelyHoveredTypes };\n\n  hover.pieces?.forEach((pieceId) =\u003e transitivelyHoveredPieces.add(pieceId));\n\n  hover.types?.forEach((typeId) =\u003e transitivelyHoveredTypes.add(typeId));\n\n  if (store \u0026\u0026 (hover.types?.length || hover.designs?.length)) {\n    const design = store.design().snapshot();\n    design?.pieces?.forEach((piece) =\u003e {\n      if (piece.type \u0026\u0026 hover.types?.includes(piece.type.guid)) {\n        transitivelyHoveredPieces.add(piece.guid);\n      }\n      if (piece.design \u0026\u0026 hover.designs?.includes(piece.design.guid)) {\n        transitivelyHoveredPieces.add(piece.guid);\n      }\n    });\n  }\n\n  if (store \u0026\u0026 hover.pieces?.length) {\n    const design = store.design().snapshot();\n    hover.pieces.forEach((pieceId) =\u003e {\n      const piece = design?.pieces?.find((p) =\u003e p.guid === pieceId);\n      if (piece?.type?.guid) {\n        transitivelyHoveredTypes.add(piece.type.guid);\n      }\n    });\n  }\n\n  return { transitivelyHoveredPieces, transitivelyHoveredTypes };\n}",
+                "newString": "function computeHoverData(store: DesignStore | null, state: DesignAppState): HoverPiecesContextValue {\n  const hover = state.hover;\n  const transitivelyHoveredPieces = new Set\u003cstring\u003e();\n  const transitivelyHoveredTypes = new Set\u003cstring\u003e();\n\n  if (!hover) return { transitivelyHoveredPieces, transitivelyHoveredTypes };\n\n  hover.pieces?.forEach((pieceId) =\u003e transitivelyHoveredPieces.add(pieceId));\n\n  hover.types?.forEach((typeId) =\u003e transitivelyHoveredTypes.add(typeId));\n\n  if (store \u0026\u0026 (hover.types?.length || hover.designs?.length)) {\n    const hoverTypesSet = hover.types ? new Set(hover.types) : undefined;\n    const hoverDesignsSet = hover.designs ? new Set(hover.designs) : undefined;\n    const design = store.design().snapshot();\n    design?.pieces?.forEach((piece) =\u003e {\n      if (piece.type \u0026\u0026 hoverTypesSet?.has(piece.type.guid)) {\n        transitivelyHoveredPieces.add(piece.guid);\n      }\n      if (piece.design \u0026\u0026 hoverDesignsSet?.has(piece.design.guid)) {\n        transitivelyHoveredPieces.add(piece.guid);\n      }\n    });\n  }\n\n  if (store \u0026\u0026 hover.pieces?.length) {\n    const design = store.design().snapshot();\n    const pieceMap = new Map(design?.pieces?.map((p) =\u003e [p.guid, p]) ?? []);\n    hover.pieces.forEach((pieceId) =\u003e {\n      const piece = pieceMap.get(pieceId);\n      if (piece?.type?.guid) {\n        transitivelyHoveredTypes.add(piece.type.guid);\n      }\n    });\n  }\n\n  return { transitivelyHoveredPieces, transitivelyHoveredTypes };\n}"
+              },
+              {
+                "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
+                "oldString": "export function useTypeAppIsPortHovered(connectorId: string): HookResult\u003cboolean\u003e {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const typeScope = useTypeScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const typeGuid = typeScope?.guid ?? \"\";\n  const selector = useMemo(() =\u003e createTypeHoverSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);\n  const hover = useSelector(actor, selector);\n  const value = hover?.connector === connectorId;",
+                "newString": "export function useTypeAppIsPortHovered(connectorId: string): HookResult\u003cboolean\u003e {\n  const actor = useSketchpadActor();\n  const kitScope = useKitScope();\n  const typeScope = useTypeScope();\n  const kitGuid = kitScope?.guid ?? \"\";\n  const typeGuid = typeScope?.guid ?? \"\";\n  const key = `${kitGuid}/${typeGuid}`;\n  const selector = useMemo(\n    () =\u003e (state: any) =\u003e state.context.typeApps[key]?.hover?.connector === connectorId,\n    [key, connectorId],\n  );\n  const value = useSelector(actor, selector);"
+              }
+            ]
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01QQruhMJFAGxaSWU7UkuXpN__vscode-1774514533959",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:12:24Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:12:24.152Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx build semio/sketchpad 2\u003e\u00261 | grep -E \"error TS\" | wc -l",
+            "explanation": "Count total TypeScript errors to verify no new ones were introduced",
+            "goal": "Verify build is clean",
+            "isBackground": false,
+            "timeout": 120000
+          },
+          "tool_use_id": "toolu_bdrk_015uL8kcdLRKPwB3XuHcsrjD__vscode-1774514533960",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:12:43Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:12:43.777Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 npx nx build semio/sketchpad 2\u003e\u00261 | grep -E \"error TS\" | wc -l",
+            "explanation": "Count total TypeScript errors to verify no new ones were introduced",
+            "goal": "Verify build is clean",
+            "isBackground": false,
+            "timeout": 120000
+          },
+          "tool_response": "239",
+          "tool_use_id": "toolu_bdrk_015uL8kcdLRKPwB3XuHcsrjD__vscode-1774514533960",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.plan.updating.starting",
+        "second": "2026-03-26T09:12:51Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:12:51.309Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "manage_todo_list",
+          "tool_input": {
+            "todoList": [
+              {
+                "id": 1,
+                "status": "completed",
+                "title": "Read current file state at all change points"
+              },
+              {
+                "id": 2,
+                "status": "completed",
+                "title": "Restore all optimizations"
+              },
+              {
+                "id": 3,
+                "status": "completed",
+                "title": "Verify build and close ticket"
+              }
+            ]
+          },
+          "tool_use_id": "toolu_bdrk_01YLAmeUPvspKW41LcquqtSC__vscode-1774514533961",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.plan.updating.ended",
+        "second": "2026-03-26T09:12:51Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:12:51.483Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "manage_todo_list",
+          "tool_input": {
+            "todoList": [
+              {
+                "id": 1,
+                "status": "completed",
+                "title": "Read current file state at all change points"
+              },
+              {
+                "id": 2,
+                "status": "completed",
+                "title": "Restore all optimizations"
+              },
+              {
+                "id": 3,
+                "status": "completed",
+                "title": "Verify build and close ticket"
+              }
+            ]
+          },
+          "tool_response": "Successfully wrote todo list",
+          "tool_use_id": "toolu_bdrk_01YLAmeUPvspKW41LcquqtSC__vscode-1774514533961",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-26T09:13:01Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:13:01.297Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "mcp_repo_ticket_close",
+          "tool_input": {
+            "files": [
+              "semio/sketchpad/index.tsx"
+            ],
+            "path": "26/03/25/OPTIMIZE-SKETCHPAD-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER",
+            "summary": "Restored all discarded performance optimizations. All 15 changes re-applied: DerivedNode custom isEqual, DerivedStore.getOrCreate isEqual passthrough, simplified clear hover guard, useDesignAppHover setter with queueMicrotask + deduplication + stable ref, 6 granular boolean selectors (isPieceHovered/Selected, isConnectionHovered/Selected, isPortHovered, isPiecePortSelected), useDesignAppSelectedConnector with stable ref, computeHoverData with Set/Map for O(1) lookups, useTypeAppIsPortHovered with inline selector. Build verified: 239 pre-existing errors, 0 new."
+          },
+          "tool_use_id": "toolu_bdrk_01284Fpb3hLZpqmofAVEwVPt__vscode-1774514533962",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-26T09:13:07Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:13:07.017Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "mcp_repo_ticket_close",
+          "tool_input": {
+            "files": [
+              "semio/sketchpad/index.tsx"
+            ],
+            "path": "26/03/25/OPTIMIZE-SKETCHPAD-INTERACTION-PERFORMANCE-FOR-SELECTION-AND-HOVER",
+            "summary": "Restored all discarded performance optimizations. All 15 changes re-applied: DerivedNode custom isEqual, DerivedStore.getOrCreate isEqual passthrough, simplified clear hover guard, useDesignAppHover setter with queueMicrotask + deduplication + stable ref, 6 granular boolean selectors (isPieceHovered/Selected, isConnectionHovered/Selected, isPortHovered, isPiecePortSelected), useDesignAppSelectedConnector with stable ref, computeHoverData with Set/Map for O(1) lookups, useTypeAppIsPortHovered with inline selector. Build verified: 239 pre-existing errors, 0 new."
+          },
+          "tool_response": "[🎫optimizesketchpadinteractionperformanceforselectionandhover](repo://ticket/🎫optimizesketchpadinteractionperformanceforselectionandhover) - `closed` - `closed 1 second ago`\n",
+          "tool_use_id": "toolu_bdrk_01284Fpb3hLZpqmofAVEwVPt__vscode-1774514533962",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-26T09:13:18Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:13:18.689Z",
+          "hook_event_name": "Stop",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-03-26T09:15:52Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:15:52.165Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "prompt": "make sure you restore everything back",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-26T09:16:00Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:16:00.246Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 git diff --stat HEAD semio/sketchpad/index.tsx",
+            "explanation": "Check if there are uncommitted changes showing our optimizations",
+            "goal": "Verify changes are present",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_011TN75vqVgy1Uh3RGFD4H5d__vscode-1774514533963",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.ended",
+        "second": "2026-03-26T09:16:00Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:16:00.587Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 git diff --stat HEAD semio/sketchpad/index.tsx",
+            "explanation": "Check if there are uncommitted changes showing our optimizations",
+            "goal": "Verify changes are present",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": " 1 file changed, 162 insertions(+), 71 deletions(-)",
+          "tool_use_id": "toolu_bdrk_011TN75vqVgy1Uh3RGFD4H5d__vscode-1774514533963",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-26T09:16:05Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:16:05.909Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 git diff HEAD semio/sketchpad/index.tsx",
+            "explanation": "Show the full diff to verify all optimizations are restored",
+            "goal": "Verify all changes",
+            "isBackground": false,
+            "timeout": 10000
+          },
+          "tool_use_id": "toolu_bdrk_01HVfzF9k3CB8XGEjVQfKVxC__vscode-1774514533964",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.ended",
+        "second": "2026-03-26T09:16:06Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:16:06.260Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio \u0026\u0026 git diff HEAD semio/sketchpad/index.tsx",
+            "explanation": "Show the full diff to verify all optimizations are restored",
+            "goal": "Verify all changes",
+            "isBackground": false,
+            "timeout": 10000
+          },
+          "tool_response": "diff --git a/semio/sketchpad/index.tsx b/semio/sketchpad/index.tsx\nindex 9fa6fd6d3..8dcef13c4 100644\n--- a/semio/sketchpad/index.tsx\n+++ b/semio/sketchpad/index.tsx\n@@ -269,6 +269,7 @@ import {\n   useSensor,\n   useSensors,\n   useStoreApi,\n+  useThree,\n   useTranslation,\n   VerticalWindows,\n   ViewportPortal,\n@@ -2231,14 +2232,16 @@ export class DerivedNode\u003cT\u003e {\n   private compute: () =\u003e T;\n   private value: T | undefined;\n   private valueJson?: string;\n+  private isEqual?: (a: T, b: T) =\u003e boolean;\n   private subscribers = new Set\u003c() =\u003e void\u003e();\n   private unsubscribers: Disposable[] = [];\n   private initialized = false;\n   version: number = 0;\n \n-  constructor(deps: BaseDependency[], compute: () =\u003e T) {\n+  constructor(deps: BaseDependency[], compute: () =\u003e T, isEqual?: (a: T, b: T) =\u003e boolean) {\n     this.deps = deps;\n     this.compute = compute;\n+    this.isEqual = isEqual;\n   }\n \n   private init() {\n@@ -2261,12 +2264,19 @@ export class DerivedNode\u003cT\u003e {\n \n   private recompute() {\n     const next = this.compute();\n-    const nextJson = JSON.stringify(next, DerivedNode.jsonReplacer);\n-    if (nextJson !== this.valueJson) {\n+    if (this.isEqual) {\n+      if (this.value !== undefined \u0026\u0026 this.isEqual(this.value, next)) return;\n       this.value = next;\n-      this.valueJson = nextJson;\n       this.version++;\n       this.subscribers.forEach((cb) =\u003e cb());\n+    } else {\n+      const nextJson = JSON.stringify(next, DerivedNode.jsonReplacer);\n+      if (nextJson !== this.valueJson) {\n+        this.value = next;\n+        this.valueJson = nextJson;\n+        this.version++;\n+        this.subscribers.forEach((cb) =\u003e cb());\n+      }\n     }\n   }\n \n@@ -2311,9 +2321,9 @@ export class DerivedNode\u003cT\u003e {\n export class DerivedStore {\n   private nodes = new Map\u003cstring, DerivedNode\u003cany\u003e\u003e();\n \n-  getOrCreate\u003cT\u003e(key: string, deps: BaseDependency[], compute: () =\u003e T): DerivedNode\u003cT\u003e {\n+  getOrCreate\u003cT\u003e(key: string, deps: BaseDependency[], compute: () =\u003e T, isEqual?: (a: T, b: T) =\u003e boolean): DerivedNode\u003cT\u003e {\n     if (!this.nodes.has(key)) {\n-      this.nodes.set(key, new DerivedNode\u003cT\u003e(deps, compute));\n+      this.nodes.set(key, new DerivedNode\u003cT\u003e(deps, compute, isEqual));\n     }\n     return this.nodes.get(key)! as DerivedNode\u003cT\u003e;\n   }\n@@ -2873,8 +2883,7 @@ export function createClearHoverHandler\u003cTAppKey extends string, TAppState extend\n   registerEventHandler(eventType, {\n     guard: (context: any) =\u003e {\n       const app = context[config.appKey];\n-      const hover = app?.hover;\n-      return hover !== undefined \u0026\u0026 Object.keys(hover).some((k) =\u003e hover[k] !== undefined \u0026\u0026 (Array.isArray(hover[k]) ? hover[k].length \u003e 0 : true));\n+      return app?.hover !== undefined;\n     },\n     action: (context: any) =\u003e {\n       const app = context[config.appKey] || config.createDefaultState();\n@@ -24684,12 +24693,12 @@ export const LayoutCanvas: FC\u003c{\n           return normalized;\n         };\n \n-        const rawConfig = parseWindowLayout(layoutState) || (windowConfig.defaultLayout ? layoutNodeToGoldenLayoutConfig(windowConfig.defaultLayout) : undefined);\n-        if (!rawConfig) {\n+        const parsedLayout = parseWindowLayout(layoutState) ?? parseWindowLayout(windowConfig.defaultLayout);\n+        if (!parsedLayout) {\n           console.error(\"[LayoutCanvas] No layout config provided!\");\n           return;\n         }\n-        const config = normalizeLayoutConfig(rawConfig);\n+        const config = normalizeLayoutConfig(layoutNodeToGoldenLayoutConfig(parsedLayout));\n \n         const layout = new GoldenLayout(config, containerRef.current!);\n         let isInitialized = false;\n@@ -24769,8 +24778,8 @@ export const LayoutCanvas: FC\u003c{\n \n           try {\n             if (isInitialized) {\n-              const config = layout.toConfig();\n-              onLayoutChange(config);\n+              const nextLayout = parseWindowLayout(layout.toConfig());\n+              onLayoutChange(nextLayout ?? layout.toConfig());\n             }\n           } catch (error: any) {\n             if (error?.message?.includes(\"not yet initialised\")) {\n@@ -29546,6 +29555,30 @@ function useDesignAppField\u003cT, TEvent extends { type: string }\u003e(options: UseDesig\n   return useMemo(() =\u003e createField(value, (next: T) =\u003e actor.send(createSendEvent(kitGuid, designGuid, next) as Parameters\u003ctypeof actor.send\u003e[0]), canSet), [value, actor, createSendEvent, kitGuid, designGuid, canSet]);\n }\n \n+/**\n+ * Returns a reactive field for the Design app selection state.\n+ * MUST create a Field wrapping the current selection and setter.\n+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappselectionfield](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppSelectionField)\n+ **/\n+export function useDesignAppSelectionField(): Field\u003cDesignAppSelection\u003e {\n+  return useDesignAppField\u003cDesignAppSelection, { type: \"DESIGN.SET_SELECTION\"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }\u003e({\n+    createGranularSelector: createDesignSelectionSelector,\n+    fallback: {},\n+    createCanEvent: (kitGuid, designGuid) =\u003e ({ type: \"DESIGN.SET_SELECTION\", kitGuid, designGuid, selection: {} }),\n+    createSendEvent: (kitGuid, designGuid, selection) =\u003e ({ type: \"DESIGN.SET_SELECTION\", kitGuid, designGuid, selection }),\n+    useWildcardFallback: true,\n+  });\n+}\n+\n+/**\n+ * Returns a hook result for the Design app selection state.\n+ * MUST provide the current selection, a setter, and a canSet flag.\n+ * [👤semio📚js🗃️sketchpad💻design🔖imports🔖store🔖components🛠️usedesignappselection](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Store/s/Components/d/i/useDesignAppSelection)\n+ **/\n+export function useDesignAppSelection(): HookResult\u003cDesignAppSelection\u003e {\n+  return fieldToHookResult(useDesignAppSelectionField());\n+}\n+\n /**\n  * Returns a reactive field for the Design app fullscreen window.\n  *MUST create a Field wrapping the fullscreen value and setter.\n@@ -29762,23 +29795,34 @@ export function useDesignAppHover(): HookResult\u003cDesignAppHover | undefined\u003e {\n   const designScope = useDesignScope();\n   const kitGuid = kitScope?.guid ?? \"\";\n   const designGuid = designScope?.guid ?? \"\";\n+  const store = useDesignStore(identitySelector) as DesignStore | null;\n   const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n   const value = useSelector(actor, selector);\n+  const valueRef = useRef(value);\n+  valueRef.current = value;\n   const canSetEvent = useMemo(() =\u003e ({ type: \"DESIGN.SET_HOVER\" as const, kitGuid, designGuid, hover: {} }), [kitGuid, designGuid]);\n   const canSet = useSelector(actor, (snapshot) =\u003e snapshot.can(canSetEvent));\n+  const pendingHoverRef = useRef\u003c{ hover: DesignAppHover | undefined; scheduled: boolean }\u003e({ hover: undefined, scheduled: false });\n   const setter = useMemo(() =\u003e {\n     if (!canSet) return undefined;\n     return (hover: DesignAppHover | undefined) =\u003e {\n-      if (areHoverStatesEqual(value, hover)) return;\n-      setTimeout(() =\u003e {\n-        if (hover \u0026\u0026 (hover.pieces?.length || hover.connections?.length)) {\n-          actor.send({ type: \"DESIGN.SET_HOVER\", kitGuid, designGuid, hover });\n-        } else {\n-          actor.send({ type: \"DESIGN.CLEAR_HOVER\", kitGuid, designGuid });\n-        }\n-      }, 0);\n+      if (areHoverStatesEqual(valueRef.current, hover)) return;\n+      store?.change({ hover: hover ?? {} });\n+      pendingHoverRef.current.hover = hover;\n+      if (!pendingHoverRef.current.scheduled) {\n+        pendingHoverRef.current.scheduled = true;\n+        queueMicrotask(() =\u003e {\n+          const pendingHover = pendingHoverRef.current.hover;\n+          pendingHoverRef.current.scheduled = false;\n+          if (pendingHover \u0026\u0026 (pendingHover.pieces?.length || pendingHover.connections?.length || pendingHover.connectors?.length || pendingHover.types?.length || pendingHover.designs?.length)) {\n+            actor.send({ type: \"DESIGN.SET_HOVER\", kitGuid, designGuid, hover: pendingHover });\n+          } else {\n+            actor.send({ type: \"DESIGN.CLEAR_HOVER\", kitGuid, designGuid });\n+          }\n+        });\n+      }\n     };\n-  }, [actor, kitGuid, designGuid, canSet, value]);\n+  }, [actor, kitGuid, designGuid, canSet, store]);\n   return conditionalHookResult(canSet, value, setter);\n }\n \n@@ -30984,10 +31028,12 @@ export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string):\n   const designScope = useDesignScope();\n   const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n   const designGuid = designScope?.guid ?? id?.design ?? \"\";\n-  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n-  const hover = useSelector(actor, selector);\n-  if (!pieceId) return false;\n-  return hover?.pieces?.includes(pieceId) ?? false;\n+  const key = `${kitGuid}/${designGuid}`;\n+  const selector = useMemo(\n+    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.pieces?.includes(pieceId) ?? false,\n+    [key, pieceId],\n+  );\n+  return useSelector(actor, selector);\n }\n \n /**\n@@ -31031,12 +31077,14 @@ function computeHoverData(store: DesignStore | null, state: DesignAppState): Hov\n   hover.types?.forEach((typeId) =\u003e transitivelyHoveredTypes.add(typeId));\n \n   if (store \u0026\u0026 (hover.types?.length || hover.designs?.length)) {\n+    const hoverTypesSet = hover.types ? new Set(hover.types) : undefined;\n+    const hoverDesignsSet = hover.designs ? new Set(hover.designs) : undefined;\n     const design = store.design().snapshot();\n     design?.pieces?.forEach((piece) =\u003e {\n-      if (piece.type \u0026\u0026 hover.types?.includes(piece.type.guid)) {\n+      if (piece.type \u0026\u0026 hoverTypesSet?.has(piece.type.guid)) {\n         transitivelyHoveredPieces.add(piece.guid);\n       }\n-      if (piece.design \u0026\u0026 hover.designs?.includes(piece.design.guid)) {\n+      if (piece.design \u0026\u0026 hoverDesignsSet?.has(piece.design.guid)) {\n         transitivelyHoveredPieces.add(piece.guid);\n       }\n     });\n@@ -31044,8 +31092,9 @@ function computeHoverData(store: DesignStore | null, state: DesignAppState): Hov\n \n   if (store \u0026\u0026 hover.pieces?.length) {\n     const design = store.design().snapshot();\n+    const pieceMap = new Map(design?.pieces?.map((p) =\u003e [p.guid, p]) ?? []);\n     hover.pieces.forEach((pieceId) =\u003e {\n-      const piece = design?.pieces?.find((p) =\u003e p.guid === pieceId);\n+      const piece = pieceMap.get(pieceId);\n       if (piece?.type?.guid) {\n         transitivelyHoveredTypes.add(piece.type.guid);\n       }\n@@ -31139,10 +31188,12 @@ export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string):\n   const designScope = useDesignScope();\n   const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n   const designGuid = designScope?.guid ?? id?.design ?? \"\";\n-  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n-  const selection = useSelector(actor, selector);\n-  if (!pieceId) return false;\n-  return selection?.pieces?.includes(pieceId) ?? false;\n+  const key = `${kitGuid}/${designGuid}`;\n+  const selector = useMemo(\n+    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.pieces?.includes(pieceId) ?? false,\n+    [key, pieceId],\n+  );\n+  return useSelector(actor, selector);\n }\n \n /**\n@@ -31218,10 +31269,12 @@ export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?:\n   const designScope = useDesignScope();\n   const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n   const designGuid = designScope?.guid ?? id?.design ?? \"\";\n-  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n-  const hover = useSelector(actor, selector);\n-  if (!connectionId) return false;\n-  return hover?.connections?.includes(connectionId) ?? false;\n+  const key = `${kitGuid}/${designGuid}`;\n+  const selector = useMemo(\n+    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.connections?.includes(connectionId) ?? false,\n+    [key, connectionId],\n+  );\n+  return useSelector(actor, selector);\n }\n \n /**\n@@ -31235,10 +31288,12 @@ export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?\n   const designScope = useDesignScope();\n   const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n   const designGuid = designScope?.guid ?? id?.design ?? \"\";\n-  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n-  const selection = useSelector(actor, selector);\n-  if (!connectionId) return false;\n-  return selection?.connections?.includes(connectionId) ?? false;\n+  const key = `${kitGuid}/${designGuid}`;\n+  const selector = useMemo(\n+    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.connections?.includes(connectionId) ?? false,\n+    [key, connectionId],\n+  );\n+  return useSelector(actor, selector);\n }\n \n /**\n@@ -31252,9 +31307,12 @@ export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId:\n   const designScope = useDesignScope();\n   const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n   const designGuid = designScope?.guid ?? id?.design ?? \"\";\n-  const selector = useMemo(() =\u003e createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n-  const hover = useSelector(actor, selector);\n-  return hover?.connectors?.some((p) =\u003e p.piece === pieceId \u0026\u0026 p.connector === connectorId) ?? false;\n+  const key = `${kitGuid}/${designGuid}`;\n+  const selector = useMemo(\n+    () =\u003e (state: any) =\u003e state.context.designApps[key]?.hover?.connectors?.some((p: any) =\u003e p.piece === pieceId \u0026\u0026 p.connector === connectorId) ?? false,\n+    [key, pieceId, connectorId],\n+  );\n+  return useSelector(actor, selector);\n }\n \n /**\n@@ -31279,11 +31337,23 @@ export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnect\n   const designScope = useDesignScope();\n   const kitGuid = kitScope?.guid ?? id?.kit ?? \"\";\n   const designGuid = designScope?.guid ?? id?.design ?? \"\";\n-  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n-  const selection = useSelector(actor, selector);\n-  const connector = selection?.connectors?.[0];\n-  if (!connector?.piece || !connector?.connector) return EMPTY_CONNECTOR;\n-  return { piece: connector.piece, connector: connector.connector };\n+  const key = `${kitGuid}/${designGuid}`;\n+  const selector = useMemo(\n+    () =\u003e (state: any) =\u003e {\n+      const connector = state.context.designApps[key]?.selection?.connectors?.[0];\n+      if (!connector?.piece || !connector?.connector) return EMPTY_CONNECTOR;\n+      return { piece: connector.piece, connector: connector.connector } as SelectedConnector;\n+    },\n+    [key],\n+  );\n+  const result = useSelector(actor, selector);\n+  const stableRef = useRef\u003cSelectedConnector\u003e(result);\n+  if (result === undefined) {\n+    stableRef.current = undefined;\n+  } else if (!stableRef.current || stableRef.current.piece !== result.piece || stableRef.current.connector !== result.connector) {\n+    stableRef.current = result;\n+  }\n+  return stableRef.current;\n }\n \n /**\n@@ -31297,10 +31367,12 @@ export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: s\n   const designScope = useDesignScope();\n   const kitGuid = kitScope?.guid ?? \"\";\n   const designGuid = designScope?.guid ?? \"\";\n-  const selector = useMemo(() =\u003e createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);\n-  const selection = useSelector(actor, selector);\n-  if (!connectorId) return false;\n-  return selection?.connectors?.some((c) =\u003e c.piece === pieceId \u0026\u0026 c.connector === connectorId) ?? false;\n+  const key = `${kitGuid}/${designGuid}`;\n+  const selector = useMemo(\n+    () =\u003e (state: any) =\u003e state.context.designApps[key]?.selection?.connectors?.some((c: any) =\u003e c.piece === pieceId \u0026\u0026 c.connector === connectorId) ?? false,\n+    [key, pieceId, connectorId],\n+  );\n+  return useSelector(actor, selector);\n }\n \n /**\n@@ -37281,6 +37353,7 @@ interface DesignMeshEventProps {\n \n const GLTFMesh: FC\u003c{ url: string; highlightColor: string | null } \u0026 DesignMeshEventProps\u003e = ({ url, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) =\u003e {\n   const gltf = useGLTF(url);\n+  const invalidate = useThree((s) =\u003e s.invalidate);\n   const plasterColor = useMemo(() =\u003e new THREE.Color(getComputedColor(\"--plaster\")), []);\n   const plasterEdgeColor = useMemo(() =\u003e new THREE.Color(getComputedColor(\"--plaster-edge\")), []);\n   const highlightThreeColor = useMemo(() =\u003e (highlightColor ? new THREE.Color(highlightColor) : null), [highlightColor]);\n@@ -37310,12 +37383,14 @@ const GLTFMesh: FC\u003c{ url: string; highlightColor: string | null } \u0026 DesignMeshEv\n   }, [gltf.scene, plasterColor, plasterEdgeColor]);\n   useEffect(() =\u003e {\n     applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);\n-  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);\n+    invalidate();\n+  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor, invalidate]);\n   return \u003cprimitive object={clonedScene} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} /\u003e;\n };\n \n const FBXMesh: FC\u003c{ url: string; highlightColor: string | null } \u0026 DesignMeshEventProps\u003e = ({ url, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) =\u003e {\n   const scene = useFBX(url);\n+  const invalidate = useThree((s) =\u003e s.invalidate);\n   const plasterColor = useMemo(() =\u003e new THREE.Color(getComputedColor(\"--plaster\")), []);\n   const plasterEdgeColor = useMemo(() =\u003e new THREE.Color(getComputedColor(\"--plaster-edge\")), []);\n   const highlightThreeColor = useMemo(() =\u003e (highlightColor ? new THREE.Color(highlightColor) : null), [highlightColor]);\n@@ -37345,12 +37420,14 @@ const FBXMesh: FC\u003c{ url: string; highlightColor: string | null } \u0026 DesignMeshEve\n   }, [scene, plasterColor, plasterEdgeColor]);\n   useEffect(() =\u003e {\n     applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);\n-  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);\n+    invalidate();\n+  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor, invalidate]);\n   return \u003cprimitive object={clonedScene} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} /\u003e;\n };\n \n const OBJMesh: FC\u003c{ url: string; highlightColor: string | null } \u0026 DesignMeshEventProps\u003e = ({ url, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) =\u003e {\n   const obj = useLoader(OBJLoader, url);\n+  const invalidate = useThree((s) =\u003e s.invalidate);\n   const plasterColor = useMemo(() =\u003e new THREE.Color(getComputedColor(\"--plaster\")), []);\n   const plasterEdgeColor = useMemo(() =\u003e new THREE.Color(getComputedColor(\"--plaster-edge\")), []);\n   const highlightThreeColor = useMemo(() =\u003e (highlightColor ? new THREE.Color(highlightColor) : null), [highlightColor]);\n@@ -37380,7 +37457,8 @@ const OBJMesh: FC\u003c{ url: string; highlightColor: string | null } \u0026 DesignMeshEve\n   }, [obj, plasterColor, plasterEdgeColor]);\n   useEffect(() =\u003e {\n     applyHighlightToLoadedScene(clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor);\n-  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor]);\n+    invalidate();\n+  }, [clonedScene, highlightThreeColor, plasterColor, plasterEdgeColor, invalidate]);\n   return \u003cprimitive object={clonedScene} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} /\u003e;\n };\n \n@@ -37579,19 +37657,27 @@ const ModelPiece: FC\u003cModelPieceProps\u003e = () =\u003e {\n     [focusPiece, piece.guid],\n   );\n \n-  const handlePointerEnter = useCallback(() =\u003e {\n-    if (currentHoveredPieceGuidRef.current !== piece.guid) {\n-      currentHoveredPieceGuidRef.current = piece.guid;\n-      if (hoverPiece) hoverPiece(piece.guid);\n-    }\n-  }, [piece.guid, hoverPiece, currentHoveredPieceGuidRef]);\n+  const handlePointerEnter = useCallback(\n+    (e?: ThreeEvent\u003cPointerEvent\u003e) =\u003e {\n+      e?.stopPropagation();\n+      if (currentHoveredPieceGuidRef.current !== piece.guid) {\n+        currentHoveredPieceGuidRef.current = piece.guid;\n+        if (hoverPiece) hoverPiece(piece.guid);\n+      }\n+    },\n+    [piece.guid, hoverPiece, currentHoveredPieceGuidRef],\n+  );\n \n-  const handlePointerLeave = useCallback(() =\u003e {\n-    if (currentHoveredPieceGuidRef.current === piece.guid) {\n-      currentHoveredPieceGuidRef.current = null;\n-      if (clearHover) clearHover();\n-    }\n-  }, [piece.guid, clearHover, currentHoveredPieceGuidRef]);\n+  const handlePointerLeave = useCallback(\n+    (e?: ThreeEvent\u003cPointerEvent\u003e) =\u003e {\n+      e?.stopPropagation();\n+      if (currentHoveredPieceGuidRef.current === piece.guid) {\n+        currentHoveredPieceGuidRef.current = null;\n+        if (clearHover) clearHover();\n+      }\n+    },\n+    [piece.guid, clearHover, currentHoveredPieceGuidRef],\n+  );\n \n   const materialColor = useMemo(() =\u003e {\n     const tempDiv = document.createElement(\"div\");\n@@ -39658,9 +39744,12 @@ export function useTypeAppIsPortHovered(connectorId: string): HookResult\u003cboolean\n   const typeScope = useTypeScope();\n   const kitGuid = kitScope?.guid ?? \"\";\n   const typeGuid = typeScope?.guid ?? \"\";\n-  const selector = useMemo(() =\u003e createTypeHoverSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);\n-  const hover = useSelector(actor, selector);\n-  const value = hover?.connector === connectorId;\n+  const key = `${kitGuid}/${typeGuid}`;\n+  const selector = useMemo(\n+    () =\u003e (state: any) =\u003e state.context.typeApps[key]?.hover?.connector === connectorId,\n+    [key, connectorId],\n+  );\n+  const value = useSelector(actor, selector);\n   const canSetEvent = useMemo(() =\u003e ({ type: \"TYPE.HOVER_CONNECTOR\" as const, kitGuid, typeGuid, connectorGuid: connectorId }), [kitGuid, typeGuid, connectorId]);\n   const canSet = useSelector(actor, (snapshot) =\u003e snapshot.can(canSetEvent));\n   const setter = useMemo(() =\u003e {\n@@ -51886,6 +51975,8 @@ if (typeof process !== \"undefined\" \u0026\u0026 process.release \u0026\u0026 process.release.name ==\n \n       const infiniteLoopErrors = errors.filter((e) =\u003e e.includes(\"Maximum update depth exceeded\"));\n       expect(infiniteLoopErrors).toHaveLength(0);\n+      const missingDesignSelectionHookErrors = errors.filter((error) =\u003e error.includes(\"useDesignAppSelection is not defined\"));\n+      expect(missingDesignSelectionHookErrors).toHaveLength(0);\n \n       const navbar = page.locator('[id=\"semio.sketchpad.navbar\"]');\n       await expect(navbar).toBeVisible({ timeout: 30000 });",
+          "tool_use_id": "toolu_bdrk_01HVfzF9k3CB8XGEjVQfKVxC__vscode-1774514533964",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-26T09:16:11Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:16:11.297Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/chat-session-resources/2a13ee9a-f43d-4239-80e9-2fe684ade0c1/toolu_bdrk_01HVfzF9k3CB8XGEjVQfKVxC__vscode-1774514533964/content.txt",
+            "startLine": 1,
+            "endLine": 500
+          },
+          "tool_use_id": "toolu_bdrk_012w4ZmYuee6MTGxBqPi4DEv__vscode-1774514533965",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-26T09:16:11Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:16:11.630Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/chat-session-resources/2a13ee9a-f43d-4239-80e9-2fe684ade0c1/toolu_bdrk_01HVfzF9k3CB8XGEjVQfKVxC__vscode-1774514533964/content.txt",
+            "startLine": 1,
+            "endLine": 500
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_012w4ZmYuee6MTGxBqPi4DEv__vscode-1774514533965",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-26T09:16:29Z",
+        "session": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T09:16:29.590Z",
+          "hook_event_name": "Stop",
+          "session_id": "2a13ee9a-f43d-4239-80e9-2fe684ade0c1",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2a13ee9a-f43d-4239-80e9-2fe684ade0c1.jsonl",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    }
+  ],
+  "plan": {
+    "steps": [
+      {
+        "id": "",
+        "name": "Read current file state at all change points",
+        "status": "completed",
+        "ideated": "2026-03-26T09:10:02Z",
+        "started": "2026-03-26T09:10:02Z",
+        "completed": "2026-03-26T09:11:05Z"
+      },
+      {
+        "id": "",
+        "name": "Restore all optimizations",
+        "status": "completed",
+        "ideated": "2026-03-26T09:11:05Z",
+        "started": "2026-03-26T09:11:05Z",
+        "completed": "2026-03-26T09:12:51Z"
+      },
+      {
+        "id": "",
+        "name": "Verify build and close ticket",
+        "status": "completed",
+        "ideated": "2026-03-26T09:10:02Z"
+      },
+      {
+        "id": "",
+        "name": "Restore DerivedNode equality optimization",
+        "status": "not-started",
+        "ideated": "2026-03-26T09:10:02Z",
+        "abandoned": "2026-03-26T09:11:05Z"
+      },
+      {
+        "id": "",
+        "name": "Restore clear hover guard",
+        "status": "not-started",
+        "ideated": "2026-03-26T09:10:02Z",
+        "abandoned": "2026-03-26T09:11:05Z"
+      },
+      {
+        "id": "",
+        "name": "Restore hover setter optimization",
+        "status": "not-started",
+        "ideated": "2026-03-26T09:10:02Z",
+        "abandoned": "2026-03-26T09:11:05Z"
+      },
+      {
+        "id": "",
+        "name": "Restore granular boolean selectors",
+        "status": "not-started",
+        "ideated": "2026-03-26T09:10:02Z",
+        "abandoned": "2026-03-26T09:11:05Z"
+      },
+      {
+        "id": "",
+        "name": "Restore computeHoverData optimization",
+        "status": "not-started",
+        "ideated": "2026-03-26T09:10:02Z",
+        "abandoned": "2026-03-26T09:11:05Z"
+      },
+      {
+        "id": "",
+        "name": "Restore type app port hover",
+        "status": "not-started",
+        "ideated": "2026-03-26T09:10:02Z",
+        "abandoned": "2026-03-26T09:11:05Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "name": "semio",
+  "description": "Interacts with the semio monorepo.",
+  "prompt": "file://../../AGENTS.md",
+  "mcpServers": {
+    "playwright-test": {
+      "command": "npx",
+      "args": [
+        "playwright",
+        "run-test-mcp-server"
+      ]
+    },
+    "repo": {
+      "command": "./repo/cli/cli",
+      "args": [
+        "mcp"
+      ]
+    },
+    "semio": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "semio/engine",
+        "run",
+        "main.py",
+        "--mcp-stdio"
+      ]
+    },
+    "coda": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "coda/engine",
+        "run",
+        "coda.py",
+        "--mcp-stdio"
+      ]
+    }
+  },
+  "tools": [
+    "*"
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell",
+    "@repo",
+    "@semio",
+    "@coda",
+    "@playwright-test"
+  ],
+  "toolsSettings": {
+    "shell": {
+      "allowedCommands": [
+        "npm *",
+        "npx *",
+        "node *",
+        "go *",
+        "cargo *",
+        "rustc *",
+        "python *",
+        "python3 *",
+        "uv *",
+        "pip *",
+        "pip3 *",
+        "ruff *",
+        "dotnet *",
+        "git *",
+        "gh *",
+        "find *",
+        "grep *",
+        "cat *",
+        "ls *",
+        "tree *",
+        "mkdir *",
+        "cp *",
+        "mv *",
+        "rm *",
+        "touch *",
+        "head *",
+        "tail *",
+        "wc *",
+        "sort *",
+        "uniq *",
+        "sed *",
+        "awk *",
+        "curl *",
+        "wget *",
+        "tar *",
+        "zip *",
+        "unzip *",
+        "echo *",
+        "pwd",
+        "which *",
+        "env",
+        "printenv *",
+        "date *",
+        "diff *",
+        "patch *",
+        "xargs *",
+        "cd *",
+        "pushd *",
+        "popd *",
+        "prettier *",
+        "eslint *",
+        "vitest *",
+        "playwright *",
+        "pytest *"
+      ],
+      "deniedCommands": [
+        "git push --force*",
+        "git reset --hard*"
+      ]
+    },
+    "write": {
+      "allowedPaths": [
+        "**"
+      ]
+    }
+  },
+  "resources": [
+    "file://../../AGENTS.md",
+    "file://../../CLAUDE.md",
+    "file://../../GEMINI.md"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "./repo/cli/cli hook agentSpawn kiro-cli"
+      }
+    ],
+    "userPromptSubmit": [
+      {
+        "command": "./repo/cli/cli hook userPromptSubmit kiro-cli"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "./repo/cli/cli hook preToolUse kiro-cli"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "./repo/cli/cli hook postToolUse kiro-cli"
+      }
+    ],
+    "stop": [
+      {
+        "command": "./repo/cli/cli hook stop kiro-cli"
+      }
+    ]
+  },
+  "includeMcpJson": true,
+  "welcomeMessage": "Ready to work on the semio monorepo."
+}

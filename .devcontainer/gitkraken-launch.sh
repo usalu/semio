@@ -11,14 +11,16 @@ if [ "$RUNNING_PROCESSES" -gt 0 ]; then
     exit 0
 fi
 
-# Check if we're in WSL environment
-if grep -q "Microsoft\|WSL" /proc/version 2>/dev/null; then
-    echo "Starting GitKraken with WSL-compatible flags..."
-    # Start GitKraken with no-sandbox and no-debug flags for WSL compatibility
-    gitkraken --no-sandbox --no-debug --path "$WORKSPACE" &
-else
-    echo "Starting GitKraken..."
-    gitkraken --no-debug --path "$WORKSPACE" &
+# Set up virtual display if needed
+if [ -z "$DISPLAY" ]; then
+    export DISPLAY=:99
 fi
+if ! pgrep -f "Xvfb.*:99" >/dev/null 2>&1; then
+    Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset >/dev/null 2>&1 &
+    sleep 2
+fi
+
+echo "Starting GitKraken..."
+gitkraken --no-sandbox --no-debug --disable-gpu --disable-dev-shm-usage --path "$WORKSPACE" &
 
 echo "GitKraken launched successfully!"

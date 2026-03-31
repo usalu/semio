@@ -398,17 +398,9 @@ start_gitkraken_if_needed() {
     sleep 2
   fi
 
-  # Check if we're in WSL environment
-  if grep -q "Microsoft\|WSL" /proc/version 2>/dev/null; then
-    echo "🚀 Starting GitKraken with WSL-compatible flags..."
-    # Start GitKraken with no-sandbox and no-debug flags for WSL compatibility
-    gitkraken --no-sandbox --no-debug --path "$WORKSPACE" >/dev/null 2>&1 &
-    echo "✅ GitKraken started in background."
-  else
-    echo "🚀 Starting GitKraken..."
-    gitkraken --no-debug --no-sandbox --path "$WORKSPACE" >/dev/null 2>&1 &
-    echo "✅ GitKraken started in background."
-  fi
+  echo "🚀 Starting GitKraken..."
+  gitkraken --no-sandbox --no-debug --disable-gpu --disable-dev-shm-usage --path "$WORKSPACE" >/dev/null 2>&1 &
+  echo "✅ GitKraken started in background."
 }
 
 # Only auto-start if not explicitly disabled

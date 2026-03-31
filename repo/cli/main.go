@@ -40011,8 +40011,6 @@ func generateKiroConfig(repoRoot string) (string, error) {
 
 // #endregion 🔖Configure
 
-// #region 🔖Update Command
-
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command)
 // Update command implementation for dependency updates.
 

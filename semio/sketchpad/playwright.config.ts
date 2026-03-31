@@ -22,8 +22,15 @@
 // [👤semio📚js⚙️playwrightconfig🔖playwrightconfiguration](repo://p/u/semio/b/l/js/f/playwright.config.ts/s/Playwright%20Configuration)
 // Configures Playwright for end-to-end browser tests against the sketchpad dev server.
 // MUST use a single worker to avoid port conflicts.
+// Uses esbuild-based ESM loader hook (pw-loader.mjs) to handle CSS stubs, TypeScript
+// type stripping, Vite import.meta.glob stubs, and JSON imports without type attributes.
 
-process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ''} --import data:text/javascript,export%20async%20function%20load(url,context,nextLoad)%7Bif(url.endsWith(%22.css%22))return%7Bformat:%22module%22,shortCircuit:true,source:%22export%20default%20%7B%7D%22%7D;return%20nextLoad(url,context)%7D`.trim();
+import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
+
+const __dirname = resolve(fileURLToPath(import.meta.url), "..");
+const loaderPath = resolve(__dirname, "pw-loader.mjs");
+process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ""} --import file://${loaderPath}`.trim();
 
 import { defineConfig, devices } from "@playwright/test";
 

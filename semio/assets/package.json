@@ -1,6 +1,7 @@
 {
   "name": "@semio/assets",
   "version": "1.0.0",
+  "type": "module",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/assets",
   "projectType": "library",

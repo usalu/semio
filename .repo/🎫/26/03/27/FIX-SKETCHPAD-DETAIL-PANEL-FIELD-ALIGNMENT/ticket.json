@@ -1,0 +1,12 @@
+{
+  "title": "Fix Sketchpad Detail Panel Field Alignment",
+  "status": "open",
+  "description": "Analyze and fix the sketchpad detail panel wrong render for selected element piece fields so labels like Attributes, Origin, X Axis, and Y Axis align on the same vertical level as their input fields. Extend existing tests and verify the panel rendering path.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1144"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪d3173a4f10e64f67b21e6e359587a884"
+  ]
+}

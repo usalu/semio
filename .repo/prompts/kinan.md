@@ -1,4 +1,38 @@
 
+Refine the semio/sketchpad Details panel spacing in the right-side property inspector without changing the existing PanelSection architecture, section registration logic, interaction model, or tree-based inspector layout.
+
+Keep the current TreeSection, TreeItem, TreeRow, SortableTreeItems, and property row/value-column layout. Improve readability by introducing structure-driven spacing rules in the shared tree primitives: use minimal spacing between rows that belong to the same logical property group, use a clearly larger gap between sibling nested groups, and use the strongest separation plus a divider between top-level property sections. Apply this generically by hierarchy and structural role, not by section name or field name.
+
+Make sure indentation guides / tree connector lines remain continuous across the full subtree height and never break because of row gaps, group spacing, section spacing, or sortable list spacing. Do not use spacing techniques that interrupt the vertical guide stroke. Also increase the horizontal offset between the tree guide / chevron column and the item label to about 2x the current spacing.
+
+
+
+Detail Panel Edits:
+
+
+- sketchpad design app , currently when selecting the base fixed base piece the plane sections and its tree items and rows are breaking. fix to follorw the structure elsewhere in the detail panel regarding alignment and sizing of the input fields and section titles. make sure that the plane section and its items are visually consistent with the rest of the detail panel, with proper spacing, alignment, and no overlaps between fields or section titles. also make sure that all input fields are fully visible and editable without being cut off or hidden behind other elements, and that the section titles are clearly distinguishable from the input fields with enough gap to avoid confusion. overall ensure that the detail panel maintains a clean and organized layout that allows users to easily view and edit all properties of the selected piece without any visual issues or usability problems.
+
+- sketchpad detail panel, currently input field is two rows indead of a single row, fix the layout to have the input field as a single row. by the end of the field cut the last word and add ellipsis if the content is too long to fit in a single row. make sure that when the input field is clicked or in focus, it expands to show the full content, and when it is not in focus, it collapses back to a single row with ellipsis if necessary. also ensure that this behavior is consistent across all input fields in the detail panel, and that it does not cause any layout issues such as overlapping with other fields or section titles. overall make sure that the input fields are user-friendly, visually clear, and functionally robust in handling varying content lengths while maintaining a clean and organized layout in the detail panel.
+
+sketchpad detail panel double the current gap between tree sections and tree items to seperate them more and make it more clear that they are different sections. also add more gap between the section titles and the first item in the section to make it more clear where the section starts. overall make sure that there is enough spacing between all elements in the detail panel to improve readability and visual clarity, without making it look too sparse or disconnected. also make sure that the spacing is consistent across all sections and fields in the detail panel, and that it does not cause any layout issues such as overlapping or misalignment of elements.
+
+- Gaps between sections and fields
+- fix overlap between input fields and section titles
+- make sure all fields are editable and support multi-edit where applicable
+- when piece 
+
+- input fields are a single line , they get expanded to show the full content when clicked on them, as well as when they are in focus. when they are not in focus they get collapsed to a single line with ellipsis if the content is too long. make sure this is working for all input fields and that it is consistent across all of them, and that it doesnt cause any layout issues such as overlapping with other fields or section titles. also make sure that when multiple pieces are selected and they have different values for a field, the field shows a mixed state (e.g. empty value with a dash or "mixed" text) and that when the user edits the field, it applies the change to all selected pieces, and that the mixed state is cleared and shows the new value after editing. also make sure that when multiple pieces are selected and they have the same value for a field, the field shows that value and allows editing it for all selected pieces. overall make sure that the input fields are user-friendly, visually clear, and functionally robust in handling single and multi-selection scenarios, with proper spacing, no overlaps, and consistent behavior across all fields.
+
+
+- and not overlapping with each other or section titles, and that they are all editable and support multi-edit where applicable
+
+
+-"Fix Selected Pieces" button is visible and functional when multiple pieces with inconsistent values are selected.
+
+-side labels should be connecting and connected 
+
+- hover in diagram should also hover in scene window. currently when i hover over a piece in the diagram window it doesnt get hovered in the scene window. make sure to implement this functionality and that it works both ways (hovering in scene window should also hover in diagram window) and that it is consistent across all pieces, and that it doesnt cause any performance issues or visual glitches such as flickering or delayed hover states. also make sure that when multiple pieces are selected and hovered, all of them get hovered in both windows, and that the hover state is visually clear and distinguishable from the selection state, with proper spacing and no overlaps with other elements.
+---------------------------------------------------------------------------
 
 dragging is the action of offsetting a piece centers in the diagram 
 moving is the action of translating piece planes in the scene
