@@ -12616,6 +12616,34 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     """)
 
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS folder (
+            guid VARCHAR(36) PRIMARY KEY,
+            name VARCHAR(256) NOT NULL,
+            parent_guid VARCHAR(36)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS file (
+            guid VARCHAR(36) PRIMARY KEY,
+            name VARCHAR(256) NOT NULL,
+            mime VARCHAR(256),
+            size INTEGER,
+            hash VARCHAR(256),
+            remote_url TEXT,
+            folder_guid VARCHAR(36)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS model_tag (
+            model_guid VARCHAR(36) NOT NULL,
+            tag_guid VARCHAR(36) NOT NULL,
+            PRIMARY KEY (model_guid, tag_guid)
+        )
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS kit_payload (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             data TEXT NOT NULL
@@ -12841,6 +12869,47 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
                     design_guid,
                 ),
             )
+
+    for folder_entry in data.get("folders", []):
+        cursor.execute(
+            """
+            INSERT INTO folder (guid, name, parent_guid)
+            VALUES (?, ?, ?)
+        """,
+            (
+                folder_entry.get("guid", str(uuid.uuid4())),
+                folder_entry.get("name", ""),
+                _getGuidFromRef(folder_entry.get("parent")),
+            ),
+        )
+
+    for file_entry in data.get("files", []):
+        cursor.execute(
+            """
+            INSERT INTO file (guid, name, mime, size, hash, remote_url, folder_guid)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+            (
+                file_entry.get("guid", str(uuid.uuid4())),
+                file_entry.get("name", ""),
+                file_entry.get("mime"),
+                file_entry.get("size"),
+                file_entry.get("hash"),
+                file_entry.get("remote"),
+                _getGuidFromRef(file_entry.get("folder")),
+            ),
+        )
+
+    for t in data.get("types", []):
+        for m in t.get("models", []):
+            model_guid = m.get("guid")
+            for tag in m.get("tags", []):
+                tag_guid = _getGuidFromRef(tag) if isinstance(tag, dict) else tag
+                if model_guid and tag_guid:
+                    cursor.execute(
+                        "INSERT OR IGNORE INTO model_tag (model_guid, tag_guid) VALUES (?, ?)",
+                        (model_guid, tag_guid),
+                    )
 
     cursor.execute(
         "INSERT INTO kit_payload (id, data) VALUES (1, ?)",

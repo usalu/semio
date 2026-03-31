@@ -1,11 +1,9 @@
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-const bundleRoot = dirname(fileURLToPath(import.meta.url));
-
+// Use process.cwd() so this shared config works from any bundle root
+// (elements/ui, semio/ui, …) without hardcoding the directory.
 export default defineConfig({
-  root: bundleRoot,
+  root: process.cwd(),
   test: {
     environment: "node",
     include: ["index.tsx"],

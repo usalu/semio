@@ -41,22 +41,22 @@ import { Slot } from "@radix-ui/react-slot";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
 import {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    ConnectionMode,
-    getBezierPath,
-    Handle,
-    MiniMap,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    SelectionMode,
-    useInternalNode,
-    useReactFlow,
-    useStoreApi,
-    ViewportPortal,
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  ConnectionMode,
+  getBezierPath,
+  Handle,
+  MiniMap,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 } from "@xyflow/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
@@ -64,34 +64,34 @@ import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import type { LucideIcon } from "lucide-react";
 import {
-    Plus as AddIcon,
-    AlertCircle as AlertCircleIcon,
-    BookOpen as BookIcon,
-    Camera as CameraIcon,
-    Check as CheckIcon,
-    CheckIcon as CheckIconAlt,
-    ChevronDown as ChevronDownIcon,
-    ChevronDownIcon as ChevronDownIconAlt,
-    ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
-    ChevronsUpDown as ChevronsUpDownIcon,
-    X as CloseIcon,
-    XIcon as CloseIconAlt,
-    FileText as DocumentIcon,
-    ExternalLink as ExternalLinkIcon,
-    Folder as FolderIcon,
-    GripVertical as GripVerticalIcon,
-    Info as InfoIcon,
-    Lightbulb as LightbulbIcon,
-    Maximize2 as Maximize2Icon,
-    Minimize2 as Minimize2Icon,
-    ArrowLeft as NavigateBackIcon,
-    ArrowRight as NavigateForwardIcon,
-    ArrowUp as NavigateUpIcon,
-    Minus as RemoveIcon,
-    SearchIcon,
-    TriangleAlert as TriangleAlertIcon,
-    GraduationCap as TutorialIcon,
+  Plus as AddIcon,
+  AlertCircle as AlertCircleIcon,
+  BookOpen as BookIcon,
+  Camera as CameraIcon,
+  Check as CheckIcon,
+  CheckIcon as CheckIconAlt,
+  ChevronDown as ChevronDownIcon,
+  ChevronDownIcon as ChevronDownIconAlt,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronsUpDown as ChevronsUpDownIcon,
+  X as CloseIcon,
+  XIcon as CloseIconAlt,
+  FileText as DocumentIcon,
+  ExternalLink as ExternalLinkIcon,
+  Folder as FolderIcon,
+  GripVertical as GripVerticalIcon,
+  Info as InfoIcon,
+  Lightbulb as LightbulbIcon,
+  Maximize2 as Maximize2Icon,
+  Minimize2 as Minimize2Icon,
+  ArrowLeft as NavigateBackIcon,
+  ArrowRight as NavigateForwardIcon,
+  ArrowUp as NavigateUpIcon,
+  Minus as RemoveIcon,
+  SearchIcon,
+  TriangleAlert as TriangleAlertIcon,
+  GraduationCap as TutorialIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -14555,15 +14555,7 @@ interface TreeHierarchyGutterProps {
   slotOffsetPx?: number;
 }
 
-const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({
-  level,
-  isLastAtLevel,
-  showLines,
-  slot,
-  connectCurrentLevel = false,
-  extendCurrentLevelToBottom = false,
-  slotOffsetPx = 0,
-}) => {
+const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, isLastAtLevel, showLines, slot, connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0 }) => {
   const currentGuidePx = indentationLinePx(level);
   const parentGuidePx = level > 0 ? indentationLinePx(level - 1) : 0;
   const elbowWidthPx = Math.max(currentGuidePx - parentGuidePx, 0);
@@ -14572,7 +14564,9 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({
   return (
     <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: `${gutterWidthPx}px`, minWidth: `${gutterWidthPx}px` }}>
       <IndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} />
-      {showLines && level > 0 && connectCurrentLevel && <div data-slot="tree-branch-elbow" className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }} />}
+      {showLines && level > 0 && connectCurrentLevel && (
+        <div data-slot="tree-branch-elbow" className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }} />
+      )}
       {showLines && extendCurrentLevelToBottom && <div data-slot="tree-branch-stem" className="pointer-events-none absolute top-1/2 bottom-0 w-px bg-muted-foreground/40" style={{ left: `${currentGuidePx - 0.5}px` }} />}
       <div data-slot="tree-gutter-slot" className="absolute inset-y-0 left-0 flex items-center" style={treeGutterSlotStyle(level, slotOffsetPx)}>
         <div className="flex w-[14px] flex-shrink-0 items-center justify-center">{slot}</div>
@@ -14595,29 +14589,9 @@ interface TreeAlignedRowProps {
   slotOffsetPx?: number;
 }
 
-const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
-  level,
-  isLastAtLevel,
-  showLines,
-  slot,
-  children,
-  className,
-  contentClassName,
-  align = "center",
-  connectCurrentLevel = false,
-  extendCurrentLevelToBottom = false,
-  slotOffsetPx = 0,
-}) => (
+const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({ level, isLastAtLevel, showLines, slot, children, className, contentClassName, align = "center", connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0 }) => (
   <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level)}>
-    <TreeHierarchyGutter
-      level={level}
-      isLastAtLevel={isLastAtLevel}
-      showLines={showLines}
-      slot={slot}
-      connectCurrentLevel={connectCurrentLevel}
-      extendCurrentLevelToBottom={extendCurrentLevelToBottom}
-      slotOffsetPx={slotOffsetPx}
-    />
+    <TreeHierarchyGutter level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} />
     <div data-slot="tree-row-content" className={cn("min-w-0", contentClassName)}>
       {children}
     </div>
@@ -15370,14 +15344,14 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             )}
           </TreeAlignedRow>
         </div>
-          {open && (
-            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}>
-              <TreeBranchContent slot="tree-item-content" topPaddingPx={treeItemContentPaddingTopPx}>
-                {children}
-              </TreeBranchContent>
-            </TreeContext.Provider>
-          )}
-        </>
+        {open && (
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}>
+            <TreeBranchContent slot="tree-item-content" topPaddingPx={treeItemContentPaddingTopPx}>
+              {children}
+            </TreeBranchContent>
+          </TreeContext.Provider>
+        )}
+      </>
     );
   }
 
@@ -15408,13 +15382,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         onMouseLeave={() => setIsHovered(false)}
       >
         <div data-slot="tree-item-row-left" className="relative min-w-0">
-          <TreeAlignedRow
-            level={level}
-            isLastAtLevel={isLastAtLevel}
-            showLines={showLines}
-            connectCurrentLevel={level > 0}
-            contentClassName="flex min-w-0 items-center gap-[6px]"
-          >
+          <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="flex min-w-0 items-center gap-[6px]">
             {isDragHandle && <Action className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} icon={<GripVerticalIcon size={12} className="text-muted-foreground" />} />}
             {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
             <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground" style={treeItemLabelStyle}>
@@ -15461,13 +15429,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <TreeAlignedRow
-        level={level}
-        isLastAtLevel={isLastAtLevel}
-        showLines={showLines}
-        connectCurrentLevel={level > 0}
-        contentClassName="flex min-w-0 items-center gap-[6px]"
-      >
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="flex min-w-0 items-center gap-[6px]">
         {isDragHandle && <Action className="cursor-grab active:cursor-grabbing" {...attributes} {...listeners} icon={<GripVerticalIcon size={12} className="text-muted-foreground" />} />}
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
         <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground" style={treeItemLabelStyle}>
@@ -15855,13 +15817,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <TreeAlignedRow
-        level={level}
-        isLastAtLevel={isLastAtLevel}
-        showLines={showLines}
-        connectCurrentLevel={level > 0}
-        contentClassName="flex min-w-0 items-center gap-[6px]"
-      >
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="flex min-w-0 items-center gap-[6px]">
         {loading && <Spinner size="small" className="text-muted-foreground" />}
         {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
         <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground" style={treeItemLabelStyle}>
@@ -16750,14 +16706,7 @@ const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderCon
     <ControlTreeRow
       className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.controlRow)}
       left={
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          slotOffsetPx={2}
-          contentClassName="flex min-w-0 items-center gap-[6px]"
-        >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-[6px]">
           <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-foreground", classNames?.controlLabel)} style={treeItemLabelStyle}>
             {node.key}
           </span>
@@ -17846,26 +17795,26 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 // Consumers MUST provide nodes and edges arrays.
 
 export {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    forceCenter,
-    forceCollide,
-    forceLink,
-    forceManyBody,
-    forceSimulation,
-    forceX,
-    forceY,
-    getBezierPath,
-    Handle,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    useInternalNode,
-    useReactFlow,
-    useStoreApi,
-    ViewportPortal
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  getBezierPath,
+  Handle,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
@@ -20172,7 +20121,7 @@ const UICanvas: React.FC<{
             layout.destroy();
           } catch {}
           layoutRef.current = null;
-        };
+        });
       } catch (error) {
         console.error("[UICanvas] Failed to load GoldenLayout:", error);
       }
@@ -21037,7 +20986,7 @@ export { i18next, initReactI18next, LanguageDetector, useTranslation };
 // #endregion 🔖I18n
 
 // #region 🔖Hotkeys
-    export { useHotkeys } from "react-hotkeys-hook";
+export { useHotkeys } from "react-hotkeys-hook";
 // #endregion 🔖Hotkeys
 
 // #region 🔖Date

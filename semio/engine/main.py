@@ -3388,7 +3388,14 @@ def _enrich_design(kit: dict, design: dict) -> dict:
     """Enrich design pieces with flattened plane/center data from flattenDesignDict."""
     design_guid = design.get("guid")
     try:
-        flatten_result = flattenDesignDict(kit, design_guid)
+        # Inject the full session design into the kit for flattening.
+        # The kit's designs list may have a shallow entry (no pieces) when the
+        # session design was hydrated from a sibling .design.semio.json file.
+        # flattenDesignDict reads the design from kit["designs"], so it must
+        # contain the full design with all pieces.
+        kit_for_flatten = dict(kit)
+        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("guid") != design_guid] + [design]
+        flatten_result = flattenDesignDict(kit_for_flatten, design_guid)
         flatten_by_guid: dict[str, dict] = {}
         for update in flatten_result.get("pieces", {}).get("updated", []):
             pid = update.get("id")

@@ -14930,7 +14930,6 @@ export class InMemoryKitStore implements UndoableKitStore {
 // Test code is guarded so it only executes under vitest, not in browser bundles.
 if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   const { beforeAll, describe, expect, it, vi } = await import("vitest");
-  const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
   const ElementsBundle = await import("@elements/ui");
@@ -14961,7 +14960,6 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     NakaginCapsuleTowerDiffDesign,
     NakaginCapsuleTowerWithDiffDesign,
   } = await import("@semio/assets");
-  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
   const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
   type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
   type KitJsonFileAdapter = import("@semio/studio").KitJsonFileAdapter;
