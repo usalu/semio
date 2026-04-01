@@ -180,6 +180,7 @@ import {
   Geometry,
   getBezierPath,
   Handle,
+  HelperRow,
   HorizontalWindows,
   HoverCard,
   HoverCardContent,
@@ -16957,9 +16958,9 @@ const KitSectionForm: FC = () => {
     const kit = useKit() as Kit;
     if (!kit) {
       return (
-        <TreeRow>
+        <HelperRow propertyAligned>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notAvailable")}</p>
-        </TreeRow>
+        </HelperRow>
       );
     }
     const kitDataSource = useKitAppStore() as any;
@@ -17032,9 +17033,9 @@ const KitSectionForm: FC = () => {
     );
   } catch (error) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
 };
@@ -17103,13 +17104,13 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
   const types = typeGuids.map((guid) => kit?.types?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Type[];
   return (
     <>
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.types.multipleSelected")}</p>
-      </TreeRow>
+      </HelperRow>
       {types.map((type) => (
-        <TreeRow key={type.guid}>
-          <p className="text-sm font-medium">{type.name}</p>
-        </TreeRow>
+        <HelperRow key={type.guid} propertyAligned>
+          <p className="text-sm font-medium text-foreground">{type.name}</p>
+        </HelperRow>
       ))}
     </>
   );
@@ -17171,13 +17172,13 @@ const MultiplePortsSection: FC<{ portGuids: string[] }> = ({ portGuids }) => {
   const ports = portGuids.map((guid) => kit?.ports?.find((i) => i.guid === guid)).filter((i) => i !== undefined) as Port[];
   return (
     <>
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.ports.multipleSelected")}</p>
-      </TreeRow>
+      </HelperRow>
       {ports.map((iface) => (
-        <TreeRow key={iface.guid}>
-          <p className="text-sm font-medium">{iface.name}</p>
-        </TreeRow>
+        <HelperRow key={iface.guid} propertyAligned>
+          <p className="text-sm font-medium text-foreground">{iface.name}</p>
+        </HelperRow>
       ))}
     </>
   );
@@ -17230,19 +17231,17 @@ const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
   const tags = tagGuids.map((guid) => kit?.tags?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Tag[];
   return (
     <>
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.tags.multipleSelected")}</p>
-      </TreeRow>
+      </HelperRow>
       {tags.map((tag) => (
-        <TreeRow key={tag.guid}>
-          <p className="text-sm font-medium">{tag.name}</p>
-        </TreeRow>
+        <HelperRow key={tag.guid} propertyAligned>
+          <p className="text-sm font-medium text-foreground">{tag.name}</p>
+        </HelperRow>
       ))}
     </>
   );
 };
-
-
 
 /**
  * Detail section component for the selected design.
@@ -17345,13 +17344,13 @@ const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) 
   const designs = designGuids.map((guid) => kit?.designs?.find((d) => d.guid === guid)).filter((d) => d !== undefined) as Design[];
   return (
     <>
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.designs.multipleSelected")}</p>
-      </TreeRow>
+      </HelperRow>
       {designs.map((design) => (
-        <TreeRow key={design.guid}>
-          <p className="text-sm font-medium">{design.name}</p>
-        </TreeRow>
+        <HelperRow key={design.guid} propertyAligned>
+          <p className="text-sm font-medium text-foreground">{design.name}</p>
+        </HelperRow>
       ))}
     </>
   );
@@ -17532,9 +17531,9 @@ export const MultipleArtifactsSection: FC = () => {
   if (authorsCount > 0) kinds.push(t("semio.sketchpad.app.kit.authors.multipleTitle", { count: authorsCount }));
   if (kinds.length <= 1) return null;
   return (
-    <TreeRow>
+    <HelperRow propertyAligned>
       <p className="text-sm text-muted-foreground">{kinds.join(", ")}</p>
-    </TreeRow>
+    </HelperRow>
   );
 };
 
@@ -33400,14 +33399,14 @@ const PiecesSectionForm: FC = () => {
   return (
     <>
       {hasNoValidPieces ? (
-        <TreeRow>
+        <HelperRow propertyAligned>
           <p className="text-sm text-muted-foreground">No valid pieces found in selection.</p>
-        </TreeRow>
+        </HelperRow>
       ) : null}
       {!hasNoValidPieces && hasMixedTypes ? (
-        <TreeRow>
+        <HelperRow propertyAligned>
           <p className="text-sm text-muted-foreground">{mixedSelectionMessageLabel}</p>
-        </TreeRow>
+        </HelperRow>
       ) : !hasNoValidPieces ? (
         <TreeItem id="semio.sketchpad.app.design.panel.details.section.piece.pieceInfo" defaultOpen={true}>
           {isDesignPiece ? (
@@ -33594,7 +33593,7 @@ const PiecesSectionForm: FC = () => {
             </TreeItem>
           )}
           {((isSingle && piece && !piece.plane) || (!isSingle && hasUnfixedPieces)) && (
-            <TreeRow>
+            <HelperRow propertyAligned>
               <div className="flex flex-col gap-single">
                 <p className="text-sm text-muted-foreground">{connectedPieceInfoLabel}</p>
                 <Button id="semio.sketchpad.app.design.piece.fixPiece" onClick={fixPieces}>
@@ -33602,7 +33601,7 @@ const PiecesSectionForm: FC = () => {
                   {fixPieceLabel}
                 </Button>
               </div>
-            </TreeRow>
+            </HelperRow>
           )}
           {hasPlane && (
             <TreeItem id="semio.sketchpad.app.design.piece.plane" defaultOpen={true}>
@@ -33876,9 +33875,9 @@ const ConnectionsSectionForm: FC<{
   }
   return (
     <>
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{(multipleEditingLabel || "").replace("{{count}}", String(connections.length))}</p>
-      </TreeRow>
+      </HelperRow>
       <TreeRow>
         <Textarea
           lazy
@@ -33961,9 +33960,9 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 
   if (!piece || !type || !connector) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{connectorNotFoundLabel}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
 
@@ -38851,9 +38850,9 @@ const DesignWindowApp: FC<AppProps> = () => {
           specificity: 30,
           order: 20,
           content: () => (
-            <TreeRow>
+            <HelperRow propertyAligned>
               <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.selectOnlyPiecesOrConnections")}</p>
-            </TreeRow>
+            </HelperRow>
           ),
         });
       }
@@ -39132,10 +39131,11 @@ const DesignWindowApp: FC<AppProps> = () => {
                 {
                   icon: <AddIcon size={12} />,
                   onClick: () => {
+                    const pieceGuid = guid();
                     const center = { u: 6, v: -7 };
                     const plane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
                     transaction?.start();
-                    addPiece?.({ guid: guid(), type: { guid: type.guid }, center, plane });
+                    addPiece?.({ guid: pieceGuid, id_: pieceGuid, type: { guid: type.guid }, center, plane });
                     transaction?.finalize();
                   },
                   id: "semio.sketchpad.app.design.panel.workbench.types.addPiece",
@@ -39215,10 +39215,11 @@ const DesignWindowApp: FC<AppProps> = () => {
             icon: <AddIcon size={12} />,
             onClick: () => {
               if (disabled) return;
+              const pieceGuid = guid();
               const center = { u: 6, v: -7 };
               const plane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
               transaction?.start();
-              addPiece?.({ guid: guid(), design: { guid: design.guid }, center, plane });
+              addPiece?.({ guid: pieceGuid, id_: pieceGuid, design: { guid: design.guid }, center, plane });
               transaction?.finalize();
             },
             id: "semio.sketchpad.app.design.panel.workbench.designs.addPiece",
@@ -41718,6 +41719,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { point: { x: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                       <TreeRow>
@@ -41728,6 +41730,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { point: { y: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                       <TreeRow>
@@ -41738,6 +41741,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { point: { z: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                     </TreeItem>
@@ -41750,6 +41754,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { direction: { x: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                       <TreeRow>
@@ -41760,6 +41765,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { direction: { y: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                       <TreeRow>
@@ -41770,6 +41776,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { direction: { z: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                     </TreeItem>
@@ -42056,7 +42063,7 @@ const AttributesSectionForm: FC = () => {
 export const TypeConnectorSection: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
-  return <ConnectorSectionForm connectorGuid={connectorGuid} />;
+  return <TypeConnectorSectionForm connectorGuid={connectorGuid} />;
 };
 
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorSectionForm)
@@ -42073,9 +42080,9 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
 
   if (!connector) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorNotFound")}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
 
@@ -42153,6 +42160,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { point: { x: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42163,6 +42171,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { point: { y: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42173,6 +42182,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { point: { z: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
       </TreeItem>
@@ -42185,6 +42195,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { direction: { x: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42195,6 +42206,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { direction: { y: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42205,6 +42217,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { direction: { z: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
       </TreeItem>
@@ -42253,9 +42266,9 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 
   if (connectors.length === 0) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorsNotFound")}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
 
@@ -42332,6 +42345,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.x", { point: { x: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42342,6 +42356,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.y", { point: { y: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42352,6 +42367,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.z", { point: { z: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
       </TreeItem>
@@ -42364,6 +42380,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.x", { direction: { x: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42374,6 +42391,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.y", { direction: { y: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42384,6 +42402,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.z", { direction: { z: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
       </TreeItem>
@@ -47556,9 +47575,9 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
   const kitShallow = kitShallows.find((k) => k.guid === kitId);
   if (!kitShallow) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
   return (
@@ -51860,14 +51879,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             const selectedFilesClick = afterClickSelection?.files || [];
             const selectedAuthorsClick = afterClickSelection?.authors || [];
             const totalSelected =
-              selectedTypesClick.length +
-              selectedDesignsClick.length +
-              selectedFoldersClick.length +
-              selectedQualitiesClick.length +
-              selectedPortsClick.length +
-              selectedTagsClick.length +
-              selectedFilesClick.length +
-              selectedAuthorsClick.length;
+              selectedTypesClick.length + selectedDesignsClick.length + selectedFoldersClick.length + selectedQualitiesClick.length + selectedPortsClick.length + selectedTagsClick.length + selectedFilesClick.length + selectedAuthorsClick.length;
             console.log(`[Kit] Total selected: ${totalSelected} (types: ${selectedTypesClick.length}, designs: ${selectedDesignsClick.length}, folders: ${selectedFoldersClick.length})`);
             expect(totalSelected).toBeGreaterThan(0);
             console.log("[Kit] Diagram node click selection test complete");

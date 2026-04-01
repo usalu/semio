@@ -41,22 +41,22 @@ import { Slot } from "@radix-ui/react-slot";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
 import {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    ConnectionMode,
-    getBezierPath,
-    Handle,
-    MiniMap,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    SelectionMode,
-    useInternalNode,
-    useReactFlow,
-    useStoreApi,
-    ViewportPortal,
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  ConnectionMode,
+  getBezierPath,
+  Handle,
+  MiniMap,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 } from "@xyflow/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
@@ -64,34 +64,34 @@ import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import type { LucideIcon } from "lucide-react";
 import {
-    Plus as AddIcon,
-    AlertCircle as AlertCircleIcon,
-    BookOpen as BookIcon,
-    Camera as CameraIcon,
-    Check as CheckIcon,
-    CheckIcon as CheckIconAlt,
-    ChevronDown as ChevronDownIcon,
-    ChevronDownIcon as ChevronDownIconAlt,
-    ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
-    ChevronsUpDown as ChevronsUpDownIcon,
-    X as CloseIcon,
-    XIcon as CloseIconAlt,
-    FileText as DocumentIcon,
-    ExternalLink as ExternalLinkIcon,
-    Folder as FolderIcon,
-    GripVertical as GripVerticalIcon,
-    Info as InfoIcon,
-    Lightbulb as LightbulbIcon,
-    Maximize2 as Maximize2Icon,
-    Minimize2 as Minimize2Icon,
-    ArrowLeft as NavigateBackIcon,
-    ArrowRight as NavigateForwardIcon,
-    ArrowUp as NavigateUpIcon,
-    Minus as RemoveIcon,
-    SearchIcon,
-    TriangleAlert as TriangleAlertIcon,
-    GraduationCap as TutorialIcon,
+  Plus as AddIcon,
+  AlertCircle as AlertCircleIcon,
+  BookOpen as BookIcon,
+  Camera as CameraIcon,
+  Check as CheckIcon,
+  CheckIcon as CheckIconAlt,
+  ChevronDown as ChevronDownIcon,
+  ChevronDownIcon as ChevronDownIconAlt,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronsUpDown as ChevronsUpDownIcon,
+  X as CloseIcon,
+  XIcon as CloseIconAlt,
+  FileText as DocumentIcon,
+  ExternalLink as ExternalLinkIcon,
+  Folder as FolderIcon,
+  GripVertical as GripVerticalIcon,
+  Info as InfoIcon,
+  Lightbulb as LightbulbIcon,
+  Maximize2 as Maximize2Icon,
+  Minimize2 as Minimize2Icon,
+  ArrowLeft as NavigateBackIcon,
+  ArrowRight as NavigateForwardIcon,
+  ArrowUp as NavigateUpIcon,
+  Minus as RemoveIcon,
+  SearchIcon,
+  TriangleAlert as TriangleAlertIcon,
+  GraduationCap as TutorialIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -3085,6 +3085,30 @@ const elementUiTranslationBundles = {
                 "label": {
                   "normal": "Fensterlayout geladen",
                   "beginner": "Fensterlayout geladen"
+                }
+              }
+            },
+            "workbench": {
+              "types": {
+                "addPiece": {
+                  "label": {
+                    "normal": "Bauteil hinzufügen",
+                    "beginner": "Ein neues Bauteil dieses Typs zum Entwurf hinzufügen"
+                  }
+                },
+                "duplicateType": {
+                  "label": {
+                    "normal": "Typ duplizieren",
+                    "beginner": "Eine Kopie dieses Typs erstellen"
+                  }
+                }
+              },
+              "designs": {
+                "addPiece": {
+                  "label": {
+                    "normal": "Bauteil hinzufügen",
+                    "beginner": "Ein neues Bauteil dieses Entwurfs zum aktuellen Entwurf hinzufügen"
+                  }
                 }
               }
             }
@@ -8038,6 +8062,30 @@ const elementUiTranslationBundles = {
                   "beginner": "Window Layout Loaded"
                 }
               }
+            },
+            "workbench": {
+              "types": {
+                "addPiece": {
+                  "label": {
+                    "normal": "Add Piece",
+                    "beginner": "Add a new piece of this type to the design"
+                  }
+                },
+                "duplicateType": {
+                  "label": {
+                    "normal": "Duplicate Type",
+                    "beginner": "Create a duplicate of this type"
+                  }
+                }
+              },
+              "designs": {
+                "addPiece": {
+                  "label": {
+                    "normal": "Add Piece",
+                    "beginner": "Add a new piece of this design to the current design"
+                  }
+                }
+              }
             }
           },
           "gridSize": {
@@ -10726,6 +10774,7 @@ export function Label({ id, rowId, label, labelElementId, className, children }:
   const localizedLabel = useLabel(id);
   const resolvedLabel = label ?? localizedLabel;
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const isInsideTreeRow = React.useContext(TreeRowAlignmentContext);
   const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
   const propertyLabelElement = (
     <Tooltip>
@@ -10750,27 +10799,32 @@ export function Label({ id, rowId, label, labelElementId, className, children }:
     </Tooltip>
   );
 
-  if (isTree) {
-    return (
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
-        <div id={rowId} data-slot="property-row" style={{ marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" }} className={cn("group grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]", className)}>
-          {propertyLabelElement}
-          <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
-            {children}
-          </div>
-        </div>
-      </TreeAlignedRow>
-    );
-  }
-
-  return (
-    <div id={rowId} data-slot="property-row" className={cn("group grid min-w-0 w-full items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_1fr]", className)}>
+  const propertyRowElement = (
+    <div
+      id={rowId}
+      data-slot="property-row"
+      style={isTree ? { marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" } : undefined}
+      className={cn("group grid min-w-0 items-center gap-x-[8px] min-h-[24px]", isTree ? "grid-cols-[96px_minmax(0,1fr)]" : "w-full grid-cols-[96px_1fr]", className)}
+    >
       {propertyLabelElement}
       <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
         {children}
       </div>
     </div>
   );
+
+  if (isTree) {
+    if (isInsideTreeRow) {
+      return propertyRowElement;
+    }
+    return (
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
+        {propertyRowElement}
+      </TreeAlignedRow>
+    );
+  }
+
+  return propertyRowElement;
 }
 
 // #endregion Base Components
@@ -12307,7 +12361,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const showCollapsedDisplay = !!showLabel && !isFocused && isCollapsibleInputType(type);
 
   const inputElement = (
-      <div data-slot="input-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+    <div data-slot="input-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       {showCollapsedDisplay ? (
         <CollapsedFieldDisplay className={className} disabled={props.disabled} id={id} mixed={mixed} onActivate={() => setIsFocused(true)} placeholder={computedPlaceholder} slot="input" value={mixed && !inputDisplayValue ? "" : inputDisplayValue} />
       ) : (
@@ -14524,6 +14578,7 @@ const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeS
 };
 
 const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number }>({ level: 0, isLastAtLevel: [], showLines: true, isTree: false, indentMultiplier: 1 });
+const TreeRowAlignmentContext = React.createContext(false);
 const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 10 * multiplier;
 const detailPanelPropertyControlClassName =
   "min-w-0 w-full flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ml-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
@@ -14580,13 +14635,7 @@ interface TreeHierarchyGutterProps {
   slotOffsetPx?: number;
 }
 
-const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({
-  level,
-  showLines,
-  slot,
-  connectCurrentLevel = false,
-  slotOffsetPx = 0,
-}) => {
+const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, slotOffsetPx = 0 }) => {
   const { indentMultiplier } = React.useContext(TreeContext);
   const currentGuidePx = indentationLinePx(level, indentMultiplier);
   const parentGuidePx = level > 0 ? indentationLinePx(level - 1, indentMultiplier) : 0;
@@ -14596,24 +14645,28 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({
   const elbowWidthPx = Math.max(elbowEndPx - parentGuidePx, 0);
   const gutterWidthPx = treeGutterWidthPx(level, indentMultiplier);
   const positionedSlot =
-    hasSlot && React.isValidElement(slot)
-      ? React.cloneElement(slot, {
-          ...slot.props,
-          "data-slot": slot.props["data-slot"] ?? "tree-gutter-slot",
-          className: cn("absolute top-1/2 -translate-y-1/2", slot.props.className),
-          style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...slot.props.style },
-        })
-      : hasSlot
-        ? (
-            <span data-slot="tree-gutter-slot" className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier)}>
-              {slot}
-            </span>
-          )
-        : null;
+    hasSlot && React.isValidElement(slot) ? (
+      React.cloneElement(slot, {
+        ...slot.props,
+        "data-slot": slot.props["data-slot"] ?? "tree-gutter-slot",
+        className: cn("absolute top-1/2 -translate-y-1/2", slot.props.className),
+        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...slot.props.style },
+      })
+    ) : hasSlot ? (
+      <span data-slot="tree-gutter-slot" className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier)}>
+        {slot}
+      </span>
+    ) : null;
 
   return (
     <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: `${gutterWidthPx}px`, minWidth: `${gutterWidthPx}px` }}>
-      {showLines && level > 0 && connectCurrentLevel && <div data-slot="tree-branch-elbow" className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150" style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }} />}
+      {showLines && level > 0 && connectCurrentLevel && (
+        <div
+          data-slot="tree-branch-elbow"
+          className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150"
+          style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }}
+        />
+      )}
       {positionedSlot}
     </div>
   );
@@ -14633,33 +14686,15 @@ interface TreeAlignedRowProps {
   slotOffsetPx?: number;
 }
 
-const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
-  level,
-  isLastAtLevel,
-  showLines,
-  slot,
-  children,
-  className,
-  contentClassName,
-  align = "center",
-  connectCurrentLevel = false,
-  extendCurrentLevelToBottom = false,
-  slotOffsetPx = 0,
-}) => {
+const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({ level, isLastAtLevel, showLines, slot, children, className, contentClassName, align = "center", connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0 }) => {
   const { indentMultiplier } = React.useContext(TreeContext);
   return (
-  <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
-    <TreeHierarchyGutter
-      level={level}
-      showLines={showLines}
-      slot={slot}
-      connectCurrentLevel={connectCurrentLevel}
-      slotOffsetPx={slotOffsetPx}
-    />
-    <div data-slot="tree-row-content" className={cn("min-w-0", contentClassName)}>
-      {children}
+    <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
+      <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} slotOffsetPx={slotOffsetPx} />
+      <div data-slot="tree-row-content" className={cn("min-w-0", contentClassName)}>
+        {children}
+      </div>
     </div>
-  </div>
   );
 };
 
@@ -15105,14 +15140,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onDoubleClick(event);
         }}
       >
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null}
-          contentClassName="min-w-0"
-        >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
@@ -15391,14 +15419,14 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </div>
           </TreeAlignedRow>
         </div>
-          {open && (
-            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
-              <TreeBranchContent slot="tree-item-content" topPaddingPx={treeItemContentPaddingTopPx}>
-                {children}
-              </TreeBranchContent>
-            </TreeContext.Provider>
-          )}
-        </>
+        {open && (
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
+            <TreeBranchContent slot="tree-item-content" topPaddingPx={treeItemContentPaddingTopPx}>
+              {children}
+            </TreeBranchContent>
+          </TreeContext.Provider>
+        )}
+      </>
     );
   }
 
@@ -15428,13 +15456,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          contentClassName="min-w-0"
-        >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
@@ -15471,13 +15493,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <TreeAlignedRow
-        level={level}
-        isLastAtLevel={isLastAtLevel}
-        showLines={showLines}
-        connectCurrentLevel={level > 0}
-        contentClassName="min-w-0"
-      >
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
@@ -15830,22 +15846,12 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <TreeAlignedRow
-        level={level}
-        isLastAtLevel={isLastAtLevel}
-        showLines={showLines}
-        connectCurrentLevel={level > 0}
-        contentClassName="min-w-0"
-      >
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {loading && <Spinner size="small" className="text-muted-foreground" />}
             {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-            <span
-              data-slot="tree-label"
-              className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable"
-              style={treeItemLabelStyle}
-            >
+            <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable" style={treeItemLabelStyle}>
               {resolvedLabel as React.ReactNode}
             </span>
           </div>
@@ -15897,6 +15903,9 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
 
 /**
  * Leaf form row combining TreeItem and TreeContent into [Indent][Label][Control].
+ * When a label resolves (via id or explicit label prop), delegates to TreeItem for the standard header row.
+ * When no label resolves, wraps children in TreeAlignedRow so controls always get proper gutter alignment
+ * and tree guide lines regardless of whether the child control uses showLabel.
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treerow](repo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-ROW)
  **/
 export const TreeRow: React.FC<{
@@ -15908,25 +15917,76 @@ export const TreeRow: React.FC<{
   onClick?: (event: React.MouseEvent) => void;
   onDoubleClick?: (event: React.MouseEvent) => void;
   actions?: TreeSectionAction[];
-}> = ({ children, className, id, label, onClick, onDoubleClick, actions }) => (
-  <TreeItem className={className} id={id} label={label} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
-    {children}
-  </TreeItem>
-);
+}> = ({ children, className, id, label, onClick, onDoubleClick, actions }) => {
+  const localizedLabel = id ? useLabel(id) : undefined;
+  const resolvedLabel = label !== undefined ? label : localizedLabel;
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+
+  if (resolvedLabel) {
+    return (
+      <TreeItem className={className} id={id} label={label} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
+        {children}
+      </TreeItem>
+    );
+  }
+
+  if (!isTree) {
+    return (
+      <TreeRowAlignmentContext.Provider value={true}>
+        <div data-slot="tree-row" className={cn("min-w-0 w-full min-h-[24px]", className)}>
+          {children}
+        </div>
+      </TreeRowAlignmentContext.Provider>
+    );
+  }
+
+  return (
+    <TreeRowAlignmentContext.Provider value={true}>
+      <div data-slot="tree-row" className={cn("relative min-w-0 w-full", className)}>
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
+          {children}
+        </TreeAlignedRow>
+      </div>
+    </TreeRowAlignmentContext.Provider>
+  );
+};
 
 /**
  * Informational text row spanning the full control column width.
+ * When `propertyAligned` is true and inside a tree, renders content in the
+ * value-column of the shared property-row grid (same layout as Label).
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨helperrow](repo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/HELPER-ROW)
  **/
-export const HelperRow: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
-  <TreeItem className={className}>
-    <TreeContent>
-      <div data-slot="helper-row" className="text-xs text-muted-foreground leading-tight py-[2px]">
-        {children}
-      </div>
-    </TreeContent>
-  </TreeItem>
-);
+export const HelperRow: React.FC<{ children: React.ReactNode; className?: string; propertyAligned?: boolean }> = ({ children, className, propertyAligned = false }) => {
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const helperContent = (
+    <div data-slot="helper-row" data-detail-panel-control="fill" className={cn("text-xs text-muted-foreground leading-tight py-[2px]", className)}>
+      {children}
+    </div>
+  );
+  if (propertyAligned && isTree) {
+    const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
+    return (
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
+        <div
+          data-slot="property-row"
+          style={{ marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" }}
+          className="grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]"
+        >
+          <div />
+          <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
+            {helperContent}
+          </div>
+        </div>
+      </TreeAlignedRow>
+    );
+  }
+  return (
+    <TreeItem className={className}>
+      <TreeContent>{helperContent}</TreeContent>
+    </TreeItem>
+  );
+};
 
 const getTreeItemLabel = (item: TreeDataItem): React.ReactNode => {
   if (!item.description) {
@@ -15965,40 +16025,96 @@ export interface FileTreeNode {
 }
 
 //#region 🔖TreeHoverPath
+// Branch containers that hold child rows and render IndentationLines.
 const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
+// Row-level elements that own an elbow connector.
 const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "control-tree-row"]);
-const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="control-tree-row"]';
+const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="control-tree-row"], [data-slot="tree-content"]';
+const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]';
 const treeHoverPathAttr = "data-tree-hover-path";
 
 const clearTreeHoverPath = (root: HTMLElement) => {
   root.querySelectorAll(`[${treeHoverPathAttr}]`).forEach((el) => el.removeAttribute(treeHoverPathAttr));
 };
 
+/**
+ * Derive the row element that owns a branch container.
+ * Handles all DOM shapes: tree-item-row/control-tree-row siblings,
+ * tree-section-row behind collapsible-content, tree-property-item parent.
+ */
+const rowForBranch = (branch: Element): Element | null => {
+  const prev = branch.previousElementSibling;
+  if (prev) {
+    const prevSlot = prev.getAttribute("data-slot");
+    if (prevSlot && treeRowSlots.has(prevSlot)) return prev;
+  }
+  const parent = branch.parentElement;
+  const parentSlot = parent?.getAttribute("data-slot");
+  if (parentSlot === "tree-property-item") return parent!;
+  if (parentSlot === "collapsible-content") {
+    const sectionRow = parent!.previousElementSibling;
+    if (sectionRow?.getAttribute("data-slot") === "tree-section-row") return sectionRow;
+  }
+  return null;
+};
+
+/**
+ * Resolve the conceptual tree row from a pointer target.
+ * First tries matching a known row slot via closest(). When no row wrapper
+ * exists (pass-through TreeRow, raw controls), falls back to the nearest
+ * branch container and returns its owner row.
+ */
+const resolveHoverRow = (target: HTMLElement, root: HTMLElement): Element | null => {
+  const direct = target.closest(treeHoverPathRowSelector);
+  if (direct && root.contains(direct)) return direct;
+  const branch = target.closest(treeHoverPathBranchSelector);
+  if (branch && root.contains(branch)) return rowForBranch(branch);
+  return null;
+};
+
+const markTerminalBranch = (row: Element) => {
+  const slot = row.getAttribute("data-slot");
+  if (slot === "tree-item-row" || slot === "control-tree-row") {
+    const next = row.nextElementSibling;
+    if (next) {
+      const nextSlot = next.getAttribute("data-slot");
+      if (nextSlot && treeBranchSlots.has(nextSlot)) {
+        next.setAttribute(treeHoverPathAttr, "branch");
+      }
+    }
+  } else if (slot === "tree-section-row") {
+    const next = row.nextElementSibling;
+    if (next?.getAttribute("data-slot") === "collapsible-content") {
+      for (const child of Array.from(next.children)) {
+        if (child.getAttribute("data-slot") === "tree-section-content") {
+          child.setAttribute(treeHoverPathAttr, "branch");
+          break;
+        }
+      }
+    }
+  } else if (slot === "tree-property-item") {
+    for (const child of Array.from(row.children)) {
+      if (child.getAttribute("data-slot") === "tree-property-content") {
+        child.setAttribute(treeHoverPathAttr, "branch");
+        break;
+      }
+    }
+  }
+};
+
 const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
   clearTreeHoverPath(root);
   row.setAttribute(treeHoverPathAttr, "row");
+  markTerminalBranch(row);
   let el: Element | null = row.parentElement;
   while (el && el !== root) {
     const slot = el.getAttribute("data-slot");
     if (slot && treeBranchSlots.has(slot)) {
       el.setAttribute(treeHoverPathAttr, "branch");
-      const prev = el.previousElementSibling;
-      if (prev) {
-        const prevSlot = prev.getAttribute("data-slot");
-        if (prevSlot && treeRowSlots.has(prevSlot)) {
-          prev.setAttribute(treeHoverPathAttr, "row");
-        }
-      }
-      const parent = el.parentElement;
-      const parentSlot = parent?.getAttribute("data-slot");
-      if (parentSlot === "tree-property-item") {
-        parent!.setAttribute(treeHoverPathAttr, "row");
-      }
-      if (parentSlot === "collapsible-content") {
-        const sectionRow = parent!.previousElementSibling;
-        if (sectionRow?.getAttribute("data-slot") === "tree-section-row") {
-          sectionRow.setAttribute(treeHoverPathAttr, "row");
-        }
+      const ownerRow = rowForBranch(el);
+      if (ownerRow) {
+        ownerRow.setAttribute(treeHoverPathAttr, "row");
+        markTerminalBranch(ownerRow);
       }
     }
     el = el.parentElement;
@@ -16280,10 +16396,9 @@ export const Tree = (({
   const handleTreePointerOver = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const root = treeRootRef.current;
     if (!root) return;
-    const row = (e.target as HTMLElement).closest(treeHoverPathRowSelector);
-    if (row && root.contains(row)) {
-      applyTreeHoverPath(row, root);
-    }
+    const row = resolveHoverRow(e.target as HTMLElement, root);
+    if (row) applyTreeHoverPath(row, root);
+    else clearTreeHoverPath(root);
   }, []);
 
   const handleTreePointerLeave = React.useCallback(() => {
@@ -16777,14 +16892,7 @@ const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderCon
     <ControlTreeRow
       className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.controlRow)}
       left={
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          slotOffsetPx={2}
-          contentClassName="flex min-w-0 items-center gap-[6px]"
-        >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-[6px]">
           <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-foreground", classNames?.controlLabel)} style={treeItemLabelStyle}>
             {node.key}
           </span>
@@ -17873,26 +17981,26 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 // Consumers MUST provide nodes and edges arrays.
 
 export {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    forceCenter,
-    forceCollide,
-    forceLink,
-    forceManyBody,
-    forceSimulation,
-    forceX,
-    forceY,
-    getBezierPath,
-    Handle,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    useInternalNode,
-    useReactFlow,
-    useStoreApi,
-    ViewportPortal
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  getBezierPath,
+  Handle,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
@@ -21064,7 +21172,7 @@ export { i18next, initReactI18next, LanguageDetector, useTranslation };
 // #endregion 🔖I18n
 
 // #region 🔖Hotkeys
-    export { useHotkeys } from "react-hotkeys-hook";
+export { useHotkeys } from "react-hotkeys-hook";
 // #endregion 🔖Hotkeys
 
 // #region 🔖Date
@@ -21380,7 +21488,7 @@ if (treeVitest) {
       expect(markup).not.toMatch(/data-slot="tree-gutter"[^>]*><div class="absolute left-0 top-0 bottom-0 pointer-events-none"/);
       expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
-      expect(markup).toContain('absolute top-1/2 -translate-y-1/2');
+      expect(markup).toContain("absolute top-1/2 -translate-y-1/2");
       expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150" style="left:7px;width:3px"');
       expect(markup).not.toContain('data-slot="tree-branch-stem"');
       expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40/g)?.length ?? 0).toBe(3);
@@ -21453,11 +21561,7 @@ if (treeVitest) {
     it("keeps tree section actions inline with the header row when isTree is true", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
-          <TreeSection
-            id="tooltip.manual"
-            defaultOpen={false}
-            actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]}
-          />
+          <TreeSection id="tooltip.manual" defaultOpen={false} actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]} />
         </TreeContext.Provider>,
       );
 
@@ -21465,7 +21569,7 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       const rowContentIdx = markup.indexOf('data-slot="tree-row-content"');
-      const actionsIdx = markup.indexOf("data-testid=\"add-icon\"");
+      const actionsIdx = markup.indexOf('data-testid="add-icon"');
       expect(rowContentIdx).toBeGreaterThan(-1);
       expect(actionsIdx).toBeGreaterThan(-1);
       expect(actionsIdx).toBeGreaterThan(rowContentIdx);
@@ -21474,32 +21578,26 @@ if (treeVitest) {
     it("keeps tree item actions inline with the header row when isTree is true", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
-          <TreeItem
-            id="tooltip.manual"
-            actions={[{ icon: <span data-testid="remove-icon" />, onClick: () => undefined }]}
-          />
+          <TreeItem id="tooltip.manual" actions={[{ icon: <span data-testid="remove-icon" />, onClick: () => undefined }]} />
         </TreeContext.Provider>,
       );
 
       expect(markup).toContain('class="flex items-center gap-[6px] min-w-0 w-full"');
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
-      expect(markup).toContain("data-testid=\"remove-icon\"");
+      expect(markup).toContain('data-testid="remove-icon"');
     });
 
     it("uses the same inline tree header actions when isTree is false", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false, isTree: false, indentMultiplier: 1 }}>
-          <TreeItem
-            id="tooltip.manual"
-            actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]}
-          />
+          <TreeItem id="tooltip.manual" actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]} />
         </TreeContext.Provider>,
       );
 
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
-      expect(markup).toContain("data-testid=\"add-icon\"");
+      expect(markup).toContain('data-testid="add-icon"');
     });
   });
 

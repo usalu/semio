@@ -1,0 +1,12 @@
+{
+  "title": "Fix Info Text Placement in Sketchpad Details Panel",
+  "status": "open",
+  "description": "Fix the placement of connected-piece info text and all similar informational text elements in the semio/sketchpad Details panel. Render these messages inside the existing property row/value-column layout (using Label with empty label) so they occupy the same width and horizontal bounds as normal input fields, but without input border or field chrome. Apply through shared property row/layout rules (Label component), not hardcoded offsets.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1243"
+  },
+  "goal": "🎯sketchpad",
+  "sessions": [
+    "⚪79af24aa455a42ae970b8f4f4d876c13"
+  ]
+}
