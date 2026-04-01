@@ -3,7 +3,7 @@
     "1": [
       {
         "name": "Merge Designs",
-        "description": "Merge a list of distinct designs into a new design. All designs are normalized first, so the connections align. All the pieces have the name and variant as a prefix to ensure uniqueness. Make sure every design is distinct by having a unique combination of name and variant.",
+        "description": "Merge a list of distinct designs into a new design. All designs are normalized first, so the connections align. All the pieces have the name as a prefix to ensure uniqueness. Make sure every design is distinct by having a unique name.",
         "icon": "icon",
         "nickname": "\u22faDsns",
         "inputs": [
@@ -36,18 +36,6 @@
             "name": "Image",
             "nickname": "Im?",
             "kind": "Image"
-          },
-          {
-            "description": "The optional value of the design.",
-            "name": "Variant",
-            "nickname": "Vn?",
-            "kind": "Variant"
-          },
-          {
-            "description": "The optional view of the design. No view means the default view.",
-            "name": "View",
-            "nickname": "Vw?",
-            "kind": "View"
           },
           {
             "description": "The optional attributes of the design.",
@@ -221,7 +209,7 @@
       },
       {
         "name": "Replace Type",
-        "description": "Replace a type (name) in a design. All variants stay the same and must exist in the new type.",
+        "description": "Replace a type (name) in a design.",
         "icon": "icon",
         "nickname": "\u21bbTyp",
         "inputs": [
@@ -254,8 +242,8 @@
         ]
       },
       {
-        "name": "Vary Types",
-        "description": "Change a variant (name) from one type to another variant of the same type for all pieces of a design.",
+        "name": "Change Types",
+        "description": "Change a type name from one type to another type for all pieces of a design.",
         "icon": "icon",
         "nickname": "\u21b7Typ",
         "inputs": [
@@ -271,18 +259,6 @@
             "nickname": "Na",
             "kind": "Type Name"
           },
-          {
-            "description": "The optional variant of the type of the piece. No variant means the default variant.",
-            "name": "Type Variant",
-            "nickname": "OVn",
-            "kind": "Type Variant"
-          },
-          {
-            "description": "The optional variant of the type of the piece. No variant means the default variant.",
-            "name": "Type Variant",
-            "nickname": "NVn",
-            "kind": "Type Variant"
-          }
         ],
         "outputs": [
           {
@@ -337,7 +313,7 @@
     "2": [
       {
         "name": "Normalize Kit",
-        "description": "Normalize a kit to this document. This normalizes all types and designs and reorders them. Types are reordered after name and variant and designs after name, variant and view.",
+        "description": "Normalize a kit to this document. This normalizes all types and designs and reorders them. Types are reordered after name and designs after name.",
         "icon": "icon",
         "nickname": "\u21d2Kit",
         "inputs": [
@@ -615,7 +591,7 @@
     "1": [
       {
         "name": "Select Kit",
-        "description": "Select a kit with a name and an optional version.\nIf no version is provided it will select all variants.\nIf you want to select the default version then use the empty text.",
+        "description": "Select a kit with a name and an optional version.\nIf no version is provided it will select the latest version.\nIf you want to select the default version then use the empty text.",
         "icon": "icon",
         "nickname": "?Kit",
         "inputs": [
@@ -655,7 +631,7 @@
       },
       {
         "name": "Select Design",
-        "description": "Select a design with a name, an optional variant and an optional view.\nIf no variant is provided it will select all variants.\nIf you want to select the default variant then use the empty text.\nIf no view is provided it will select all views.\nIf you want to select the default view then use the empty text.",
+        "description": "Select a design with a name.\nIf you want to select the default design then use the empty text.",
         "icon": "icon",
         "nickname": "?Dsn",
         "inputs": [
@@ -701,7 +677,7 @@
       },
       {
         "name": "Select Type",
-        "description": "Select a type with a name and an optional variant. If no variant is provided it will select all variants. If you want to select the default type then use the empty text.",
+        "description": "Select a type with a name. If you want to select the default type then use the empty text.",
         "icon": "icon",
         "nickname": "?Typ",
         "inputs": [
@@ -717,12 +693,6 @@
             "nickname": "Na",
             "kind": "Name"
           },
-          {
-            "description": "The optional value of the type.",
-            "name": "Variant",
-            "nickname": "Vn?",
-            "kind": "Variant"
-          }
         ],
         "outputs": [
           {
@@ -821,7 +791,7 @@
       },
       {
         "name": "Select Pieces",
-        "description": "Select pieces of a certain type. If no variant is provided it will select all variants. If you want to select the default type then use the empty text.",
+        "description": "Select pieces of a certain type. If you want to select the default type then use the empty text.",
         "icon": "icon",
         "nickname": "?Pces",
         "inputs": [
@@ -837,12 +807,6 @@
             "nickname": "Na",
             "kind": "Name"
           },
-          {
-            "description": "The optional value of the type.",
-            "name": "Variant",
-            "nickname": "Vn?",
-            "kind": "Variant"
-          }
         ],
         "outputs": [
           {
@@ -4312,18 +4276,6 @@
             "kind": "Name"
           },
           {
-            "description": "The optional value of the design.",
-            "name": "Variant",
-            "nickname": "Vn?",
-            "kind": "Variant"
-          },
-          {
-            "description": "The optional view of the design. No view means the default view.",
-            "name": "View",
-            "nickname": "Vw?",
-            "kind": "View"
-          },
-          {
             "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the model.",
             "name": "Mime",
             "nickname": "Mm",
@@ -4496,13 +4448,7 @@
             "name": "Name",
             "nickname": "Na",
             "kind": "Name"
-          },
-          {
-            "description": "The optional value of the type.",
-            "name": "Variant",
-            "nickname": "Vn?",
-            "kind": "Variant"
-          },
+          }
           {
             "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the model.",
             "name": "Mime",

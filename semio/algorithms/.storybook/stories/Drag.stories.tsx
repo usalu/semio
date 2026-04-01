@@ -1,11 +1,11 @@
 // #region 🔖Header
 // 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx
-// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_OUTPUT windows.
+// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
 // Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🔖Header
 
-import type { DesignChange, Design } from "@semio/js";
+import type { DesignChange, Design, DesignDiff } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -22,6 +22,7 @@ const rawDesign = { ...DragDesign, guid: "drag-preset-guid", name: "Drag Preset"
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "drag-vec", kind: WindowKind.VEC_INPUT, label: "Vec" },
   { id: "drag-input", kind: WindowKind.PIECES_SELECTION_INPUT, label: "Input" },
+  { id: "drag-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
   { id: "drag-output", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];
 
@@ -38,6 +39,7 @@ function DragFrame() {
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>((DragPieces as any).pieces?.map((p: any) => p.guid) ?? []);
   const [vec, setVec] = React.useState(DragOffset);
   const [outputDesign, setOutputDesign] = React.useState<Design | undefined>(undefined);
+  const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -46,6 +48,7 @@ function DragFrame() {
     setFlattenChange(null);
     setBaseDesign(null);
     setOutputDesign(undefined);
+    setDesignDiff(undefined);
     void (async () => {
       const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
@@ -69,13 +72,16 @@ function DragFrame() {
     let cancelled = false;
     void (async () => {
       if (selectedPieceGuids.length === 0) {
-        if (!cancelled) setOutputDesign(undefined);
+        if (!cancelled) { setOutputDesign(undefined); setDesignDiff(undefined); }
         return;
       }
-      // Invalidate stale output while recomputing.
       setOutputDesign(undefined);
+      setDesignDiff(undefined);
+      const { dragPiecesInDesign } = await import("@semio/js");
+      const piecesDesign = { guid: baseDesign.guid, name: baseDesign.name, pieces: (baseDesign.pieces ?? []).filter((p: any) => selectedPieceGuids.includes(p.guid)) };
+      const diff = dragPiecesInDesign(baseDesign, piecesDesign, vec);
       const result = await nativeDragPieces(kit, rawDesign as any, baseDesign, selectedPieceGuids, vec, language);
-      if (!cancelled) setOutputDesign(result);
+      if (!cancelled) { setDesignDiff(diff); setOutputDesign(result); }
     })();
     return () => {
       cancelled = true;
@@ -92,10 +98,11 @@ function DragFrame() {
       vecMax: { u: 10, v: 10 },
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
+      designDiff,
       outputDesign: outputDesign ?? baseDesign ?? rawDesign,
       error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? "Select at least one piece to drag." : !outputDesign ? `Loading drag result (${language})…` : undefined,
     }),
-    [kit, baseDesign, selectedPieceGuids, vec, outputDesign, flattenChange, language],
+    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],
   );
 
   return <AlgorithmApp id="drag" label="Drag" windows={WINDOWS} context={context} className="h-full w-full" />;

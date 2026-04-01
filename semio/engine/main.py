@@ -1651,7 +1651,7 @@ async def app_design_viewer() -> fastapi.Response:
         content=_build_design_viewer_html(),
         media_type="text/html",
         headers={
-            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:;",
+            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:; worker-src blob:;",
         },
     )
 
@@ -1665,7 +1665,7 @@ async def app_kit_viewer() -> fastapi.Response:
         content=_build_kit_viewer_html(),
         media_type="text/html",
         headers={
-            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:;",
+            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:; worker-src blob:;",
         },
     )
 
@@ -3264,17 +3264,21 @@ def _build_kit_artifact_data(kit: dict) -> dict:
     return meta
 
 
-def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = None) -> dict:
+def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = None, design: dict | None = None) -> dict:
     """Compute pre-rendered diagram points and lines from kit/design data.
     [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️builddiagramdata](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_diagram_data)
     """
-    design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
+    if design is None:
+        design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
     if design is None:
         return {"points": [], "lines": []}
 
-    # Flatten the design to get absolute piece positions
+    # Flatten the design to get absolute piece positions.
+    # Inject the full design into kit so flattenDesignDict can find all pieces.
     try:
-        flatten_result = flattenDesignDict(kit, design_guid)
+        kit_for_flatten = dict(kit)
+        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("guid") != design_guid] + [design]
+        flatten_result = flattenDesignDict(kit_for_flatten, design_guid)
     except Exception:
         flatten_result = {}
 
@@ -3468,7 +3472,7 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
     }
 
     if mode in _DIAGRAM_MODES or mode in _SPLIT_SCENE_DIAGRAM_MODES:
-        diagram_data = _build_diagram_data(kit, design.get("guid"), design_diff)
+        diagram_data = _build_diagram_data(kit, design.get("guid"), design_diff, design=design)
         payload["points"] = diagram_data["points"]
         payload["lines"] = diagram_data["lines"]
 

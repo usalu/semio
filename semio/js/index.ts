@@ -10177,7 +10177,7 @@ export const findUsedConnectorsByPieceInDesign = (kit: Kit, designGuid: string, 
  * MUST return the matching element or undefined.
  * [👤semio📚js💻semio🔖kit🪨findreplacabletypesforpieceindesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findReplacableTypesForPieceInDesign)
  **/
-export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string, variants?: string[]): Type[] => {
+export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Type[] => {
   const design = findDesignInKit(kit, designGuid);
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
   const requiredConnectors: Connector[] = [];
@@ -10197,7 +10197,6 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
   return (
     kit.types?.filter((replacementType) => {
       if (replacementType.isAbstract) return false;
-      if (variants !== undefined && !variants.includes(replacementType.parent?.guid ?? "")) return false;
       if (!replacementType.connectors || replacementType.connectors.length === 0) return requiredConnectors.length === 0;
       return requiredConnectors.every((requiredConnector) => {
         return replacementType.connectors!.some((replacementConnector) => areConnectorsCompatible(replacementConnector, requiredConnector));
@@ -10211,7 +10210,7 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
  * MUST return the matching element or undefined.
  * [👤semio📚js💻semio🔖kit🪨findreplacabletypesforpiecesindesign](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/findReplacableTypesForPiecesInDesign)
  **/
-export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: string, pieceGuids: string[], variants?: string[]): Type[] => {
+export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: string, pieceGuids: string[]): Type[] => {
   const design = findDesignInKit(kit, designGuid);
   const pieces = pieceGuids.map((id) => findPieceInDesign(design, id));
   const externalConnections: Array<{
@@ -10239,7 +10238,6 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
   return (
     kit.types?.filter((replacementType) => {
       if (replacementType.isAbstract) return false;
-      if (variants !== undefined && !variants.includes(replacementType.parent?.guid ?? "")) return false;
       if (!replacementType.connectors || replacementType.connectors.length === 0) return externalConnections.length === 0;
       return externalConnections.every(({ requiredConnector }) => {
         return replacementType.connectors!.some((replacementConnector) => areConnectorsCompatible(replacementConnector, requiredConnector));
@@ -10442,14 +10440,6 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
   return { updated };
 };
 
-/**
- * Parses DesignIdFromVariant from serialized input.
- * MUST produce a valid in-memory representation.
- * [👤semio📚js💻semio🔖kit🪨parsedesignidfromvariant](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/d/i/parseDesignIdFromVariant)
- **/
-export const parseDesignIdFromVariant = (variant: string): string => {
-  return variant.split("-")[0];
-};
 
 // #region 🔖File Tree Utilities
 

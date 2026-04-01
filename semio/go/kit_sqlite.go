@@ -160,7 +160,7 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
 // Callers MUST provide a valid open database connection and kit GUID
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️loaddesigns](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/loadDesigns)
 func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
-	rows, err := db.Query(`SELECT guid, name, parent_guid, variant, unit, folder, 
+	rows, err := db.Query(`SELECT guid, name, parent_guid, unit, folder, 
         is_abstract, can_scale, can_mirror, description, icon, image, created, updated 
         FROM design WHERE kit_guid = ?`, kitGuid)
 	if err != nil {
@@ -171,10 +171,10 @@ func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
 	var designs []Design
 	for rows.Next() {
 		var d Design
-		var parentGuid, variant, unit, folder, description, icon, image sql.NullString
+		var parentGuid, unit, folder, description, icon, image sql.NullString
 		var isAbstract, canScale, canMirror sql.NullBool
 		var created, updated string
-		if err := rows.Scan(&d.Guid, &d.Name, &parentGuid, &variant, &unit, &folder,
+		if err := rows.Scan(&d.Guid, &d.Name, &parentGuid, &unit, &folder,
 			&isAbstract, &canScale, &canMirror, &description, &icon, &image, &created, &updated); err != nil {
 			return nil, err
 		}

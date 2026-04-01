@@ -3439,15 +3439,6 @@ class TypeImageField(RealField, abc.ABC):
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
-class TypeVariantField(RealField, abc.ABC):
-    """Field mixin for the variant of a type.
-    TypeVariantField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)
-    """
-
-    variant: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
-
 class TypeParentField(RealField, abc.ABC):
     """Field mixin for the parent of a type.
     TypeParentField MUST declare exactly one field with appropriate constraints.
@@ -3482,6 +3473,15 @@ class TypeStockField(RealField, abc.ABC):
     """
 
     stock: int = pydantic.Field(default=2147483647)
+
+
+class TypeVariantField(RealField, abc.ABC):
+    """Field mixin for the variant of a type.
+    TypeVariantField MUST declare exactly one field with appropriate constraints.
+    [👤semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)
+    """
+
+    variant: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeVirtualField(RealField, abc.ABC):
@@ -3547,7 +3547,7 @@ class TypeUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
-class TypeId(TypeVariantField, TypeNameField, Id):
+class TypeId(TypeNameField, TypeVariantField, Id):
     """Identity fields for uniquely identifying a type.
     TypeId MUST contain all fields that uniquely identify a type.
     [👤semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)
@@ -3564,7 +3564,6 @@ class TypeProps(
     TypeParentField,
     TypeVirtualField,
     TypeStockField,
-    TypeVariantField,
     TypeImageField,
     TypeIconField,
     TypeDescriptionField,
@@ -3583,7 +3582,6 @@ class TypeInput(
     TypeUnitField,
     TypeVirtualField,
     TypeStockField,
-    TypeVariantField,
     TypeImageField,
     TypeIconField,
     TypeDescriptionField,
@@ -3613,7 +3611,6 @@ class TypeOutput(
     TypeUnitField,
     TypeVirtualField,
     TypeStockField,
-    TypeVariantField,
     TypeImageField,
     TypeIconField,
     TypeDescriptionField,
@@ -5147,22 +5144,6 @@ class DesignImageField(RealField, abc.ABC):
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
-class DesignVariantField(RealField, abc.ABC):
-    """Field mixin for the variant of a design.
-    DesignVariantField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designvariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignVariantField)
-    """
-
-    variant: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
-
-class DesignViewField(RealField, abc.ABC):
-    """Field mixin for the view of a design.
-    DesignViewField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designviewfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignViewField)
-    """
-
-    view: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class DesignParentField(RealField, abc.ABC):
@@ -5255,7 +5236,7 @@ class DesignUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
-class DesignId(DesignNameField, DesignVariantField, Id):
+class DesignId(DesignNameField, Id):
     """Identity fields for uniquely identifying a design.
     DesignId MUST contain all fields that uniquely identify a design.
     [👤semio📚py💻semio🔖domain🔖design🛠️designid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignId)
@@ -5266,13 +5247,11 @@ class DesignId(DesignNameField, DesignVariantField, Id):
 
 class DesignProps(
     DesignUnitField,
-    DesignViewField,
     DesignActiveLayerField,
     DesignFolderField,
     DesignIsAbstractField,
     DesignParentField,
     DesignLocationField,
-    DesignVariantField,
     DesignImageField,
     DesignIconField,
     DesignDescriptionField,
@@ -5289,8 +5268,6 @@ class DesignProps(
 
 class DesignInput(
     DesignUnitField,
-    DesignViewField,
-    DesignVariantField,
     DesignImageField,
     DesignIconField,
     DesignDescriptionField,
@@ -5317,8 +5294,6 @@ class DesignInput(
 
 class DesignContext(
     DesignUnitField,
-    DesignViewField,
-    DesignVariantField,
     DesignDescriptionField,
     DesignNameField,
     Context,
@@ -5341,8 +5316,6 @@ class DesignOutput(
     DesignUpdatedField,
     DesignCreatedField,
     DesignUnitField,
-    DesignViewField,
-    DesignVariantField,
     DesignImageField,
     DesignIconField,
     DesignDescriptionField,
@@ -5383,8 +5356,6 @@ class DesignPrediction(DesignDescriptionField, Prediction):
 
 class Design(
     DesignNameField,
-    DesignVariantField,
-    DesignViewField,
     DesignDescriptionField,
     DesignIconField,
     DesignImageField,

@@ -36,6 +36,7 @@ import {
   type Attribute,
   type Camera,
   type Connection,
+  type Coord,
   type Design,
   type DesignDiff,
   type Kit,
@@ -111,11 +112,11 @@ export interface KitPort {
   mandatory?: boolean;
 }
 
-export interface KitDesignData extends Pick<Design, "guid" | "name" | "variant" | "view" | "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image"> {
+export interface KitDesignData extends Pick<Design, "guid" | "name" | "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image"> {
   parent?: { guid: string };
 }
 
-export interface KitKindData extends Pick<SemioKind, "guid" | "name" | "variant" | "description" | "createdAt" | "updatedAt" | "icon" | "image"> {
+export interface KitKindData extends Pick<SemioKind, "guid" | "name" | "description" | "createdAt" | "updatedAt" | "icon" | "image"> {
   parent?: { guid: string };
 }
 
@@ -196,8 +197,6 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
   const designs = (kit.designs ?? []).map((d) => ({
     guid: d.guid,
     name: d.name,
-    variant: d.variant,
-    view: d.view,
     description: d.description,
     createdAt: d.createdAt,
     updatedAt: d.updatedAt,
@@ -209,7 +208,6 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
   const types = (kit.types ?? []).map((t) => ({
     guid: t.guid,
     name: t.name,
-    variant: t.variant,
     description: t.description,
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
@@ -221,7 +219,7 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     (t.connectors ?? []).map((c) => ({
       guid: c.guid,
       typeGuid: t.guid,
-      id: c.id ?? c.name,
+      id: c.name,
       port: getReferenceGuid(c.port),
       name: c.name || getReferenceLabel(c.port) || "port",
       description: c.description,
@@ -272,7 +270,7 @@ const addKitMetaEntry = (entries: Array<{ label: string; value: string }>, label
   entries.push({ label, value });
 };
 
-const getKitArtifactHref = (value: Partial<KitData & KitDesignData & KitKindData>): string | undefined => value.view ?? value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;
+const getKitArtifactHref = (value: Partial<KitData & KitDesignData & KitKindData>): string | undefined => value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;
 
 const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean }): KitHierarchy => {
   const rootKey = "scope:kit";
@@ -1371,10 +1369,10 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               onClick={
                 onConnectionClick || effectiveConnectionSelectionEnabled
                   ? (event) => {
-                      event.stopPropagation();
-                      selectConnection(line.guid);
-                      onConnectionClick?.(line.connection);
-                    }
+                    event.stopPropagation();
+                    selectConnection(line.guid);
+                    onConnectionClick?.(line.connection);
+                  }
                   : undefined
               }
               pointerEvents="stroke"
@@ -1404,10 +1402,10 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               onClick={
                 onPieceClick || effectivePieceSelectionEnabled
                   ? (event) => {
-                      event.stopPropagation();
-                      selectPiece(point.guid);
-                      onPieceClick?.(point.piece);
-                    }
+                    event.stopPropagation();
+                    selectPiece(point.guid);
+                    onPieceClick?.(point.piece);
+                  }
                   : undefined
               }
               onPointerEnter={effectivePieceHoverEnabled ? () => setHoveredPiece(point.guid) : undefined}
@@ -1459,8 +1457,8 @@ export const PieceSelection: React.FC<PieceSelectionProps> = ({ selection, defau
       onSelectionChange={
         onSelectionChange
           ? (next) => {
-              onSelectionChange({ pieceGuids: next.pieceGuids ?? [] });
-            }
+            onSelectionChange({ pieceGuids: next.pieceGuids ?? [] });
+          }
           : undefined
       }
     />
@@ -1497,8 +1495,8 @@ export const ConnectionSelection: React.FC<ConnectionSelectionProps> = ({ select
       onSelectionChange={
         onSelectionChange
           ? (next) => {
-              onSelectionChange({ connectionGuids: next.connectionGuids ?? [] });
-            }
+            onSelectionChange({ connectionGuids: next.connectionGuids ?? [] });
+          }
           : undefined
       }
     />
@@ -2079,7 +2077,9 @@ interface ScenePieceModelProps {
 }
 
 const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, isSelected, isHovered }) => {
-  const gltf = useGLTF(modelSource);
+  // Disable Draco and meshopt to avoid WebAssembly CSP violations in MCP App iframes.
+  // drei defaults meshopt to true which calls WebAssembly.instantiate() violating script-src wasm-eval.
+  const gltf = useGLTF(modelSource, false, false);
   const clone = React.useMemo(() => {
     const cloned = cloneSkeleton(gltf.scene);
     cloned.traverse((object) => {
@@ -2165,23 +2165,23 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
 
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
-        event.stopPropagation();
-        onClick();
-      }
+      event.stopPropagation();
+      onClick();
+    }
     : undefined;
 
   const handlePointerEnter = onPointerEnter
     ? (event: { stopPropagation: () => void }) => {
-        event.stopPropagation();
-        onPointerEnter();
-      }
+      event.stopPropagation();
+      onPointerEnter();
+    }
     : undefined;
 
   const handlePointerLeave = onPointerLeave
     ? (event: { stopPropagation: () => void }) => {
-        event.stopPropagation();
-        onPointerLeave();
-      }
+      event.stopPropagation();
+      onPointerLeave();
+    }
     : undefined;
 
   return (
@@ -2239,23 +2239,23 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
 
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
-        event.stopPropagation();
-        onClick();
-      }
+      event.stopPropagation();
+      onClick();
+    }
     : undefined;
 
   const handlePointerEnter = onPointerEnter
     ? (event: { stopPropagation: () => void }) => {
-        event.stopPropagation();
-        onPointerEnter();
-      }
+      event.stopPropagation();
+      onPointerEnter();
+    }
     : undefined;
 
   const handlePointerLeave = onPointerLeave
     ? (event: { stopPropagation: () => void }) => {
-        event.stopPropagation();
-        onPointerLeave();
-      }
+      event.stopPropagation();
+      onPointerLeave();
+    }
     : undefined;
 
   return (
@@ -2568,9 +2568,9 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
               onClick={
                 effectiveConnectionSelectionEnabled || onConnectionClick
                   ? () => {
-                      handleSelectConnection(connection.guid);
-                      onConnectionClick?.(connection);
-                    }
+                    handleSelectConnection(connection.guid);
+                    onConnectionClick?.(connection);
+                  }
                   : undefined
               }
               onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(connection.guid) : undefined}
@@ -2589,9 +2589,9 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
               onClick={
                 effectivePieceSelectionEnabled || onPieceClick
                   ? () => {
-                      handleSelectPiece(piece.guid);
-                      onPieceClick?.(piece);
-                    }
+                    handleSelectPiece(piece.guid);
+                    onPieceClick?.(piece);
+                  }
                   : undefined
               }
               onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.guid) : undefined}
@@ -3331,7 +3331,7 @@ export const McpDesignViewer: React.FC = () => {
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
   const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [] });
   const appRef = React.useRef<McpApp | null>(null);
-  const tryRefetchRef = React.useRef<() => void>(() => {});
+  const tryRefetchRef = React.useRef<() => void>(() => { });
   const lastDiagramPayloadScoreRef = React.useRef<number>(-1);
 
   const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
@@ -3410,7 +3410,7 @@ export const McpDesignViewer: React.FC = () => {
           mergeDiagramPayload(parsed);
         }
       };
-      a.ontoolcancelled = () => {};
+      a.ontoolcancelled = () => { };
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
@@ -3578,7 +3578,7 @@ export const McpKitViewer: React.FC = () => {
   const appRef = React.useRef<McpApp | null>(null);
   const toolInputArgsRef = React.useRef<Record<string, unknown> | null>(null);
   const gotPayloadRef = React.useRef(false);
-  const tryRefetchRef = React.useRef<() => void>(() => {});
+  const tryRefetchRef = React.useRef<() => void>(() => { });
 
   const mergeKitToolArguments = React.useCallback((): Record<string, unknown> | null => {
     const client = appRef.current;
@@ -3653,7 +3653,7 @@ export const McpKitViewer: React.FC = () => {
           applyKitPayload(parsed);
         }
       };
-      a.ontoolcancelled = () => {};
+      a.ontoolcancelled = () => { };
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
@@ -5319,14 +5319,14 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
       },
       ...(context.error
         ? [
-            {
-              id: `${id}.footer.error`,
-              icon: <AlertCircleIcon size={12} />,
-              text: "Error",
-              order: 1,
-              className: "text-destructive",
-            },
-          ]
+          {
+            id: `${id}.footer.error`,
+            icon: <AlertCircleIcon size={12} />,
+            text: "Error",
+            order: 1,
+            className: "text-destructive",
+          },
+        ]
         : []),
     ],
     [id, context.selectedPieceGuids.length, pieceCount, context.error],
@@ -5435,10 +5435,10 @@ if (algorithmVitest) {
       const zoom = 2.5;
       const runtimeContext: AlgorithmRuntimeContextValue = {
         kit: { guid: "kit", name: "Kit", version: "1", designs: [], types: [] } as Kit,
-        design: { guid: "design", pieces: [], connections: [] } as Design,
+        design: { guid: "design", name: "", pieces: [], connections: [] } as Design,
         selectedPieceGuids: [],
         selectedConnectionGuids: [],
-        outputDesign: { guid: "output", pieces: [], connections: [] } as Design,
+        outputDesign: { guid: "output", name: "", pieces: [], connections: [] } as Design,
         diagramViewport: { pan, zoom, sourceKind: WindowKind.DESIGN_INPUT },
         onDiagramViewportPanChange: () => undefined,
         onDiagramViewportZoomChange: () => undefined,

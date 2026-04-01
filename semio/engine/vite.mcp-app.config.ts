@@ -54,6 +54,34 @@ const STUB_EMPTY = path.resolve(__dirname, "stubs/empty.js");
 // We only stub semio assets and unrelated heavy deps.
 const STUBBED_PREFIXES = ["@semio/assets", "cytoscape", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
+// #region 🔖MeshoptNoopPlugin
+// Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module
+// scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the
+// scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}
+// immediately, avoiding any WebAssembly usage while keeping the export shape intact.
+// Summary: Vite plugin neutralizing MeshoptDecoder WASM to avoid CSP wasm-eval violations.
+
+function meshoptNoopPlugin(): Plugin {
+  const MESHOPT_STUB = `
+const noop = () => {};
+const MeshoptDecoder = { supported: false, ready: Promise.resolve(), decode: noop, decodeGltfBuffer: noop };
+export { MeshoptDecoder };
+export default MeshoptDecoder;
+`;
+  return {
+    name: "meshopt-noop",
+    enforce: "pre",
+    load(id) {
+      if ((id.includes("MeshoptDecoder") || id.includes("meshopt_decoder")) && !id.includes("node_modules/.cache")) {
+        return MESHOPT_STUB;
+      }
+      return null;
+    },
+  };
+}
+
+// #endregion 🔖MeshoptNoopPlugin
+
 function stubHeavyDepsPlugin(): Plugin {
   return {
     name: "stub-heavy-deps",
@@ -100,7 +128,7 @@ export default defineConfig({
       },
     },
   },
-  plugins: [stubHeavyDepsPlugin(), tailwindcss(), mdx(), zodJitlessPlugin(), viteSingleFile()],
+  plugins: [meshoptNoopPlugin(), stubHeavyDepsPlugin(), tailwindcss(), mdx(), zodJitlessPlugin(), viteSingleFile()],
   esbuild: {
     jsx: "automatic",
   },

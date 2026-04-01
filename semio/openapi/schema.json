@@ -128,10 +128,10 @@
         }
       }
     },
-    "/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}": {
+    "/api/kits/{encodedKitUri}/types/{encodedTypeName}": {
       "put": {
         "summary": "Put Type",
-        "operationId": "put_type_kits__encodedKitUri__types__encodedTypeNameAndVariant__put",
+        "operationId": "put_type_kits__encodedKitUri__types__encodedTypeName__put",
         "parameters": [
           {
             "name": "encodedKitUri",
@@ -144,13 +144,13 @@
             }
           },
           {
-            "name": "encodedTypeNameAndVariant",
+            "name": "encodedTypeName",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
-              "title": "Encodedtypenameandvariant"
+              "pattern": "[a-zA-Z0-9\-._~%]+",
+              "title": "Encodedtypename"
             }
           }
         ],
@@ -187,7 +187,7 @@
       },
       "delete": {
         "summary": "Delete Type",
-        "operationId": "delete_type_kits__encodedKitUri__types__encodedTypeNameAndVariant__delete",
+        "operationId": "delete_type_kits__encodedKitUri__types__encodedTypeName__delete",
         "parameters": [
           {
             "name": "encodedKitUri",
@@ -200,13 +200,13 @@
             }
           },
           {
-            "name": "encodedTypeNameAndVariant",
+            "name": "encodedTypeName",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
-              "title": "Encodedtypenameandvariant"
+              "pattern": "[a-zA-Z0-9\-._~%]+",
+              "title": "Encodedtypename"
             }
           }
         ],
@@ -232,10 +232,10 @@
         }
       }
     },
-    "/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}": {
+    "/api/kits/{encodedKitUri}/designs/{encodedDesignName}": {
       "put": {
         "summary": "Put Design",
-        "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__put",
+        "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignName__put",
         "parameters": [
           {
             "name": "encodedKitUri",
@@ -248,13 +248,13 @@
             }
           },
           {
-            "name": "encodedDesignNameAndVariantAndView",
+            "name": "encodedDesignName",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*,[a-zA-Z0-9\\-._~%]*",
-              "title": "Encodeddesignnameandvariantandview"
+              "pattern": "[a-zA-Z0-9\-._~%]+",
+              "title": "Encodeddesignname"
             }
           }
         ],
@@ -291,7 +291,7 @@
       },
       "delete": {
         "summary": "Delete Design",
-        "operationId": "delete_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__delete",
+        "operationId": "delete_design_kits__encodedKitUri__designs__encodedDesignName__delete",
         "parameters": [
           {
             "name": "encodedKitUri",
@@ -304,13 +304,13 @@
             }
           },
           {
-            "name": "encodedDesignNameAndVariantAndView",
+            "name": "encodedDesignName",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*,[a-zA-Z0-9\\-._~%]*",
-              "title": "Encodeddesignnameandvariantandview"
+              "pattern": "[a-zA-Z0-9\-._~%]+",
+              "title": "Encodeddesignname"
             }
           }
         ],
@@ -907,20 +907,6 @@
             "description": "\ud83d\udcac The optional human-readable description of the design.",
             "default": ""
           },
-          "variant": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Variant",
-            "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
-            "default": ""
-          },
-          "view": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "View",
-            "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
-            "default": ""
-          },
           "unit": {
             "type": "string",
             "maxLength": 64,
@@ -980,20 +966,6 @@
             "maxLength": 512,
             "title": "Description",
             "description": "\ud83d\udcac The optional human-readable description of the design.",
-            "default": ""
-          },
-          "variant": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Variant",
-            "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
-            "default": ""
-          },
-          "view": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "View",
-            "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
             "default": ""
           },
           "unit": {
@@ -1069,20 +1041,6 @@
             "maxLength": 1024,
             "title": "Image",
             "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-            "default": ""
-          },
-          "variant": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Variant",
-            "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
-            "default": ""
-          },
-          "view": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "View",
-            "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
             "default": ""
           },
           "unit": {
@@ -1165,20 +1123,6 @@
             "maxLength": 1024,
             "title": "Image",
             "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-            "default": ""
-          },
-          "variant": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Variant",
-            "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
-            "default": ""
-          },
-          "view": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "View",
-            "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
             "default": ""
           },
           "unit": {
@@ -2581,13 +2525,6 @@
             "description": "\ud83d\udcac The optional human-readable description of the type.",
             "default": ""
           },
-          "variant": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Variant",
-            "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
-            "default": ""
-          },
           "stock": {
             "type": "integer",
             "title": "Stock",
@@ -2652,13 +2589,6 @@
             "maxLength": 512,
             "title": "Description",
             "description": "\ud83d\udcac The optional human-readable description of the type.",
-            "default": ""
-          },
-          "variant": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Variant",
-            "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
             "default": ""
           },
           "stock": {
@@ -2764,13 +2694,6 @@
             "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
             "default": ""
           },
-          "variant": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Variant",
-            "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
-            "default": ""
-          },
           "stock": {
             "type": "integer",
             "title": "Stock",
@@ -2863,13 +2786,6 @@
             "maxLength": 1024,
             "title": "Image",
             "description": "\ud83d\uddbc\ufe0f The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-            "default": ""
-          },
-          "variant": {
-            "type": "string",
-            "maxLength": 64,
-            "title": "Variant",
-            "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
             "default": ""
           },
           "stock": {

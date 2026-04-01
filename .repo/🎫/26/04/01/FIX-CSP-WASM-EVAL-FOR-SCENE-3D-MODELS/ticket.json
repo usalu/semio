@@ -1,0 +1,12 @@
+{
+  "title": "Fix CSP Wasm Eval for Scene 3d Models",
+  "status": "open",
+  "description": "The 3D models are not loading in the semio engine MCP app scene due to a CSP (Content Security Policy) error. The script-src directive is missing wasm-eval, which is needed for WebAssembly-based 3D rendering (likely Three.js/Draco decoder). Need to find where CSP headers are set and add wasm-eval to script-src.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1253"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪1d70668a06d54437a33ee59ed3f327ca"
+  ]
+}

@@ -191,7 +191,6 @@ erDiagram
     types {
         int id PK
         string name
-        string variant
         boolean is_virtual
         boolean can_scale
         boolean can_mirror
@@ -266,8 +265,6 @@ erDiagram
     designs {
         int id PK
         string name
-        string variant
-        string view
         boolean can_scale
         boolean can_mirror
         string unit
@@ -397,7 +394,6 @@ kit : !Kit{
     version : ?String // empty is latest
     types : *Type[
         name : !String
-        variant : ?String // empty is default
         models : +Model[
             guid : !String
             name : ?String
@@ -475,18 +471,14 @@ kit : !Kit{
     ]
     designs : *Design[
         name : !String
-        variant : ?String // empty is default
         view : ?String // empty is default
         pieces : +Piece[
             id : !String
             type : !TypeId{
                 name : !String
-                variant : ?String
             }
             design : ?DesignId{
                 name : !String
-                variant : ?String
-                view : ?String
             }
             plane : ?Plane{
                 origin : !Point{
@@ -1055,7 +1047,6 @@ $$
 \tau =
 (
 name,
-variant,
 models,
 connectors,
 props,
@@ -1168,8 +1159,6 @@ $$
 d =
 (
 name,
-variant,
-view,
 P_d,
 E_d,
 S_d,

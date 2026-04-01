@@ -1259,11 +1259,22 @@ class TestAppEndpoint:
         assert "semio design viewer" in response.text
 
     def test_app_design_viewer_csp_header(self):
-        """The app endpoint includes Content-Security-Policy allowing iframe embedding."""
+        """The app endpoint includes Content-Security-Policy allowing iframe embedding and wasm-unsafe-eval for Three.js scene."""
         client = TestClient(engine.rest)
         response = client.get("/app/design-viewer")
-        assert "content-security-policy" in response.headers
-        assert "frame-ancestors *" in response.headers["content-security-policy"]
+        csp = response.headers["content-security-policy"]
+        assert "frame-ancestors *" in csp
+        assert "'wasm-unsafe-eval'" in csp
+        assert "script-src" in csp
+        assert "worker-src blob:" in csp
+
+    def test_app_kit_viewer_csp_header(self):
+        """The kit-viewer endpoint includes the same CSP as design-viewer."""
+        client = TestClient(engine.rest)
+        response = client.get("/app/kit-viewer")
+        csp = response.headers["content-security-policy"]
+        assert "frame-ancestors *" in csp
+        assert "'wasm-unsafe-eval'" in csp
 
     def test_app_design_viewer_html_structure(self):
         """The HTML contains root element for the React MCP App from @semio/ui."""
