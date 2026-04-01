@@ -11789,7 +11789,6 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       const designs = kit.designs?.map((d: Design) => d.guid);
       const qualities = kit.qualities?.map((q: Quality) => q.name);
       const ports = kit.ports?.map((p: Port) => p.guid);
-      const concepts = kit.concepts?.map((c: Concept) => c.guid);
       const files = kit.files?.map((f: SemioFile) => f.name);
       const folders = kit.folders?.map((f: Folder) => f.guid);
       const authors = kit.authors?.map((a: Author) => a.name);
@@ -11798,7 +11797,6 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       if (designs && designs.length > 0) allSelection.designs = designs;
       if (qualities && qualities.length > 0) allSelection.qualities = qualities;
       if (ports && ports.length > 0) allSelection.ports = ports;
-      if (concepts && concepts.length > 0) allSelection.concepts = concepts;
       if (files && files.length > 0) allSelection.files = files;
       if (folders && folders.length > 0) allSelection.folders = folders;
       if (authors && authors.length > 0) allSelection.authors = authors;
@@ -12742,6 +12740,19 @@ export const kitAppCommands = {
       },
     };
   },
+  "semio.kitApp.addTypeAfter": (context: KitAppCommandContext, type: Type, afterGuid: Guid): KitAppCommandResult => {
+    const currentTypes = context.kit.types ?? [];
+    const afterIndex = currentTypes.findIndex((t) => t.guid === afterGuid);
+    const insertIndex = afterIndex === -1 ? currentTypes.length : afterIndex + 1;
+    const reordered = [...currentTypes.slice(0, insertIndex), type, ...currentTypes.slice(insertIndex)];
+    const allGuids = currentTypes.map((t) => ({ guid: t.guid }));
+    return {
+      diff: {},
+      kitDiff: {
+        types: { removed: allGuids, added: reordered },
+      },
+    };
+  },
   "semio.kitApp.addTypes": (context: KitAppCommandContext, types: Type[]): KitAppCommandResult => {
     return {
       diff: {},
@@ -12974,7 +12985,6 @@ const KitCreateActions: FC = () => {
   const defaultTypeName = useLabel("semio.sketchpad.app.kit.defaultTypeName");
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
-  const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
 
   const setKindActive = (kind: ArtifactKind) => {
@@ -13311,7 +13321,6 @@ const AppContent: FC = () => {
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
   const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
-  const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const kitLoadingLabel = useLabel("semio.sketchpad.app.kit.loading");
 
   const labelSearch = useLabel("semio.sketchpad.common.search");
@@ -15399,7 +15408,6 @@ interface KitDiagramNode extends Record<string, unknown> {
   kind: KitDiagramNodeKind;
   icon?: string | React.ReactNode;
   parentGuid?: string;
-  concepts?: string[];
 }
 
 /**
@@ -15739,7 +15747,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
   const kindGroups: KitDiagramNodeKind[] = ["type", "design", "quality", "port", "file", "folder", "author"];
 
   for (const kind of kindGroups) {
-    let items: Array<{ guid: string; name: string; icon?: any; parentGuid?: string; concepts?: string[] }> = [];
+    let items: Array<{ guid: string; name: string; icon?: any; parentGuid?: string }> = [];
 
     switch (kind) {
       case "type":
@@ -15748,7 +15756,6 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           name: t.name,
           icon: t.icon,
           parentGuid: t.parent?.guid,
-          concepts: (t.concepts ?? []).map((c: any) => (typeof c === "string" ? c : c?.guid)).filter((guid): guid is string => Boolean(guid)),
         }));
         break;
       case "design":
@@ -15757,7 +15764,6 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           name: d.name,
           icon: d.icon,
           parentGuid: d.parent?.guid,
-          concepts: (d.concepts ?? []).map((c: any) => (typeof c === "string" ? c : c?.guid)).filter((guid): guid is string => Boolean(guid)),
         }));
         break;
       case "quality":
@@ -15792,7 +15798,6 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           kind,
           icon: item.icon,
           parentGuid: item.parentGuid,
-          concepts: item.concepts,
         },
       });
 
@@ -15857,7 +15862,6 @@ const hasAnySelection = (selection: KitAppSelection): boolean =>
   (selection.qualities?.length ?? 0) > 0 ||
   (selection.ports?.length ?? 0) > 0 ||
   (selection.tags?.length ?? 0) > 0 ||
-  (selection.concepts?.length ?? 0) > 0 ||
   (selection.files?.length ?? 0) > 0 ||
   (selection.folders?.length ?? 0) > 0 ||
   (selection.authors?.length ?? 0) > 0;
@@ -15867,7 +15871,6 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
   const selectedDesignGuids = new Set(selection.designs ?? []);
   const selectedPortGuids = new Set(selection.ports ?? []);
   const selectedTagGuids = new Set(selection.tags ?? []);
-  const selectedConceptGuids = new Set(selection.concepts ?? []);
   const selectedFileIds = new Set(selection.files ?? []);
   const selectedFolderGuids = new Set(selection.folders ?? []);
   const selectedAuthorIds = new Set(selection.authors ?? []);
@@ -15906,7 +15909,6 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
   const designs = (kit.designs ?? []).filter((d) => allDesignGuids.has(d.guid));
   const ports = (kit.ports ?? []).filter((p) => selectedPortGuids.has(p.guid));
   const tags = (kit.tags ?? []).filter((t) => selectedTagGuids.has(t.guid));
-  const concepts = (kit.concepts ?? []).filter((c) => selectedConceptGuids.has(c.guid));
   const files = (kit.files ?? []).filter((f) => selectedFileIds.has(f.guid));
   const folders = (kit.folders ?? []).filter((f) => selectedFolderGuids.has(f.guid));
   const authors = (kit.authors ?? []).filter((a) => selectedAuthorIds.has(a.guid));
@@ -15917,7 +15919,6 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
     designs,
     ports,
     tags,
-    concepts,
     files,
     folders,
     authors,
@@ -24233,16 +24234,20 @@ const PanelToggles: FC = ({}) => {
   const LeftIcon = leftTabs[0]?.icon;
   const RightIcon = rightTabs[0]?.icon;
 
-  if (!hasLeftTabs && !hasRightTabs) return null;
-
   return (
-    <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
-      {hasLeftTabs && <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="!border-0" icon={LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />} />}
-      {hasRightTabs && (
-        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="!border-0" icon={RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />} />
+    <div className="flex items-stretch gap-single">
+      {(hasLeftTabs || hasRightTabs) && (
+        <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
+          {hasLeftTabs && <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="!border-0" icon={LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />} />}
+          {hasRightTabs && (
+            <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="!border-0" icon={RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />} />
+          )}
+        </div>
       )}
-      <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.chat" pressed={isChatOpen} onPressedChange={handleChatToggle} className="!border-0" icon={<ChatIcon size={16} />} />
-      <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.settings" pressed={isSettingsOpen} onPressedChange={handleSettingsToggle} className="!border-0" icon={<SettingsIcon size={16} />} />
+      <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.chat" pressed={isChatOpen} onPressedChange={handleChatToggle} className="!border-0" icon={<ChatIcon size={16} />} />
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.settings" pressed={isSettingsOpen} onPressedChange={handleSettingsToggle} className="!border-0" icon={<SettingsIcon size={16} />} />
+      </div>
     </div>
   );
 };
@@ -27614,6 +27619,7 @@ export function useKitAppCommands(id?: KitAppId) {
       toggleTypesFullscreen: noOp,
       toggleDesignsFullscreen: noOp,
       addType: noOp,
+      addTypeAfter: noOp,
       addTypes: noOp,
       removeType: noOp,
       removeTypes: noOp,
@@ -27680,6 +27686,7 @@ export function useKitAppCommands(id?: KitAppId) {
     toggleTypesFullscreen: () => controller.execute("semio.kitApp.toggleTypesFullscreen", getOrigin()),
     toggleDesignsFullscreen: () => controller.execute("semio.kitApp.toggleDesignsFullscreen", getOrigin()),
     addType: (type: Type) => controller.execute("semio.kitApp.addType", getOrigin(), type),
+    addTypeAfter: (type: Type, afterGuid: Guid) => controller.execute("semio.kitApp.addTypeAfter", getOrigin(), type, afterGuid),
     addTypes: (types: Type[]) => controller.execute("semio.kitApp.addTypes", getOrigin(), types),
     removeType: (guid: Guid) => controller.execute("semio.kitApp.removeType", getOrigin(), guid),
     removeTypes: (typeIds: Guid[]) => controller.execute("semio.kitApp.removeTypes", getOrigin(), typeIds),
@@ -38740,29 +38747,6 @@ const DesignWindowApp: FC<AppProps> = () => {
   const appType = useAppType();
 
   useEffect(() => {
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.design.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.design.settings.content", label: null, content: <DesignSettingsContent /> }]} />
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.design.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => <BasicChatPanel id="semio.sketchpad.app.design.chat" title="Design" />,
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.design.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.design.chat");
-    };
-  }, [addSidePanelTab, removeSidePanelTab]);
-
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!setActiveTool || !isSelectionToolKind(activeTool)) return;
       const nextToolKind = toSelectionToolKind(
@@ -39220,11 +39204,11 @@ const DesignWindowApp: FC<AppProps> = () => {
                     const newType: Type = {
                       ...type,
                       guid: guid(),
-                      name: `${type.name} Copy`,
+                      name: `${type.name} Duplicate`,
                       createdAt: new Date().toISOString(),
                       updatedAt: new Date().toISOString(),
                     };
-                    kitAppCommands.addType(newType);
+                    kitAppCommands.addTypeAfter(newType, type.guid);
                   },
                   id: "semio.sketchpad.app.design.panel.workbench.types.duplicateType",
                 },
@@ -45519,30 +45503,6 @@ const QualityApp: FC<QualityAppProps> = () => {
     return removeWorkbenchWindowFromLayout(windowLayout);
   }, [windowLayout]);
 
-  useEffect(() => {
-    if (appType !== "quality") return;
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.quality.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.quality.settings.content", label: null, content: <QualitySettingsContent /> }]} />
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.quality.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => <BasicChatPanel id="semio.sketchpad.app.quality.chat" title="Quality" />,
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.quality.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.quality.chat");
-    };
-  }, [appType, addSidePanelTab, removeSidePanelTab]);
-
   const defaultLayout = useMemo(() => {
     return {
       type: "row",
@@ -50856,20 +50816,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     const chatToggleCount = await page.locator('[id="semio.sketchpad.navbar.panelToggle.chat"]').count();
     console.log(`[${appName}] Navbar panel toggles: left=${leftToggleCount}, right=${rightToggleCount}, settings=${settingsToggleCount}, chat=${chatToggleCount}`);
 
-    if (leftToggleCount + rightToggleCount === 0) {
-      // Check if React crashed
-      const rootChildCount = await page.evaluate(() => document.querySelector("#root")?.children.length ?? 0).catch(() => -1);
-      console.log(`[${appName}] React root child count: ${rootChildCount}`);
-      if (rootChildCount === 0) {
-        // React tree crashed, skip assertion for this app
-        console.log(`[${appName}] React tree appears crashed, skipping panel toggle check`);
-        return;
-      }
-    }
-
-    expect(leftToggleCount + rightToggleCount).toBeGreaterThan(0);
-    expect(settingsToggleCount).toBe(0);
-    expect(chatToggleCount).toBe(0);
+    // Chat and settings are always present in navbar as dedicated toggle buttons
+    expect(settingsToggleCount).toBeGreaterThan(0);
+    expect(chatToggleCount).toBeGreaterThan(0);
   }
 
   async function expectClassicNavbarChrome(page: PlaywrightPage, appName: string): Promise<void> {
@@ -53317,7 +53266,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           // #endregion 🔖Workbench Add Piece
 
           // #region 🔖Workbench Duplicate Type
-          console.log("[Design] Testing workbench duplicate button clones type as sibling named 'typename Copy'");
+          console.log("[Design] Testing workbench duplicate button clones type as sibling named 'typename Duplicate'");
           const typeForDuplicate = await page.evaluate(
             ({ typeGuid }: { typeGuid: string }) => {
               const store = (window as any).__SEMIO_STORE__;
@@ -53353,7 +53302,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               const newType = { ...sourceType, guid: crypto.randomUUID(), name: copyName, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
               kitStore.execute("semio.kit.createType", "semio.sketchpad.test.workbench.duplicateType", newType);
             },
-            { sourceType: typeForDuplicate, copyName: `${typeName} Copy` },
+            { sourceType: typeForDuplicate, copyName: `${typeName} Duplicate` },
           );
           await expect
             .poll(
@@ -53379,14 +53328,14 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               if (!kitStore) return null;
               return (kitStore.snapshot().types ?? []).find((t: any) => t.name === copyName) ?? null;
             },
-            { copyName: `${typeName} Copy` },
+            { copyName: `${typeName} Duplicate` },
           );
           expect(duplicatedType).toBeTruthy();
-          expect(duplicatedType?.name).toBe(`${typeName} Copy`);
+          expect(duplicatedType?.name).toBe(`${typeName} Duplicate`);
           const sourceParentGuid = typeof typeForDuplicate?.parent === "string" ? typeForDuplicate.parent : (typeForDuplicate?.parent?.guid ?? null);
           const copyParentGuid = typeof duplicatedType?.parent === "string" ? duplicatedType.parent : (duplicatedType?.parent?.guid ?? null);
           expect(copyParentGuid).toBe(sourceParentGuid);
-          console.log(`[Design] Duplicate type: '${typeName} Copy' created as sibling ✓`);
+          console.log(`[Design] Duplicate type: '${typeName} Duplicate' created as sibling ✓`);
           // #endregion 🔖Workbench Duplicate Type
         } else {
           console.log("[Design] No source type guid available for store add-piece verification, skipping");

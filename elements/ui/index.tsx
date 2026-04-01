@@ -797,8 +797,8 @@ const elementUiTranslationBundles = {
         },
         "duplicateType": {
           "label": {
-            "normal": "Typ duplizieren",
-            "beginner": "Typ duplizieren"
+            "normal": "Typ duplizieren (Hover)",
+            "beginner": "Typ duplizieren (Hover)"
           }
         },
         "addType": {
@@ -5605,8 +5605,8 @@ const elementUiTranslationBundles = {
         },
         "duplicateType": {
           "label": {
-            "normal": "Duplicate Type",
-            "beginner": "Duplicate Type"
+            "normal": "Duplicate Type by Hover",
+            "beginner": "Duplicate Type by Hover"
           }
         },
         "addType": {
@@ -10725,12 +10725,13 @@ interface LabelProps {
 export function Label({ id, rowId, label, labelElementId, className, children }: LabelProps) {
   const localizedLabel = useLabel(id);
   const resolvedLabel = label ?? localizedLabel;
-  const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
   const propertyLabelElement = (
     <Tooltip>
       <TooltipTrigger asChild>
         {isTree ? (
-          <div data-slot="property-label-tree" className="min-w-0">
+          <div data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}>
             <div className="inline-flex min-w-0 h-[22px]">
               <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]">
                 {resolvedLabel}
@@ -10752,7 +10753,7 @@ export function Label({ id, rowId, label, labelElementId, className, children }:
   if (isTree) {
     return (
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
-        <div id={rowId} data-slot="property-row" className={cn("group grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]", className)}>
+        <div id={rowId} data-slot="property-row" style={{ marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" }} className={cn("group grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]", className)}>
           {propertyLabelElement}
           <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
             {children}
@@ -21125,13 +21126,15 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-gutter"');
       expect(markup).toContain("grid-template-columns:24px minmax(0, 1fr)");
       expect(markup).toContain('data-slot="property-label-tree" class="min-w-0"');
-      expect(markup).toContain('data-slot="property-row" class="group grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]"');
+      expect(markup).toContain('data-slot="property-row"');
+      expect(markup).toContain("margin-left:-10px");
+      expect(markup).toContain("width:calc(100% + 10px)");
+      expect(markup).toContain("grid-cols-[96px_minmax(0,1fr)]");
       expect(markup).toContain('data-slot="property-control"');
       expect(markup).toContain("justify-end");
       expect(markup).toContain("data-detail-panel-control");
+      expect(markup).toContain("padding-left:10px");
       expect(markup).not.toContain("margin-left:13px");
-      expect(markup).not.toContain("margin-left:-10px");
-      expect(markup).not.toContain("padding-left:10px");
       expect(markup).not.toContain("gap-[6px]");
     });
 

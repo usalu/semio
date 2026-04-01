@@ -1,4 +1,34 @@
+Implement a generic tree-path hover highlight for the semio/sketchpad tree system. When any TreeSection, TreeItem, or TreeRow is hovered, highlight the full ancestor path in the tree gutter from that row up to the highest visible parent/root. Use the existing tree infrastructure — TreeContext, TreeContent, IndentationLines, and current guide rendering — without changing hierarchy, spacing, or layout behavior.
 
+Behavior:
+- on row hover, detect the hovered node’s ancestor chain
+- highlight only the connector/indentation path that belongs to that chain
+- keep the normal tree lines, but render the active path in a theme-aware brighter/darker tone within the existing color system depending on light/dark mode
+- make the active path line 1.5x thicker than the default guide stroke
+- apply this generically across the whole tree, including nested groups and sortable items
+- clear the highlight on hover end
+- do not hardcode section names or field names
+- do not introduce new UI elements; extend the current tree line rendering only
+
+---------------------------------------------------------------
+
+
+very last refractor happened to details panel have introduced a misalignment and different input fields.
+goal is 
+
+
+very last refactor happened to Details panel have introduced a misalignment and different input fields. goal is to restore one consistent property row / value-column layout across the entire right-side property inspector. The same value-side field widget must not change width, x-position, or box model depending on subtree depth, local TreeItem header structure, or nearby actions. Input, Textarea, Combobox, disabled/readOnly Input, Stepper, Slider value/control area, Toggle, and Button when used as a field control must all resolve through the same shared value-column sizing rules.
+
+Fix the regression narrowly in the layout plumbing introduced by the last refactor: nested collection items, nested field rows, and flat sibling rows must use the same field-column start and end lines, and the same field sizing logic. Tree hierarchy, TreeSection, TreeItem, TreeRow, TreeContent, IndentationLines, SortableTreeItems, actions, spacing rhythm, and tree lines should remain intact. Do not hardcode section names or field names. The adaptation should only remove the unintended subtree-dependent field sizing and restore a single consistent Details panel field layout.
+
+/////////////////////////////////////////////////////////////
+
+
+pervious prompt > move chat and setting from the right panel as tabs and place them as seperate buttons in the navbar following the exact same ui icon as right and left panel toggels. place them to the right of right and left panel toggles. they should open the setting and the chat exactly in the same panel as the right panel but should be only accesable through the navbar. one of the three togggles could be enabled at the same time (chat,setting,or right toggle panel) all render at the exact same place and size on the screen when active. remove them as tabs from the right panel toggle so that they are only accesable from navbar 
+currently > toggles buttons are able to be activated at the same time, and they are also accessible from the right panel toggle as tabs. the chat and setting should be only accessible from the navbar and not from the right panel toggle, and only one of the three toggles (chat, setting, or right panel) should be able to be active at the same time. when one of them is active, it should render in the same place and size on the screen as the current right panel. this will help to declutter the right panel and make it more focused on its content, while still providing easy access to chat and settings through the navbar.
+
+
+////////////////////////////////////////////////////////////////////////////////
 move chat and setting from the right panel as tabs and place them as seperate buttons in the navbar following the exact same ui icon as right and left panel toggels. place them to the right of right and left panel toggles. they should open the setting and the chat exactly in the same panel as the right panel but should be only accesable through the navbar. one of the three togggles could be enabled at the same time (chat,setting,or right toggle panel) all render at the exact same place and size on the screen when active. remove them as tabs from the right panel toggle so that they are only accesable from navbar 
 
 Refactor the semio/sketchpad Details panel tree spacing and line layout in index2.tsx using the Ant Design Tree `showLine` + `switcherIcon` example as the visual reference for gutter rhythm, label-start spacing, and connector-line behavior — but keep my existing tree system and UI primitives.
@@ -37,7 +67,7 @@ This should be a narrow spatial refactor: adapt the tree gutter, switcher slot, 
 
 
 
-
+//////////////////////////////////////////////////////////////
 
 Fix  Details panel alignment for expandable property-level `TreeItem`s. In the right-side property inspector, a property-group header like `Location` is at the same hierarchy level as sibling property rows, so its label must start on the same vertical label line as nearby non-expandable rows such as the surrounding field rows. Do not let the chevron/icon slot shift the whole header inward. Instead, keep the chevron inside a reserved control slot within the existing tree gutter / left label area, while preserving the same label-start alignment for sibling rows at that level. fix for all property-level expandable headers across all sections in the Details panel, without affecting the alignment of nested child rows, tree lines, or spacing elsewhere in the tree.
 
