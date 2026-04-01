@@ -383,7 +383,7 @@ func Emit(kind EventKind, source string, payload interface{}) {
 	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
 		url = "http://" + addr
 	}
-	url = strings.TrimSuffix(url, "/") + "/events"
+	url = strings.TrimSuffix(url, "/") + "/api/v1/events"
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return

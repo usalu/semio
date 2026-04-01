@@ -60,14 +60,14 @@ const config: StorybookConfig = {
       ...(config.server.fs || {}),
       allow: Array.from(new Set([...(config.server.fs?.allow || []), repoRootPath])),
     };
+    const currentWatch = config.server.watch && typeof config.server.watch === "object" ? config.server.watch : {};
+    const currentIgnored = currentWatch.ignored;
+    const ignoredList = Array.isArray(currentIgnored) ? currentIgnored : (currentIgnored ? [currentIgnored] : []);
     config.server.watch = {
-      ...(config.server.watch || {}),
+      ...currentWatch,
+      usePolling: true,
       ignored: [
-        ...(Array.isArray(config.server.watch?.ignored)
-          ? config.server.watch.ignored
-          : config.server.watch?.ignored
-            ? [config.server.watch.ignored]
-            : []),
+        ...ignoredList,
         "**/storybook-static/**",
         "**/.nx/**",
         "**/.repo/**",

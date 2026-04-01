@@ -128,11 +128,17 @@ export async function nativeDeletePieces(kit: Kit, design: Design, pieceGuids: r
 
 /**
  * Runs drag-pieces in TypeScript using dragPiecesInDesign from @semio/js.
- * Drag is a pure geometric operation that runs in-process regardless of language selection.
+ * Computes the drag diff on the flattened design, applies it to the raw design, then re-flattens
+ * so that children move automatically with their parents.
+ * Returns the new flattened design.
  * [👤semio📚algorithms💻nativealgorithmadapter🛠️nativedragpieces](repo://p/u/semio/b/l/algorithms/f/nativeAlgorithmAdapter.ts/s/Native/d/i/nativeDragPieces)
  */
-export async function nativeDragPieces(design: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<DesignDiff> {
-  const { dragPiecesInDesign } = await import("@semio/js");
-  const piecesDesign: Design = { guid: design.guid, name: design.name, pieces: (design.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
-  return dragPiecesInDesign(design, piecesDesign, offset);
+export async function nativeDragPieces(kit: Kit, rawDesign: Design, flatDesign: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<Design> {
+  const { dragPiecesInDesign, applyDesignDiff, flattenDesign } = await import("@semio/js");
+  const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
+  const diff = dragPiecesInDesign(flatDesign, piecesDesign, offset);
+  const updatedRaw = applyDesignDiff(rawDesign, diff);
+  const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === rawDesign.guid ? updatedRaw : d)) };
+  const flatChange = flattenDesign(updatedKit, rawDesign.guid);
+  return applyDesignDiff(updatedRaw, flatChange.forward);
 }

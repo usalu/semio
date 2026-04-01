@@ -1,0 +1,37 @@
+{
+  "id": "5c65ae6d-717c-4a63-9c93-5e4f48cee0ee",
+  "uri": "repo://session/5c65ae6d-717c-4a63-9c93-5e4f48cee0ee",
+  "client": "cursor-chat",
+  "second": "2026-03-31T21:49:37Z",
+  "checkpoint": "294493312c232bb40d31293f83a304f0e9d9540e",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "294493312c232bb40d31293f83a304f0e9d9540e",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-31T21:49:37Z",
+        "session": "5c65ae6d-717c-4a63-9c93-5e4f48cee0ee"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "5c65ae6d-717c-4a63-9c93-5e4f48cee0ee",
+          "generation_id": "5c65ae6d-717c-4a63-9c93-5e4f48cee0ee",
+          "model": "tab",
+          "file_path": "\\workspaces\\semio\\repo\\postgres\\schema.sql",
+          "content": "",
+          "hook_event_name": "beforeTabFileRead",
+          "cursor_version": "2.6.22",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": null
+        }
+      },
+      "response": {}
+    }
+  ]
+}

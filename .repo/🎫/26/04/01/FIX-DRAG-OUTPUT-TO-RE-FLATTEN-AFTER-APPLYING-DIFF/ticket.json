@@ -1,0 +1,12 @@
+{
+  "title": "Fix Drag Output to Re-flatten After Applying Diff",
+  "status": "open",
+  "description": "Fix drag algorithm output: apply drag diff to raw (unflattened) design then re-flatten, so children move with parents automatically. Currently the diff is applied to the flattened design causing children to keep stale absolute positions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1242"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪8bb7bdbb61194f949ea4b3bb732a1043"
+  ]
+}

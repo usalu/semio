@@ -30,6 +30,15 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## 🧰repo
 
+repo:
+The cli and the server MUST be refactored to work together. The cli MUST remain go. The server MUST be next.js server (web with dashboard, auth, api, admin pages) with a postgres database and pg-boss as queue. The server is publicly accessible. It MUST only accept requests from trusted developers.
+The entire .repo folder currently has the entire data and history. Everything that is not temporary MUST be moved outside of the repo folder. It MUST live in a postgres database on the server (schema under repo/postgres/schema.sql). The server is additionally a discord bot that send messages to different channels on the community discord server. All events trigger a message to the discord server.
+On the client, the only things that are kept are cache, temporary folders and the prompt files.
+When a ticket is opened, then a temporary folder under `.repo/🎫/{{ticket-id}}` is created. When the ticket is closed, then the temporary folder including all files is sent to the server and removed from the client. The entire logging that happens currently on client side MUST be moved to the server side. Create
+Setup everything with docker compose for the server.
+Migrate all existing history to the database. When data is in different format, try to convert it to the new format otherwise drop it.
+Make sure to test everything before I deploy it on a Linux VM.
+
 ## 🧰repo⌨️cli
 
 Whenever invoking this command, regardless of the port, the container is being killed aswell stopping all running work. Make sure that the agent hooks deny this and give a meaningful reason.

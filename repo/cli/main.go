@@ -41,6 +41,7 @@ import (
 	"io/fs"
 	"math"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -753,6 +754,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(configureCommand(factory, &config))
 	root.AddCommand(benchmarkCmd)
 	root.AddCommand(updateCmd)
+	root.AddCommand(authCommand(&config))
 	return root, &config
 }
 
@@ -796,6 +798,66 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+// #region 🔖Auth Command
+// [🧰repo⌨️cli💻main🔖cliadapter🔖authcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Auth%20Command)
+// Auth command for server authentication.
+
+// authCommand creates the auth command with whoami subcommand.
+// [🧰repo⌨️cli💻main🔖cliadapter🔖authcommand🛠️authcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Auth%20Command/d/i/authCommand)
+func authCommand(config *Config) *cobra.Command {
+	auth := &cobra.Command{
+		Use:   "auth",
+		Short: "Server authentication",
+	}
+	auth.AddCommand(&cobra.Command{
+		Use:   "whoami",
+		Short: "Show current authenticated developer",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			info, err := serverWhoami()
+			if err != nil {
+				return fmt.Errorf("not authenticated: %w", err)
+			}
+			if config.IsJSON() {
+				jsonBytes, _ := json.MarshalIndent(info, "", "  ")
+				fmt.Println(string(jsonBytes))
+			} else {
+				fmt.Printf("Email: %s\n", info["email"])
+				fmt.Printf("Name: %s\n", info["display_name"])
+				fmt.Printf("Role: %s\n", info["role"])
+			}
+			return nil
+		},
+	})
+	auth.AddCommand(&cobra.Command{
+		Use:   "status",
+		Short: "Show server connection status",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			addr := getServerAddr()
+			if addr == "" {
+				fmt.Println("Server: not configured (set SEMIO_SERVER_ADDR)")
+				return nil
+			}
+			fmt.Printf("Server: %s\n", addr)
+			token := getServerToken()
+			if token == "" {
+				fmt.Println("Token: not set (set SEMIO_SERVER_TOKEN)")
+				return nil
+			}
+			fmt.Println("Token: configured")
+			info, err := serverWhoami()
+			if err != nil {
+				fmt.Printf("Auth: failed (%v)\n", err)
+				return nil
+			}
+			fmt.Printf("Auth: %s (%s)\n", info["email"], info["role"])
+			return nil
+		},
+	})
+	return auth
+}
+
+// #endregion 🔖Auth Command
 
 // syncCommand holds the data fields for a syncCommand record.
 // syncCommand MUST perform the syncCommand operation.
@@ -22663,7 +22725,16 @@ func SaveTicket(ticket *Ticket) error {
 	if err != nil {
 		return err
 	}
-	return WriteTextFile(ticket.JsonPath, string(jsonBytes))
+	if err := WriteTextFile(ticket.JsonPath, string(jsonBytes)); err != nil {
+		return err
+	}
+	// Sync ticket state to server (fire-and-forget, don't block on failure)
+	action := "open"
+	if ticket.Status == TicketStatusClosed {
+		action = "close"
+	}
+	go syncTicketToServer(ticket, action)
+	return nil
 }
 
 // ReadTicket MUST return the ticket content or an error if unavailable.
@@ -40471,6 +40542,106 @@ func CopyFile(sourcePath, destPath string) error {
 }
 
 // #endregion 🔖File Utilities
+
+// #region 🔖Server Client
+// [🧰repo⌨️cli💻main🔖types🔖cli🔖serverclient](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Server%20Client)
+// HTTP client for communicating with the Next.js repo server. Uses Bearer token auth with API keys.
+
+// getServerAddr returns the server address from SEMIO_SERVER_ADDR env var.
+func getServerAddr() string {
+	addr := strings.TrimSpace(os.Getenv("SEMIO_SERVER_ADDR"))
+	if addr == "" {
+		return ""
+	}
+	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
+		addr = "http://" + addr
+	}
+	return strings.TrimSuffix(addr, "/")
+}
+
+// getServerToken returns the API key from SEMIO_SERVER_TOKEN env var.
+func getServerToken() string {
+	return strings.TrimSpace(os.Getenv("SEMIO_SERVER_TOKEN"))
+}
+
+// serverRequest sends an authenticated HTTP request to the server.
+func serverRequest(method, path string, body interface{}) (*http.Response, error) {
+	addr := getServerAddr()
+	if addr == "" {
+		return nil, fmt.Errorf("SEMIO_SERVER_ADDR not set")
+	}
+	url := addr + path
+	var reqBody io.Reader
+	if body != nil {
+		jsonBytes, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		reqBody = bytes.NewReader(jsonBytes)
+	}
+	req, err := http.NewRequest(method, url, reqBody)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if token := getServerToken(); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	client := &http.Client{Timeout: 10 * time.Second}
+	return client.Do(req)
+}
+
+// syncTicketToServer sends ticket state to the server. No-op if server is not configured.
+func syncTicketToServer(ticket *Ticket, action string) {
+	addr := getServerAddr()
+	if addr == "" {
+		return
+	}
+	ticketID := fmt.Sprintf("%d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+	payload := map[string]interface{}{
+		"action":  action,
+		"id":      ticketID,
+		"title":   ticket.Title,
+		"prompt":  ticket.Description,
+		"summary": ticket.Summary,
+		"goal":    ticket.Goal,
+		"parent":  ticket.Parent,
+		"author":  GetGitAuthorAlias(),
+	}
+	if ticket.Management != nil && ticket.Management.Issue != "" {
+		payload["github_issue"] = ticket.Management.Issue
+	}
+	for _, s := range ticket.Sessions {
+		if s != "" {
+			payload["session_id"] = s
+			break
+		}
+	}
+	resp, err := serverRequest("POST", "/api/v1/tickets", payload)
+	if err != nil {
+		return
+	}
+	resp.Body.Close()
+}
+
+// serverWhoami calls the auth whoami endpoint and returns developer info.
+func serverWhoami() (map[string]interface{}, error) {
+	resp, err := serverRequest("GET", "/api/v1/auth", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("auth failed: %s", resp.Status)
+	}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// #endregion 🔖Server Client
 
 // #region 🔖Goals
 

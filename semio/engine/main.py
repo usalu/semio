@@ -3422,10 +3422,14 @@ def _enrich_design(kit: dict, design: dict) -> dict:
 
 
 def _strip_kit_blobs(kit: dict) -> dict:
-    """Deep copy kit and remove file blobs for UI transport."""
+    """Deep copy kit, cache file blobs in _mcp_app_file_blobs, and replace blob with url for UI transport."""
     kit_for_ui = copy.deepcopy(kit)
     for f in kit_for_ui.get("files", []):
-        f.pop("blob", None)
+        blob = f.pop("blob", None)
+        guid = f.get("guid")
+        if blob and guid:
+            _mcp_app_file_blobs[guid] = blob
+            f["url"] = f"http://127.0.0.1:{PORT}/api/app/files/{guid}"
     return kit_for_ui
 
 

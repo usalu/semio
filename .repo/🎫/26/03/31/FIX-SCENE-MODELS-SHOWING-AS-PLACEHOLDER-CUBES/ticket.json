@@ -1,0 +1,10 @@
+{
+  "title": "Fix Scene Models Showing As Placeholder Cubes",
+  "status": "closed",
+  "description": "In the MCP app scene, 3D models show as placeholder boxes instead of actual GLTF models. Root cause: `_strip_kit_blobs` in semio/engine/main.py removes `blob` from kit files but never sets a `url`, and `_mcp_app_file_blobs` dict is never populated even though the `/api/app/files/{file_guid}` endpoint exists to serve them. Fix `_strip_kit_blobs` to: store each file's blob in `_mcp_app_file_blobs[guid]`, replace `blob` with `url` = `http://127.0.0.1:{PORT}/api/app/files/{guid}` on the stripped kit file. Then rebuild dist/mcp-app.html.",
+  "summary": "Fixed 3D models showing as placeholder boxes in MCP app scene. Root cause: _strip_kit_blobs removed blob from kit files but never set url, so getSceneFileSource returned undefined and ScenePiece fell back to box geometry. Fix: _strip_kit_blobs now stores each file blob in _mcp_app_file_blobs[guid] and sets file.url = http://127.0.0.1:{PORT}/api/app/files/{guid}. getSceneFileSource already checks file.url; isSceneGltfSource recognises the source via file.name (.glb suffix). The /api/app/files/{guid} endpoint already served blobs correctly. Rebuilt dist/mcp-app.html (6.57MB).",
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪5fd7867af2a64f55a2bdb1450df06d7b"
+  ]
+}
