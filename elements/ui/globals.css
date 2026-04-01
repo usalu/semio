@@ -1203,3 +1203,20 @@
   padding-top: 8px;
 }
 /* #endregion */
+
+/* #region 🔖TreeHoverPath */
+/* Tree hover path highlight: when a row is hovered, ancestor branch containers
+ * receive [data-tree-hover-path="branch"] and ancestor/active rows receive
+ * [data-tree-hover-path="row"]. Guide lines and elbows on the path are rendered
+ * 1.5× thicker in a brighter/darker theme-aware tone. */
+
+[data-tree-hover-path="branch"] > [data-slot="tree-guide"] [data-tree-guide-line] {
+  width: 1.5px !important;
+  background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
+}
+
+[data-tree-hover-path="row"] [data-slot="tree-branch-elbow"] {
+  height: 1.5px !important;
+  background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
+}
+/* #endregion 🔖TreeHoverPath */

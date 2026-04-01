@@ -14564,9 +14564,9 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
   if (!showLines || level === 0) return null;
 
   return (
-    <div className="absolute left-0 top-0 bottom-0 pointer-events-none">
+    <div data-slot="tree-guide" className="absolute left-0 top-0 bottom-0 pointer-events-none">
       <div className="absolute top-0 bottom-0" style={{ left: `${indentationLinePx(level - 1, indentMultiplier) - 0.5}px` }}>
-        <div className="w-px h-full bg-muted-foreground/40" />
+        <div data-tree-guide-line="" className="w-px h-full bg-muted-foreground/40 transition-[width,background-color] duration-150" />
       </div>
     </div>
   );
@@ -14613,7 +14613,7 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({
 
   return (
     <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: `${gutterWidthPx}px`, minWidth: `${gutterWidthPx}px` }}>
-      {showLines && level > 0 && connectCurrentLevel && <div data-slot="tree-branch-elbow" className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }} />}
+      {showLines && level > 0 && connectCurrentLevel && <div data-slot="tree-branch-elbow" className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150" style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }} />}
       {positionedSlot}
     </div>
   );
@@ -15964,6 +15964,48 @@ export interface FileTreeNode {
   children?: FileTreeNode[];
 }
 
+//#region 🔖TreeHoverPath
+const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
+const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "control-tree-row"]);
+const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="control-tree-row"]';
+const treeHoverPathAttr = "data-tree-hover-path";
+
+const clearTreeHoverPath = (root: HTMLElement) => {
+  root.querySelectorAll(`[${treeHoverPathAttr}]`).forEach((el) => el.removeAttribute(treeHoverPathAttr));
+};
+
+const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
+  clearTreeHoverPath(root);
+  row.setAttribute(treeHoverPathAttr, "row");
+  let el: Element | null = row.parentElement;
+  while (el && el !== root) {
+    const slot = el.getAttribute("data-slot");
+    if (slot && treeBranchSlots.has(slot)) {
+      el.setAttribute(treeHoverPathAttr, "branch");
+      const prev = el.previousElementSibling;
+      if (prev) {
+        const prevSlot = prev.getAttribute("data-slot");
+        if (prevSlot && treeRowSlots.has(prevSlot)) {
+          prev.setAttribute(treeHoverPathAttr, "row");
+        }
+      }
+      const parent = el.parentElement;
+      const parentSlot = parent?.getAttribute("data-slot");
+      if (parentSlot === "tree-property-item") {
+        parent!.setAttribute(treeHoverPathAttr, "row");
+      }
+      if (parentSlot === "collapsible-content") {
+        const sectionRow = parent!.previousElementSibling;
+        if (sectionRow?.getAttribute("data-slot") === "tree-section-row") {
+          sectionRow.setAttribute(treeHoverPathAttr, "row");
+        }
+      }
+    }
+    el = el.parentElement;
+  }
+};
+//#endregion 🔖TreeHoverPath
+
 /**
  * Hierarchical tree view component with optional file tree rendering.
  * [👤semio📚js🗃️sketchpad💻elements🔖tree🪨tree](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree/d/i/Tree)
@@ -16233,10 +16275,26 @@ export const Tree = (({
     );
   };
 
+  const treeRootRef = React.useRef<HTMLDivElement>(null);
+
+  const handleTreePointerOver = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const root = treeRootRef.current;
+    if (!root) return;
+    const row = (e.target as HTMLElement).closest(treeHoverPathRowSelector);
+    if (row && root.contains(row)) {
+      applyTreeHoverPath(row, root);
+    }
+  }, []);
+
+  const handleTreePointerLeave = React.useCallback(() => {
+    const root = treeRootRef.current;
+    if (root) clearTreeHoverPath(root);
+  }, []);
+
   return (
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
-        <div className={`w-full min-w-0 overflow-hidden ${className}`}>
+        <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
           {resolvedSections.map((section) => (
             <div key={section.id} data-slot="tree-section-wrapper">
               <DataSectionView section={section} />
@@ -21323,9 +21381,9 @@ if (treeVitest) {
       expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
       expect(markup).toContain('absolute top-1/2 -translate-y-1/2');
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style="left:7px;width:3px"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150" style="left:7px;width:3px"');
       expect(markup).not.toContain('data-slot="tree-branch-stem"');
-      expect(markup.match(/w-px h-full bg-muted-foreground\/40/g)?.length ?? 0).toBe(3);
+      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40/g)?.length ?? 0).toBe(3);
       expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
       expect(markup).not.toContain('data-slot="tree-property-label" class="relative min-w-0" style="padding-left:');
       expect(markup).toContain('data-slot="tree-section-content"');

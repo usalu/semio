@@ -16932,7 +16932,7 @@ export const KitToolbarSelection: FC = () => {
 // #region Details
 
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS)
-// Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
+// Details MUST render the Kit app detail panels for kit, type, port, tag, design, file, folder, and multi-artifact sections.
 
 /**
  * Detail section component for the currently open kit.
@@ -17242,65 +17242,7 @@ const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
   );
 };
 
-/**
- * Detail section component for the selected concept.
- *MUST render the concept form fields within a detail panel section.
- * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨conceptsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/ConceptSection)
- **/
-export const ConceptSection: FC = () => {
-  const { t } = useTranslation();
-  const [selection] = useKitAppSelection();
-  const selectedConcepts = selection?.concepts || [];
-  if (selectedConcepts.length === 0) return null;
-  if (selectedConcepts.length === 1) return <SingleConceptSection conceptGuid={selectedConcepts[0]} />;
-  return <MultipleConceptsSection conceptGuids={selectedConcepts} />;
-};
 
-/** SingleConceptSection holds the data fields for a SingleConceptSection record.
- **/
-// [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖details🪨singleconceptsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Details/d/i/SingleConceptSection)
-/**
- * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singleconceptsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleConceptSection)
- **/
-const SingleConceptSection: FC<{ conceptGuid: string }> = ({ conceptGuid }) => {
-  const { t } = useTranslation();
-  const kit = useKit() as Kit;
-  const concept = kit?.concepts?.find((c) => c.guid === conceptGuid);
-  if (!concept) return null;
-  return (
-    <>
-      <TreeRow>
-        <Input id="semio.sketchpad.app.kit.panel.details.section.concept.name" value={concept.name} readOnly showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Textarea id="semio.sketchpad.app.kit.panel.details.section.concept.description" value={concept.description || ""} placeholder={t("semio.sketchpad.app.kit.concept.descriptionPlaceholder.label")} readOnly showLabel />
-      </TreeRow>
-    </>
-  );
-};
-
-// [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipleconceptssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleConceptsSection)
-/**
- * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipleconceptssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleConceptsSection)
- * MultipleConceptsSection holds the data fields for a MultipleConceptsSection record.
- **/
-const MultipleConceptsSection: FC<{ conceptGuids: string[] }> = ({ conceptGuids }) => {
-  const { t } = useTranslation();
-  const kit = useKit() as Kit;
-  const concepts = conceptGuids.map((guid) => kit?.concepts?.find((c) => c.guid === guid)).filter((c) => c !== undefined) as Concept[];
-  return (
-    <>
-      <TreeRow>
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.concepts.multipleSelected")}</p>
-      </TreeRow>
-      {concepts.map((concept) => (
-        <TreeRow key={concept.guid}>
-          <p className="text-sm font-medium">{concept.name}</p>
-        </TreeRow>
-      ))}
-    </>
-  );
-};
 
 /**
  * Detail section component for the selected design.
@@ -51915,7 +51857,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             const selectedQualitiesClick = afterClickSelection?.qualities || [];
             const selectedPortsClick = afterClickSelection?.ports || [];
             const selectedTagsClick = afterClickSelection?.tags || [];
-            const selectedConceptsClick = afterClickSelection?.concepts || [];
             const selectedFilesClick = afterClickSelection?.files || [];
             const selectedAuthorsClick = afterClickSelection?.authors || [];
             const totalSelected =
@@ -51925,7 +51866,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               selectedQualitiesClick.length +
               selectedPortsClick.length +
               selectedTagsClick.length +
-              selectedConceptsClick.length +
               selectedFilesClick.length +
               selectedAuthorsClick.length;
             console.log(`[Kit] Total selected: ${totalSelected} (types: ${selectedTypesClick.length}, designs: ${selectedDesignsClick.length}, folders: ${selectedFoldersClick.length})`);
@@ -52066,7 +52006,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 qualities: kit.qualities?.length || 0,
                 ports: kit.ports?.length || 0,
                 tags: kit.tags?.length || 0,
-                concepts: kit.concepts?.length || 0,
                 files: visibleFileCount,
                 folders: visibleFolderCount,
                 authors: kit.authors?.length || 0,
@@ -52077,7 +52016,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             console.log(`[Kit] Kit data: ${JSON.stringify(kitData)}`);
 
             if (kitData) {
-              const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
+              const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.files + kitData.folders + kitData.authors;
               console.log(`[Kit] Expected total visible artifacts: ${totalArtifacts} (files: ${kitData.files}/${kitData.totalFiles}, folders: ${kitData.folders}/${kitData.totalFolders})`);
               expect(nodeCountAll).toBe(totalArtifacts);
             }
