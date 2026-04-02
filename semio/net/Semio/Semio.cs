@@ -1966,7 +1966,6 @@ public class KitDiffUpdate
     public KitId Kit { get; set; } = new();
     public KitDiff? Diff { get; set; }
 }
-
 // [👤semio📚net🛅semio💻semio🔖entitying🛠️change](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Change)
 /// <summary>Change holds the data fields for a Change record.</summary>
 /// Change MUST perform the Change operation.
@@ -11219,7 +11218,6 @@ public class ServerException : Exception
 }
 
 #endregion 🔖Api
-
 // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite)
 // Callers MUST use KitSqlite for direct CRUD operations on local static SQLite kit databases.
 

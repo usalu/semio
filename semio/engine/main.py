@@ -3459,6 +3459,16 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
     enriched_design = _enrich_design(kit, design)
     kit_for_ui = _strip_kit_blobs(kit)
 
+    # [DEBUG] log payload summary for diagnosing scene/diagram issues
+    _pieces = enriched_design.get("pieces", [])
+    _pieces_with_center = sum(1 for p in _pieces if p.get("center"))
+    _pieces_with_plane = sum(1 for p in _pieces if p.get("plane"))
+    _kit_types = kit_for_ui.get("types", [])
+    _types_with_models = sum(1 for t in _kit_types if t.get("models"))
+    _kit_files = kit_for_ui.get("files", [])
+    _files_with_url = sum(1 for f in _kit_files if f.get("url"))
+    print(f"[DEBUG] _build_app_payload: mode={mode} pieces={len(_pieces)} withCenter={_pieces_with_center} withPlane={_pieces_with_plane} types={len(_kit_types)} typesWithModels={_types_with_models} files={len(_kit_files)} filesWithUrl={_files_with_url}", flush=True)
+
     payload: dict[str, typing.Any] = {
         "mode": mode,
         "surface": _mcp_app_surface_for_mode(mode),

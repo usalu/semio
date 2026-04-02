@@ -363,7 +363,6 @@ import { importKit as importKitArchive } from "@semio/js";
 // #region Types
 
 // #region SyncPath Types
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖types](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES)
 // MUST define path segment and path types for navigating sync document structures.
 
@@ -382,7 +381,6 @@ export type SyncPath = SyncPathSegment[];
 // #endregion SyncPath Types
 
 // #region Granular Hook Types
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖granularhooktypes](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GRANULAR-HOOK-TYPES)
 // MUST define hook result tuples and field abstractions for granular reactive state access.
 
@@ -535,7 +533,6 @@ export function hookResultToField<T>(result: HookResult<T>): Field<T> {
 // #endregion Granular Hook Types
 
 // #region Standard Empty Constants
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖standardemptyconstants](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/STANDARD-EMPTY-CONSTANTS)
 // MUST provide frozen singleton constants for empty collections and default panel visibility.
 
@@ -576,7 +573,6 @@ export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
 // #endregion Standard Empty Constants
 
 // #region Generic Diff Types
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖types🔖genericdifftypes](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TYPES/GENERIC-DIFF-TYPES)
 // MUST define generic array and selection diff types with apply and inverse operations.
 
@@ -789,7 +785,6 @@ export type SyncAttributes = SyncArray<SyncMap<string>>;
 // #endregion Types
 
 // #region Enums
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖enums](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/ENUMS)
 // MUST enumerate theme, expertise, mode, store status, tool, window, and panel kinds.
 
@@ -932,7 +927,6 @@ export enum PanelKind {
 // #region Ports
 
 // #region File Provider
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖fileprovider](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FILE-PROVIDER)
 // MUST define file storage provider interfaces for upload, download, and delete operations.
 
@@ -1013,7 +1007,6 @@ export interface FileOperation {
 // #endregion File Provider
 
 // #region App IDs
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appids](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-I-DS)
 // MUST define identifier interfaces for design, kit, type, and quality app scopes.
 
@@ -1055,7 +1048,6 @@ export interface QualityAppId {
 // #endregion App IDs
 
 // #region Panel
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panel](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL)
 // MUST define panel kind configurations, visibility, sizing, sections, and definition interfaces.
 
@@ -1328,7 +1320,6 @@ export interface AppPanels {
 // #endregion Panel
 
 // #region App Registry
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖appregistry](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/APP-REGISTRY)
 // MUST define route segment and app configuration interfaces for app registration.
 
@@ -1365,7 +1356,6 @@ export interface AppRegistration extends AppConfig {}
 // #endregion App Registry
 
 // #region Sketchpad State
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖sketchpadstate](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/SKETCHPAD-STATE)
 // MUST define mutable and immutable sketchpad state interfaces with diff types.
 
@@ -1476,7 +1466,6 @@ export type SketchpadScope = { id: string; remote?: RemoteProviders; onWindowEve
 // #endregion Sketchpad State
 
 // #region Commands
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖commands](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMMANDS)
 // MUST define command context and result interfaces for kit and sketchpad operations.
 
@@ -1521,7 +1510,6 @@ export interface SketchpadCommandResult {
 // #endregion Commands
 
 // #region Store
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖store](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/STORE)
 // MUST define store state, app step, edit, diff, and command result interfaces.
 
@@ -1611,7 +1599,6 @@ export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<T
 // #endregion Store
 
 // #region Complete State
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖completestate](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/COMPLETE-STATE)
 // MUST define the complete aggregated state interface for the entire sketchpad.
 
@@ -1638,7 +1625,6 @@ export interface CompleteState {
 // #endregion Complete State
 
 // #region Window
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖window](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/WINDOW)
 // MUST define window configuration, control, layout parsing, and default layout creation.
 
@@ -1683,7 +1669,6 @@ export interface AppWindowProps {
 // #endregion Window
 
 // #region Tool
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖tool](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/TOOL)
 // MUST define tool interfaces for selection, lasso, connector, and hand interactions.
 
@@ -1739,7 +1724,6 @@ export interface ToolGroupProps {
 // #endregion Tool
 
 // #region Focus
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖focus](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FOCUS)
 // MUST define the focus item interface for search and navigation targets.
 
@@ -1750,7 +1734,6 @@ export { QualityEntityStore as QualityStore };
 // #endregion Focus
 
 // #region Footer
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖footer](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/FOOTER)
 // MUST define the footer item interface for status bar entries.
 
@@ -1772,7 +1755,6 @@ export interface FooterItem {
 // #endregion Footer
 
 // #region Panel Props
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖ports🔖panelprops](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/PORTS/PANEL-PROPS)
 // MUST define resizable panel props interface for panel width management.
 
@@ -1793,7 +1775,6 @@ export interface ResizablePanelProps {
 // #region XState Integration
 
 // #region XState Types
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖xstatetypes](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/X-STATE-TYPES)
 // MUST define XState machine context and event type interfaces for sketchpad, kit, and app machines.
 
@@ -1939,7 +1920,6 @@ export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineCo
 // #endregion XState Types
 
 // #region Sync-XState Bridge
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖syncxstatebridge](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/Y-JS-X-STATE-BRIDGE)
 // MUST bridge sync document observation to XState machine events.
 
@@ -2027,7 +2007,6 @@ export function createSyncSelector<TContext extends StoreSyncContext, TSnapshot>
 // #endregion Sync-XState Bridge
 
 // #region Machine Factories
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖xstateintegration🔖machinefactories](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/X-STATE-INTEGRATION/MACHINE-FACTORIES)
 // MUST define machine input and transaction configuration interfaces for state machine creation.
 
@@ -2067,7 +2046,6 @@ export interface TransactionMachineConfig<TEdit = any> {
 // #endregion XState Integration
 
 // #region SyncPath Helpers
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖syncpathhelpers](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/Y-PATH-HELPERS)
 // MUST provide path segment constructors, value retrieval, and observation functions for Y.js paths.
 
@@ -2209,7 +2187,6 @@ export function createPathObserver(root: SyncMap<any>, path: SyncPath, subscribe
 // #endregion SyncPath Helpers
 
 // #region Derived Store
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖derivedstore](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/DERIVED-STORE)
 // MUST provide reactive derived computation nodes with dependency tracking and caching.
 
@@ -2350,7 +2327,6 @@ export class DerivedStore {
 // #endregion Derived Store
 
 // #region Store Factory Registry
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖storefactoryregistry](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/STORE-FACTORY-REGISTRY)
 // MUST manage registration and retrieval of app-specific store factory functions.
 
@@ -2475,7 +2451,6 @@ export function getQualityAppStoreFactory(): QualityAppStoreFactory {
 // #endregion Store Factory Registry
 
 // #region App Plugin Registry
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖apppluginregistry](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-PLUGIN-REGISTRY)
 // MUST manage plugin registration, retrieval, and contribution composition for app extensions.
 
@@ -2630,7 +2605,6 @@ export function getPluginDefaultStates(): Record<string, any> {
 // #endregion App Plugin Registry
 
 // #region Dynamic Event Dispatch Registry
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖dynamiceventdispatchregistry](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/DYNAMIC-EVENT-DISPATCH-REGISTRY)
 // MUST manage dynamic event handler and guard registration with namespace-based dispatch.
 
@@ -2793,7 +2767,6 @@ export function getRegisteredEventTypes(): string[] {
 // #endregion Dynamic Event Dispatch Registry
 
 // #region App Event Handler Factories
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖appeventhandlerfactories](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-EVENT-HANDLER-FACTORIES)
 // MUST provide factory functions for creating standard app event handlers for panels, hover, selection, and windows.
 
@@ -3455,7 +3428,6 @@ export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppSt
 // #endregion App Event Handler Factories
 
 // #region Transaction Handler Factory
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖transactionhandlerfactory](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/TRANSACTION-HANDLER-FACTORY)
 // MUST provide factory functions for creating undo/redo transaction event handlers.
 
@@ -3682,7 +3654,6 @@ export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionH
 // #endregion Transaction Handler Factory
 
 // #region Selector Factory Pattern
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖selectorfactorypattern](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/SELECTOR-FACTORY-PATTERN)
 // MUST provide factory functions for creating property selectors with app key scoping.
 
@@ -3736,7 +3707,6 @@ export function getOrCreateAppState<TState>(context: Record<string, Record<strin
 // #endregion Selector Factory Pattern
 
 // #region App Hooks Registry
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖apphooksregistry](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-HOOKS-REGISTRY)
 // MUST manage registration and retrieval of design and kit app hook implementations.
 
@@ -3839,7 +3809,6 @@ export function getKitAppHooks(): KitAppHooks {
 // #endregion App Hooks Registry
 
 // #region App Registry Exports
-
 // [👤semio📚js🗃️sketchpad💻sharedts🔖appregistryexports](repo://section/SEMIO/JS/SKETCHPAD/SHARED.TS/APP-REGISTRY-EXPORTS)
 // MUST provide docs registry port interface and registration for documentation section access.
 
@@ -4102,7 +4071,6 @@ export const getPortCompatibilityState = (candidatePortGuid: string | undefined,
 // #region Components
 
 // #region Tutorial Controls
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖components](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/COMPONENTS)
 // Tutorial playback controls MUST render in the footer during active tutorials.
 
@@ -4191,7 +4159,6 @@ const TutorialControlsContent: FC = () => {
 // #endregion Tutorial Controls
 
 // #region Recording Controls
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖components🔖recordingcontrols](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/COMPONENTS/RECORDING-CONTROLS)
 // Recording controls MUST render in the footer during active recording in dev mode.
 
@@ -4276,7 +4243,6 @@ const RecordingControlsContent: FC = () => {
 // #endregion Recording Controls
 
 // #region Record Button
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖components🔖recordbutton](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/COMPONENTS/RECORD-BUTTON)
 // Record button MUST toggle recording in the footer when in dev mode.
 
@@ -4325,7 +4291,6 @@ export const RecordButton: FC = () => {
 // #endregion Record Button
 
 // #region Tutorial Overlay
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖components🔖tutorialoverlay](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/COMPONENTS/TUTORIAL-OVERLAY)
 // Tutorial overlay MUST render focus highlights and cursor animations during playback.
 
@@ -4369,7 +4334,6 @@ interface FocusOverlayProps {
     highlightMode: "dim" | "spotlight" | "pulse";
   };
 }
-
 // [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialoverlay🪨focusoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Overlay/d/i/FocusOverlay)
 /**
  * [👤semio📚js🗃️sketchpad💻tutorials🔖components🔖tutorialoverlay🪨focusoverlay](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Tutorials.tsx/s/Components/s/Tutorial%20Overlay/d/i/FocusOverlay)
@@ -4494,7 +4458,6 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
 
 // #endregion Components
 // #region Built-in Tutorials
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖builtintutorials](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/BUILT-IN-TUTORIALS)
 // Built-in tutorials MUST define default tutorial content shipped with the app.
 
@@ -4639,7 +4602,6 @@ export const sketchpadTour: Tutorial = {
 // #endregion Built-in Tutorials
 
 // #region Commands
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/COMMANDS)
 // Tutorial and recording command definitions MUST map command names to store actions.
 
@@ -4733,7 +4695,6 @@ export const devCommands = {
 // #endregion Commands
 
 // #region Command Interceptor
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖commandinterceptor](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/COMMAND-INTERCEPTOR)
 // Command interceptor MUST record events and check milestone completion during playback.
 
@@ -4762,7 +4723,6 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
 // #endregion Command Interceptor
 
 // #region Hooks
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖hooks](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/HOOKS)
 // Tutorial hooks MUST provide reactive access to tutorial and recording state.
 
@@ -4843,7 +4803,6 @@ export const useTutorialProgress = () => {
 // #endregion Hooks
 
 // #region Context
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖context](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/CONTEXT)
 // Tutorial context MUST provide the store and state to descendant components.
 
@@ -4901,7 +4860,6 @@ const useTutorialContext = () => {
 // #region Types
 
 // #region Tutorial Entities
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖types🔖tutorialentities](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/TYPES/TUTORIAL-ENTITIES)
 // Tutorial entity interfaces MUST define milestones, recordings, and playback state.
 
@@ -5034,7 +4992,6 @@ export interface TutorialDiff {
 // #endregion Types
 
 // #region Store
-
 // [👤semio📚js🗃️sketchpad💻tutorialstsx🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/TUTORIALS.TSX/STORE)
 // Tutorial store MUST manage playback, recording, and milestone navigation state.
 
@@ -5965,7 +5922,6 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
 }
 
 // #region 🔖Store
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store)
 // Reactive stores for collaborative state management.
 
@@ -6555,7 +6511,6 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
 }
 
 // #region Plain App Store (Plain)
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS))
 // Plain application stores using plain in-memory state with transaction support.
 
@@ -6865,11 +6820,9 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 // #endregion Plain App Store (Plain)
 
 // #region File Provider
-
 // [🔖semio/js/sketchpad/Sketchpad.tsx#File Provider](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/FILE-PROVIDER)
 
 // #region 🔖Memory File Provider
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖fileprovider🔖memoryfileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/File%20Provider/s/Memory%20File%20Provider)
 // In-memory file storage provider for temporary or test scenarios.
 
@@ -6921,7 +6874,6 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
 // #endregion Memory File Provider
 
 // #region Local File Provider (IndexedDB)
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖fileprovider🔖localfileproviderindexeddb](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/File%20Provider/s/Local%20File%20Provider%20(IndexedDB))
 // Browser-local file storage provider backed by IndexedDB.
 
@@ -7028,7 +6980,6 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
 // #endregion Local File Provider (IndexedDB)
 
 // #region Remote File Provider
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖fileprovider🔖remotefileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/File%20Provider/s/Remote%20File%20Provider)
 // Remote file storage provider backed by a REST API.
 
@@ -7101,7 +7052,6 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
 // #endregion Remote File Provider
 
 // #region Composite File Provider
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖plainappstorenoyjs🔖fileprovider🔖compositefileprovider](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Plain%20App%20Store%20(No%20YJS)/s/File%20Provider/s/Composite%20File%20Provider)
 // Composite file storage provider that delegates to multiple underlying providers.
 
@@ -7886,7 +7836,6 @@ export function useExplodeableDesignNodes(designGuid: Guid): any[] {
 // #endregion Entity Hooks
 
 // #region Kit
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖kit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit)
 // Storage-agnostic kit store hooks using KitStore interface.
 
@@ -7909,7 +7858,6 @@ async function executeKitCommand(kitStore: KitStore, command: string, origin?: s
   await syncKitFileCommandResult(kitStore, context.kit, command, args, result);
   return result;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit✂️kitscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/d/i/KitScope)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit✂️kitscope](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/d/i/KitScope)
@@ -7978,10 +7926,8 @@ export function useKit<T>(selector?: (kit: Kit) => T, guid?: Guid): T | Kit | nu
 }
 
 // #region Targeted Kit Hooks
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖kit🔖targetedkithooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit/s/Targeted%20Kit%20Hooks)
 // React hooks for accessing specific kit data through scope providers.
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨emptytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_TYPES)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨emptytypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/EMPTY_TYPES)
@@ -8036,7 +7982,6 @@ const EMPTY_TAGS: Tag[] = [];
  * EMPTY_CONCEPTS holds the data fields for a EMPTY_CONCEPTS record.
  **/
 const EMPTY_CONCEPTS: Concept[] = [];
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖kit🔖targetedkithooks🪨selecttypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectTypes)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖kit🔖targetedkithooks🪨selecttypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Kit/s/Targeted%20Kit%20Hooks/d/i/selectTypes)
@@ -8481,10 +8426,8 @@ export function useKitCommands() {
 // #endregion Kit
 
 // #region Commands
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Commands)
 // Kit command definitions for import, export, and sync operations.
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖commands🪨sqlwasmurl](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Commands/d/i/sqlWasmUrl)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖commands🪨sqlwasmurl](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Commands/d/i/sqlWasmUrl)
@@ -8924,11 +8867,9 @@ export const kitCommands = {
 // #endregion Commands
 
 // #region Machine
-
 // [🔖semio/js/sketchpad/Sketchpad.tsx#Machine](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/MACHINE)
 
 // #region 🔖Types
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖types](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Types)
 // Type definitions for app state, machine input, and context structures.
 
@@ -8944,7 +8885,6 @@ export const defaultPanelVisibility: PanelVisibility = {
 };
 
 // #region App State Types
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖types🔖appstatetypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Types/s/App%20State%20Types)
 // State shape interfaces for all application views: home, kit, design, type, quality.
 
@@ -9269,7 +9209,6 @@ export type SketchpadEvent =
 // #endregion Types
 
 // #region Helpers
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖helpers](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Helpers)
 // Helper functions for path migration, default state creation, and store initialization.
 
@@ -9360,7 +9299,6 @@ function buildSnapshot(syncSketchpad: SyncMap<any>): SketchpadState {
     activeHotkeySetting: (syncSketchpad.get("activeHotkeySetting") as string) || undefined,
   };
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖helpers🛠️applydiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Helpers/d/i/applyDiff)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️applydiff](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/applyDiff)
@@ -9592,7 +9530,6 @@ function readSketchpadStateFromLocalStorage(id: string): Partial<SketchpadState>
     return JSON.parse(raw) as Partial<SketchpadState>;
   } catch {}
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖machine🔖helpers🛠️writesketchpadstatetolocalstorage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Machine/s/Helpers/d/i/writeSketchpadStateToLocalStorage)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖machine🔖helpers🛠️writesketchpadstatetolocalstorage](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Machine/s/Helpers/d/i/writeSketchpadStateToLocalStorage)
@@ -9804,7 +9741,6 @@ function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): 
 // #endregion Helpers
 
 // #region Sketchpad Machine
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖sketchpadmachine](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Sketchpad%20Machine)
 // XState state machine definition for the sketchpad application lifecycle.
 
@@ -10177,7 +10113,6 @@ export const sketchpadMachine = setup({
 });
 
 // #region Sketchpad Selectors
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖sketchpadmachine🔖sketchpadselectors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Sketchpad%20Machine/s/Sketchpad%20Selectors)
 // Selector functions for extracting state from the sketchpad machine context.
 
@@ -10872,7 +10807,6 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
 // #endregion Factory
 
 // #region Legacy Type Exports
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖legacytypeexports](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Legacy%20Type%20Exports)
 // Legacy type exports for backward compatibility with existing consumers.
 
@@ -11051,7 +10985,6 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
 // #endregion Legacy Type Exports
 
 // #region Actor Types
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖machine🔖actortypes](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Machine/s/Actor%20Types)
 // Type aliases for the sketchpad XState actor references and snapshots.
 
@@ -11084,7 +11017,6 @@ export const SketchpadActorContext = createContext<SketchpadActorRef | null>(nul
 // #endregion Machine
 
 // #region Apps
-
 // [🔖semio/js/sketchpad/Sketchpad.tsx#Apps](semiorepo://section/semio/js/sketchpad/Sketchpad.tsx/APPS)
 // App-specific hooks for design, type, kit, and sketchpad views.
 
@@ -11966,7 +11898,6 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
 // #endregion Internal State Management
 
 // #region Types
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/TYPES)
 // Types MUST provide hover status and color hooks for type visual indication in the Kit app.
 
@@ -12052,7 +11983,6 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
 // #endregion Types
 
 // #region Designs
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖designs](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/DESIGNS)
 // Designs MUST provide hover status and color hooks for design visual indication in the Kit app.
 
@@ -12138,7 +12068,6 @@ export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fil
 // #endregion Designs
 
 // #region Commands
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/COMMANDS)
 // Commands MUST define all executable Kit app actions for artifact CRUD, import, and export.
 
@@ -12888,15 +12817,12 @@ export const kitAppCommands = {
 // #endregion Commands
 
 // #region Canvas
-
 // [🔖semio/js/sketchpad/Kit.tsx#Canvas](semiorepo://section/semio/js/sketchpad/Kit.tsx/CANVAS)
 
 // #region Windows
-
 // [🔖semio/js/sketchpad/Kit.tsx#Windows](semiorepo://section/semio/js/sketchpad/Kit.tsx/WINDOWS)
 
 // #region Table
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS)
 // Table MUST render the interactive data table with sortable columns, expandable rows, and drag-drop reordering.
 
@@ -12905,7 +12831,6 @@ export const kitAppCommands = {
  * ArtifactKind holds the data fields for a ArtifactKind record.
  **/
 type ArtifactKind = "designs" | "types" | "qualities" | "ports" | "files" | "folders" | "authors";
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨kitkindtoggles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/KitKindToggles)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨kitkindtoggles](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/KitKindToggles)
@@ -13081,7 +13006,6 @@ type TableRow = {
   data: Design | Type | Quality | Port | Tag | Concept | SemioFile | Author | Folder;
   folderId?: string;
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨chevronright](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/ChevronRight)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨chevronright](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/ChevronRight)
@@ -13092,7 +13016,6 @@ const ChevronRight: FC<{ className?: string }> = ({ className }) => (
     <path d="m9 18 6-6-6-6" />
   </svg>
 );
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨chevrondown](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/ChevronDown)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨chevrondown](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/ChevronDown)
@@ -13103,7 +13026,6 @@ const ChevronDown: FC<{ className?: string }> = ({ className }) => (
     <path d="m6 9 6 6 6-6" />
   </svg>
 );
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨getfileicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/getFileIcon)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨getfileicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/getFileIcon)
@@ -13162,7 +13084,6 @@ const getFileIcon = (fileName: string) => {
       return <DocumentIcon className="size-tiny" />;
   }
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨getrowicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/getRowIcon)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨getrowicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/getRowIcon)
@@ -15255,7 +15176,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
     return this.props.children;
   }
 }
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🛠️usekitappyjstoxstatesync](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/useKitAppYjsToXStateSync)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖table🪨usekitappyjstoxstatesync](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Table/d/i/useKitAppYjsToXStateSync)
@@ -15385,7 +15305,6 @@ const KitTableApp: FC = () => {
 // #endregion Table
 
 // #region Diagram
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖windows🔖diagram](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/WINDOWS/DIAGRAM)
 // Diagram MUST render the interactive force-directed Kit diagram with type and design nodes.
 
@@ -15542,7 +15461,6 @@ const KIT_DIAGRAM_PROXIMITY_CONNECT_DISTANCE = Math.max(KIT_DIAGRAM_DEFAULT_SHAP
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨iskitdiagramnodekind](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/isKitDiagramNodeKind)
  **/
 const isKitDiagramNodeKind = (value: string): value is KitDiagramNodeKind => value === "type" || value === "design" || value === "quality" || value === "port" || value === "file" || value === "folder" || value === "author";
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨toreactflowposition](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/toReactFlowPosition)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨toreactflowposition](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/toReactFlowPosition)
@@ -15554,7 +15472,6 @@ const toReactFlowPosition = (side: "top" | "right" | "bottom" | "left"): Positio
   if (side === "bottom") return Position.Bottom;
   return Position.Left;
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramnodekind](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramNodeKind)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramnodekind](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramNodeKind)
@@ -15567,7 +15484,6 @@ const resolveDiagramNodeKind = (node: any): KitDiagramNodeKind => {
   if (isKitDiagramNodeKind(idKind)) return idKind;
   return KIT_DIAGRAM_FALLBACK_KIND;
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramnodeposition](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramNodePosition)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramnodeposition](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramNodePosition)
@@ -15578,14 +15494,12 @@ const resolveDiagramNodePosition = (node: any): { x: number; y: number } => {
   if (position && Number.isFinite(position.x) && Number.isFinite(position.y)) return position;
   return { x: 0, y: 0 };
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramnodeframe](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramNodeFrame)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramnodeframe](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramNodeFrame)
  * resolveDiagramNodeFrame holds the data fields for a resolveDiagramNodeFrame record.
  **/
 const resolveDiagramNodeFrame = (node: any, kind: KitDiagramNodeKind) => normalizeKitDiagramFrame({ width: node?.width, height: node?.height }, getKitDiagramNodeFrameForKind(kind));
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramedgeanchors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramEdgeAnchors)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨resolvediagramedgeanchors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/resolveDiagramEdgeAnchors)
@@ -15667,7 +15581,6 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style, sel
     </g>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨floatingconnectionline](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/FloatingConnectionLine)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨floatingconnectionline](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/FloatingConnectionLine)
@@ -15726,7 +15639,6 @@ const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY
 
   return <BaseEdge path={edgePath} style={{ stroke: "var(--active-base)", strokeWidth: 3 }} />;
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨buildkitdiagramdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/buildKitDiagramData)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨buildkitdiagramdata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/buildKitDiagramData)
@@ -15940,7 +15852,6 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
   id: string;
   relationship: "part-of" | "reference";
 }
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨kitdiagraminner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramInner)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨kitdiagraminner](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramInner)
@@ -16523,7 +16434,6 @@ const KitDiagramInner: FC = () => {
     </div>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨kitdiagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagram)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨kitdiagram](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagram)
@@ -16554,7 +16464,6 @@ const KitDiagramWindow = memo(() => {
   return <KitDiagram />;
 });
 KitDiagramWindow.displayName = "KitDiagramWindow";
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨multiwindowapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/MultiWindowApp)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖windows🔖diagram🪨multiwindowapp](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/MultiWindowApp)
@@ -16921,15 +16830,12 @@ export const KitToolbarSelection: FC = () => {
 // #endregion 🔖Diagram
 
 // #region Panels
-
 // [🔖semio/js/sketchpad/Kit.tsx#Panels](semiorepo://section/semio/js/sketchpad/Kit.tsx/PANELS)
 
 // #region Right
-
 // [🔖semio/js/sketchpad/Kit.tsx#Right](semiorepo://section/semio/js/sketchpad/Kit.tsx/RIGHT)
 
 // #region Details
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS)
 // Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
 
@@ -17127,7 +17033,6 @@ export const PortSection: FC = () => {
   if (selectedPorts.length === 1) return <SinglePortSection portGuid={selectedPorts[0]} />;
   return <MultiplePortsSection portGuids={selectedPorts} />;
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singleportsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SinglePortSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singleportsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SinglePortSection)
@@ -17158,7 +17063,6 @@ const SinglePortSection: FC<{ portGuid: string }> = ({ portGuid }) => {
     </>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipleportssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultiplePortsSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipleportssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultiplePortsSection)
@@ -17195,7 +17099,6 @@ export const TagSection: FC = () => {
   if (selectedTags.length === 1) return <SingleTagSection tagGuid={selectedTags[0]} />;
   return <MultipleTagsSection tagGuids={selectedTags} />;
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singletagsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleTagSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singletagsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleTagSection)
@@ -17217,7 +17120,6 @@ const SingleTagSection: FC<{ tagGuid: string }> = ({ tagGuid }) => {
     </>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipletagssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleTagsSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipletagssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleTagsSection)
@@ -17277,7 +17179,6 @@ const SingleConceptSection: FC<{ conceptGuid: string }> = ({ conceptGuid }) => {
     </>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipleconceptssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleConceptsSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨multipleconceptssection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleConceptsSection)
@@ -17313,7 +17214,6 @@ export const KitDesignSection: FC = () => {
   if (selectedDesigns.length === 1) return <SingleDesignSection designGuid={selectedDesigns[0]} />;
   return <MultipleDesignsSection designGuids={selectedDesigns} />;
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singledesignsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleDesignSection)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details🪨singledesignsection](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleDesignSection)
@@ -17598,10 +17498,8 @@ export const MultipleArtifactsSection: FC = () => {
 // #endregion Details
 
 // #region Settings
-
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖panels🔖right🔖settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Panels/s/Right/s/Settings)
 // Settings MUST render the Kit app settings panel with theme, language, device, expertise, mode, and diagram force controls.
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖settings🪨kiteditorsettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Settings/d/i/KitEditorSettingsContent)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖settings🪨kiteditorsettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Settings/d/i/KitEditorSettingsContent)
@@ -17653,7 +17551,6 @@ const KitEditorSettingsContent: FC = () => {
     </>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖settings🪨sketchpadsettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Settings/d/i/SketchpadSettingsContent)
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖internalstatemanagement🔖canvas🔖panels🔖right🔖settings🪨sketchpadsettingscontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Internal%20State%20Management/s/Canvas/s/Panels/s/Right/s/Settings/d/i/SketchpadSettingsContent)
@@ -17752,7 +17649,6 @@ const SketchpadSettingsContent: FC = () => {
 // #endregion Canvas
 
 // #region Footer
-
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖footer](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Footer)
 // Footer MUST render the Kit app footer with selection count status.
 
@@ -17782,7 +17678,6 @@ export const KitAppFooter: FC = () => {
 // #endregion Footer
 
 // #region Config
-
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖config](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Config)
 // Config MUST export the Kit app configuration with route segments, panel definitions, and path matching.
 
@@ -17813,7 +17708,6 @@ export const kitConfig: AppConfig = {
 // #endregion 🔖Kit
 
 // #region 🔖Design
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps)
 // Design app hooks for piece and connection selection, hover, and diff state.
 
@@ -18392,7 +18286,6 @@ export function useDiffedDesign(): Design {
 // #endregion Design
 
 // #region Sketchpad
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad)
 // Core reactive observation, synchronization hooks, and sketchpad store implementation.
 
@@ -18650,7 +18543,6 @@ export function createNestedArrayItemMembershipObserver(syncMap: SyncMap<any>, m
     if (arrayDisposer) arrayDisposer();
   };
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨performanceloggingenabled](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/performanceLoggingEnabled)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨performanceloggingenabled](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/performanceLoggingEnabled)
@@ -19086,7 +18978,6 @@ const docsPanelVisibilityListeners = new Set<() => void>();
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️docspanelvisibilityupdate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/DocsPanelVisibilityUpdate)
  **/
 type DocsPanelVisibilityUpdate = PanelVisibility | ((prev: PanelVisibility) => PanelVisibility);
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️getdocspanelvisibilitysnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/getDocsPanelVisibilitySnapshot)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️getdocspanelvisibilitysnapshot](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/getDocsPanelVisibilitySnapshot)
@@ -19095,7 +18986,6 @@ type DocsPanelVisibilityUpdate = PanelVisibility | ((prev: PanelVisibility) => P
 function getDocsPanelVisibilitySnapshot(): PanelVisibility {
   return docsPanelVisibilityState;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️subscribedocspanelvisibility](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/subscribeDocsPanelVisibility)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️subscribedocspanelvisibility](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/subscribeDocsPanelVisibility)
@@ -19107,7 +18997,6 @@ function subscribeDocsPanelVisibility(listener: () => void) {
     docsPanelVisibilityListeners.delete(listener);
   };
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️updatedocspanelvisibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/updateDocsPanelVisibilityState)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨updatedocspanelvisibilitystate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/updateDocsPanelVisibilityState)
@@ -19119,7 +19008,6 @@ function updateDocsPanelVisibilityState(update: DocsPanelVisibilityUpdate) {
   docsPanelVisibilityState = merged;
   docsPanelVisibilityListeners.forEach((listener) => listener());
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨nullstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/nullStore)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨nullstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/nullStore)
@@ -19165,7 +19053,6 @@ export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchro
     data: storeState.data && selector ? selector(storeState.data) : storeState.data,
   } as StoreState<TAccessl | TSelected>;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️aresamekit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/areSameKit)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️aresamekit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/areSameKit)
@@ -19174,7 +19061,6 @@ export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchro
 function areSameKit(kit1: Guid, kit2: Guid): boolean {
   return kit1 === kit2;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitAppVal)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitappval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitAppVal)
@@ -19194,7 +19080,6 @@ type SyncKitApp = SyncMap<SyncKitAppVal>;
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitapps](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitApps)
  **/
 type SyncKitApps = SyncMap<SyncKitApp>;
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitMetadata)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ykitmetadata](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncKitMetadata)
@@ -19326,7 +19211,6 @@ function resolveHomeStoreFactory(): HomeStoreFactory {
   if (!homeStoreFactory) throw new Error("Home store factory not registered");
   return homeStoreFactory;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🛠️resolvedocsappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/resolveDocsAppStoreFactory)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🛠️resolvedocsappstorefactory](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/resolveDocsAppStoreFactory)
@@ -19338,7 +19222,6 @@ function resolveDocsAppStoreFactory(): DocsAppStoreFactory {
 }
 
 // registerDesignAppStoreFactory, registerKitAppStoreFactory, registerQualityAppStoreFactory, registerTypeAppStoreFactory are already declared above
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad✂️ysketchpadval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/SyncSketchpadVal)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad✂️ysketchpadval](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/SyncSketchpadVal)
@@ -20594,7 +20477,6 @@ export class SketchpadStore {
 }
 
 SketchpadStore._loadModules();
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨stores](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/stores)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨stores](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/stores)
@@ -20609,7 +20491,6 @@ if (import.meta.hot?.data.stores) {
     import.meta.hot.data.stores = stores;
   }
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖apps🔖sketchpad🪨actors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps/s/Sketchpad/d/i/actors)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖apps🔖sketchpad🪨actors](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps/s/Sketchpad/d/i/actors)
@@ -20976,7 +20857,6 @@ export function useNavigationHistory(): {
 }
 
 // #region XState Hooks
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖sketchpad🔖xstatehooks](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Sketchpad/s/XState%20Hooks)
 // React hooks for accessing XState sketchpad actor state and sending events.
 
@@ -21800,7 +21680,6 @@ export function useKitCommandsById(kitGuid?: string) {
 // #endregion Sketchpad
 
 // #region Commands
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖apps🔖commands](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Apps/s/Commands)
 // Exported sketchpad command map for theme, language, mode, device, and navigation.
 
@@ -22002,7 +21881,6 @@ export const sketchpadDevCommands = {
 // #endregion Commands
 
 // #region Apps Registry
-
 // [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖appsregistry](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/APPS-REGISTRY)
 // Dynamic app panel loader for registering app-specific panels.
 
@@ -22122,7 +22000,6 @@ class AppRegistry {
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖appsregistry🪨appregistry](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps%20Registry/d/i/appRegistry)
  **/
 const appRegistry = new AppRegistry();
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖appsregistry🪨appconfigsloadpromise](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Apps%20Registry/d/i/appConfigsLoadPromise)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖appsregistry🪨appconfigsloadpromise](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Apps%20Registry/d/i/appConfigsLoadPromise)
@@ -22153,7 +22030,6 @@ export { appRegistry, loadAppConfigs };
 // #endregion Apps Registry
 
 // #region Navbar
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖navbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Navbar)
 // Focus-based navigation context provider for navbar breadcrumbs and search.
 
@@ -22169,7 +22045,6 @@ interface FocusContextValue {
   setOnFocusItem: (callback: ((itemId: string) => void) | undefined) => void;
   triggerFocusItem: (itemId: string) => void;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖navbar🪨focuscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Navbar/d/i/FocusContext)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖navbar🪨focuscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Navbar/d/i/FocusContext)
@@ -22225,7 +22100,6 @@ export const useFocusSafe = () => {
   const context = useContext(FocusContext);
   return context;
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖navbar✂️panelsectioncontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Navbar/d/i/PanelSectionContextValue)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖navbar✂️panelsectioncontextvalue](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Navbar/d/i/PanelSectionContextValue)
@@ -22354,10 +22228,8 @@ export const useRemovePanelSection = () => {
 // #endregion Navbar
 
 // #region SidePanel Tabs
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖sidepaneltabs](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/SidePanel%20Tabs)
 // Context provider managing side panel and HUD panel tab registration.
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sidepaneltabs✂️hudpaneltabsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/SidePanel%20Tabs/d/i/HudPanelTabsState)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sidepaneltabs✂️sidepaneltabsstate](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/SidePanel%20Tabs/d/i/SidePanelTabsState)
@@ -22478,7 +22350,6 @@ export const useActiveRightTabId = (): [string | undefined, (tabId: string) => v
 // #endregion SidePanel Tabs
 
 // #region Origin
-
 // [👤semio📚js🗃️sketchpad💻sketchpadtsx🔖store🔖origin](semiorepo://section/SEMIO/JS/SKETCHPAD/SKETCHPAD.TSX/STORE/ORIGIN)
 // Context provider for tracking the origin URL of the sketchpad instance.
 
@@ -22500,7 +22371,6 @@ type OriginStore = {
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin🪨defaultorigin](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/DEFAULT_ORIGIN)
  **/
 const DEFAULT_ORIGIN = "semio.sketchpad.unknown";
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖origin🛠️createoriginstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Origin/d/i/createOriginStore)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin🪨createoriginstore](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/createOriginStore)
@@ -22522,7 +22392,6 @@ function createOriginStore(): OriginStore & { setOrigin: (origin: string) => voi
   };
   return { subscribe, setOrigin, getOrigin: () => origin };
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖origin🛠️resolveoriginfromtarget](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Origin/d/i/resolveOriginFromTarget)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin🛠️resolveoriginfromtarget](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/resolveOriginFromTarget)
@@ -22534,7 +22403,6 @@ function resolveOriginFromTarget(target: EventTarget | null): string {
   if (!resolved.startsWith("semio.sketchpad.")) return DEFAULT_ORIGIN;
   return resolved;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖origin🪨origincontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Origin/d/i/OriginContext)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖origin🪨origincontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Origin/d/i/OriginContext)
@@ -22591,7 +22459,6 @@ export function useOriginValue(): string {
 // #endregion Origin
 
 // #region Footer Items
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖footeritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Footer%20Items)
 // Context provider for dynamically registering footer bar items.
 
@@ -22606,7 +22473,6 @@ interface FooterItemContextValue {
   addItem: (item: FooterItem) => void;
   removeItem: (itemId: string) => void;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖footeritems🪨footeritemcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Footer%20Items/d/i/FooterItemContext)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖footeritems🪨footeritemcontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Footer%20Items/d/i/FooterItemContext)
@@ -22675,10 +22541,8 @@ export const useRemoveFooterItem = () => {
 // #endregion Footer Items
 
 // #region Global Footer Items
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖globalfooteritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Global%20Footer%20Items)
 // Global footer items component that registers persistent footer entries.
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖globalfooteritems🪨globalfooteritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Global%20Footer%20Items/d/i/GlobalFooterItems)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖globalfooteritems🪨globalfooteritems](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Global%20Footer%20Items/d/i/GlobalFooterItems)
@@ -22705,7 +22569,6 @@ const GlobalFooterItems: FC = () => {
 // #endregion Global Footer Items
 
 // #region ConceptFilter
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖conceptfilter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/ConceptFilter)
 // Filter component for narrowing results by architectural concepts.
 
@@ -22761,7 +22624,6 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
 // #endregion ConceptFilter
 
 // #region ToolGroup
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖toolgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/ToolGroup)
 // Toolbar group component for switching between tool modes.
 
@@ -22836,7 +22698,6 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
 // #endregion ToolGroup
 
 // #region DragDrop
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖dragdrop](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/DragDrop)
 // Context provider for drag-and-drop type placement interactions.
 
@@ -22881,7 +22742,6 @@ export const useDragDrop = () => {
 // #endregion DragDrop
 
 // #region Hotkeys
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖hotkeys](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Hotkeys)
 // Keyboard shortcut hook with configurable hotkey overrides.
 
@@ -22994,7 +22854,6 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
 interface NavigationProps {
   mobile?: boolean;
 }
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🪨navigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/d/i/Navigation)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🪨navigation](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/Navigation)
@@ -23849,7 +23708,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   return <Breadcrumb className="flex-1 min-w-0" items={breadcrumbItems} />;
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store✂️searchresult](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/d/i/SearchResult)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store✂️searchresult](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/SearchResult)
@@ -23860,7 +23718,6 @@ type SearchResult = {
   item: KitShallow | DesignShallow | TypeShallow | Quality | { id: string; name: string; description?: string };
   kitGuid?: string;
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🪨buildsearchresultpath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/d/i/buildSearchResultPath)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🪨buildsearchresultpath](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/d/i/buildSearchResultPath)
@@ -24248,7 +24105,6 @@ const PanelToggles: FC = ({}) => {
 };
 
 // #region Canvas
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖canvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Canvas)
 // Canvas layout components for window management and multi-pane rendering.
 
@@ -24272,7 +24128,6 @@ export function useCanvasContext() {
 }
 
 // Canvas, HorizontalWindows, VerticalWindows are re-exported from @semio/ui above.
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖canvas🪨windowcontrolsgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Canvas/d/i/WindowControlsGroup)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖canvas🪨windowcontrolsgroup](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Canvas/d/i/WindowControlsGroup)
@@ -24326,7 +24181,6 @@ const WindowControlsGroup: FC<{ controls: WindowControl[] }> = ({ controls }) =>
     </div>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖canvas✂️layouterrorboundaryprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Canvas/d/i/LayoutErrorBoundaryProps)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖canvas✂️layouterrorboundaryprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Canvas/d/i/LayoutErrorBoundaryProps)
@@ -24958,10 +24812,8 @@ export const LayoutCanvas: FC<{
 // #endregion Canvas
 
 // #region App Router
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖approuter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/App%20Router)
 // React Router integration with scope providers and route-based app switching.
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖approuter🪨scopewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/App%20Router/d/i/ScopeWrapper)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖approuter🪨scopewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/App%20Router/d/i/ScopeWrapper)
@@ -24973,7 +24825,6 @@ const ScopeWrapper: FC<{ ScopeProvider: ComponentType<{ guid: string; children: 
   if (!guid) return <>{children}</>;
   return <ScopeProvider guid={guid}>{children}</ScopeProvider>;
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖approuter🪨approuter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/App%20Router/d/i/AppRouter)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖approuter🪨approuter](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/App%20Router/d/i/AppRouter)
@@ -25047,10 +24898,8 @@ const AppRouter: FC = () => {
 // #endregion App Router
 
 // #region Sketchpad Components
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖sketchpadcomponents](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Sketchpad%20Components)
 // Top-level sketchpad React components for rendering the complete application.
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨toolbarscopewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/ToolbarScopeWrapper)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨toolbarscopewrapper](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/ToolbarScopeWrapper)
@@ -26033,7 +25882,6 @@ const LayoutWrapper: FC = () => {
     </TutorialProvider>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨sketchpadinteractionbridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/SketchpadInteractionBridge)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨sketchpadinteractionbridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/SketchpadInteractionBridge)
@@ -26058,7 +25906,6 @@ const SketchpadInteractionBridge: FC<{ children: React.ReactNode }> = ({ childre
     </InteractionProvider>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨globalnavigationbridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/GlobalNavigationBridge)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨globalnavigationbridge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/GlobalNavigationBridge)
@@ -26080,7 +25927,6 @@ const GlobalNavigationBridge: FC<{ children: React.ReactNode }> = ({ children })
 
   return <>{children}</>;
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨sketchpadcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/SketchpadContent)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨sketchpadcontent](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/SketchpadContent)
@@ -26089,7 +25935,6 @@ const GlobalNavigationBridge: FC<{ children: React.ReactNode }> = ({ children })
 const SketchpadContent: FC = () => {
   return <LayoutWrapper />;
 };
-
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🔖store🔖sketchpadcomponents🪨sketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/s/Store/s/Sketchpad%20Components/d/i/Sketchpad)
 /**
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖store🔖sketchpadcomponents🪨sketchpad](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Store/s/Sketchpad%20Components/d/i/Sketchpad)
@@ -26193,14 +26038,12 @@ export { Sketchpad };
 // Consolidated from Kit.tsx
 
 // #region Imports
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/IMPORTS)
 // Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.
 
 // #endregion Imports
 
 // #region Design Family Helpers
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖designfamilyhelpers](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/DESIGN-FAMILY-HELPERS)
 // Design family helper functions MUST traverse the design hierarchy to collect related design GUIDs.
 
@@ -27143,7 +26986,6 @@ if (typeof window !== "undefined") {
 }
 
 // #region Kit KitAppView Plugin Registration
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖kitapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/KIT-APP-PLUGIN-REGISTRATION)
 // Kit app plugin registration MUST register the Kit app plugin with machine actions, guards, and default state.
 
@@ -27710,7 +27552,6 @@ export function useKitAppCommands(id?: KitAppId) {
 }
 
 //#region Action Hooks
-
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖internalstatemanagement🔖actionhooks](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/INTERNAL-STATE-MANAGEMENT/ACTION-HOOKS)
 // Action hooks MUST provide composable React hooks for Kit app selection, hover, sort, filter, and transaction actions.
 
@@ -29317,7 +29158,6 @@ function initializeDesignStore() {
 }
 
 // #region Design App Plugin Registration
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖store🔖designapppluginregistration](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/STORE/DESIGN-APP-PLUGIN-REGISTRATION)
 // Design app plugin registration MUST register the Design app plugin with machine actions, guards, and default state.
 
@@ -29489,7 +29329,6 @@ const DesignAppScopeContext = createContext<DesignAppScope | null>(null);
  * DesignAppActorContext holds the data fields for a DesignAppActorContext record.
  **/
 const DesignAppActorContext = createContext<any>(null);
-
 // [👤semio📚js🗃️sketchpad💻design🔖store🪨designappsynccomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/DesignAppSyncComponent)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖store🪨designappsynccomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/DesignAppSyncComponent)
@@ -29561,7 +29400,6 @@ export const DesignAppScopeProvider = (props: { id: string; children: React.Reac
   const value = { id: props.id };
   return React.createElement(DesignAppScopeContext.Provider, { value }, React.createElement(DesignAppActorContext.Provider, { value: null }, React.createElement(DesignAppSyncComponent, null, props.children)));
 };
-
 // [👤semio📚js🗃️sketchpad💻design🔖store🔖components🪨usedesignappscope](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/s/Components/d/i/useDesignAppScope)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖store🔖components🪨usedesignappscope](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/s/Components/d/i/useDesignAppScope)
@@ -29653,7 +29491,6 @@ interface UseDesignAppFieldOptions<T, TEvent extends { type: string }> {
   createSendEvent: (kitGuid: Guid, designGuid: Guid, value: T) => TEvent;
   useWildcardFallback?: boolean;
 }
-
 // [👤semio📚js🗃️sketchpad💻design🔖store🔖components🛠️usedesignappfield](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/s/Components/d/i/useDesignAppField)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖store🔖components🪨usedesignappfield](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/s/Components/d/i/useDesignAppField)
@@ -31146,7 +30983,6 @@ function areDesignSyncStatesEqual(
 function areTransactionContextsEqual(a: TransactionPiecesContextValue, b: TransactionPiecesContextValue): boolean {
   return areSetsEqual(a.changedPieces, b.changedPieces) && areMapsEqual(a.statusMap, b.statusMap);
 }
-
 // [👤semio📚js🗃️sketchpad💻design🔖store🛠️transactionpiecesproviderinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/TransactionPiecesProviderInner)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖store🪨transactionpiecesproviderinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/TransactionPiecesProviderInner)
@@ -31260,7 +31096,6 @@ class HoverPiecesStore {
  **/
 const HoverPiecesStoreContext = createContext<HoverPiecesStore | null>(null);
 const noopSubscribe = (_cb: () => void) => () => {};
-
 // [👤semio📚js🗃️sketchpad💻design🔖store🛠️computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖store🪨computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)
@@ -31315,7 +31150,6 @@ function computeHoverData(store: DesignStore | null, state: DesignAppState): Hov
 function areHoverContextsEqual(a: HoverPiecesContextValue, b: HoverPiecesContextValue): boolean {
   return areSetsEqual(a.transitivelyHoveredPieces, b.transitivelyHoveredPieces) && areSetsEqual(a.transitivelyHoveredTypes, b.transitivelyHoveredTypes);
 }
-
 // [👤semio📚js🗃️sketchpad💻design🔖store🛠️hoverpiecesproviderinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/HoverPiecesProviderInner)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖store🪨hoverpiecesproviderinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/HoverPiecesProviderInner)
@@ -31732,7 +31566,6 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
 }
 
 // #region Footer
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖footer](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/FOOTER)
 // Footer MUST render dynamic Design app footer items showing selection and transaction state.
 
@@ -31867,7 +31700,6 @@ export const DesignAppFooter: FC = () => {
 // #endregion Footer
 
 // #region Filters
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖filters](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/FILTERS)
 // Design filter context MUST provide visibility state for pieces, connections, and ports via URL search params.
 
@@ -31917,7 +31749,6 @@ const useDesignFilters = () => useContext(DesignFilterContext);
 // #endregion Filters
 
 // #region Tools
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖tools](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLS)
 // Tools MUST define all Design app tool configurations for selection, lasso, and hand modes.
 
@@ -32094,7 +31925,6 @@ export const DesignLassoSettings: FC = () => {
 // #endregion Tools
 
 // #region Toolbar
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖toolbar](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/TOOLBAR)
 // Toolbar components MUST provide filter functionality for the Design app.
 
@@ -32162,7 +31992,6 @@ const DesignToolbarFilters: FC = () => {
 // #endregion Tools
 
 // #region Panels
-
 // [🔖semio/js/sketchpad/Design.tsx#Panels](repo://section/semio/js/sketchpad/Design.tsx/PANELS)
 
 // #region 🔖WindowLibrary
@@ -32257,7 +32086,6 @@ const windowTemplates: WindowTemplate[] = [
 interface DraggableWindowItemProps {
   template: WindowTemplate;
 }
-
 // [👤semio📚js🗃️sketchpad💻design🔖panels🔖windowlibrary🪨draggablewindowitem](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/WindowLibrary/d/i/DraggableWindowItem)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖panels🔖windowlibrary🪨draggablewindowitem](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/WindowLibrary/d/i/DraggableWindowItem)
@@ -32319,7 +32147,6 @@ export const WindowLibrary: FC = () => {
 // #endregion WindowLibrary
 
 // #region Details
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖panels🔖details](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/PANELS/DETAILS)
 // Details MUST render the Design app detail panels for design, pieces, connections, and connector sections.
 
@@ -32331,7 +32158,6 @@ export const WindowLibrary: FC = () => {
 export const DesignSection: FC = () => {
   return <DesignSectionForm />;
 };
-
 // [👤semio📚js🗃️sketchpad💻design🔖panels🔖details🪨designsectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/Details/d/i/DesignSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖panels🔖details🪨designsectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/Details/d/i/DesignSectionForm)
@@ -32754,7 +32580,6 @@ const DesignSectionForm: FC = () => {
 export const PiecesSection: FC = () => {
   return <PiecesSectionForm />;
 };
-
 // [👤semio📚js🗃️sketchpad💻design🔖panels🔖details🪨piecessectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/Details/d/i/PiecesSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖panels🔖details🪨piecessectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/Details/d/i/PiecesSectionForm)
@@ -33746,7 +33571,6 @@ const ConnectionInfoField: FC<{
   </Label>
 );
 // #endregion 🔖Connection Detail Fields
-
 // [👤semio📚js🗃️sketchpad💻design🔖panels🔖details🪨singleconnectioninfo](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/Details/d/i/SingleConnectionInfo)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖panels🔖details🪨singleconnectioninfo](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/Details/d/i/SingleConnectionInfo)
@@ -33808,7 +33632,6 @@ const SingleConnectionInfo: FC = () => {
     </>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻design🔖panels🔖details🪨singleconnectionfields](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/Details/d/i/SingleConnectionFields)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖panels🔖details🪨singleconnectionfields](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Panels/s/Details/d/i/SingleConnectionFields)
@@ -34073,7 +33896,6 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 // #endregion Panels
 
 // #region Canvas
-
 // [🔖semio/js/sketchpad/Design.tsx#Canvas](repo://section/semio/js/sketchpad/Design.tsx/CANVAS)
 // #region 🔖Hover Intent Context
 // [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas)
@@ -34095,7 +33917,6 @@ interface HoverIntentContextValue {
  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖hoverintentcontext🪨hoverintentprovider](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Hover%20Intent%20Context/d/i/HoverIntentProvider)
  **/
 const HoverIntentContext = createContext<HoverIntentContextValue | null>(null);
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖hoverintentcontext🛠️hoverintentprovider](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Hover%20Intent%20Context/d/i/HoverIntentProvider)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖hoverintentcontext🪨hoverintentprovider](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Hover%20Intent%20Context/d/i/HoverIntentProvider)
@@ -34303,7 +34124,6 @@ function syncPieceRenderData(store: PieceRenderDataStoreApi, designStore: Design
 }
 
 // #region Diagram
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖canvas🔖diagram](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/CANVAS/DIAGRAM)
 // Diagram MUST render the interactive React Flow design diagram with nodes, edges, minimap, and controls.
 
@@ -34467,7 +34287,6 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
     </ViewportPortal>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨presencediagram](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/PresenceDiagram)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨presencediagram](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/PresenceDiagram)
@@ -34585,7 +34404,6 @@ const getConnectorPositionStyle = (connector: Connector): { x: number; y: number
     y: -(radius * Math.cos(angle) - radius),
   };
 };
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectorhandle](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectorHandle)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectorhandle](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectorHandle)
@@ -35178,7 +34996,6 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, connectors
  * [👤semio📚js🗃️sketchpad💻design🔖imports🔖panels🔖canvas🔖diagram🪨nodecomponents](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Imports/s/Panels/s/Canvas/s/Diagram/d/i/nodeComponents)
  **/
 const nodeComponents = { piece: PieceNodeComponent, design: DesignNodeComponent };
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectionedgecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectionEdgeComponent)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectionedgecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectionEdgeComponent)
@@ -35195,7 +35012,6 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = (props) => 
     </ConnectionScopeProvider>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectionedgefallback](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectionEdgeFallback)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectionedgefallback](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectionEdgeFallback)
@@ -35251,7 +35067,6 @@ const ConnectionEdgeFallback: React.FC<EdgeProps<ConnectionEdge>> = ({ sourceX, 
  * ConnectionEdgeInnerProps holds the data fields for a ConnectionEdgeInnerProps record.
  **/
 type ConnectionEdgeInnerProps = EdgeProps<ConnectionEdge> & { connectionGuid: Guid };
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectionedgeinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectionEdgeInner)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨connectionedgeinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/ConnectionEdgeInner)
@@ -35539,7 +35354,6 @@ const HelperLines: React.FC<{
     </div>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨piecetonode](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/pieceToNode)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨piecetonode](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/pieceToNode)
@@ -35915,7 +35729,6 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
 interface DesignDiagramProps {
   reactFlowInstanceRef: React.MutableRefObject<ReactFlowInstance | null>;
 }
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨designdiagram](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/DesignDiagram)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖diagram🪨designdiagram](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Diagram/d/i/DesignDiagram)
@@ -37560,7 +37373,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 // #endregion Diagram
 
 // #region Scene
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖canvas🔖scene](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/CANVAS/SCENE)
 // Scene MUST render the Three.js 3D scene view of design pieces with selection and hover highlighting.
 
@@ -37664,7 +37476,6 @@ const PresenceThree: FC<DesignAppPresenceOther> = ({ name, cursor, camera }) => 
 interface PlaneThreeProps {
   plane: Plane;
 }
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨planethree](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/PlaneThree)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨planethree](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/PlaneThree)
@@ -37936,7 +37747,6 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
 };
 
 interface ModelPieceProps {}
-
 // [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨modelpiece](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/ModelPiece)
 /**
  * [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨modelpiece](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/ModelPiece)
@@ -39402,7 +39212,6 @@ const DesignApp: FC = () => {
 // #endregion App
 
 // #region Config
-
 // [👤semio📚js🗃️sketchpad💻designtsx🔖app🔖config](repo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX/APP/CONFIG)
 // Config MUST export the Design app configuration with route segments, panel definitions, and path matching.
 
@@ -39555,7 +39364,6 @@ const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 // #endregion Internal State Management
 
 // #region Type App Plugin Registration
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖typeapppluginregistration](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Type%20App%20Plugin%20Registration)
 // Plugin registration and XState event handlers for the TypeApp. MUST register all event handlers at module load.
 
@@ -39778,7 +39586,6 @@ if (typeof window !== "undefined") {
 // #endregion Type App Plugin Registration
 
 // #region XState Hooks
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖xstatehooks](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/XState%20Hooks)
 // React hooks that read and write TypeApp XState machine state. MUST use memoized selectors for performance.
 
@@ -40456,7 +40263,6 @@ export const TypeAppScopeProvider = (props: { id: string; children: React.ReactN
 // #endregion XState Hooks
 
 // #region Commands
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖commands](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Commands)
 // Command definitions for the TypeApp producing diffs from context. MUST return TypeAppCommandResult.
 
@@ -40621,7 +40427,6 @@ export const typeAppCommands = {
 // #endregion Commands
 
 // #region Scene
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖scene](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Scene)
 // Three.js scene components for connectors, meshes, and the 3D viewport. MUST render inside a React Three Fiber canvas.
 
@@ -40709,7 +40514,6 @@ const ConnectorVisual: FC<{ connector: Connector; isSelected: boolean; isHovered
     </Geometry>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨connectorpreview](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/ConnectorPreview)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨connectorpreview](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/ConnectorPreview)
@@ -40736,14 +40540,12 @@ const ConnectorPreview: FC<{ position: THREE.Vector3; normal: THREE.Vector3 }> =
     </group>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨getcomputedcolorformesh](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/getComputedColorForMesh)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨getcomputedcolorformesh](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/getComputedColorForMesh)
  * getComputedColorForMesh holds the data fields for a getComputedColorForMesh record.
  **/
 const getComputedColorForMesh = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨gltfmesh](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/GLTFMesh)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨gltfmesh](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/GLTFMesh)
@@ -41119,7 +40921,6 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     </Suspense>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeports](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypePorts)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeports](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypePorts)
@@ -41332,7 +41133,6 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 // #region Right
 
 // #region Details
-
 // [👤semio📚js🗃️sketchpad💻typetsx🔖panels](repo://section/SEMIO/JS/SKETCHPAD/TYPE.TSX/PANELS)
 // Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
 
@@ -41997,7 +41797,6 @@ export const AttributesSection: FC = () => {
   if (!isInTypeScope) return null;
   return <AttributesSectionForm />;
 };
-
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨attributessectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AttributesSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨attributessectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/AttributesSectionForm)
@@ -42132,7 +41931,6 @@ export const TypeConnectorSection: FC<{ connectorGuid: Guid }> = ({ connectorGui
   if (!isInTypeScope) return null;
   return <ConnectorSectionForm connectorGuid={connectorGuid} />;
 };
-
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorSectionForm)
@@ -42312,7 +42110,6 @@ export const ConnectorsMultipleSection: FC<{ connectorGuids: Guid[] }> = ({ conn
   if (!isInTypeScope) return null;
   return <ConnectorsMultipleSectionForm connectorGuids={connectorGuids} />;
 };
-
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsmultiplesectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsMultipleSectionForm)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsmultiplesectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorsMultipleSectionForm)
@@ -42468,10 +42265,8 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 // #endregion Details
 
 // #region Settings
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖right🔖settings](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Right/s/Settings)
 // Settings panel for theme, language, device, expertise, and mode selection. MUST use toggle groups and select elements.
-
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖settings🪨typesettingscontent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Settings/d/i/TypeSettingsContent)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖settings🪨typesettingscontent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Settings/d/i/TypeSettingsContent)
@@ -42570,7 +42365,6 @@ const TypeSettingsContent: FC = () => {
 // #endregion Panels
 
 // #region Tools
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖tools](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Tools)
 // Tool definitions for selection modes and connector creation. MUST export tool objects and settings components.
 
@@ -42714,10 +42508,8 @@ export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, Selectio
 // #endregion Tools
 
 // #region App
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖app](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/App)
 // Main TypeApp component orchestrating panels, scene, keyboard shortcuts, and drag-and-drop. MUST register sections on mount.
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖app🪨app](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/App/d/i/App)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖app🪨app](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/App)
@@ -42992,7 +42784,6 @@ const TypeWindowApp: FC = () => {
 };
 
 // #region Filters
-
 // [👤semio📚js🗃️sketchpad💻typetsx🔖filters](repo://section/SEMIO/JS/SKETCHPAD/TYPE.TSX/FILTERS)
 // Type filter context and toolbar toggles MUST control connector and model visibility via URL search params.
 
@@ -43172,7 +42963,6 @@ const TypeApp: FC = () => {
     </TransactionProvider>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻type🔖app🛠️usetypeappinitialize](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/TypeWindowApp/d/i/useTypeAppInitialize)
 /**
  * [👤semio📚js🗃️sketchpad💻type🔖app🪨usetypeappinitialize](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/App/d/i/useTypeAppInitialize)
@@ -43219,7 +43009,6 @@ function useTypeAppInitialize() {
 // #endregion App
 
 // #region Footer
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖footer](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Footer)
 // Footer component displaying model tag toggles. MUST update footer items when tags change.
 
@@ -43309,7 +43098,6 @@ export const TypeAppFooter: FC = () => {
 // #endregion Footer
 
 // #region Config
-
 // [👤semio📚js🗃️sketchpad💻type🔖imports🔖panels🔖config](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Imports/s/Panels/s/Config)
 // App configuration for the TypeApp including route segments, panels, and path matching. MUST define all route segments.
 
@@ -43477,7 +43265,6 @@ export interface FormulaFunction {
 // #endregion Types
 
 // #region Functions
-
 // [👤semio📚js🗃️sketchpad💻qualitytsx🔖functions](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/FUNCTIONS)
 // Formula function definitions, parsing, and LaTeX conversion utilities MUST be declared here.
 
@@ -43819,7 +43606,6 @@ export function formulaToLatex(ast: any): string {
 
   return "\\text{?}";
 }
-
 // [👤semio📚js🗃️sketchpad💻quality🔖functions🛠️inversequalityappselectiondiff](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/inverseQualityAppSelectionDiff)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖functions🪨inversequalityappselectiondiff](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Functions/d/i/inverseQualityAppSelectionDiff)
@@ -43839,7 +43625,6 @@ function inverseQualityAppSelectionDiff(selection: QualityAppSelection, diff: Qu
 // #endregion Functions
 
 // #region Commands
-
 // [👤semio📚js🗃️sketchpad💻qualitytsx🔖commands](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMMANDS)
 // Quality app command handlers MUST modify state through diff objects.
 
@@ -43955,7 +43740,6 @@ const qualityAppCommands = {
 // #endregion Commands
 
 // #region Store
-
 // [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)
 // Quality app store, hooks, and reactive state management MUST be declared here.
 
@@ -44120,7 +43904,6 @@ if (typeof window !== "undefined") {
 }
 
 // #region Quality App Plugin Registration
-
 // [👤semio📚js🗃️sketchpad💻qualitytsx🔖store🔖qualityapppluginregistration](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE/QUALITY-APP-PLUGIN-REGISTRATION)
 // Plugin registration and event handler wiring MUST initialize quality app context.
 
@@ -44515,7 +44298,6 @@ export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
 // #endregion Store
 
 // #region Components
-
 // [👤semio📚js🗃️sketchpad💻qualitytsx🔖components](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/COMPONENTS)
 // React components MUST render the quality app formula diagram, details panel, and workbench.
 
@@ -44535,7 +44317,6 @@ const FunctionNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, se
   const initials = data.label.substring(0, 2).toUpperCase();
   return <DiagramNode content={initials} selected={selected} showTopHandle showBottomHandle />;
 };
-
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitynodecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityNodeComponent)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitynodecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityNodeComponent)
@@ -44550,7 +44331,6 @@ const QualityNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, sel
     .toUpperCase();
   return <DiagramNode content={initials} selected={selected} showTopHandle showBottomHandle />;
 };
-
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨variablenodecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/VariableNodeComponent)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨variablenodecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/VariableNodeComponent)
@@ -44561,7 +44341,6 @@ const VariableNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, se
   const initials = varName.substring(0, 2).toUpperCase();
   return <DiagramNode content={initials} selected={selected} showTopHandle showBottomHandle />;
 };
-
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨valuenodecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/ValueNodeComponent)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨valuenodecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/ValueNodeComponent)
@@ -44571,7 +44350,6 @@ const ValueNodeComponent: FC<{ data: any; selected?: boolean }> = ({ data, selec
   const display = data.label.length > 4 ? data.label.substring(0, 4) : data.label;
   return <DiagramNode content={display} selected={selected} showTopHandle />;
 };
-
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨placeholdernodecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/PlaceholderNodeComponent)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨placeholdernodecomponent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/PlaceholderNodeComponent)
@@ -44863,7 +44641,6 @@ interface FunctionNodeProps {
   kind: "function" | "quality" | "variable" | "unit" | "value";
   label: string;
 }
-
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨functionnode](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNode)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨functionnode](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/FunctionNode)
@@ -45032,7 +44809,6 @@ interface QualityTreeNode {
   qualities: Quality[];
   children: Map<string, QualityTreeNode>;
 }
-
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨buildqualitytree](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/buildQualityTree)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨buildqualitytree](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/buildQualityTree)
@@ -45068,7 +44844,6 @@ const buildQualityTree = (qualities: Quality[]): Map<string, QualityTreeNode> =>
 
   return root;
 };
-
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitytree](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityTree)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualitytree](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityTree)
@@ -45113,7 +44888,6 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
 
   return <>{Array.from(tree.entries()).map(([key, node]) => renderNode(key, node))}</>;
 };
-
 // [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualityworkbenchqualities](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityWorkbenchQualities)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖components🪨qualityworkbenchqualities](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/Components/d/i/QualityWorkbenchQualities)
@@ -45275,7 +45049,6 @@ FormulaWindow.displayName = "FormulaWindow";
  **/
 const QualityDiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => <QualityDiagram reactFlowInstanceRef={reactFlowInstanceRef} />);
 QualityDiagramWindow.displayName = "QualityDiagramWindow";
-
 // [👤semio📚js🗃️sketchpad💻quality🔖app🪨app](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/QualityApp/d/i/QualityApp)
 /**
  * [👤semio📚js🗃️sketchpad💻quality🔖app🪨app](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Quality.tsx/s/QualityApp/d/i/QualityApp)
@@ -45610,7 +45383,6 @@ const QualityApp: FC<QualityAppProps> = () => {
 // #endregion QualityApp
 
 // #region Config
-
 // [👤semio📚js🗃️sketchpad💻qualitytsx🔖config](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/CONFIG)
 // Quality app route, panel, and path matching configuration MUST be exported.
 
@@ -45934,7 +45706,6 @@ export function getAllSections(): SectionInfo[] {
 // #region MDX Provider
 
 // #region SectionTree
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖mdxprovider🔖sectiontree](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/MDX-PROVIDER/SECTION-TREE)
 // Section tree navigation component MUST render docs file hierarchy.
 
@@ -46066,14 +45837,12 @@ interface HeadingsContextValue {
   registerHeading: (heading: HeadingNode) => void;
   clearHeadings: () => void;
 }
-
 // [👤semio📚js🗃️sketchpad💻docs🪨headingscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/d/i/HeadingsContext)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨headingscontext](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/HeadingsContext)
  * HeadingsContext holds the data fields for a HeadingsContext record.
  **/
 const HeadingsContext = createContext<HeadingsContextValue | null>(null);
-
 // [👤semio📚js🗃️sketchpad💻docs🪨tabitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/d/i/TabItem)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider🪨tabitem](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/TabItem)
@@ -46300,7 +46069,6 @@ export const HeadingsProvider: FC<HeadingsProviderProps> = ({ children }) => {
   const { headings, registerHeading, clearHeadings } = useHeadings();
   return <HeadingsContext.Provider value={{ headings, registerHeading, clearHeadings }}>{children}</HeadingsContext.Provider>;
 };
-
 // [👤semio📚js🗃️sketchpad💻docs🔖mdxloader✂️mdxproviderprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Loader/d/i/MDXProviderProps)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖mdxprovider✂️mdxproviderprops](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/MDX%20Provider/d/i/MDXProviderProps)
@@ -46322,7 +46090,6 @@ export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
 // #endregion MDX Provider
 
 // #region Registry
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖registry](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/REGISTRY)
 // Docs registry MUST provide page and section lookup for navigation.
 
@@ -46486,7 +46253,6 @@ export const docsRegistry = new DocsRegistry();
 // #endregion Registry
 
 // #region Store
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖store](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/STORE)
 // Docs app section state MUST be declared here.
 
@@ -46503,7 +46269,6 @@ export interface DocsSectionState {
 // #endregion Store
 
 // #region Types
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/TYPES)
 // Docs app state, selection, and diff type definitions MUST be declared here.
 
@@ -46577,7 +46342,6 @@ export interface DocsCommandResult {
 // #endregion Types
 
 // #region Docs App Store
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖docsappstore](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/DOCS-APP-STORE)
 // Docs app store MUST extend PlainAppStore with docs-specific state management.
 
@@ -46676,7 +46440,6 @@ export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsA
 // #endregion Docs App Store
 
 // #region Commands
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖commands](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/COMMANDS)
 // Docs app command handlers MUST modify state through diff objects.
 
@@ -46741,7 +46504,6 @@ if (typeof window !== "undefined") {
 }
 
 // #region Docs App Plugin Registration
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖commands🔖docsapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/COMMANDS/DOCS-APP-PLUGIN-REGISTRATION)
 // Plugin registration MUST initialize docs app context and registry.
 
@@ -46771,7 +46533,6 @@ if (typeof window !== "undefined") {
 // #region Windows
 
 // #region Page
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖canvas](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/CANVAS)
 // Page window MUST render MDX content with navigation and heading extraction.
 
@@ -46793,7 +46554,6 @@ interface TreeNode {
   page?: DocsPage;
   children: Map<string, TreeNode>;
 }
-
 // [👤semio📚js🗃️sketchpad💻docs🔖canvas🔖windows🔖page🪨pagecanvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas/s/Windows/s/Page/d/i/PageCanvas)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖canvas🔖windows🔖page🪨pagecanvas](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Canvas/s/Windows/s/Page/d/i/PageCanvas)
@@ -46999,7 +46759,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
 // #endregion Canvas
 
 // #region Footer
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/FOOTER)
 // Footer component MUST manage docs app footer items.
 
@@ -47051,7 +46810,6 @@ const Workbench: FC = () => {
     </TreeStateProvider>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻docs🔖panels🪨overview](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Overview)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨overview](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Overview)
@@ -47074,7 +46832,6 @@ const Overview: FC = () => {
     </TreeStateProvider>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻docs🔖panels🪨details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Details)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨details](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Details)
@@ -47097,7 +46854,6 @@ const Details: FC = () => {
     </div>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻docs🔖panels🪨settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Settings)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖panels🪨settings](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/Panels/d/i/Settings)
@@ -47188,7 +46944,6 @@ const Settings: FC = () => {
 };
 
 // #region App
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖app](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/APP)
 // Docs app root component MUST compose MDX routing, panel sections, and layout.
 
@@ -47199,7 +46954,6 @@ const Settings: FC = () => {
 export enum DocsAppWindowKind {
   Page = "page",
 }
-
 // [👤semio📚js🗃️sketchpad💻docs🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App/d/i/App)
 /**
  * [👤semio📚js🗃️sketchpad💻docs🔖app🪨app](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Docs.tsx/s/App/d/i/App)
@@ -47396,7 +47150,6 @@ const DocsApp: FC = () => {
 // #endregion DocsApp
 
 // #region Config
-
 // [👤semio📚js🗃️sketchpad💻docstsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/DOCS.TSX/CONFIG)
 // Docs app route, panel, and path matching configuration MUST be exported.
 
@@ -47432,7 +47185,6 @@ const useHome = useHomeApp;
 // #endregion Imports
 
 // #region Types
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖types](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES)
 // Home app type definitions MUST be declared here.
 
@@ -47536,7 +47288,6 @@ export interface HomeCommandResult {
 // #endregion Types
 
 // #region Home App Plugin Registration
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖homeapppluginregistration](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/HOME-APP-PLUGIN-REGISTRATION)
 // Home app plugin and event handler registration MUST initialize XState context.
 
@@ -47601,7 +47352,6 @@ if (typeof window !== "undefined") {
 // #endregion Home App Plugin Registration
 
 // #region Hooks (XState-based)
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖hooksxstatebased](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/HOOKS-X-STATE-BASED)
 // XState-based hooks MUST re-export state selectors for the Home app.
 
@@ -47626,7 +47376,6 @@ export {};
 // #region Right
 
 // #region Details
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖details](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/DETAILS)
 // Details panel MUST show properties of selected kits.
 
@@ -47643,7 +47392,6 @@ export const HomeKitSection: FC = () => {
   if (selectedKits.length === 1) return <SingleKitSection kitId={selectedKits[0]} />;
   return <MultipleKitsSection kitIds={selectedKits} />;
 };
-
 // [👤semio📚js🗃️sketchpad💻home🔖imports🔖types🔖hooksxstatebased🔖table🔖details🪨singlekitsection](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Imports/s/Types/s/Hooks%20(XState-based)/s/Table/s/Details/d/i/SingleKitSection)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖canvas🔖panels🔖right🔖details🪨singlekitsection](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas/s/Panels/s/Right/s/Details/d/i/SingleKitSection)
@@ -47679,7 +47427,6 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
     </>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻home🔖details🪨multiplekitssection](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Details/d/i/MultipleKitsSection)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖canvas🔖panels🔖right🔖details🪨multiplekitssection](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas/s/Panels/s/Right/s/Details/d/i/MultipleKitsSection)
@@ -47750,7 +47497,6 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
 // #endregion Details
 
 // #region Chat
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖chat](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/CHAT)
 // Chat panel MUST show the chat placeholder content.
 
@@ -47761,10 +47507,8 @@ const ChatPlaceholder: FC = () => {
 // #endregion Chat
 
 // #region Settings
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖settings](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/SETTINGS)
 // Settings panel MUST expose theme, language, device, expertise, and mode toggles.
-
 // [👤semio📚js🗃️sketchpad💻home🔖settings🪨settingscontent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Settings/d/i/SettingsContent)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖canvas🔖panels🔖right🔖settings🪨settingscontent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/Canvas/s/Panels/s/Right/s/Settings/d/i/SettingsContent)
@@ -47865,7 +47609,6 @@ const SettingsContent: FC = () => {
 // #endregion Canvas
 
 // #region Footer
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖footer](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/FOOTER)
 // Footer component MUST manage Home app footer items.
 
@@ -47886,7 +47629,6 @@ const HomeFooter: FC = () => {
 // #endregion Footer
 
 // #region DropZone
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖dropzone](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/DROP-ZONE)
 // DropZone component MUST handle drag-and-drop kit imports.
 
@@ -48004,7 +47746,6 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 // #endregion DropZone
 
 // #region App
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖app](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/APP)
 // App components MUST compose the Home app toolbar, table, and logic.
 
@@ -48013,7 +47754,6 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
  * KitKind holds the data fields for a KitKind record.
  **/
 type KitKind = "temporary" | "local" | "remote";
-
 // [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbarfilters](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarFilters)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbarfilters](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarFilters)
@@ -48050,7 +47790,6 @@ const HomeToolbarFilters: FC = () => {
     </ToolbarGroup>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbarcreate](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarCreate)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbarcreate](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarCreate)
@@ -48093,7 +47832,6 @@ const HomeToolbarCreate: FC = () => {
     </ToolbarGroup>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbaropen](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarOpen)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖app🪨hometoolbaropen](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeToolbarOpen)
@@ -48174,7 +47912,6 @@ type HomeTableRow = {
   icon?: string;
   isLoading?: boolean;
 };
-
 // [👤semio📚js🗃️sketchpad💻home🔖app🪨hometablecontent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeTableContent)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖app🪨hometablecontent](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/d/i/HomeTableContent)
@@ -48930,7 +48667,6 @@ const HomeTableContent: FC = () => {
 };
 
 // #region Multi-Window App
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖app🔖multiwindowapp](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/APP/MULTI-WINDOW-APP)
 // Multi-window app MUST orchestrate the Home canvas and layout.
 
@@ -48942,7 +48678,6 @@ const HomeTableWindow = memo(() => {
   return <HomeTableContent />;
 });
 HomeTableWindow.displayName = "HomeTableWindow";
-
 // [👤semio📚js🗃️sketchpad💻home🔖app🔖multiwindowapp🪨home](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/s/Multi-Window%20App/d/i/Home)
 /**
  * [👤semio📚js🗃️sketchpad💻home🔖app🔖multiwindowapp🪨home](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Home.tsx/s/App/s/Multi-Window%20App/d/i/Home)
@@ -49092,7 +48827,6 @@ const Home: FC = () => {
 // #endregion App
 
 // #region Config
-
 // [👤semio📚js🗃️sketchpad💻hometsx🔖config](repo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CONFIG)
 // Config MUST define the Home app registration and panel setup.
 
@@ -49211,7 +48945,6 @@ if (typeof window !== "undefined") {
 // #endregion Feedback App Plugin Registration
 
 // #region Triadic Hooks
-
 // [👤semio📚js🗃️sketchpad💻feedbacktsx🔖triadichooks](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/TRIADIC-HOOKS)
 // MUST provide triadic hooks for accessing and mutating Feedback app state.
 
@@ -49327,10 +49060,8 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
 // #region Components
 
 // #region Form
-
 // [👤semio📚js🗃️sketchpad💻feedbacktsx🔖components🔖form](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/COMPONENTS/FORM)
 // MUST render feedback form for submitting bug reports and ideas.
-
 // [👤semio📚js🗃️sketchpad💻feedback🔖components🔖form🪨feedbackform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Components/s/Form/d/i/FeedbackForm)
 /**
  * [👤semio📚js🗃️sketchpad💻feedback🔖components🔖form🪨feedbackform](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/Components/s/Form/d/i/FeedbackForm)
@@ -49553,10 +49284,8 @@ const FeedbackForm: FC = () => {
 // #endregion Components
 
 // #region App
-
 // [👤semio📚js🗃️sketchpad💻feedbacktsx🔖app](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/APP)
 // MUST integrate feedback app with toolbar and layout canvas.
-
 // [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedbacktoolbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/FeedbackToolbar)
 /**
  * [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedbacktoolbar](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/FeedbackToolbar)
@@ -49582,7 +49311,6 @@ const FeedbackToolbar: FC = () => {
     </ToolbarGroup>
   );
 };
-
 // [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedback](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/Feedback)
 /**
  * [👤semio📚js🗃️sketchpad💻feedback🔖app🪨feedback](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Feedback.tsx/s/App/d/i/Feedback)
@@ -49623,7 +49351,6 @@ const Feedback: FC = () => {
 // #endregion App
 
 // #region Config
-
 // [👤semio📚js🗃️sketchpad💻feedbacktsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/CONFIG)
 // MUST define app configuration for the Feedback app.
 
@@ -49643,7 +49370,6 @@ export const feedbackConfig = {
 // #endregion Config
 
 // #region Global Footer Item
-
 // [👤semio📚js🗃️sketchpad💻feedbacktsx🔖globalfooteritem](semiorepo://section/SEMIO/JS/SKETCHPAD/FEEDBACK.TSX/GLOBAL-FOOTER-ITEM)
 // MUST re-export the feedback icon for the footer item.
 

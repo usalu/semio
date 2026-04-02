@@ -39,11 +39,9 @@ const execAsync = promisify(exec);
  * execFileAsync holds the data fields for a execFileAsync record.
  **/
 const execFileAsync = promisify(execFile);
-
 // [🧰repo🖱️vscode💻extension🔖imports✂️problem](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports/d/i/Problem)
 // Problem holds the data fields for a Problem record.
 type Problem = { message: string };
-
 // [🧰repo🖱️vscode💻extension🔖imports🛠️deserializekit](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports/d/i/deserializeKit)
 // deserializeKit holds the data fields for a deserializeKit record.
 function deserializeKit(text: string): unknown {
@@ -542,7 +540,6 @@ let cachedRepoBaseUrl: string | undefined = undefined;
  * runningProcesses holds the data fields for a runningProcesses record.
  **/
 const runningProcesses = new Map<string, AbortController>();
-
 // [🧰repo🖱️vscode💻extension🔖globals🪨cliconcurrencylimit](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/cliConcurrencyLimit)
 // Maximum number of concurrent CLI subprocess spawns to prevent system overload.
 const CLI_CONCURRENCY_LIMIT = 2;
@@ -581,7 +578,6 @@ let monorepoProvider: MonorepoTreeDataProvider | undefined;
 // #endregion 🔖Globals
 
 // #region 🔖Utilities
-
 // [🧰repo🖱️vscode💻extension🔖utilities](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities)
 // Utilities MUST provide shared functions for logging, shell execution, and binary resolution.
 
@@ -597,7 +593,7 @@ function writeLog(level: string, args: any[]): void {
   try {
     const logPath = path.join(getWorkspaceRoot() || "", "activation.log");
     fs.appendFileSync(logPath, `[${level}] ${message}\n`);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 /**
@@ -817,7 +813,6 @@ export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> 
 // #endregion 🔖Utilities
 
 // #region 🔖URI Resolution
-
 // [🧰repo🖱️vscode💻extension🔖uriresolution](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution)
 // URI Resolution MUST handle parsing, tree node caching, and repo URI navigation.
 
@@ -1254,7 +1249,6 @@ async function navigateToUri(uri: string): Promise<void> {
 // #endregion 🔖URI Resolution
 
 // #region 🔖Helpers
-
 // [🧰repo🖱️vscode💻extension🔖helpers](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Helpers)
 // Helpers MUST provide file path extraction, ticket path resolution, and editor navigation.
 
@@ -1339,7 +1333,6 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
 // #endregion 🔖Helpers
 
 // #region 🔖File Analysis & Diagnostics
-
 // [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics)
 // File Analysis & Diagnostics MUST handle analysis, breach diagnostics, bundle caching, and kit validation.
 
@@ -1551,7 +1544,6 @@ function validateKitDocument(document: vscode.TextDocument): void {
 // #endregion 🔖File Analysis & Diagnostics
 
 // #region 🔖Providers
-
 // [🧰repo🖱️vscode💻extension🔖providers](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers)
 // Providers MUST implement VS Code tree data providers for filter, monorepo, and sections views.
 
@@ -1811,7 +1803,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(public filterProvider?: FilterTreeDataProvider) {}
+  constructor(public filterProvider?: FilterTreeDataProvider) { }
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -1918,7 +1910,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
             if (parsed.section) {
               sections.push(parsed.section);
             }
-          } catch (e) {}
+          } catch (e) { }
         }
         return this.createSectionItems(sections, filePath);
       } catch (e) {
@@ -2150,7 +2142,6 @@ function updateSemioDecorations(editor: vscode.TextEditor) {
 // #endregion 🔖Providers
 
 // #region 🔖Activation
-
 // [🧰repo🖱️vscode💻extension🔖activation](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation)
 // Activation MUST handle extension activation, command registration, and lifecycle management.
 
@@ -2669,6 +2660,6 @@ export function activate(context: vscode.ExtensionContext) {
  *Implementations MUST clean up any active subscriptions.
  * [🧰repo🖱️vscode💻extension🔖activation🛠️deactivate](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/deactivate)
  **/
-export function deactivate() {}
+export function deactivate() { }
 
 // #endregion 🔖Activation

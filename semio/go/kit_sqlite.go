@@ -546,7 +546,6 @@ func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
 }
 
 // buildFilePath constructs the file path from the folder hierarchy and file name
-// buildFilePath MUST perform the buildFilePath operation.
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️buildfilepath](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/buildFilePath)
 func buildFilePath(kit *Kit, file *File) string {
 	if file.Folder == nil {
@@ -560,7 +559,6 @@ func buildFilePath(kit *Kit, file *File) string {
 }
 
 // buildFolderPath constructs the folder path from the folder hierarchy
-// buildFolderPath MUST perform the buildFolderPath operation.
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️buildfolderpath](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/buildFolderPath)
 func buildFolderPath(kit *Kit, folderGuid string) string {
 	for _, f := range kit.Folders {
@@ -580,7 +578,6 @@ func buildFolderPath(kit *Kit, folderGuid string) string {
 
 // blobEncode encodes bytes to a data URI string with the mime type inferred from filename.
 // Falls back to "application/octet-stream" when the extension is unknown.
-// blobEncode MUST perform the blobEncode operation.
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobencode](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobEncode)
 func blobEncode(data []byte, filename string) string {
 	mimeStr := mimeFromFilename(filename)
@@ -615,7 +612,6 @@ func mimeFromFilename(filename string) string {
 
 // blobDecode decodes a data URI string to bytes.
 // Supports "data:<mime>;base64,<data>" format as well as raw base64 for backwards compatibility.
-// blobDecode MUST perform the blobDecode operation.
 // [👤semio📚go💻kitsqlite🔖sqlitekitoperations🛠️blobdecode](repo://p/u/semio/b/l/go/f/kit_sqlite.go/s/SQLite%20Kit%20Operations/d/i/blobDecode)
 func blobDecode(s string) ([]byte, error) {
 	if strings.HasPrefix(s, "data:") {

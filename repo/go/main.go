@@ -3,22 +3,7 @@
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // GPL-3.0
 // Shared Go library for repo CLI and server: event kinds, payloads, and emit helper.
-// #region 🔖License
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// #endregion 🔖License
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or \(at your option\) any later version\. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\.  See the GNU Affero General Public License for more details\. You should have received a copy of the GNU Affero General Public License along with this program\.  If not, see <https://www\.gnu\.org/licenses/>\.
 
 // #endregion 🔖Header
 
@@ -363,7 +348,6 @@ type ExtractPayload struct {
 // [🧰repo📚go💻main🔖emit](repo://p/i/repo/b/l/go/f/main.go/s/Emit)
 
 // Emit posts an event to the repo server. No-op when SEMIO_SERVER_ADDR is unset.
-// Emit MUST perform the Emit operation.
 // [🧰repo📚go💻main🔖emit🛠️emit](repo://p/i/repo/b/l/go/f/main.go/s/Emit/d/i/Emit)
 func Emit(kind EventKind, source string, payload interface{}) {
 	addr := strings.TrimSpace(os.Getenv("SEMIO_SERVER_ADDR"))

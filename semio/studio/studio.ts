@@ -1,5 +1,4 @@
 // #region 🔖Header
-
 // [👤semio👥studio💻studio](repo://p/u/semio/b/l/studio/f/studio.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>

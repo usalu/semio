@@ -358,7 +358,6 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
     addKitMetaEntry(metadata, "Name", kind.name);
     addKitMetaEntry(metadata, "Guid", kind.guid);
     addKitMetaEntry(metadata, "Description", kind.description);
-    addKitMetaEntry(metadata, "Variant", kind.variant);
     addKitMetaEntry(metadata, "Created", kind.createdAt);
     addKitMetaEntry(metadata, "Updated", kind.updatedAt);
     const key = `kind:${kind.guid}`;
@@ -382,9 +381,7 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
     addKitMetaEntry(metadata, "Name", design.name);
     addKitMetaEntry(metadata, "Guid", design.guid);
     addKitMetaEntry(metadata, "Description", design.description);
-    addKitMetaEntry(metadata, "Variant", design.variant);
     addKitMetaEntry(metadata, "Unit", design.unit);
-    addKitMetaEntry(metadata, "View", design.view);
     addKitMetaEntry(metadata, "Created", design.createdAt);
     addKitMetaEntry(metadata, "Updated", design.updatedAt);
     registerNode({
@@ -1998,8 +1995,10 @@ const isSceneGltfSource = (source?: string, modelName?: string): boolean => {
 const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: DiagramEntityStatus }>): ScenePieceAsset[] => {
   const kindsByGuid = new Map((kit.types ?? []).map((kind) => [kind.guid, kind] as const));
   const filesByGuid = new Map((kit.files ?? []).map((file) => [file.guid, file] as const));
-  return pieces
-    .filter(({ piece }) => piece.plane && piece.center)
+  console.debug(`[DEBUG] buildScenePieceAssets: kit.types=${kit.types?.length ?? 0} kit.files=${kit.files?.length ?? 0} pieces=${pieces.length}`);
+  const withPlaneAndCenter = pieces.filter(({ piece }) => piece.plane && piece.center);
+  console.debug(`[DEBUG] buildScenePieceAssets: pieces with plane+center=${withPlaneAndCenter.length}`);
+  const result = withPlaneAndCenter
     .map(({ piece, status }) => {
       const kindGuid = piece.type?.guid;
       const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
@@ -2023,6 +2022,9 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
         modelSource: getSceneFileSource(file),
       };
     });
+  const withModel = result.filter((a) => a.modelSource);
+  console.debug(`[DEBUG] buildScenePieceAssets: assets with modelSource=${withModel.length}/${result.length} first=${withModel[0]?.modelSource?.slice(0, 80)}`);
+  return result;
 };
 
 const toSceneVector = (coord: { x: number; y: number; z: number }): THREE.Vector3 => new THREE.Vector3(coord.x, coord.y, coord.z).applyMatrix4(SEMIO_TO_THREE_BASIS);
@@ -3308,6 +3310,11 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
   const merged = diff ? designWithDiff(design, diff) : design;
   if (!merged?.guid) return merged;
 
+  const piecesBeforeCount = merged.pieces?.length ?? 0;
+  const piecesWithCenter = merged.pieces?.filter((p) => p.center).length ?? 0;
+  const piecesWithPlane = merged.pieces?.filter((p) => p.plane).length ?? 0;
+  console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface: surface=${surface} pieces=${piecesBeforeCount} withCenter=${piecesWithCenter} withPlane=${piecesWithPlane}`);
+
   try {
     const kitDesigns = (kit.designs ?? []) as Design[];
     const kitForFlatten: Kit = {
@@ -3317,8 +3324,12 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
 
     const fc = flattenDesign(kitForFlatten, merged.guid);
     const piecesDiff = fc.forward?.pieces;
+    console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface: flattenDesign updatedPieces=${(piecesDiff as any)?.updated?.length ?? 0} piecesDiff=${JSON.stringify(piecesDiff)?.slice(0, 200)}`);
     if (!piecesDiff) return merged;
-    return applyDesignDiff(merged, { pieces: piecesDiff });
+    const result = applyDesignDiff(merged, { pieces: piecesDiff });
+    const resultWithCenter = result.pieces?.filter((p) => p.center).length ?? 0;
+    console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface: result pieces=${result.pieces?.length ?? 0} withCenter=${resultWithCenter}`);
+    return result;
   } catch (e) {
     console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface failed: ${(e as Error)?.message ?? String(e)}`);
     return merged;

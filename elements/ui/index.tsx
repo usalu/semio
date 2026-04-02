@@ -41,22 +41,22 @@ import { Slot } from "@radix-ui/react-slot";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
 import {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    ConnectionMode,
-    getBezierPath,
-    Handle,
-    MiniMap,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    SelectionMode,
-    useInternalNode,
-    useReactFlow,
-    useStoreApi,
-    ViewportPortal,
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  ConnectionMode,
+  getBezierPath,
+  Handle,
+  MiniMap,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 } from "@xyflow/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
@@ -64,34 +64,34 @@ import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import type { LucideIcon } from "lucide-react";
 import {
-    Plus as AddIcon,
-    AlertCircle as AlertCircleIcon,
-    BookOpen as BookIcon,
-    Camera as CameraIcon,
-    Check as CheckIcon,
-    CheckIcon as CheckIconAlt,
-    ChevronDown as ChevronDownIcon,
-    ChevronDownIcon as ChevronDownIconAlt,
-    ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
-    ChevronsUpDown as ChevronsUpDownIcon,
-    X as CloseIcon,
-    XIcon as CloseIconAlt,
-    FileText as DocumentIcon,
-    ExternalLink as ExternalLinkIcon,
-    Folder as FolderIcon,
-    GripVertical as GripVerticalIcon,
-    Info as InfoIcon,
-    Lightbulb as LightbulbIcon,
-    Maximize2 as Maximize2Icon,
-    Minimize2 as Minimize2Icon,
-    ArrowLeft as NavigateBackIcon,
-    ArrowRight as NavigateForwardIcon,
-    ArrowUp as NavigateUpIcon,
-    Minus as RemoveIcon,
-    SearchIcon,
-    TriangleAlert as TriangleAlertIcon,
-    GraduationCap as TutorialIcon,
+  Plus as AddIcon,
+  AlertCircle as AlertCircleIcon,
+  BookOpen as BookIcon,
+  Camera as CameraIcon,
+  Check as CheckIcon,
+  CheckIcon as CheckIconAlt,
+  ChevronDown as ChevronDownIcon,
+  ChevronDownIcon as ChevronDownIconAlt,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronsUpDown as ChevronsUpDownIcon,
+  X as CloseIcon,
+  XIcon as CloseIconAlt,
+  FileText as DocumentIcon,
+  ExternalLink as ExternalLinkIcon,
+  Folder as FolderIcon,
+  GripVertical as GripVerticalIcon,
+  Info as InfoIcon,
+  Lightbulb as LightbulbIcon,
+  Maximize2 as Maximize2Icon,
+  Minimize2 as Minimize2Icon,
+  ArrowLeft as NavigateBackIcon,
+  ArrowRight as NavigateForwardIcon,
+  ArrowUp as NavigateUpIcon,
+  Minus as RemoveIcon,
+  SearchIcon,
+  TriangleAlert as TriangleAlertIcon,
+  GraduationCap as TutorialIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -9865,7 +9865,6 @@ export interface Camera {
 // #endregion Utilities
 
 // #region Section Specificity
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖sectionspecificity](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/SECTION-SPECIFICITY)
 // Enum defining priority levels for section content ownership.
 // Consumers MUST use these constants for section precedence.
@@ -9887,7 +9886,6 @@ export enum SectionSpecificity {
 // #endregion Section Specificity
 
 // #region Interaction Context
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖interactioncontext](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INTERACTION-CONTEXT)
 // React context for tracking active UI interactions.
 // Consumers MUST wrap interactive elements with InteractionProvider.
@@ -9941,7 +9939,6 @@ const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 // #endregion Interaction Context
 
 // #region Level Context
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖levelcontext](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LEVEL-CONTEXT)
 // React context for UI depth level tracking.
 // Consumers MUST wrap components with LevelProvider.
@@ -9978,7 +9975,6 @@ export const useLevel = () => React.useContext(LevelContext);
 // #endregion Level Context
 
 // #region Element
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖element](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/ELEMENT)
 // Core element types, transaction context, and level-based CSS class helpers.
 // Consumers MUST use level functions for consistent styling.
@@ -10143,7 +10139,6 @@ export const getLevelDivideElementClass = (level: Level): string => {
 // #endregion Element
 
 // #region Command
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖command](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/COMMAND)
 // Command palette UI built on cmdk primitives.
 // Consumers MUST use CommandInput for search functionality.
@@ -10268,7 +10263,6 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) 
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };
 
 // #region Footer
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖footer](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/FOOTER)
 // Status bar component at the bottom of the layout.
 // Consumers MUST provide FooterItem entries for each action.
@@ -10326,7 +10320,6 @@ export { Footer };
 // #endregion Footer
 
 // #region Layout
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖layout](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/LAYOUT)
 // Top-level layout orchestrating navbar, panels, canvas, and footer.
 // Consumers MUST provide a canvas element.
@@ -10382,7 +10375,6 @@ export { Layout };
 // #endregion Layout
 
 // #region Popover
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖popover](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/POPOVER)
 // Floating popover component built on Radix primitives.
 
@@ -10439,7 +10431,6 @@ export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 // #endregion Popover
 
 // #region Tooltip
-
 // [👤semio📚js🗃️sketchpad💻elements🔖tooltip](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tooltip)
 // Tooltip components with expertise-level adaptive content.
 // Consumers MUST configure the expertise mode provider.
@@ -10703,7 +10694,6 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
 // #endregion Tooltip
 
 // #region Base Components
-
 // [👤semio📚js🗃️sketchpad💻elements🔖basecomponents](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components)
 // Foundational internal components like Label.
 // Consumers MUST use these as building blocks for inputs.
@@ -10720,7 +10710,6 @@ interface LabelProps {
   className?: string;
   children: React.ReactNode;
 }
-
 // [👤semio📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
 export function Label({ id, rowId, label, labelElementId, className, children }: LabelProps) {
   const localizedLabel = useLabel(id);
@@ -10775,7 +10764,6 @@ export function Label({ id, rowId, label, labelElementId, className, children }:
 // #endregion Base Components
 
 // #region Display Components
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components)
 // Read-only display wrappers for tooltips and callouts.
 // Consumers MUST pass valid config objects.
@@ -10834,7 +10822,6 @@ function IdSemioTooltip({ id, children }: IdSemioTooltipProps) {
 export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
 
 // #region Aside
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖aside](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Aside)
 // Callout boxes for notes, tips, cautions, and dangers.
 // Consumers MUST specify a valid kind prop.
@@ -10895,7 +10882,6 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 // #endregion Aside
 
 // #region Avatar
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖avatar](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Avatar)
 // User avatar components with image, fallback, drag, and table variants.
 // Consumers MUST provide content for the fallback.
@@ -11059,7 +11045,6 @@ export { Avatar, AvatarFallback, AvatarImage };
 // #endregion Avatar
 
 // #region Card
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖card](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Card)
 // Card container and grid layout for content blocks.
 /**
@@ -11111,7 +11096,6 @@ export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, c
 // #endregion Card
 
 // #region Spinner
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖spinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Spinner)
 // Animated loading spinner in small, medium, or large sizes.
 // Consumers MUST choose an appropriate size for the context.
@@ -11142,7 +11126,6 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
 // #endregion Spinner
 
 // #region NotFound
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖notfound](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/NotFound)
 // 404-style placeholder with icon, title, and back navigation.
 // Consumers MUST provide a title for the error.
@@ -11183,7 +11166,6 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
 // #endregion NotFound
 
 // #region LoadingRow
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖loadingrow](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/LoadingRow)
 // Skeleton loading row with pulsing icon and name.
 // Consumers MUST provide a name for the placeholder.
@@ -11217,7 +11199,6 @@ export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = 
 // #endregion LoadingRow
 
 // #region DiagramNode
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖diagramnode](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/DiagramNode)
 // Individual diagram node element with selection and hover states.
 // Consumers MUST provide content for the node.
@@ -11281,7 +11262,6 @@ export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => voi
 // #endregion DiagramNode
 
 // #region HoverCard
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖hovercard](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/HoverCard)
 // Hover-triggered card built on Radix primitives.
 // Consumers MUST use HoverCardTrigger to activate.
@@ -11328,7 +11308,6 @@ export { HoverCard, HoverCardContent, HoverCardTrigger };
 // #endregion HoverCard
 
 // #region Icons
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖displaycomponents🔖icons](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/DISPLAY-COMPONENTS/ICONS)
 // Cursor icon component for collaborative pointer display.
 // Consumers MUST provide position data for rendering.
@@ -11371,7 +11350,6 @@ export { Cursor };
 // #endregion Icons
 
 // #region Section
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖section](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Section)
 // Collapsible section container with heading and specificity.
 // Consumers MUST provide a heading string.
@@ -11408,7 +11386,6 @@ export { Section };
 // #endregion Section
 
 // #region Steps
-
 // [👤semio📚js🗃️sketchpad💻elements🔖displaycomponents🔖steps](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Display%20Components/s/Steps)
 // Ordered step list container for tutorial or wizard flows.
 // Consumers MUST provide step children in order.
@@ -11437,7 +11414,6 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 // #region Input Components
 
 // #region ActionGroup
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS)
 // Compact action button group with dropdown support.
 // Consumers MUST provide action items for the group.
@@ -11907,7 +11883,6 @@ export { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVaria
 export type { ButtonCycleProps, ButtonProps };
 
 // #region Combobox
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖combobox](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Combobox)
 // Searchable dropdown with popover options list.
 // Consumers MUST provide options and onValueChange handler.
@@ -12016,7 +11991,6 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
 // #endregion Combobox
 
 // #region Input
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖input](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Input)
 // Text input field with label, validation, and clear support.
 // Consumers MUST provide an id for accessibility.
@@ -12306,7 +12280,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const showCollapsedDisplay = !!showLabel && !isFocused && isCollapsibleInputType(type);
 
   const inputElement = (
-      <div data-slot="input-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+    <div data-slot="input-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
       {showCollapsedDisplay ? (
         <CollapsedFieldDisplay className={className} disabled={props.disabled} id={id} mixed={mixed} onActivate={() => setIsFocused(true)} placeholder={computedPlaceholder} slot="input" value={mixed && !inputDisplayValue ? "" : inputDisplayValue} />
       ) : (
@@ -12352,7 +12326,6 @@ export { Input };
 // #endregion Input
 
 // #region Select
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖select](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Select)
 // Dropdown select built on Radix primitives.
 // Consumers MUST use SelectItem children for options.
@@ -12573,7 +12546,6 @@ export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScro
 // #endregion Select
 
 // #region Slider
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖slider](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Slider)
 // Range slider built on Radix primitives.
 // Consumers MUST provide min and max values.
@@ -12812,7 +12784,6 @@ export { Slider };
 // #endregion Slider
 
 // #region Stepper
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖stepper](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Stepper)
 // Numeric stepper with increment/decrement and drag adjustment.
 // Consumers MUST provide min and max bounds.
@@ -13068,7 +13039,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
 // #endregion Stepper
 
 // #region Textarea
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖textarea](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Textarea)
 // Multi-line text input with label and validation.
 // Consumers MUST provide an id for the field.
@@ -13199,7 +13169,6 @@ export { Textarea };
 // #endregion Textarea
 
 // #region Toggle
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle)
 // Toggle button with pressed/unpressed states.
 // Consumers MUST handle onPressedChange events.
@@ -13286,7 +13255,6 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖toggle✂️toggleprops](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/Toggle/d/i/ToggleProps)
 type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleWithActionProps | ToggleDropdownProps<T>;
 
@@ -13295,7 +13263,6 @@ export type { ToggleProps };
 // #endregion Toggle
 
 // #region ToggleGroup
-
 // [👤semio📚js🗃️sketchpad💻elements🔖inputcomponents🔖togglegroup](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Input%20Components/s/ToggleGroup)
 // Group of mutually exclusive or multi-select toggles.
 // Consumers MUST provide items with distinct values.
@@ -13626,7 +13593,6 @@ export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 // #endregion ToggleGroup
 
 // #region Orb
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖orb](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/ORB)
 // Circular position indicator on a Ring. t ∈ [0,1[ maps to an angle on the ring.
 
@@ -13679,7 +13645,6 @@ export type { OrbProps };
 // #endregion Orb
 
 // #region Ring
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖inputcomponents🔖ring](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/INPUT-COMPONENTS/RING)
 // SVG ring container with draggable Orbs. Fires onOrbChange(orbId, oldT, newT) on drag.
 
@@ -13842,7 +13807,6 @@ export type { RingOrbData, RingProps };
 // #region Aggregation Components
 
 // #region Accordion
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖accordion](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/ACCORDION)
 // Collapsible accordion built on Radix primitives.
 // Consumers MUST use AccordionItem children.
@@ -13894,7 +13858,6 @@ export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
 // #endregion Accordion
 
 // #region Collapsible
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖collapsible](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/COLLAPSIBLE)
 // Collapsible section built on Radix primitives.
 // Consumers MUST use CollapsibleTrigger.
@@ -13927,7 +13890,6 @@ export { Collapsible, CollapsibleContent, CollapsibleTrigger };
 // #endregion Collapsible
 
 // #region Dialog
-
 // [👤semio📚js🗃️sketchpad💻elements🔖dialog](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Dialog)
 // Modal dialog built on Radix primitives.
 // Consumers MUST use DialogTrigger to open.
@@ -14123,11 +14085,9 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 // #endregion Resizable
 
 // #region Scrollable
-
 // [👤semio📚js🗃️sketchpad💻elements🔖scrollable](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Scrollable)
 // Custom scrollable area built on Radix ScrollArea.
 // Consumers MUST wrap content in Scrollable.
-
 // [👤semio📚js🗃️sketchpad💻elements🔖aggregationcomponents🔖scrollable🪨scrollable](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Aggregation%20Components/s/Scrollable/d/i/Scrollable)
 const Scrollable = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Viewport>, React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(
   ({ className, children, orientation = "vertical", ...props }, ref) => {
@@ -14179,7 +14139,6 @@ export { Scrollable, ScrollBar };
 // #endregion Scrollable
 
 // #region Band
-
 // [👤semio📚js🗃️sketchpad💻elements🔖band](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Band)
 // Horizontal band of navigation items with labels and icons.
 // Consumers MUST provide BandItem entries.
@@ -14237,7 +14196,6 @@ export { Band as Band };
 // #endregion Band
 
 // #region Strip
-
 // [👤semio📚js🗃️sketchpad💻elements🔖strip](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Strip)
 // Vertical strip of icon items for compact navigation.
 // Consumers MUST provide StripItem entries.
@@ -14295,7 +14253,6 @@ export { Strip };
 // #endregion Strip
 
 // #region Navbar
-
 // [👤semio📚js🗃️sketchpad💻elements🔖navbar](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Navbar)
 // Top navigation bar with icon items.
 // Consumers MUST provide NavbarItem entries.
@@ -14344,7 +14301,6 @@ export { Navbar };
 // #endregion Navbar
 
 // #region Tabs
-
 // [👤semio📚js🗃️sketchpad💻elements🔖tabs](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tabs)
 // Tab container built on Radix primitives.
 // Consumers MUST use TabsTrigger and TabsContent.
@@ -14402,7 +14358,6 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 // #endregion Tabs
 
 // #region Tree
-
 // [👤semio📚js🗃️sketchpad💻elements🔖tree](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Tree)
 // Hierarchical tree view with sections, items, and file trees.
 // Consumers MUST wrap components in TreeStateProvider.
@@ -14579,13 +14534,7 @@ interface TreeHierarchyGutterProps {
   slotOffsetPx?: number;
 }
 
-const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({
-  level,
-  showLines,
-  slot,
-  connectCurrentLevel = false,
-  slotOffsetPx = 0,
-}) => {
+const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, slotOffsetPx = 0 }) => {
   const { indentMultiplier } = React.useContext(TreeContext);
   const currentGuidePx = indentationLinePx(level, indentMultiplier);
   const parentGuidePx = level > 0 ? indentationLinePx(level - 1, indentMultiplier) : 0;
@@ -14595,24 +14544,24 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({
   const elbowWidthPx = Math.max(elbowEndPx - parentGuidePx, 0);
   const gutterWidthPx = treeGutterWidthPx(level, indentMultiplier);
   const positionedSlot =
-    hasSlot && React.isValidElement(slot)
-      ? React.cloneElement(slot, {
-          ...slot.props,
-          "data-slot": slot.props["data-slot"] ?? "tree-gutter-slot",
-          className: cn("absolute top-1/2 -translate-y-1/2", slot.props.className),
-          style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...slot.props.style },
-        })
-      : hasSlot
-        ? (
-            <span data-slot="tree-gutter-slot" className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier)}>
-              {slot}
-            </span>
-          )
-        : null;
+    hasSlot && React.isValidElement(slot) ? (
+      React.cloneElement(slot, {
+        ...slot.props,
+        "data-slot": slot.props["data-slot"] ?? "tree-gutter-slot",
+        className: cn("absolute top-1/2 -translate-y-1/2", slot.props.className),
+        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...slot.props.style },
+      })
+    ) : hasSlot ? (
+      <span data-slot="tree-gutter-slot" className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier)}>
+        {slot}
+      </span>
+    ) : null;
 
   return (
     <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: `${gutterWidthPx}px`, minWidth: `${gutterWidthPx}px` }}>
-      {showLines && level > 0 && connectCurrentLevel && <div data-slot="tree-branch-elbow" className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }} />}
+      {showLines && level > 0 && connectCurrentLevel && (
+        <div data-slot="tree-branch-elbow" className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }} />
+      )}
       {positionedSlot}
     </div>
   );
@@ -14632,33 +14581,15 @@ interface TreeAlignedRowProps {
   slotOffsetPx?: number;
 }
 
-const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
-  level,
-  isLastAtLevel,
-  showLines,
-  slot,
-  children,
-  className,
-  contentClassName,
-  align = "center",
-  connectCurrentLevel = false,
-  extendCurrentLevelToBottom = false,
-  slotOffsetPx = 0,
-}) => {
+const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({ level, isLastAtLevel, showLines, slot, children, className, contentClassName, align = "center", connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0 }) => {
   const { indentMultiplier } = React.useContext(TreeContext);
   return (
-  <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
-    <TreeHierarchyGutter
-      level={level}
-      showLines={showLines}
-      slot={slot}
-      connectCurrentLevel={connectCurrentLevel}
-      slotOffsetPx={slotOffsetPx}
-    />
-    <div data-slot="tree-row-content" className={cn("min-w-0", contentClassName)}>
-      {children}
+    <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
+      <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} slotOffsetPx={slotOffsetPx} />
+      <div data-slot="tree-row-content" className={cn("min-w-0", contentClassName)}>
+        {children}
+      </div>
     </div>
-  </div>
   );
 };
 
@@ -15104,14 +15035,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onDoubleClick(event);
         }}
       >
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null}
-          contentClassName="min-w-0"
-        >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
@@ -15390,14 +15314,14 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </div>
           </TreeAlignedRow>
         </div>
-          {open && (
-            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
-              <TreeBranchContent slot="tree-item-content" topPaddingPx={treeItemContentPaddingTopPx}>
-                {children}
-              </TreeBranchContent>
-            </TreeContext.Provider>
-          )}
-        </>
+        {open && (
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
+            <TreeBranchContent slot="tree-item-content" topPaddingPx={treeItemContentPaddingTopPx}>
+              {children}
+            </TreeBranchContent>
+          </TreeContext.Provider>
+        )}
+      </>
     );
   }
 
@@ -15427,13 +15351,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          contentClassName="min-w-0"
-        >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
@@ -15470,13 +15388,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <TreeAlignedRow
-        level={level}
-        isLastAtLevel={isLastAtLevel}
-        showLines={showLines}
-        connectCurrentLevel={level > 0}
-        contentClassName="min-w-0"
-      >
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
@@ -15829,22 +15741,12 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <TreeAlignedRow
-        level={level}
-        isLastAtLevel={isLastAtLevel}
-        showLines={showLines}
-        connectCurrentLevel={level > 0}
-        contentClassName="min-w-0"
-      >
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {loading && <Spinner size="small" className="text-muted-foreground" />}
             {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
-            <span
-              data-slot="tree-label"
-              className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable"
-              style={treeItemLabelStyle}
-            >
+            <span data-slot="tree-label" className="flex-1 text-xs font-normal truncate text-foreground cursor-selectable" style={treeItemLabelStyle}>
               {resolvedLabel as React.ReactNode}
             </span>
           </div>
@@ -16249,7 +16151,6 @@ export const Tree = (({
 }) as TreeComponent;
 
 // #region Basic Chat Panel
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖basicchatpanel](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/BASIC-CHAT-PANEL)
 // Shared side-panel chat UI with local-only message storage.
 // Consumers MUST provide a stable id and title per app tab.
@@ -16483,7 +16384,6 @@ Tree.Section = Tree.Files;
 export const FileTree = TreeFiles;
 
 // #region ControlTree
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🔖controltree](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/CONTROL-TREE)
 // Leva-like nested folder+controls tree UI using existing design system components.
 // Consumers MUST provide ControlDef[] and optional ControlTreeFolderSettings.
@@ -16718,14 +16618,7 @@ const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderCon
     <ControlTreeRow
       className={cn("hover:bg-hover-panel select-none overflow-hidden group", classNames?.controlRow)}
       left={
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          slotOffsetPx={2}
-          contentClassName="flex min-w-0 items-center gap-[6px]"
-        >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-[6px]">
           <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-foreground", classNames?.controlLabel)} style={treeItemLabelStyle}>
             {node.key}
           </span>
@@ -16808,7 +16701,6 @@ export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText =
 // #region Navigation Components
 
 // #region Breadcrumb
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖navigationcomponents🔖breadcrumb](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/NAVIGATION-COMPONENTS/BREADCRUMB)
 // Breadcrumb trail for hierarchical page navigation.
 // Consumers MUST provide BreadcrumbItemData entries.
@@ -17074,7 +16966,6 @@ export { PageNavigation };
 // #region Panel Components
 
 // #region Panel
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS)
 // Resizable dockable panel with sections and collapse support.
 // Consumers MUST set resizeSide for the handle.
@@ -17253,7 +17144,6 @@ export { Panel };
 // #endregion Panel
 
 // #region PanelGroup
-
 // [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖panelgroup](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/PanelGroup)
 // Flex container grouping multiple panels together.
 // Consumers MUST provide panel children.
@@ -17283,7 +17173,6 @@ export { PanelGroup };
 // #endregion PanelGroup
 
 // #region LeftPanel
-
 // [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖leftpanel](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/LeftPanel)
 // Left-docked panel variant with right resize handle.
 
@@ -17306,7 +17195,6 @@ export { LeftPanel };
 // #endregion LeftPanel
 
 // #region RightPanel
-
 // [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖rightpanel](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/RightPanel)
 export type RightPanelProps = Omit<PanelProps, "resizeSide">;
 
@@ -17322,7 +17210,6 @@ export { RightPanel };
 // #endregion RightPanel
 
 // #region MiddlePanel
-
 // [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖middlepanel](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/MiddlePanel)
 // Center panel variant without resize handles.
 
@@ -17368,7 +17255,6 @@ export { BottomPanel };
 // #endregion BottomPanel
 
 // #region SidePanel
-
 // [👤semio📚js🗃️sketchpad💻elements🔖panelcomponents🔖sidepanel](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Panel%20Components/s/SidePanel)
 // Collapsible side panel with tabbed content.
 // Consumers MUST provide SidePanelTabConfig entries.
@@ -17497,7 +17383,6 @@ export { SidePanel };
 // #endregion SidePanel
 
 // #region MobilePanel
-
 // [👤semio📚js🗃️sketchpad💻elementstsx🔖panelcomponents🔖mobilepanel](repo://section/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/PANEL-COMPONENTS/MOBILE-PANEL)
 // Full-width tabbed panel for mobile layouts. Not resizable. All tabs in one panel.
 
@@ -17746,7 +17631,6 @@ export { Window };
 // #endregion Window
 
 // #region Page
-
 // [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖page](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Page)
 // Full-page content wrapper with frontmatter and footer.
 // Consumers MUST provide frontmatter and children.
@@ -17808,32 +17692,31 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 // #endregion Page
 
 // #region Diagram
-
 // [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖diagram](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Diagram)
 // Interactive node-edge diagram built on ReactFlow and D3 force.
 // Consumers MUST provide nodes and edges arrays.
 
 export {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    forceCenter,
-    forceCollide,
-    forceLink,
-    forceManyBody,
-    forceSimulation,
-    forceX,
-    forceY,
-    getBezierPath,
-    Handle,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    useInternalNode,
-    useReactFlow,
-    useStoreApi,
-    ViewportPortal
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  getBezierPath,
+  Handle,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
@@ -18530,7 +18413,6 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
 // #endregion Diagram
 
 // #region Scene
-
 // [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene)
 // 3D scene viewer built on React Three Fiber.
 // Consumers MUST provide SceneGeometry data.
@@ -19210,7 +19092,6 @@ export const SceneSkeleton: React.FC = () => (
 // #endregion Scene
 
 // #region Table
-
 // [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖table](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Table)
 // Sortable, hierarchical data table with drag-drop support.
 // Consumers MUST provide columns and data arrays.
@@ -21005,7 +20886,7 @@ export { i18next, initReactI18next, LanguageDetector, useTranslation };
 // #endregion 🔖I18n
 
 // #region 🔖Hotkeys
-    export { useHotkeys } from "react-hotkeys-hook";
+export { useHotkeys } from "react-hotkeys-hook";
 // #endregion 🔖Hotkeys
 
 // #region 🔖Date
@@ -21319,7 +21200,7 @@ if (treeVitest) {
       expect(markup).not.toMatch(/data-slot="tree-gutter"[^>]*><div class="absolute left-0 top-0 bottom-0 pointer-events-none"/);
       expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
-      expect(markup).toContain('absolute top-1/2 -translate-y-1/2');
+      expect(markup).toContain("absolute top-1/2 -translate-y-1/2");
       expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style="left:7px;width:3px"');
       expect(markup).not.toContain('data-slot="tree-branch-stem"');
       expect(markup.match(/w-px h-full bg-muted-foreground\/40/g)?.length ?? 0).toBe(3);
@@ -21392,11 +21273,7 @@ if (treeVitest) {
     it("keeps tree section actions inline with the header row when isTree is true", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
-          <TreeSection
-            id="tooltip.manual"
-            defaultOpen={false}
-            actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]}
-          />
+          <TreeSection id="tooltip.manual" defaultOpen={false} actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]} />
         </TreeContext.Provider>,
       );
 
@@ -21404,7 +21281,7 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       const rowContentIdx = markup.indexOf('data-slot="tree-row-content"');
-      const actionsIdx = markup.indexOf("data-testid=\"add-icon\"");
+      const actionsIdx = markup.indexOf('data-testid="add-icon"');
       expect(rowContentIdx).toBeGreaterThan(-1);
       expect(actionsIdx).toBeGreaterThan(-1);
       expect(actionsIdx).toBeGreaterThan(rowContentIdx);
@@ -21413,32 +21290,26 @@ if (treeVitest) {
     it("keeps tree item actions inline with the header row when isTree is true", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
-          <TreeItem
-            id="tooltip.manual"
-            actions={[{ icon: <span data-testid="remove-icon" />, onClick: () => undefined }]}
-          />
+          <TreeItem id="tooltip.manual" actions={[{ icon: <span data-testid="remove-icon" />, onClick: () => undefined }]} />
         </TreeContext.Provider>,
       );
 
       expect(markup).toContain('class="flex items-center gap-[6px] min-w-0 w-full"');
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
-      expect(markup).toContain("data-testid=\"remove-icon\"");
+      expect(markup).toContain('data-testid="remove-icon"');
     });
 
     it("uses the same inline tree header actions when isTree is false", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false, isTree: false, indentMultiplier: 1 }}>
-          <TreeItem
-            id="tooltip.manual"
-            actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]}
-          />
+          <TreeItem id="tooltip.manual" actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]} />
         </TreeContext.Provider>,
       );
 
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
-      expect(markup).toContain("data-testid=\"add-icon\"");
+      expect(markup).toContain('data-testid="add-icon"');
     });
   });
 

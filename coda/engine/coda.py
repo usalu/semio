@@ -69,7 +69,6 @@ def _load_json_with_comments(path: Path) -> dict:
 
 def _get_project_root() -> Path | None:
     """Resolve project root from CODA_PROJECT or cwd.
-    _get_project_root MUST perform the _get_project_root operation.
     [🔬coda📚py💻coda🔖helpers🛠️getprojectroot](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_project_root)
     """
     if val := os.environ.get(_PROJECT_ENV):
@@ -83,9 +82,7 @@ def _get_project_root() -> Path | None:
 
 
 def _get_coda_config() -> dict:
-    """_get_coda_config performs the _get_coda_config operation.
     [🔬coda📚py💻coda🔖helpers🛠️getcodaconfig](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_coda_config)
-    _get_coda_config MUST perform the _get_coda_config operation.
     """
     config_path = Path(os.environ.get("CODA_CONFIG", _CODA_JSON_PATH))
     if not config_path.is_absolute():
@@ -176,9 +173,7 @@ def _normalize_target_definition(target_definition: dict) -> dict:
 
 
 def _get_project_config() -> dict | None:
-    """_get_project_config performs the _get_project_config operation.
     [🔬coda📚py💻coda🔖helpers🛠️getprojectconfig](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_project_config)
-    _get_project_config MUST perform the _get_project_config operation.
     """
     root = _get_project_root()
     if not root:
@@ -337,9 +332,7 @@ def _run_ontology_validator(
 
 
 def _get_latest_run(root: Path) -> Path | None:
-    """_get_latest_run performs the _get_latest_run operation.
     [🔬coda📚py💻coda🔖helpers🛠️getlatestrun](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_latest_run)
-    _get_latest_run MUST perform the _get_latest_run operation.
     """
     runs = root / ".coda" / "runs"
     if not runs.exists():
@@ -349,9 +342,7 @@ def _get_latest_run(root: Path) -> Path | None:
 
 
 def _get_latest_iteration(run_dir: Path) -> Path | None:
-    """_get_latest_iteration performs the _get_latest_iteration operation.
     [🔬coda📚py💻coda🔖helpers🛠️getlatestiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_latest_iteration)
-    _get_latest_iteration MUST perform the _get_latest_iteration operation.
     """
     iters = run_dir / "iterations"
     if not iters.exists():
@@ -804,7 +795,6 @@ def get_iterations() -> str:
 def get_report() -> str:
     """Get the current report from the latest iteration.
     [🔬coda📚py💻coda🔖resources🛠️getreport](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_report)
-    get_report MUST perform the get_report operation.
     """
     root = _get_project_root()
     if not root:

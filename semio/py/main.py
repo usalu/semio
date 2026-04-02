@@ -6833,9 +6833,7 @@ class ValidationResult:
 
 
 def _isGuid(s: str) -> bool:
-    """_isGuid performs the _isGuid operation.
     [👤semio📚py💻semio🔖domain🔖validation🛠️isguid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/_isGuid)
-    _isGuid MUST perform the _isGuid operation.
     """
     import re
 
@@ -6849,9 +6847,7 @@ def _isGuid(s: str) -> bool:
 
 
 def _normalizeGuids(obj: typing.Any) -> typing.Any:
-    """_normalizeGuids performs the _normalizeGuids operation.
     [👤semio📚py💻semio🔖domain🔖validation🛠️normalizeguids](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/_normalizeGuids)
-    _normalizeGuids MUST perform the _normalizeGuids operation.
     """
     if obj is None:
         return obj
@@ -7228,25 +7224,19 @@ def validateKit(kit: Kit) -> ValidationResult:
 
 
 def _makeFix(title: str, diff: dict) -> ValidationFix:
-    """_makeFix performs the _makeFix operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖dictbasedvalidation🛠️makefix](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Dict-based%20Validation/d/i/_makeFix)
-    _makeFix MUST perform the _makeFix operation.
     """
     return ValidationFix(title=title, diff=diff)
 
 
 def _deepCopy(obj: typing.Any) -> typing.Any:
-    """_deepCopy performs the _deepCopy operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖dictbasedvalidation🛠️deepcopy](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Dict-based%20Validation/d/i/_deepCopy)
-    _deepCopy MUST perform the _deepCopy operation.
     """
     return json.loads(json.dumps(obj))
 
 
 def _newGuid() -> str:
-    """_newGuid performs the _newGuid operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖dictbasedvalidation🛠️newguid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Dict-based%20Validation/d/i/_newGuid)
-    _newGuid MUST perform the _newGuid operation.
     """
     import uuid
 
@@ -8763,7 +8753,6 @@ def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> fl
 
 def _normalizeValue(value: typing.Any) -> typing.Any:
     """Normalize empty values to None for comparison.
-    _normalizeValue MUST perform the _normalizeValue operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️normalizevalue](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_normalizeValue)
     """
     if value is None or value == "" or value == []:
@@ -8773,7 +8762,6 @@ def _normalizeValue(value: typing.Any) -> typing.Any:
 
 def _normalizeBoolean(value: bool | None) -> bool | None:
     """Normalize boolean: True stays True, False/None become None.
-    _normalizeBoolean MUST perform the _normalizeBoolean operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️normalizeboolean](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_normalizeBoolean)
     """
     return True if value else None
@@ -8781,7 +8769,6 @@ def _normalizeBoolean(value: bool | None) -> bool | None:
 
 def _normalizeArray(arr: list | None) -> list:
     """Normalize None or single item to list.
-    _normalizeArray MUST perform the _normalizeArray operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️normalizearray](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_normalizeArray)
     """
     if arr is None:
@@ -9087,7 +9074,6 @@ def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
 
 def _getGuidFromRef(ref: typing.Any) -> str | None:
     """Extract guid from either a string (Input format) or dict with guid (Output format).
-    _getGuidFromRef MUST perform the _getGuidFromRef operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getguidfromref](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getGuidFromRef)
     """
     if ref is None:
@@ -9099,7 +9085,6 @@ def _getGuidFromRef(ref: typing.Any) -> str | None:
 
 def _floatEqual(a, b, epsilon=1e-9):
     """Compare two float values with epsilon tolerance.
-    _floatEqual MUST perform the _floatEqual operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️floatequal](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_floatEqual)
     """
     if a is None and b is None:
@@ -9482,7 +9467,6 @@ def _getCollectionDiff(
         after: The after collection
         getItemDiff: Function to get item-level diff
         entityKey: The key name for the entity ID in the updated array (e.g., "type", "design", "piece")
-    _getCollectionDiff MUST perform the _getCollectionDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getcollectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getCollectionDiff)
     """
     diff: dict = {}
@@ -9523,7 +9507,6 @@ def _applyCollectionDiff(
         diff: The diff to apply (with removed, updated, added)
         applyItemDiff: Function to apply item-level diff
         entityKey: The key name for the entity ID in the updated array (e.g., "type", "design", "piece")
-    _applyCollectionDiff MUST perform the _applyCollectionDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applycollectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyCollectionDiff)
     """
     if not diff:
@@ -9554,7 +9537,6 @@ def _applyCollectionDiff(
 
 def _getTypeDiff(before: dict, after: dict) -> dict:
     """Get diff between two type dicts.
-    _getTypeDiff MUST perform the _getTypeDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️gettypediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getTypeDiff)
     """
     diff: dict = {}
@@ -9612,7 +9594,6 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
 
 def _applyTypeDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a type dict.
-    _applyTypeDiff MUST perform the _applyTypeDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applytypediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyTypeDiff)
     """
     result = dict(base)
@@ -9652,7 +9633,6 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
 
 def _getConnectorDiff(before: dict, after: dict) -> dict:
     """Get diff between two connector dicts.
-    _getConnectorDiff MUST perform the _getConnectorDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getconnectordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getConnectorDiff)
     """
     diff: dict = {}
@@ -9696,7 +9676,6 @@ def _getConnectorDiff(before: dict, after: dict) -> dict:
 
 def _applyConnectorDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a connector dict.
-    _applyConnectorDiff MUST perform the _applyConnectorDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyconnectordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyConnectorDiff)
     """
     result = dict(base)
@@ -9732,7 +9711,6 @@ def _applyConnectorDiff(base: dict, diff: dict) -> dict:
 
 def _getModelDiff(before: dict, after: dict) -> dict:
     """Get diff between two model dicts.
-    _getModelDiff MUST perform the _getModelDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getmodeldiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getModelDiff)
     """
     diff: dict = {}
@@ -9764,7 +9742,6 @@ def _getModelDiff(before: dict, after: dict) -> dict:
 
 def _applyModelDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a model dict.
-    _applyModelDiff MUST perform the _applyModelDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applymodeldiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyModelDiff)
     """
     result = dict(base)
@@ -9782,7 +9759,6 @@ def _applyModelDiff(base: dict, diff: dict) -> dict:
 
 def _getDesignDiff(before: dict, after: dict) -> dict:
     """Get diff between two design dicts.
-    _getDesignDiff MUST perform the _getDesignDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getDesignDiff)
     """
     diff: dict = {}
@@ -9849,7 +9825,6 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
 
 def _applyDesignDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a design dict.
-    _applyDesignDiff MUST perform the _applyDesignDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applydesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyDesignDiff)
     """
     result = dict(base)
@@ -9960,7 +9935,6 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
 def _getPieceDiff(before: dict, after: dict) -> dict:
     """Get diff between two piece dicts.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getpiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getPieceDiff)
-    _getPieceDiff MUST perform the _getPieceDiff operation.
     """
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
@@ -9991,7 +9965,6 @@ def _getPieceDiff(before: dict, after: dict) -> dict:
 
 def _applyPieceDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a piece dict.
-    _applyPieceDiff MUST perform the _applyPieceDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applypiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyPieceDiff)
     """
     result = dict(base)
@@ -10017,7 +9990,6 @@ def _applyPieceDiff(base: dict, diff: dict) -> dict:
 
 def _getConnectionDiff(before: dict, after: dict) -> dict:
     """Get diff between two connection dicts.
-    _getConnectionDiff MUST perform the _getConnectionDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getconnectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getConnectionDiff)
     """
     diff: dict = {}
@@ -10041,7 +10013,6 @@ def _getConnectionDiff(before: dict, after: dict) -> dict:
 
 def _applyConnectionDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a connection dict.
-    _applyConnectionDiff MUST perform the _applyConnectionDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyconnectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyConnectionDiff)
     """
     result = dict(base)
@@ -10062,7 +10033,6 @@ def _applyConnectionDiff(base: dict, diff: dict) -> dict:
 def _getTagDiff(before: dict, after: dict) -> dict:
     """Get diff between two tag dicts.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️gettagdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getTagDiff)
-    _getTagDiff MUST perform the _getTagDiff operation.
     """
     diff: dict = {}
     if before.get("name") != after.get("name"):
@@ -10079,7 +10049,6 @@ def _getTagDiff(before: dict, after: dict) -> dict:
 
 def _applyTagDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a tag dict.
-    _applyTagDiff MUST perform the _applyTagDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applytagdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyTagDiff)
     """
     result = dict(base)
@@ -10093,7 +10062,6 @@ def _applyTagDiff(base: dict, diff: dict) -> dict:
 
 def _getConceptDiff(before: dict, after: dict) -> dict:
     """Get diff between two concept dicts.
-    _getConceptDiff MUST perform the _getConceptDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getconceptdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getConceptDiff)
     """
     diff: dict = {}
@@ -10112,7 +10080,6 @@ def _getConceptDiff(before: dict, after: dict) -> dict:
 def _applyConceptDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a concept dict.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyconceptdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyConceptDiff)
-    _applyConceptDiff MUST perform the _applyConceptDiff operation.
     """
     result = dict(base)
     for key in ["name", "description", "icon"]:
@@ -10125,7 +10092,6 @@ def _applyConceptDiff(base: dict, diff: dict) -> dict:
 
 def _getPortDiff(before: dict, after: dict) -> dict:
     """Get diff between two port dicts.
-    _getPortDiff MUST perform the _getPortDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getportdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getPortDiff)
     """
     diff: dict = {}
@@ -10155,7 +10121,6 @@ def _getPortDiff(before: dict, after: dict) -> dict:
 
 def _applyPortDiff(base: dict, diff: dict) -> dict:
     """Apply diff to an port dict.
-    _applyPortDiff MUST perform the _applyPortDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyportdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyPortDiff)
     """
     result = dict(base)
@@ -10171,7 +10136,6 @@ def _applyPortDiff(base: dict, diff: dict) -> dict:
 
 def _getFileDiff(before: dict, after: dict) -> dict:
     """Get diff between two file dicts.
-    _getFileDiff MUST perform the _getFileDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getfilediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getFileDiff)
     """
     diff: dict = {}
@@ -10199,7 +10163,6 @@ def _getFileDiff(before: dict, after: dict) -> dict:
 
 def _applyFileDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a file dict.
-    _applyFileDiff MUST perform the _applyFileDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyfilediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyFileDiff)
     """
     result = dict(base)
@@ -10215,7 +10178,6 @@ def _applyFileDiff(base: dict, diff: dict) -> dict:
 
 def _getFolderDiff(before: dict, after: dict) -> dict:
     """Get diff between two folder dicts.
-    _getFolderDiff MUST perform the _getFolderDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getfolderdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getFolderDiff)
     """
     diff: dict = {}
@@ -10232,7 +10194,6 @@ def _getFolderDiff(before: dict, after: dict) -> dict:
 def _applyFolderDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a folder dict.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyfolderdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyFolderDiff)
-    _applyFolderDiff MUST perform the _applyFolderDiff operation.
     """
     result = dict(base)
     for key in ["name", "description"]:
@@ -10245,7 +10206,6 @@ def _applyFolderDiff(base: dict, diff: dict) -> dict:
 
 def _getQualityDiff(before: dict, after: dict) -> dict:
     """Get diff between two quality dicts.
-    _getQualityDiff MUST perform the _getQualityDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getqualitydiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getQualityDiff)
     """
     diff: dict = {}
@@ -10288,7 +10248,6 @@ def _getQualityDiff(before: dict, after: dict) -> dict:
 
 def _applyQualityDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a quality dict.
-    _applyQualityDiff MUST perform the _applyQualityDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyqualitydiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyQualityDiff)
     """
     result = dict(base)
@@ -10318,7 +10277,6 @@ def _applyQualityDiff(base: dict, diff: dict) -> dict:
 
 def _getAuthorDiff(before: dict, after: dict) -> dict:
     """Get diff between two author dicts.
-    _getAuthorDiff MUST perform the _getAuthorDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getauthordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getAuthorDiff)
     """
     diff: dict = {}
@@ -10334,7 +10292,6 @@ def _getAuthorDiff(before: dict, after: dict) -> dict:
 
 def _applyAuthorDiff(base: dict, diff: dict) -> dict:
     """Apply diff to an author dict.
-    _applyAuthorDiff MUST perform the _applyAuthorDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyauthordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyAuthorDiff)
     """
     result = dict(base)
@@ -10348,7 +10305,6 @@ def _applyAuthorDiff(base: dict, diff: dict) -> dict:
 
 def _getAttributeDiff(before: dict, after: dict) -> dict:
     """Get diff between two attribute dicts - used for individual attribute update diffs.
-    _getAttributeDiff MUST perform the _getAttributeDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getattributediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getAttributeDiff)
     """
     diff: dict = {}
@@ -10364,7 +10320,6 @@ def _getAttributeDiff(before: dict, after: dict) -> dict:
 def _applyAttributeDiff(base: dict, diff: dict) -> dict:
     """Apply diff to an attribute dict.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyattributediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyAttributeDiff)
-    _applyAttributeDiff MUST perform the _applyAttributeDiff operation.
     """
     result = dict(base)
     for key in ["key", "value", "definition"]:
@@ -10375,7 +10330,6 @@ def _applyAttributeDiff(base: dict, diff: dict) -> dict:
 
 def _getAttributesDiff(before: list, after: list) -> dict:
     """Get diff for attributes collection - uses GUID for identification with EntityId format.
-    _getAttributesDiff MUST perform the _getAttributesDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getattributesdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getAttributesDiff)
     """
     diff: dict = {}
@@ -10403,7 +10357,6 @@ def _getAttributesDiff(before: list, after: list) -> dict:
 
 def _applyAttributesDiff(base: list, diff: dict | None) -> list:
     """Apply diff to attributes collection - uses GUID for identification with EntityId format.
-    _applyAttributesDiff MUST perform the _applyAttributesDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyattributesdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyAttributesDiff)
     """
     if not diff:
@@ -10426,7 +10379,6 @@ def _applyAttributesDiff(base: list, diff: dict | None) -> list:
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
     """Compute inverse of attributes collection diff - uses GUID with EntityId format.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseattributesdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseAttributesDiff)
-    _inverseAttributesDiff MUST perform the _inverseAttributesDiff operation.
     """
     inverse: dict = {}
 
@@ -10464,7 +10416,6 @@ def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
 def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of an attribute diff.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseattributediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseAttributeDiff)
-    _inverseAttributeDiff MUST perform the _inverseAttributeDiff operation.
     """
     inverse: dict = {}
     for key in ["key", "value", "definition"]:
@@ -10607,7 +10558,6 @@ def _inverseCollectionDiff(
         appliedDiff: The diff that was applied
         inverseItemDiff: Function to compute inverse of item-level diff
         entityKey: The key name for the entity ID (e.g., "type", "design", "piece")
-    _inverseCollectionDiff MUST perform the _inverseCollectionDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversecollectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseCollectionDiff)
     """
     inverse: dict = {}
@@ -10641,7 +10591,6 @@ def _inverseCollectionDiff(
 
 def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a type diff.
-    _inverseTypeDiff MUST perform the _inverseTypeDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversetypediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseTypeDiff)
     """
     inverse: dict = {}
@@ -10686,7 +10635,6 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a connector diff.
-    _inverseConnectorDiff MUST perform the _inverseConnectorDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectorDiff)
     """
     inverse: dict = {}
@@ -10717,7 +10665,6 @@ def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
 def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a model diff.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversemodeldiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseModelDiff)
-    _inverseModelDiff MUST perform the _inverseModelDiff operation.
     """
     inverse: dict = {}
     for key in ["name", "description"]:
@@ -10735,7 +10682,6 @@ def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
 def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a connection diff (negate numeric deltas).
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectionDiff)
-    _inverseConnectionDiff MUST perform the _inverseConnectionDiff operation.
     """
     inverse: dict = {}
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
@@ -10754,7 +10700,6 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a model diff.
-    _inverseModelDiff MUST perform the _inverseModelDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversemodeldiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseModelDiff)
     """
     inverse: dict = {}
@@ -10772,7 +10717,6 @@ def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a connection diff (negate numeric deltas).
-    _inverseConnectionDiff MUST perform the _inverseConnectionDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectionDiff)
     """
     inverse: dict = {}
@@ -10792,7 +10736,6 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a design diff.
-    _inverseDesignDiff MUST perform the _inverseDesignDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversedesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseDesignDiff)
     """
     inverse: dict = {}
@@ -10839,7 +10782,6 @@ def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a piece diff.
-    _inversePieceDiff MUST perform the _inversePieceDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversepiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inversePieceDiff)
     """
     inverse: dict = {}
@@ -10865,7 +10807,6 @@ def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a tag diff.
-    _inverseTagDiff MUST perform the _inverseTagDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversetagdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseTagDiff)
     """
     inverse: dict = {}
@@ -10879,7 +10820,6 @@ def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a concept diff.
-    _inverseConceptDiff MUST perform the _inverseConceptDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconceptdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConceptDiff)
     """
     inverse: dict = {}
@@ -10893,7 +10833,6 @@ def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of an port diff.
-    _inversePortDiff MUST perform the _inversePortDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseportdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inversePortDiff)
     """
     inverse: dict = {}
@@ -10909,7 +10848,6 @@ def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a file diff.
-    _inverseFileDiff MUST perform the _inverseFileDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversefilediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseFileDiff)
     """
     inverse: dict = {}
@@ -10925,7 +10863,6 @@ def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
 
 def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a folder diff.
-    _inverseFolderDiff MUST perform the _inverseFolderDiff operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversefolderdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseFolderDiff)
     """
     inverse: dict = {}
@@ -10940,7 +10877,6 @@ def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
 def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a quality diff.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversequalitydiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseQualityDiff)
-    _inverseQualityDiff MUST perform the _inverseQualityDiff operation.
     """
     inverse: dict = {}
     for key in [
@@ -10970,7 +10906,6 @@ def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
 def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of an author diff.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseauthordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseAuthorDiff)
-    _inverseAuthorDiff MUST perform the _inverseAuthorDiff operation.
     """
     inverse: dict = {}
     for key in ["name", "email"]:
@@ -11052,7 +10987,6 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
 class Change:
     """Change holds the data fields for a Change record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️change](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/Change)
-    Change MUST perform the Change operation.
     """
 
     forward: dict
@@ -11064,9 +10998,7 @@ class Change:
 
 
 def changeToDict(change: Change) -> dict:
-    """changeToDict performs the changeToDict operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️changetodict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/changeToDict)
-    changeToDict MUST perform the changeToDict operation.
     """
     result: dict = {"forward": change.forward, "backward": change.backward}
     if change.author is not None:
@@ -11084,7 +11016,6 @@ def changeToDict(change: Change) -> dict:
 class AttributeChange(Change):
     """AttributeChange holds the data fields for a AttributeChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️attributechange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/AttributeChange)
-    AttributeChange MUST perform the AttributeChange operation.
     """
 
     pass
@@ -11094,7 +11025,6 @@ class AttributeChange(Change):
 class AuthorChange(Change):
     """AuthorChange holds the data fields for a AuthorChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️authorchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/AuthorChange)
-    AuthorChange MUST perform the AuthorChange operation.
     """
 
     pass
@@ -11104,7 +11034,6 @@ class AuthorChange(Change):
 class FileChange(Change):
     """FileChange holds the data fields for a FileChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️filechange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/FileChange)
-    FileChange MUST perform the FileChange operation.
     """
 
     pass
@@ -11114,7 +11043,6 @@ class FileChange(Change):
 class FolderChange(Change):
     """FolderChange holds the data fields for a FolderChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️folderchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/FolderChange)
-    FolderChange MUST perform the FolderChange operation.
     """
 
     pass
@@ -11123,7 +11051,6 @@ class FolderChange(Change):
 @dataclasses.dataclass
 class QualityChange(Change):
     """QualityChange holds the data fields for a QualityChange record.
-    QualityChange MUST perform the QualityChange operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️qualitychange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/QualityChange)
     """
 
@@ -11134,7 +11061,6 @@ class QualityChange(Change):
 class PortChange(Change):
     """PortChange holds the data fields for a PortChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️portchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PortChange)
-    PortChange MUST perform the PortChange operation.
     """
 
     pass
@@ -11144,7 +11070,6 @@ class PortChange(Change):
 class PropChange(Change):
     """PropChange holds the data fields for a PropChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️propchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PropChange)
-    PropChange MUST perform the PropChange operation.
     """
 
     pass
@@ -11154,7 +11079,6 @@ class PropChange(Change):
 class TagChange(Change):
     """TagChange holds the data fields for a TagChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️tagchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/TagChange)
-    TagChange MUST perform the TagChange operation.
     """
 
     pass
@@ -11164,7 +11088,6 @@ class TagChange(Change):
 class ConceptChange(Change):
     """ConceptChange holds the data fields for a ConceptChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️conceptchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConceptChange)
-    ConceptChange MUST perform the ConceptChange operation.
     """
 
     pass
@@ -11174,7 +11097,6 @@ class ConceptChange(Change):
 class ModelChange(Change):
     """ModelChange holds the data fields for a ModelChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️modelchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ModelChange)
-    ModelChange MUST perform the ModelChange operation.
     """
 
     pass
@@ -11184,7 +11106,6 @@ class ModelChange(Change):
 class ConnectorChange(Change):
     """ConnectorChange holds the data fields for a ConnectorChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️connectorchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConnectorChange)
-    ConnectorChange MUST perform the ConnectorChange operation.
     """
 
     pass
@@ -11194,7 +11115,6 @@ class ConnectorChange(Change):
 class TypeChange(Change):
     """TypeChange holds the data fields for a TypeChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️typechange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/TypeChange)
-    TypeChange MUST perform the TypeChange operation.
     """
 
     pass
@@ -11204,7 +11124,6 @@ class TypeChange(Change):
 class LayerChange(Change):
     """LayerChange holds the data fields for a LayerChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️layerchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/LayerChange)
-    LayerChange MUST perform the LayerChange operation.
     """
 
     pass
@@ -11214,7 +11133,6 @@ class LayerChange(Change):
 class PieceChange(Change):
     """PieceChange holds the data fields for a PieceChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️piecechange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PieceChange)
-    PieceChange MUST perform the PieceChange operation.
     """
 
     pass
@@ -11224,7 +11142,6 @@ class PieceChange(Change):
 class GroupChange(Change):
     """GroupChange holds the data fields for a GroupChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️groupchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/GroupChange)
-    GroupChange MUST perform the GroupChange operation.
     """
 
     pass
@@ -11234,7 +11151,6 @@ class GroupChange(Change):
 class ConnectionChange(Change):
     """ConnectionChange holds the data fields for a ConnectionChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️connectionchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConnectionChange)
-    ConnectionChange MUST perform the ConnectionChange operation.
     """
 
     pass
@@ -11244,7 +11160,6 @@ class ConnectionChange(Change):
 class StatChange(Change):
     """StatChange holds the data fields for a StatChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️statchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/StatChange)
-    StatChange MUST perform the StatChange operation.
     """
 
     pass
@@ -11254,7 +11169,6 @@ class StatChange(Change):
 class DesignChange(Change):
     """DesignChange holds the data fields for a DesignChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️designchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/DesignChange)
-    DesignChange MUST perform the DesignChange operation.
     """
 
     pass
@@ -11264,7 +11178,6 @@ class DesignChange(Change):
 class KitChange(Change):
     """KitChange holds the data fields for a KitChange record.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️kitchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/KitChange)
-    KitChange MUST perform the KitChange operation.
     """
 
     pass
@@ -11366,9 +11279,7 @@ def getDesignChange(
     author: typing.Optional[str] = None,
     time: typing.Optional[datetime.datetime] = None,
 ) -> DesignChange:
-    """getDesignChange performs the getDesignChange operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesignchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getDesignChange)
-    getDesignChange MUST perform the getDesignChange operation.
     """
     forward_diff = _getDesignDiff(before, after)
     backward_diff = _inverseDesignDiff(before, forward_diff)
@@ -11388,9 +11299,7 @@ def getKitChange(
     author: typing.Optional[str] = None,
     time: typing.Optional[datetime.datetime] = None,
 ) -> KitChange:
-    """getKitChange performs the getKitChange operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getkitchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getKitChange)
-    getKitChange MUST perform the getKitChange operation.
     """
     forward_diff = getKitDiffDict(before, after)
     backward_diff = inverseKitDiffDict(before, forward_diff)
@@ -11406,7 +11315,6 @@ def getKitChange(
 
 def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
     """Extract guid from an updated entry which might use EntityId format or old id format.
-    _extractUpdateGuid MUST perform the _extractUpdateGuid operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️extractupdateguid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_extractUpdateGuid)
     """
     for key in entityKeys:
@@ -11758,9 +11666,7 @@ class KitData:
 
 
 def _parse_connector_from_sqlite(row: dict) -> dict:
-    """_parse_connector_from_sqlite performs the _parse_connector_from_sqlite operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parseconnectorfromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_connector_from_sqlite)
-    _parse_connector_from_sqlite MUST perform the _parse_connector_from_sqlite operation.
     """
     return {
         "guid": row.get("guid"),
@@ -11783,9 +11689,7 @@ def _parse_connector_from_sqlite(row: dict) -> dict:
 
 
 def _parse_model_from_sqlite(row: dict) -> dict:
-    """_parse_model_from_sqlite performs the _parse_model_from_sqlite operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parsemodelfromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_model_from_sqlite)
-    _parse_model_from_sqlite MUST perform the _parse_model_from_sqlite operation.
     """
     return {
         "guid": row.get("guid"),
@@ -11796,9 +11700,7 @@ def _parse_model_from_sqlite(row: dict) -> dict:
 
 
 def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict]) -> dict:
-    """_parse_type_from_sqlite performs the _parse_type_from_sqlite operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parsetypefromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_type_from_sqlite)
-    _parse_type_from_sqlite MUST perform the _parse_type_from_sqlite operation.
     """
     return {
         "guid": row.get("guid"),
@@ -11819,9 +11721,7 @@ def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict
 
 
 def _parse_piece_from_sqlite(row: dict) -> dict:
-    """_parse_piece_from_sqlite performs the _parse_piece_from_sqlite operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parsepiecefromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_piece_from_sqlite)
-    _parse_piece_from_sqlite MUST perform the _parse_piece_from_sqlite operation.
     """
     plane = None
     if row.get("plane_origin_x") is not None:
@@ -11884,9 +11784,7 @@ def _parse_piece_from_sqlite(row: dict) -> dict:
 
 
 def _parse_connection_from_sqlite(row: dict) -> dict:
-    """_parse_connection_from_sqlite performs the _parse_connection_from_sqlite operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parseconnectionfromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_connection_from_sqlite)
-    _parse_connection_from_sqlite MUST perform the _parse_connection_from_sqlite operation.
     """
     return {
         "guid": row.get("guid"),
@@ -11913,9 +11811,7 @@ def _parse_connection_from_sqlite(row: dict) -> dict:
 
 
 def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[dict]) -> dict:
-    """_parse_design_from_sqlite performs the _parse_design_from_sqlite operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parsedesignfromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_design_from_sqlite)
-    _parse_design_from_sqlite MUST perform the _parse_design_from_sqlite operation.
     """
     view = None
     if row.get("view_center_u") is not None or row.get("view_center_v") is not None or row.get("view_zoom") is not None:
@@ -11949,7 +11845,6 @@ def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[d
 
 def _build_folder_path(kit_dict: dict, folder_guid: str) -> str:
     """Build folder path from folder hierarchy.
-    _build_folder_path MUST perform the _build_folder_path operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️buildfolderpath](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_build_folder_path)
     """
     for f in kit_dict.get("folders", []):
@@ -11965,7 +11860,6 @@ def _build_folder_path(kit_dict: dict, folder_guid: str) -> str:
 
 def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
     """Build file path from folder hierarchy and file name.
-    _build_file_path MUST perform the _build_file_path operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️buildfilepath](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_build_file_path)
     """
     folder = file_dict.get("folder")
@@ -12426,7 +12320,6 @@ def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
 
 def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     """Write kit data to SQLite database using the TypeScript schema.
-    _write_kit_to_sqlite MUST perform the _write_kit_to_sqlite operation.
     [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️writekittosqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_write_kit_to_sqlite)
     """
     import sqlite3
