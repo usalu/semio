@@ -1026,6 +1026,12 @@ const elementUiTranslationBundles = {
                 "beginner": "Waehlen Sie Ihr Erfahrungsniveau"
               }
             },
+            "device": {
+              "label": {
+                "normal": "Geraet",
+                "beginner": "Waehlen Sie das Eingabegeraet"
+              }
+            },
             "layout": {
               "label": {
                 "normal": "Layout",
@@ -3285,6 +3291,36 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Einstellungen",
               "beginner": "Einstellungen"
+            },
+            "theme": {
+              "label": {
+                "normal": "Design",
+                "beginner": "Farbschema waehlen"
+              }
+            },
+            "language": {
+              "label": {
+                "normal": "Sprache",
+                "beginner": "Sprache auswaehlen"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Geraet",
+                "beginner": "Eingabegeraet waehlen"
+              }
+            },
+            "expertise": {
+              "label": {
+                "normal": "Erfahrung",
+                "beginner": "Erfahrungsniveau waehlen"
+              }
+            },
+            "mode": {
+              "label": {
+                "normal": "Modus",
+                "beginner": "Benutzer- oder Entwicklermodus waehlen"
+              }
             }
           },
           "navigation": {
@@ -5964,7 +6000,7 @@ const elementUiTranslationBundles = {
           "settings": {
             "label": {
               "normal": "Settings",
-              "beginner": "Configure application settings"
+              "beginner": "Home settings"
             },
             "theme": {
               "label": {
@@ -5994,6 +6030,12 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "Expertise",
                 "beginner": "Select your expertise level"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Device",
+                "beginner": "Select the input device"
               }
             },
             "layout": {
@@ -6277,18 +6319,6 @@ const elementUiTranslationBundles = {
                 "normal": "Create",
                 "beginner": "Create a new kit"
               }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Home settings"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Home chat"
             }
           }
         },
@@ -6912,8 +6942,8 @@ const elementUiTranslationBundles = {
           },
           "settings": {
             "label": {
-              "normal": "Kit Editor",
-              "beginner": "Kit editor settings"
+              "normal": "Settings",
+              "beginner": "Kit settings"
             },
             "diagram": {
               "chargeStrength": {
@@ -7094,18 +7124,6 @@ const elementUiTranslationBundles = {
                 "normal": "Hand",
                 "beginner": "Hand"
               }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Kit settings"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Kit chat"
             }
           }
         },
@@ -9171,12 +9189,6 @@ const elementUiTranslationBundles = {
               }
             }
           },
-          "title": {
-            "label": {
-              "normal": "Title",
-              "beginner": "Title"
-            }
-          },
           "functions": {
             "label": {
               "normal": "Functions",
@@ -9223,6 +9235,36 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Settings",
               "beginner": "Settings"
+            },
+            "theme": {
+              "label": {
+                "normal": "Theme",
+                "beginner": "Choose the color theme"
+              }
+            },
+            "language": {
+              "label": {
+                "normal": "Language",
+                "beginner": "Select the language"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Device",
+                "beginner": "Select the input device"
+              }
+            },
+            "expertise": {
+              "label": {
+                "normal": "Expertise",
+                "beginner": "Select your expertise level"
+              }
+            },
+            "mode": {
+              "label": {
+                "normal": "Mode",
+                "beginner": "Select user or developer mode"
+              }
             }
           },
           "navigation": {
@@ -9785,6 +9827,58 @@ export function useLabel(id: string): string | undefined {
       }
       if ("beginner" in label && label.beginner !== undefined) {
         return String(label.beginner);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Resolves a localized string from a raw translation value and expertise level.
+ * Pure function (non-hook) variant of useLabel for use outside React render context.
+ * Handles: string, {label: string}, {label: {normal, beginner}}, {normal, beginner}.
+ **/
+export function resolveTranslationLabel(value: unknown): string | undefined {
+  const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+
+    if ("label" in obj) {
+      const label = obj.label;
+
+      if (typeof label === "string") {
+        return label;
+      }
+
+      if (label && typeof label === "object") {
+        const labelObj = label as Record<string, unknown>;
+        if (expertise === Expertise.BEGINNER && "beginner" in labelObj && labelObj.beginner !== undefined) {
+          return String(labelObj.beginner);
+        }
+        if ("normal" in labelObj && labelObj.normal !== undefined) {
+          return String(labelObj.normal);
+        }
+        if ("beginner" in labelObj && labelObj.beginner !== undefined) {
+          return String(labelObj.beginner);
+        }
+      }
+    }
+
+    if ("normal" in obj || "beginner" in obj) {
+      if (expertise === Expertise.BEGINNER && "beginner" in obj && obj.beginner !== undefined) {
+        return String(obj.beginner);
+      }
+      if ("normal" in obj && obj.normal !== undefined) {
+        return String(obj.normal);
+      }
+      if ("beginner" in obj && obj.beginner !== undefined) {
+        return String(obj.beginner);
       }
     }
   }

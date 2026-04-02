@@ -1,7 +1,8 @@
 {
   "title": "Fix Info Text Placement in Sketchpad Details Panel",
-  "status": "open",
+  "status": "closed",
   "description": "Fix the placement of connected-piece info text and all similar informational text elements in the semio/sketchpad Details panel. Render these messages inside the existing property row/value-column layout (using Label with empty label) so they occupy the same width and horizontal bounds as normal input fields, but without input border or field chrome. Apply through shared property row/layout rules (Label component), not hardcoded offsets.",
+  "summary": "Modified HelperRow in elements/ui to support a `propertyAligned` prop that renders content in the property-row value column using the same grid layout as Label (grid-cols-[96px_minmax(0,1fr)], TreeAlignedRow, detailPanelIndentPx offset). Replaced 17 raw-text-in-TreeRow patterns in semio/sketchpad with HelperRow propertyAligned, including: connected-piece info text + fix button, kit not available/not found, multiple types/ports/tags/designs selection messages, multiple connections editing, connector not found, select-only-pieces-or-connections prompt, and multiple artifacts summary. Added text-foreground to name list items to prevent muted-color inheritance. All 134 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1243"
   },

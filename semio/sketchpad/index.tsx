@@ -25,336 +25,337 @@
 
 import type { Connector, Port } from "@semio/js";
 import {
-  applyKitDiff,
-  areDesignsInSameFamily,
-  arePortsCompatible,
-  areSameConnection,
-  Attribute,
-  Author,
-  AuthorDiff,
-  AuthorId,
-  buildFileTree,
-  Camera,
-  colorPortsForTypes,
-  Concept,
-  ConceptDiff,
-  Connection,
-  ConnectionDiff,
-  ConnectionId,
-  Coord,
-  createClusteredDesign,
-  Design,
-  DesignDiff,
-  DesignShallow,
-  DiffStatus,
-  dragPiecesInDesign,
-  expandDesignPieces,
-  exportKit,
-  FileDiff,
-  findDesignInKit,
-  findModel,
-  findPieceInDesign,
-  findTypeInKit,
-  fixPiecesInDesign,
-  flattenFileTree,
-  Folder,
-  FolderDiff,
-  generateUniqueName,
-  getClusterableGroups,
-  getDesignDiff,
-  getIncludedDesigns,
-  Guid,
-  guid,
-  ICON_WIDTH,
-  importKit,
-  InMemoryKitStore,
-  inverseKitDiff,
-  Kit,
-  KitDiff,
-  KitShallow,
-  type KitStore,
-  type KitStoreSnapshot,
-  Model,
-  Piece,
-  PieceDiff,
-  PieceId,
-  piecesMetadata,
-  Plane,
-  planeToMatrix,
-  Point,
-  PortDiff,
-  Quality,
-  QualityDiff,
-  replaceClusterWithDesign,
-  selectBestModel,
-  File as SemioFile,
-  sumQualityInDesign,
-  Tag,
-  TagDiff,
-  TOLERANCE,
-  toSemioRotation,
-  toThreeRotation,
-  Type,
-  TypeDiff,
-  TypeShallow,
-  Vector,
+    applyKitDiff,
+    areDesignsInSameFamily,
+    arePortsCompatible,
+    areSameConnection,
+    Attribute,
+    Author,
+    AuthorDiff,
+    AuthorId,
+    buildFileTree,
+    Camera,
+    colorPortsForTypes,
+    Concept,
+    ConceptDiff,
+    Connection,
+    ConnectionDiff,
+    ConnectionId,
+    Coord,
+    createClusteredDesign,
+    Design,
+    DesignDiff,
+    DesignShallow,
+    DiffStatus,
+    dragPiecesInDesign,
+    expandDesignPieces,
+    exportKit,
+    FileDiff,
+    findDesignInKit,
+    findModel,
+    findPieceInDesign,
+    findTypeInKit,
+    fixPiecesInDesign,
+    flattenFileTree,
+    Folder,
+    FolderDiff,
+    generateUniqueName,
+    getClusterableGroups,
+    getDesignDiff,
+    getIncludedDesigns,
+    Guid,
+    guid,
+    ICON_WIDTH,
+    importKit,
+    InMemoryKitStore,
+    inverseKitDiff,
+    Kit,
+    KitDiff,
+    KitShallow,
+    type KitStore,
+    type KitStoreSnapshot,
+    Model,
+    Piece,
+    PieceDiff,
+    PieceId,
+    piecesMetadata,
+    Plane,
+    planeToMatrix,
+    Point,
+    PortDiff,
+    Quality,
+    QualityDiff,
+    replaceClusterWithDesign,
+    selectBestModel,
+    File as SemioFile,
+    sumQualityInDesign,
+    Tag,
+    TagDiff,
+    TOLERANCE,
+    toSemioRotation,
+    toThreeRotation,
+    Type,
+    TypeDiff,
+    TypeShallow,
+    Vector,
 } from "@semio/js";
 import type {
-  ConnectionLineComponentProps,
-  DragEndEvent,
-  DragOverEvent,
-  DragStartEvent,
-  Edge,
-  EdgeProps,
-  EdgeTypes,
-  FuseResult,
-  LayoutNode,
-  MiniMapNodeProps,
-  Node,
-  NodeProps,
-  NodeTypes,
-  ReactFlowInstance,
-  RFConnection,
-  Simulation,
-  SimulationLinkDatum,
-  SimulationNodeDatum,
-  ThreeEvent,
-  UIWindowKindDefinition,
+    ConnectionLineComponentProps,
+    DragEndEvent,
+    DragOverEvent,
+    DragStartEvent,
+    Edge,
+    EdgeProps,
+    EdgeTypes,
+    FuseResult,
+    LayoutNode,
+    MiniMapNodeProps,
+    Node,
+    NodeProps,
+    NodeTypes,
+    ReactFlowInstance,
+    RFConnection,
+    Simulation,
+    SimulationLinkDatum,
+    SimulationNodeDatum,
+    ThreeEvent,
+    UIWindowKindDefinition,
 } from "@semio/ui";
 import {
-  Action,
-  ActionGroup,
-  ActionGroupItem,
-  type ActorRefFrom,
-  type AnyActorRef,
-  applyNodeChanges,
-  arrayMove,
-  Aside,
-  assign,
-  Avatar,
-  AvatarFallback,
-  Diagram as BaseDiagram,
-  BaseEdge,
-  MDXProvider as BaseMDXProvider,
-  Tabs as BaseTabs,
-  BasicChatPanel,
-  Breadcrumb,
-  BrowserRouter,
-  Button,
-  ButtonGroup,
-  ButtonGroupItem,
-  calculateDiagramLayout,
-  Canvas,
-  closestCenter,
-  Combobox,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  createActor,
-  createDefaultLayout,
-  dateFnsDe as de,
-  deduplicateWindowLayout,
-  Diagram,
-  DiagramNode,
-  DndContext,
-  DraggableAvatar,
-  DragOverlay,
-  DreiSelect,
-  Edges,
-  dateFnsEnUS as enUS,
-  FileTree,
-  FileTreeNode,
-  Footer,
-  forceCollide,
-  forceLink,
-  forceManyBody,
-  forceSimulation,
-  forceX,
-  forceY,
-  formatDistanceToNow,
-  fromCallback,
-  Fuse,
-  Geometry,
-  getBezierPath,
-  Handle,
-  HelperRow,
-  HorizontalWindows,
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-  elementUiI18n as i18n,
-  Input,
-  InteractionProvider,
-  Label,
-  Layout as LayoutComponent,
-  layoutNodeToGoldenLayoutConfig,
-  LevelProvider,
-  Line,
-  MemoryRouter,
-  Navbar,
-  type NavbarItem,
-  NotFound,
-  OBJLoader,
-  Outlet,
-  Page,
-  PageFrontmatter,
-  PageNavigation,
-  parseWindowLayout,
-  PlaceholderDiagramNode,
-  PointerSensor,
-  pointerWithin,
-  Position,
-  ReactFlowProvider,
-  rectIntersection,
-  Ring,
-  Route,
-  Routes,
-  Scene as SceneComponent,
-  sceneFrameControlRef,
-  Scrollable,
-  SectionSpecificity,
-  Select,
-  SelectContent,
-  SelectionMode,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  setup,
-  Slider,
-  type SnapshotFrom,
-  SortableTreeItems,
-  Sphere,
-  Spinner,
-  Stepper,
-  stringifyWindowLayout,
-  Strip,
-  Table,
-  TableAvatar,
-  TableColumn,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Textarea,
-  THREE,
-  Toggle,
-  ToggleGroup,
-  ToolbarDivider,
-  ToolbarGroup,
-  ToolbarItem,
-  ToolbarZone,
-  Transaction,
-  TransactionProvider,
-  Tree,
-  TreeContent,
-  TreeItem,
-  TreeRow,
-  TreeStateProvider,
-  useCommandHotkey,
-  useDraggable,
-  useDroppable,
-  useFBX,
-  useGLTF,
-  useTranslatedHotkey as useHotkey,
-  useTranslation as useI18nTranslation,
-  useInternalNode,
-  useLabel,
-  useLoader,
-  useLocation,
-  useParams,
-  useReactFlow,
-  useNavigate as useReactNavigate,
-  useSearchParams,
-  useXStateSelector as useSelector,
-  useSensor,
-  useSensors,
-  useStoreApi,
-  useThree,
-  useTranslation,
-  VerticalWindows,
-  ViewportPortal,
-  Window,
-  WindowKind,
+    Action,
+    ActionGroup,
+    ActionGroupItem,
+    type ActorRefFrom,
+    type AnyActorRef,
+    applyNodeChanges,
+    arrayMove,
+    Aside,
+    assign,
+    Avatar,
+    AvatarFallback,
+    Diagram as BaseDiagram,
+    BaseEdge,
+    MDXProvider as BaseMDXProvider,
+    Tabs as BaseTabs,
+    BasicChatPanel,
+    Breadcrumb,
+    BrowserRouter,
+    Button,
+    ButtonGroup,
+    ButtonGroupItem,
+    calculateDiagramLayout,
+    Canvas,
+    closestCenter,
+    Combobox,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    createActor,
+    createDefaultLayout,
+    dateFnsDe as de,
+    deduplicateWindowLayout,
+    Diagram,
+    DiagramNode,
+    DndContext,
+    DraggableAvatar,
+    DragOverlay,
+    DreiSelect,
+    Edges,
+    dateFnsEnUS as enUS,
+    FileTree,
+    FileTreeNode,
+    Footer,
+    forceCollide,
+    forceLink,
+    forceManyBody,
+    forceSimulation,
+    forceX,
+    forceY,
+    formatDistanceToNow,
+    fromCallback,
+    Fuse,
+    Geometry,
+    getBezierPath,
+    Handle,
+    HelperRow,
+    HorizontalWindows,
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+    elementUiI18n as i18n,
+    Input,
+    InteractionProvider,
+    Label,
+    Layout as LayoutComponent,
+    layoutNodeToGoldenLayoutConfig,
+    LevelProvider,
+    Line,
+    MemoryRouter,
+    Navbar,
+    type NavbarItem,
+    NotFound,
+    OBJLoader,
+    Outlet,
+    Page,
+    PageFrontmatter,
+    PageNavigation,
+    parseWindowLayout,
+    PlaceholderDiagramNode,
+    PointerSensor,
+    pointerWithin,
+    Position,
+    ReactFlowProvider,
+    rectIntersection,
+    resolveTranslationLabel,
+    Ring,
+    Route,
+    Routes,
+    Scene as SceneComponent,
+    sceneFrameControlRef,
+    Scrollable,
+    SectionSpecificity,
+    Select,
+    SelectContent,
+    SelectionMode,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    setup,
+    Slider,
+    type SnapshotFrom,
+    SortableTreeItems,
+    Sphere,
+    Spinner,
+    Stepper,
+    stringifyWindowLayout,
+    Strip,
+    Table,
+    TableAvatar,
+    TableColumn,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+    Textarea,
+    THREE,
+    Toggle,
+    ToggleGroup,
+    ToolbarDivider,
+    ToolbarGroup,
+    ToolbarItem,
+    ToolbarZone,
+    Transaction,
+    TransactionProvider,
+    Tree,
+    TreeContent,
+    TreeItem,
+    TreeRow,
+    TreeStateProvider,
+    useCommandHotkey,
+    useDraggable,
+    useDroppable,
+    useFBX,
+    useGLTF,
+    useTranslatedHotkey as useHotkey,
+    useTranslation as useI18nTranslation,
+    useInternalNode,
+    useLabel,
+    useLoader,
+    useLocation,
+    useParams,
+    useReactFlow,
+    useNavigate as useReactNavigate,
+    useSearchParams,
+    useXStateSelector as useSelector,
+    useSensor,
+    useSensors,
+    useStoreApi,
+    useThree,
+    useTranslation,
+    VerticalWindows,
+    ViewportPortal,
+    Window,
+    WindowKind,
 } from "@semio/ui";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import {
-  AddIcon,
-  AlertCircleIcon,
-  AwardIcon,
-  ChatIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  CloseIcon,
-  CodeIcon,
-  ConnectionIcon,
-  ConnectorIcon,
-  CopyIcon,
-  DetailsIcon,
-  DiagramIcon,
-  DisconnectIcon,
-  DocumentIcon,
-  MessageCircle as FeedbackIcon,
-  FileCodeIcon,
-  FileImageIcon,
-  FileJsonIcon,
-  FileSpreadsheetIcon,
-  FileTypeIcon,
-  FileVideoIcon,
-  FocusIcon,
-  FolderIcon,
-  HandIcon,
-  HomeIcon,
-  IntersectIcon,
-  LayoutIcon,
-  LocalKitIcon,
-  Maximize2Icon,
-  Minimize2Icon,
-  MonitorIcon,
-  MoonIcon,
-  MoreHorizontalIcon,
-  MousePointerIcon,
-  NavigateBackIcon,
-  NavigateForwardIcon,
-  NavigateUpIcon,
-  PauseIcon,
-  PieceIcon,
-  PlayIcon,
-  PortIcon,
-  RecordIcon,
-  RemoteKitIcon,
-  RemoveIcon,
-  SceneIcon,
-  SearchIcon,
-  SelectToolIcon,
-  SettingsIcon,
-  SkipBackIcon,
-  SkipForwardIcon,
-  SortAscendingIcon,
-  SortDescendingIcon,
-  StatsIcon,
-  StopIcon,
-  SunIcon,
-  TableViewIcon,
-  TemporaryKitIcon,
-  ToolbarIcon,
-  ToolsIcon,
-  TutorialIcon,
-  TypeIcon,
-  UserIcon,
-  WorkbenchIcon,
+    AddIcon,
+    AlertCircleIcon,
+    AwardIcon,
+    ChatIcon,
+    CheckIcon,
+    ChevronDownIcon,
+    ChevronRightIcon,
+    CloseIcon,
+    CodeIcon,
+    ConnectionIcon,
+    ConnectorIcon,
+    CopyIcon,
+    DetailsIcon,
+    DiagramIcon,
+    DisconnectIcon,
+    DocumentIcon,
+    MessageCircle as FeedbackIcon,
+    FileCodeIcon,
+    FileImageIcon,
+    FileJsonIcon,
+    FileSpreadsheetIcon,
+    FileTypeIcon,
+    FileVideoIcon,
+    FocusIcon,
+    FolderIcon,
+    HandIcon,
+    HomeIcon,
+    IntersectIcon,
+    LayoutIcon,
+    LocalKitIcon,
+    Maximize2Icon,
+    Minimize2Icon,
+    MonitorIcon,
+    MoonIcon,
+    MoreHorizontalIcon,
+    MousePointerIcon,
+    NavigateBackIcon,
+    NavigateForwardIcon,
+    NavigateUpIcon,
+    PauseIcon,
+    PieceIcon,
+    PlayIcon,
+    PortIcon,
+    RecordIcon,
+    RemoteKitIcon,
+    RemoveIcon,
+    SceneIcon,
+    SearchIcon,
+    SelectToolIcon,
+    SettingsIcon,
+    SkipBackIcon,
+    SkipForwardIcon,
+    SortAscendingIcon,
+    SortDescendingIcon,
+    StatsIcon,
+    StopIcon,
+    SunIcon,
+    TableViewIcon,
+    TemporaryKitIcon,
+    ToolbarIcon,
+    ToolsIcon,
+    TutorialIcon,
+    TypeIcon,
+    UserIcon,
+    WorkbenchIcon,
 } from "../assets/icons";
 import { createSyncDocFactory, isSyncArray, isSyncMap, type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent } from "../studio/studio";
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
 export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
-import type { Locator, Page as PlaywrightPage } from "@playwright/test";
-import { importKit as importKitArchive } from "@semio/js";
+    import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+    import { importKit as importKitArchive } from "@semio/js";
 // #endregion 🔖Imports
 
 // #region 🔖Shared
@@ -2821,10 +2822,7 @@ export function createTogglePanelHandler<TAppKey extends string, TAppState exten
       return {
         [config.appKey]: {
           ...app,
-          panelVisibility: {
-            ...app.panelVisibility,
-            [event.panel]: !app.panelVisibility[event.panel],
-          },
+          panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel),
         },
       };
     },
@@ -2973,10 +2971,7 @@ export function createKeyedTogglePanelHandler<TAppKey extends string, TAppState 
           ...apps,
           [key]: {
             ...app,
-            panelVisibility: {
-              ...app.panelVisibility,
-              [event.panel]: !app.panelVisibility[event.panel],
-            },
+            panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel),
           },
         },
       };
@@ -3318,7 +3313,7 @@ export function createSingleKeyTogglePanelHandler<TAppKey extends string, TAppSt
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key] || createDefaultState();
-      return { [appKey]: { ...context[appKey], [key]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel) } } };
     },
   });
 }
@@ -13254,8 +13249,8 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-2 text-center">
             <DocumentIcon className="h-12 w-12 text-muted-foreground" />
-            <p className="text-lg font-medium">{t("semio.sketchpad.app.kit.dropzone.label")}</p>
-            <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.dropzone.description")}</p>
+            <p className="text-lg font-medium">{resolveTranslationLabel(t("semio.sketchpad.app.kit.dropzone.label"))}</p>
+            <p className="text-sm text-muted-foreground">{resolveTranslationLabel(t("semio.sketchpad.app.kit.dropzone.description"))}</p>
           </div>
         </div>
       )}
@@ -15854,6 +15849,73 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
     }
   }
 
+  const portToTypes = new Map<string, Set<string>>();
+  const typeByGuid = new Map((kit.types ?? []).map((typeRecord) => [typeRecord.guid, typeRecord]));
+  const resolveTypeLineage = (typeGuid: string): string[] => {
+    const lineage: string[] = [];
+    const visited = new Set<string>();
+    let currentGuid: string | undefined = typeGuid;
+    while (currentGuid && !visited.has(currentGuid)) {
+      visited.add(currentGuid);
+      lineage.push(currentGuid);
+      const currentType = typeByGuid.get(currentGuid);
+      currentGuid = currentType?.parent?.guid;
+    }
+    return lineage;
+  };
+  for (const type of kit.types ?? []) {
+    for (const connector of type.connectors ?? []) {
+      const portGuid = connector.port?.guid;
+      if (portGuid) {
+        const sourceId = `port:${portGuid}`;
+        for (const relatedTypeGuid of resolveTypeLineage(type.guid)) {
+          const targetId = `type:${relatedTypeGuid}`;
+          const edgeId = `ref-${sourceId}-${targetId}`;
+          if (!edges.some((e) => e.id === edgeId)) {
+            edges.push({
+              id: edgeId,
+              source: sourceId,
+              target: targetId,
+              type: "floating",
+              style: edgeStyle["reference"],
+              data: { relationship: "reference" },
+            });
+          }
+          if (!portToTypes.has(portGuid)) portToTypes.set(portGuid, new Set());
+          portToTypes.get(portGuid)!.add(relatedTypeGuid);
+        }
+      }
+    }
+  }
+
+  const portGroups = createPortGroupMap(kit.ports ?? []);
+  const groupToTypes = new Map<string, Set<string>>();
+  for (const [portGuid, typeGuids] of portToTypes) {
+    const groupRoot = portGroups.get(portGuid) ?? portGuid;
+    if (!groupToTypes.has(groupRoot)) groupToTypes.set(groupRoot, new Set());
+    for (const typeGuid of typeGuids) groupToTypes.get(groupRoot)!.add(typeGuid);
+  }
+  for (const typeGuids of groupToTypes.values()) {
+    const arr = Array.from(typeGuids);
+    for (let i = 0; i < arr.length; i++) {
+      for (let j = i + 1; j < arr.length; j++) {
+        const sourceId = `type:${arr[i]}`;
+        const targetId = `type:${arr[j]}`;
+        const edgeId = `compat-${sourceId}-${targetId}`;
+        if (!edges.some((e) => e.id === edgeId)) {
+          edges.push({
+            id: edgeId,
+            source: sourceId,
+            target: targetId,
+            type: "floating",
+            style: edgeStyle["reference"],
+            data: { relationship: "reference" },
+          });
+        }
+      }
+    }
+  }
+
   return { nodes, edges };
 };
 
@@ -17147,12 +17209,12 @@ const SinglePortSection: FC<{ portGuid: string }> = ({ portGuid }) => {
         <Input id="semio.sketchpad.app.kit.panel.details.section.port.name" value={iface.name} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Textarea id="semio.sketchpad.app.kit.panel.details.section.port.description" value={iface.description || ""} placeholder={t("semio.sketchpad.app.kit.port.descriptionPlaceholder.label")} readOnly showLabel />
+        <Textarea id="semio.sketchpad.app.kit.panel.details.section.port.description" value={iface.description || ""} placeholder={resolveTranslationLabel(t("semio.sketchpad.app.kit.port.descriptionPlaceholder.label"))} readOnly showLabel />
       </TreeRow>
       <TreeRow>
         <Input
           id="semio.sketchpad.app.kit.panel.details.section.port.compatible"
-          value={compatibleCount === 0 ? t("semio.sketchpad.app.kit.port.allCompatible") : `${compatibleCount} ${t("semio.sketchpad.app.kit.port.compatiblePorts")}`}
+          value={compatibleCount === 0 ? (resolveTranslationLabel(t("semio.sketchpad.app.kit.port.allCompatible")) ?? "") : `${compatibleCount} ${resolveTranslationLabel(t("semio.sketchpad.app.kit.port.compatiblePorts")) ?? ""}`}
           readOnly
           showLabel
         />
@@ -17173,7 +17235,7 @@ const MultiplePortsSection: FC<{ portGuids: string[] }> = ({ portGuids }) => {
   return (
     <>
       <HelperRow propertyAligned>
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.ports.multipleSelected")}</p>
+        <p className="text-sm text-muted-foreground">{resolveTranslationLabel(t("semio.sketchpad.app.kit.ports.multipleSelected"))}</p>
       </HelperRow>
       {ports.map((iface) => (
         <HelperRow key={iface.guid} propertyAligned>
@@ -17214,7 +17276,7 @@ const SingleTagSection: FC<{ tagGuid: string }> = ({ tagGuid }) => {
         <Input id="semio.sketchpad.app.kit.panel.details.section.tag.name" value={tag.name} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Textarea id="semio.sketchpad.app.kit.panel.details.section.tag.description" value={tag.description || ""} placeholder={t("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label")} readOnly showLabel />
+        <Textarea id="semio.sketchpad.app.kit.panel.details.section.tag.description" value={tag.description || ""} placeholder={resolveTranslationLabel(t("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label"))} readOnly showLabel />
       </TreeRow>
     </>
   );
@@ -17232,7 +17294,7 @@ const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
   return (
     <>
       <HelperRow propertyAligned>
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.tags.multipleSelected")}</p>
+        <p className="text-sm text-muted-foreground">{resolveTranslationLabel(t("semio.sketchpad.app.kit.tags.multipleSelected"))}</p>
       </HelperRow>
       {tags.map((tag) => (
         <HelperRow key={tag.guid} propertyAligned>
@@ -21509,10 +21571,7 @@ export function useAppCommands() {
       case "docs":
         return {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
-            updateDocsPanelVisibilityState((prev) => ({
-              ...prev,
-              [panelKey]: !prev[panelKey],
-            }));
+            updateDocsPanelVisibilityState((prev) => getNextPanelVisibilityFromToggle(prev, panelKey));
           },
           execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
@@ -25882,7 +25941,7 @@ const LayoutWrapper: FC = () => {
                                         pressed={isActive}
                                         onPressedChange={() => toggleToolbarGroup(groupId)}
                                         icon={getGroupIcon(groupId)}
-                                        text={i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`)}
+                                        text={resolveTranslationLabel(i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`))}
                                       />
                                     );
                                   }
@@ -25909,7 +25968,7 @@ const LayoutWrapper: FC = () => {
                                         return {
                                           value: subToolId,
                                           label: section?.toolbarGroup?.subToolIcon || <FocusIcon className="size-tiny" />,
-                                          text: section?.toolbarGroup?.subToolLabelId ? i18n.t(section.toolbarGroup.subToolLabelId) : subToolId,
+                                          text: section?.toolbarGroup?.subToolLabelId ? resolveTranslationLabel(i18n.t(section.toolbarGroup.subToolLabelId)) : subToolId,
                                           id: `semio.sketchpad.toolbar.subtool.${subToolId}`,
                                         };
                                       })}
@@ -25925,7 +25984,7 @@ const LayoutWrapper: FC = () => {
                                     pressed={isActive}
                                     onPressedChange={() => toggleToolbarGroup(groupId)}
                                     icon={getGroupIcon(groupId)}
-                                    text={i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`)}
+                                    text={resolveTranslationLabel(i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`))}
                                   />
                                 );
                               })}
@@ -35752,13 +35811,14 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
           return null;
         }
 
-        const type = findTypeInKit(kit, typeof piece.type === "string" ? piece.type : piece.type?.guid);
+        const typeGuid = typeof piece.type === "string" ? piece.type : piece.type?.guid;
+        const type = (kit.types ?? []).find((t: Type) => t.guid === typeGuid);
         if (!type) {
           const fallbackType: Type = {
-            guid: `fallback-${piece.type}`,
-            name: `Unknown-${piece.type}`,
+            guid: `fallback-${typeGuid}`,
+            name: `Unknown-${typeGuid}`,
             unit: "m",
-            description: `Missing type: ${piece.type}`,
+            description: `Missing type: ${typeGuid}`,
             connectors: [],
             models: [],
           };
@@ -36290,7 +36350,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         if (!droppedType) return;
         transaction?.start();
         const pieceGuid = guid();
-        const piece = { guid: pieceGuid, type: { guid: droppedType.guid }, center, plane };
+        const piece = { guid: pieceGuid, id_: pieceGuid, type: { guid: droppedType.guid }, center, plane };
         addPiece?.(piece);
         transaction?.finalize();
       } else if (dragData.type === "design" && dragData.designGuid) {
@@ -36300,6 +36360,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         const pieceGuid = guid();
         const piece = {
           guid: pieceGuid,
+          id_: pieceGuid,
           design: { guid: droppedDesign.guid },
           center,
           plane,
@@ -37873,7 +37934,9 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   }, [fileGuid, kitStore]);
 
   if (!blobUrl) {
-    return null;
+    return (
+      <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />
+    );
   }
 
   return (
@@ -47536,7 +47599,7 @@ export { useHome };
 
 // #region Table
 
-export {};
+    export { };
 
 // #endregion Table
 
@@ -49576,10 +49639,10 @@ export { FeedbackIcon };
 
 // --- Combined from index.tsx and index.ts ---
 
-import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
-import type { KitJsonFileAdapter } from "../studio/studio";
-import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-import "./globals.css";
+    import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
+    import type { KitJsonFileAdapter } from "../studio/studio";
+    import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
+    import "./globals.css";
 
 export { createJsonFileKitStore, JsonFileKitStore };
 export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };

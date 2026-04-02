@@ -1,0 +1,14 @@
+{
+  "title": "Add Compact Connection Minimap for Kit Diagram",
+  "status": "closed",
+  "description": "Add a small compact map in the kit diagram to visualize all current relationships (type-design, port-type, type-type compatibility, hierarchy links) at a glance. Reuse existing diagram minimap styling/pattern used by design diagram.",
+  "summary": "Reverted the previous Kit diagram minimap addition by removing `showMinimap` and `miniMapNodeComponent` props from KitDiagramInner. This restores the prior UI behavior with no in-canvas minimap.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1251"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪fa52be01e2c9448fa46c9b42359f0caa",
+    "⚪ec6d48cbfbca448ca36c41566c096912"
+  ]
+}

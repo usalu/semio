@@ -1,3 +1,12 @@
+Fix the semio/sketchpad Details panel layout regression globally, including the Type app. The current implementation works perfectly in design app but in type app it is breaking the shared Details panel structure in nested sections such as connectors/point/direction, causing rows, controls, and tree guides to drift, overlap, or stop following the standard property row/value-column layout. the Details panel implementation must be consistent across all apps and all section types.
+
+Refactor the shared Details panel tree/layout primitives so TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, and IndentationLines all resolve through the same global structure: tree header rows stay tree headers, property rows stay property rows, nested groups keep hierarchy, and all value-side controls stay within the same shared value-column bounds. Preserve PanelSection architecture, hierarchy, spacing rhythm, actions, and tree lines. Do not hardcode section names or field names. Apply the fix generically so nested connector content in the Type app follows the same stable Details panel structure as every other panel subtree. importaant is dont break the deign app structure only fix the type app structure to follow the same structure as design app by applaying global layout rules and not one off fixes.
+
+------------------------------------------------------------
+
+Extend the tree-path hover highlight so it also includes the terminal branch segment of the hovered lowest-level row. Right now the ancestor path highlights, but the final local connector for the hovered TreeRow / leaf-level row is missing. When a row is hovered, highlight the complete path: the vertical ancestor chain, the final vertical segment at the hovered depth, and the small horizontal branch/elbow segment that connects into the hovered row label. Keep the existing TreeContext, TreeSection, TreeItem, TreeRow, TreeContent, and IndentationLines behavior unchanged; this is only a completion fix for the active path rendering. Apply it generically to all leaf and non-leaf rows without hardcoding section names or field names.
+
+
 Implement a generic tree-path hover highlight for the semio/sketchpad tree system. When any TreeSection, TreeItem, or TreeRow is hovered, highlight the full ancestor path in the tree gutter from that row up to the highest visible parent/root. Use the existing tree infrastructure — TreeContext, TreeContent, IndentationLines, and current guide rendering — without changing hierarchy, spacing, or layout behavior.
 
 Behavior:
