@@ -28,7 +28,6 @@
 def fixed_function(value: int) -> int:
     """Increments a value by one.
     fixed_function MUST return value plus one.
-    [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixed🔖functions🛠️fixedfunction](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixed.py/s/Functions/d/i/fixed_function)
     """
     return value + 1
 

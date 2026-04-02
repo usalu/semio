@@ -51,8 +51,10 @@ def remove_performs_comments(file_path):
         # Split into lines and filter out matching lines
         lines = content.split('\n')
         filtered_lines = []
-        
-        for line in lines:
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            
             # Check if line matches any of the patterns
             if (re.match(go_pattern, line) or 
                 re.match(go_method_pattern, line) or
@@ -64,8 +66,18 @@ def remove_performs_comments(file_path):
                 re.match(jsdoc_no_star_pattern, line) or
                 re.match(rust_xml_pattern, line) or
                 re.search(inline_pattern, line)):  # Use search for inline pattern
-                continue  # Skip this line
+                
+                # Skip this line
+                i += 1
+                
+                # Also skip the next line if it contains a reference with emojis
+                if i < len(lines) and re.search(r'[👤📚💻🔖🛠️]', lines[i]):
+                    i += 1
+                
+                continue
+            
             filtered_lines.append(line)
+            i += 1
         
         new_content = '\n'.join(filtered_lines)
         

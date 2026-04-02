@@ -29,32 +29,33 @@ function FlattenFrame() {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [change, setChange] = React.useState<DesignChange | null>(null);
+  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
+    setChange(null);
+    setBaseDesign(null);
     void nativeFlattenDesign(kit, rawDesign.guid, language).then((ch) => {
-      if (!cancelled) setChange(ch);
+      if (cancelled) return;
+      setChange(ch);
+      setBaseDesign(applyDesignDiff(rawDesign, ch.forward) as any);
     });
     return () => {
       cancelled = true;
     };
   }, [kit, language]);
 
-  const flatDesign = React.useMemo(() => {
-    if (!change?.forward) return rawDesign;
-    return applyDesignDiff(rawDesign, change.forward) as any;
-  }, [change]);
-
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: rawDesign,
+      design: baseDesign ?? rawDesign,
       selectedPieceGuids: [],
       designDiff: change?.forward,
-      outputDesign: flatDesign,
-      error: !change ? `Loading flatten (${language})…` : undefined,
+      diffDesign: baseDesign ?? rawDesign,
+      outputDesign: baseDesign ?? rawDesign,
+      error: !change || !baseDesign ? `Loading flatten (${language})…` : undefined,
     }),
-    [kit, flatDesign, change, language],
+    [kit, baseDesign, change, language],
   );
 
   return <AlgorithmApp id="flatten" label="Flatten" windows={WINDOWS} context={context} className="h-full w-full" />;

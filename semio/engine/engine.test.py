@@ -243,7 +243,7 @@ class TestMcp:
         assert tools["show_design"].meta["ui"]["resourceUri"] == "ui://semio/design-viewer"
 
     def test_mcp_app_html_resources_include_ui_csp_meta(self):
-        """MCP App HTML resources expose _meta.ui.csp so hosts allow network access to the engine (see .repo/✍️/mcp-app.md)."""
+        """MCP App HTML resources expose _meta.ui.csp so hosts allow network access to the engine (see .repo//mcp-app.md)."""
         resources = {str(r.uri): r for r in engine.mcp._resource_manager.list_resources()}
         for uri in ("ui://semio/design-viewer", "ui://semio/kit-viewer"):
             r = resources[uri]
