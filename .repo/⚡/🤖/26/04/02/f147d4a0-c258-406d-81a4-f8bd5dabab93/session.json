@@ -1,0 +1,38 @@
+{
+  "id": "f147d4a0-c258-406d-81a4-f8bd5dabab93",
+  "uri": "repo://session/f147d4a0-c258-406d-81a4-f8bd5dabab93",
+  "client": "cursor-chat",
+  "second": "2026-04-02T10:15:59Z",
+  "checkpoint": "363a24ef8e36e3ee77ff1bc3aa1b54d9ac4b27f3",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "363a24ef8e36e3ee77ff1bc3aa1b54d9ac4b27f3",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-02T10:15:59Z",
+        "session": "f147d4a0-c258-406d-81a4-f8bd5dabab93"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "f147d4a0-c258-406d-81a4-f8bd5dabab93",
+          "generation_id": "",
+          "model": "claude-4.6-opus-high-thinking",
+          "session_id": "f147d4a0-c258-406d-81a4-f8bd5dabab93",
+          "is_background_agent": false,
+          "composer_mode": "agent",
+          "hook_event_name": "sessionStart",
+          "cursor_version": "2.4.31",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "kinan.sarak@gmail.com",
+          "transcript_path": null
+        }
+      },
+      "response": {}
+    }
+  ]
+}

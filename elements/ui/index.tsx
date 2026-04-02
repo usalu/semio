@@ -4766,68 +4766,6 @@ const elementUiTranslationBundles = {
               "beginner": "Einstellungen"
             }
           }
-        },
-        "subtool": {
-          "select": {
-            "label": {
-              "normal": "Auswählen",
-              "beginner": "Auswählen"
-            }
-          },
-          "hand": {
-            "label": {
-              "normal": "Hand",
-              "beginner": "Hand"
-            }
-          },
-          "lasso": {
-            "label": {
-              "normal": "Lasso",
-              "beginner": "Lasso"
-            }
-          },
-          "additive": {
-            "label": {
-              "normal": "Additiv",
-              "beginner": "Additiv"
-            }
-          },
-          "subtractive": {
-            "label": {
-              "normal": "Subtraktiv",
-              "beginner": "Subtraktiv"
-            }
-          },
-          "intersect": {
-            "label": {
-              "normal": "Schnittmenge",
-              "beginner": "Schnittmenge"
-            }
-          },
-          "connector": {
-            "label": {
-              "normal": "Konnektor",
-              "beginner": "Konnektor"
-            }
-          },
-          "appSettings": {
-            "label": {
-              "normal": "App Einstellungen",
-              "beginner": "App Einstellungen"
-            }
-          },
-          "command": {
-            "label": {
-              "normal": "Befehl",
-              "beginner": "Befehl"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Werkzeuge",
-              "beginner": "Werkzeuge"
-            }
-          }
         }
       },
       "tutorial": {
@@ -9591,18 +9529,6 @@ const elementUiTranslationBundles = {
           "view": "View",
           "actions": "Actions",
           "settings": "Settings"
-        },
-        "subtool": {
-          "select": "Select",
-          "hand": "Hand",
-          "lasso": "Lasso",
-          "additive": "Additive",
-          "subtractive": "Subtractive",
-          "intersect": "Intersect",
-          "connector": "Connector",
-          "appSettings": "App Settings",
-          "command": "Command",
-          "tools": "Tools"
         }
       },
       "tutorial": {
@@ -19108,13 +19034,14 @@ const GeometryFile: React.FC<GeometryFileProps> = ({ src, environment, roughness
  **/
 interface GizmoProps {
   show?: boolean;
+  onAxisClick?: (direction: THREE.Vector3) => void;
 }
 
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨gizmo](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Gizmo)
  * Gizmo holds the data fields for a Gizmo record.
  **/
-const Gizmo: React.FC<GizmoProps> = ({ show = true }) => {
+const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const [colors, setColors] = React.useState<[string, string, string]>(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
   const labels = React.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
   const margin = React.useMemo(() => [80, 80] as [number, number], []);
@@ -19133,7 +19060,11 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true }) => {
   if (!show) return null;
   return (
     <GizmoHelper alignment="bottom-right" margin={margin}>
-      <GizmoViewport labels={labels} axisColors={colors} />
+      <GizmoViewport
+        labels={labels}
+        axisColors={colors}
+        onClick={onAxisClick ? (e) => { onAxisClick(e.object.position.clone()); return null; } : undefined}
+      />
     </GizmoHelper>
   );
 };
@@ -19151,13 +19082,15 @@ interface SceneInnerProps {
   focusedItemId?: string;
   onFocusComplete?: () => void;
   selectionOnDrag?: boolean;
+  onAxisClick?: (direction: THREE.Vector3) => void;
+  onOrbitEnd?: () => void;
 }
 
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨sceneinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneInner)
  * SceneInner holds the data fields for a SceneInner record.
  **/
-const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete, selectionOnDrag = false }) => {
+const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete, selectionOnDrag = false, onAxisClick, onOrbitEnd }) => {
   const [gridColors, setGridColors] = React.useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -19260,6 +19193,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
 
   const handleEnd = React.useCallback(() => {
     if (isUpdatingCameraRef.current) return;
+    onOrbitEnd?.();
     if (cameraRef.current && controlsRef.current && onCameraChange) {
       const position = cameraRef.current.position;
       const target = controlsRef.current.target;
@@ -19276,7 +19210,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       };
       onCameraChange(newCamera);
     }
-  }, [onCameraChange]);
+  }, [onCameraChange, onOrbitEnd]);
 
   React.useEffect(() => {
     if (!focusedItemId || !cameraRef.current || !controlsRef.current) return;
@@ -19368,7 +19302,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       <ambientLight intensity={1} />
       {children}
       {showGrid && <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />}
-      {showGizmo && <Gizmo />}
+      {showGizmo && <Gizmo onAxisClick={onAxisClick} />}
     </>
   );
 };
@@ -19429,6 +19363,20 @@ export const Scene: React.FC<SceneProps> = ({
     },
   ];
 
+  const gizmoSnappedRef = React.useRef(false);
+
+  const handleAxisClick = React.useCallback((_direction: THREE.Vector3) => {
+    gizmoSnappedRef.current = true;
+    onProjectionChange?.("orthographic");
+  }, [onProjectionChange]);
+
+  const handleOrbitEnd = React.useCallback(() => {
+    if (gizmoSnappedRef.current) {
+      gizmoSnappedRef.current = false;
+      onProjectionChange?.("camera");
+    }
+  }, [onProjectionChange]);
+
   return (
     <div className={`relative h-full w-full ${className}`} style={{ minHeight: "100%", minWidth: "100%" }} onDoubleClick={onDoubleClickCapture}>
       {onProjectionChange && (
@@ -19445,7 +19393,7 @@ export const Scene: React.FC<SceneProps> = ({
         style={{ width: "100%", height: "100%" }}
       >
         <SceneFrameControl />
-        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete} selectionOnDrag={selectionOnDrag}>
+        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete} selectionOnDrag={selectionOnDrag} onAxisClick={onProjectionChange ? handleAxisClick : undefined} onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}>
           {children}
         </SceneInner>
       </ThreeCanvas>

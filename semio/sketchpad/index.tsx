@@ -25,337 +25,337 @@
 
 import type { Connector, Port } from "@semio/js";
 import {
-    applyKitDiff,
-    areDesignsInSameFamily,
-    arePortsCompatible,
-    areSameConnection,
-    Attribute,
-    Author,
-    AuthorDiff,
-    AuthorId,
-    buildFileTree,
-    Camera,
-    colorPortsForTypes,
-    Concept,
-    ConceptDiff,
-    Connection,
-    ConnectionDiff,
-    ConnectionId,
-    Coord,
-    createClusteredDesign,
-    Design,
-    DesignDiff,
-    DesignShallow,
-    DiffStatus,
-    dragPiecesInDesign,
-    expandDesignPieces,
-    exportKit,
-    FileDiff,
-    findDesignInKit,
-    findModel,
-    findPieceInDesign,
-    findTypeInKit,
-    fixPiecesInDesign,
-    flattenFileTree,
-    Folder,
-    FolderDiff,
-    generateUniqueName,
-    getClusterableGroups,
-    getDesignDiff,
-    getIncludedDesigns,
-    Guid,
-    guid,
-    ICON_WIDTH,
-    importKit,
-    InMemoryKitStore,
-    inverseKitDiff,
-    Kit,
-    KitDiff,
-    KitShallow,
-    type KitStore,
-    type KitStoreSnapshot,
-    Model,
-    Piece,
-    PieceDiff,
-    PieceId,
-    piecesMetadata,
-    Plane,
-    planeToMatrix,
-    Point,
-    PortDiff,
-    Quality,
-    QualityDiff,
-    replaceClusterWithDesign,
-    selectBestModel,
-    File as SemioFile,
-    sumQualityInDesign,
-    Tag,
-    TagDiff,
-    TOLERANCE,
-    toSemioRotation,
-    toThreeRotation,
-    Type,
-    TypeDiff,
-    TypeShallow,
-    Vector,
+  applyKitDiff,
+  areDesignsInSameFamily,
+  arePortsCompatible,
+  areSameConnection,
+  Attribute,
+  Author,
+  AuthorDiff,
+  AuthorId,
+  buildFileTree,
+  Camera,
+  colorPortsForTypes,
+  Concept,
+  ConceptDiff,
+  Connection,
+  ConnectionDiff,
+  ConnectionId,
+  Coord,
+  createClusteredDesign,
+  Design,
+  DesignDiff,
+  DesignShallow,
+  DiffStatus,
+  dragPiecesInDesign,
+  expandDesignPieces,
+  exportKit,
+  FileDiff,
+  findDesignInKit,
+  findModel,
+  findPieceInDesign,
+  findTypeInKit,
+  fixPiecesInDesign,
+  flattenFileTree,
+  Folder,
+  FolderDiff,
+  generateUniqueName,
+  getClusterableGroups,
+  getDesignDiff,
+  getIncludedDesigns,
+  Guid,
+  guid,
+  ICON_WIDTH,
+  importKit,
+  InMemoryKitStore,
+  inverseKitDiff,
+  Kit,
+  KitDiff,
+  KitShallow,
+  type KitStore,
+  type KitStoreSnapshot,
+  Model,
+  Piece,
+  PieceDiff,
+  PieceId,
+  piecesMetadata,
+  Plane,
+  planeToMatrix,
+  Point,
+  PortDiff,
+  Quality,
+  QualityDiff,
+  replaceClusterWithDesign,
+  selectBestModel,
+  File as SemioFile,
+  sumQualityInDesign,
+  Tag,
+  TagDiff,
+  TOLERANCE,
+  toSemioRotation,
+  toThreeRotation,
+  Type,
+  TypeDiff,
+  TypeShallow,
+  Vector,
 } from "@semio/js";
 import type {
-    ConnectionLineComponentProps,
-    DragEndEvent,
-    DragOverEvent,
-    DragStartEvent,
-    Edge,
-    EdgeProps,
-    EdgeTypes,
-    FuseResult,
-    LayoutNode,
-    MiniMapNodeProps,
-    Node,
-    NodeProps,
-    NodeTypes,
-    ReactFlowInstance,
-    RFConnection,
-    Simulation,
-    SimulationLinkDatum,
-    SimulationNodeDatum,
-    ThreeEvent,
-    UIWindowKindDefinition,
+  ConnectionLineComponentProps,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  Edge,
+  EdgeProps,
+  EdgeTypes,
+  FuseResult,
+  LayoutNode,
+  MiniMapNodeProps,
+  Node,
+  NodeProps,
+  NodeTypes,
+  ReactFlowInstance,
+  RFConnection,
+  Simulation,
+  SimulationLinkDatum,
+  SimulationNodeDatum,
+  ThreeEvent,
+  UIWindowKindDefinition,
 } from "@semio/ui";
 import {
-    Action,
-    ActionGroup,
-    ActionGroupItem,
-    type ActorRefFrom,
-    type AnyActorRef,
-    applyNodeChanges,
-    arrayMove,
-    Aside,
-    assign,
-    Avatar,
-    AvatarFallback,
-    Diagram as BaseDiagram,
-    BaseEdge,
-    MDXProvider as BaseMDXProvider,
-    Tabs as BaseTabs,
-    BasicChatPanel,
-    Breadcrumb,
-    BrowserRouter,
-    Button,
-    ButtonGroup,
-    ButtonGroupItem,
-    calculateDiagramLayout,
-    Canvas,
-    closestCenter,
-    Combobox,
-    CommandDialog,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-    createActor,
-    createDefaultLayout,
-    dateFnsDe as de,
-    deduplicateWindowLayout,
-    Diagram,
-    DiagramNode,
-    DndContext,
-    DraggableAvatar,
-    DragOverlay,
-    DreiSelect,
-    Edges,
-    dateFnsEnUS as enUS,
-    FileTree,
-    FileTreeNode,
-    Footer,
-    forceCollide,
-    forceLink,
-    forceManyBody,
-    forceSimulation,
-    forceX,
-    forceY,
-    formatDistanceToNow,
-    fromCallback,
-    Fuse,
-    Geometry,
-    getBezierPath,
-    Handle,
-    HelperRow,
-    HorizontalWindows,
-    HoverCard,
-    HoverCardContent,
-    HoverCardTrigger,
-    elementUiI18n as i18n,
-    Input,
-    InteractionProvider,
-    Label,
-    Layout as LayoutComponent,
-    layoutNodeToGoldenLayoutConfig,
-    LevelProvider,
-    Line,
-    MemoryRouter,
-    Navbar,
-    type NavbarItem,
-    NotFound,
-    OBJLoader,
-    Outlet,
-    Page,
-    PageFrontmatter,
-    PageNavigation,
-    parseWindowLayout,
-    PlaceholderDiagramNode,
-    PointerSensor,
-    pointerWithin,
-    Position,
-    ReactFlowProvider,
-    rectIntersection,
-    resolveTranslationLabel,
-    Ring,
-    Route,
-    Routes,
-    Scene as SceneComponent,
-    sceneFrameControlRef,
-    Scrollable,
-    SectionSpecificity,
-    Select,
-    SelectContent,
-    SelectionMode,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-    setup,
-    Slider,
-    type SnapshotFrom,
-    SortableTreeItems,
-    Sphere,
-    Spinner,
-    Stepper,
-    stringifyWindowLayout,
-    Strip,
-    Table,
-    TableAvatar,
-    TableColumn,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-    Textarea,
-    THREE,
-    Toggle,
-    ToggleGroup,
-    ToolbarDivider,
-    ToolbarGroup,
-    ToolbarItem,
-    ToolbarZone,
-    Transaction,
-    TransactionProvider,
-    Tree,
-    TreeContent,
-    TreeItem,
-    TreeRow,
-    TreeStateProvider,
-    useCommandHotkey,
-    useDraggable,
-    useDroppable,
-    useFBX,
-    useGLTF,
-    useTranslatedHotkey as useHotkey,
-    useTranslation as useI18nTranslation,
-    useInternalNode,
-    useLabel,
-    useLoader,
-    useLocation,
-    useParams,
-    useReactFlow,
-    useNavigate as useReactNavigate,
-    useSearchParams,
-    useXStateSelector as useSelector,
-    useSensor,
-    useSensors,
-    useStoreApi,
-    useThree,
-    useTranslation,
-    VerticalWindows,
-    ViewportPortal,
-    Window,
-    WindowKind,
+  Action,
+  ActionGroup,
+  ActionGroupItem,
+  type ActorRefFrom,
+  type AnyActorRef,
+  applyNodeChanges,
+  arrayMove,
+  Aside,
+  assign,
+  Avatar,
+  AvatarFallback,
+  Diagram as BaseDiagram,
+  BaseEdge,
+  MDXProvider as BaseMDXProvider,
+  Tabs as BaseTabs,
+  BasicChatPanel,
+  Breadcrumb,
+  BrowserRouter,
+  Button,
+  ButtonGroup,
+  ButtonGroupItem,
+  calculateDiagramLayout,
+  Canvas,
+  closestCenter,
+  Combobox,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  createActor,
+  createDefaultLayout,
+  dateFnsDe as de,
+  deduplicateWindowLayout,
+  Diagram,
+  DiagramNode,
+  DndContext,
+  DraggableAvatar,
+  DragOverlay,
+  DreiSelect,
+  Edges,
+  dateFnsEnUS as enUS,
+  FileTree,
+  FileTreeNode,
+  Footer,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  formatDistanceToNow,
+  fromCallback,
+  Fuse,
+  Geometry,
+  getBezierPath,
+  Handle,
+  HelperRow,
+  HorizontalWindows,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  elementUiI18n as i18n,
+  Input,
+  InteractionProvider,
+  Label,
+  Layout as LayoutComponent,
+  layoutNodeToGoldenLayoutConfig,
+  LevelProvider,
+  Line,
+  MemoryRouter,
+  Navbar,
+  type NavbarItem,
+  NotFound,
+  OBJLoader,
+  Outlet,
+  Page,
+  PageFrontmatter,
+  PageNavigation,
+  parseWindowLayout,
+  PlaceholderDiagramNode,
+  PointerSensor,
+  pointerWithin,
+  Position,
+  ReactFlowProvider,
+  rectIntersection,
+  resolveTranslationLabel,
+  Ring,
+  Route,
+  Routes,
+  Scene as SceneComponent,
+  sceneFrameControlRef,
+  Scrollable,
+  SectionSpecificity,
+  Select,
+  SelectContent,
+  SelectionMode,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  setup,
+  Slider,
+  type SnapshotFrom,
+  SortableTreeItems,
+  Sphere,
+  Spinner,
+  Stepper,
+  stringifyWindowLayout,
+  Strip,
+  Table,
+  TableAvatar,
+  TableColumn,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Textarea,
+  THREE,
+  Toggle,
+  ToggleGroup,
+  ToolbarDivider,
+  ToolbarGroup,
+  ToolbarItem,
+  ToolbarZone,
+  Transaction,
+  TransactionProvider,
+  Tree,
+  TreeContent,
+  TreeItem,
+  TreeRow,
+  TreeStateProvider,
+  useCommandHotkey,
+  useDraggable,
+  useDroppable,
+  useFBX,
+  useGLTF,
+  useTranslatedHotkey as useHotkey,
+  useTranslation as useI18nTranslation,
+  useInternalNode,
+  useLabel,
+  useLoader,
+  useLocation,
+  useParams,
+  useReactFlow,
+  useNavigate as useReactNavigate,
+  useSearchParams,
+  useXStateSelector as useSelector,
+  useSensor,
+  useSensors,
+  useStoreApi,
+  useThree,
+  useTranslation,
+  VerticalWindows,
+  ViewportPortal,
+  Window,
+  WindowKind,
 } from "@semio/ui";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import {
-    AddIcon,
-    AlertCircleIcon,
-    AwardIcon,
-    ChatIcon,
-    CheckIcon,
-    ChevronDownIcon,
-    ChevronRightIcon,
-    CloseIcon,
-    CodeIcon,
-    ConnectionIcon,
-    ConnectorIcon,
-    CopyIcon,
-    DetailsIcon,
-    DiagramIcon,
-    DisconnectIcon,
-    DocumentIcon,
-    MessageCircle as FeedbackIcon,
-    FileCodeIcon,
-    FileImageIcon,
-    FileJsonIcon,
-    FileSpreadsheetIcon,
-    FileTypeIcon,
-    FileVideoIcon,
-    FocusIcon,
-    FolderIcon,
-    HandIcon,
-    HomeIcon,
-    IntersectIcon,
-    LayoutIcon,
-    LocalKitIcon,
-    Maximize2Icon,
-    Minimize2Icon,
-    MonitorIcon,
-    MoonIcon,
-    MoreHorizontalIcon,
-    MousePointerIcon,
-    NavigateBackIcon,
-    NavigateForwardIcon,
-    NavigateUpIcon,
-    PauseIcon,
-    PieceIcon,
-    PlayIcon,
-    PortIcon,
-    RecordIcon,
-    RemoteKitIcon,
-    RemoveIcon,
-    SceneIcon,
-    SearchIcon,
-    SelectToolIcon,
-    SettingsIcon,
-    SkipBackIcon,
-    SkipForwardIcon,
-    SortAscendingIcon,
-    SortDescendingIcon,
-    StatsIcon,
-    StopIcon,
-    SunIcon,
-    TableViewIcon,
-    TemporaryKitIcon,
-    ToolbarIcon,
-    ToolsIcon,
-    TutorialIcon,
-    TypeIcon,
-    UserIcon,
-    WorkbenchIcon,
+  AddIcon,
+  AlertCircleIcon,
+  AwardIcon,
+  ChatIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  CloseIcon,
+  CodeIcon,
+  ConnectionIcon,
+  ConnectorIcon,
+  CopyIcon,
+  DetailsIcon,
+  DiagramIcon,
+  DisconnectIcon,
+  DocumentIcon,
+  MessageCircle as FeedbackIcon,
+  FileCodeIcon,
+  FileImageIcon,
+  FileJsonIcon,
+  FileSpreadsheetIcon,
+  FileTypeIcon,
+  FileVideoIcon,
+  FocusIcon,
+  FolderIcon,
+  HandIcon,
+  HomeIcon,
+  IntersectIcon,
+  LayoutIcon,
+  LocalKitIcon,
+  Maximize2Icon,
+  Minimize2Icon,
+  MonitorIcon,
+  MoonIcon,
+  MoreHorizontalIcon,
+  MousePointerIcon,
+  NavigateBackIcon,
+  NavigateForwardIcon,
+  NavigateUpIcon,
+  PauseIcon,
+  PieceIcon,
+  PlayIcon,
+  PortIcon,
+  RecordIcon,
+  RemoteKitIcon,
+  RemoveIcon,
+  SceneIcon,
+  SearchIcon,
+  SelectToolIcon,
+  SettingsIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  StatsIcon,
+  StopIcon,
+  SunIcon,
+  TableViewIcon,
+  TemporaryKitIcon,
+  ToolbarIcon,
+  ToolsIcon,
+  TutorialIcon,
+  TypeIcon,
+  UserIcon,
+  WorkbenchIcon,
 } from "../assets/icons";
 import { createSyncDocFactory, isSyncArray, isSyncMap, type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent } from "../studio/studio";
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
 export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
-    import type { Locator, Page as PlaywrightPage } from "@playwright/test";
-    import { importKit as importKitArchive } from "@semio/js";
+import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+import { importKit as importKitArchive } from "@semio/js";
 // #endregion 🔖Imports
 
 // #region 🔖Shared
@@ -1203,9 +1203,6 @@ export interface PanelSection {
     id: string; // "selection", "filter", "create", "view", "actions"
     labelId?: string;
     order?: number;
-    subToolId?: string;
-    subToolLabelId?: string;
-    subToolIcon?: ReactNode;
     onActivate?: () => void;
   };
   actions?: Array<{
@@ -16682,9 +16679,6 @@ const MultiWindowApp: FC = () => {
         id: "selection",
         labelId: "semio.sketchpad.toolbar.parent.selection",
         order: 10,
-        subToolId: "select",
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.select",
-        subToolIcon: <MousePointerIcon className="size-tiny" />,
       },
       content: () => (
         <KitScopeProvider guid={kitGuid}>
@@ -19393,6 +19387,7 @@ export class SketchpadStore {
   private kitShallowsCache?: KitShallow[];
   private kitShallowsVersion: number = 0;
   private kitShallowsCacheVersion: number = -1;
+  private readonly collaborativeKitStoreCache: Map<string, CollaborativeKitStore> = new Map();
   private readonly kitCreatedSubscribers: Set<() => void>;
   private readonly kitDeletedSubscribers: Set<() => void>;
   private readonly kitAppCreatedSubscribers: Set<() => void>;
@@ -19928,6 +19923,7 @@ export class SketchpadStore {
         }
       });
       this.kits.delete(guid);
+      this.collaborativeKitStoreCache.delete(guid);
       this.kitShallowsVersion++;
       this.schedulePersistKitsToStorage();
       this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
@@ -20309,7 +20305,12 @@ export class SketchpadStore {
     if (!kitStore) {
       throw new Error(`Kit with guid ${guid} not found`);
     }
-    return new CollaborativeKitStore(kitStore);
+    let cached = this.collaborativeKitStoreCache.get(guid);
+    if (!cached || cached.store !== kitStore) {
+      cached = new CollaborativeKitStore(kitStore);
+      this.collaborativeKitStoreCache.set(guid, cached);
+    }
+    return cached;
   }
 
   kitStore(guid: string): KitStore {
@@ -22249,7 +22250,7 @@ const PanelSectionContext = createContext<PanelSectionContextValue | null>(null)
 const areToolbarGroupsEquivalent = (left?: PanelSection["toolbarGroup"], right?: PanelSection["toolbarGroup"]): boolean => {
   if (left === right) return true;
   if (!left || !right) return !left && !right;
-  return left.id === right.id && left.labelId === right.labelId && left.order === right.order && left.subToolId === right.subToolId && left.subToolLabelId === right.subToolLabelId;
+  return left.id === right.id && left.labelId === right.labelId && left.order === right.order;
 };
 
 const arePanelSectionsEquivalent = (left: PanelSection, right: PanelSection): boolean => {
@@ -25650,13 +25651,6 @@ const LayoutWrapper: FC = () => {
     });
   }, []);
 
-  const [activeSubToolByGroup, setActiveSubToolByGroup] = useState<Record<string, string>>({});
-
-  const setSubTool = useCallback((groupId: string, subToolId: string) => {
-    setActiveSubToolByGroup((prev) => ({ ...prev, [groupId]: subToolId }));
-    setActiveToolbarGroup(groupId);
-  }, []);
-
   const getGroupIcon = useCallback((groupId: string) => {
     switch (groupId) {
       case "hand":
@@ -25929,53 +25923,6 @@ const LayoutWrapper: FC = () => {
                                 if (!toolbarGroups[groupId]) return null;
                                 const isActive = activeToolbarGroup === groupId;
 
-                                if (groupId === "selection") {
-                                  const activeSubToolId = activeSubToolByGroup[groupId] || toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
-                                  const uniqueSubTools = Array.from(new Set(toolbarGroups[groupId].map((s) => s.toolbarGroup?.subToolId).filter(Boolean))) as string[];
-                                  if (uniqueSubTools.length === 0) {
-                                    return (
-                                      <Toggle
-                                        key={groupId}
-                                        kind="single"
-                                        id={`semio.sketchpad.toolbar.group.${groupId}`}
-                                        pressed={isActive}
-                                        onPressedChange={() => toggleToolbarGroup(groupId)}
-                                        icon={getGroupIcon(groupId)}
-                                        text={resolveTranslationLabel(i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`))}
-                                      />
-                                    );
-                                  }
-
-                                  return (
-                                    <Toggle
-                                      key={groupId}
-                                      kind="dropdown"
-                                      id={`semio.sketchpad.toolbar.group.${groupId}`}
-                                      value={activeSubToolId}
-                                      pressed={isActive}
-                                      onPressedChange={(pressed) => {
-                                        setActiveToolbarGroup(pressed ? groupId : null);
-                                      }}
-                                      onValueChange={(val) => val && setSubTool(groupId, val)}
-                                      dropdownSide="top"
-                                      dropdownAlign="end"
-                                      dropdownSideOffset={2}
-                                      dropdownAvoidCollisions={false}
-                                      dropdownInstant={true}
-                                      dropdownContentClassName="w-[10.5rem] min-w-[10.5rem] p-0 overflow-hidden border transition-none"
-                                      items={uniqueSubTools.map((subToolId) => {
-                                        const section = toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId === subToolId);
-                                        return {
-                                          value: subToolId,
-                                          label: section?.toolbarGroup?.subToolIcon || <FocusIcon className="size-tiny" />,
-                                          text: section?.toolbarGroup?.subToolLabelId ? resolveTranslationLabel(i18n.t(section.toolbarGroup.subToolLabelId)) : subToolId,
-                                          id: `semio.sketchpad.toolbar.subtool.${subToolId}`,
-                                        };
-                                      })}
-                                    />
-                                  );
-                                }
-
                                 return (
                                   <Toggle
                                     key={groupId}
@@ -25998,11 +25945,6 @@ const LayoutWrapper: FC = () => {
                               <ToolbarZone className="flex-nowrap min-w-0">
                                 <ToolbarScopeWrapper>
                                   {toolbarGroups[activeToolbarGroup]?.map((section) => {
-                                    if (activeToolbarGroup === "selection") {
-                                      const activeSubToolId = activeSubToolByGroup["selection"] || toolbarGroups["selection"].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
-                                      const hasSelectionSubTools = toolbarGroups["selection"]?.some((s) => Boolean(s.toolbarGroup?.subToolId));
-                                      if (hasSelectionSubTools && section.toolbarGroup?.subToolId !== activeSubToolId) return null;
-                                    }
                                     return <ToolbarItem key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</ToolbarItem>;
                                   })}
                                 </ToolbarScopeWrapper>
@@ -26240,7 +26182,7 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
 
 // #region Constants
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖constants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Constants)
-// Constants MUST define artifact kinds and toolbar sub-tool configurations for the Kit app.
+// Constants MUST define artifact kinds for the Kit app.
 
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖constants🪨artifactkinds](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Constants/d/i/artifactKinds)
@@ -37934,9 +37876,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   }, [fileGuid, kitStore]);
 
   if (!blobUrl) {
-    return (
-      <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />
-    );
+    return <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />;
   }
 
   return (
@@ -43140,9 +43080,6 @@ const TypeApp: FC = () => {
         id: "hand",
         labelId: "semio.sketchpad.toolbar.parent.hand",
         order: 30,
-        subToolId: ToolKind.HAND,
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.hand",
-        subToolIcon: <HandIcon className="size-tiny" />,
       },
       content: <TypeHandSettings />,
     });
@@ -43155,9 +43092,6 @@ const TypeApp: FC = () => {
         id: "create",
         labelId: "semio.sketchpad.toolbar.parent.create",
         order: 40,
-        subToolId: ToolKind.CONNECTOR,
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.connector",
-        subToolIcon: <ConnectorIcon className="size-tiny" />,
         onActivate: () => commandsRef.current.setActiveTool(ToolKind.CONNECTOR),
       },
       content: <TypeConnectorSettings />,
@@ -47599,7 +47533,7 @@ export { useHome };
 
 // #region Table
 
-    export { };
+export {};
 
 // #endregion Table
 
@@ -49639,10 +49573,10 @@ export { FeedbackIcon };
 
 // --- Combined from index.tsx and index.ts ---
 
-    import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
-    import type { KitJsonFileAdapter } from "../studio/studio";
-    import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-    import "./globals.css";
+import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
+import type { KitJsonFileAdapter } from "../studio/studio";
+import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
+import "./globals.css";
 
 export { createJsonFileKitStore, JsonFileKitStore };
 export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
