@@ -1,0 +1,16 @@
+{
+  "title": "Unify Toolbar Element Visual Consistency",
+  "status": "closed",
+  "description": "Analyze and fix all visual inconsistencies across toolbar elements in the sketchpad. Key issues: 1) Icon sizes differ between groups (some use size-tiny, others rely on addIconSize default size-small), 2) Some toolbar content uses ToolbarGroup wrapper while others use raw divs with different gap/padding, 3) getToolbarGroupIcon uses hardcoded size={16} instead of design tokens, 4) Mixed use of Button vs Toggle without consistent sizing.",
+  "summary": "Fixed the remaining toolbar inconsistency caused by an invalid CSS selector for the settings zone.\n\nRoot cause:\n- Selector used `#semio.sketchpad.toolbar.zone.settings`, but the actual ID contains dots.\n- In CSS, dots in an ID selector are interpreted as class separators unless escaped.\n- Result: settings-zone-specific normalization for toggle `data-state=on` never applied.\n\nFix:\n- Replaced selector with exact ID attribute selector:\n  - `[id=\"semio.sketchpad.toolbar.zone.settings\"] [data-slot=\"toggle-group-item\"][data-state=\"on\"]`\n  - same for `:hover`\n\nOutcome:\n- Settings controls (e.g., Filter Connectors/Models and Selection Additive/Subtractive) now share the same neutral style contract across groups.\n- Tools-zone active group highlighting remains unchanged.\n\nValidation:\n- `npx tsc --noEmit --project semio/sketchpad/tsconfig.json` passed.\n- `npm test --workspace elements/ui` passed (23/23).\n- No linter errors in changed CSS file.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1262"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪d758791668784a5d89e9ee4993e7dcd6",
+    "⚪8fe88b49a3cf47b58a7ef6a8871fc561",
+    "⚪a74492d08ddc4c2eabeb0e813c2a6283",
+    "⚪34b7f177b41d45efb73d9253af63c884"
+  ]
+}

@@ -41,22 +41,22 @@ import { Slot } from "@radix-ui/react-slot";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
 import {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    ConnectionMode,
-    getBezierPath,
-    Handle,
-    MiniMap,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    SelectionMode,
-    useInternalNode,
-    useReactFlow,
-    useStoreApi,
-    ViewportPortal,
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  ConnectionMode,
+  getBezierPath,
+  Handle,
+  MiniMap,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 } from "@xyflow/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
@@ -64,34 +64,34 @@ import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import type { LucideIcon } from "lucide-react";
 import {
-    Plus as AddIcon,
-    AlertCircle as AlertCircleIcon,
-    BookOpen as BookIcon,
-    Camera as CameraIcon,
-    Check as CheckIcon,
-    CheckIcon as CheckIconAlt,
-    ChevronDown as ChevronDownIcon,
-    ChevronDownIcon as ChevronDownIconAlt,
-    ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
-    ChevronsUpDown as ChevronsUpDownIcon,
-    X as CloseIcon,
-    XIcon as CloseIconAlt,
-    FileText as DocumentIcon,
-    ExternalLink as ExternalLinkIcon,
-    Folder as FolderIcon,
-    GripVertical as GripVerticalIcon,
-    Info as InfoIcon,
-    Lightbulb as LightbulbIcon,
-    Maximize2 as Maximize2Icon,
-    Minimize2 as Minimize2Icon,
-    ArrowLeft as NavigateBackIcon,
-    ArrowRight as NavigateForwardIcon,
-    ArrowUp as NavigateUpIcon,
-    Minus as RemoveIcon,
-    SearchIcon,
-    TriangleAlert as TriangleAlertIcon,
-    GraduationCap as TutorialIcon,
+  Plus as AddIcon,
+  AlertCircle as AlertCircleIcon,
+  BookOpen as BookIcon,
+  Camera as CameraIcon,
+  Check as CheckIcon,
+  CheckIcon as CheckIconAlt,
+  ChevronDown as ChevronDownIcon,
+  ChevronDownIcon as ChevronDownIconAlt,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronsUpDown as ChevronsUpDownIcon,
+  X as CloseIcon,
+  XIcon as CloseIconAlt,
+  FileText as DocumentIcon,
+  ExternalLink as ExternalLinkIcon,
+  Folder as FolderIcon,
+  GripVertical as GripVerticalIcon,
+  Info as InfoIcon,
+  Lightbulb as LightbulbIcon,
+  Maximize2 as Maximize2Icon,
+  Minimize2 as Minimize2Icon,
+  ArrowLeft as NavigateBackIcon,
+  ArrowRight as NavigateForwardIcon,
+  ArrowUp as NavigateUpIcon,
+  Minus as RemoveIcon,
+  SearchIcon,
+  TriangleAlert as TriangleAlertIcon,
+  GraduationCap as TutorialIcon,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -11729,6 +11729,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
 
   const actionElement = (
     <Comp
+      data-slot="action"
       type={Comp === "button" ? "button" : undefined}
       role={Comp === "div" && (props as any).onClick ? "button" : undefined}
       tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
@@ -14666,11 +14667,11 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
   const gutterWidthPx = treeGutterWidthPx(level, indentMultiplier);
   const positionedSlot =
     hasSlot && React.isValidElement(slot) ? (
-      React.cloneElement(slot, {
-        ...slot.props,
-        "data-slot": slot.props["data-slot"] ?? "tree-gutter-slot",
-        className: cn("absolute top-1/2 -translate-y-1/2", slot.props.className),
-        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...slot.props.style },
+      React.cloneElement(slot as React.ReactElement<any>, {
+        ...(slot as React.ReactElement<any>).props,
+        "data-slot": (slot as React.ReactElement<any>).props["data-slot"] ?? "tree-gutter-slot",
+        className: cn("absolute top-1/2 -translate-y-1/2", (slot as React.ReactElement<any>).props.className),
+        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...(slot as React.ReactElement<any>).props.style },
       })
     ) : hasSlot ? (
       <span data-slot="tree-gutter-slot" className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier)}>
@@ -14779,7 +14780,7 @@ const renderTreeHeaderActions = (actions: TreeSectionAction[]) => (
 );
 
 const TreeDragHandle: React.FC<{
-  attributes?: Record<string, unknown>;
+  attributes?: Record<string, unknown> | object;
   listeners?: Record<string, unknown>;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }> = ({ attributes, listeners, onClick }) => (
@@ -18001,26 +18002,26 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 // Consumers MUST provide nodes and edges arrays.
 
 export {
-    applyNodeChanges,
-    Background,
-    BackgroundVariant,
-    BaseEdge,
-    forceCenter,
-    forceCollide,
-    forceLink,
-    forceManyBody,
-    forceSimulation,
-    forceX,
-    forceY,
-    getBezierPath,
-    Handle,
-    Position,
-    ReactFlow,
-    ReactFlowProvider,
-    useInternalNode,
-    useReactFlow,
-    useStoreApi,
-    ViewportPortal
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  getBezierPath,
+  Handle,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  useInternalNode,
+  useReactFlow,
+  useStoreApi,
+  ViewportPortal,
 };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
@@ -19037,6 +19038,73 @@ interface GizmoProps {
   onAxisClick?: (direction: THREE.Vector3) => void;
 }
 
+type SceneProjectionKind = "camera" | "orthographic";
+
+type SceneSnapViewKind = "front" | "back" | "side" | "opposite-side" | "top" | "bottom";
+
+interface SceneGizmoSnapTarget {
+  axis: "x" | "y" | "z";
+  sign: 1 | -1;
+  view: SceneSnapViewKind;
+  cameraDirection: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  up: {
+    x: number;
+    y: number;
+    z: number;
+  };
+}
+
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨resolvescenegizmosnaptarget](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/resolveSceneGizmoSnapTarget)
+ * resolveSceneGizmoSnapTarget holds the data fields for a resolveSceneGizmoSnapTarget record.
+ **/
+export const resolveSceneGizmoSnapTarget = (direction: Pick<THREE.Vector3, "x" | "y" | "z">): SceneGizmoSnapTarget => {
+  const dominantAxis = ([
+    { axis: "x" as const, magnitude: Math.abs(direction.x), raw: direction.x },
+    { axis: "y" as const, magnitude: Math.abs(direction.y), raw: direction.y },
+    { axis: "z" as const, magnitude: Math.abs(direction.z), raw: direction.z },
+  ].sort((a, b) => b.magnitude - a.magnitude)[0] ?? { axis: "x" as const, magnitude: 1, raw: 1 });
+  const sign = dominantAxis.raw >= 0 ? 1 : -1;
+
+  if (dominantAxis.axis === "x") {
+    return {
+      axis: "x",
+      sign,
+      view: sign > 0 ? "front" : "back",
+      cameraDirection: { x: sign, y: 0, z: 0 },
+      up: { x: 0, y: 1, z: 0 },
+    };
+  }
+
+  if (dominantAxis.axis === "y") {
+    return {
+      axis: "y",
+      sign,
+      view: sign > 0 ? "top" : "bottom",
+      cameraDirection: { x: 0, y: sign, z: 0 },
+      up: sign > 0 ? { x: 0, y: 0, z: -1 } : { x: 0, y: 0, z: 1 },
+    };
+  }
+
+  return {
+    axis: "z",
+    sign,
+    view: sign < 0 ? "side" : "opposite-side",
+    cameraDirection: { x: 0, y: 0, z: sign },
+    up: { x: 0, y: 1, z: 0 },
+  };
+};
+
+const updateSceneCameraProjection = (camera: THREE.Camera): void => {
+  if (camera instanceof THREE.OrthographicCamera || camera instanceof THREE.PerspectiveCamera) {
+    camera.updateProjectionMatrix();
+  }
+};
+
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨gizmo](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Gizmo)
  * Gizmo holds the data fields for a Gizmo record.
@@ -19044,7 +19112,9 @@ interface GizmoProps {
 const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const [colors, setColors] = React.useState<[string, string, string]>(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
   const labels = React.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
-  const margin = React.useMemo(() => [80, 80] as [number, number], []);
+  const margin = React.useMemo(() => [124, 124] as [number, number], []);
+  const axisScale = React.useMemo(() => [1.35, 1.35, 1.35] as [number, number, number], []);
+  const labelColor = React.useMemo(() => getComputedColor("--foreground"), []);
 
   React.useEffect(() => {
     const updateColors = () => setColors([getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
@@ -19063,7 +19133,18 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
       <GizmoViewport
         labels={labels}
         axisColors={colors}
-        onClick={onAxisClick ? (e) => { onAxisClick(e.object.position.clone()); return null; } : undefined}
+        axisScale={axisScale}
+        axisHeadScale={1.35}
+        labelColor={labelColor}
+        font="20px Inter var, Arial, sans-serif"
+        onClick={
+          onAxisClick
+            ? (e) => {
+                onAxisClick(e.object.position.clone());
+                return null;
+              }
+            : undefined
+        }
       />
     </GizmoHelper>
   );
@@ -19077,12 +19158,13 @@ interface SceneInnerProps {
   children?: React.ReactNode;
   showGrid?: boolean;
   showGizmo?: boolean;
+  projection: SceneProjectionKind;
   camera?: Camera;
   onCameraChange?: (camera: Camera) => void;
+  onProjectionChange?: (projection: SceneProjectionKind) => void;
   focusedItemId?: string;
   onFocusComplete?: () => void;
   selectionOnDrag?: boolean;
-  onAxisClick?: (direction: THREE.Vector3) => void;
   onOrbitEnd?: () => void;
 }
 
@@ -19090,7 +19172,19 @@ interface SceneInnerProps {
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨sceneinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneInner)
  * SceneInner holds the data fields for a SceneInner record.
  **/
-const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete, selectionOnDrag = false, onAxisClick, onOrbitEnd }) => {
+const SceneInner: React.FC<SceneInnerProps> = ({
+  children,
+  showGrid = true,
+  showGizmo = true,
+  projection,
+  camera: initialCamera,
+  onCameraChange,
+  onProjectionChange,
+  focusedItemId,
+  onFocusComplete,
+  selectionOnDrag = false,
+  onOrbitEnd,
+}) => {
   const [gridColors, setGridColors] = React.useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -19117,21 +19211,44 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
   const prevCameraStringRef = React.useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
   const cameraRestoredRef = React.useRef(false);
   const restoredCameraStringRef = React.useRef<string | undefined>(undefined);
-
-  const cameraRef = React.useRef<THREE.OrthographicCamera>(threeCamera as THREE.OrthographicCamera);
+  const previousProjectionRef = React.useRef<SceneProjectionKind>(projection);
+  const cameraRef = React.useRef<THREE.Camera>(threeCamera as THREE.Camera);
+  const [pendingSnapTarget, setPendingSnapTarget] = React.useState<SceneGizmoSnapTarget | null>(null);
 
   React.useEffect(() => {
-    const cam = cameraRef.current;
-    if (cam && cam instanceof THREE.OrthographicCamera) {
-      cam.zoom = 50;
-      cam.updateProjectionMatrix();
+    cameraRef.current = threeCamera as THREE.Camera;
+    const currentCamera = cameraRef.current;
+    if (projection === "orthographic" && currentCamera instanceof THREE.OrthographicCamera) {
+      currentCamera.zoom = 50;
     }
-  }, []);
+    updateSceneCameraProjection(currentCamera);
+  }, [projection, threeCamera]);
+
+  const emitCameraChange = React.useCallback(() => {
+    if (!cameraRef.current || !controlsRef.current || !onCameraChange) return;
+    const position = cameraRef.current.position;
+    const target = controlsRef.current.target;
+    const forwardVector = new THREE.Vector3().subVectors(target, position);
+    if (forwardVector.lengthSq() < 0.001) return;
+    const forward = forwardVector.normalize();
+    const up = cameraRef.current.up.clone().normalize();
+    onCameraChange({
+      position: { x: position.x, y: position.y, z: position.z },
+      forward: { x: forward.x, y: forward.y, z: forward.z },
+      up: { x: up.x, y: up.y, z: up.z },
+    });
+  }, [onCameraChange]);
 
   React.useEffect(() => {
     if (!cameraRef.current || !controlsRef.current) return;
 
     const currentCameraString = initialCamera ? JSON.stringify(initialCamera) : undefined;
+
+    if (previousProjectionRef.current !== projection) {
+      previousProjectionRef.current = projection;
+      cameraRestoredRef.current = false;
+      restoredCameraStringRef.current = undefined;
+    }
 
     if (prevCameraStringRef.current !== currentCameraString) {
       cameraRestoredRef.current = false;
@@ -19161,7 +19278,10 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
         cameraRef.current.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
         const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
         controlsRef.current.target.copy(target);
-        cameraRef.current.updateProjectionMatrix();
+        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+          cameraRef.current.zoom = 50;
+        }
+        updateSceneCameraProjection(cameraRef.current);
         controlsRef.current.update();
 
         setTimeout(() => {
@@ -19178,7 +19298,10 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
         cameraRef.current.position.set(10, 10, 10);
         cameraRef.current.up.set(0, 1, 0);
         controlsRef.current.target.set(0, 0, 0);
-        cameraRef.current.updateProjectionMatrix();
+        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+          cameraRef.current.zoom = 50;
+        }
+        updateSceneCameraProjection(cameraRef.current);
         controlsRef.current.update();
 
         setTimeout(() => {
@@ -19189,28 +19312,76 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       cameraRestoredRef.current = true;
       restoredCameraStringRef.current = currentCameraString;
     }
-  }, [initialCamera]);
+  }, [initialCamera, projection]);
+
+  React.useEffect(() => {
+    if (!pendingSnapTarget || !cameraRef.current || !controlsRef.current) return;
+
+    const currentCamera = cameraRef.current;
+    const controls = controlsRef.current;
+    const currentTarget = controls.target.clone();
+    const currentPosition = currentCamera.position.clone();
+    const currentUp = currentCamera.up.clone().normalize();
+    const nextDirection = new THREE.Vector3(pendingSnapTarget.cameraDirection.x, pendingSnapTarget.cameraDirection.y, pendingSnapTarget.cameraDirection.z).normalize();
+    const nextUp = new THREE.Vector3(pendingSnapTarget.up.x, pendingSnapTarget.up.y, pendingSnapTarget.up.z).normalize();
+    const nextPosition = currentTarget.clone().add(nextDirection.multiplyScalar(Math.max(currentPosition.distanceTo(currentTarget), 1)));
+    const animationDurationMs = 280;
+
+    isUpdatingCameraRef.current = true;
+
+    const animateSnap = (startTime: number) => {
+      const frame = (now: number) => {
+        if (!cameraRef.current || !controlsRef.current) {
+          setPendingSnapTarget(null);
+          isUpdatingCameraRef.current = false;
+          return;
+        }
+
+        const progress = Math.min(1, (now - startTime) / animationDurationMs);
+        const easedProgress = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+        cameraRef.current.position.lerpVectors(currentPosition, nextPosition, easedProgress);
+        cameraRef.current.up.lerpVectors(currentUp, nextUp, easedProgress).normalize();
+        controlsRef.current.target.copy(currentTarget);
+
+        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+          cameraRef.current.zoom = 50;
+        }
+        updateSceneCameraProjection(cameraRef.current);
+        controlsRef.current.update();
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+          return;
+        }
+
+        emitCameraChange();
+        onProjectionChange?.("orthographic");
+        setPendingSnapTarget(null);
+        isUpdatingCameraRef.current = false;
+      };
+
+      requestAnimationFrame(frame);
+    };
+
+    requestAnimationFrame(animateSnap);
+  }, [emitCameraChange, onProjectionChange, pendingSnapTarget, projection]);
+
+  const handleGizmoAxisClick = React.useCallback((direction: THREE.Vector3) => {
+    setPendingSnapTarget(resolveSceneGizmoSnapTarget(direction));
+  }, []);
+
+  const handleStart = React.useCallback(() => {
+    if (isUpdatingCameraRef.current || projection !== "orthographic") return;
+    emitCameraChange();
+    onProjectionChange?.("camera");
+  }, [emitCameraChange, onProjectionChange, projection]);
 
   const handleEnd = React.useCallback(() => {
     if (isUpdatingCameraRef.current) return;
     onOrbitEnd?.();
-    if (cameraRef.current && controlsRef.current && onCameraChange) {
-      const position = cameraRef.current.position;
-      const target = controlsRef.current.target;
-      const forwardVec = new THREE.Vector3().subVectors(target, position);
-
-      if (forwardVec.lengthSq() < 0.001) return;
-
-      const forward = forwardVec.normalize();
-      const up = cameraRef.current.up;
-      const newCamera = {
-        position: { x: position.x, y: position.y, z: position.z },
-        forward: { x: forward.x, y: forward.y, z: forward.z },
-        up: { x: up.x, y: up.y, z: up.z },
-      };
-      onCameraChange(newCamera);
-    }
-  }, [onCameraChange, onOrbitEnd]);
+    emitCameraChange();
+  }, [emitCameraChange, onOrbitEnd]);
 
   React.useEffect(() => {
     if (!focusedItemId || !cameraRef.current || !controlsRef.current) return;
@@ -19259,7 +19430,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
         const t = 0.1;
         camera.position.lerp(newPosition, t);
         controlsRef.current.target.lerp(center, t);
-        camera.updateProjectionMatrix();
+        updateSceneCameraProjection(camera);
         controlsRef.current.update();
 
         const distanceToTarget = camera.position.distanceTo(newPosition);
@@ -19284,6 +19455,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       <OrbitControls
         ref={controlsRef}
         enableDamping={false}
+        onStart={handleStart}
         mouseButtons={
           selectionOnDrag
             ? {
@@ -19302,7 +19474,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       <ambientLight intensity={1} />
       {children}
       {showGrid && <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />}
-      {showGizmo && <Gizmo onAxisClick={onAxisClick} />}
+      {showGizmo && <Gizmo onAxisClick={handleGizmoAxisClick} />}
     </>
   );
 };
@@ -19324,8 +19496,8 @@ interface SceneProps {
   className?: string;
   focusedItemId?: string;
   onFocusComplete?: () => void;
-  projection?: "camera" | "orthographic";
-  onProjectionChange?: (projection: "camera" | "orthographic") => void;
+  projection?: SceneProjectionKind;
+  onProjectionChange?: (projection: SceneProjectionKind) => void;
   selectionOnDrag?: boolean;
 }
 
@@ -19341,20 +19513,34 @@ export const Scene: React.FC<SceneProps> = ({
   onCameraChange,
   onDoubleClickCapture,
   onPointerMissed,
-  orthographic = true,
+  orthographic = false,
   shadows = false,
   className = "",
   focusedItemId,
   onFocusComplete,
-  projection = "orthographic",
+  projection = "camera",
   onProjectionChange,
   selectionOnDrag = false,
 }) => {
+  const [resolvedProjection, setResolvedProjection] = React.useState<SceneProjectionKind>(projection ?? (orthographic ? "orthographic" : "camera"));
+
+  React.useEffect(() => {
+    setResolvedProjection(projection ?? (orthographic ? "orthographic" : "camera"));
+  }, [orthographic, projection]);
+
+  const handleProjectionChange = React.useCallback(
+    (nextProjection: SceneProjectionKind) => {
+      setResolvedProjection(nextProjection);
+      onProjectionChange?.(nextProjection);
+    },
+    [onProjectionChange],
+  );
+
   const projectionOptions: ActionDropdownOption[] = [
     {
       value: "camera",
       icon: <CameraIcon className="size-3" />,
-      label: "Camera",
+      label: "Perspective",
     },
     {
       value: "orthographic",
@@ -19363,37 +19549,31 @@ export const Scene: React.FC<SceneProps> = ({
     },
   ];
 
-  const gizmoSnappedRef = React.useRef(false);
-
-  const handleAxisClick = React.useCallback((_direction: THREE.Vector3) => {
-    gizmoSnappedRef.current = true;
-    onProjectionChange?.("orthographic");
-  }, [onProjectionChange]);
-
-  const handleOrbitEnd = React.useCallback(() => {
-    if (gizmoSnappedRef.current) {
-      gizmoSnappedRef.current = false;
-      onProjectionChange?.("camera");
-    }
-  }, [onProjectionChange]);
-
   return (
     <div className={`relative h-full w-full ${className}`} style={{ minHeight: "100%", minWidth: "100%" }} onDoubleClick={onDoubleClickCapture}>
-      {onProjectionChange && (
-        <div className="absolute top-1 right-1 z-panel">
-          <ActionDropdown id="scene-projection" options={projectionOptions} value={projection} onValueChange={(value) => onProjectionChange(value as "camera" | "orthographic")} />
-        </div>
-      )}
+      <div className="absolute top-1 right-1 z-panel">
+        <ActionDropdown id="scene-projection" options={projectionOptions} value={resolvedProjection} onValueChange={(value) => handleProjectionChange(value as SceneProjectionKind)} />
+      </div>
       <ThreeCanvas
         onPointerMissed={onPointerMissed}
-        orthographic={orthographic}
+        orthographic={resolvedProjection === "orthographic"}
         shadows={shadows}
         frameloop="demand"
-        camera={orthographic ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : undefined}
+        camera={resolvedProjection === "orthographic" ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : { fov: 75, position: [10, 10, 10], near: 0.1, far: 10000 }}
         style={{ width: "100%", height: "100%" }}
       >
         <SceneFrameControl />
-        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete} selectionOnDrag={selectionOnDrag} onAxisClick={onProjectionChange ? handleAxisClick : undefined} onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}>
+        <SceneInner
+          showGrid={showGrid}
+          showGizmo={showGizmo}
+          projection={resolvedProjection}
+          camera={camera}
+          onCameraChange={onCameraChange}
+          onProjectionChange={handleProjectionChange}
+          focusedItemId={focusedItemId}
+          onFocusComplete={onFocusComplete}
+          selectionOnDrag={selectionOnDrag}
+        >
           {children}
         </SceneInner>
       </ThreeCanvas>
@@ -21214,7 +21394,7 @@ export { i18next, initReactI18next, LanguageDetector, useTranslation };
 // #endregion 🔖I18n
 
 // #region 🔖Hotkeys
-    export { useHotkeys } from "react-hotkeys-hook";
+export { useHotkeys } from "react-hotkeys-hook";
 // #endregion 🔖Hotkeys
 
 // #region 🔖Date
@@ -21640,6 +21820,60 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       expect(markup).toContain('data-testid="add-icon"');
+    });
+  });
+
+  describe("scene helpers", () => {
+    it("maps dominant gizmo axes to stable orthographic snap targets", () => {
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(1, 0.2, 0.1))).toEqual({
+        axis: "x",
+        sign: 1,
+        view: "front",
+        cameraDirection: { x: 1, y: 0, z: 0 },
+        up: { x: 0, y: 1, z: 0 },
+      });
+
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0.1, 1, 0.2))).toEqual({
+        axis: "y",
+        sign: 1,
+        view: "top",
+        cameraDirection: { x: 0, y: 1, z: 0 },
+        up: { x: 0, y: 0, z: -1 },
+      });
+
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0.1, 0.2, -1))).toEqual({
+        axis: "z",
+        sign: -1,
+        view: "side",
+        cameraDirection: { x: 0, y: 0, z: -1 },
+        up: { x: 0, y: 1, z: 0 },
+      });
+    });
+
+    it("preserves opposite-side views for negative axis clicks", () => {
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(-1, 0, 0))).toEqual({
+        axis: "x",
+        sign: -1,
+        view: "back",
+        cameraDirection: { x: -1, y: 0, z: 0 },
+        up: { x: 0, y: 1, z: 0 },
+      });
+
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0, -1, 0))).toEqual({
+        axis: "y",
+        sign: -1,
+        view: "bottom",
+        cameraDirection: { x: 0, y: -1, z: 0 },
+        up: { x: 0, y: 0, z: 1 },
+      });
+
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0, 0, 1))).toEqual({
+        axis: "z",
+        sign: 1,
+        view: "opposite-side",
+        cameraDirection: { x: 0, y: 0, z: 1 },
+        up: { x: 0, y: 1, z: 0 },
+      });
     });
   });
 

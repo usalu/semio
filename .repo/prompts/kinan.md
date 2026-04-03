@@ -1,3 +1,42 @@
+
+
+semio:
+Define a copyPiecesAndConnectionsInDesign(design:Design, pieces:Guid[], connections:Guid[], anchor: ["byMiddle", "byCentroid", "byBottomLeftCorner", "byBottomRightCorner", "byTopLeftCorner", "byTopRightCorner"]):Design function that:
+
+copy should copy all internal connected (=non-fixed) pieces,
+copy all internal [both pieces are within the given pieces] connections (not partial [one piece is within the given pieces, the other is not] or external [none of the pieces are within the given pieces]),
+copy but flatten all pieces that have the parent outside of the given pieces
+
+cetroid should be calculated based on the bounding box of the pieces and connections being copied, and the offset should be applied to the new pieces in this logic 
+
+look for conenctions that are outside of the selected pices. the selected piece which has the conenction should become fixed and the conenction should be deleted. the piece should get its new plane based on the anchor point . 
+
+if the piece is fixed, the new plane should be normalized first and then the offset should be applied to the new plane so that the anchor point is placed at the same position as the original piece. 
+
+
+
+
+
+
+
+
+if the piece is not fixed, 
+
+
+and offset should be applied to the new plane 
+so that their centroid is placed at the anchor point.
+
+ddldlddddldld dddldlddddd
+
+
+----------------------------------------------------------------------------------
+
+analyze all different ui elements in the toolbar. i want all of them to be visually extrem consistent, font, sizing margins, Icon size,etc....) currently switching from create to filter feels like the elements have a complete different styling. i assume it has to do wit hthe fact that one tool group is command and the other is not, but i want to make sure that all of the elements in the toolbar have the same visual styling and consistency regardless of their function or grouping. please analyze the current toolbar elements and identify any inconsistencies in their visual design, such as differences in font, sizing, margins, icon size, or any other styling aspects. then, refactor the toolbar code to ensure that all elements follow a unified design system, making them visually cohesive and consistent across the entire toolbar. make sure that these changes doesnt change any other ui elements outside the toolbar and that it only affects the visual styling of the toolbar elements, without altering their functionality or behavior. also make sure to test the changes thoroughly to ensure that all toolbar elements are visually consistent and that there are no unintended side effects on the user experience. NO hardcoding 
+
+
+sketchpad type app: gumball
+---------------------------------------------------------------------
+
 Fix the semio/sketchpad Details panel layout regression globally, including the Type app. The current implementation works perfectly in design app but in type app it is breaking the shared Details panel structure in nested sections such as connectors/point/direction, causing rows, controls, and tree guides to drift, overlap, or stop following the standard property row/value-column layout. the Details panel implementation must be consistent across all apps and all section types.
 
 Refactor the shared Details panel tree/layout primitives so TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, and IndentationLines all resolve through the same global structure: tree header rows stay tree headers, property rows stay property rows, nested groups keep hierarchy, and all value-side controls stay within the same shared value-column bounds. Preserve PanelSection architecture, hierarchy, spacing rhythm, actions, and tree lines. Do not hardcode section names or field names. Apply the fix generically so nested connector content in the Type app follows the same stable Details panel structure as every other panel subtree. importaant is dont break the deign app structure only fix the type app structure to follow the same structure as design app by applaying global layout rules and not one off fixes.

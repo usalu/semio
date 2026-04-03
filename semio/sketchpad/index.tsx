@@ -5942,6 +5942,82 @@ export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagra
 // #region 🔖Utilities
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities)
 // Utilities MUST provide the utilities functionality.
+
+// #region 🔖SharedLayoutTransition
+// FLIP-based shared layout transition hook for smooth toolbar resizing.
+
+type SharedLayoutRect = { left: number; top: number; width: number; height: number };
+const sharedLayoutRectCache = new Map<string, SharedLayoutRect>();
+
+/**
+ * Applies a FLIP (First-Last-Invert-Play) animation to an element whenever
+ * its bounding rect changes between React render cycles. Uses transform-based
+ * animation (translate + scale) via the Web Animations API for compositor-friendly
+ * performance. Respects prefers-reduced-motion.
+ *
+ * Specs: Measures previous rect (stored in ref), measures new rect in
+ * useLayoutEffect (after DOM mutation, before paint), computes inverse
+ * transform, then animates back to identity. Cancels in-flight animations
+ * on re-trigger to avoid visual jumps.
+ **/
+function useSharedLayoutTransition(
+  ref: React.RefObject<HTMLElement | null>,
+  transformOrigin: string = "center center",
+  sharedKey?: string,
+): void {
+  const prevRectRef = useRef<SharedLayoutRect | null>(null);
+  const animRef = useRef<Animation | null>(null);
+  const reducedMotionRef = useRef(typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      prevRectRef.current = null;
+      return;
+    }
+
+    if (animRef.current) {
+      animRef.current.cancel();
+      animRef.current = null;
+    }
+
+    const nextRect = el.getBoundingClientRect();
+    const next: SharedLayoutRect = { left: nextRect.left, top: nextRect.top, width: nextRect.width, height: nextRect.height };
+
+    const prevFromCache = sharedKey ? sharedLayoutRectCache.get(sharedKey) ?? null : null;
+    const prev = prevRectRef.current ?? prevFromCache;
+
+    prevRectRef.current = next;
+    if (sharedKey) sharedLayoutRectCache.set(sharedKey, next);
+
+    if (!prev || reducedMotionRef.current) return;
+    if (next.width === 0 || next.height === 0 || prev.width === 0 || prev.height === 0) return;
+
+    const dx = prev.left - next.left;
+    const dy = prev.top - next.top;
+    const sx = prev.width / next.width;
+    const sy = prev.height / next.height;
+
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01) return;
+
+    animRef.current = el.animate(
+      [
+        { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, transformOrigin },
+        { transform: "none", transformOrigin },
+      ],
+      { duration: 200, easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+    );
+  });
+
+  useEffect(() => {
+    return () => {
+      animRef.current?.cancel();
+    };
+  }, []);
+}
+
+// #endregion 🔖SharedLayoutTransition
+
 /**
  * getToolbarGroupIcon holds the data fields for a getToolbarGroupIcon record.
  **/
@@ -5950,10 +6026,10 @@ export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagra
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🛠️gettoolbargroupicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/d/i/getToolbarGroupIcon)
  **/
 function getToolbarGroupIcon(groupId: string): ReactNode {
-  if (groupId === "open") return <FolderIcon size={16} />;
-  if (groupId === "selection") return <FocusIcon size={16} />;
-  if (groupId === "filter") return <SearchIcon size={16} />;
-  if (groupId === "create") return <LayoutIcon size={16} />;
+  if (groupId === "open") return <FolderIcon className="size-tiny" />;
+  if (groupId === "selection") return <FocusIcon className="size-tiny" />;
+  if (groupId === "filter") return <SearchIcon className="size-tiny" />;
+  if (groupId === "create") return <LayoutIcon className="size-tiny" />;
   return null;
 }
 
@@ -7196,6 +7272,7 @@ type KitFileState = {
   blobs: Map<string, Blob>;
   objectUrls: Map<string, string>;
   providerUrls: Map<string, string>;
+  pendingBlobDownloads: Map<string, Promise<string | null>>;
   providerFactory?: FileProviderFactory;
   provider?: FileProvider;
   providerKitGuid?: string;
@@ -7214,6 +7291,7 @@ const getOrCreateKitFileState = (kitStore: KitStore): KitFileState => {
       blobs: new Map(),
       objectUrls: new Map(),
       providerUrls: new Map(),
+      pendingBlobDownloads: new Map(),
     };
   }
   return storeWithFiles.__semioKitFileState;
@@ -7504,20 +7582,37 @@ export class CollaborativeKitStore {
     return file.remote && isBrowserReadableFileUrl(file.remote) ? file.remote : null;
   }
   async getFileBlobUrl(guid: string): Promise<string | null> {
-    const kit = this._kitStore.getSnapshot().kit;
     const fileState = getOrCreateKitFileState(this._kitStore);
     const cachedBlobUrl = fileState.objectUrls.get(guid);
     if (cachedBlobUrl) {
       return cachedBlobUrl;
     }
 
+    const pending = fileState.pendingBlobDownloads.get(guid);
+    if (pending) {
+      return pending;
+    }
+
+    const downloadPromise = this._downloadFileBlobUrl(guid, fileState);
+    fileState.pendingBlobDownloads.set(guid, downloadPromise);
+    try {
+      return await downloadPromise;
+    } finally {
+      fileState.pendingBlobDownloads.delete(guid);
+    }
+  }
+  private async _downloadFileBlobUrl(guid: string, fileState: KitFileState): Promise<string | null> {
+    const kit = this._kitStore.getSnapshot().kit;
+
     const cachedBlob = fileState.blobs.get(guid);
     if (cachedBlob) {
+      console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): using cached blob`);
       return createKitFileObjectUrl(this._kitStore, guid, cachedBlob);
     }
 
     const file = kit.files?.find((existingFile) => existingFile.guid === guid);
     if (!file) {
+      console.warn(`[DEBUG] _downloadFileBlobUrl(${guid}): file not found in kit`);
       return null;
     }
 
@@ -7527,35 +7622,47 @@ export class CollaborativeKitStore {
       try {
         const blob = await binaryStore.readFile(storagePath);
         if (blob) {
+          console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): loaded from binary store, size=${blob.size}`);
           fileState.blobs.set(guid, blob);
           return createKitFileObjectUrl(this._kitStore, guid, blob);
         }
-      } catch (error) {}
+      } catch (error) {
+        console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): binary store read failed:`, error);
+      }
     }
 
     const provider = await getKitFileProvider(this._kitStore, kit.guid);
     if (provider) {
       try {
         const blob = await provider.download(kit.guid, file.guid, storagePath);
+        console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): loaded from provider, size=${blob.size}`);
         fileState.blobs.set(guid, blob);
         const providerUrl = provider.getUrl(kit.guid, file.guid, storagePath);
         if (providerUrl) {
           fileState.providerUrls.set(guid, providerUrl);
         }
         return createKitFileObjectUrl(this._kitStore, guid, blob);
-      } catch (error) {}
+      } catch (error) {
+        console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): provider download failed:`, error);
+      }
+    } else {
+      console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): no provider available`);
     }
 
     const readableUrl = getReadableKitFileUrl(fileState, file);
     if (readableUrl) {
+      console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): trying readable URL: ${readableUrl}`);
       const blob = await fetchReadableKitFileBlob(readableUrl);
       if (blob) {
+        console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): fetched from readable URL, size=${blob.size}`);
         fileState.blobs.set(guid, blob);
         return createKitFileObjectUrl(this._kitStore, guid, blob);
       }
     }
 
-    return this.getFileUrl(guid);
+    const fallbackUrl = this.getFileUrl(guid);
+    console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): all methods exhausted, fallback URL: ${fallbackUrl}`);
+    return fallbackUrl;
   }
   subscribe(listener: () => void): () => void {
     return this._kitStore.subscribe(listener);
@@ -12951,13 +13058,13 @@ const KitKindToggles: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Toggle pressed={selectedKinds.has("designs")} onPressedChange={() => toggleKind("designs")} id="semio.sketchpad.app.kit.toolbar.showDesigns" icon={<LayoutIcon />} text={labelDesigns} />
-      <Toggle pressed={selectedKinds.has("types")} onPressedChange={() => toggleKind("types")} id="semio.sketchpad.app.kit.toolbar.showTypes" icon={<TypeIcon />} text={labelTypes} />
-      <Toggle pressed={selectedKinds.has("qualities")} onPressedChange={() => toggleKind("qualities")} id="semio.sketchpad.app.kit.toolbar.showQualities" icon={<AwardIcon />} text={labelQualities} />
-      <Toggle pressed={selectedKinds.has("ports")} onPressedChange={() => toggleKind("ports")} id="semio.sketchpad.app.kit.toolbar.showPorts" icon={<PortIcon />} text={labelPorts} />
-      <Toggle pressed={selectedKinds.has("files")} onPressedChange={() => toggleKind("files")} id="semio.sketchpad.app.kit.toolbar.showFiles" icon={<DocumentIcon />} text={labelFiles} />
-      <Toggle pressed={selectedKinds.has("folders")} onPressedChange={() => toggleKind("folders")} id="semio.sketchpad.app.kit.toolbar.showFolders" icon={<FolderIcon />} text={labelFolders} />
-      <Toggle pressed={selectedKinds.has("authors")} onPressedChange={() => toggleKind("authors")} id="semio.sketchpad.app.kit.toolbar.showAuthors" icon={<UserIcon />} text={labelAuthors} />
+      <Toggle pressed={selectedKinds.has("designs")} onPressedChange={() => toggleKind("designs")} id="semio.sketchpad.app.kit.toolbar.showDesigns" icon={<LayoutIcon className="size-tiny" />} text={labelDesigns} />
+      <Toggle pressed={selectedKinds.has("types")} onPressedChange={() => toggleKind("types")} id="semio.sketchpad.app.kit.toolbar.showTypes" icon={<TypeIcon className="size-tiny" />} text={labelTypes} />
+      <Toggle pressed={selectedKinds.has("qualities")} onPressedChange={() => toggleKind("qualities")} id="semio.sketchpad.app.kit.toolbar.showQualities" icon={<AwardIcon className="size-tiny" />} text={labelQualities} />
+      <Toggle pressed={selectedKinds.has("ports")} onPressedChange={() => toggleKind("ports")} id="semio.sketchpad.app.kit.toolbar.showPorts" icon={<PortIcon className="size-tiny" />} text={labelPorts} />
+      <Toggle pressed={selectedKinds.has("files")} onPressedChange={() => toggleKind("files")} id="semio.sketchpad.app.kit.toolbar.showFiles" icon={<DocumentIcon className="size-tiny" />} text={labelFiles} />
+      <Toggle pressed={selectedKinds.has("folders")} onPressedChange={() => toggleKind("folders")} id="semio.sketchpad.app.kit.toolbar.showFolders" icon={<FolderIcon className="size-tiny" />} text={labelFolders} />
+      <Toggle pressed={selectedKinds.has("authors")} onPressedChange={() => toggleKind("authors")} id="semio.sketchpad.app.kit.toolbar.showAuthors" icon={<UserIcon className="size-tiny" />} text={labelAuthors} />
     </ToolbarGroup>
   );
 };
@@ -13057,11 +13164,11 @@ const KitCreateActions: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Button onClick={() => handleCreateArtifact("designs")} id="semio.sketchpad.app.kit.toolbar.createDesign" icon={<LayoutIcon />} text={labelDesign} />
-      <Button onClick={() => handleCreateArtifact("types")} id="semio.sketchpad.app.kit.toolbar.createType" icon={<TypeIcon />} text={labelType} />
-      <Button onClick={() => handleCreateArtifact("qualities")} id="semio.sketchpad.app.kit.toolbar.createQuality" icon={<AwardIcon />} text={labelQuality} />
-      <Button onClick={() => handleCreateArtifact("ports")} id="semio.sketchpad.app.kit.toolbar.createPort" icon={<PortIcon />} text={labelPort} />
-      <Button onClick={() => handleCreateArtifact("folders")} id="semio.sketchpad.app.kit.toolbar.createFolder" icon={<FolderIcon />} text={labelFolder} />
+      <Button onClick={() => handleCreateArtifact("designs")} id="semio.sketchpad.app.kit.toolbar.createDesign" icon={<LayoutIcon className="size-tiny" />} text={labelDesign} />
+      <Button onClick={() => handleCreateArtifact("types")} id="semio.sketchpad.app.kit.toolbar.createType" icon={<TypeIcon className="size-tiny" />} text={labelType} />
+      <Button onClick={() => handleCreateArtifact("qualities")} id="semio.sketchpad.app.kit.toolbar.createQuality" icon={<AwardIcon className="size-tiny" />} text={labelQuality} />
+      <Button onClick={() => handleCreateArtifact("ports")} id="semio.sketchpad.app.kit.toolbar.createPort" icon={<PortIcon className="size-tiny" />} text={labelPort} />
+      <Button onClick={() => handleCreateArtifact("folders")} id="semio.sketchpad.app.kit.toolbar.createFolder" icon={<FolderIcon className="size-tiny" />} text={labelFolder} />
     </ToolbarGroup>
   );
 };
@@ -16897,11 +17004,7 @@ export function useKitAppFilterSearch(): HookResult<string> {
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram🔖tools🪨kitfilters](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/s/Tools/d/i/KitFilters)
  **/
 export const KitFilters: FC = () => {
-  return (
-    <ToolbarGroup>
-      <KitKindToggles />
-    </ToolbarGroup>
-  );
+  return <KitKindToggles />;
 };
 
 /**
@@ -25610,6 +25713,11 @@ const LayoutWrapper: FC = () => {
   const [activeDragData, setActiveDragData] = useState<any>(null);
   const [activeToolbarGroup, setActiveToolbarGroup] = useState<string | null>(null);
 
+  const toolbarToolsZoneRef = useRef<HTMLDivElement>(null);
+  const toolbarSettingsZoneRef = useRef<HTMLDivElement>(null);
+  useSharedLayoutTransition(toolbarToolsZoneRef, "right center", "semio.sketchpad.toolbar.zone.tools");
+  useSharedLayoutTransition(toolbarSettingsZoneRef, "left center", "semio.sketchpad.toolbar.zone.settings");
+
   const toolbarGroups = useMemo(() => {
     const groups: Record<string, PanelSection[]> = {};
     toolbarSections.forEach((section) => {
@@ -25916,7 +26024,7 @@ const LayoutWrapper: FC = () => {
                   toolbarSections.length > 0 ? (
                     <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 h-[40px] pointer-events-none px-2">
                       <div id="semio.sketchpad.toolbar.seam" className="absolute left-1/2 top-0 h-full w-0 -translate-x-1/2">
-                        <div id="semio.sketchpad.toolbar.zone.tools" className="absolute right-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
+                        <div ref={toolbarToolsZoneRef} id="semio.sketchpad.toolbar.zone.tools" className="absolute right-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
                           <LevelProvider level="panel">
                             <ToolbarZone>
                               {["hand", "selection", "filter", "create", "view", "actions"].map((groupId) => {
@@ -25940,7 +26048,7 @@ const LayoutWrapper: FC = () => {
                         </div>
 
                         {activeToolbarGroup && toolbarGroups[activeToolbarGroup] && (
-                          <div id="semio.sketchpad.toolbar.zone.settings" className="absolute left-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
+                          <div ref={toolbarSettingsZoneRef} id="semio.sketchpad.toolbar.zone.settings" className="absolute left-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
                             <LevelProvider level="panel">
                               <ToolbarZone className="flex-nowrap min-w-0">
                                 <ToolbarScopeWrapper>
@@ -31951,7 +32059,7 @@ export const DesignSelectSettings: FC = () => {
   const handLabel = useLabel("semio.sketchpad.app.design.tools.select.navigation.hand");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle
         id="semio.sketchpad.app.design.tools.select.mode.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -31994,7 +32102,7 @@ export const DesignSelectSettings: FC = () => {
         pressed={activeTool === ToolKind.HAND}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.HAND : ToolKind.SELECTION_NORMAL)}
       />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -32026,7 +32134,7 @@ export const DesignLassoSettings: FC = () => {
   const freeformLabel = useLabel("semio.sketchpad.app.design.tools.lasso.freeform");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <ToggleGroup
         items={[
           { value: String(ToolKind.LASSO_RECTANGULAR), icon: <DiagramIcon className="size-tiny" />, text: rectangularLabel, id: "semio.sketchpad.app.design.tools.lasso.rectangular" },
@@ -32036,7 +32144,7 @@ export const DesignLassoSettings: FC = () => {
         onValueChange={(vals: string[]) => vals[0] && setActiveTool && setActiveTool(Number(vals[0]) as unknown as ToolKind)}
         kind="single"
       />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -37770,6 +37878,25 @@ const OBJMesh: FC<{ url: string; highlightColor: string | null } & DesignMeshEve
   return <primitive object={clonedScene} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
 };
 
+class MeshErrorBoundary extends React.Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode; fallback: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.debug(`[DEBUG] [MeshErrorBoundary] Caught error loading 3D model:`, error.message);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
 const LoadedPieceMesh: FC<{ url: string; fileExtension: string; highlightColor: string | null } & DesignMeshEventProps> = ({ url, fileExtension, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const ext = fileExtension.toLowerCase();
   if (ext === "glb" || ext === "gltf") {
@@ -37850,39 +37977,52 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   }, [modelGuid, selectionReason, type]);
 
   useEffect(() => {
+    setBlobUrl(modelUrl ?? null);
     if (!fileGuid) {
-      setBlobUrl(null);
       return;
     }
     let cancelled = false;
-    let currentBlobUrl: string | null = null;
-    (async () => {
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryCount = 0;
+    const maxRetries = 3;
+    const load = async () => {
       try {
         const url = await kitStore.getFileBlobUrl(fileGuid);
         if (!cancelled && url) {
-          currentBlobUrl = url;
           setBlobUrl(url);
+        } else if (!cancelled && !url && retryCount < maxRetries) {
+          retryCount++;
+          console.debug(`[DEBUG] [PieceMesh] No URL for file ${fileGuid}, retry ${retryCount}/${maxRetries}`);
+          retryTimer = setTimeout(load, 1000 * retryCount);
         } else if (!cancelled && !url) {
-          console.warn("[PieceMesh] No URL available for file:", fileGuid);
+          console.warn("[PieceMesh] No URL available for file after retries:", fileGuid);
         }
       } catch (error) {
         console.error("[PieceMesh] Failed to get blob URL:", error);
       }
-    })();
+    };
+    load();
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [fileGuid, kitStore]);
+  }, [fileGuid, kitStore, modelUrl]);
 
-  if (!blobUrl) {
+  const renderUrl = blobUrl ?? modelUrl;
+
+  if (!renderUrl) {
     return <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />;
   }
 
+  const fallbackGeometry = <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />;
+
   return (
-    <Suspense fallback={null}>
-      <LoadedPieceMesh url={blobUrl} fileExtension={fileExtension} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />
-    </Suspense>
+    <MeshErrorBoundary fallback={fallbackGeometry}>
+      <Suspense fallback={null}>
+        <LoadedPieceMesh url={renderUrl} fileExtension={fileExtension} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />
+      </Suspense>
+    </MeshErrorBoundary>
   );
 };
 
@@ -38242,14 +38382,11 @@ const DesignAppScene: FC = () => {
   const [toggleAccesslFullscreen] = useDesignAppToggleAccesslFullscreen();
   const [, setCamera] = useDesignAppCamera();
   const [clearFocus] = useDesignAppClearFocus();
-  const [fullscreenValue] = useDesignAppFullscreen();
-  const fullscreen = fullscreenValue === DesignAppFullscreenWindow.Accessl;
   const [camera] = useDesignAppCamera();
   const [activeTool] = useDesignAppActiveTool();
   const selectionOnDrag = activeTool !== ToolKind.HAND;
   const [focusedPieceGuid] = useDesignAppFocusedPieceGuid();
-  const [panelVisibility] = useDesignAppPanelVisibility();
-  const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
+  const [projection, setProjection] = React.useState<"camera" | "orthographic">("camera");
   const sceneTypes = useKitTypes();
   const sceneDesigns = useKitDesigns();
   const { setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
@@ -38302,14 +38439,38 @@ const DesignAppScene: FC = () => {
       const actualUp = { x: upX / upLen, y: upY / upLen, z: upZ / upLen };
       const halfWidth = dropZoneBounds.width / (2 * zoom);
       const halfHeight = dropZoneBounds.height / (2 * zoom);
-      const rayOrigin = {
-        x: camPos.x + right.x * ndcX * halfWidth + actualUp.x * ndcY * halfHeight,
-        y: camPos.y + right.y * ndcX * halfWidth + actualUp.y * ndcY * halfHeight,
-        z: camPos.z + right.z * ndcX * halfWidth + actualUp.z * ndcY * halfHeight,
-      };
-      const t = Math.abs(fwd.y) > 0.0001 ? -rayOrigin.y / fwd.y : 0;
-      const threeX = rayOrigin.x + fwd.x * t;
-      const threeZ = rayOrigin.z + fwd.z * t;
+      const perspectiveFieldOfViewRadians = (75 * Math.PI) / 180;
+      const perspectiveAspectRatio = dropZoneBounds.width / Math.max(dropZoneBounds.height, 1);
+      const perspectiveHalfHeight = Math.tan(perspectiveFieldOfViewRadians / 2);
+      const perspectiveHalfWidth = perspectiveHalfHeight * perspectiveAspectRatio;
+      const rayOrigin =
+        projection === "orthographic"
+          ? {
+              x: camPos.x + right.x * ndcX * halfWidth + actualUp.x * ndcY * halfHeight,
+              y: camPos.y + right.y * ndcX * halfWidth + actualUp.y * ndcY * halfHeight,
+              z: camPos.z + right.z * ndcX * halfWidth + actualUp.z * ndcY * halfHeight,
+            }
+          : camPos;
+      const rayDirection =
+        projection === "orthographic"
+          ? fwd
+          : (() => {
+              const perspectiveDirection = {
+                x: fwd.x + right.x * ndcX * perspectiveHalfWidth + actualUp.x * ndcY * perspectiveHalfHeight,
+                y: fwd.y + right.y * ndcX * perspectiveHalfWidth + actualUp.y * ndcY * perspectiveHalfHeight,
+                z: fwd.z + right.z * ndcX * perspectiveHalfWidth + actualUp.z * ndcY * perspectiveHalfHeight,
+              };
+              const perspectiveDirectionLength = Math.sqrt(perspectiveDirection.x ** 2 + perspectiveDirection.y ** 2 + perspectiveDirection.z ** 2);
+              return {
+                x: perspectiveDirection.x / perspectiveDirectionLength,
+                y: perspectiveDirection.y / perspectiveDirectionLength,
+                z: perspectiveDirection.z / perspectiveDirectionLength,
+              };
+            })();
+      if (Math.abs(rayDirection.y) <= 0.0001) return;
+      const t = -rayOrigin.y / rayDirection.y;
+      const threeX = rayOrigin.x + rayDirection.x * t;
+      const threeZ = rayOrigin.z + rayDirection.z * t;
       const semioX = threeX;
       const semioY = -threeZ;
       const semioZ = 0;
@@ -38335,7 +38496,7 @@ const DesignAppScene: FC = () => {
       setActiveDraggedType(null);
       setActiveDraggedDesign(null);
     },
-    [sceneTypes, sceneDesigns, camera, transaction, addPiece, setActiveDraggedType, setActiveDraggedDesign],
+    [sceneTypes, sceneDesigns, camera, projection, transaction, addPiece, setActiveDraggedType, setActiveDraggedDesign],
   );
 
   useEffect(() => {
@@ -38374,7 +38535,7 @@ const DesignAppScene: FC = () => {
   return (
     <div ref={sceneDropZoneRef} data-drop-zone="scene" data-drop-zone-id={sceneId} className="h-full w-full">
       <SceneComponent
-        showGizmo={fullscreen && !!panelVisibility.toolbar}
+        showGizmo={true}
         camera={camera}
         onCameraChange={onCameraChange}
         onDoubleClickCapture={onDoubleClickCapture}
@@ -40930,32 +41091,39 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   }, [modelGuid, selectionReason, typeGuid, typeModels]);
 
   useEffect(() => {
+    setBlobUrl(modelUrl ?? null);
     if (!fileGuid) {
-      setBlobUrl(null);
       return;
     }
 
     let cancelled = false;
-    let currentBlobUrl: string | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryCount = 0;
+    const maxRetries = 3;
 
-    (async () => {
+    const load = async () => {
       try {
         const url = await kitDataSource.getFileBlobUrl(fileGuid);
         if (!cancelled && url) {
-          currentBlobUrl = url;
           setBlobUrl(url);
+        } else if (!cancelled && !url && retryCount < maxRetries) {
+          retryCount++;
+          console.debug(`[DEBUG] [TypeMesh] No URL for file ${fileGuid}, retry ${retryCount}/${maxRetries}`);
+          retryTimer = setTimeout(load, 1000 * retryCount);
         } else if (!cancelled && !url) {
-          console.warn("[TypeMesh] No URL available for file:", fileGuid);
+          console.warn("[TypeMesh] No URL available for file after retries:", fileGuid);
         }
       } catch (error) {
         console.error("[TypeMesh] Failed to get blob URL:", error);
       }
-    })();
+    };
+    load();
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [fileGuid, kitDataSource]);
+  }, [fileGuid, kitDataSource, modelUrl]);
 
   const resolveMeshIntersection = useCallback(
     (clientX: number, clientY: number) => {
@@ -41039,14 +41207,18 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
-  if (!blobUrl) {
+  const renderUrl = blobUrl ?? modelUrl;
+
+  if (!renderUrl) {
     return null;
   }
 
   return (
-    <Suspense fallback={null}>
-      <LoadedTypeMesh url={blobUrl} fileExtension={fileExtension} onSceneReady={handleSceneReady} />
-    </Suspense>
+    <MeshErrorBoundary fallback={null}>
+      <Suspense fallback={null}>
+        <LoadedTypeMesh url={renderUrl} fileExtension={fileExtension} onSceneReady={handleSceneReady} />
+      </Suspense>
+    </MeshErrorBoundary>
   );
 };
 
@@ -42601,7 +42773,7 @@ export const TypeSelectSettings: FC = () => {
   const subtractiveLabel = useLabel("semio.sketchpad.app.type.tools.select.subtractive");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle
         id="semio.sketchpad.app.type.tools.select.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -42616,7 +42788,7 @@ export const TypeSelectSettings: FC = () => {
         pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
       />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -42646,9 +42818,9 @@ export const TypeConnectorSettings: FC = () => {
   const connectorLabel = useLabel("semio.sketchpad.app.type.tools.connector");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle id="semio.sketchpad.app.type.tools.connector" pressed={activeTool === ToolKind.CONNECTOR} onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)} icon={<ConnectorIcon className="size-tiny" />} text={connectorLabel} />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -43029,8 +43201,8 @@ const TypeKindToggles: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Toggle pressed={isActive("connectors")} onPressedChange={() => toggleKind("connectors")} id="semio.sketchpad.app.type.toolbar.showConnectors" icon={<ConnectorIcon />} text={labelConnectors} />
-      <Toggle pressed={isActive("models")} onPressedChange={() => toggleKind("models")} id="semio.sketchpad.app.type.toolbar.showModels" icon={<SceneIcon />} text={labelModels} />
+      <Toggle pressed={isActive("connectors")} onPressedChange={() => toggleKind("connectors")} id="semio.sketchpad.app.type.toolbar.showConnectors" icon={<ConnectorIcon className="size-tiny" />} text={labelConnectors} />
+      <Toggle pressed={isActive("models")} onPressedChange={() => toggleKind("models")} id="semio.sketchpad.app.type.toolbar.showModels" icon={<SceneIcon className="size-tiny" />} text={labelModels} />
     </ToolbarGroup>
   );
 };
@@ -45088,7 +45260,7 @@ export const QualitySelectSettings: FC = () => {
   const subtractiveLabel = useLabel("semio.sketchpad.app.quality.tools.select.subtractive");
   const intersectLabel = useLabel("semio.sketchpad.app.quality.tools.select.intersect");
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle
         id="semio.sketchpad.app.quality.tools.select.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -45110,7 +45282,7 @@ export const QualitySelectSettings: FC = () => {
         pressed={activeTool === ToolKind.SELECTION_INTERSECT}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
       />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -47962,9 +48134,11 @@ const HomeToolbarFilters: FC = () => {
 
   return (
     <ToolbarGroup>
-      {availableKitKinds.temporary && <Toggle pressed={selectedKind === "temporary"} onPressedChange={() => toggleKind("temporary")} id="semio.sketchpad.app.home.toolbar.showTemporary" icon={<TemporaryKitIcon />} text={labelTemporary} />}
-      {availableKitKinds.local && <Toggle pressed={selectedKind === "local"} onPressedChange={() => toggleKind("local")} id="semio.sketchpad.app.home.toolbar.showLocal" icon={<LocalKitIcon />} text={labelLocal} />}
-      {availableKitKinds.remote && <Toggle pressed={selectedKind === "remote"} onPressedChange={() => toggleKind("remote")} id="semio.sketchpad.app.home.toolbar.showRemote" icon={<RemoteKitIcon />} text={labelRemote} />}
+      {availableKitKinds.temporary && (
+        <Toggle pressed={selectedKind === "temporary"} onPressedChange={() => toggleKind("temporary")} id="semio.sketchpad.app.home.toolbar.showTemporary" icon={<TemporaryKitIcon className="size-tiny" />} text={labelTemporary} />
+      )}
+      {availableKitKinds.local && <Toggle pressed={selectedKind === "local"} onPressedChange={() => toggleKind("local")} id="semio.sketchpad.app.home.toolbar.showLocal" icon={<LocalKitIcon className="size-tiny" />} text={labelLocal} />}
+      {availableKitKinds.remote && <Toggle pressed={selectedKind === "remote"} onPressedChange={() => toggleKind("remote")} id="semio.sketchpad.app.home.toolbar.showRemote" icon={<RemoteKitIcon className="size-tiny" />} text={labelRemote} />}
     </ToolbarGroup>
   );
 };
@@ -49494,7 +49668,7 @@ const FeedbackToolbar: FC = () => {
   return (
     <ToolbarGroup>
       <Button id="semio.sketchpad.app.feedback.toolbar.send" onClick={handleSendClick} className="gap-single">
-        <CheckIcon className="size-small" />
+        <CheckIcon className="size-tiny" />
         {submitLabel}
       </Button>
     </ToolbarGroup>
@@ -50493,30 +50667,34 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     await page.waitForTimeout(2000);
   }
 
-  async function getSceneModelResolutionForPiece(page: PlaywrightPage, pieceGuid: string): Promise<{ hasResolvedModel: boolean; typeGuid: string | null; modelGuid: string | null }> {
-    return await page.evaluate((targetPieceGuid) => {
+  async function getSceneModelResolutionForPiece(page: PlaywrightPage, pieceGuid: string): Promise<{ hasResolvedModel: boolean; typeGuid: string | null; modelGuid: string | null; renderUrl: string | null }> {
+    return await page.evaluate(async (targetPieceGuid) => {
       const store = (window as any).__SEMIO_STORE__;
-      if (!store) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!store) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
-      if (kitGuids.length === 0) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (kitGuids.length === 0) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const kitStore = store.kit(kitGuids[0]);
-      if (!kitStore) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!kitStore) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const kit = kitStore.snapshot();
       const url = window.location.pathname;
       const designGuidMatch = url.match(/\/designs\/([^/]+)/);
       const designGuid = designGuidMatch?.[1];
       const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs?.length - 1];
-      if (!design) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!design) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const piece = (design.pieces ?? []).find((p: any) => p.guid === targetPieceGuid);
-      if (!piece) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!piece) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const typeGuid = typeof piece.type === "string" ? piece.type : (piece.type?.guid ?? piece.typeGuid ?? piece.kind?.guid ?? piece.kindGuid ?? null);
-      if (!typeGuid) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!typeGuid) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const type = (kit.types ?? []).find((t: any) => t.guid === typeGuid);
-      if (!type || !type.models || type.models.length === 0) return { hasResolvedModel: false, typeGuid, modelGuid: null };
+      if (!type || !type.models || type.models.length === 0) return { hasResolvedModel: false, typeGuid, modelGuid: null, renderUrl: null };
       const defaultModel = type.models.find((m: any) => !m.tags || m.tags.length === 0) ?? type.models[0];
-      if (!defaultModel) return { hasResolvedModel: false, typeGuid, modelGuid: null };
+      if (!defaultModel) return { hasResolvedModel: false, typeGuid, modelGuid: null, renderUrl: null };
       const fileGuid = typeof defaultModel.file === "string" ? defaultModel.file : defaultModel.file?.guid;
-      return { hasResolvedModel: !!fileGuid, typeGuid, modelGuid: fileGuid ?? null };
+      if (!fileGuid) return { hasResolvedModel: false, typeGuid, modelGuid: null, renderUrl: null };
+      const directUrl = typeof kitStore.getFileUrl === "function" ? kitStore.getFileUrl(fileGuid) : null;
+      const blobUrl = !directUrl && typeof kitStore.getFileBlobUrl === "function" ? await kitStore.getFileBlobUrl(fileGuid) : null;
+      const renderUrl = directUrl ?? blobUrl ?? null;
+      return { hasResolvedModel: Boolean(renderUrl), typeGuid, modelGuid: fileGuid, renderUrl };
     }, pieceGuid);
   }
 
@@ -52140,6 +52318,34 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         expect(Math.abs(pan1Duration - avgPanTime)).toBeLessThan(100);
         expect(Math.abs(pan2Duration - avgPanTime)).toBeLessThan(100);
         expect(Math.abs(pan3Duration - avgPanTime)).toBeLessThan(100);
+
+        const sceneProjection = page.locator('[id="scene-projection"]').first();
+        await expect(sceneProjection).toBeVisible({ timeout: 5000 });
+        await expect.poll(async () => ((await sceneProjection.textContent()) ?? "").toLowerCase(), { timeout: 5000 }).toContain("perspective");
+
+        const gizmoCandidatePoints = [
+          { x: canvasBox.x + canvasBox.width - 84, y: canvasBox.y + canvasBox.height - 84 },
+          { x: canvasBox.x + canvasBox.width - 104, y: canvasBox.y + canvasBox.height - 84 },
+          { x: canvasBox.x + canvasBox.width - 84, y: canvasBox.y + canvasBox.height - 104 },
+        ];
+        let gizmoSnapTriggered = false;
+        for (const point of gizmoCandidatePoints) {
+          await page.mouse.click(point.x, point.y);
+          await page.waitForTimeout(500);
+          const projectionText = ((await sceneProjection.textContent()) ?? "").toLowerCase();
+          console.log(`[Type Test] Projection after gizmo click at ${point.x},${point.y}: ${projectionText}`);
+          if (projectionText.includes("orthographic")) {
+            gizmoSnapTriggered = true;
+            break;
+          }
+        }
+        expect(gizmoSnapTriggered).toBe(true);
+
+        await page.mouse.move(centerX, centerY);
+        await page.mouse.down();
+        await page.mouse.move(centerX + 120, centerY + 40);
+        await page.mouse.up();
+        await expect.poll(async () => ((await sceneProjection.textContent()) ?? "").toLowerCase(), { timeout: 5000 }).toContain("perspective");
       }
 
       await page.waitForTimeout(500);

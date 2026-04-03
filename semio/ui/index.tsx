@@ -2273,6 +2273,9 @@ interface SceneGizmoProps {
 
 const SceneGizmo: React.FC<SceneGizmoProps> = ({ show, onAxisClick }) => {
   const [colors, setColors] = React.useState<[string, string, string]>(() => [getSceneComputedColor("--accent") || "#ef4444", getSceneComputedColor("--accent-tertiary") || "#22c55e", getSceneComputedColor("--accent-secondary") || "#3b82f6"]);
+  const margin = React.useMemo(() => [124, 124] as [number, number], []);
+  const axisScale = React.useMemo(() => [1.35, 1.35, 1.35] as [number, number, number], []);
+  const labelColor = React.useMemo(() => getSceneComputedColor("--foreground") || "#111827", []);
 
   React.useEffect(() => {
     const updateColors = () => setColors([getSceneComputedColor("--accent") || "#ef4444", getSceneComputedColor("--accent-tertiary") || "#22c55e", getSceneComputedColor("--accent-secondary") || "#3b82f6"]);
@@ -2284,10 +2287,14 @@ const SceneGizmo: React.FC<SceneGizmoProps> = ({ show, onAxisClick }) => {
 
   if (!show) return null;
   return (
-    <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+    <GizmoHelper alignment="bottom-right" margin={margin}>
       <GizmoViewport
         labels={["X", "Z", "-Y"]}
         axisColors={colors}
+        axisScale={axisScale}
+        axisHeadScale={1.35}
+        labelColor={labelColor}
+        font="20px Inter var, Arial, sans-serif"
         onClick={onAxisClick ? (e) => { onAxisClick(e.object.position.clone()); return null; } : undefined}
       />
     </GizmoHelper>
@@ -2387,7 +2394,7 @@ const SceneAutoFit: React.FC<{ zoomTarget: ZoomTarget; snapshot: SceneSnapshot }
 };
 
 const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGizmo, zoomTarget, snapshot, camera: initialCamera, onCameraChange, onAxisClick, onOrbitEnd, children }) => {
-  const { camera: threeCamera } = useThree();
+  const { camera: threeCamera, invalidate } = useThree();
   const controlsRef = React.useRef<any>(null);
   const isUpdatingCameraRef = React.useRef(false);
   const cameraRestoredRef = React.useRef(false);
@@ -2397,8 +2404,19 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
     if (cam && cam instanceof THREE.OrthographicCamera) {
       cam.zoom = 50;
       cam.updateProjectionMatrix();
+      invalidate();
     }
-  }, [threeCamera]);
+  }, [invalidate, threeCamera]);
+
+  React.useLayoutEffect(() => {
+    invalidate();
+    const frameId = requestAnimationFrame(() => invalidate());
+    const timeoutIds = [0, 50, 150, 300].map((delayMs) => window.setTimeout(() => invalidate(), delayMs));
+    return () => {
+      cancelAnimationFrame(frameId);
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
+  }, [children, initialCamera, invalidate, showGizmo, showGrid, snapshot, zoomTarget]);
 
   React.useEffect(() => {
     if (!threeCamera || !controlsRef.current || cameraRestoredRef.current) return;
@@ -2415,12 +2433,13 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
       controlsRef.current.target.copy(target);
       threeCamera.updateProjectionMatrix();
       controlsRef.current.update();
+      invalidate();
       setTimeout(() => {
         isUpdatingCameraRef.current = false;
       }, 300);
     });
     cameraRestoredRef.current = true;
-  }, [initialCamera, threeCamera]);
+  }, [initialCamera, invalidate, threeCamera]);
 
   const handleEnd = React.useCallback(() => {
     if (isUpdatingCameraRef.current) return;
@@ -2437,7 +2456,8 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
       forward: { x: forward.x, y: forward.y, z: forward.z },
       up: { x: up.x, y: up.y, z: up.z },
     });
-  }, [onCameraChange, onOrbitEnd, threeCamera]);
+    invalidate();
+  }, [invalidate, onCameraChange, onOrbitEnd, threeCamera]);
 
   return (
     <>
