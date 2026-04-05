@@ -123,7 +123,16 @@ semio:
 
 There is an error with drag. The descendants of other dragged pieces are not ignored properly. E.g. in semio/algorithms/Drag `b0` is dragged but all the descendants of `b0` are also dragged (with piece diffs).
 
-semio:
+---
+
+semio: Design Pieces
+
+---
+
+Definitions:
+
+A design piece is a piece that references a design (instead of a type)
+
 Define a clusterPiecesInDesign(kit:Kit, design:Guid, pieces:Guid[]):KitDiff function that
 
 - Creates a new design
@@ -131,6 +140,94 @@ Define a clusterPiecesInDesign(kit:Kit, design:Guid, pieces:Guid[]):KitDiff func
 - Removes all internal connection which are only within the given pieces from the current design and
 
 A clusterPiecesInDesign is a shape invariant operation (all piece planes after flatten are identical before and after cluster)
+
+---
+
+semio: Extend designs with copy and paste functionality.
+
+---
+
+Definitions:
+
+A selection is a set of pieces and connections.
+
+A piece is:
+
+- selected when it is part of the selection.
+- internal when it is selected, the parent piece is selected and the parent connection is selected.
+- parent-piece-inclusive when the parent piece is selected.
+- parent-piece-exclusive when the parent piece is not selected.
+- parent-connection-inclusive when the parent connection is selected.
+- parent-connection-exclusive when the parent connection is not selected.
+- parent-inclusive when parent-piece-inclusive and parent-connection-inclusive.
+- parent-exclusive when parent-piece-exclusive and parent-connection-exclusive.
+- child-piece-inclusive when all child pieces are selected
+- child-piece-mixed when some child pieces are selected and some are not selected.
+- child-piece-exclusive when all child pieces are not selected
+- child-connection-inclusive when all child connections are selected
+- child-connection-mixed when some child connections are selected and some are not selected.
+- child-connection-exclusive when all child connections are not selected
+- child-inclusive when child-piece-inclusive and child-connection-inclusive.
+- child-mixed when child-piece-mixed and child-connection-mixed.
+- child-exclusive when child-piece-exclusive and child-connection-exclusive.
+
+A connection is:
+
+- selected when it is part of the selection.
+- internal when the connection is selected and both pieces are selected.
+- orphaned when the connection is selected and both pieces are not selected.
+- parent-inclusive when the parent is selected.
+- parent-exclusive when the parent is not selected.
+- child-inclusive when the child piece is selected.
+- child-exclusive when the child piece is not selected.
+
+A design is:
+
+- clumping when all pieces are interconnected.
+- hanging when the design is clumping and has exactly one selected parent-exclusive connection along with the external parent piece.
+
+Two connectors are similar when:
+
+- Same name, compatible ports, same point, same direction
+- Same name
+- Compatible ports
+- Similar point and similar direction
+
+A bounding rectangle is the smallest rectangle (u,v domains) that can contain the selection. It uses the min/max of the set of center coords of pieces and the pieces of connections. For external connections, add the center of the external pieces to the set of center coords.
+
+---
+
+`copyDesign(design:Design, pieces:Guid[], connections:Guid[]): Design`:
+
+- add every selected fixed pieces
+- add every internal connected pieces
+- add every internal connection
+- add every selected parent-piece-exclusive parent-connection-inclusive piece with additional attributes: `semio.center` with the flat center of the piece and `semio.plane` with the flat plane of the piece.
+- add every orphaned connection, add every selected parent-exlusive child-inclusive connection, add every selected parent-inclusive child-exclusive connection. Add all involved external pieces with additional attributes on the external pieces: `semio.piece.origin` set to `"external"`.
+
+---
+
+`pasteHanging(s): DesignDiff` pastes a hanging design …
+
+`pasteDesign(source:Design, target:Design, anchor: "original" | "middle" | "centroid" | "bottomLeft" | "bottomRight" | "topLeft" | "topRight" = "bottomLeft", coord?:Coord): DesignDiff`:
+
+- add every internal piece
+- add fixed pieces with their connections
+
+- add every internal fixed piece with anchor-remapped center and non-remapped existing plane and the additional attributes: `semio.original.center` with the non-remapped flat center.
+- add every selected parent-connection-inclusive parent-piece-exclusive piece with additional attributes: anchor-remapped flat center `semio.center`, non-remapped flat center `semio.original.center` and non-remapped flat plane `semio.plane` as json (not directly as center and plane because it is connected). Add the external parent piece with additional attributes: `semio.piece.origin` set to `"external"`.
+- add every internal connection
+- add every orphaned connection. Add both external pieces with additional attributes on the external pieces: `semio.piece.origin` set to `"external"`.
+- add every selected parent-inclusive child-exclusive connection. Add the external child piece with additional attributes on the external piece: `semio.piece.origin` set to `"external"`.
+- make sure that external pieces are only added once.
+
+---
+
+Change the return type from all algorithms (currently Diff or Change) to Operation. An operation always returns a diff, errors, warnings
+e.g.
+flattenDesign(kit:Kit, design:Guid): Result<DesignDiff, >
+
+---
 
 Define a designWithDiff(design:Design,designDiff:DesignDiff): Design
 The design is a mixture between the old and the new but more resembling the old than the new. On the other hand, applyDesignDiff(design:Design,designDiff:DesignDiff): Design is the new design.

@@ -39,6 +39,10 @@ from owlready2 import get_ontology, sync_reasoner_pellet
 
 mcp = FastMCP("coda", json_response=True)
 
+_CODA_ROOT = Path(__file__).resolve().parent
+_CODA_JSON_PATH = _CODA_ROOT / "coda.json"
+_PROJECT_ENV = "CODA_PROJECT"
+_PROPERTY_KIND_MEASURE_KINDS = {
     "number": ["increase", "decrease"],
     "object": ["add", "remove"],
     "array": ["append", "remove_item"],
@@ -56,6 +60,7 @@ mcp = FastMCP("coda", json_response=True)
 def _load_json_with_comments(path: Path) -> dict:
     """Load JSON file, stripping // line comments.
     _load_json_with_comments MUST strip full-line // comments without corrupting URLs inside strings.
+    [🔬coda📚py💻coda🔖helpers🛠️loadjsonwithcomments](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_load_json_with_comments)
     """
     text = path.read_text(encoding="utf-8")
     text = re.sub(r"^\s*//.*$", "", text, flags=re.MULTILINE)
@@ -64,38 +69,54 @@ def _load_json_with_comments(path: Path) -> dict:
 
 def _get_project_root() -> Path | None:
     """Resolve project root from CODA_PROJECT or cwd.
+    _get_project_root MUST perform the _get_project_root operation.
+    [🔬coda📚py💻coda🔖helpers🛠️getprojectroot](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_project_root)
     """
     if val := os.environ.get(_PROJECT_ENV):
         p = Path(val).resolve()
+        return p if (p / ".coda" / "project.json").exists() else None
     cwd = Path.cwd()
     for d in [cwd, *cwd.parents]:
         if (d / ".coda" / "project.json").exists():
+            return d
+    return None
 
 
 def _get_coda_config() -> dict:
+    """_get_coda_config performs the _get_coda_config operation.
+    [🔬coda📚py💻coda🔖helpers🛠️getcodaconfig](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_coda_config)
+    _get_coda_config MUST perform the _get_coda_config operation.
     """
     config_path = Path(os.environ.get("CODA_CONFIG", _CODA_JSON_PATH))
     if not config_path.is_absolute():
+        config_path = _CODA_ROOT / config_path
     return _load_json_with_comments(config_path)
 
 
 def _canonicalize_property_kind(raw_kind: str | None) -> str:
     """Map legacy property kind values to canonical coda kinds.
     _canonicalize_property_kind MUST map to one of: number, object, array, level, category.
+    [🔬coda📚py💻coda🔖helpers🛠️canonicalizepropertykind](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_canonicalize_property_kind)
     """
     if not raw_kind:
+        return "object"
     kind = str(raw_kind).strip().lower()
     _ALIASES = {"collection": "array"}
     kind = _ALIASES.get(kind, kind)
     if kind in _PROPERTY_KIND_MEASURE_KINDS:
+        return kind
+    return "object"
 
 
 def _normalize_property_definition(property_definition: dict) -> dict:
     """Normalize a property definition to the canonical coda property kind system.
     _normalize_property_definition MUST expose canonical kind and kind-specific measure_kinds.
+    [🔬coda📚py💻coda🔖helpers🛠️normalizepropertydefinition](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_normalize_property_definition)
     """
     normalized = dict(property_definition)
     kind = _canonicalize_property_kind(normalized.get("kind") or normalized.get("type"))
+    normalized["kind"] = kind
+    normalized["measure_kinds"] = normalized.get("measure_kinds") or list(
         _PROPERTY_KIND_MEASURE_KINDS[kind]
     )
 
@@ -105,6 +126,9 @@ def _normalize_property_definition(property_definition: dict) -> dict:
     if kind == "object":
         properties = normalized.get("properties", [])
         if isinstance(properties, list):
+            normalized["properties"] = [
+                _normalize_property_definition(p) if isinstance(p, dict) else p
+                for p in properties
             ]
 
     if kind == "array":
@@ -119,6 +143,7 @@ def _normalize_property_definition(property_definition: dict) -> dict:
             for level in levels:
                 if not isinstance(level, dict):
                     normalized_levels.append(level)
+                    continue
                 normalized_level = dict(level)
                 measures = normalized_level.get("measures")
                 if isinstance(measures, dict):
@@ -130,23 +155,36 @@ def _normalize_property_definition(property_definition: dict) -> dict:
                         instructions["raise"] = instructions.pop("higher")
                 normalized_level["measure_kinds"] = ["raise", "lower"]
                 normalized_levels.append(normalized_level)
+            normalized["levels"] = normalized_levels
 
+    return normalized
 
 
 def _normalize_target_definition(target_definition: dict) -> dict:
     """Normalize target property definitions to canonical coda property kinds.
     _normalize_target_definition MUST normalize all target properties recursively.
+    [🔬coda📚py💻coda🔖helpers🛠️normalizetargetdefinition](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_normalize_target_definition)
     """
     normalized = dict(target_definition)
     properties = normalized.get("properties", [])
     if isinstance(properties, list):
+        normalized["properties"] = [
+            _normalize_property_definition(p) if isinstance(p, dict) else p
+            for p in properties
         ]
+    return normalized
 
 
 def _get_project_config() -> dict | None:
+    """_get_project_config performs the _get_project_config operation.
+    [🔬coda📚py💻coda🔖helpers🛠️getprojectconfig](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_project_config)
+    _get_project_config MUST perform the _get_project_config operation.
     """
     root = _get_project_root()
     if not root:
+        return None
+    path = root / ".coda" / "project.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
 
 def _ensure_validation_envelope(raw: str) -> dict:
@@ -155,10 +193,15 @@ def _ensure_validation_envelope(raw: str) -> dict:
     try:
         obj = json.loads(text)
     except Exception:
+        truth = "unknown"
+        return {
             "valid": None,
+            "validations": [
+                {
                     "instance": "validation",
                     "expression": "",
                     "truth": truth,
+                    "tree": {
                         "id": "root",
                         "kind": "DataValue",
                         "label": "validation output",
@@ -173,19 +216,29 @@ def _ensure_validation_envelope(raw: str) -> dict:
             ],
         }
 
+    if (
         isinstance(obj, dict)
+        and "validations" in obj
         and isinstance(obj["validations"], list)
     ):
+        return obj
 
     breachs = []
     if isinstance(obj, dict):
         breachs = obj.get("breachs") or obj.get("breaches") or []
+    has_breaches = isinstance(breachs, list) and len(breachs) > 0
 
+    truth = "false" if has_breaches else "unknown"
+    valid_overall = not has_breaches
 
+    return {
         "valid": valid_overall,
+        "validations": [
+            {
                 "instance": "validation",
                 "expression": "",
                 "truth": truth,
+                "tree": {
                     "id": "root",
                     "kind": "DataValue",
                     "label": "legacy report",
@@ -202,6 +255,7 @@ def _ensure_validation_envelope(raw: str) -> dict:
 
 
 def _run_ontology_validator(
+    target_id: str, translation_path: Path, validator_cfg: dict
 ) -> dict:
     """Run the default ontology-based validator for a target translation.
     _run_ontology_validator MUST return an envelope with valid and validations fields.
@@ -215,35 +269,51 @@ def _run_ontology_validator(
     if ontology_path_str:
         ontology_path = Path(ontology_path_str)
         if not ontology_path.is_absolute():
+            ontology_path = (
+                Path(__file__).resolve().parent / ontology_path_str
             ).resolve()
     else:
+        ontology_path = Path(__file__).resolve().parent / "ontology.owl"
 
     if not ontology_path.exists():
         raise FileNotFoundError(f"Ontology file not found: {ontology_path}")
 
     # Merge data (translation) and ontology into a temporary ontology file.
+    engine_root = Path(__file__).resolve().parent
+    temp_dir = engine_root / "temp"
     temp_dir.mkdir(parents=True, exist_ok=True)
+    temp_merged = temp_dir / f"{target_id}-merged.owl"
 
     data_graph = rdflib.Graph().parse(str(translation_path))
     rule_graph = rdflib.Graph().parse(str(ontology_path))
+    merged_graph = data_graph + rule_graph
     merged_graph.serialize(str(temp_merged), format="xml")
 
     onto = get_ontology(temp_merged.as_uri()).load()
 
     try:
         with onto:
+            sync_reasoner_pellet(
+                infer_property_values=True, infer_data_property_values=True, debug=0
             )
 
         # Find NotCompliant class and its instances as failing validations.
+        not_compliant_cls = None
         for cl in onto.classes():
             if cl.name == "NotCompliant":
+                not_compliant_cls = cl
+                break
 
         validations: list[dict] = []
         if not_compliant_cls is not None:
             for ind in not_compliant_cls.instances():
+                instance_name = ind.name
+                validations.append(
+                    {
                         "instance": instance_name,
                         "expression": validator_cfg.get("expression") or "NotCompliant",
                         "truth": "false",
+                        "tree": {
                             "id": f"{instance_name}-root",
                             "kind": "ClassAssertion",
                             "label": "NotCompliant",
@@ -257,24 +327,39 @@ def _run_ontology_validator(
                     }
                 )
 
+        valid_overall = len(validations) == 0
         return {"valid": valid_overall, "validations": validations}
     finally:
         try:
             onto.destroy(update_relation=True, update_is_a=True)
         except Exception:
+            pass
 
 
 def _get_latest_run(root: Path) -> Path | None:
+    """_get_latest_run performs the _get_latest_run operation.
+    [🔬coda📚py💻coda🔖helpers🛠️getlatestrun](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_latest_run)
+    _get_latest_run MUST perform the _get_latest_run operation.
     """
+    runs = root / ".coda" / "runs"
     if not runs.exists():
+        return None
     dirs = sorted(d for d in runs.iterdir() if d.is_dir())
+    return dirs[-1] if dirs else None
 
 
 def _get_latest_iteration(run_dir: Path) -> Path | None:
+    """_get_latest_iteration performs the _get_latest_iteration operation.
+    [🔬coda📚py💻coda🔖helpers🛠️getlatestiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_latest_iteration)
+    _get_latest_iteration MUST perform the _get_latest_iteration operation.
     """
+    iters = run_dir / "iterations"
     if not iters.exists():
+        return None
+    dirs = sorted(
         int(d.name) for d in iters.iterdir() if d.is_dir() and d.name.isdigit()
     )
+    return iters / str(dirs[-1]) if dirs else None
 
 
 # endregion Helpers
@@ -287,20 +372,31 @@ def _get_latest_iteration(run_dir: Path) -> Path | None:
 class Session:
     """Stateful session tracking the current project, run, iteration, and target.
     Shared by both MCP and sidecar modes.
+    [🔬coda📚py💻coda🔖session🛠️session](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/Session)
     """
 
     def __init__(self) -> None:
+        self.project_root: Path | None = None
+        self.run_dir: Path | None = None
+        self.iteration_dir: Path | None = None
+        self.target_id: str | None = None
 
     def start_working_on_project(self, path: str) -> dict:
         """Set the active project root. Resets run/iteration/target.
+        [🔬coda📚py💻coda🔖session🛠️startworkingonproject](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/start_working_on_project)
         """
         p = Path(path).resolve()
         if not (p / ".coda" / "project.json").exists():
             return {"error": f"No coda project at {p}"}
+        self.project_root = p
         self.run_dir = _get_latest_run(p)
+        self.iteration_dir = (
+            _get_latest_iteration(self.run_dir) if self.run_dir else None
         )
+        self.target_id = None
         os.environ[_PROJECT_ENV] = str(p)
         proj = json.loads((p / ".coda" / "project.json").read_text(encoding="utf-8"))
+        return {
             "ok": True,
             "project_root": str(p),
             "project": proj,
@@ -310,30 +406,44 @@ class Session:
 
     def start_run(self) -> dict:
         """Create a new run in the current project. Sets it as active run.
+        [🔬coda📚py💻coda🔖session🛠️startrun](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/start_run)
         """
         if not self.project_root:
             return {"error": "No project. Call start_working_on_project first."}
         from datetime import datetime, timezone
 
+        run_id = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        run_dir = self.project_root / ".coda" / "runs" / run_id
         run_dir.mkdir(parents=True)
+        (run_dir / "run.json").write_text(
+            json.dumps({"id": run_id, "started": run_id}, indent=2), encoding="utf-8"
         )
         (run_dir / "iterations").mkdir()
+        self.run_dir = run_dir
+        self.iteration_dir = None
+        self.target_id = None
         return {"run_id": run_id, "path": str(run_dir)}
 
     def start_iteration(self, run_id: str | None = None) -> dict:
         """Create a new iteration in the active or specified run. Sets it as active iteration.
+        [🔬coda📚py💻coda🔖session🛠️startiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/start_iteration)
         """
         if not self.project_root:
             return {"error": "No project. Call start_working_on_project first."}
         if run_id:
+            rd = self.project_root / ".coda" / "runs" / run_id
             if not rd.exists():
                 return {"error": f"Run not found: {run_id}"}
         else:
+            rd = self.run_dir
             if not rd:
                 return {"error": "No run. Call start_run first."}
+        iters_dir = rd / "iterations"
         iters_dir.mkdir(parents=True, exist_ok=True)
+        existing = [
             int(d.name) for d in iters_dir.iterdir() if d.is_dir() and d.name.isdigit()
         ]
+        idx = max(existing, default=-1) + 1
         iter_dir = iters_dir / str(idx)
         iter_dir.mkdir()
         (iter_dir / "targets").mkdir()
@@ -341,9 +451,14 @@ class Session:
         target_ids = [t.get("id") for t in (proj or {}).get("targets", [])]
         for tid in target_ids:
             (iter_dir / "targets" / tid).mkdir(parents=True, exist_ok=True)
+        (iter_dir / "iteration.json").write_text(
             json.dumps({"index": idx, "targets": target_ids}, indent=2),
             encoding="utf-8",
         )
+        self.run_dir = rd
+        self.iteration_dir = iter_dir
+        self.target_id = None
+        return {
             "run_id": rd.name,
             "iteration_index": idx,
             "path": str(iter_dir),
@@ -352,6 +467,7 @@ class Session:
 
     def start_translation(self, target_id: str) -> dict:
         """Set the active target and prepare for translation.
+        [🔬coda📚py💻coda🔖session🛠️starttranslation](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/start_translation)
         """
         if not self.project_root:
             return {"error": "No project. Call start_working_on_project first."}
@@ -362,22 +478,35 @@ class Session:
             return {"error": "No project config"}
         targets = proj.get("targets", [])
         if not any(t.get("id") == target_id for t in targets):
+            return {
                 "error": f"Target not in project: {target_id}",
                 "targets": [t.get("id") for t in targets],
             }
+        target_dir = self.iteration_dir / "targets" / target_id
         target_dir.mkdir(parents=True, exist_ok=True)
+        self.target_id = target_id
         design_id = proj.get("design", {}).get("id", "unknown")
+        design_slug = design_id.split(".")[-1] if "." in design_id else design_id
+        target_slug = target_id.split(".")[-1] if "." in target_id else target_id
+        agent_name = f"{design_slug}-to-{target_slug}-translation-subagent"
+        return {
             "action": "invoke_subagent",
             "agent_name": agent_name,
             "target_id": target_id,
             "design_id": design_id,
             "output_path": str(target_dir / "translation.json"),
+            "instruction": (
+                f"Invoke the @{agent_name} subagent to translate the {design_id} "
+                f"design into the {target_id} target format. "
+                f"The subagent MUST write its output to {target_dir / 'translation.json'}."
             ),
         }
 
     def get_status(self) -> dict:
         """Return current session state.
+        [🔬coda📚py💻coda🔖session🛠️getstatus](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/get_status)
         """
+        return {
             "project_root": str(self.project_root) if self.project_root else None,
             "run_dir": str(self.run_dir) if self.run_dir else None,
             "iteration_dir": str(self.iteration_dir) if self.iteration_dir else None,
@@ -395,12 +524,14 @@ _mcp_sessions: weakref.WeakKeyDictionary[typing.Any, Session] = weakref.WeakKeyD
 
 def _mcp_session_id(ctx) -> typing.Any | None:
     """Get MCP session object from context."""
+    return ctx.session if ctx and hasattr(ctx, "session") else None
 
 
 def _get_mcp_session(ctx) -> Session:
     """Get or create Session for an MCP session."""
     sid = _mcp_session_id(ctx)
     if sid is None:
+        return _sidecar_session
     if sid not in _mcp_sessions:
         _mcp_sessions[sid] = Session()
     return _mcp_sessions[sid]
@@ -417,6 +548,7 @@ def _get_mcp_session(ctx) -> Session:
 def get_measures() -> str:
     """List all measures that are available.
     Implementations MUST load the coda config and return the measures array.
+    [🔬coda📚py💻coda🔖resources🛠️getmeasures](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_measures)
     """
     config = _get_coda_config()
     return json.dumps(config.get("measures", []), indent=2)
@@ -426,6 +558,7 @@ def get_measures() -> str:
 def get_measure(id: str) -> str:
     """Get a measure by id.
     Implementations MUST return an error JSON object when the measure is not found.
+    [🔬coda📚py💻coda🔖resources🛠️getmeasure](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_measure)
     """
     config = _get_coda_config()
     for m in config.get("measures", []):
@@ -437,6 +570,7 @@ def get_measure(id: str) -> str:
 @mcp.resource("coda://property-kinds")
 def get_property_kinds() -> str:
     """List all property kinds with their measures.
+    [🔬coda📚py💻coda🔖resources🛠️getpropertykinds](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_property_kinds)
     """
     config = _get_coda_config()
     return json.dumps(config.get("property_kinds", {}), indent=2)
@@ -445,6 +579,7 @@ def get_property_kinds() -> str:
 @mcp.resource("coda://correlation")
 def get_correlation() -> str:
     """Get the property correlation matrix.
+    [🔬coda📚py💻coda🔖resources🛠️getcorrelation](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_correlation)
     """
     config = _get_coda_config()
     return json.dumps(config.get("correlation", {}), indent=2)
@@ -454,8 +589,11 @@ def get_correlation() -> str:
 def get_properties() -> str:
     """List all root-level property definitions with normalized kinds and measure_kinds.
     Implementations MUST load the coda config and return the normalized properties array.
+    [🔬coda📚py💻coda🔖resources🛠️getproperties](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_properties)
     """
     config = _get_coda_config()
+    properties = [
+        _normalize_property_definition(p) if isinstance(p, dict) else p
         for p in config.get("properties", [])
     ]
     return json.dumps(properties, indent=2)
@@ -465,6 +603,7 @@ def get_properties() -> str:
 def get_property(id: str) -> str:
     """Get a root-level property by id with normalized kind and measure_kinds.
     Implementations MUST return an error JSON object when the property is not found.
+    [🔬coda📚py💻coda🔖resources🛠️getproperty](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_property)
     """
     config = _get_coda_config()
     for p in config.get("properties", []):
@@ -477,6 +616,7 @@ def get_property(id: str) -> str:
 def get_targets() -> str:
     """List all targets.
     Implementations MUST load the coda config and return the targets array.
+    [🔬coda📚py💻coda🔖resources🛠️gettargets](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_targets)
     """
     config = _get_coda_config()
     targets = [_normalize_target_definition(t) for t in config.get("targets", [])]
@@ -487,6 +627,7 @@ def get_targets() -> str:
 def get_frameworks() -> str:
     """List all frameworks. Frameworks are the same as targets in coda.json but general (not project-scoped).
     Implementations MUST load the coda config and return the targets array.
+    [🔬coda📚py💻coda🔖resources🛠️getframeworks](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_frameworks)
     """
     config = _get_coda_config()
     return json.dumps(config.get("targets", []), indent=2)
@@ -496,6 +637,7 @@ def get_frameworks() -> str:
 def get_framework(id: str) -> str:
     """Get a framework by id. Frameworks are the same as targets in coda.json but general (not project-scoped).
     Implementations MUST return an error JSON object when the framework is not found.
+    [🔬coda📚py💻coda🔖resources🛠️getframework](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_framework)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -508,6 +650,7 @@ def get_framework(id: str) -> str:
 def get_target(id: str) -> str:
     """Get a target by id.
     Implementations MUST return an error JSON object when the target is not found.
+    [🔬coda📚py💻coda🔖resources🛠️gettarget](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -520,6 +663,7 @@ def get_target(id: str) -> str:
 def get_target_properties(target_id: str) -> str:
     """Get properties for a target.
     Implementations MUST return an error JSON object when the target is not found.
+    [🔬coda📚py💻coda🔖resources🛠️gettargetproperties](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target_properties)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -533,6 +677,7 @@ def get_target_properties(target_id: str) -> str:
 def get_target_property(target_id: str, id: str) -> str:
     """Get a property by id for a target.
     Implementations MUST return an error JSON object when the target or property is not found.
+    [🔬coda📚py💻coda🔖resources🛠️gettargetproperty](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target_property)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -549,6 +694,7 @@ def get_target_property(target_id: str, id: str) -> str:
 def get_target_rules(target_id: str) -> str:
     """Get rules for a target.
     Implementations MUST return an error JSON object when the target is not found.
+    [🔬coda📚py💻coda🔖resources🛠️gettargetrules](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target_rules)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -561,6 +707,7 @@ def get_target_rules(target_id: str) -> str:
 def get_target_rule(target_id: str, id: str) -> str:
     """Get a rule by id for a target.
     Implementations MUST return an error JSON object when the target or rule is not found.
+    [🔬coda📚py💻coda🔖resources🛠️gettargetrule](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target_rule)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -576,9 +723,12 @@ def get_target_rule(target_id: str, id: str) -> str:
 def get_project() -> str:
     """Get the current project configuration.
     Implementations MUST return an error JSON object when no project root is found.
+    [🔬coda📚py💻coda🔖resources🛠️getproject](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_project)
     """
     proj = _get_project_config()
     if proj is None:
+        return json.dumps(
+            {
                 "error": "No coda project found. Set CODA_PROJECT or run from project root."
             }
         )
@@ -589,6 +739,7 @@ def get_project() -> str:
 def get_current_run() -> str:
     """Get the current run metadata.
     Implementations MUST return an error JSON object when no project or run exists.
+    [🔬coda📚py💻coda🔖resources🛠️getcurrentrun](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_current_run)
     """
     root = _get_project_root()
     if not root:
@@ -596,6 +747,8 @@ def get_current_run() -> str:
     run_dir = _get_latest_run(root)
     if not run_dir:
         return json.dumps({"error": "No runs found"})
+    run_json = run_dir / "run.json"
+    data = (
         json.loads(run_json.read_text(encoding="utf-8"))
         if run_json.exists()
         else {"id": run_dir.name}
@@ -607,6 +760,7 @@ def get_current_run() -> str:
 def get_current_iteration() -> str:
     """Get the current iteration metadata.
     Implementations MUST return an error JSON object when no project, run, or iteration exists.
+    [🔬coda📚py💻coda🔖resources🛠️getcurrentiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_current_iteration)
     """
     root = _get_project_root()
     if not root:
@@ -617,6 +771,8 @@ def get_current_iteration() -> str:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return json.dumps({"error": "No iterations found"})
+    iter_json = iter_dir / "iteration.json"
+    data = (
         json.loads(iter_json.read_text(encoding="utf-8"))
         if iter_json.exists()
         else {"index": iter_dir.name}
@@ -628,6 +784,7 @@ def get_current_iteration() -> str:
 def get_iterations() -> str:
     """List iterations in the current run.
     Implementations MUST return an empty array when no runs or iterations exist.
+    [🔬coda📚py💻coda🔖resources🛠️getiterations](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_iterations)
     """
     root = _get_project_root()
     if not root:
@@ -635,6 +792,7 @@ def get_iterations() -> str:
     run_dir = _get_latest_run(root)
     if not run_dir:
         return json.dumps([])
+    iters = run_dir / "iterations"
     if not iters.exists():
         return json.dumps([])
     dirs = [d for d in iters.iterdir() if d.is_dir() and d.name.isdigit()]
@@ -645,6 +803,8 @@ def get_iterations() -> str:
 @mcp.resource("coda://report")
 def get_report() -> str:
     """Get the current report from the latest iteration.
+    [🔬coda📚py💻coda🔖resources🛠️getreport](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_report)
+    get_report MUST perform the get_report operation.
     """
     root = _get_project_root()
     if not root:
@@ -655,6 +815,7 @@ def get_report() -> str:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return json.dumps({"error": "No iterations found"})
+    report_json = iter_dir / "targets" / "report.json"
     if not report_json.exists():
         return json.dumps({"error": "No report found"})
     return report_json.read_text(encoding="utf-8")
@@ -664,6 +825,7 @@ def get_report() -> str:
 def get_platforms() -> str:
     """List all platforms with their measure instructions.
     Implementations MUST load the coda config and return the platforms array.
+    [🔬coda📚py💻coda🔖resources🛠️getplatforms](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_platforms)
     """
     config = _get_coda_config()
     return json.dumps(config.get("platforms", []), indent=2)
@@ -673,6 +835,7 @@ def get_platforms() -> str:
 def get_platform(id: str) -> str:
     """Get a platform by id with its measure instructions.
     Implementations MUST return an error JSON object when the platform is not found.
+    [🔬coda📚py💻coda🔖resources🛠️getplatform](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_platform)
     """
     config = _get_coda_config()
     for p in config.get("platforms", []):
@@ -685,6 +848,7 @@ def get_platform(id: str) -> str:
 def get_breachs() -> str:
     """Get breachs from the current report of the latest iteration.
     Implementations MUST return an empty array when no breachs exist.
+    [🔬coda📚py💻coda🔖resources🛠️getbreachs](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_breachs)
     """
     root = _get_project_root()
     if not root:
@@ -695,6 +859,7 @@ def get_breachs() -> str:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return json.dumps({"error": "No iterations found"})
+    report_json = iter_dir / "targets" / "report.json"
     if not report_json.exists():
         return json.dumps([])
     report = json.loads(report_json.read_text(encoding="utf-8"))
@@ -706,6 +871,7 @@ def get_breachs() -> str:
 def get_translation(target_id: str) -> str:
     """Get the translation output for a target in the current iteration.
     Implementations MUST return an error JSON object when no translation exists.
+    [🔬coda📚py💻coda🔖resources🛠️gettranslation](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_translation)
     """
     root = _get_project_root()
     if not root:
@@ -716,6 +882,7 @@ def get_translation(target_id: str) -> str:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return json.dumps({"error": "No iterations found"})
+    translation_json = iter_dir / "targets" / target_id / "translation.json"
     if not translation_json.exists():
         return json.dumps({"error": f"No translation found for target: {target_id}"})
     return translation_json.read_text(encoding="utf-8")
@@ -735,6 +902,7 @@ def get_validation(target_id: str) -> str:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return json.dumps({"error": "No iterations found"})
+    report_json = iter_dir / "targets" / target_id / "report.json"
     if not report_json.exists():
         return json.dumps({"error": f"No validation found for target: {target_id}"})
     return report_json.read_text(encoding="utf-8")
@@ -751,6 +919,7 @@ def get_validation(target_id: str) -> str:
 def start_working_on_project(path: str, ctx: Context) -> dict:
     """Set the active project for this MCP session. MUST be called first.
     Path: absolute path to a folder containing .coda/project.json.
+    [🔬coda📚py💻coda🔖tools🛠️startworkingonproject](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/start_working_on_project)
     """
     return _get_mcp_session(ctx).start_working_on_project(path)
 
@@ -759,6 +928,7 @@ def start_working_on_project(path: str, ctx: Context) -> dict:
 def start_run(ctx: Context) -> dict:
     """Start a new run in the active project. Creates run directory under .coda/runs.
     MUST call start_working_on_project first.
+    [🔬coda📚py💻coda🔖tools🛠️startrun](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/start_run)
     """
     return _get_mcp_session(ctx).start_run()
 
@@ -767,6 +937,7 @@ def start_run(ctx: Context) -> dict:
 def start_iteration(ctx: Context, run_id: str | None = None) -> dict:
     """Start a new iteration in the active or specified run.
     MUST call start_run first (or specify run_id).
+    [🔬coda📚py💻coda🔖tools🛠️startiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/start_iteration)
     """
     return _get_mcp_session(ctx).start_iteration(run_id)
 
@@ -775,6 +946,7 @@ def start_iteration(ctx: Context, run_id: str | None = None) -> dict:
 def start_translation(target_id: str, ctx: Context) -> dict:
     """Set the active target and prepare for translation.
     MUST call start_iteration first.
+    [🔬coda📚py💻coda🔖tools🛠️starttranslation](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/start_translation)
     """
     return _get_mcp_session(ctx).start_translation(target_id)
 
@@ -782,6 +954,7 @@ def start_translation(target_id: str, ctx: Context) -> dict:
 @mcp.tool()
 def get_status(ctx: Context) -> dict:
     """Return the current session state (project, run, iteration, target).
+    [🔬coda📚py💻coda🔖tools🛠️getstatus](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/get_status)
     """
     return _get_mcp_session(ctx).get_status()
 
@@ -790,6 +963,7 @@ def get_status(ctx: Context) -> dict:
 def translate(target_id: str, ctx: Context) -> dict:
     """Translate design to target format by invoking the translator subagent.
     Uses the session's active iteration or falls back to latest.
+    [🔬coda📚py💻coda🔖tools🛠️translate](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/translate)
     """
     sess = _get_mcp_session(ctx)
     if sess.project_root and sess.iteration_dir:
@@ -800,6 +974,7 @@ def translate(target_id: str, ctx: Context) -> dict:
         return {"error": "No project"}
     targets = proj.get("targets", [])
     if not any(t.get("id") == target_id for t in targets):
+        return {
             "error": f"Target not in project: {target_id}",
             "targets": [t.get("id") for t in targets],
         }
@@ -812,13 +987,22 @@ def translate(target_id: str, ctx: Context) -> dict:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found. Call start_iteration first."}
+    target_dir = iter_dir / "targets" / target_id
     target_dir.mkdir(parents=True, exist_ok=True)
     design_id = proj.get("design", {}).get("id", "unknown")
+    design_slug = design_id.split(".")[-1] if "." in design_id else design_id
+    target_slug = target_id.split(".")[-1] if "." in target_id else target_id
+    agent_name = f"{design_slug}-to-{target_slug}-translation-subagent"
+    return {
         "action": "invoke_subagent",
         "agent_name": agent_name,
         "target_id": target_id,
         "design_id": design_id,
         "output_path": str(target_dir / "translation.json"),
+        "instruction": (
+            f"Invoke the @{agent_name} subagent to translate the {design_id} "
+            f"design into the {target_id} target format. "
+            f"The subagent MUST write its output to {target_dir / 'translation.json'}."
         ),
     }
 
@@ -826,6 +1010,7 @@ def translate(target_id: str, ctx: Context) -> dict:
 @mcp.tool()
 def save_translation(target_id: str, data: str) -> dict:
     """Save translation output for a target in the current iteration.
+    [🔬coda📚py💻coda🔖tools🛠️savetranslation](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/save_translation)
     """
     root = _get_project_root()
     if not root:
@@ -836,7 +1021,9 @@ def save_translation(target_id: str, data: str) -> dict:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    target_dir = iter_dir / "targets" / target_id
     target_dir.mkdir(parents=True, exist_ok=True)
+    translation_path = target_dir / "translation.json"
     translation_path.write_text(data, encoding="utf-8")
     return {"saved": True, "path": str(translation_path)}
 
@@ -844,6 +1031,7 @@ def save_translation(target_id: str, data: str) -> dict:
 @mcp.tool()
 def validate(target_id: str) -> dict:
     """Validate a target by running its validator on the translation output.
+    [🔬coda📚py💻coda🔖tools🛠️validate](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/validate)
     """
     root = _get_project_root()
     if not root:
@@ -861,7 +1049,10 @@ def validate(target_id: str) -> dict:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    translation_path = iter_dir / "targets" / target_id / "translation.json"
     if not translation_path.exists():
+        return {
+            "error": f"No translation found for target: {target_id}. Call translate first."
         }
 
     validator_cfg = (target_cfg or {}).get("validator", {}) or {}
@@ -871,20 +1062,31 @@ def validate(target_id: str) -> dict:
         try:
             report = _run_ontology_validator(target_id, translation_path, validator_cfg)
         except Exception as e:
+            return {
+                "error": f"Ontology validator failed for target: {target_id}: {e!s}"
             }
+        report_path = iter_dir / "targets" / target_id / "report.json"
         report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return {
             "validated": True,
             "target_id": target_id,
             "report_path": str(report_path),
             "report": report,
         }
+    validators_dir = root / ".coda" / "validators"
+    validator_bin = None
     if validators_dir.exists():
         for candidate in [target_id, target_id.replace(".", "-")]:
             for ext in ["", ".exe"]:
+                p = validators_dir / f"{candidate}{ext}"
                 if p.exists() and p.is_file():
+                    validator_bin = p
+                    break
             if validator_bin:
+                break
     if validator_bin:
         try:
+            result = subprocess.run(
                 [str(validator_bin)],
                 input=translation_path.read_text(encoding="utf-8"),
                 capture_output=True,
@@ -892,8 +1094,11 @@ def validate(target_id: str) -> dict:
                 timeout=120,
                 cwd=str(root),
             )
+            report_raw = result.stdout.strip() if result.stdout else "{}"
             envelope = _ensure_validation_envelope(report_raw)
+            report_path = iter_dir / "targets" / target_id / "report.json"
             report_path.write_text(json.dumps(envelope, indent=2), encoding="utf-8")
+            return {
                 "validated": True,
                 "target_id": target_id,
                 "report_path": str(report_path),
@@ -903,9 +1108,14 @@ def validate(target_id: str) -> dict:
             return {"error": f"Validator timed out for target: {target_id}"}
         except Exception as e:
             return {"error": f"Validator failed for target: {target_id}: {e!s}"}
+    return {
         "action": "manual_validation",
         "target_id": target_id,
         "translation_path": str(translation_path),
+        "instruction": (
+            f"No validator binary found for {target_id}. "
+            f"Validate the translation manually or provide a validator in "
+            f".coda/validators/{target_id}."
         ),
     }
 
@@ -913,6 +1123,7 @@ def validate(target_id: str) -> dict:
 @mcp.tool()
 def save_report(report_data: str) -> dict:
     """Save aggregated report for the current iteration.
+    [🔬coda📚py💻coda🔖tools🛠️savereport](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/save_report)
     """
     root = _get_project_root()
     if not root:
@@ -923,6 +1134,7 @@ def save_report(report_data: str) -> dict:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    report_path = iter_dir / "targets" / "report.json"
     report_path.write_text(report_data, encoding="utf-8")
     return {"saved": True, "path": str(report_path)}
 
@@ -930,6 +1142,7 @@ def save_report(report_data: str) -> dict:
 @mcp.tool()
 def fix(prompt: str) -> dict:
     """Fix design to address breachs by invoking the fixer subagent.
+    [🔬coda📚py💻coda🔖tools🛠️fix](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/fix)
     """
     proj = _get_project_config()
     if not proj:
@@ -938,6 +1151,8 @@ def fix(prompt: str) -> dict:
     if not root:
         return {"error": "No project root"}
     design_id = proj.get("design", {}).get("id", "unknown")
+    design_slug = design_id.split(".")[-1] if "." in design_id else design_id
+    agent_name = f"{design_slug}-fixing-subagent"
     config = _get_coda_config()
     measures = config.get("measures", [])
     run_dir = _get_latest_run(root)
@@ -945,14 +1160,20 @@ def fix(prompt: str) -> dict:
     if run_dir:
         iter_dir = _get_latest_iteration(run_dir)
         if iter_dir:
+            report_path = iter_dir / "targets" / "report.json"
             if report_path.exists():
                 report = json.loads(report_path.read_text(encoding="utf-8"))
+    return {
         "action": "invoke_subagent",
         "agent_name": agent_name,
         "design_id": design_id,
         "prompt": prompt,
         "report": report,
         "available_measures": [m.get("id") for m in measures],
+        "instruction": (
+            f"Invoke the @{agent_name} subagent to fix the design using the "
+            f"{design_id} MCP server. The subagent MUST use the design MCP tools "
+            f"to address: {prompt}"
         ),
     }
 
@@ -966,7 +1187,9 @@ def fix(prompt: str) -> dict:
 @mcp.prompt()
 def change(prompt: str) -> str:
     """Change the design according to the given prompt. Use with the fixer agent.
+    [🔬coda📚py💻coda🔖prompts🛠️change](repo://p/r/coda/b/l/py/f/coda.py/s/Prompts/d/i/change)
     """
+    return f"Change the design to address the following: {prompt}"
 
 
 # endregion Prompts
@@ -986,7 +1209,10 @@ def _register_sidecar(name: str):
     """Decorator to register a sidecar method handler."""
 
     def decorator(fn):
+        _SIDECAR_METHODS[name] = fn
+        return fn
 
+    return decorator
 
 
 @_register_sidecar("heartbeat")
@@ -1028,6 +1254,8 @@ def _sidecar_get_status(params: dict) -> dict:
 @_register_sidecar("get_properties")
 def _sidecar_get_properties(params: dict) -> dict:
     config = _get_coda_config()
+    return [
+        _normalize_property_definition(p) if isinstance(p, dict) else p
         for p in config.get("properties", [])
     ]
 
@@ -1055,6 +1283,7 @@ def _sidecar_get_project(params: dict) -> dict:
     proj = _get_project_config()
     if proj is None:
         return {"error": "No coda project found"}
+    return proj
 
 
 @_register_sidecar("get_report")
@@ -1068,6 +1297,7 @@ def _sidecar_get_report(params: dict) -> dict:
     iter_dir = _sidecar_session.iteration_dir or _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    report_json = iter_dir / "targets" / "report.json"
     if not report_json.exists():
         return {"error": "No report found"}
     return json.loads(report_json.read_text(encoding="utf-8"))
@@ -1084,6 +1314,7 @@ def _sidecar_get_breachs(params: dict) -> dict:
     iter_dir = _sidecar_session.iteration_dir or _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    report_json = iter_dir / "targets" / "report.json"
     if not report_json.exists():
         return []
     report = json.loads(report_json.read_text(encoding="utf-8"))
@@ -1102,10 +1333,12 @@ def _sidecar_get_iterations(params: dict) -> dict:
     run_dir = _sidecar_session.run_dir or _get_latest_run(root)
     if not run_dir:
         return []
+    iters = run_dir / "iterations"
     if not iters.exists():
         return []
     dirs = [d for d in iters.iterdir() if d.is_dir() and d.name.isdigit()]
     entries = [{"index": d.name} for d in sorted(dirs, key=lambda x: int(x.name))]
+    return entries
 
 
 @_register_sidecar("get_platforms")
@@ -1113,6 +1346,7 @@ def _sidecar_get_platforms(params: dict) -> dict:
     # Try project-local .coda/platforms/ directory first
     root = _get_project_root()
     if root:
+        platforms_dir = root / ".coda" / "platforms"
         if platforms_dir.exists():
             platforms = []
             for p in platforms_dir.iterdir():
@@ -1120,7 +1354,9 @@ def _sidecar_get_platforms(params: dict) -> dict:
                     try:
                         platforms.append(json.loads(p.read_text(encoding="utf-8")))
                     except Exception:
+                        pass
             if platforms:
+                return platforms
     # Fall back to coda.json platforms
     config = _get_coda_config()
     return config.get("platforms", [])
@@ -1134,6 +1370,7 @@ def _sidecar_get_current_run(params: dict) -> dict:
     run_dir = _get_latest_run(root)
     if not run_dir:
         return {"error": "No runs found"}
+    run_json = run_dir / "run.json"
     if run_json.exists():
         return json.loads(run_json.read_text(encoding="utf-8"))
     return {"id": run_dir.name, "run_id": run_dir.name}
@@ -1150,6 +1387,7 @@ def _sidecar_get_current_iteration(params: dict) -> dict:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    iter_json = iter_dir / "iteration.json"
     if iter_json.exists():
         return json.loads(iter_json.read_text(encoding="utf-8"))
     return {"index": iter_dir.name}
@@ -1169,6 +1407,7 @@ def _sidecar_get_translation(params: dict) -> dict:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    translation_json = iter_dir / "targets" / target_id / "translation.json"
     if not translation_json.exists():
         return {"error": f"No translation found for target: {target_id}"}
     return json.loads(translation_json.read_text(encoding="utf-8"))
@@ -1195,8 +1434,13 @@ def _sidecar_translate(params: dict) -> dict:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found. Call start_iteration first."}
+    target_dir = iter_dir / "targets" / target_id
     target_dir.mkdir(parents=True, exist_ok=True)
     design_id = proj.get("design", {}).get("id", "unknown")
+    design_slug = design_id.split(".")[-1] if "." in design_id else design_id
+    target_slug = target_id.split(".")[-1] if "." in target_id else target_id
+    agent_name = f"{design_slug}-to-{target_slug}-translation-subagent"
+    result = {
         "action": "invoke_subagent",
         "agent_name": agent_name,
         "target_id": target_id,
@@ -1204,9 +1448,11 @@ def _sidecar_translate(params: dict) -> dict:
         "output_path": str(target_dir / "translation.json"),
         "instruction": f"Invoke the @{agent_name} subagent to translate the {design_id} design into the {target_id} target format.",
     }
+    _emit_event(
         "translate_started",
         {"target_id": target_id, "agent_name": agent_name, "design_id": design_id},
     )
+    return result
 
 
 @_register_sidecar("save_validation")
@@ -1224,10 +1470,14 @@ def _sidecar_save_validation(params: dict) -> dict:
     iter_dir = _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    report_path = iter_dir / "targets" / target_id / "report.json"
     report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(
+        data if isinstance(data, str) else json.dumps(data), encoding="utf-8"
     )
     result = {"saved": True, "path": str(report_path)}
     _emit_event("validation_saved", {"target_id": target_id, "path": str(report_path)})
+    return result
 
 
 @_register_sidecar("save_translation")
@@ -1245,7 +1495,9 @@ def _sidecar_save_translation(params: dict) -> dict:
     iter_dir = _sidecar_session.iteration_dir or _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    target_dir = iter_dir / "targets" / target_id
     target_dir.mkdir(parents=True, exist_ok=True)
+    translation_path = target_dir / "translation.json"
     translation_path.write_text(data, encoding="utf-8")
     return {"saved": True, "path": str(translation_path)}
 
@@ -1262,6 +1514,7 @@ def _sidecar_save_report(params: dict) -> dict:
     iter_dir = _sidecar_session.iteration_dir or _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    report_path = iter_dir / "targets" / "report.json"
     report_path.write_text(data, encoding="utf-8")
     return {"saved": True, "path": str(report_path)}
 
@@ -1287,6 +1540,7 @@ def _sidecar_validate(params: dict) -> dict:
     iter_dir = _sidecar_session.iteration_dir or _get_latest_iteration(run_dir)
     if not iter_dir:
         return {"error": "No iterations found"}
+    translation_path = iter_dir / "targets" / target_id / "translation.json"
     if not translation_path.exists():
         return {"error": f"No translation for target: {target_id}"}
 
@@ -1297,21 +1551,32 @@ def _sidecar_validate(params: dict) -> dict:
         try:
             report = _run_ontology_validator(target_id, translation_path, validator_cfg)
         except Exception as e:
+            return {
+                "error": f"Ontology validator failed for target: {target_id}: {e!s}"
             }
+        report_path = iter_dir / "targets" / target_id / "report.json"
         report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return {
             "validated": True,
             "target_id": target_id,
             "report_path": str(report_path),
             "report": report,
         }
 
+    validators_dir = root / ".coda" / "validators"
+    validator_bin = None
     if validators_dir.exists():
         for candidate in [target_id, target_id.replace(".", "-")]:
             for ext in ["", ".exe"]:
+                p = validators_dir / f"{candidate}{ext}"
                 if p.exists() and p.is_file():
+                    validator_bin = p
+                    break
             if validator_bin:
+                break
     if validator_bin:
         try:
+            result = subprocess.run(
                 [str(validator_bin)],
                 input=translation_path.read_text(encoding="utf-8"),
                 capture_output=True,
@@ -1319,7 +1584,10 @@ def _sidecar_validate(params: dict) -> dict:
                 timeout=120,
                 cwd=str(root),
             )
+            report_data = result.stdout.strip() if result.stdout else "{}"
+            report_path = iter_dir / "targets" / target_id / "report.json"
             report_path.write_text(report_data, encoding="utf-8")
+            return {
                 "validated": True,
                 "target_id": target_id,
                 "report_path": str(report_path),
@@ -1329,6 +1597,7 @@ def _sidecar_validate(params: dict) -> dict:
             return {"error": f"Validator timed out for target: {target_id}"}
         except Exception as e:
             return {"error": f"Validator failed: {e!s}"}
+    return {
         "action": "manual_validation",
         "target_id": target_id,
         "translation_path": str(translation_path),
@@ -1347,6 +1616,8 @@ def _sidecar_fix(params: dict) -> dict:
     if not root:
         return {"error": "No project root"}
     design_id = proj.get("design", {}).get("id", "unknown")
+    design_slug = design_id.split(".")[-1] if "." in design_id else design_id
+    agent_name = f"{design_slug}-fixing-subagent"
     config = _get_coda_config()
     measures = config.get("measures", [])
     run_dir = _sidecar_session.run_dir or _get_latest_run(root)
@@ -1354,8 +1625,10 @@ def _sidecar_fix(params: dict) -> dict:
     if run_dir:
         iter_dir = _sidecar_session.iteration_dir or _get_latest_iteration(run_dir)
         if iter_dir:
+            report_path = iter_dir / "targets" / "report.json"
             if report_path.exists():
                 report = json.loads(report_path.read_text(encoding="utf-8"))
+    return {
         "action": "invoke_subagent",
         "agent_name": agent_name,
         "design_id": design_id,
@@ -1367,6 +1640,7 @@ def _sidecar_fix(params: dict) -> dict:
 
 def _handle_sidecar_request(request: dict) -> dict:
     """Dispatch a sidecar JSON request and return a response dict.
+    [🔬coda📚py💻coda🔖sidecar🛠️handlesidecarrequest](repo://p/r/coda/b/l/py/f/coda.py/s/Sidecar/d/i/_handle_sidecar_request)
     """
     req_id = request.get("id")
     method = request.get("method", "")
@@ -1374,6 +1648,7 @@ def _handle_sidecar_request(request: dict) -> dict:
 
     handler = _SIDECAR_METHODS.get(method)
     if not handler:
+        return {
             "id": req_id,
             "error": {"code": -32601, "message": f"Unknown method: {method}"},
         }
@@ -1389,6 +1664,7 @@ def _handle_sidecar_request(request: dict) -> dict:
 
 def _run_sidecar() -> None:
     """Run the sidecar stdio event loop. Reads JSON lines from stdin, writes responses to stdout.
+    [🔬coda📚py💻coda🔖sidecar🛠️runsidecar](repo://p/r/coda/b/l/py/f/coda.py/s/Sidecar/d/i/_run_sidecar)
     """
     # Write a ready message so Electron knows we've started
     _write_stdout({"id": None, "result": {"status": "ready", "pid": os.getpid()}})
@@ -1396,11 +1672,14 @@ def _run_sidecar() -> None:
     for line in sys.stdin:
         line = line.strip()
         if not line:
+            continue
         try:
             request = json.loads(line)
         except json.JSONDecodeError as e:
+            _write_stdout(
                 {"id": None, "error": {"code": -32700, "message": f"Parse error: {e}"}}
             )
+            continue
 
         response = _handle_sidecar_request(request)
         _write_stdout(response)
@@ -1424,17 +1703,21 @@ def main() -> None:
     --sidecar: Electron sidecar (JSON-over-stdio).
     --mcp-stdio: MCP server over stdio.
     Default: MCP server over streamable-http on 127.0.0.1:8080.
+    [🔬coda📚py💻coda🔖main🛠️main](repo://p/r/coda/b/l/py/f/coda.py/s/Main/d/i/main)
     """
     parser = argparse.ArgumentParser(description="coda - ACC design assistant")
     group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "--sidecar",
         action="store_true",
         help="Run as Electron sidecar (JSON-over-stdio)",
     )
+    group.add_argument(
         "--mcp-stdio",
         action="store_true",
         help="Run MCP server over stdio",
     )
+    parser.add_argument(
         "--project",
         type=str,
         default=None,
