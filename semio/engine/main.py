@@ -3425,24 +3425,45 @@ def _enrich_design(kit: dict, design: dict) -> dict:
         return design
 
 
-def _strip_kit_blobs(kit: dict) -> dict:
+def _select_best_model_file_guids(kit: dict, design: dict | None) -> set[str]:
+    """Return file GUIDs for the best (untagged or first) model of each type used in the design.
+    Mirrors the JS selectBestModel logic so the same files are inlined that the scene will actually load."""
+    if not design:
+        return set()
+    type_guids = {(p.get("type") or {}).get("guid") for p in design.get("pieces", [])}
+    type_guids.discard(None)
+    result: set[str] = set()
+    for typ in kit.get("types", []):
+        if typ.get("guid") not in type_guids:
+            continue
+        models = typ.get("models") or []
+        best = next((m for m in models if not m.get("tags")), models[0] if models else None)
+        if not best:
+            continue
+        file_guid = (best.get("file") or {}).get("guid")
+        if file_guid:
+            result.add(file_guid)
+    return result
+
+
+def _strip_kit_blobs(kit: dict, design: dict | None = None) -> dict:
     """Deep copy kit, cache file blobs in _mcp_app_file_blobs, and replace blob with url for UI transport.
-    GLB/GLTF blobs are kept inline as data URLs so 3D model loading works without HTTP requests (avoiding CSP issues in sandboxed iframes)."""
+    GLB/GLTF blobs for the design's selected type models are kept inline as data URLs to avoid CSP/HTTP
+    issues in sandboxed iframes. All other blobs are stripped and served via HTTP endpoint."""
+    inline_guids = _select_best_model_file_guids(kit, design)
     kit_for_ui = copy.deepcopy(kit)
     for f in kit_for_ui.get("files", []):
+        guid = f.get("guid")
         name = (f.get("name") or "").lower()
         is_gltf = name.endswith(".glb") or name.endswith(".gltf")
-        guid = f.get("guid")
-        if is_gltf:
-            # Keep blob inline; also cache for HTTP fallback
+        keep_inline = is_gltf and guid in inline_guids
+        if keep_inline:
             blob = f.get("blob")
-            if blob and guid:
-                _mcp_app_file_blobs[guid] = blob
-                f["url"] = f"http://127.0.0.1:{PORT}/api/app/files/{guid}"
         else:
             blob = f.pop("blob", None)
-            if blob and guid:
-                _mcp_app_file_blobs[guid] = blob
+        if blob and guid:
+            _mcp_app_file_blobs[guid] = blob
+            if not keep_inline:
                 f["url"] = f"http://127.0.0.1:{PORT}/api/app/files/{guid}"
     return kit_for_ui
 
@@ -3467,7 +3488,10 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
     kit = _get_session_kit(ctx)
     design = _get_session_design(ctx)
     enriched_design = _enrich_design(kit, design)
-    kit_for_ui = _strip_kit_blobs(kit)
+    kit_for_ui = _strip_kit_blobs(kit, design=enriched_design)
+    # Strip designs list from kit: current design is already in payload["design"],
+    # and kit.designs (4.6MB for large kits) is redundant overhead that causes host truncation.
+    kit_for_ui.pop("designs", None)
 
     # [DEBUG] log payload summary for diagnosing scene/diagram issues
     _pieces = enriched_design.get("pieces", [])

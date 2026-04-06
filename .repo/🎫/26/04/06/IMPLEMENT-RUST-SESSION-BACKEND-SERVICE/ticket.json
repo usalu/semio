@@ -1,0 +1,12 @@
+{
+  "title": "Implement Rust Session Backend Service",
+  "status": "open",
+  "description": "Implement the Rust session-backend service as described in the implementation plan. Single binary bin.rs backed by PostgreSQL with temporal relational tables, session actors, domain/semio commands, conflict handling, and historical artifact views.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1273"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪2d5b6e20d91044aba2cba2bc6f1b0ed2"
+  ]
+}

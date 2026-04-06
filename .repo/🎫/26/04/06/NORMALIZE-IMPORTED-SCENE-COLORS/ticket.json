@@ -1,0 +1,9 @@
+{
+  "title": "Normalize Imported Scene Colors",
+  "status": "open",
+  "description": "Overwrite imported scene mesh colors and line colors with homogeneous colors in semio/ui scene rendering, matching the sketchpad behavior. Update the existing semio/ui test file to cover imported mesh and line material normalization and interactive recoloring. Run the relevant tests and finish the ticket.",
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪c0d447db117e4d19b3e8fa0ca4f3ab4d"
+  ]
+}

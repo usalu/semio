@@ -2071,6 +2071,96 @@ const toScenePieceMatrix = (plane: Plane): THREE.Matrix4 => {
   return new THREE.Matrix4().multiplyMatrices(SEMIO_TO_THREE_BASIS, planeMatrix).multiply(THREE_TO_SEMIO_BASIS);
 };
 
+// #region 🔖SceneModelMaterials
+// Specs: Imported scene assets in semio/ui MUST ignore embedded mesh, line, and point colors.
+// The runtime replaces them with homogeneous scene materials so status and interaction colors stay consistent.
+// Summary: Shared helpers that normalize imported scene materials and recolor them consistently.
+
+interface SceneModelColorState {
+  meshColor: string;
+  lineColor: string;
+  emissiveColor?: string;
+  emissiveIntensity: number;
+  opacity: number;
+}
+
+const createSceneMeshMaterial = (color: string): THREE.MeshStandardMaterial =>
+  new THREE.MeshStandardMaterial({
+    color,
+    metalness: 0,
+    roughness: 1,
+  });
+
+const createSceneLineMaterial = (color: string): THREE.LineBasicMaterial => new THREE.LineBasicMaterial({ color });
+
+const createScenePointsMaterial = (color: string): THREE.PointsMaterial => new THREE.PointsMaterial({ color, size: 1 });
+
+const cloneSceneModelWithHomogeneousMaterials = (scene: THREE.Object3D, meshColor: string, lineColor: string): THREE.Object3D => {
+  const cloned = cloneSkeleton(scene);
+  cloned.traverse((object) => {
+    if (object instanceof THREE.Mesh) {
+      if (Array.isArray(object.material)) {
+        object.material = object.material.map(() => createSceneMeshMaterial(meshColor));
+      } else {
+        object.material = createSceneMeshMaterial(meshColor);
+      }
+      return;
+    }
+    if (object instanceof THREE.Line || object instanceof THREE.LineSegments) {
+      object.material = createSceneLineMaterial(lineColor);
+      return;
+    }
+    if (object instanceof THREE.Points) {
+      object.material = createScenePointsMaterial(lineColor);
+    }
+  });
+  return cloned;
+};
+
+const applySceneModelColorState = (scene: THREE.Object3D, state: SceneModelColorState): void => {
+  scene.traverse((object) => {
+    if (object instanceof THREE.Mesh) {
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => {
+        if (!material || !("color" in material)) return;
+        const meshMaterial = material as THREE.MeshStandardMaterial;
+        meshMaterial.color.set(state.meshColor);
+        meshMaterial.emissive.set(state.emissiveColor ?? "#000000");
+        meshMaterial.emissiveIntensity = state.emissiveIntensity;
+        meshMaterial.transparent = state.opacity < 1;
+        meshMaterial.opacity = state.opacity;
+      });
+      return;
+    }
+    if (object instanceof THREE.Line || object instanceof THREE.LineSegments || object instanceof THREE.Points) {
+      const material = object.material;
+      if (!material || !("color" in material)) return;
+      (material as THREE.LineBasicMaterial | THREE.PointsMaterial).color.set(state.lineColor);
+      material.transparent = state.opacity < 1;
+      material.opacity = state.opacity;
+    }
+  });
+};
+
+const getSceneModelColorState = (status: DiagramEntityStatus, isSelected: boolean, isHovered: boolean): SceneModelColorState => {
+  const isDiffed = status !== "default";
+  const isRemoved = status === "removed";
+  const neutralColor = resolveSceneColor("var(--muted-foreground)", "#888888");
+  const baseColor = isDiffed ? resolveSceneColor(getEntityStatusColor(status), "#888888") : neutralColor;
+  const selectedColor = isSelected ? resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6") : null;
+  const hoveredColor = isHovered ? resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa") : null;
+
+  return {
+    meshColor: isSelected ? selectedColor ?? baseColor : isHovered ? hoveredColor ?? baseColor : baseColor,
+    lineColor: isSelected ? selectedColor ?? baseColor : isHovered ? hoveredColor ?? baseColor : baseColor,
+    emissiveColor: isSelected ? selectedColor ?? baseColor : isHovered ? hoveredColor ?? baseColor : isDiffed ? baseColor : undefined,
+    emissiveIntensity: isSelected ? 0.35 : isHovered ? 0.15 : isDiffed ? 0.4 : 0,
+    opacity: isRemoved ? 0.35 : 1,
+  };
+};
+
+// #endregion 🔖SceneModelMaterials
+
 interface ScenePieceModelProps {
   modelSource: string;
   status: DiagramEntityStatus;
@@ -2083,53 +2173,11 @@ const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, 
   // drei defaults meshopt to true which calls WebAssembly.instantiate() violating script-src wasm-eval.
   const gltf = useGLTF(modelSource, false, false);
   const clone = React.useMemo(() => {
-    const cloned = cloneSkeleton(gltf.scene);
-    cloned.traverse((object) => {
-      if (!(object instanceof THREE.Mesh)) return;
-      if (Array.isArray(object.material)) {
-        object.material = object.material.map((m) => m.clone());
-      } else if (object.material) {
-        object.material = object.material.clone();
-      }
-    });
-    return cloned;
+    return cloneSceneModelWithHomogeneousMaterials(gltf.scene, "#888888", "#888888");
   }, [gltf.scene]);
 
   React.useEffect(() => {
-    const isDiffed = status !== "default";
-    const isRemoved = status === "removed";
-    // Use neutral gray for default pieces; use status color (red/green/yellow) for diffed pieces
-    const neutralColor = resolveSceneColor("var(--muted-foreground)", "#888888");
-    const statusColor = isDiffed ? resolveSceneColor(getEntityStatusColor(status), "#888888") : neutralColor;
-    const selectedColor = isSelected ? resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6") : null;
-    const hoveredColor = isHovered ? resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa") : null;
-    clone.traverse((object) => {
-      if (!(object instanceof THREE.Mesh)) return;
-      const materials = Array.isArray(object.material) ? object.material : [object.material];
-      materials.forEach((material) => {
-        if (!material || !("color" in material)) return;
-        const mat = material as THREE.MeshStandardMaterial;
-
-        // Base color reflects status: neutral gray for default, status color (red/green/yellow) for diffed
-        mat.color.set(statusColor);
-
-        if (isSelected && selectedColor) {
-          mat.emissive.set(selectedColor);
-          mat.emissiveIntensity = 0.35;
-        } else if (isHovered && hoveredColor) {
-          mat.emissive.set(hoveredColor);
-          mat.emissiveIntensity = 0.15;
-        } else if (isDiffed) {
-          mat.emissive.set(statusColor);
-          mat.emissiveIntensity = 0.4;
-        } else {
-          mat.emissive.set("#000000");
-          mat.emissiveIntensity = 0;
-        }
-        mat.transparent = isRemoved;
-        mat.opacity = isRemoved ? 0.35 : 1;
-      });
-    });
+    applySceneModelColorState(clone, getSceneModelColorState(status, isSelected, isHovered));
   }, [clone, status, isHovered, isSelected]);
 
   return <Clone object={clone} />;
@@ -4457,6 +4505,94 @@ if (import.meta.vitest) {
       expect(xAxis.toArray()).toEqual([1, 0, 0]);
       expect(yAxis.toArray()).toEqual([0, 1, 0]);
       expect(zAxis.toArray()).toEqual([0, 0, 1]);
+    });
+  });
+
+  describe("scene model material normalization", () => {
+    it("overwrites imported mesh, line, and point materials with homogeneous scene materials", () => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "#ff0000" }));
+      const line = new THREE.LineSegments(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]),
+        new THREE.LineBasicMaterial({ color: "#00ff00" }),
+      );
+      const points = new THREE.Points(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0)]),
+        new THREE.PointsMaterial({ color: "#0000ff", size: 5 }),
+      );
+      const source = new THREE.Group();
+      source.add(mesh, line, points);
+
+      const clone = cloneSceneModelWithHomogeneousMaterials(source, "#112233", "#445566");
+
+      const clonedMesh = clone.children[0] as THREE.Mesh;
+      const clonedLine = clone.children[1] as THREE.LineSegments;
+      const clonedPoints = clone.children[2] as THREE.Points;
+
+      expect(clonedMesh.material).toBeInstanceOf(THREE.MeshStandardMaterial);
+      expect((clonedMesh.material as THREE.MeshStandardMaterial).color.getHexString()).toBe("112233");
+      expect(clonedLine.material).toBeInstanceOf(THREE.LineBasicMaterial);
+      expect((clonedLine.material as THREE.LineBasicMaterial).color.getHexString()).toBe("445566");
+      expect(clonedPoints.material).toBeInstanceOf(THREE.PointsMaterial);
+      expect((clonedPoints.material as THREE.PointsMaterial).color.getHexString()).toBe("445566");
+    });
+
+    it("recolors imported mesh and line materials consistently for interaction and removed states", () => {
+      const source = new THREE.Group();
+      source.add(
+        new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "#ff0000" })),
+        new THREE.LineSegments(
+          new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]),
+          new THREE.LineBasicMaterial({ color: "#00ff00" }),
+        ),
+      );
+      const clone = cloneSceneModelWithHomogeneousMaterials(source, "#111111", "#222222");
+
+      applySceneModelColorState(clone, {
+        meshColor: "#334455",
+        lineColor: "#556677",
+        emissiveColor: "#778899",
+        emissiveIntensity: 0.35,
+        opacity: 0.35,
+      });
+
+      const clonedMesh = clone.children[0] as THREE.Mesh;
+      const clonedLine = clone.children[1] as THREE.LineSegments;
+      const meshMaterial = clonedMesh.material as THREE.MeshStandardMaterial;
+      const lineMaterial = clonedLine.material as THREE.LineBasicMaterial;
+
+      expect(meshMaterial.color.getHexString()).toBe("334455");
+      expect(meshMaterial.emissive.getHexString()).toBe("778899");
+      expect(meshMaterial.emissiveIntensity).toBe(0.35);
+      expect(meshMaterial.transparent).toBe(true);
+      expect(meshMaterial.opacity).toBe(0.35);
+      expect(lineMaterial.color.getHexString()).toBe("556677");
+      expect(lineMaterial.transparent).toBe(true);
+      expect(lineMaterial.opacity).toBe(0.35);
+    });
+
+    it("derives selected and removed imported scene colors from the shared scene tokens", () => {
+      document.documentElement.style.setProperty("--muted-foreground", "#888888");
+      document.documentElement.style.setProperty("--accent", "#123456");
+      document.documentElement.style.setProperty("--accent-secondary", "#abcdef");
+      document.documentElement.style.setProperty("--color-removed", "#ff0000");
+      document.documentElement.style.setProperty("--color-new", "#00ff00");
+      document.documentElement.style.setProperty("--color-modified", "#ffff00");
+      document.documentElement.style.setProperty("--color-changed-selected", "#654321");
+      document.documentElement.style.setProperty("--color-changed-hovered", "#fedcba");
+
+      const selectedState = getSceneModelColorState("default", true, false);
+      const removedState = getSceneModelColorState("removed", false, false);
+
+      expect(selectedState.meshColor).toBe("#123456");
+      expect(selectedState.lineColor).toBe("#123456");
+      expect(selectedState.emissiveColor).toBe("#123456");
+      expect(selectedState.emissiveIntensity).toBe(0.35);
+      expect(selectedState.opacity).toBe(1);
+      expect(removedState.meshColor).toBe("#ff0000");
+      expect(removedState.lineColor).toBe("#ff0000");
+      expect(removedState.emissiveColor).toBe("#ff0000");
+      expect(removedState.emissiveIntensity).toBe(0.4);
+      expect(removedState.opacity).toBe(0.35);
     });
   });
 

@@ -1,7 +1,7 @@
 {
   "title": "Synchronize Diagram Pan And Zoom",
   "status": "closed",
-  "summary": "Phase 2 of the Next.js + PostgreSQL server migration. Created auth API route for developer/key management. Fixed pg-boss v10 work handler signatures. Installed npm dependencies and verified Next.js build (all 12 API routes + landing page). Created Docker Compose setup (postgres, web, worker, caddy reverse proxy), Caddyfile, .env.example. Refactored Go CLI with server client module (getServerAddr, serverRequest, syncTicketToServer, serverWhoami), updated SaveTicket to sync to server, added auth command (whoami + status), and updated Emit endpoint from /events to /api/v1/events. All builds pass (Next.js build, Go CLI compile, Go shared lib compile). CLI tests pass.",
+  "summary": "Stripped kit.designs from kit_for_ui in _build_app_payload to reduce MCP payload from ~7MB to ~2.4MB. kit.designs (4.6MB) was redundant since the current design is already in payload.design, and mcpFlattenDesignForSemioSurface handles missing kit.designs via kit.designs??[]. kitArtifacts is built from the full kit before stripping so the kit browser panel still has all design entries. Rebuilt the MCP app HTML bundle.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪433ba041e2d449dd983f41a0b3e83961",
@@ -15,6 +15,7 @@
     "⚪f1345a90e3984bd6ae29ab4eb66fecf4",
     "⚪f96ee4bb6a2f4679bf426f30b60f9520",
     "⚪48330d8dc6db4f4fb47f979994c08c9f",
-    "⚪084299190cac4061a0fc375a60cf2c5e"
+    "⚪084299190cac4061a0fc375a60cf2c5e",
+    "⚪fae9bc1dde254df7804c5414c9d74d46"
   ]
 }

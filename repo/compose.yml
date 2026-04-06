@@ -79,6 +79,23 @@ services:
       - web
   # #endregion 🔖ReverseProxy
 
+  # #region 🔖Session
+  session:
+    build:
+      context: ../semio/rs
+      dockerfile: Dockerfile.session
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-semio}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-semio_repo}
+      SESSION_HOST: 0.0.0.0
+      SESSION_PORT: 8788
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8788"
+  # #endregion 🔖Session
+
 volumes:
   postgres_data:
   blob_data:
