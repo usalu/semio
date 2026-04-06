@@ -1,0 +1,99 @@
+{
+  "id": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+  "uri": "repo://session/6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+  "client": "copilot-chat",
+  "second": "2026-04-06T12:51:11Z",
+  "checkpoint": "38b4c2af98b28228aa39132cfad8316ed6afb085",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "38b4c2af98b28228aa39132cfad8316ed6afb085",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-06T12:51:11Z",
+        "session": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-06T12:51:11.247Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl",
+          "source": "new",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "38b4c2af98b28228aa39132cfad8316ed6afb085",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-06T12:51:11Z",
+        "session": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-06T12:51:11.247Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl",
+          "source": "new",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "38b4c2af98b28228aa39132cfad8316ed6afb085",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-06T12:51:11Z",
+        "session": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-06T12:51:11.607Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl",
+          "prompt": "The skill name 'roll-dice' should match the folder name 'semio-to-ifc'.",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "38b4c2af98b28228aa39132cfad8316ed6afb085",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-06T12:51:11Z",
+        "session": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-06T12:51:11.607Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "6ab29e42-64cc-4a23-858d-9bc2443f73c9",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6ab29e42-64cc-4a23-858d-9bc2443f73c9.jsonl",
+          "prompt": "The skill name 'roll-dice' should match the folder name 'semio-to-ifc'.",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

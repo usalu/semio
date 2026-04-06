@@ -166,12 +166,8 @@ pub struct ClearPresence;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "status")]
 pub enum CommandResult {
-    Accepted {
-        domain_version: DomainVersion,
-    },
-    Rejected {
-        conflicts: Vec<ConflictDetail>,
-    },
+    Accepted { domain_version: DomainVersion },
+    Rejected { conflicts: Vec<ConflictDetail> },
     IdempotentDuplicate,
 }
 
@@ -184,3 +180,118 @@ pub struct ConflictDetail {
 }
 
 // #endregion 🔖CommandResult
+
+// #region 🔖Tests
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn domain_command_create_type_serde_roundtrip() {
+        let cmd = DomainCommand::CreateType(CreateEntity {
+            entity_id: Uuid::nil(),
+            fields: serde_json::json!({"name": "Wall"}),
+        });
+        let json = serde_json::to_string(&cmd).unwrap();
+        let deser: DomainCommand = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, DomainCommand::CreateType(_)));
+    }
+
+    #[test]
+    fn domain_command_batch_serde() {
+        let batch = DomainCommand::Batch(DomainBatch {
+            commands: vec![
+                DomainCommand::PatchKit(PatchKit {
+                    fields: serde_json::json!({"name": "new-name"}),
+                }),
+                DomainCommand::DeleteType(DeleteEntity {
+                    entity_id: Uuid::nil(),
+                }),
+            ],
+        });
+        let json = serde_json::to_string(&batch).unwrap();
+        let deser: DomainCommand = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, DomainCommand::Batch(_)));
+    }
+
+    #[test]
+    fn semio_command_upsert_cursor_serde() {
+        let cmd = SemioCommand::UpsertCursor(UpsertCursor { u: 1.0, v: 2.0 });
+        let json = serde_json::to_string(&cmd).unwrap();
+        assert!(json.contains("\"kind\":\"UpsertCursor\""));
+        let deser: SemioCommand = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, SemioCommand::UpsertCursor(_)));
+    }
+
+    #[test]
+    fn semio_command_set_selection_serde() {
+        let cmd = SemioCommand::SetSelection(SetSelection {
+            piece_ids: vec![Uuid::nil()],
+            design_ids: vec![],
+        });
+        let json = serde_json::to_string(&cmd).unwrap();
+        let deser: SemioCommand = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, SemioCommand::SetSelection(_)));
+    }
+
+    #[test]
+    fn command_result_accepted_serde() {
+        let result = CommandResult::Accepted { domain_version: 42 };
+        let json = serde_json::to_string(&result).unwrap();
+        assert!(json.contains("\"status\":\"Accepted\""));
+        let deser: CommandResult = serde_json::from_str(&json).unwrap();
+        assert!(matches!(
+            deser,
+            CommandResult::Accepted { domain_version: 42 }
+        ));
+    }
+
+    #[test]
+    fn command_result_idempotent_duplicate_serde() {
+        let result = CommandResult::IdempotentDuplicate;
+        let json = serde_json::to_string(&result).unwrap();
+        let deser: CommandResult = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, CommandResult::IdempotentDuplicate));
+    }
+
+    #[test]
+    fn command_envelope_serde_roundtrip() {
+        let env = CommandEnvelope {
+            command_id: CommandId(Uuid::nil()),
+            client_id: ClientId(Uuid::nil()),
+            request_id: RequestId(Uuid::nil()),
+            actor_person_id: PersonId(Uuid::nil()),
+            base_domain_version: 0,
+        };
+        let json = serde_json::to_string(&env).unwrap();
+        let deser: CommandEnvelope = serde_json::from_str(&json).unwrap();
+        assert_eq!(deser.base_domain_version, 0);
+    }
+
+    #[test]
+    fn create_piece_serde() {
+        let cmd = DomainCommand::CreatePiece(CreatePiece {
+            piece_id: Uuid::nil(),
+            design_id: Uuid::nil(),
+            fields: serde_json::json!({"name": "p1"}),
+        });
+        let json = serde_json::to_string(&cmd).unwrap();
+        let deser: DomainCommand = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, DomainCommand::CreatePiece(_)));
+    }
+
+    #[test]
+    fn create_connection_serde() {
+        let cmd = DomainCommand::CreateConnection(CreateConnection {
+            connection_id: Uuid::nil(),
+            design_id: Uuid::nil(),
+            fields: serde_json::json!({}),
+        });
+        let json = serde_json::to_string(&cmd).unwrap();
+        let deser: DomainCommand = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, DomainCommand::CreateConnection(_)));
+    }
+}
+
+// #endregion 🔖Tests

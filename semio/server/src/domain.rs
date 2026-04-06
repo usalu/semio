@@ -112,10 +112,7 @@ pub enum EntityKind {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Lifecycle {
     Active,
-    Tombstoned {
-        at: DomainVersion,
-        by: CommandId,
-    },
+    Tombstoned { at: DomainVersion, by: CommandId },
 }
 
 impl Lifecycle {
@@ -268,3 +265,113 @@ pub enum SessionStatus {
 }
 
 // #endregion 🔖SessionStatus
+
+// #region 🔖Tests
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn field_patch_no_change_is_default() {
+        let p: FieldPatch<String> = FieldPatch::default();
+        assert!(!p.is_change());
+    }
+
+    #[test]
+    fn field_patch_set_is_change() {
+        let p = FieldPatch::Set("hello".to_string());
+        assert!(p.is_change());
+    }
+
+    #[test]
+    fn field_patch_clear_is_change() {
+        let p: FieldPatch<String> = FieldPatch::Clear;
+        assert!(p.is_change());
+    }
+
+    #[test]
+    fn field_patch_serde_roundtrip() {
+        let set = FieldPatch::Set(42);
+        let json = serde_json::to_string(&set).unwrap();
+        let deser: FieldPatch<i32> = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, FieldPatch::Set(42)));
+
+        let clear: FieldPatch<i32> = FieldPatch::Clear;
+        let json = serde_json::to_string(&clear).unwrap();
+        let deser: FieldPatch<i32> = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deser, FieldPatch::Clear));
+    }
+
+    #[test]
+    fn required_field_patch_no_change_is_default() {
+        let p: RequiredFieldPatch<String> = RequiredFieldPatch::default();
+        assert!(!p.is_change());
+    }
+
+    #[test]
+    fn required_field_patch_set_is_change() {
+        let p = RequiredFieldPatch::Set("hello".to_string());
+        assert!(p.is_change());
+    }
+
+    #[test]
+    fn entity_kind_serde_uses_snake_case() {
+        let json = serde_json::to_string(&EntityKind::Kit).unwrap();
+        assert_eq!(json, "\"kit\"");
+        let json = serde_json::to_string(&EntityKind::Connection).unwrap();
+        assert_eq!(json, "\"connection\"");
+    }
+
+    #[test]
+    fn lifecycle_is_active() {
+        assert!(Lifecycle::Active.is_active());
+        let tombstoned = Lifecycle::Tombstoned {
+            at: 5,
+            by: CommandId(Uuid::nil()),
+        };
+        assert!(!tombstoned.is_active());
+    }
+
+    #[test]
+    fn conflict_policy_kit_name_rejects() {
+        assert_eq!(
+            conflict_policy(PropertyKey::KitName),
+            ConflictPolicy::RejectIfChanged
+        );
+    }
+
+    #[test]
+    fn conflict_policy_piece_type_requires_reference() {
+        assert_eq!(
+            conflict_policy(PropertyKey::PieceType),
+            ConflictPolicy::ReferenceMustExistAndBeActive
+        );
+    }
+
+    #[test]
+    fn conflict_policy_kit_description_last_writer_wins() {
+        assert_eq!(
+            conflict_policy(PropertyKey::KitDescription),
+            ConflictPolicy::LastWriterWins
+        );
+    }
+
+    #[test]
+    fn session_status_serde_snake_case() {
+        let json = serde_json::to_string(&SessionStatus::Active).unwrap();
+        assert_eq!(json, "\"active\"");
+        let json = serde_json::to_string(&SessionStatus::Passivated).unwrap();
+        assert_eq!(json, "\"passivated\"");
+    }
+
+    #[test]
+    fn session_id_serde_roundtrip() {
+        let id = SessionId(Uuid::nil());
+        let json = serde_json::to_string(&id).unwrap();
+        let deser: SessionId = serde_json::from_str(&json).unwrap();
+        assert_eq!(id, deser);
+    }
+}
+
+// #endregion 🔖Tests
