@@ -1,977 +1,2306 @@
-type Query {
-  node(
-    """
-    The ID of the object
-    """
-    id: ID!
-  ): Node
-  kit(uri: String!): Kit
-}
-
-interface Node {
-  """
-  The ID of the object
-  """
-  id: ID!
-}
-
-type Kit implements Node {
-  uri: String!
-  name: String!
-  description: String!
-  icon: String!
-  image: String!
-  preview: String!
-  version: String!
-  remote: String!
-  homepage: String!
-  license: String!
-  created: DateTime!
-  updated: DateTime!
-  concepts: [String!]!
-  types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
-  designs(before: String, after: String, first: Int, last: Int): DesignNodeConnection
-  attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
-
-  """
-  The ID of the object
-  """
-  id: ID!
-}
-
-"""
-The `DateTime` scalar type represents a DateTime
-value as specified by
-[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
-"""
 scalar DateTime
 
-type TypeNodeConnection {
-  """
-  Pagination data for this connection.
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection.
-  """
-  edges: [TypeNodeEdge]!
+enum DiffStatus {
+  unchanged
+  added
+  removed
+  modified
 }
 
-"""
-The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
-"""
-type PageInfo {
-  """
-  When paginating forwards, are there more items?
-  """
-  hasNextPage: Boolean!
-
-  """
-  When paginating backwards, are there more items?
-  """
-  hasPreviousPage: Boolean!
-
-  """
-  When paginating backwards, the cursor to continue.
-  """
-  startCursor: String
-
-  """
-  When paginating forwards, the cursor to continue.
-  """
-  endCursor: String
+type Coord {
+  u: Float!
+  v: Float!
 }
 
-"""
-A Relay edge containing a `TypeNode` and its cursor.
-"""
-type TypeNodeEdge {
-  """
-  The item at the end of the edge
-  """
-  node: Type
-
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
+type Vec {
+  u: Float!
+  v: Float!
 }
 
-type Type implements Node {
-  name: String!
-  description: String!
-  icon: String!
-  image: String!
-  variant: String!
-  stock: Int!
-  virtual: Boolean!
-  unit: String!
-  created: DateTime!
-  updated: DateTime!
-  models(before: String, after: String, first: Int, last: Int): ModelNodeConnection
-  connectors(before: String, after: String, first: Int, last: Int): ConnectorNodeConnection
-  authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
-  attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
-  kit: Kit
-  pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
-
-  """
-  The ID of the object
-  """
-  id: ID!
-  location: Location!
-  authors: [Author!]!
-  concepts: [String!]!
-}
-
-type ModelNodeConnection {
-  """
-  Pagination data for this connection.
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection.
-  """
-  edges: [ModelNodeEdge]!
-}
-
-"""
-A Relay edge containing a `ModelNode` and its cursor.
-"""
-type ModelNodeEdge {
-  """
-  The item at the end of the edge
-  """
-  node: Model
-
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
-}
-
-type Model implements Node {
-  url: String!
-  description: String!
-  attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
-  type: Type
-
-  """
-  The ID of the object
-  """
-  id: ID!
-  tags: [String!]!
-}
-
-type AttributeNodeConnection {
-  """
-  Pagination data for this connection.
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection.
-  """
-  edges: [AttributeNodeEdge]!
-}
-
-"""
-A Relay edge containing a `AttributeNode` and its cursor.
-"""
-type AttributeNodeEdge {
-  """
-  The item at the end of the edge
-  """
-  node: Attribute
-
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
-}
-
-type Attribute implements Node {
-  name: String!
-  value: String!
-  unit: String!
-  definition: String!
-  model: Model
-  connector: Connector
-  type: Type
-  piece: Piece
-  connection: Connection
-  design: Design
-  kit: Kit
-
-  """
-  The ID of the object
-  """
-  id: ID!
-}
-
-type Connector implements Node {
-  description: String!
-  mandatory: Boolean!
-  port: String!
-  t: Float!
-  id_: String
-  attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
-  type: Type
-
-  """
-  The ID of the object
-  """
-  id: ID!
-  compatiblePorts: [String!]!
-  point: Point!
-  direction: Vector!
-  connections: [Connection!]!
-}
-
-"""
-✖️ A 3d-point (xyz) of floating point numbers.
-"""
 type Point {
-  """
-  🎚️ The x-coordinate of the point.
-  """
   x: Float!
-
-  """
-  🎚️ The y-coordinate of the point.
-  """
   y: Float!
-
-  """
-  🎚️ The z-coordinate of the point.
-  """
   z: Float!
 }
 
-"""
-➡️ A 3d-vector (xyz) of floating point numbers.
-"""
 type Vector {
-  """
-  🎚️ The x-coordinate of the vector.
-  """
   x: Float!
-
-  """
-  🎚️ The y-coordinate of the vector.
-  """
   y: Float!
-
-  """
-  🎚️ The z-coordinate of the vector.
-  """
   z: Float!
-}
-
-type Connection implements Node {
-  description: String!
-  gap: Float!
-  shift: Float!
-  rise: Float!
-  rotation: Float!
-  turn: Float!
-  tilt: Float!
-  x: Float!
-  y: Float!
-  attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
-  design: Design
-
-  """
-  The ID of the object
-  """
-  id: ID!
-  connected: Side!
-  connecting: Side!
-}
-
-type Design implements Node {
-  name: String!
-  description: String!
-  icon: String!
-  image: String!
-  variant: String!
-  view: String!
-  unit: String!
-  created: DateTime!
-  updated: DateTime!
-  pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
-  connections(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
-  authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
-  attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
-  kit: Kit
-
-  """
-  The ID of the object
-  """
-  id: ID!
-  location: Location!
-  authors: [Author!]!
-  concepts: [String!]!
-}
-
-type PieceNodeConnection {
-  """
-  Pagination data for this connection.
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection.
-  """
-  edges: [PieceNodeEdge]!
-}
-
-"""
-A Relay edge containing a `PieceNode` and its cursor.
-"""
-type PieceNodeEdge {
-  """
-  The item at the end of the edge
-  """
-  node: Piece
-
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
-}
-
-type Piece implements Node {
-  description: String!
-  id_: String
-  type: Type
-  plane: Plane
-  attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
-  design: Design
-
-  """
-  The ID of the object
-  """
-  id: ID!
-  center: Coord!
-  connections: [Connection!]!
 }
 
 type Plane {
-  piece: Piece
   origin: Point!
   xAxis: Vector!
   yAxis: Vector!
 }
 
-"""
-📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
-"""
-type Coord {
-  """
-  🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
-  """
-  x: Float!
-
-  """
-  🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
-  """
-  y: Float!
+type Camera {
+  position: Point!
+  forward: Vector!
+  up: Vector!
 }
 
-type ConnectionNodeConnection {
-  """
-  Pagination data for this connection.
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection.
-  """
-  edges: [ConnectionNodeEdge]!
+type Attribute {
+  guid: String!
+  key: String!
+  value: String
+  definition: String
 }
 
-"""
-A Relay edge containing a `ConnectionNode` and its cursor.
-"""
-type ConnectionNodeEdge {
-  """
-  The item at the end of the edge
-  """
-  node: Connection
-
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
+type AttributeMeta {
+  guid: String!
+  key: String!
+  value: String
+  definition: String
 }
 
-type AuthorNodeConnection {
-  """
-  Pagination data for this connection.
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection.
-  """
-  edges: [AuthorNodeEdge]!
+type AttributeShallow {
+  guid: String!
+  key: String!
+  value: String
+  definition: String
 }
 
-"""
-A Relay edge containing a `AuthorNode` and its cursor.
-"""
-type AuthorNodeEdge {
-  """
-  The item at the end of the edge
-  """
-  node: Author
-
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
+type AttributeDiff {
+  guid: String
+  key: String
+  value: String
+  definition: String
 }
 
-type Author implements Node {
+type AttributesDiff {
+  removed: [AttributeId!]
+  updated: [AttributeUpdate!]
+  added: [Attribute!]
+}
+
+type AttributeUpdate {
+  attribute: AttributeId!
+  diff: AttributeDiff!
+}
+
+type AttributeId {
+  guid: String!
+}
+
+type LocationId {
+  guid: String!
+}
+
+type AuthorId {
+  guid: String!
+}
+
+type FileId {
+  guid: String!
+}
+
+type FolderId {
+  guid: String!
+}
+
+type BenchmarkId {
+  guid: String!
+}
+
+type QualityId {
+  guid: String!
+}
+
+type PortId {
+  guid: String!
+}
+
+type PropId {
+  guid: String!
+}
+
+type ModelId {
+  guid: String!
+}
+
+type ConnectorId {
+  guid: String!
+}
+
+type TypeId {
+  guid: String!
+}
+
+type LayerId {
+  guid: String!
+}
+
+type PieceId {
+  guid: String!
+}
+
+type GroupId {
+  guid: String!
+}
+
+type ConnectionId {
+  guid: String!
+}
+
+type StatId {
+  guid: String!
+}
+
+type DesignId {
+  guid: String!
+}
+
+type KitId {
+  guid: String!
+}
+
+type TagId {
+  guid: String!
+}
+
+type ConceptId {
+  guid: String!
+}
+
+type Location {
+  guid: String!
+  longitude: Float!
+  latitude: Float!
+  altitude: Float
+  attributes: [Attribute!]
+}
+
+type LocationDiff {
+  guid: String
+  longitude: Float
+  latitude: Float
+  altitude: Float
+  attributes: AttributesDiff
+}
+
+type Author {
+  guid: String!
   name: String!
   email: String!
-  rank: Int!
-  type: Type
-  design: Design
-
-  """
-  The ID of the object
-  """
-  id: ID!
+  attributes: [Attribute!]
 }
 
-"""
-📍 A location on the earth surface (longitude, latitude).
-"""
-type Location {
-  """
-  ↔️ The longitude of the location in degrees.
-  """
-  longitude: Float!
-
-  """
-  ↕️ The latitude of the location in degrees.
-  """
-  latitude: Float!
+type AuthorMeta {
+  guid: String!
+  name: String!
+  email: String!
 }
 
-"""
-🧱 A side of a piece in a connection.
-"""
+type AuthorShallow {
+  guid: String!
+  name: String!
+  email: String!
+  attributes: [Attribute!]
+}
+
+type AuthorDiff {
+  guid: String
+  name: String
+  email: String
+  attributes: AttributesDiff
+}
+
+type AuthorsDiff {
+  removed: [AuthorId!]
+  updated: [AuthorUpdate!]
+  added: [Author!]
+}
+
+type AuthorUpdate {
+  author: AuthorId!
+  diff: AuthorDiff!
+}
+
+type File {
+  guid: String!
+  name: String!
+  remote: String
+  folder: FolderId
+  size: Float
+  hash: String
+  blob: String
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type FileMeta {
+  guid: String!
+  name: String!
+  remote: String
+  folder: FolderId
+  size: Float
+  hash: String
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type FileShallow {
+  guid: String!
+  name: String!
+  remote: String
+  folder: FolderId
+  size: Float
+  hash: String
+  blob: String
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type FileDiff {
+  guid: String
+  name: String
+  remote: String
+  folder: FolderId
+  size: Float
+  hash: String
+  blob: String
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type FilesDiff {
+  removed: [FileId!]
+  updated: [FileUpdate!]
+  added: [File!]
+}
+
+type FileUpdate {
+  file: FileId!
+  diff: FileDiff!
+}
+
+type Folder {
+  guid: String!
+  name: String!
+  parent: FolderId
+  description: String
+  attributes: [Attribute!]
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type FolderMeta {
+  guid: String!
+  name: String!
+  parent: FolderId
+  description: String
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type FolderShallow {
+  guid: String!
+  name: String!
+  parent: FolderId
+  description: String
+  attributes: [Attribute!]
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type FolderDiff {
+  guid: String
+  name: String
+  parent: FolderId
+  description: String
+  attributes: AttributesDiff
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+type FoldersDiff {
+  removed: [FolderId!]
+  updated: [FolderUpdate!]
+  added: [Folder!]
+}
+
+type FolderUpdate {
+  folder: FolderId!
+  diff: FolderDiff!
+}
+
+type Benchmark {
+  guid: String!
+  name: String!
+  icon: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+  attributes: [Attribute!]
+}
+
+type BenchmarkDiff {
+  guid: String
+  name: String
+  icon: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+  attributes: AttributesDiff
+}
+
+type BenchmarksDiff {
+  removed: [BenchmarkId!]
+  updated: [BenchmarkUpdate!]
+  added: [Benchmark!]
+}
+
+type BenchmarkUpdate {
+  benchmark: BenchmarkId!
+  diff: BenchmarkDiff!
+}
+
+type Quality {
+  guid: String!
+  key: String!
+  name: String!
+  description: String
+  uri: String
+  kind: Int
+  folder: String
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: [Benchmark!]
+  attributes: [Attribute!]
+}
+
+type QualityMeta {
+  guid: String!
+  key: String!
+  name: String!
+  description: String
+  uri: String
+  kind: Int
+  folder: String
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+}
+
+type QualityShallow {
+  guid: String!
+  key: String!
+  name: String!
+  description: String
+  uri: String
+  kind: Int
+  folder: String
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: [Benchmark!]
+  attributes: [AttributeMeta!]
+}
+
+type QualityDiff {
+  guid: String
+  key: String
+  name: String
+  description: String
+  uri: String
+  kind: Int
+  folder: String
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: BenchmarksDiff
+  attributes: AttributesDiff
+}
+
+type QualitiesDiff {
+  removed: [QualityId!]
+  updated: [QualityUpdate!]
+  added: [Quality!]
+}
+
+type QualityUpdate {
+  quality: QualityId!
+  diff: QualityDiff!
+}
+
+type Port {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  compatiblePorts: [PortId!]
+  attributes: [Attribute!]
+}
+
+type PortMeta {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+}
+
+type PortShallow {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  compatiblePorts: [PortId!]
+  attributes: [Attribute!]
+}
+
+type PortDiff {
+  guid: String
+  name: String
+  description: String
+  icon: String
+  compatiblePorts: [PortId!]
+  attributes: AttributesDiff
+}
+
+type PortsDiff {
+  removed: [PortId!]
+  updated: [PortUpdate!]
+  added: [Port!]
+}
+
+type PortUpdate {
+  port: PortId!
+  diff: PortDiff!
+}
+
+type Prop {
+  guid: String!
+  quality: QualityId!
+  value: String!
+  unit: String
+  attributes: [Attribute!]
+}
+
+type PropMeta {
+  guid: String!
+  quality: QualityId!
+  value: String!
+  unit: String
+}
+
+type PropShallow {
+  guid: String!
+  quality: QualityId!
+  value: String!
+  unit: String
+  attributes: [Attribute!]
+}
+
+type PropDiff {
+  guid: String
+  quality: QualityId
+  value: String
+  unit: String
+  attributes: AttributesDiff
+}
+
+type PropsDiff {
+  removed: [PropId!]
+  updated: [PropUpdate!]
+  added: [Prop!]
+}
+
+type PropUpdate {
+  prop: PropId!
+  diff: PropDiff!
+}
+
+type Tag {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  attributes: [Attribute!]
+}
+
+type TagMeta {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+}
+
+type TagShallow {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  attributes: [Attribute!]
+}
+
+type TagDiff {
+  guid: String
+  name: String
+  description: String
+  icon: String
+  attributes: AttributesDiff
+}
+
+type TagsDiff {
+  removed: [TagId!]
+  updated: [TagUpdate!]
+  added: [Tag!]
+}
+
+type TagUpdate {
+  tag: TagId!
+  diff: TagDiff!
+}
+
+type Concept {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  attributes: [Attribute!]
+}
+
+type ConceptMeta {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+}
+
+type ConceptShallow {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  attributes: [Attribute!]
+}
+
+type ConceptDiff {
+  guid: String
+  name: String
+  description: String
+  icon: String
+  attributes: AttributesDiff
+}
+
+type ConceptsDiff {
+  removed: [ConceptId!]
+  updated: [ConceptUpdate!]
+  added: [Concept!]
+}
+
+type ConceptUpdate {
+  concept: ConceptId!
+  diff: ConceptDiff!
+}
+
+type Model {
+  guid: String!
+  name: String
+  tags: [TagId!]
+  file: FileId!
+  description: String
+  attributes: [Attribute!]
+}
+
+type ModelMeta {
+  guid: String!
+  name: String
+  file: FileId!
+  description: String
+}
+
+type ModelShallow {
+  guid: String!
+  name: String
+  tags: [TagId!]
+  file: FileId!
+  description: String
+  attributes: [Attribute!]
+}
+
+type ModelDiff {
+  guid: String
+  name: String
+  tags: [TagId!]
+  file: FileId
+  description: String
+  attributes: AttributesDiff
+}
+
+type ModelsDiff {
+  removed: [ModelId!]
+  updated: [ModelUpdate!]
+  added: [Model!]
+}
+
+type ModelUpdate {
+  model: ModelId!
+  diff: ModelDiff!
+}
+
+type Connector {
+  guid: String!
+  name: String
+  t: Float!
+  point: Point!
+  direction: Vector!
+  description: String
+  port: PortId
+  mandatory: Boolean
+  props: [Prop!]
+  attributes: [Attribute!]
+}
+
+type ConnectorMeta {
+  guid: String!
+  name: String
+  t: Float!
+  point: Point!
+  direction: Vector!
+  description: String
+  port: PortId
+  mandatory: Boolean
+}
+
+type ConnectorShallow {
+  guid: String!
+  name: String
+  t: Float!
+  point: Point!
+  direction: Vector!
+  description: String
+  port: PortId
+  mandatory: Boolean
+  props: [PropMeta!]
+  attributes: [AttributeMeta!]
+}
+
+type ConnectorDiff {
+  guid: String
+  name: String
+  t: Float
+  point: PointDiff
+  direction: VectorDiff
+  description: String
+  port: PortId
+  mandatory: Boolean
+  props: PropsDiff
+  attributes: AttributesDiff
+}
+
+type ConnectorsDiff {
+  removed: [ConnectorId!]
+  updated: [ConnectorUpdate!]
+  added: [Connector!]
+}
+
+type ConnectorUpdate {
+  connector: ConnectorId!
+  diff: ConnectorDiff!
+}
+
+type CoordDiff {
+  u: Float
+  v: Float
+}
+
+type VecDiff {
+  u: Float
+  v: Float
+}
+
+type PointDiff {
+  x: Float
+  y: Float
+  z: Float
+}
+
+type VectorDiff {
+  x: Float
+  y: Float
+  z: Float
+}
+
+type PlaneDiff {
+  origin: PointDiff
+  xAxis: VectorDiff
+  yAxis: VectorDiff
+}
+
+type CameraDiff {
+  position: PointDiff
+  forward: VectorDiff
+  up: VectorDiff
+}
+
+type Type {
+  guid: String!
+  name: String!
+  parent: TypeId
+  isAbstract: Boolean
+  folder: String
+  models: [Model!]
+  connectors: [Connector!]
+  props: [Prop!]
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationId
+  authors: [AuthorId!]
+  concepts: [ConceptId!]
+  icon: String
+  image: String
+  description: String
+  attributes: [Attribute!]
+}
+
+type TypeMeta {
+  guid: String!
+  name: String!
+  parent: TypeId
+  isAbstract: Boolean
+  folder: String
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationId
+  icon: String
+  image: String
+  description: String
+}
+
+type TypeShallow {
+  guid: String!
+  name: String!
+  parent: TypeId
+  isAbstract: Boolean
+  folder: String
+  models: [ModelMeta!]
+  connectors: [ConnectorMeta!]
+  props: [PropMeta!]
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationId
+  authors: [AuthorId!]
+  concepts: [ConceptId!]
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeMeta!]
+}
+
+type TypeDiff {
+  name: String
+  parent: TypeId
+  isAbstract: Boolean
+  folder: String
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationId
+  icon: String
+  image: String
+  description: String
+  authors: [AuthorId!]
+  concepts: [ConceptId!]
+  models: ModelsDiff
+  connectors: ConnectorsDiff
+  props: PropsDiff
+  attributes: AttributesDiff
+}
+
+type TypesDiff {
+  removed: [TypeId!]
+  updated: [TypeUpdate!]
+  added: [Type!]
+}
+
+type TypeUpdate {
+  type: TypeId!
+  diff: TypeDiff!
+}
+
+type Layer {
+  guid: String!
+  path: String!
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  attributes: [Attribute!]
+}
+
+type LayerMeta {
+  guid: String!
+  path: String!
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+}
+
+type LayerShallow {
+  guid: String!
+  path: String!
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  attributes: [AttributeMeta!]
+}
+
+type LayerDiff {
+  guid: String
+  path: String
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  attributes: AttributesDiff
+}
+
+type LayersDiff {
+  removed: [LayerId!]
+  updated: [LayerUpdate!]
+  added: [Layer!]
+}
+
+type LayerUpdate {
+  layer: LayerId!
+  diff: LayerDiff!
+}
+
+type Piece {
+  guid: String!
+  name: String
+  type: TypeId
+  design: DesignId
+  plane: Plane
+  center: Coord
+  scale: Float
+  mirrorPlane: Plane
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: [Prop!]
+  attributes: [Attribute!]
+}
+
+type PieceMeta {
+  guid: String!
+  name: String
+  type: TypeId
+  design: DesignId
+  plane: Plane
+  center: Coord
+  scale: Float
+  mirrorPlane: Plane
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+}
+
+type PieceShallow {
+  guid: String!
+  name: String
+  type: TypeId
+  design: DesignId
+  plane: Plane
+  center: Coord
+  scale: Float
+  mirrorPlane: Plane
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: [PropMeta!]
+  attributes: [AttributeMeta!]
+}
+
+type PieceDiff {
+  name: String
+  type: TypeId
+  design: DesignId
+  plane: PlaneDiff
+  center: Coord
+  scale: Float
+  mirrorPlane: Plane
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: PropsDiff
+  attributes: AttributesDiff
+}
+
+type PiecesDiff {
+  removed: [PieceId!]
+  updated: [PieceUpdate!]
+  added: [Piece!]
+}
+
+type PieceUpdate {
+  piece: PieceId!
+  diff: PieceDiff!
+}
+
+type Group {
+  guid: String!
+  pieces: [PieceId!]!
+  color: String
+  name: String
+  description: String
+  attributes: [Attribute!]
+}
+
+type GroupMeta {
+  guid: String!
+  pieces: [PieceId!]!
+  color: String
+  name: String
+  description: String
+}
+
+type GroupShallow {
+  guid: String!
+  pieces: [PieceId!]!
+  color: String
+  name: String
+  description: String
+  attributes: [AttributeMeta!]
+}
+
+type GroupDiff {
+  guid: String
+  pieces: [PieceId!]
+  color: String
+  name: String
+  description: String
+  attributes: AttributesDiff
+}
+
+type GroupsDiff {
+  removed: [GroupId!]
+  updated: [GroupUpdate!]
+  added: [Group!]
+}
+
+type GroupUpdate {
+  group: GroupId!
+  diff: GroupDiff!
+}
+
 type Side {
-  piece: Piece!
-  connector: Connector!
+  piece: PieceId!
+  designPiece: PieceId
+  connector: ConnectorId
 }
 
-type ConnectorNodeConnection {
-  """
-  Pagination data for this connection.
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection.
-  """
-  edges: [ConnectorNodeEdge]!
+type SideDiff {
+  piece: PieceId
+  designPiece: PieceId
+  connector: ConnectorId
 }
 
-"""
-A Relay edge containing a `ConnectorNode` and its cursor.
-"""
-type ConnectorNodeEdge {
-  """
-  The item at the end of the edge
-  """
-  node: Connector
-
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
+type SideId {
+  piece: PieceId!
+  designPiece: PieceId
+  connector: ConnectorId
 }
 
-type DesignNodeConnection {
-  """
-  Pagination data for this connection.
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection.
-  """
-  edges: [DesignNodeEdge]!
+type SidesDiff {
+  removed: [SideId!]
+  updated: [SideUpdate!]
+  added: [Side!]
 }
 
-"""
-A Relay edge containing a `DesignNode` and its cursor.
-"""
-type DesignNodeEdge {
-  """
-  The item at the end of the edge
-  """
-  node: Design
+type SideUpdate {
+  side: SideId!
+  diff: SideDiff!
+}
 
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
+type Connection {
+  guid: String!
+  connected: Side!
+  connecting: Side!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: [Attribute!]
+}
+
+type ConnectionMeta {
+  guid: String!
+  connected: Side!
+  connecting: Side!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+}
+
+type ConnectionShallow {
+  guid: String!
+  connected: Side!
+  connecting: Side!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: [AttributeMeta!]
+}
+
+type ConnectionDiff {
+  connected: SideDiff
+  connecting: SideDiff
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: AttributesDiff
+}
+
+type ConnectionsDiff {
+  removed: [ConnectionId!]
+  updated: [ConnectionUpdate!]
+  added: [Connection!]
+}
+
+type ConnectionUpdate {
+  connection: ConnectionId!
+  diff: ConnectionDiff!
+}
+
+type Stat {
+  guid: String!
+  quality: QualityId!
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+type StatMeta {
+  guid: String!
+  quality: QualityId!
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+type StatShallow {
+  guid: String!
+  quality: QualityId!
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+type StatDiff {
+  guid: String
+  quality: QualityId
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+type StatsDiff {
+  removed: [StatId!]
+  updated: [StatUpdate!]
+  added: [Stat!]
+}
+
+type StatUpdate {
+  stat: StatId!
+  diff: StatDiff!
+}
+
+type Design {
+  guid: String!
+  name: String!
+  parent: DesignId
+  isAbstract: Boolean
+  folder: String
+  pieces: [Piece!]
+  connections: [Connection!]
+  stats: [Stat!]
+  props: [Prop!]
+  layers: [Layer!]
+  activeLayer: LayerId
+  groups: [Group!]
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationId
+  authors: [AuthorId!]
+  concepts: [ConceptId!]
+  icon: String
+  image: String
+  description: String
+  attributes: [Attribute!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type DesignMeta {
+  guid: String!
+  name: String!
+  parent: DesignId
+  isAbstract: Boolean
+  folder: String
+  activeLayer: LayerId
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationId
+  icon: String
+  image: String
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type DesignShallow {
+  guid: String!
+  name: String!
+  parent: DesignId
+  isAbstract: Boolean
+  folder: String
+  pieces: [PieceMeta!]
+  connections: [ConnectionMeta!]
+  stats: [StatMeta!]
+  props: [PropMeta!]
+  layers: [LayerMeta!]
+  activeLayer: LayerId
+  groups: [GroupMeta!]
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationId
+  authors: [AuthorId!]
+  concepts: [ConceptId!]
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeMeta!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type DesignDiff {
+  name: String
+  parent: DesignId
+  isAbstract: Boolean
+  folder: String
+  activeLayer: LayerId
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationId
+  icon: String
+  image: String
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  pieces: PiecesDiff
+  connections: ConnectionsDiff
+  stats: StatsDiff
+  props: PropsDiff
+  layers: LayersDiff
+  groups: GroupsDiff
+  authors: AuthorsDiff
+  attributes: AttributesDiff
+}
+
+type DesignsDiff {
+  removed: [DesignId!]
+  updated: [DesignUpdate!]
+  added: [Design!]
+}
+
+type DesignUpdate {
+  design: DesignId!
+  diff: DesignDiff!
+}
+
+type DesignChange {
+  forward: DesignDiff!
+  backward: DesignDiff!
+}
+
+type Kit {
+  guid: String!
+  name: String!
+  version: String
+  types: [Type!]
+  designs: [Design!]
+  tags: [Tag!]
+  concepts: [Concept!]
+  ports: [Port!]
+  qualities: [Quality!]
+  files: [File!]
+  folders: [Folder!]
+  authors: [Author!]
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  attributes: [Attribute!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type KitMeta {
+  guid: String!
+  name: String!
+  version: String
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type KitShallow {
+  guid: String!
+  name: String!
+  version: String
+  types: [TypeMeta!]
+  designs: [DesignMeta!]
+  tags: [TagMeta!]
+  concepts: [ConceptMeta!]
+  ports: [PortMeta!]
+  qualities: [QualityMeta!]
+  files: [FileMeta!]
+  folders: [FolderMeta!]
+  authors: [AuthorMeta!]
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeMeta!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type KitDiff {
+  name: String
+  version: String
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  types: TypesDiff
+  designs: DesignsDiff
+  tags: TagsDiff
+  concepts: ConceptsDiff
+  ports: PortsDiff
+  qualities: QualitiesDiff
+  authors: AuthorsDiff
+  files: FilesDiff
+  folders: FoldersDiff
+  attributes: AttributesDiff
+}
+
+type KitsDiff {
+  removed: [KitId!]
+  updated: [KitUpdate!]
+  added: [Kit!]
+}
+
+type KitUpdate {
+  kit: KitId!
+  diff: KitDiff!
+}
+
+type KitChange {
+  forward: KitDiff!
+  backward: KitDiff!
+}
+
+type Query {
+  kit(guid: String!): Kit
 }
 
 type Mutation {
-  createKit(kit: KitInputNode!): Kit
+  applyKitDiff(guid: String!, diff: KitDiffInput!): Kit
 }
 
-input KitInputNode {
-  """
-  📛 The name of the kit.
-  """
-  name: String!
-
-  """
-  💬 The optional human-readable description of the kit.
-  """
-  description: String = ""
-
-  """
-  🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.
-  """
-  icon: String = ""
-
-  """
-  🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-  """
-  image: String = ""
-
-  """
-  🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.
-  """
-  preview: String = ""
-
-  """
-  🔀The optional version of the kit. No version means the latest version.
-  """
-  version: String = ""
-
-  """
-  ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
-  """
-  remote: String = ""
-
-  """
-  🏠 The optional url of the homepage of the kit.
-  """
-  homepage: String = ""
-
-  """
-  ⚖️️The optional license [ spdx id | url ] of the kit.
-  """
-  license: String = ""
-
-  """
-  🧩The types of the kit.
-  """
-  types: [TypeInputNode] = null
-
-  """
-  🏙️ The designs of the kit.
-  """
-  designs: [DesignInputNode] = null
-
-  """
-  🏷️️The attributes of the kit.
-  """
-  attributes: [AttributeInputNode] = null
+input CoordInput {
+  u: Float!
+  v: Float!
 }
 
-input TypeInputNode {
-  """
-  📛 The name of the type.
-  """
-  name: String!
-
-  """
-  💬 The optional human-readable description of the type.
-  """
-  description: String = ""
-
-  """
-  🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
-  """
-  icon: String = ""
-
-  """
-  🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-  """
-  image: String = ""
-
-  """
-  🔀The optional variant of the type. No variant means the default variant.
-  """
-  variant: String = ""
-
-  """
-  📦The number of items in stock. 2147483647 (=2^31-1) means infinite stock.
-  """
-  stock: Int = 2147483647
-
-  """
-  👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.
-  """
-  virtual: Boolean = false
-
-  """
-  Ⓜ️ The length unit of the point and the direction of the connectors of the type.
-  """
-  unit: String = ""
-  location: LocationInputNode = null
-  models: [ModelInputNode] = null
-  connectors: [ConnectorInputNode] = null
-  authors: [AuthorInputNode] = null
-  attributes: [AttributeInputNode] = null
-  concepts: [String] = null
+input VecInput {
+  u: Float!
+  v: Float!
 }
 
-input LocationInputNode {
-  """
-  ↔️ The longitude of the location in degrees.
-  """
-  longitude: Float!
-
-  """
-  ↕️ The latitude of the location in degrees.
-  """
-  latitude: Float!
-}
-
-input ModelInputNode {
-  """
-  🔗 The Unique Resource Locator (URL) to the resource of the model.
-  """
-  url: String!
-
-  """
-  💬 The optional human-readable description of the model.
-  """
-  description: String = ""
-
-  """
-  🏷️️The optional tags to group models. No tags means default.
-  """
-  tags: [String] = null
-
-  """
-  🏷️️The attributes of the model.
-  """
-  attributes: [AttributeInputNode] = null
-}
-
-input AttributeInputNode {
-  """
-  🏷️️The name of the attribute.
-  """
-  name: String!
-
-  """
-  🏷️️The optional value [ text | url ] of the attribute. No value is equivalent to true.
-  """
-  value: String = ""
-
-  """
-  🏷️️The optional unit of the value of the attribute.
-  """
-  unit: String = ""
-
-  """
-  🏷️️The optional definition [ text | uri ] of the attribute.
-  """
-  definition: String = ""
-}
-
-input ConnectorInputNode {
-  """
-  🆔 The id of the connector.
-  """
-  id_: String = ""
-
-  """
-  💬 The optional human-readable description of the connector.
-  """
-  description: String = ""
-
-  """
-  💯 Whether the connector is mandatory. A mandatory connector must be connected in a design.
-  """
-  mandatory: Boolean = false
-
-  """
-  👨‍👩‍👧‍👦 The optional port of the connector. This allows to define explicit compatibility with other connectors.
-  """
-  port: String = ""
-
-  """
-  ✅ The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.
-  """
-  compatiblePorts: [String] = null
-
-  """
-  💍 The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
-  """
-  t: Float = 0
-
-  """
-  ✖️ The connection point of the connector that is attracted to another connection point.
-  """
-  point: PointInputNode!
-
-  """
-  ➡️ The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned.
-  """
-  direction: VectorInputNode!
-
-  """
-  🏷️️The attributes of the connector.
-  """
-  attributes: [AttributeInputNode] = null
-}
-
-input PointInputNode {
-  """
-  🎚️ The x-coordinate of the point.
-  """
+input PointInput {
   x: Float!
-
-  """
-  🎚️ The y-coordinate of the point.
-  """
   y: Float!
-
-  """
-  🎚️ The z-coordinate of the point.
-  """
   z: Float!
 }
 
-input VectorInputNode {
-  """
-  🎚️ The x-coordinate of the vector.
-  """
+input VectorInput {
   x: Float!
-
-  """
-  🎚️ The y-coordinate of the vector.
-  """
   y: Float!
-
-  """
-  🎚️ The z-coordinate of the vector.
-  """
   z: Float!
 }
 
-input AuthorInputNode {
-  """
-  📛 The name of the author.
-  """
-  name: String!
+input PlaneInput {
+  origin: PointInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
+}
 
-  """
-  📧 The email of the author.
-  """
+input CameraInput {
+  position: PointInput!
+  forward: VectorInput!
+  up: VectorInput!
+}
+
+input AttributeInput {
+  guid: String!
+  key: String!
+  value: String
+  definition: String
+}
+
+input AttributeIdInput {
+  guid: String!
+}
+
+input LocationIdInput {
+  guid: String!
+}
+
+input AuthorIdInput {
+  guid: String!
+}
+
+input FileIdInput {
+  guid: String!
+}
+
+input FolderIdInput {
+  guid: String!
+}
+
+input BenchmarkIdInput {
+  guid: String!
+}
+
+input QualityIdInput {
+  guid: String!
+}
+
+input PortIdInput {
+  guid: String!
+}
+
+input PropIdInput {
+  guid: String!
+}
+
+input ModelIdInput {
+  guid: String!
+}
+
+input ConnectorIdInput {
+  guid: String!
+}
+
+input TypeIdInput {
+  guid: String!
+}
+
+input LayerIdInput {
+  guid: String!
+}
+
+input PieceIdInput {
+  guid: String!
+}
+
+input GroupIdInput {
+  guid: String!
+}
+
+input ConnectionIdInput {
+  guid: String!
+}
+
+input StatIdInput {
+  guid: String!
+}
+
+input DesignIdInput {
+  guid: String!
+}
+
+input KitIdInput {
+  guid: String!
+}
+
+input TagIdInput {
+  guid: String!
+}
+
+input ConceptIdInput {
+  guid: String!
+}
+
+input AttributesDiffInput {
+  removed: [AttributeIdInput!]
+  updated: [AttributeUpdateInput!]
+  added: [AttributeInput!]
+}
+
+input AttributeUpdateInput {
+  attribute: AttributeIdInput!
+  diff: AttributeDiffInput!
+}
+
+input AttributeDiffInput {
+  guid: String
+  key: String
+  value: String
+  definition: String
+}
+
+input AuthorInput {
+  guid: String!
+  name: String!
   email: String!
+  attributes: [AttributeInput!]
 }
 
-input DesignInputNode {
-  """
-  📛 The name of the design.
-  """
+input AuthorDiffInput {
+  guid: String
+  name: String
+  email: String
+  attributes: AttributesDiffInput
+}
+
+input AuthorsDiffInput {
+  removed: [AuthorIdInput!]
+  updated: [AuthorUpdateInput!]
+  added: [AuthorInput!]
+}
+
+input AuthorUpdateInput {
+  author: AuthorIdInput!
+  diff: AuthorDiffInput!
+}
+
+input FileInput {
+  guid: String!
   name: String!
-
-  """
-  💬 The optional human-readable description of the design.
-  """
-  description: String = ""
-
-  """
-  🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.
-  """
-  icon: String = ""
-
-  """
-  🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-  """
-  image: String = ""
-
-  """
-  🔀The optional variant of the design. No variant means the default variant.
-  """
-  variant: String = ""
-
-  """
-  🥽 The optional view of the design. No view means the default view.
-  """
-  view: String = ""
-
-  """
-  📏 The unit of the design.
-  """
-  unit: String = ""
-  location: LocationInputNode = null
-  pieces: [PieceInputNode] = null
-  connections: [ConnectionInputNode] = null
-  authors: [AuthorInputNode] = null
-  attributes: [AttributeInputNode] = null
-  concepts: [String] = null
+  remote: String
+  folder: FolderIdInput
+  size: Float
+  hash: String
+  blob: String
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
 }
 
-input PieceInputNode {
-  """
-  🆔 The id of the piece.
-  """
-  id_: String = ""
-
-  """
-  💬 The optional human-readable description of the piece.
-  """
-  description: String = ""
-
-  """
-  ◳ The optional plane of the piece. Fixed pieces MUST have both plane and center set simultaneously.
-  """
-  plane: PlaneInputNode = null
-
-  """
-  📺 The optional center of the piece in the diagram. Fixed pieces MUST have both plane and center set simultaneously.
-  """
-  center: CoordInputNode = null
-
-  """
-  🏷️️The attributes of the piece.
-  """
-  attributes: [AttributeInputNode] = null
-  type: TypeIdInputNode!
+input FileDiffInput {
+  guid: String
+  name: String
+  remote: String
+  folder: FolderIdInput
+  size: Float
+  hash: String
+  blob: String
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
 }
 
-input PlaneInputNode {
-  """
-  ⌱ The origin of the plane.
-  """
-  origin: PointInputNode!
-
-  """
-  ➡️ The x-axis of the plane.
-  """
-  xAxis: VectorInputNode!
-
-  """
-  ➡️ The y-axis of the plane.
-  """
-  yAxis: VectorInputNode!
+input FilesDiffInput {
+  removed: [FileIdInput!]
+  updated: [FileUpdateInput!]
+  added: [FileInput!]
 }
 
-input CoordInputNode {
-  """
-  🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
-  """
-  x: Float!
-
-  """
-  🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
-  """
-  y: Float!
+input FileUpdateInput {
+  file: FileIdInput!
+  diff: FileDiffInput!
 }
 
-input TypeIdInputNode {
-  """
-  📛 The name of the type.
-  """
+input FolderInput {
+  guid: String!
   name: String!
-
-  """
-  🔀The optional variant of the type. No variant means the default variant.
-  """
-  variant: String = ""
+  parent: FolderIdInput
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
 }
 
-input ConnectionInputNode {
-  """
-  💬 The optional human-readable description of the connection.
-  """
-  description: String = ""
-
-  """
-  ↕️ The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece.
-  """
-  gap: Float = 0
-
-  """
-  ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..
-  """
-  shift: Float = 0
-
-  """
-  🪜 The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
-  """
-  rise: Float = 0
-
-  """
-  🔄 The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees.
-  """
-  rotation: Float = 0
-
-  """
-  🛞 The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
-  """
-  turn: Float = 0
-
-  """
-  ↗️ The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
-  """
-  tilt: Float = 0
-
-  """
-  ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
-  """
-  x: Float = 0
-
-  """
-  ⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
-  """
-  y: Float = 0
-
-  """
-  🧲 The connected side of the connection.
-  """
-  connected: SideInputNode!
-
-  """
-  🧲 The connecting side of the connection.
-  """
-  connecting: SideInputNode!
+input FolderDiffInput {
+  guid: String
+  name: String
+  parent: FolderIdInput
+  description: String
+  attributes: AttributesDiffInput
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
 }
 
-input SideInputNode {
-  piece: PieceIdInputNode!
-  connector: ConnectorIdInputNode!
+input FoldersDiffInput {
+  removed: [FolderIdInput!]
+  updated: [FolderUpdateInput!]
+  added: [FolderInput!]
 }
 
-input PieceIdInputNode {
-  """
-  🆔 The id of the piece.
-  """
-  id_: String = ""
+input FolderUpdateInput {
+  folder: FolderIdInput!
+  diff: FolderDiffInput!
 }
 
-input ConnectorIdInputNode {
-  """
-  🆔 The id of the connector.
-  """
-  id_: String = ""
+input BenchmarkInput {
+  guid: String!
+  name: String!
+  icon: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+  attributes: [AttributeInput!]
+}
+
+input BenchmarkDiffInput {
+  guid: String
+  name: String
+  icon: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+  attributes: AttributesDiffInput
+}
+
+input BenchmarksDiffInput {
+  removed: [BenchmarkIdInput!]
+  updated: [BenchmarkUpdateInput!]
+  added: [BenchmarkInput!]
+}
+
+input BenchmarkUpdateInput {
+  benchmark: BenchmarkIdInput!
+  diff: BenchmarkDiffInput!
+}
+
+input QualityInput {
+  guid: String!
+  key: String!
+  name: String!
+  description: String
+  uri: String
+  kind: Int
+  folder: String
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: [BenchmarkInput!]
+  attributes: [AttributeInput!]
+}
+
+input QualityDiffInput {
+  guid: String
+  key: String
+  name: String
+  description: String
+  uri: String
+  kind: Int
+  folder: String
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: BenchmarksDiffInput
+  attributes: AttributesDiffInput
+}
+
+input QualitiesDiffInput {
+  removed: [QualityIdInput!]
+  updated: [QualityUpdateInput!]
+  added: [QualityInput!]
+}
+
+input QualityUpdateInput {
+  quality: QualityIdInput!
+  diff: QualityDiffInput!
+}
+
+input PortInput {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  compatiblePorts: [PortIdInput!]
+  attributes: [AttributeInput!]
+}
+
+input PortDiffInput {
+  guid: String
+  name: String
+  description: String
+  icon: String
+  compatiblePorts: [PortIdInput!]
+  attributes: AttributesDiffInput
+}
+
+input PortsDiffInput {
+  removed: [PortIdInput!]
+  updated: [PortUpdateInput!]
+  added: [PortInput!]
+}
+
+input PortUpdateInput {
+  port: PortIdInput!
+  diff: PortDiffInput!
+}
+
+input PropInput {
+  guid: String!
+  quality: QualityIdInput!
+  value: String!
+  unit: String
+  attributes: [AttributeInput!]
+}
+
+input PropDiffInput {
+  guid: String
+  quality: QualityIdInput
+  value: String
+  unit: String
+  attributes: AttributesDiffInput
+}
+
+input PropsDiffInput {
+  removed: [PropIdInput!]
+  updated: [PropUpdateInput!]
+  added: [PropInput!]
+}
+
+input PropUpdateInput {
+  prop: PropIdInput!
+  diff: PropDiffInput!
+}
+
+input TagInput {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
+}
+
+input TagDiffInput {
+  guid: String
+  name: String
+  description: String
+  icon: String
+  attributes: AttributesDiffInput
+}
+
+input TagsDiffInput {
+  removed: [TagIdInput!]
+  updated: [TagUpdateInput!]
+  added: [TagInput!]
+}
+
+input TagUpdateInput {
+  tag: TagIdInput!
+  diff: TagDiffInput!
+}
+
+input ConceptInput {
+  guid: String!
+  name: String!
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
+}
+
+input ConceptDiffInput {
+  guid: String
+  name: String
+  description: String
+  icon: String
+  attributes: AttributesDiffInput
+}
+
+input ConceptsDiffInput {
+  removed: [ConceptIdInput!]
+  updated: [ConceptUpdateInput!]
+  added: [ConceptInput!]
+}
+
+input ConceptUpdateInput {
+  concept: ConceptIdInput!
+  diff: ConceptDiffInput!
+}
+
+input ModelInput {
+  guid: String!
+  name: String
+  tags: [TagIdInput!]
+  file: FileIdInput!
+  description: String
+  attributes: [AttributeInput!]
+}
+
+input ModelDiffInput {
+  guid: String
+  name: String
+  tags: [TagIdInput!]
+  file: FileIdInput
+  description: String
+  attributes: AttributesDiffInput
+}
+
+input ModelsDiffInput {
+  removed: [ModelIdInput!]
+  updated: [ModelUpdateInput!]
+  added: [ModelInput!]
+}
+
+input ModelUpdateInput {
+  model: ModelIdInput!
+  diff: ModelDiffInput!
+}
+
+input ConnectorInput {
+  guid: String!
+  name: String
+  t: Float!
+  point: PointInput!
+  direction: VectorInput!
+  description: String
+  port: PortIdInput
+  mandatory: Boolean
+  props: [PropInput!]
+  attributes: [AttributeInput!]
+}
+
+input ConnectorDiffInput {
+  guid: String
+  name: String
+  t: Float
+  point: PointInput
+  direction: VectorInput
+  description: String
+  port: PortIdInput
+  mandatory: Boolean
+  props: PropsDiffInput
+  attributes: AttributesDiffInput
+}
+
+input ConnectorsDiffInput {
+  removed: [ConnectorIdInput!]
+  updated: [ConnectorUpdateInput!]
+  added: [ConnectorInput!]
+}
+
+input ConnectorUpdateInput {
+  connector: ConnectorIdInput!
+  diff: ConnectorDiffInput!
+}
+
+input TypeInput {
+  guid: String!
+  name: String!
+  parent: TypeIdInput
+  isAbstract: Boolean
+  folder: String
+  models: [ModelInput!]
+  connectors: [ConnectorInput!]
+  props: [PropInput!]
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationIdInput
+  authors: [AuthorIdInput!]
+  concepts: [ConceptIdInput!]
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+}
+
+input TypeDiffInput {
+  name: String
+  parent: TypeIdInput
+  isAbstract: Boolean
+  folder: String
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationIdInput
+  icon: String
+  image: String
+  description: String
+  authors: [AuthorIdInput!]
+  concepts: [ConceptIdInput!]
+  models: ModelsDiffInput
+  connectors: ConnectorsDiffInput
+  props: PropsDiffInput
+  attributes: AttributesDiffInput
+}
+
+input TypesDiffInput {
+  removed: [TypeIdInput!]
+  updated: [TypeUpdateInput!]
+  added: [TypeInput!]
+}
+
+input TypeUpdateInput {
+  type: TypeIdInput!
+  diff: TypeDiffInput!
+}
+
+input LayerInput {
+  guid: String!
+  path: String!
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  attributes: [AttributeInput!]
+}
+
+input LayerDiffInput {
+  guid: String
+  path: String
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  attributes: AttributesDiffInput
+}
+
+input LayersDiffInput {
+  removed: [LayerIdInput!]
+  updated: [LayerUpdateInput!]
+  added: [LayerInput!]
+}
+
+input LayerUpdateInput {
+  layer: LayerIdInput!
+  diff: LayerDiffInput!
+}
+
+input PieceInput {
+  guid: String!
+  name: String
+  type: TypeIdInput
+  design: DesignIdInput
+  plane: PlaneInput
+  center: CoordInput
+  scale: Float
+  mirrorPlane: PlaneInput
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: [PropInput!]
+  attributes: [AttributeInput!]
+}
+
+input PieceDiffInput {
+  name: String
+  type: TypeIdInput
+  design: DesignIdInput
+  plane: PlaneInput
+  center: CoordInput
+  scale: Float
+  mirrorPlane: PlaneInput
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: PropsDiffInput
+  attributes: AttributesDiffInput
+}
+
+input PiecesDiffInput {
+  removed: [PieceIdInput!]
+  updated: [PieceUpdateInput!]
+  added: [PieceInput!]
+}
+
+input PieceUpdateInput {
+  piece: PieceIdInput!
+  diff: PieceDiffInput!
+}
+
+input GroupInput {
+  guid: String!
+  pieces: [PieceIdInput!]!
+  color: String
+  name: String
+  description: String
+  attributes: [AttributeInput!]
+}
+
+input GroupDiffInput {
+  guid: String
+  pieces: [PieceIdInput!]
+  color: String
+  name: String
+  description: String
+  attributes: AttributesDiffInput
+}
+
+input GroupsDiffInput {
+  removed: [GroupIdInput!]
+  updated: [GroupUpdateInput!]
+  added: [GroupInput!]
+}
+
+input GroupUpdateInput {
+  group: GroupIdInput!
+  diff: GroupDiffInput!
+}
+
+input SideInput {
+  piece: PieceIdInput!
+  designPiece: PieceIdInput
+  connector: ConnectorIdInput
+}
+
+input ConnectionInput {
+  guid: String!
+  connected: SideInput!
+  connecting: SideInput!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: [AttributeInput!]
+}
+
+input SideDiffInput {
+  piece: PieceIdInput
+  designPiece: PieceIdInput
+  connector: ConnectorIdInput
+}
+
+input ConnectionDiffInput {
+  connected: SideDiffInput
+  connecting: SideDiffInput
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: AttributesDiffInput
+}
+
+input ConnectionsDiffInput {
+  removed: [ConnectionIdInput!]
+  updated: [ConnectionUpdateInput!]
+  added: [ConnectionInput!]
+}
+
+input ConnectionUpdateInput {
+  connection: ConnectionIdInput!
+  diff: ConnectionDiffInput!
+}
+
+input StatInput {
+  guid: String!
+  quality: QualityIdInput!
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+input StatDiffInput {
+  guid: String
+  quality: QualityIdInput
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+input StatsDiffInput {
+  removed: [StatIdInput!]
+  updated: [StatUpdateInput!]
+  added: [StatInput!]
+}
+
+input StatUpdateInput {
+  stat: StatIdInput!
+  diff: StatDiffInput!
+}
+
+input DesignInput {
+  guid: String!
+  name: String!
+  parent: DesignIdInput
+  isAbstract: Boolean
+  folder: String
+  pieces: [PieceInput!]
+  connections: [ConnectionInput!]
+  stats: [StatInput!]
+  props: [PropInput!]
+  layers: [LayerInput!]
+  activeLayer: LayerIdInput
+  groups: [GroupInput!]
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationIdInput
+  authors: [AuthorIdInput!]
+  concepts: [ConceptIdInput!]
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DesignDiffInput {
+  name: String
+  parent: DesignIdInput
+  isAbstract: Boolean
+  folder: String
+  activeLayer: LayerIdInput
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationIdInput
+  icon: String
+  image: String
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  pieces: PiecesDiffInput
+  connections: ConnectionsDiffInput
+  stats: StatsDiffInput
+  props: PropsDiffInput
+  layers: LayersDiffInput
+  groups: GroupsDiffInput
+  authors: AuthorsDiffInput
+  attributes: AttributesDiffInput
+}
+
+input DesignsDiffInput {
+  removed: [DesignIdInput!]
+  updated: [DesignUpdateInput!]
+  added: [DesignInput!]
+}
+
+input DesignUpdateInput {
+  design: DesignIdInput!
+  diff: DesignDiffInput!
+}
+
+input KitInput {
+  guid: String!
+  name: String!
+  version: String
+  types: [TypeInput!]
+  designs: [DesignInput!]
+  tags: [TagInput!]
+  concepts: [ConceptInput!]
+  ports: [PortInput!]
+  qualities: [QualityInput!]
+  files: [FileInput!]
+  folders: [FolderInput!]
+  authors: [AuthorInput!]
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input KitDiffInput {
+  name: String
+  version: String
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  types: TypesDiffInput
+  designs: DesignsDiffInput
+  tags: TagsDiffInput
+  concepts: ConceptsDiffInput
+  ports: PortsDiffInput
+  qualities: QualitiesDiffInput
+  authors: AuthorsDiffInput
+  files: FilesDiffInput
+  folders: FoldersDiffInput
+  attributes: AttributesDiffInput
 }
