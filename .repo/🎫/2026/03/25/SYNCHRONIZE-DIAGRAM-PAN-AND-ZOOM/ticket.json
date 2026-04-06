@@ -1,7 +1,7 @@
 {
   "title": "Synchronize Diagram Pan And Zoom",
-  "status": "closed",
-  "summary": "Stripped kit.designs from kit_for_ui in _build_app_payload to reduce MCP payload from ~7MB to ~2.4MB. kit.designs (4.6MB) was redundant since the current design is already in payload.design, and mcpFlattenDesignForSemioSurface handles missing kit.designs via kit.designs??[]. kitArtifacts is built from the full kit before stripping so the kit browser panel still has all design entries. Rebuilt the MCP app HTML bundle.",
+  "status": "open",
+  "summary": "Normalized imported semio/ui scene assets to replace embedded mesh, line, and point colors with homogeneous scene materials, then recolor them through shared interaction/status state. Extended the existing semio/ui index.tsx tests to cover material replacement and recoloring. Verified the new scene tests pass; the full semio/ui suite still has a pre-existing Rust cargo dependency conflict in ExportDesignModel.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪433ba041e2d449dd983f41a0b3e83961",
@@ -16,6 +16,8 @@
     "⚪f96ee4bb6a2f4679bf426f30b60f9520",
     "⚪48330d8dc6db4f4fb47f979994c08c9f",
     "⚪084299190cac4061a0fc375a60cf2c5e",
-    "⚪fae9bc1dde254df7804c5414c9d74d46"
+    "⚪fae9bc1dde254df7804c5414c9d74d46",
+    "⚪53c1915741c44596982f39bc285d2b9a",
+    "⚪3c1201012bae4516bdb62f5c31b5fac1"
   ]
 }

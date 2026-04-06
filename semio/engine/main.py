@@ -1641,6 +1641,26 @@ def _build_kit_viewer_html() -> str:
     return html.replace('data-mcp-viewer="design"', 'data-mcp-viewer="kit"', 1).replace("<title>semio design viewer</title>", "<title>semio kit viewer</title>", 1)
 
 
+def _build_scene_viewer_html() -> str:
+    """Build the embeddable scene viewer HTML from the same bundle, mounting McpSceneViewer (3D only).
+    [👤semio📚engine💻engine🔖rest🛠️buildsceneviewerhtml](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_build_scene_viewer_html)
+    """
+    html = _build_design_viewer_html()
+    if "MCP App not built" in html:
+        return html.replace("MCP App not built", "MCP scene app not built", 1)
+    return html.replace('data-mcp-viewer="design"', 'data-mcp-viewer="scene"', 1).replace("<title>semio design viewer</title>", "<title>semio scene viewer</title>", 1)
+
+
+def _build_diagram_viewer_html() -> str:
+    """Build the embeddable diagram viewer HTML from the same bundle, mounting McpDiagramViewer (2D only).
+    [👤semio📚engine💻engine🔖rest🛠️builddiagramviewerhtml](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/_build_diagram_viewer_html)
+    """
+    html = _build_design_viewer_html()
+    if "MCP App not built" in html:
+        return html.replace("MCP App not built", "MCP diagram app not built", 1)
+    return html.replace('data-mcp-viewer="design"', 'data-mcp-viewer="diagram"', 1).replace("<title>semio design viewer</title>", "<title>semio diagram viewer</title>", 1)
+
+
 @rest.get("/app/design-viewer")
 async def app_design_viewer() -> fastapi.Response:
     """Return the embeddable design viewer HTML shell.
@@ -1663,6 +1683,34 @@ async def app_kit_viewer() -> fastapi.Response:
     """
     return fastapi.Response(
         content=_build_kit_viewer_html(),
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:; worker-src blob:;",
+        },
+    )
+
+
+@rest.get("/app/scene-viewer")
+async def app_scene_viewer() -> fastapi.Response:
+    """Return the embeddable scene viewer HTML shell (SemioScene 3D only from @semio/ui).
+    [👤semio📚engine💻engine🔖rest🛠️appsceneviewer](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/app_scene_viewer)
+    """
+    return fastapi.Response(
+        content=_build_scene_viewer_html(),
+        media_type="text/html",
+        headers={
+            "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:; worker-src blob:;",
+        },
+    )
+
+
+@rest.get("/app/diagram-viewer")
+async def app_diagram_viewer() -> fastapi.Response:
+    """Return the embeddable diagram viewer HTML shell (SemioDiagram 2D only from @semio/ui).
+    [👤semio📚engine💻engine🔖rest🛠️appdiagramviewer](repo://p/u/semio/b/l/engine/f/engine.py/s/Rest/d/i/app_diagram_viewer)
+    """
+    return fastapi.Response(
+        content=_build_diagram_viewer_html(),
         media_type="text/html",
         headers={
             "Content-Security-Policy": "default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; frame-ancestors *; connect-src * data: blob:; img-src * data: blob:; worker-src blob:;",
@@ -2058,6 +2106,10 @@ _APP_RESOURCE_URI = "ui://semio/design-viewer"
 _APP_RESOURCE_META = {"ui": {"resourceUri": _APP_RESOURCE_URI}, "ui/resourceUri": _APP_RESOURCE_URI}
 _KIT_APP_RESOURCE_URI = "ui://semio/kit-viewer"
 _KIT_APP_RESOURCE_META = {"ui": {"resourceUri": _KIT_APP_RESOURCE_URI}, "ui/resourceUri": _KIT_APP_RESOURCE_URI}
+_SCENE_APP_RESOURCE_URI = "ui://semio/scene-viewer"
+_SCENE_APP_RESOURCE_META = {"ui": {"resourceUri": _SCENE_APP_RESOURCE_URI}, "ui/resourceUri": _SCENE_APP_RESOURCE_URI}
+_DIAGRAM_APP_RESOURCE_URI = "ui://semio/diagram-viewer"
+_DIAGRAM_APP_RESOURCE_META = {"ui": {"resourceUri": _DIAGRAM_APP_RESOURCE_URI}, "ui/resourceUri": _DIAGRAM_APP_RESOURCE_URI}
 
 
 def _mcp_app_html_resource_meta() -> dict[str, typing.Any]:
@@ -3164,9 +3216,11 @@ def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = 
     payload["fetchUrl"] = fetch_url
     text = json.dumps(payload)
     hint: dict[str, typing.Any] = {"fetchUrl": fetch_url, "mode": payload.get("mode")}
+    if payload.get("surface"):
+        hint["surface"] = payload["surface"]
     if "points" in payload:
-        hint["points"] = []
-        hint["lines"] = []
+        hint["points"] = payload["points"]
+        hint["lines"] = payload.get("lines", [])
     return CallToolResult(
         content=[
             TextContent(type="text", text=json.dumps(hint)),
@@ -3200,8 +3254,26 @@ def _build_kit_only_app_response(kit: dict) -> CallToolResult:
     return _as_mcp_app_tool_result(_build_kit_only_app_payload(kit))
 
 
+def _connector_port_ref_string(value: object) -> str:
+    """Normalize connector.port (string or PortId object) to a guid string for kit artifact JSON."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        g = value.get("guid")
+        if g is not None:
+            return str(g)
+    return ""
+
+
 def _build_kit_artifact_data(kit: dict) -> dict:
-    """Build a minimal kit artifact payload for UI selection (designs, types, connectors)."""
+    """Build a minimal kit artifact payload for UI selection (designs, kinds, kit ports, connectors).
+
+    Specs: ``ports`` MUST list kit-level Port entities only; ``connectors`` MUST list flattened
+    type Connector rows (never label connectors as ports).
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️buildkitartifactdata](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/_build_kit_artifact_data)
+    """
     meta: dict = {
         "name": kit.get("name") or "",
         "version": kit.get("version") or "",
@@ -3228,7 +3300,19 @@ def _build_kit_artifact_data(kit: dict) -> dict:
         designs.append(design_payload)
 
     types = []
-    ports = []
+    kit_ports: list[dict] = []
+    for p in kit.get("ports", []) or []:
+        pg = p.get("guid")
+        if not pg:
+            continue
+        port_payload: dict = {"guid": pg, "name": p.get("name", "")}
+        for key in ("description", "icon"):
+            val = p.get(key)
+            if val:
+                port_payload[key] = val
+        kit_ports.append(port_payload)
+
+    connectors: list[dict] = []
     for t in kit.get("types", []) or []:
         t_guid = t.get("guid")
         if not t_guid:
@@ -3246,13 +3330,14 @@ def _build_kit_artifact_data(kit: dict) -> dict:
             c_guid = c.get("guid")
             if not c_guid:
                 continue
-            ports.append(
+            port_s = _connector_port_ref_string(c.get("port"))
+            connectors.append(
                 {
                     "guid": c_guid,
                     "typeGuid": t_guid,
                     "id": c.get("id", ""),
-                    "port": c.get("port", ""),
-                    "name": c.get("name", "") or c.get("id", "") or c.get("port", "") or "port",
+                    "port": port_s,
+                    "name": c.get("name", "") or c.get("id", "") or port_s or "connector",
                     "description": c.get("description", ""),
                     "mandatory": bool(c.get("mandatory", False)),
                 }
@@ -3260,7 +3345,8 @@ def _build_kit_artifact_data(kit: dict) -> dict:
 
     meta["designs"] = designs
     meta["types"] = types
-    meta["ports"] = ports
+    meta["ports"] = kit_ports
+    meta["connectors"] = connectors
     return meta
 
 
@@ -3561,6 +3647,34 @@ def kit_viewer_resource() -> str:
     return _build_kit_viewer_html()
 
 
+@mcp.resource(
+    _SCENE_APP_RESOURCE_URI,
+    name="semio scene viewer",
+    description="3D scene viewer for semio designs. Renders pieces with GLTF models in 3D from @semio/ui.",
+    mime_type="text/html;profile=mcp-app",
+    meta=_mcp_app_html_resource_meta(),
+)
+def scene_viewer_resource() -> str:
+    """Serve the MCP scene viewer HTML (SemioScene 3D only shell) built from @semio/ui.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️sceneviewerresource](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/scene_viewer_resource)
+    """
+    return _build_scene_viewer_html()
+
+
+@mcp.resource(
+    _DIAGRAM_APP_RESOURCE_URI,
+    name="semio diagram viewer",
+    description="2D diagram viewer for semio designs. Renders piece-connection diagrams with pan and zoom from @semio/ui.",
+    mime_type="text/html;profile=mcp-app",
+    meta=_mcp_app_html_resource_meta(),
+)
+def diagram_viewer_resource() -> str:
+    """Serve the MCP diagram viewer HTML (SemioDiagram 2D only shell) built from @semio/ui.
+    [👤semio📚engine💻engine🔖mcp🔖mcpapptools🛠️diagramviewerresource](repo://p/u/semio/b/l/engine/f/engine.py/s/Mcp/s/MCP%20App%20Tools/d/i/diagram_viewer_resource)
+    """
+    return _build_diagram_viewer_html()
+
+
 @mcp.tool(meta=_APP_RESOURCE_META)
 def show_design(ctx: Context) -> CallToolResult:
     """Show the current design in the split design viewer (scene + 2D diagram). Requires an active kit and design session."""
@@ -3570,7 +3684,7 @@ def show_design(ctx: Context) -> CallToolResult:
         return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool(meta=_APP_RESOURCE_META)
+@mcp.tool(meta=_DIAGRAM_APP_RESOURCE_META)
 def show_diagram(ctx: Context) -> CallToolResult:
     """Show the current design as a 2D diagram only (no 3D scene panel). Requires an active kit and design session."""
     try:
@@ -3579,7 +3693,7 @@ def show_diagram(ctx: Context) -> CallToolResult:
         return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-@mcp.tool(meta=_APP_RESOURCE_META)
+@mcp.tool(meta=_SCENE_APP_RESOURCE_META)
 def show_scene(ctx: Context) -> CallToolResult:
     """Show the current design in the 3D scene viewer. Requires an active kit and design session."""
     try:

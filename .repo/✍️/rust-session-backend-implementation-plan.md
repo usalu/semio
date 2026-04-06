@@ -1,324 +1,299 @@
-# Rust Session-Backend Service Implementation Plan
+# Implementation Plan: Rust Session-Backend Service
 
-## 1. Goal
+## 1. Scope and hard constraints
 
-Build a single Rust backend service that hosts collaborative session state for a kit-shaped domain with strongly typed relational persistence, deterministic conflict handling, support for cyclic references, and persisted semio/presentational state.
+This plan assumes the backend is a **collaborative session service** for one session-scoped root object (`Kit`) with nested entities such as `Type`, `Design`, `Piece`, `Connection`, `Group`, `Layer`, `Prop`, `Port`, `Quality`, `File`, `Folder`, `Author`, `Tag`, and `Concept`.
 
-The service has these non-negotiable properties:
+The uploaded schema shows:
 
-- exactly one logical writer on the server per session
-- PostgreSQL as the only durable store
-- one PostgreSQL schema only
-- one Rust source file only: `bin.rs`
-- no JSON blobs for canonical state or diffs
-- explicit relational modeling with foreign keys, enums, check constraints, and typed history
-- tombstone-based deletion in the write path
-- semio/presentational data persisted as first-class entities
-- clean support for historical artifact views for **Type** and **Design** at these lookback points:
-  - `1min`
-  - `5min`
-  - `10min`
-  - `30min`
-  - `1h`
-  - `5h`
-  - `1d`
-  - `3d`
-  - `7d`
-  - `1mo`
-  - `6mo`
-  - `1y`
+- a `Kit` root containing `types`, `designs`, `tags`, `concepts`, `ports`, `qualities`, `files`, `folders`, and `authors`
+- `Design` containing `pieces`, `connections`, `stats`, `props`, `layers`, and `groups`
+- `Piece` referencing both `Design` and `Type`
+- several self-references (`Type.parent`, `Design.parent`, `Folder.parent`)
+- sparse diff inputs where most changed properties are represented by nullable fields
 
-The implementation target is a clean new system, not a compatibility layer.
+This plan is intentionally shaped by your requirements:
+
+- **maximum type safety**
+- **proper relational SQL**
+- **no JSON state storage**
+- **no peer-to-peer or multi-writer design**
+- **exactly one logical writer per session on the server**
+- **support for cyclic dependencies**
+- **presentational / ephemeral data stored as first-class semio entities**
+- **no backward-compatibility constraints**
+
+## 2. Recommended top-level architecture
+
+Build a **single Rust service** with four internal subsystems:
+
+1. **API layer**
+   - HTTP for commands and snapshots
+   - WebSocket (or SSE) for live updates
+   - authentication / authorization
+   - connection/session attachment
+
+2. **Session runtime**
+   - exactly one `SessionActor` task per active session
+   - sole writer for that session
+   - keeps typed in-memory state
+   - serializes command application and persistence
+
+3. **Persistence layer**
+   - PostgreSQL only
+   - fully normalized relational schema
+   - append-only typed history tables
+   - typed semio tables for ephemeral/presentational state
+
+4. **Read / stream layer**
+   - loads full typed session snapshot
+   - broadcasts accepted domain and semio changes
+   - supports reconnect and catch-up by version
+
+This is a **modular monolith**, not a microservice system.
+
+That is the right level of ambition here: one deployable, one database, one writer task per session, one strongly typed domain model.
 
 ---
 
-## 2. High-level architecture
+## 3. Hard design decisions
 
-The service is a single deployable process with four internal parts, all implemented inside `bin.rs`:
+### 3.1 One writer actor per session
 
-1. HTTP/WebSocket API
-2. Session directory and session actors
-3. Domain and semio command application
-4. PostgreSQL persistence and historical reads
-
-The core runtime shape is:
+Every mutation for a session goes through one in-process actor:
 
 ```text
-frontend -> HTTP/WS -> SessionDirectory -> SessionActor(session_id) -> PostgreSQL
+frontend -> API -> SessionDirectory -> SessionActor(session_id) -> PostgreSQL
 ```
 
-For each active session, exactly one in-process actor owns mutation ordering. That actor:
+Properties:
 
-- receives domain and semio commands
-- validates them against the current session state
-- resolves conflicts deterministically
-- persists accepted changes in one SQL transaction
-- updates in-memory state
-- broadcasts accepted changes to subscribers
+- commands are processed strictly in arrival order at the actor
+- no concurrent writes inside a session
+- conflict resolution is deterministic
+- no distributed consensus is needed
+- no row-level race handling is pushed into business logic
 
-This keeps the design simple and correct:
+A session actor is a **logical process**, implemented as a Tokio task with an inbox.
 
-- no peer-to-peer synchronization
-- no multi-writer database race logic in the domain layer
-- no distributed locking protocol beyond the actor itself
+### 3.2 PostgreSQL as the only durable store
+
+Use PostgreSQL for:
+
+- canonical domain state
+- typed history / audit records
+- semio/presentational state
+- session metadata
+- command idempotency
+- reconnect/catch-up
+
+Do **not** introduce Redis for core correctness. You do not need it for a clean first implementation.
+
+### 3.3 Strongly typed relational model, not document storage
+
+Do **not** store the session or diffs as JSON blobs.
+
+Use:
+
+- one table per entity
+- proper join tables for many-to-many relations
+- typed history tables
+- explicit foreign keys
+- explicit enums / check constraints
+- strong Rust newtypes for IDs
+
+### 3.4 Explicit command model, not sparse GraphQL diff objects internally
+
+The uploaded GraphQL diff model is useful as a description of change shape, but it is not the right internal command model because sparse nullable inputs make these three states hard to distinguish cleanly:
+
+- field not touched
+- field set to a value
+- optional field explicitly cleared to `null`
+
+For the new backend, use explicit commands and explicit field operations.
+
+### 3.5 Soft deletion with tombstones, not physical deletion in the write path
+
+To support concurrent stale writes and cyclic references safely:
+
+- domain deletes become **tombstones**
+- reads hide tombstoned rows
+- cleanup is a later administrative operation
+- references to tombstoned rows are rejected (unless a property explicitly allows nulling or placeholder substitution)
 
 ---
 
-## 3. Single-file Rust structure (`bin.rs`)
+## 4. Session boundary and ownership model
 
-Everything lives in one file. The file is still organized into sections so it remains readable.
+The **session** is the consistency boundary.
 
-Recommended order inside `bin.rs`:
+Everything mutable in a collaborative editing flow is scoped by `session_id`.
 
-1. imports, constants, configuration structs
-2. ID newtypes and shared scalar/value objects
-3. enums for entity kinds, property keys, conflict policies, lifecycle, and command kinds
-4. domain structs for current in-memory state
-5. transport DTOs for HTTP input/output
-6. command enums and patch types
-7. SQL row structs and query helper functions
-8. session directory
-9. session actor implementation
-10. conflict engine and validation functions
-11. snapshot and history query functions
-12. WebSocket event streaming
-13. HTTP route handlers
-14. startup, migration runner, and `main`
+That means all canonical rows should include `session_id`, for example:
 
-Inline submodules are allowed only if they remain inside `bin.rs`, for example:
+- `type_entity(session_id, type_id, ...)`
+- `design_entity(session_id, design_id, ...)`
+- `piece_entity(session_id, piece_id, ...)`
 
-```rust
-mod api { /* inline */ }
-mod domain { /* inline */ }
-mod db { /* inline */ }
-```
+This gives you:
 
-No external crate split is required. The point is operational and structural simplicity, not premature modularization.
+- strict isolation between sessions
+- simple actor ownership
+- simple conflict/version tracking
+- simple SQL partitioning/indexing strategy later if needed
 
-Recommended dependencies:
-
-- `tokio`
-- `axum`
-- `sqlx`
-- `serde`
-- `uuid`
-- `time`
-- `thiserror`
-- `tracing`
-- `tracing-subscriber`
+A session can optionally be associated with a business identity such as `kit_id`, but the write model is session-scoped.
 
 ---
 
-## 4. Type-safety rules
+## 5. Rust project layout
 
-### 4.1 Newtypes for every identity
+Use a single workspace:
 
-Never pass raw `Uuid` values through the domain layer. Define strong newtypes for every entity identity.
-
-Example:
-
-```rust
-struct SessionId(Uuid);
-struct KitId(Uuid);
-struct TypeId(Uuid);
-struct DesignId(Uuid);
-struct PieceId(Uuid);
-struct GroupId(Uuid);
-struct ConnectionId(Uuid);
-struct LayerId(Uuid);
-struct PropId(Uuid);
-struct QualityId(Uuid);
-struct PortId(Uuid);
-struct PersonId(Uuid);
-struct CommandId(Uuid);
-struct ClientId(Uuid);
-struct RequestId(Uuid);
+```text
+backend/
+  crates/
+    app/               # binary
+    api/               # HTTP/WS handlers, DTOs
+    session_runtime/   # session directory + actor runtime
+    domain/            # entity types, IDs, invariants, commands, conflict policies
+    persistence/       # sqlx repositories, migrations, row mapping
+    semio/             # presence/cursor/look domain
+    auth/              # authn/authz
+    observability/     # tracing, metrics
+    test_support/      # fixtures, builders, integration helpers
 ```
 
-### 4.2 Explicit field patch semantics
+### 5.1 Core libraries
 
-Use explicit patch enums instead of sparse nullable DTO semantics.
+Use:
+
+- `tokio` for async runtime
+- `axum` for HTTP + WebSocket
+- `sqlx` with compile-time checked queries for PostgreSQL
+- `serde` for API serialization
+- `uuid` for stable IDs
+- `time` for timestamps
+- `thiserror` for domain and application errors
+- `tracing` + `tracing-subscriber` for structured logs
+
+### 5.2 Type-safety rules in Rust
+
+Use newtypes for every domain ID:
 
 ```rust
-enum FieldPatch<T> {
+pub struct SessionId(Uuid);
+pub struct KitId(Uuid);
+pub struct TypeId(Uuid);
+pub struct DesignId(Uuid);
+pub struct PieceId(Uuid);
+pub struct GroupId(Uuid);
+pub struct ConnectionId(Uuid);
+pub struct PortId(Uuid);
+pub struct QualityId(Uuid);
+```
+
+Do not use raw `Uuid` or `String` in domain APIs after the transport boundary.
+
+Model all mutable fields with explicit patch semantics:
+
+```rust
+pub enum FieldPatch<T> {
     NoChange,
     Set(T),
     Clear,
 }
+```
 
-enum RequiredFieldPatch<T> {
+For non-nullable fields, use:
+
+```rust
+pub enum RequiredFieldPatch<T> {
     NoChange,
     Set(T),
 }
 ```
 
-This removes ambiguity between:
+This removes ambiguity and is substantially safer than sparse nullable diff objects.
 
-- untouched field
-- field assigned a value
-- nullable field explicitly cleared
+---
 
-### 4.3 Explicit property registry
+## 6. Domain model strategy
 
-Every mutable property gets a compile-time `PropertyKey` enum value.
+## 6.1 Current-state model
+
+Maintain a fully typed in-memory session state inside the actor:
+
+```rust
+pub struct SessionState {
+    pub session_id: SessionId,
+    pub version: DomainVersion,
+    pub semio_version: SemioVersion,
+    pub kit: KitState,
+    pub types: BTreeMap<TypeId, TypeState>,
+    pub designs: BTreeMap<DesignId, DesignState>,
+    pub pieces: BTreeMap<PieceId, PieceState>,
+    pub groups: BTreeMap<GroupId, GroupState>,
+    pub connections: BTreeMap<ConnectionId, ConnectionState>,
+    // ...
+    pub semio_people: BTreeMap<PersonId, SemioPersonState>,
+}
+```
+
+The actor loads this from SQL on session activation.
+
+Given the schema size (around 23 entity kinds, max composition depth 4), loading the full session into memory is reasonable and simplifies correctness.
+
+## 6.2 Entity identity versus entity state
+
+For each entity kind, distinguish:
+
+- **identity**
+- **live state**
+- **lifecycle**
 
 Example:
 
 ```rust
-enum PropertyKey {
-    TypeName,
-    TypeParentType,
-    TypeDescription,
-    DesignName,
-    DesignParentDesign,
-    DesignActiveLayer,
-    PieceType,
-    PiecePlane,
-    PieceCenter,
-    PieceScale,
-    GroupMembership,
-    ConnectionEndpoints,
-    SemioCursor,
-    SemioLook,
+pub enum Lifecycle {
+    Active,
+    Tombstoned { at: DomainVersion, by: CommandId },
 }
 ```
 
-This registry drives:
-
-- conflict policy lookup
-- property clock updates
-- audit/history generation
-- testing coverage
+Do not physically remove rows during ordinary mutation processing.
 
 ---
 
-## 5. Domain boundary
+## 7. SQL schema design
 
-The consistency boundary is the **session**.
+Use separate PostgreSQL schemas:
 
-All canonical domain data and all semio data are scoped by `session_id`.
+- `runtime` — session metadata and versions
+- `core` — current canonical domain state
+- `history` — append-only typed audit/change records
+- `semio` — ephemeral/presentational state
+- `auth` — optional session membership / roles
 
-Each active session actor owns an in-memory state shaped roughly like this:
+## 7.1 Session runtime tables
 
-```rust
-struct SessionState {
-    session_id: SessionId,
-    domain_version: i64,
-    semio_version: i64,
-    kit: KitState,
-    types: BTreeMap<TypeId, TypeState>,
-    designs: BTreeMap<DesignId, DesignState>,
-    pieces: BTreeMap<PieceId, PieceState>,
-    layers: BTreeMap<LayerId, LayerState>,
-    groups: BTreeMap<GroupId, GroupState>,
-    connections: BTreeMap<ConnectionId, ConnectionState>,
-    props: BTreeMap<PropId, PropState>,
-    semio_people: BTreeMap<(PersonId, String), SemioPersonState>,
-}
-```
-
-The full current session state is loaded from PostgreSQL when the actor starts and is rebuilt from relational rows only.
-
----
-
-## 6. PostgreSQL layout: one schema only
-
-Use exactly one PostgreSQL schema, for example `app`.
-
-Everything lives under that schema:
-
-- runtime tables
-- domain tables
-- historical/version tables
-- semio tables
-- enums
-
-There are no separate SQL schemas such as `runtime`, `core`, `history`, or `semio`.
-
-To keep the schema readable, use table naming prefixes:
-
-- `session_*`
-- `commit_*`
-- `type_*`
-- `design_*`
-- `piece_*`
-- `group_*`
-- `semio_*`
-
-Example DDL style:
-
-```sql
-create schema if not exists app;
-set search_path to app;
-```
-
----
-
-## 7. Persistence model: temporal relational tables
-
-The cleanest way to support historical artifact viewing without JSON is to make the canonical domain tables **temporal**.
-
-That means each mutable domain row carries version validity:
-
-- `valid_from_version bigint not null`
-- `valid_to_version bigint null`
-- `recorded_at timestamptz not null`
-- `recorded_by_command_id uuid not null`
-
-A row is current when `valid_to_version is null`.
-
-When a property changes:
-
-1. close the current row by setting `valid_to_version = next_domain_version`
-2. insert a new row with updated values and `valid_from_version = next_domain_version`
-
-Deletes are represented as tombstones, not hard deletes.
-
-This gives three important benefits:
-
-1. current-state reads remain relational and strongly typed
-2. historical reads become simple `as-of version` queries
-3. Type and Design artifact views at named lookback points become first-class, not bolted on
-
-### 7.1 Global domain commit table
-
-Create a table that maps every accepted domain version to commit metadata.
-
-### `app.domain_commit`
-
-Columns:
-
-- `session_id uuid not null`
-- `domain_version bigint not null`
-- `command_id uuid not null`
-- `committed_at timestamptz not null`
-- `actor_person_id uuid not null`
-- primary key `(session_id, domain_version)`
-- unique `(command_id)`
-
-This table is the anchor for all historical lookups.
-
-### 7.2 Session table
-
-### `app.session`
+### `runtime.session`
+Tracks session lifecycle.
 
 Columns:
 
 - `session_id uuid primary key`
-- `kit_id uuid not null`
+- `root_kit_id uuid not null`
 - `domain_version bigint not null default 0`
 - `semio_version bigint not null default 0`
-- `status text not null`
+- `status session_status not null`
 - `writer_instance_id uuid null`
 - `writer_lease_expires_at timestamptz null`
 - `created_at timestamptz not null`
 - `updated_at timestamptz not null`
 
-The initial implementation can run on one service instance and still keep the writer columns for future safety.
-
-### 7.3 Idempotency and request tracking
-
-### `app.session_command`
+### `runtime.session_command`
+Idempotency and command envelope.
 
 Columns:
 
@@ -326,57 +301,62 @@ Columns:
 - `session_id uuid not null`
 - `client_id uuid not null`
 - `request_id uuid not null`
-- `command_kind text not null`
-- `base_domain_version bigint null`
-- `base_semio_version bigint null`
+- `base_domain_version bigint not null`
 - `accepted_domain_version bigint null`
 - `accepted_semio_version bigint null`
+- `command_kind command_kind not null`
 - `actor_person_id uuid not null`
 - `received_at timestamptz not null`
 - `applied_at timestamptz null`
-- `status text not null`
+- `status command_status not null`
 - unique `(session_id, client_id, request_id)`
 
-### 7.4 Property clock table
+This table lets the server safely accept retries.
 
-### `app.property_clock`
+### `runtime.property_clock`
+The key table for property-level conflict resolution.
 
 Columns:
 
 - `session_id uuid not null`
-- `entity_kind text not null`
+- `entity_kind entity_kind not null`
 - `entity_id uuid not null`
-- `property_key text not null`
+- `property_key property_key not null`
 - `last_changed_domain_version bigint not null`
 - `last_command_id uuid not null`
 - primary key `(session_id, entity_kind, entity_id, property_key)`
 
-This table is the main index for property-level stale-write detection.
+This table says: “what is the latest accepted domain version that changed this exact property?”
+
+That means conflict checks do not need to replay an event log to learn whether a field changed after a client’s base version.
+
+### `runtime.session_subscription` (optional)
+For live connections.
+
+Columns:
+
+- `connection_id uuid primary key`
+- `session_id uuid not null`
+- `person_id uuid not null`
+- `frontend_id text not null`
+- `connected_at timestamptz not null`
+- `last_seen_at timestamptz not null`
 
 ---
 
-## 8. Canonical domain tables
+## 7.2 Canonical domain tables (`core` schema)
 
-Every domain entity table is temporal and uses one row version per accepted domain change.
+The exact table count will be high because the schema is rich and type-safe by design. That is acceptable.
 
-The pattern is:
+Below is the recommended pattern.
 
-- logical identity columns (`session_id`, entity id)
-- business columns
-- lifecycle/tombstone columns
-- validity window columns (`valid_from_version`, `valid_to_version`)
-- audit columns (`recorded_at`, `recorded_by_command_id`)
+### Root and top-level entities
 
-### 8.1 Root and simple entities
-
-Representative examples:
-
-### `app.kit_row`
-
-- `session_id`
-- `kit_id`
+#### `core.kit`
+- `session_id uuid not null`
+- `kit_id uuid not null`
 - `name text not null`
-- `version_label text null`
+- `version text null`
 - `remote text null`
 - `homepage text null`
 - `license text null`
@@ -384,112 +364,175 @@ Representative examples:
 - `icon text null`
 - `image text null`
 - `description text null`
-- `lifecycle text not null`
-- `valid_from_version bigint not null`
-- `valid_to_version bigint null`
-- `recorded_at timestamptz not null`
-- `recorded_by_command_id uuid not null`
-- primary key `(session_id, kit_id, valid_from_version)`
+- `created_at timestamptz null`
+- `updated_at timestamptz null`
+- `lifecycle lifecycle_status not null default 'active'`
+- primary key `(session_id, kit_id)`
 
-### `app.author_row`
-
+#### `core.author`
 - `session_id`
 - `author_id`
 - `name text not null`
 - `email text not null`
-- `lifecycle text not null`
-- validity columns
-- audit columns
+- `lifecycle`
+- PK `(session_id, author_id)`
 
-### `app.tag_row`, `app.concept_row`, `app.quality_row`, `app.port_row`, `app.file_row`, `app.folder_row`
+#### `core.location`
+- `session_id`
+- `location_id`
+- `longitude double precision not null`
+- `latitude double precision not null`
+- `altitude double precision null`
+- `lifecycle`
+- PK `(session_id, location_id)`
 
-Use the same pattern.
+#### `core.folder`
+- `session_id`
+- `folder_id`
+- `name text not null`
+- `parent_folder_id uuid null`
+- `description text null`
+- created/updated columns
+- `lifecycle`
+- PK `(session_id, folder_id)`
+- FK `(session_id, parent_folder_id)` -> `core.folder`
+- mark FK as `DEFERRABLE INITIALLY DEFERRED`
 
-### 8.2 Type artifact tables
+#### `core.file`
+- `session_id`
+- `file_id`
+- `name text not null`
+- `remote text null`
+- `folder_id uuid null`
+- `size_bytes bigint null`
+- `hash text null`
+- `blob_ref text null`
+- created/updated/by columns
+- `lifecycle`
+- PK `(session_id, file_id)`
+- FK to folder
 
-A **Type artifact** is reconstructed from these temporal tables:
+#### `core.tag`, `core.concept`, `core.port`, `core.quality`, `core.benchmark`
+Use direct entity tables with typed scalar columns.
 
-- `app.type_row`
-- `app.type_author_row`
-- `app.type_concept_row`
-- `app.type_attribute_row`
-- `app.type_prop_row`
-- `app.model_row`
-- `app.model_tag_row`
-- `app.connector_row`
-- `app.connector_prop_row`
+### Important relationships
 
-#### `app.type_row`
+#### `core.port_compatibility`
+- `session_id`
+- `port_id`
+- `compatible_port_id`
+- PK `(session_id, port_id, compatible_port_id)`
 
-Columns:
+#### `core.quality_benchmark`
+- `session_id`
+- `quality_id`
+- `benchmark_id`
+- PK `(session_id, quality_id, benchmark_id)`
 
-- `session_id uuid not null`
-- `type_id uuid not null`
+### Type/model/connector hierarchy
+
+#### `core.type_entity`
+- `session_id`
+- `type_id`
 - `name text not null`
 - `parent_type_id uuid null`
 - `is_abstract boolean null`
-- `folder_id uuid null`
+- `folder text null`
 - `stock integer null`
-- `is_virtual boolean null`
+- `virtual boolean null`
 - `unit text null`
 - `location_id uuid null`
 - `icon text null`
 - `image text null`
 - `description text null`
-- `lifecycle text not null`
-- `deleted_at_version bigint null`
-- `valid_from_version bigint not null`
-- `valid_to_version bigint null`
-- `recorded_at timestamptz not null`
-- `recorded_by_command_id uuid not null`
-- primary key `(session_id, type_id, valid_from_version)`
+- created/updated columns
+- `lifecycle`
+- PK `(session_id, type_id)`
+- self-FK on parent is deferred
 
-Important constraints:
+#### `core.type_author`
+- `session_id`
+- `type_id`
+- `author_id`
+- PK `(session_id, type_id, author_id)`
 
-- self-FK on `parent_type_id` is `DEFERRABLE INITIALLY DEFERRED`
-- referenced folder/location rows must exist in the same session
-- `lifecycle` uses `active` or `tombstoned`
+#### `core.type_concept`
+- `session_id`
+- `type_id`
+- `concept_id`
+- PK `(session_id, type_id, concept_id)`
 
-#### `app.connector_row`
+#### `core.model`
+- `session_id`
+- `model_id`
+- `type_id`
+- `name text null`
+- `file_id uuid not null`
+- `description text null`
+- `lifecycle`
+- PK `(session_id, model_id)`
 
+#### `core.model_tag`
+- `session_id`
+- `model_id`
+- `tag_id`
+- PK `(session_id, model_id, tag_id)`
+
+#### `core.connector`
 - `session_id`
 - `connector_id`
 - `type_id`
 - `name text null`
+- `t double precision not null`
+- `point_x double precision not null`
+- `point_y double precision not null`
+- `point_z double precision not null`
+- `direction_x double precision not null`
+- `direction_y double precision not null`
+- `direction_z double precision not null`
+- `description text null`
 - `port_id uuid null`
 - `mandatory boolean null`
-- `t double precision not null`
-- `point_x`, `point_y`, `point_z`
-- `direction_x`, `direction_y`, `direction_z`
-- `description text null`
-- lifecycle + validity + audit columns
+- `lifecycle`
+- PK `(session_id, connector_id)`
 
-### 8.3 Design artifact tables
+### Prop and attribute strategy
 
-A **Design artifact** is reconstructed from these temporal tables:
+#### `core.prop`
+- `session_id`
+- `prop_id`
+- `quality_id uuid not null`
+- `value text not null`
+- `unit text null`
+- `owner_kind prop_owner_kind not null`
+- `owner_id uuid not null`
+- `lifecycle`
+- PK `(session_id, prop_id)`
 
-- `app.design_row`
-- `app.design_author_row`
-- `app.design_concept_row`
-- `app.design_prop_row`
-- `app.layer_row`
-- `app.piece_row`
-- `app.piece_prop_row`
-- `app.group_row`
-- `app.group_piece_row`
-- `app.connection_row`
-- `app.stat_row`
+A single typed `prop` table works well because ownership varies (`Type`, `Piece`, `Connector`, `Design`).
 
-#### `app.design_row`
+#### `core.attribute`
+- `session_id`
+- `attribute_id uuid not null`
+- `key text not null`
+- `value text null`
+- `definition text null`
+- `owner_kind attribute_owner_kind not null`
+- `owner_id uuid not null`
+- `lifecycle`
+- PK `(session_id, attribute_id)`
 
-Columns:
+This is still proper SQL and strongly typed because owner kind is explicit.
 
-- `session_id uuid not null`
-- `design_id uuid not null`
+### Design and nested entities
+
+#### `core.design`
+- `session_id`
+- `design_id`
 - `name text not null`
 - `parent_design_id uuid null`
 - `is_abstract boolean null`
-- `folder_id uuid null`
+- `folder text null`
 - `active_layer_id uuid null`
 - `can_scale boolean null`
 - `can_mirror boolean null`
@@ -498,253 +541,550 @@ Columns:
 - `icon text null`
 - `image text null`
 - `description text null`
-- `lifecycle text not null`
-- `deleted_at_version bigint null`
-- `valid_from_version bigint not null`
-- `valid_to_version bigint null`
-- `recorded_at timestamptz not null`
-- `recorded_by_command_id uuid not null`
-- primary key `(session_id, design_id, valid_from_version)`
+- created/updated columns
+- `lifecycle`
+- PK `(session_id, design_id)`
+- self-FK deferred
 
-#### `app.piece_row`
+#### `core.design_author`
+- `session_id`
+- `design_id`
+- `author_id`
+- PK `(session_id, design_id, author_id)`
 
+#### `core.design_concept`
+- `session_id`
+- `design_id`
+- `concept_id`
+- PK `(session_id, design_id, concept_id)`
+
+#### `core.layer`
+- `session_id`
+- `layer_id`
+- `design_id uuid not null`
+- `path text not null`
+- `is_hidden boolean null`
+- `is_locked boolean null`
+- `color text null`
+- `description text null`
+- `lifecycle`
+- PK `(session_id, layer_id)`
+
+#### `core.piece`
 - `session_id`
 - `piece_id`
 - `design_id uuid not null`
 - `name text null`
 - `type_id uuid null`
-- plane columns
-- center columns
+- `plane_origin_x double precision null`
+- `plane_origin_y double precision null`
+- `plane_origin_z double precision null`
+- `plane_x_axis_x double precision null`
+- `plane_x_axis_y double precision null`
+- `plane_x_axis_z double precision null`
+- `plane_y_axis_x double precision null`
+- `plane_y_axis_y double precision null`
+- `plane_y_axis_z double precision null`
+- `center_u double precision null`
+- `center_v double precision null`
 - `scale double precision null`
-- mirror plane columns
+- `mirror_plane_origin_x double precision null`
+- `mirror_plane_origin_y double precision null`
+- `mirror_plane_origin_z double precision null`
+- `mirror_plane_x_axis_x double precision null`
+- `mirror_plane_x_axis_y double precision null`
+- `mirror_plane_x_axis_z double precision null`
+- `mirror_plane_y_axis_x double precision null`
+- `mirror_plane_y_axis_y double precision null`
+- `mirror_plane_y_axis_z double precision null`
 - `is_hidden boolean null`
 - `is_locked boolean null`
 - `color text null`
 - `description text null`
-- `lifecycle text not null`
-- `deleted_at_version bigint null`
-- `valid_from_version bigint not null`
-- `valid_to_version bigint null`
-- `recorded_at timestamptz not null`
-- `recorded_by_command_id uuid not null`
-- primary key `(session_id, piece_id, valid_from_version)`
+- `lifecycle`
+- PK `(session_id, piece_id)`
 
-#### `app.group_piece_row`
+#### `core.group_entity`
+- `session_id`
+- `group_id`
+- `design_id uuid not null`
+- `color text null`
+- `name text null`
+- `description text null`
+- `lifecycle`
+- PK `(session_id, group_id)`
 
-This is also temporal.
-
+#### `core.group_piece`
 - `session_id`
 - `group_id`
 - `piece_id`
 - `ordinal integer not null`
-- `lifecycle text not null`
-- validity + audit columns
-- primary key `(session_id, group_id, piece_id, valid_from_version)`
+- PK `(session_id, group_id, piece_id)`
 
-#### `app.connection_row`
-
+#### `core.connection`
 - `session_id`
 - `connection_id`
 - `design_id uuid not null`
-- connected-side columns
-- connecting-side columns
-- `gap`, `shift`, `rise`, `rotation`, `turn`, `tilt`, `u`, `v`
+- `connected_piece_id uuid not null`
+- `connected_design_piece_id uuid null`
+- `connected_connector_id uuid null`
+- `connecting_piece_id uuid not null`
+- `connecting_design_piece_id uuid null`
+- `connecting_connector_id uuid null`
+- `gap double precision null`
+- `shift double precision null`
+- `rise double precision null`
+- `rotation double precision null`
+- `turn double precision null`
+- `tilt double precision null`
+- `u double precision null`
+- `v double precision null`
 - `description text null`
-- lifecycle + validity + audit columns
+- `lifecycle`
+- PK `(session_id, connection_id)`
 
-### 8.4 Current reads
+#### `core.stat`
+- `session_id`
+- `stat_id`
+- `design_id uuid not null`
+- `quality_id uuid not null`
+- `unit text null`
+- `min double precision null`
+- `min_excluded boolean null`
+- `max double precision null`
+- `max_excluded boolean null`
+- `lifecycle`
+- PK `(session_id, stat_id)`
 
-Current-state reads are always:
+### Tombstone columns
 
-```sql
-... where valid_to_version is null and lifecycle = 'active'
-```
+Every mutable entity table should have at least:
 
-Historical reads are always:
+- `lifecycle lifecycle_status not null`
+- `deleted_at_domain_version bigint null`
+- `deleted_by_command_id uuid null`
 
-```sql
-... where valid_from_version <= $as_of_version
-  and (valid_to_version is null or valid_to_version > $as_of_version)
-  and lifecycle = 'active'
-```
+Use `lifecycle_status` enum:
 
-If a deleted artifact should still be viewable historically, the read is performed at a version before its tombstone row becomes active.
+- `active`
+- `tombstoned`
 
----
-
-## 9. Historical artifact views
-
-Historical artifact viewing is a first-class feature of the persistence model.
-
-### 9.1 Supported lookback points
-
-The service must support these named lookbacks for **Type** and **Design** views:
-
-- `1min`
-- `5min`
-- `10min`
-- `30min`
-- `1h`
-- `5h`
-- `1d`
-- `3d`
-- `7d`
-- `1mo`
-- `6mo`
-- `1y`
-
-Use these exact tokens in the public API to avoid ambiguity between minute and month.
-
-### 9.2 Resolution algorithm
-
-For any request like:
-
-```text
-GET /sessions/{session_id}/artifacts/designs/{design_id}?at=5h
-```
-
-resolve it as follows:
-
-1. map the token to an interval
-2. compute `target_ts = now_utc - interval`
-3. query `app.domain_commit` for the latest version at or before `target_ts`
-4. use that `as_of_version` to reconstruct the artifact from temporal rows
-
-Example SQL for step 3:
-
-```sql
-select max(domain_version)
-from app.domain_commit
-where session_id = $1
-  and committed_at <= $2;
-```
-
-If no version exists that far back, return the earliest available artifact state together with metadata indicating that the target precedes the session history.
-
-### 9.3 Artifact reconstruction rules
-
-#### Type artifact at version `V`
-
-Load:
-
-- the `type_row` active at `V`
-- all active `connector_row`, `model_row`, prop rows, attribute rows, author links, and concept links for that type at `V`
-- referenced supporting rows such as `port_row`, `quality_row`, and `file_row` at `V`
-
-#### Design artifact at version `V`
-
-Load:
-
-- the `design_row` active at `V`
-- all active `piece_row`, `connection_row`, `group_row`, `group_piece_row`, `layer_row`, `stat_row`, and prop rows for that design at `V`
-- referenced `type_row` versions for piece type references at `V`
-
-This means a historical design view always resolves references against the same historical boundary. If a type was later changed or deleted, the design view for `1d ago` still shows the type as it existed one day ago.
-
-### 9.4 Named lookback helper table or code constant
-
-The simplest implementation is a code constant in `bin.rs`:
-
-```rust
-const SUPPORTED_LOOKBACKS: &[(&str, time::Duration)] = &[
-    ("1min", time::Duration::minutes(1)),
-    ("5min", time::Duration::minutes(5)),
-    ("10min", time::Duration::minutes(10)),
-    ("30min", time::Duration::minutes(30)),
-    ("1h", time::Duration::hours(1)),
-    ("5h", time::Duration::hours(5)),
-    ("1d", time::Duration::days(1)),
-    ("3d", time::Duration::days(3)),
-    ("7d", time::Duration::days(7)),
-    ("1mo", time::Duration::days(30)),
-    ("6mo", time::Duration::days(182)),
-    ("1y", time::Duration::days(365)),
-];
-```
-
-No extra table is needed.
+Queries for current state always filter `lifecycle = 'active'`.
 
 ---
 
-## 10. Semio / presentational persistence
+## 7.3 Typed history tables (`history` schema)
 
-Semio state is persisted as first-class relational entities in the same `app` schema.
+The history model should be append-only and queryable without reconstructing from JSON.
 
-Semio data is not part of canonical artifact history and must not advance the domain version. It uses its own monotonic `semio_version` per session.
+### `history.command`
+- `command_id uuid primary key`
+- `session_id uuid not null`
+- `base_domain_version bigint not null`
+- `accepted_domain_version bigint null`
+- `actor_person_id uuid not null`
+- `command_kind command_kind not null`
+- `recorded_at timestamptz not null`
 
-### 10.1 Tables
+### `history.entity_create`
+- `session_id`
+- `command_id`
+- `entity_kind`
+- `entity_id`
+- PK `(session_id, command_id, entity_kind, entity_id)`
 
-### `app.semio_person`
+### `history.entity_delete`
+- `session_id`
+- `command_id`
+- `entity_kind`
+- `entity_id`
+- `delete_reason delete_reason not null`
+- PK `(session_id, command_id, entity_kind, entity_id)`
 
+### `history.scalar_change`
+For simple scalar properties.
+
+Columns:
+
+- `session_id`
+- `command_id`
+- `entity_kind`
+- `entity_id`
+- `property_key`
+- typed before/after columns:
+  - `before_text text null`, `after_text text null`
+  - `before_bool boolean null`, `after_bool boolean null`
+  - `before_int bigint null`, `after_int bigint null`
+  - `before_float double precision null`, `after_float double precision null`
+  - `before_uuid uuid null`, `after_uuid uuid null`
+  - `before_timestamptz timestamptz null`, `after_timestamptz timestamptz null`
+- one `value_kind` enum column
+- check constraints ensure only the correct typed pair is populated
+
+### `history.coord_change`
+For `Coord` properties such as `Piece.center` or semio cursor.
+
+### `history.point_change`
+For `Point` properties.
+
+### `history.vector_change`
+For `Vector` properties.
+
+### `history.plane_change`
+For `Plane` properties.
+
+### `history.camera_change`
+For `Camera` properties such as semio look.
+
+### `history.membership_add`
+For many-to-many and ordered membership edges.
+
+Columns:
+
+- `session_id`
+- `command_id`
+- `edge_kind`
+- `owner_id`
+- `member_id`
+- `ordinal integer null`
+
+### `history.membership_remove`
+Same shape as add.
+
+This history design is deliberately boring and explicit. That is good. It is easy to inspect, index, debug, and reason about.
+
+---
+
+## 7.4 Semio tables (`semio` schema)
+
+Semio data is ephemeral in meaning, but still persisted as typed state.
+
+It should **not** share the domain version clock because cursor movement must not create domain conflicts.
+
+Use a separate `semio_version` per session.
+
+### `semio.person`
 - `session_id uuid not null`
 - `person_id uuid not null`
-- `frontend_id text not null`
 - `display_name text null`
 - `color text null`
+- `frontend_id text not null`
 - `is_present boolean not null`
 - `last_seen_at timestamptz not null`
 - `expires_at timestamptz not null`
 - primary key `(session_id, person_id, frontend_id)`
 
-### `app.semio_cursor`
-
+### `semio.cursor`
 - `session_id`
 - `person_id`
 - `frontend_id`
-- `coord_x double precision not null`
-- `coord_y double precision not null`
-- `coord_z double precision null`
-- `semio_version bigint not null`
+- `u double precision not null`
+- `v double precision not null`
 - `updated_at timestamptz not null`
-- primary key `(session_id, person_id, frontend_id)`
+- `semio_version bigint not null`
+- PK `(session_id, person_id, frontend_id)`
 
-### `app.semio_look`
-
+### `semio.look`
 - `session_id`
 - `person_id`
 - `frontend_id`
-- `camera_pos_x`, `camera_pos_y`, `camera_pos_z`
-- `camera_forward_x`, `camera_forward_y`, `camera_forward_z`
-- `camera_up_x`, `camera_up_y`, `camera_up_z`
-- `semio_version bigint not null`
-- `updated_at timestamptz not null`
-- primary key `(session_id, person_id, frontend_id)`
+- `position_x`, `position_y`, `position_z`
+- `forward_x`, `forward_y`, `forward_z`
+- `up_x`, `up_y`, `up_z`
+- `updated_at`
+- `semio_version`
+- PK `(session_id, person_id, frontend_id)`
 
-### `app.semio_selection_piece`
-
+### `semio.selection_piece`
 - `session_id`
 - `person_id`
 - `frontend_id`
 - `piece_id`
-- `semio_version bigint not null`
-- primary key `(session_id, person_id, frontend_id, piece_id)`
+- PK `(session_id, person_id, frontend_id, piece_id)`
 
-Additional semio tables can be added for hovered entity, active tool, drag state, viewport, and panel focus using the same pattern.
+### `semio.selection_design`
+- `session_id`
+- `person_id`
+- `frontend_id`
+- `design_id`
+- PK `(session_id, person_id, frontend_id, design_id)`
 
-### 10.2 Semio behavior
+You can add more semio entities later (viewport, hovered entity, drag state, active tool), but keep the same pattern:
 
-Semio writes are:
-
-- persisted
-- streamable
-- scoped to session + person + frontend
-- expiry-aware
-- excluded from canonical domain conflict logic
-
-Semio update coalescing is allowed inside the actor for high-frequency updates such as cursor movement.
+- typed table
+- typed columns
+- session scoped
+- semio versioned
+- expiry aware
+- not part of canonical domain conflict resolution
 
 ---
 
-## 11. Command model
+## 8. Conflict resolution model
 
-The authoritative write contract is explicit commands, not generic JSON patches and not raw GraphQL-shaped sparse diffs.
+## 8.1 Why this can be simple
 
-### 11.1 Domain commands
+Because there is exactly one server-side writer actor per session, the hard problem is **not** concurrent DB mutation.
+
+The hard problem is:
+
+- commands arrive with stale `base_domain_version`
+- different properties need different merge behavior
+- references may be deleted while another client creates new referencing entities
+
+The clean design is:
+
+1. client sends command with `base_domain_version`
+2. actor computes touched property set
+3. actor checks `runtime.property_clock` for any touched property changed after `base_domain_version`
+4. actor applies per-property conflict policies
+5. actor persists result + history + property clocks in one SQL transaction
+6. actor increments session version and broadcasts outcome
+
+## 8.2 Compile-time property registry
+
+Create a Rust enum covering all mutable properties:
+
+```rust
+pub enum PropertyKey {
+    KitName,
+    KitVersion,
+    TypeName,
+    TypeParent,
+    TypeIsAbstract,
+    TypeFolder,
+    TypeStock,
+    TypeVirtual,
+    TypeUnit,
+    TypeLocation,
+    TypeIcon,
+    TypeImage,
+    TypeDescription,
+    DesignName,
+    DesignParent,
+    DesignActiveLayer,
+    PieceType,
+    PiecePlane,
+    PieceCenter,
+    PieceScale,
+    PieceMirrorPlane,
+    GroupPieces,
+    ConnectionConnectedSide,
+    ConnectionConnectingSide,
+    // ...
+}
+```
+
+Create a compile-time mapping:
+
+```rust
+pub struct ConflictSpec {
+    pub policy: ConflictPolicy,
+    pub reference_behavior: ReferenceBehavior,
+}
+
+pub fn conflict_spec(key: PropertyKey) -> ConflictSpec { ... }
+```
+
+This is far safer than storing executable policy definitions in the database.
+
+## 8.3 Conflict policies
+
+Use a small fixed set of policy kinds:
+
+- `RejectIfChanged`
+- `LastWriterWins`
+- `AdditiveNumeric`
+- `ReplaceSet`
+- `UnionSet`
+- `OrderedMembershipReplace`
+- `ReferenceMustExistAndBeActive`
+- `ReferenceMayBecomeNull`
+- `TombstoneAwareReject`
+- `SemioLastWriterWins`
+
+Examples:
+
+- `Kit.name` -> `RejectIfChanged`
+- `Type.description` -> `LastWriterWins`
+- `Group.pieces` -> `OrderedMembershipReplace`
+- `Piece.type_id` -> `ReferenceMustExistAndBeActive`
+- `semio.cursor` -> `SemioLastWriterWins`
+- `semio.look` -> `SemioLastWriterWins`
+
+## 8.4 Property clocks
+
+After a command changes a property, update:
+
+```text
+(session_id, entity_kind, entity_id, property_key) -> current_domain_version
+```
+
+If a new command comes in with base version 120 and `Piece.type_id` was changed at version 123, the actor sees that immediately.
+
+## 8.5 Command outcome model
+
+Do not return only “success/failure”.
+
+Return structured outcomes:
+
+- accepted fully
+- accepted with merged fields
+- rejected with conflicts
+- partially accepted only if your product explicitly wants that behavior
+
+For the first implementation, keep it simple:
+
+- domain commands are **atomic**
+- semio commands may be coalesced but are individually acknowledged
+
+That means one domain command either commits entirely or fails entirely.
+
+---
+
+## 9. Cyclic dependency support
+
+This is one of the most important parts of the design.
+
+### 9.1 What cyclic support means here
+
+From your example:
+
+- kit contains types and designs
+- designs contain pieces
+- pieces reference types
+
+There are also self-references like:
+
+- `Type.parent -> Type`
+- `Design.parent -> Design`
+- `Folder.parent -> Folder`
+
+You may also have command bundles where multiple new entities reference each other in the same request.
+
+### 9.2 Two-phase apply inside one SQL transaction
+
+When a command creates or updates multiple interdependent entities, apply in this order:
+
+1. **Reserve identities**
+   - insert missing entity rows with minimal required columns and `lifecycle = active`
+   - this makes IDs exist before all references are connected
+
+2. **Apply scalar fields**
+   - names, booleans, numbers, text, timestamps, geometry columns
+
+3. **Apply references and membership edges**
+   - parent pointers
+   - piece -> type
+   - design -> active layer
+   - group -> piece memberships
+   - connection side references
+
+4. **Run semantic validation**
+   - referenced targets exist
+   - referenced targets are active, not tombstoned
+   - no prohibited ownership crossings
+   - no invalid layer/design mismatches
+   - no duplicate membership/order violations
+
+5. **Write history + property clocks + bump version**
+6. **Commit**
+
+### 9.3 Deferred foreign keys
+
+Any FK involved in same-transaction cyclic or self-referential creation should be created as:
+
+- `DEFERRABLE INITIALLY DEFERRED`
+
+That allows the transaction to insert mutually dependent rows before final FK validation at commit.
+
+### 9.4 Delete semantics for cyclic safety
+
+Never hard-delete in the main write path.
+
+Instead:
+
+- mark target as tombstoned
+- reject future references to tombstoned targets
+- keep old history and stale references inspectable
+- optionally run offline cleanup when safe
+
+### 9.5 The exact example: delete type while another client creates a design with a piece using that type
+
+Suppose:
+
+- client A deletes `Type T`
+- client B, based on an older version, creates `Design D` and `Piece P(type = T)`
+
+Because there is one writer actor, these commands are serialized.
+
+#### Case 1: delete arrives first
+
+1. actor tombstones `Type T`
+2. property clocks for `Type.lifecycle` are updated
+3. actor later processes the create-design command
+4. semantic validation sees `Piece.type_id = T`, but `T` is tombstoned
+5. policy for `Piece.type_id` is `ReferenceMustExistAndBeActive`
+6. command is rejected atomically with a structured conflict:
+
+```text
+conflict:
+  property = Piece.type_id
+  target = Type(T)
+  reason = target_tombstoned_after_base_version
+```
+
+No partial design is created.
+
+#### Case 2: create-design arrives first
+
+1. actor creates `Design D` and `Piece P(type = T)`
+2. actor later processes delete-type command
+3. delete-type validation finds active references from `Piece P`
+4. policy for deleting a referenced type should be:
+   - either reject delete
+   - or require explicit force-delete plus cascading null/reject semantics
+
+Recommended default:
+
+- **reject delete while active references exist**
+
+That is the cleanest invariant-preserving rule.
+
+### 9.6 Delete policy matrix
+
+For referenced entities such as `Type`, `Quality`, `Port`, `File`, `Folder`, and `Layer`, choose one of these delete policies explicitly:
+
+- `RejectIfReferenced`
+- `TombstoneAndNullifyReferences`
+- `TombstoneAndCascadeDeleteChildren`
+- `TombstoneAndKeepDangling` (**do not use**)
+
+Recommended defaults:
+
+- `Type` -> `RejectIfReferenced`
+- `Quality` -> `RejectIfReferenced`
+- `Port` -> `RejectIfReferenced`
+- `Layer` -> `RejectIfReferenced` if active references exist
+- `Folder` -> `RejectIfReferenced` or explicit subtree delete command
+- `Design` -> `CascadeDeleteOwnedChildren`
+- `Group` -> `CascadeDeleteMemberships`
+- `Connection` -> direct tombstone allowed
+
+---
+
+## 10. Command model
+
+Do not expose “apply arbitrary sparse diff to giant object” as the authoritative write contract.
+
+Instead use explicit semantic commands.
+
+## 10.1 Domain commands
 
 Examples:
 
 ```rust
-enum DomainCommand {
+pub enum DomainCommand {
     PatchKit(PatchKit),
     AddType(AddType),
     PatchType(PatchType),
@@ -761,422 +1101,661 @@ enum DomainCommand {
     AddGroup(AddGroup),
     PatchGroup(PatchGroup),
     DeleteGroup(DeleteGroup),
+    // ...
 }
 ```
 
-Each command envelope includes:
+Each command contains:
 
 - `command_id`
 - `client_id`
 - `request_id`
 - `actor_person_id`
 - `base_domain_version`
-- typed payload
+- payload
 
-### 11.2 Batch command support
+## 10.2 Batch command support
 
-Multi-entity graph edits must be atomic. Use:
+You will need batch commands for transactional multi-entity changes:
 
 ```rust
-struct DomainBatch {
-    commands: Vec<DomainCommand>,
+pub struct DomainBatch {
+    pub commands: Vec<DomainCommand>,
 }
 ```
 
-A single batch can create a design, create multiple pieces, attach them to groups, and connect them in one actor turn and one SQL transaction.
+The whole batch is atomic and processed in one actor turn and one SQL transaction.
 
-### 11.3 Semio commands
+That is how you support “create design + create pieces + set references” cleanly.
+
+## 10.3 Semio commands
 
 Examples:
 
 ```rust
-enum SemioCommand {
+pub enum SemioCommand {
     UpsertPresence(UpsertPresence),
     SetCursor(SetCursor),
     SetLook(SetLook),
     ReplacePieceSelection(ReplacePieceSelection),
+    ReplaceDesignSelection(ReplaceDesignSelection),
     ClearPresence(ClearPresence),
 }
 ```
 
-Semio commands carry `base_semio_version` rather than `base_domain_version`.
+These use `base_semio_version`, not `base_domain_version`.
 
 ---
 
-## 12. Conflict handling
+## 11. API design
 
-Conflict handling is deterministic and property-based.
+## 11.1 Write API
 
-### 12.1 Why property-level conflict checks are enough
+Use HTTP JSON commands. Keep transport boring.
 
-Because there is exactly one writer actor per session, no two commands can commit concurrently for that session. The only conflict problem is stale client intent relative to a newer committed version.
-
-The actor handles this by:
-
-1. calculating the set of touched properties for the incoming command
-2. consulting `app.property_clock`
-3. comparing each touched property against the command’s `base_domain_version`
-4. applying the compile-time policy for that property
-
-### 12.2 Conflict policy kinds
-
-Keep the policy set small and explicit:
-
-- `RejectIfChanged`
-- `LastWriterWins`
-- `AdditiveNumeric`
-- `ReplaceOrderedMembership`
-- `UnionMembership`
-- `ReferenceMustExistAndBeActive`
-- `ReferenceMayBecomeNull`
-- `TombstoneAwareReject`
-- `SemioLastWriterWins`
-
-Recommended defaults:
-
-- names, parents, active layer, and most identity-defining fields: `RejectIfChanged`
-- free-form description fields: `LastWriterWins`
-- piece type references: `ReferenceMustExistAndBeActive`
-- group membership ordering: `ReplaceOrderedMembership`
-- semio cursor/look: `SemioLastWriterWins`
-
-### 12.3 Property clock update
-
-After an accepted domain command, update the property clock for every changed property:
-
-```text
-(session_id, entity_kind, entity_id, property_key) -> accepted_domain_version
-```
-
-This avoids replaying the full history log for conflict checks.
-
----
-
-## 13. Cyclic dependency support
-
-The data model supports self-references and cross-references such as:
-
-- `Type.parent -> Type`
-- `Design.parent -> Design`
-- `Piece.type -> Type`
-- `Piece.design -> Design`
-- `Group -> Piece[]`
-- future mutually dependent graphs created in one batch
-
-### 13.1 SQL support
-
-Any foreign key that may participate in same-transaction graph creation should be declared:
-
-```sql
-DEFERRABLE INITIALLY DEFERRED
-```
-
-That includes at least:
-
-- `type_row.parent_type_id -> type_row.type_id`
-- `design_row.parent_design_id -> design_row.design_id`
-- `folder_row.parent_folder_id -> folder_row.folder_id`
-- references from nested tables created together in one batch
-
-### 13.2 Actor apply order for cyclic graph edits
-
-Inside one SQL transaction:
-
-1. reserve identities for newly created entities
-2. insert initial temporal rows with minimal required data
-3. apply scalar fields
-4. apply references and membership edges
-5. run semantic validation
-6. close old temporal rows and insert new temporal rows as needed
-7. write domain commit row, command row, and property clocks
-8. commit
-
-### 13.3 Delete behavior under cyclic references
-
-The write path never hard-deletes domain rows.
-
-Deletes become tombstones. The default policy for referenced entities is:
-
-- `Type`: reject delete if referenced by any active piece at the candidate next version
-- `Quality`: reject delete if referenced by active props/stats
-- `Port`: reject delete if referenced by active connectors
-- `Layer`: reject delete if active design state depends on it
-- `Design`: allow tombstone only when owned children are tombstoned in the same batch
-
-This keeps the graph valid at every committed version.
-
-### 13.4 Example: delete a type while another user creates a design piece referencing that type
-
-Assume client A sends `DeleteType(T)` and client B sends `AddDesign(D) + AddPiece(P { type_id = T })` based on an older version.
-
-Because one actor serializes all writes:
-
-#### If delete commits first
-
-- the actor writes a tombstone revision for `Type T`
-- the next command resolves `Piece.type_id = T`
-- the policy `ReferenceMustExistAndBeActive` fails
-- the whole batch creating `D` and `P` is rejected atomically
-
-#### If create commits first
-
-- the actor writes the design and piece rows
-- the delete command then sees active references from piece `P`
-- the delete policy for `Type` rejects the delete
-
-No dangling current-state reference is ever committed.
-
----
-
-## 14. SQL transaction flow for accepted domain commands
-
-For each accepted domain batch:
-
-1. verify idempotency from `app.session_command`
-2. `select ... for update` the `app.session` row
-3. compute `next_domain_version = current_domain_version + 1`
-4. check touched properties against `app.property_clock`
-5. apply conflict policies
-6. perform semantic validation against the in-memory state and, when needed, SQL uniqueness checks
-7. close affected temporal rows by setting `valid_to_version = next_domain_version`
-8. insert replacement temporal rows with `valid_from_version = next_domain_version`
-9. insert into `app.domain_commit`
-10. upsert `app.property_clock`
-11. update `app.session.domain_version`
-12. mark the command accepted in `app.session_command`
-13. commit
-
-Broadcast to subscribers only after commit succeeds.
-
----
-
-## 15. API surface
-
-Keep the transport surface minimal and explicit.
-
-### 15.1 Write endpoints
+### Endpoints
 
 - `POST /sessions`
 - `POST /sessions/{session_id}/attach`
+- `GET /sessions/{session_id}/snapshot`
 - `POST /sessions/{session_id}/commands/domain`
 - `POST /sessions/{session_id}/commands/semio`
-
-### 15.2 Read endpoints
-
-- `GET /sessions/{session_id}/snapshot`
 - `GET /sessions/{session_id}/events?after_domain_version=...&after_semio_version=...`
-- `GET /sessions/{session_id}/artifacts/types/{type_id}`
-- `GET /sessions/{session_id}/artifacts/types/{type_id}?at=1d`
-- `GET /sessions/{session_id}/artifacts/designs/{design_id}`
-- `GET /sessions/{session_id}/artifacts/designs/{design_id}?at=5h`
 - `GET /sessions/{session_id}/ws`
 
-### 15.3 Historical artifact response metadata
+### Why not GraphQL mutations as the main write path?
 
-Historical artifact responses should include:
+Because the main difficulty is deterministic patch semantics and conflict handling, not nested query flexibility.
 
-- `artifact_id`
-- `artifact_kind`
-- `as_of_version`
-- `as_of_committed_at`
-- `requested_lookback`
-- `resolved_lookback`
-- `is_current`
+You can still add:
 
-This makes the historical view explicit and debuggable.
+- GraphQL read API later
+- generated read adapters later
 
----
+But the **authoritative write path** should be explicit commands.
 
-## 16. Snapshot loading and catch-up
+## 11.2 Read API
 
-### 16.1 Current snapshot
+Provide:
 
-A current snapshot loads all current domain and semio rows:
+- full session snapshot
+- lightweight summary endpoints
+- catch-up events since version N
+- live stream on WebSocket
 
-- domain rows where `valid_to_version is null`
-- semio rows keyed by current primary keys and not expired
+The snapshot should include:
 
-### 16.2 Event catch-up
+- full canonical domain state
+- current `domain_version`
+- current semio snapshot
+- current `semio_version`
 
-For reconnect support, provide:
+## 11.3 Live stream protocol
 
-- domain catch-up using `app.domain_commit` and rows changed after the client’s `after_domain_version`
-- semio catch-up using current semio rows newer than `after_semio_version`
+Broadcast three event categories:
 
-The implementation does not need a separate broker for correctness.
+- `domain_command_accepted`
+- `domain_command_rejected`
+- `semio_updated`
 
----
+For reconnect:
 
-## 17. In-memory state update strategy
-
-The session actor is the authoritative in-process mutator.
-
-For each accepted command:
-
-1. validate against the current in-memory state
-2. compute the next in-memory state
-3. persist the change transactionally
-4. only after success, publish the state transition
-
-The in-memory state should mirror the current SQL view only. Historical views are reconstructed on demand from temporal tables.
+1. client reconnects with `last_domain_version` and `last_semio_version`
+2. server returns missed events from history/current semio tables
+3. client resynchronizes deterministically
 
 ---
 
-## 18. Indexing strategy
+## 12. Session actor implementation
 
-Required indexes:
+## 12.1 Session directory
 
-- `session_command(session_id, client_id, request_id)` unique
-- `domain_commit(session_id, committed_at)`
-- `property_clock(session_id, entity_kind, entity_id, property_key)` primary key
-- per temporal table:
-  - `(session_id, entity_id, valid_to_version)`
-  - `(session_id, valid_from_version)`
-  - `(session_id, parent_id, valid_to_version)` where hierarchical lookups are common
-  - `(session_id, owner_id, valid_to_version)` for owned child tables
+A process-global registry maps `session_id` to active actor handle:
 
-For artifact history reads, the most important access path is:
-
-```text
-(session_id, owner_id, valid_from_version, valid_to_version)
+```rust
+DashMap<SessionId, SessionHandle>
 ```
 
-for child tables such as pieces, connectors, props, and group membership.
+A `SessionHandle` contains:
+
+- command sender
+- broadcast sender
+- liveness / refcount metadata
+
+## 12.2 Actor lifecycle
+
+### Activation
+- load session metadata
+- load canonical tables into `SessionState`
+- load semio state
+- start actor loop
+
+### Active processing
+- receive domain and semio commands
+- coalesce high-frequency semio updates
+- persist accepted changes
+- broadcast outcomes
+
+### Passivation
+- after inactivity timeout
+- actor flushes pending semio writes
+- drops in-memory state
+- session remains fully reconstructable from SQL
+
+## 12.3 Single-writer guarantee
+
+Within one service instance, the directory guarantees one actor per session.
+
+If you later need multi-instance deployment, add a DB lease on `runtime.session.writer_instance_id`, but do not build that now unless you actually need it.
+
+For the initial system:
+
+- one service instance
+- one actor per active session
+- one DB
+- one source of truth
+
+That is enough.
 
 ---
 
-## 19. Validation layers
+## 13. Persistence flow per accepted domain command
 
-Validation should be separated into four layers.
+Inside one SQL transaction:
 
-### 19.1 Transport validation
+1. verify idempotency (`runtime.session_command`)
+2. load current session version row `FOR UPDATE`
+3. compare `base_domain_version` against `runtime.property_clock` for touched properties
+4. execute conflict policies
+5. apply canonical row changes in `core.*`
+6. write `history.command`
+7. write `history.entity_create` / `history.entity_delete` / `history.*_change`
+8. upsert `runtime.property_clock`
+9. increment `runtime.session.domain_version`
+10. mark `runtime.session_command` accepted
+11. commit
 
-- UUID parsing
+Only after commit:
+
+12. update in-memory state if not already mutated as source of truth
+13. broadcast accepted event to subscribers
+
+If commit fails, broadcast nothing.
+
+---
+
+## 14. Semio persistence flow
+
+Semio is high-frequency, so treat it differently while keeping one writer actor.
+
+### 14.1 Coalescing
+
+Inside the actor, coalesce repeated semio updates per `(person_id, frontend_id)`:
+
+- cursor: keep latest only
+- look/camera: keep latest only
+- selection: keep latest full replacement only
+
+Flush at a fixed cadence such as every 50-100 ms, or immediately on important transitions.
+
+### 14.2 Separate semio version
+
+Domain state and semio state must not share the same version counter.
+
+Use:
+
+- `domain_version` for canonical data
+- `semio_version` for presence/presentation state
+
+This prevents cursor chatter from invalidating domain commands.
+
+### 14.3 Expiry
+
+Each semio row has `expires_at`.
+
+A periodic cleanup task:
+
+- marks stale presence as absent
+- removes stale selections/cursor/look if needed
+- emits semio updates
+
+Persistence rule:
+
+- semio survives process restarts
+- semio expires automatically
+- semio is queryable and streamable
+- semio does not participate in domain referential invariants except for obvious FK validity where needed
+
+---
+
+## 15. Validation rules
+
+Validation should be split into four layers.
+
+## 15.1 Transport validation
+- required fields
 - enum decoding
-- required JSON shape
-- supported lookback token validation
+- UUID parsing
+- command shape
 
-### 19.2 Domain validation
-
-- required names
+## 15.2 Domain validation
+- names not empty where required
 - numeric ranges
-- allowed combinations of flags
-- connection endpoint consistency
-- group membership ordering constraints
+- ownership consistency
+- no impossible connection side combinations
 
-### 19.3 Referential validation
+## 15.3 Referential validation
+- referenced row exists in same session
+- referenced row is active
+- referenced row belongs to correct owning design/type
 
-- referenced entity exists in the same session at current version
-- referenced entity is active
-- referenced entity belongs to the correct owner
-
-### 19.4 Conflict validation
-
-- touched property changed after `base_domain_version`
-- policy outcome for that property
-- delete policy outcome for referenced targets
+## 15.4 Conflict validation
+- touched properties changed after base version?
+- if yes, apply property policy
+- if policy says reject, reject atomically
 
 ---
 
-## 20. Testing strategy
+## 16. Testing strategy
 
-### 20.1 Unit tests in `bin.rs`
+## 16.1 Unit tests
+Cover:
 
-Keep a large inline `#[cfg(test)]` section with focused test helpers.
+- command decoding
+- property touched-set computation
+- conflict policy application
+- delete policy checks
+- semio coalescing
+- domain invariants
 
-Test:
+## 16.2 SQL integration tests
+For each entity kind:
 
-- `FieldPatch<T>` behavior
+- create
+- update
+- tombstone
+- reject invalid reference
+- reject invalid delete
+- load snapshot
+
+For cyclic behavior:
+
+- self-parent creation in one batch
+- cross-reference creation in one batch
+- deferred FK validation
+
+## 16.3 Session actor tests
+Use deterministic actor tests for:
+
+- idempotent retry
+- stale command rejection
+- conflict merge outcomes
+- command ordering
+- snapshot + catch-up after restart
+
+## 16.4 Concurrency tests
+Even with one writer actor, test:
+
+- many API callers racing to same session
+- actor mailbox backpressure
+- reconnect + replay
+- semio storm behavior
+
+## 16.5 Property-policy matrix tests
+For every mutable property, add a table-driven test asserting:
+
+- touched property key
+- conflict policy
+- behavior on stale base version
+- behavior on target tombstone
+
+This is one of the highest-value test suites in the system.
+
+---
+
+## 17. Observability
+
+Instrument every command with:
+
+- `session_id`
+- `command_id`
+- `command_kind`
+- `actor_person_id`
+- `base_domain_version`
+- `accepted_domain_version`
+- `conflict_count`
+- `duration_ms`
+
+Metrics:
+
+- active session actors
+- actor mailbox depth
+- domain commands/sec
+- semio commands/sec
+- conflict rejects/sec
+- idempotent retries/sec
+- snapshot load time
+- SQL transaction duration
+- semio flush batch size
+
+Logs should never be the only source of truth. History tables remain the audit source.
+
+---
+
+## 18. Security and authorization
+
+Keep auth simple:
+
+- authenticate frontend/user
+- authorize session membership
+- map authenticated principal to `person_id`
+- record `actor_person_id` on every command
+
+Add role checks if needed:
+
+- viewer
+- editor
+- owner
+
+Semio writes require at least session attachment; domain writes require editor role.
+
+---
+
+## 19. Migration from the uploaded GraphQL schema
+
+Because you explicitly want a clean new solution, do not preserve the current GraphQL diff shape as the backend’s internal contract.
+
+Use the uploaded schema only as a **domain inventory** and **field/reference map**.
+
+Recommended approach:
+
+1. inventory all entities and fields from the schema
+2. define Rust domain structs and commands from scratch
+3. define SQL tables from domain ownership and references
+4. define read DTOs separately
+5. only after that, decide whether to expose:
+   - REST/JSON reads only
+   - GraphQL reads
+   - or generated typed frontend clients
+
+The current schema is best treated as analysis input, not architecture.
+
+---
+
+## 20. Concrete implementation phases
+
+## Phase 0 — Domain inventory and property map
+Deliverables:
+
+- entity catalog
+- ownership map
+- reference map
+- mutable property list
+- `PropertyKey` enum draft
+- delete policy matrix draft
+
+Acceptance criteria:
+
+- every mutable field in the schema mapped to:
+  - owning entity
+  - SQL column(s)
+  - property key
+  - conflict policy
+  - delete/reference rule
+
+## Phase 1 — Rust scaffolding
+Deliverables:
+
+- workspace
+- CI
+- formatting/linting
+- error model
+- ID newtypes
+- shared time/UUID utilities
+- basic axum/sqlx app skeleton
+
+Acceptance criteria:
+
+- service boots
+- health endpoint works
+- DB migrations run
+- compile-time SQL checking is enabled
+
+## Phase 2 — Core SQL schema
+Deliverables:
+
+- `runtime`, `core`, `history`, `semio` schemas
+- base enums
+- canonical entity tables
+- join tables
+- deferred FKs where required
+- essential indexes
+
+Acceptance criteria:
+
+- full canonical schema migrates cleanly
+- all FKs and unique constraints are in place
+- snapshot load queries compile and run
+
+## Phase 3 — Session runtime
+Deliverables:
+
+- session directory
+- actor lifecycle
+- snapshot loader
+- actor passivation
+- in-memory `SessionState`
+
+Acceptance criteria:
+
+- one actor created per active session
+- repeated attaches reuse same actor
+- actor reconstructs state from DB
+
+## Phase 4 — Domain command model
+Deliverables:
+
+- command enums
+- field patch types
+- transport DTOs
 - touched-property computation
-- conflict policy matrix
-- lookback token parsing
-- as-of version resolution
-- temporal row close/open logic
-- delete policy logic
+- command validation framework
 
-### 20.2 Integration tests against PostgreSQL
+Acceptance criteria:
 
-Test these scenarios:
+- commands decode unambiguously
+- touched properties are deterministic
+- validation errors are structured
 
-- create and patch Type
-- create and patch Design
-- create piece referencing type
-- reject delete of referenced type
-- accept delete of unreferenced type
-- reconstruct design at `1min`, `1h`, `1d`, and `1y` lookbacks
-- historical design read resolves historical referenced type versions
-- tombstoned artifact still viewable before tombstone point
-- batch create with deferred self-reference
+## Phase 5 — Conflict engine
+Deliverables:
 
-### 20.3 Session actor tests
+- `PropertyKey` enum
+- conflict policy registry
+- property clock queries
+- conflict outcome formatter
 
-Test:
+Acceptance criteria:
 
-- idempotent retries
-- stale base version rejection
-- serialized command ordering
-- current snapshot after restart
-- semio coalescing under load
+- stale writes are detected per property
+- configured policies behave correctly
+- command outcomes are deterministic
+
+## Phase 6 — Canonical persistence and history
+Deliverables:
+
+- repositories for canonical writes
+- history writers
+- property clock upserts
+- version increment logic
+- idempotency checks
+
+Acceptance criteria:
+
+- accepted command updates canonical tables
+- history rows are written
+- version increments exactly once
+- retried command is idempotent
+
+## Phase 7 — Semio subsystem
+Deliverables:
+
+- semio commands
+- semio tables
+- semio versioning
+- coalescing logic
+- expiry cleanup
+
+Acceptance criteria:
+
+- cursor/look/presence survive restart
+- semio updates do not change domain version
+- stale semio data expires correctly
+
+## Phase 8 — API and streaming
+Deliverables:
+
+- snapshot endpoint
+- domain command endpoint
+- semio command endpoint
+- catch-up endpoint
+- WebSocket stream
+
+Acceptance criteria:
+
+- client can attach, load snapshot, issue commands, reconnect, and catch up
+
+## Phase 9 — Invariant and scenario test suite
+Deliverables:
+
+- delete/reference tests
+- cyclic create tests
+- stale write tests
+- type-delete versus piece-create tests
+- restart/recovery tests
+
+Acceptance criteria:
+
+- all critical scenarios are automated
+- no known ambiguous merge behavior remains
+
+## Phase 10 — Performance and hardening
+Deliverables:
+
+- indexes tuned
+- N+1 query review
+- actor backpressure handling
+- metrics dashboards
+- operational runbook
+
+Acceptance criteria:
+
+- target session size loads within agreed SLA
+- target command throughput is met
+- observability is sufficient for production debugging
 
 ---
 
-## 21. Recommended implementation order
+## 21. Recommended first milestone
 
-### Phase 1: foundation
+The first production-worthy milestone should support only:
 
-- create `bin.rs`
-- wire `axum`, `tokio`, `sqlx`, logging, config
-- create migrations for the single `app` schema
-- implement `app.session`, `app.session_command`, `app.domain_commit`, `app.property_clock`
+- one service instance
+- one session actor per active session
+- one session root (`Kit`)
+- core domain entities:
+  - `Type`
+  - `Design`
+  - `Piece`
+  - `Connection`
+  - `Layer`
+  - `Group`
+  - `Quality`
+  - `Prop`
+  - `Port`
+- semio entities:
+  - `Person`
+  - `Cursor`
+  - `Look`
+  - `PieceSelection`
 
-### Phase 2: current domain essentials
+Plus these guarantees:
 
-- implement temporal tables for `kit_row`, `type_row`, `design_row`, `piece_row`, `layer_row`, `group_row`, `group_piece_row`, `connection_row`
-- implement snapshot loader for current state
-- implement session actor and session directory
-
-### Phase 3: command path
-
-- add explicit command DTOs and domain types
-- implement touched-property computation
-- implement conflict policy registry
-- implement transactional temporal writes
-
-### Phase 4: semio
-
-- add `semio_person`, `semio_cursor`, `semio_look`, and `semio_selection_piece`
-- add semio versioning and coalescing
-- add WebSocket push
-
-### Phase 5: historical artifacts
-
-- implement `as_of_version` resolution using `app.domain_commit`
-- implement Type artifact reconstruction at any supported lookback
-- implement Design artifact reconstruction at any supported lookback
-- add response metadata describing the resolved historical point
-
-### Phase 6: hardening
-
-- indexes
-- performance review of artifact reads
-- backpressure behavior on actor mailboxes
-- operational metrics and structured logs
-
----
-
-## 22. Final solution summary
-
-The service is a single Rust application implemented in one source file, `bin.rs`, backed by one PostgreSQL schema, `app`.
-
-The key design choices are:
-
-- one logical writer actor per session
-- explicit typed commands
-- strongly typed relational persistence only
-- temporal domain tables with `valid_from_version` / `valid_to_version`
+- typed SQL schema
+- no JSON persistence
+- typed commands
+- per-property conflict detection
 - tombstone deletes
-- compile-time property conflict registry
-- persisted semio entities with a separate `semio_version`
-- historical Type and Design artifact reconstruction through `as_of_version` queries resolved from `domain_commit`
+- deterministic rejection of invalid stale references
+- restart-safe semio persistence
 
-This design is intentionally conservative in moving parts and ambitious in correctness. It avoids distributed-systems overshoot, keeps the current-state model strongly typed, preserves deterministic conflict handling, supports cyclic dependencies cleanly, and makes historical artifact viewing a native capability rather than an afterthought.
+That is enough to prove the architecture without overshooting.
+
+---
+
+## 22. Key rules to keep the implementation clean
+
+1. **One session actor is the only writer.**
+2. **No JSON state or JSON diff persistence.**
+3. **Every mutable field has a `PropertyKey`.**
+4. **Every delete has an explicit policy.**
+5. **No hard deletes in normal mutation flow.**
+6. **Semio has its own version clock.**
+7. **Transport DTOs are not the domain model.**
+8. **Batch commands are the unit for cyclic graph edits.**
+9. **History is append-only and typed.**
+10. **Queries hide tombstones by default.**
+
+---
+
+## 23. Final recommendation
+
+Implement the service as a **single Rust application with a session actor runtime and PostgreSQL-backed normalized storage**.
+
+The key architecture choices are:
+
+- **session-scoped canonical state**
+- **one logical writer actor per session**
+- **explicit typed commands**
+- **typed relational current state**
+- **typed relational history**
+- **property-clock-based conflict detection**
+- **tombstone deletion**
+- **deferred FKs for same-transaction cyclic graph creation**
+- **separate semio subsystem with independent versioning**
+
+That combination gives you:
+
+- maximum type safety
+- deterministic conflict handling
+- support for cyclic references
+- persisted canonical and semio state
+- no unnecessary distributed systems complexity
+
+## 24. Suggested next concrete artifacts
+
+After this plan, the next three implementation artifacts should be produced in order:
+
+1. **Property map spreadsheet**
+   - every mutable field
+   - owning entity
+   - SQL columns
+   - conflict policy
+   - delete/reference policy
+
+2. **SQL migration set**
+   - enums
+   - core tables
+   - history tables
+   - semio tables
+   - indexes
+   - deferred FKs
+
+3. **Rust command and domain type skeleton**
+   - ID newtypes
+   - entity structs
+   - `FieldPatch<T>`
+   - `DomainCommand`
+   - `SemioCommand`
+   - `PropertyKey`
+   - `ConflictPolicy`

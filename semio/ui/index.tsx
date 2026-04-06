@@ -95,14 +95,23 @@ export * from "@elements/ui/elements";
 // #endregion 🔖Exports
 
 // #region 🔖Kit
-// Specs: Kit provides a kit-scoped artifact picker (designs, types, ports/connectors)
+// Specs: Kit provides a kit-scoped artifact picker (designs, kinds, kit-level ports, type connectors)
 // with the standard Semio UI controllable-state pattern: partial/full controlled/uncontrolled for
 // both available data and selection. It supports partial/full select via per-group enable flags.
 // Summary: Kit hierarchy browser with controllable data + selection, metadata, and artifact open action.
 
-export type KitGroupKind = "design" | "type" | "port";
+export type KitGroupKind = "design" | "type" | "port" | "connector";
 
-export interface KitPort {
+/** Kit-level {@link Port} rows (from {@link Kit.ports}), not type {@link Connector}s. */
+export interface KitPortArtifact {
+  guid: string;
+  name: string;
+  description?: string;
+  icon?: string;
+}
+
+/** Flattened type {@link Connector} rows for browsing (nested under kinds in the hierarchy). */
+export interface KitConnectorArtifact {
   guid: string;
   typeGuid: string;
   id?: string;
@@ -135,13 +144,17 @@ export interface KitData {
   license?: string;
   designs?: KitDesignData[];
   types?: KitKindData[];
-  ports?: KitPort[];
+  /** Kit-level ports ({@link Port} entities). */
+  ports?: KitPortArtifact[];
+  /** Flattened connectors from kinds ({@link Connector} on {@link SemioKind}). */
+  connectors?: KitConnectorArtifact[];
 }
 
 export interface KitSelection {
   designGuids?: string[];
   typeGuids?: string[];
   portGuids?: string[];
+  connectorGuids?: string[];
 }
 
 export interface KitProps {
@@ -158,11 +171,13 @@ export interface KitProps {
   designSelectionEnabled?: boolean;
   typeSelectionEnabled?: boolean;
   portSelectionEnabled?: boolean;
+  connectorSelectionEnabled?: boolean;
 
   dataEnabled?: boolean;
   designDataEnabled?: boolean;
   typeDataEnabled?: boolean;
   portDataEnabled?: boolean;
+  connectorDataEnabled?: boolean;
 
   onOpenArtifact?: (artifact: KitHierarchyNode) => void;
 
@@ -174,6 +189,7 @@ const normalizeKitSelection = (selection?: KitSelection): KitSelection => ({
   designGuids: selection?.designGuids ?? [],
   typeGuids: selection?.typeGuids ?? [],
   portGuids: selection?.portGuids ?? [],
+  connectorGuids: selection?.connectorGuids ?? [],
 });
 
 const getReferenceGuid = (value: unknown): string | undefined => {
@@ -215,13 +231,19 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     image: t.image,
     parent: t.parent ? { guid: t.parent.guid } : undefined,
   }));
-  const ports: KitPort[] = (kit.types ?? []).flatMap((t) =>
+  const ports: KitPortArtifact[] = (kit.ports ?? []).map((p) => ({
+    guid: p.guid,
+    name: p.name,
+    description: p.description,
+    icon: p.icon,
+  }));
+  const connectors: KitConnectorArtifact[] = (kit.types ?? []).flatMap((t) =>
     (t.connectors ?? []).map((c) => ({
       guid: c.guid,
       typeGuid: t.guid,
       id: c.name,
       port: getReferenceGuid(c.port),
-      name: c.name || getReferenceLabel(c.port) || "port",
+      name: c.name || getReferenceLabel(c.port) || "connector",
       description: c.description,
       mandatory: c.mandatory,
     })),
@@ -242,10 +264,11 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     designs,
     types,
     ports,
+    connectors,
   };
 };
 
-type KitHierarchyNodeKind = "scope" | "kit" | "group" | "design" | "kind" | "port";
+type KitHierarchyNodeKind = "scope" | "kit" | "group" | "design" | "kind" | "port" | "connector";
 
 export interface KitHierarchyNode {
   key: string;
@@ -272,12 +295,16 @@ const addKitMetaEntry = (entries: Array<{ label: string; value: string }>, label
 
 const getKitArtifactHref = (value: Partial<KitData & KitDesignData & KitKindData>): string | undefined => value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;
 
-const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean }): KitHierarchy => {
+const buildKitHierarchy = (
+  data: KitData,
+  options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean; connectorDataEnabled: boolean },
+): KitHierarchy => {
   const rootKey = "scope:kit";
   const kitKey = "kit:root";
   const designGroupKey = "group:designs";
   const kindGroupKey = "group:types";
-  const portGroupKey = "group:ports";
+  const kitPortsGroupKey = "group:kit-ports";
+  const orphanConnectorGroupKey = "group:orphan-connectors";
   const nodesByKey = new Map<string, KitHierarchyNode>();
   const childKeysByParentKey = new Map<string, string[]>();
 
@@ -292,7 +319,8 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
 
   const designCount = String(data.designs?.length ?? 0);
   const kindCount = String(data.types?.length ?? 0);
-  const portCount = String(data.ports?.length ?? 0);
+  const kitPortCount = String(data.ports?.length ?? 0);
+  const connectorCount = String(data.connectors?.length ?? 0);
 
   registerNode({
     key: rootKey,
@@ -302,7 +330,8 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
     metadata: [
       { label: "Designs", value: designCount },
       { label: "Types", value: kindCount },
-      { label: "Ports", value: portCount },
+      { label: "Ports", value: kitPortCount },
+      { label: "Connectors", value: connectorCount },
     ],
   });
 
@@ -348,6 +377,18 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
       groupKind: "type",
       summary: "Type hierarchy.",
       metadata: [{ label: "Count", value: kindCount }],
+    });
+  }
+
+  if (options.portDataEnabled && (data.ports?.length ?? 0) > 0) {
+    registerNode({
+      key: kitPortsGroupKey,
+      kind: "group",
+      label: "Ports",
+      parentKey: kitKey,
+      groupKind: "port",
+      summary: "Kit-level port definitions.",
+      metadata: [{ label: "Count", value: kitPortCount }],
     });
   }
 
@@ -397,39 +438,62 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
     });
   });
 
-  let orphanPortCount = 0;
-  (data.ports ?? []).forEach((port) => {
-    const metadata: Array<{ label: string; value: string }> = [];
-    addKitMetaEntry(metadata, "Kind", "Port");
-    addKitMetaEntry(metadata, "Name", port.name);
-    addKitMetaEntry(metadata, "Guid", port.guid);
-    addKitMetaEntry(metadata, "Connector Id", port.id);
-    addKitMetaEntry(metadata, "Port", port.port);
-    addKitMetaEntry(metadata, "Description", port.description);
-    addKitMetaEntry(metadata, "Mandatory", port.mandatory === undefined ? undefined : String(port.mandatory));
-    const parentKey = kindKeyByGuid.get(port.typeGuid) ?? portGroupKey;
-    if (parentKey === portGroupKey) orphanPortCount += 1;
-    registerNode({
-      key: `port:${port.guid}`,
-      kind: "port",
-      label: port.name || port.guid,
-      parentKey,
-      guid: port.guid,
-      groupKind: "port",
-      summary: port.description || "Port artifact.",
-      metadata,
+  if (options.portDataEnabled) {
+    (data.ports ?? []).forEach((port) => {
+      const metadata: Array<{ label: string; value: string }> = [];
+      addKitMetaEntry(metadata, "Kind", "Port");
+      addKitMetaEntry(metadata, "Name", port.name);
+      addKitMetaEntry(metadata, "Guid", port.guid);
+      addKitMetaEntry(metadata, "Description", port.description);
+      registerNode({
+        key: `port:${port.guid}`,
+        kind: "port",
+        label: port.name || port.guid,
+        parentKey: kitPortsGroupKey,
+        guid: port.guid,
+        groupKind: "port",
+        href: port.icon,
+        summary: port.description || "Port definition.",
+        metadata,
+      });
     });
-  });
+  }
 
-  if (orphanPortCount > 0 && options.portDataEnabled) {
+  let orphanConnectorCount = 0;
+  if (options.connectorDataEnabled) {
+    (data.connectors ?? []).forEach((connector) => {
+      const metadata: Array<{ label: string; value: string }> = [];
+      addKitMetaEntry(metadata, "Kind", "Connector");
+      addKitMetaEntry(metadata, "Name", connector.name);
+      addKitMetaEntry(metadata, "Guid", connector.guid);
+      addKitMetaEntry(metadata, "Connector Id", connector.id);
+      addKitMetaEntry(metadata, "Port", connector.port);
+      addKitMetaEntry(metadata, "Description", connector.description);
+      addKitMetaEntry(metadata, "Mandatory", connector.mandatory === undefined ? undefined : String(connector.mandatory));
+      const parentKey = kindKeyByGuid.get(connector.typeGuid) ?? orphanConnectorGroupKey;
+      if (parentKey === orphanConnectorGroupKey) orphanConnectorCount += 1;
+      registerNode({
+        key: `connector:${connector.guid}`,
+        kind: "connector",
+        label: connector.name || connector.guid,
+        parentKey,
+        guid: connector.guid,
+        groupKind: "connector",
+        summary: connector.description || "Connector on a kind.",
+        metadata,
+      });
+    });
+  }
+
+  if (orphanConnectorCount > 0 && options.connectorDataEnabled) {
     registerNode({
-      key: portGroupKey,
+      key: orphanConnectorGroupKey,
       kind: "group",
-      label: "Ports",
+      label: "Connectors",
       parentKey: kitKey,
-      groupKind: "port",
-      summary: "Ports without a resolved type parent.",
-      metadata: [{ label: "Count", value: String(orphanPortCount) }],
+      groupKind: "connector",
+      summary: "Connectors without a resolved kind parent.",
+      metadata: [{ label: "Count", value: String(orphanConnectorCount) }],
     });
   }
 
@@ -462,13 +526,16 @@ const getKitChildNodes = (hierarchy: KitHierarchy, node: KitHierarchyNode): KitH
 };
 
 const getKitNodeSelection = (node: KitHierarchyNode): KitSelection => {
-  if (node.kind === "design") return { designGuids: node.guid ? [node.guid] : [], typeGuids: [], portGuids: [] };
-  if (node.kind === "kind") return { designGuids: [], typeGuids: node.guid ? [node.guid] : [], portGuids: [] };
-  if (node.kind === "port") return { designGuids: [], typeGuids: [], portGuids: node.guid ? [node.guid] : [] };
-  return { designGuids: [], typeGuids: [], portGuids: [] };
+  if (node.kind === "design") return { designGuids: node.guid ? [node.guid] : [], typeGuids: [], portGuids: [], connectorGuids: [] };
+  if (node.kind === "kind") return { designGuids: [], typeGuids: node.guid ? [node.guid] : [], portGuids: [], connectorGuids: [] };
+  if (node.kind === "port") return { designGuids: [], typeGuids: [], portGuids: node.guid ? [node.guid] : [], connectorGuids: [] };
+  if (node.kind === "connector") return { designGuids: [], typeGuids: [], portGuids: [], connectorGuids: node.guid ? [node.guid] : [] };
+  return { designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] };
 };
 
 const getSelectedKitNodeKey = (hierarchy: KitHierarchy, selection: KitSelection): string | undefined => {
+  const selectedConnector = selection.connectorGuids?.[0];
+  if (selectedConnector && hierarchy.nodesByKey.has(`connector:${selectedConnector}`)) return `connector:${selectedConnector}`;
   const selectedPort = selection.portGuids?.[0];
   if (selectedPort && hierarchy.nodesByKey.has(`port:${selectedPort}`)) return `port:${selectedPort}`;
   const selectedKind = selection.typeGuids?.[0];
@@ -574,10 +641,12 @@ export const SemioKit: React.FC<KitProps> = ({
   designSelectionEnabled = true,
   typeSelectionEnabled = true,
   portSelectionEnabled = true,
+  connectorSelectionEnabled = true,
   dataEnabled,
   designDataEnabled = true,
   typeDataEnabled = true,
   portDataEnabled = true,
+  connectorDataEnabled = true,
   onOpenArtifact,
   title = "Kit Artifacts",
   className,
@@ -594,18 +663,20 @@ export const SemioKit: React.FC<KitProps> = ({
   const effectiveData = effectiveDataEnabled ? resolvedData : {};
   const effectiveDesigns = designDataEnabled ? (effectiveData.designs ?? []) : [];
   const effectiveTypes = typeDataEnabled ? (effectiveData.types ?? []) : [];
-  const effectivePorts = portDataEnabled ? (effectiveData.ports ?? []) : [];
+  const effectiveKitPorts = portDataEnabled ? (effectiveData.ports ?? []) : [];
+  const effectiveConnectors = connectorDataEnabled ? (effectiveData.connectors ?? []) : [];
 
   const setNextSelection = React.useCallback(
-    (next: { designGuids?: string[]; typeGuids?: string[]; portGuids?: string[] }) => {
+    (next: { designGuids?: string[]; typeGuids?: string[]; portGuids?: string[]; connectorGuids?: string[] }) => {
       if (!effectiveSelectionEnabled) return;
       setResolvedSelection({
         designGuids: designSelectionEnabled ? (next.designGuids ?? []) : [],
         typeGuids: typeSelectionEnabled ? (next.typeGuids ?? []) : [],
         portGuids: portSelectionEnabled ? (next.portGuids ?? []) : [],
+        connectorGuids: connectorSelectionEnabled ? (next.connectorGuids ?? []) : [],
       });
     },
-    [designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, setResolvedSelection, typeSelectionEnabled],
+    [connectorSelectionEnabled, designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, setResolvedSelection, typeSelectionEnabled],
   );
 
   // If kit changes and data is uncontrolled, adopt derived data from `kit`.
@@ -623,9 +694,19 @@ export const SemioKit: React.FC<KitProps> = ({
     const parts: string[] = [];
     if (designDataEnabled) parts.push(`${effectiveDesigns.length} designs`);
     if (typeDataEnabled) parts.push(`${effectiveTypes.length} types`);
-    if (portDataEnabled) parts.push(`${effectivePorts.length} ports`);
+    if (portDataEnabled) parts.push(`${effectiveKitPorts.length} ports`);
+    if (connectorDataEnabled) parts.push(`${effectiveConnectors.length} connectors`);
     return parts.join(" · ");
-  }, [designDataEnabled, effectiveDesigns.length, portDataEnabled, effectivePorts.length, typeDataEnabled, effectiveTypes.length]);
+  }, [
+    connectorDataEnabled,
+    designDataEnabled,
+    effectiveConnectors.length,
+    effectiveDesigns.length,
+    effectiveKitPorts.length,
+    effectiveTypes.length,
+    portDataEnabled,
+    typeDataEnabled,
+  ]);
 
   const hierarchy = React.useMemo(
     () =>
@@ -634,15 +715,27 @@ export const SemioKit: React.FC<KitProps> = ({
           ...effectiveData,
           designs: effectiveDesigns,
           types: effectiveTypes,
-          ports: effectivePorts,
+          ports: effectiveKitPorts,
+          connectors: effectiveConnectors,
         },
         {
           designDataEnabled,
           typeDataEnabled,
           portDataEnabled,
+          connectorDataEnabled,
         },
       ),
-    [designDataEnabled, effectiveData, effectiveDesigns, effectivePorts, effectiveTypes, portDataEnabled, typeDataEnabled],
+    [
+      connectorDataEnabled,
+      designDataEnabled,
+      effectiveConnectors,
+      effectiveData,
+      effectiveDesigns,
+      effectiveKitPorts,
+      effectiveTypes,
+      portDataEnabled,
+      typeDataEnabled,
+    ],
   );
 
   const selectedNodeKey = React.useMemo(() => getSelectedKitNodeKey(hierarchy, resolvedSelection), [hierarchy, resolvedSelection]);
@@ -671,9 +764,18 @@ export const SemioKit: React.FC<KitProps> = ({
       if (node.kind === "design" && !designSelectionEnabled) return;
       if (node.kind === "kind" && !typeSelectionEnabled) return;
       if (node.kind === "port" && !portSelectionEnabled) return;
+      if (node.kind === "connector" && !connectorSelectionEnabled) return;
       setNextSelection(getKitNodeSelection(node));
     },
-    [designSelectionEnabled, effectiveSelectionEnabled, hierarchy.nodesByKey, portSelectionEnabled, setNextSelection, typeSelectionEnabled],
+    [
+      connectorSelectionEnabled,
+      designSelectionEnabled,
+      effectiveSelectionEnabled,
+      hierarchy.nodesByKey,
+      portSelectionEnabled,
+      setNextSelection,
+      typeSelectionEnabled,
+    ],
   );
 
   const breadcrumbItems = React.useMemo(() => {
@@ -2906,8 +3008,9 @@ const isEmptyKitArtifactsData = (ka: unknown): boolean => {
   const guid = typeof o.guid === "string" ? o.guid.trim() : "";
   const d = Array.isArray(o.designs) ? o.designs.length : 0;
   const t = Array.isArray(o.types) ? o.types.length : 0;
-  const p = Array.isArray(o.ports) ? o.ports.length : 0;
-  return name.length === 0 && guid.length === 0 && d === 0 && t === 0 && p === 0;
+  const kp = Array.isArray(o.ports) ? o.ports.length : 0;
+  const c = Array.isArray(o.connectors) ? o.connectors.length : 0;
+  return name.length === 0 && guid.length === 0 && d === 0 && t === 0 && kp === 0 && c === 0;
 };
 
 /**
@@ -2994,7 +3097,7 @@ const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
   else if (p.surface === "scene") s += 200;
   const ka = p.kitArtifacts;
   if (ka) {
-    s += (ka.designs?.length ?? 0) * 10 + (ka.types?.length ?? 0) * 10 + (ka.ports?.length ?? 0);
+    s += (ka.designs?.length ?? 0) * 10 + (ka.types?.length ?? 0) * 10 + (ka.ports?.length ?? 0) + (ka.connectors?.length ?? 0);
     if (typeof ka.name === "string" && ka.name.trim().length > 0) s += 50;
     if (typeof ka.guid === "string" && ka.guid.trim().length > 0) s += 10;
   }
@@ -3286,15 +3389,11 @@ export function mcpEffectiveSurface(p: McpDiagramPayload | null | undefined): "d
   const mode = p.mode ?? "show-diagram";
   if (mode === "show-design" || mode === "show-diff" || mode === "show-diagram-diff") return "design";
   if (mode === "show-scene") return "scene";
-  if (p.surface === "design" || p.surface === "scene" || p.surface === "diagram") {
-    if (p.surface === "diagram" && p.design && p.kit && (mode === "show-diagram" || mode === "show-diagram-diff")) {
-      return "design";
-    }
-    return p.surface;
+  if (mode === "show-diagram") {
+    if (p.surface === "design" || p.surface === "scene") return p.surface;
+    return "diagram";
   }
-  if (p.design && p.kit && (mode === "show-diagram" || mode === "show-diagram-diff")) {
-    return "design";
-  }
+  if (p.surface === "design" || p.surface === "scene" || p.surface === "diagram") return p.surface;
   return "diagram";
 }
 
@@ -3329,7 +3428,12 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
       connecting: { piece: { guid: p.points.find((q) => q.u === l.targetU && q.v === l.targetV)?.guid ?? "" } },
     })),
   } as unknown as Design;
-  const diagramDesign = design ?? fallbackDesign;
+  // Prefer JS-flattened design (correct cytoscape BFS centers) over raw Python-enriched design, over points fallback.
+  // If the chosen design has no pieces with centers, fall back to the pre-computed points/lines
+  // which always have coordinates (hosts may truncate the design or flatten may fail).
+  const candidateDesign = (designFlat ?? design) as Design | undefined;
+  const candidateHasCenters = candidateDesign?.pieces?.some((pc) => pc.center) ?? false;
+  const diagramDesign = (candidateHasCenters ? candidateDesign! : (hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign))) as Design;
   const forKitFallback = surface === "diagram" && Boolean(p.kitArtifacts && canDisplayKitArtifactsFallback(p.mode, hasDiagramPoints, designGuid));
   return {
     surface,
@@ -3352,7 +3456,6 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
 export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram", diff?: DesignDiff): Design {
-  if (surface !== "design" && surface !== "scene") return diff ? designWithDiff(design, diff) : design;
   if (!kit) return diff ? designWithDiff(design, diff) : design;
 
   const merged = diff ? designWithDiff(design, diff) : design;
@@ -3388,7 +3491,7 @@ export const McpDesignViewer: React.FC = () => {
   const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
   const [selectedPieces, setSelectedPieces] = React.useState<Set<string>>(new Set());
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
-  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [] });
+  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
   const appRef = React.useRef<McpApp | null>(null);
   const tryRefetchRef = React.useRef<() => void>(() => { });
   const lastDiagramPayloadScoreRef = React.useRef<number>(-1);
@@ -3427,7 +3530,7 @@ export const McpDesignViewer: React.FC = () => {
       lastDiagramPayloadScoreRef.current = s;
       setSelectedPieces(new Set());
       setSelectedConnections(new Set());
-      setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
+      setKitSelection({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
     }
   }, [payload]);
 
@@ -3520,7 +3623,19 @@ export const McpDesignViewer: React.FC = () => {
   const sendKitSelectionUpdate = React.useCallback((next: KitSelection) => {
     if (!appRef.current) return;
     appRef.current.updateModelContext({
-      content: [{ type: "text" as const, text: JSON.stringify({ kitArtifactSelectionChange: { designGuids: next.designGuids ?? [], typeGuids: next.typeGuids ?? [], portGuids: next.portGuids ?? [] } }) }],
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            kitArtifactSelectionChange: {
+              designGuids: next.designGuids ?? [],
+              typeGuids: next.typeGuids ?? [],
+              portGuids: next.portGuids ?? [],
+              connectorGuids: next.connectorGuids ?? [],
+            },
+          }),
+        },
+      ],
     });
   }, []);
 
@@ -3633,7 +3748,7 @@ export const McpDesignViewer: React.FC = () => {
  **/
 export const McpKitViewer: React.FC = () => {
   const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
-  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [] });
+  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
   const appRef = React.useRef<McpApp | null>(null);
   const toolInputArgsRef = React.useRef<Record<string, unknown> | null>(null);
   const gotPayloadRef = React.useRef(false);
@@ -3652,7 +3767,7 @@ export const McpKitViewer: React.FC = () => {
     if (!isKitViewerPayloadSufficient(p)) return;
     gotPayloadRef.current = true;
     setPayload(p);
-    setKitSelection({ designGuids: [], typeGuids: [], portGuids: [] });
+    setKitSelection({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
   }, []);
 
   const tryRefetchKitFromServer = React.useCallback(async () => {
@@ -3755,7 +3870,19 @@ export const McpKitViewer: React.FC = () => {
   const sendKitSelectionUpdate = React.useCallback((next: KitSelection) => {
     if (!appRef.current) return;
     appRef.current.updateModelContext({
-      content: [{ type: "text" as const, text: JSON.stringify({ kitArtifactSelectionChange: { designGuids: next.designGuids ?? [], typeGuids: next.typeGuids ?? [], portGuids: next.portGuids ?? [] } }) }],
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            kitArtifactSelectionChange: {
+              designGuids: next.designGuids ?? [],
+              typeGuids: next.typeGuids ?? [],
+              portGuids: next.portGuids ?? [],
+              connectorGuids: next.connectorGuids ?? [],
+            },
+          }),
+        },
+      ],
     });
   }, []);
 
@@ -3836,6 +3963,253 @@ export const McpKitViewer: React.FC = () => {
   );
 };
 
+// #region 🔖McpSceneViewer
+// Specs: Dedicated MCP App scene viewer — always renders SemioScene (3D only), ignoring payload surface/mode.
+// Summary: Standalone 3D-scene-only MCP viewer component.
+
+/**
+ * MCP App scene viewer: always renders {@link SemioScene} from tool results.
+ * Used when the MCP host loads `ui://semio/scene-viewer` (show_scene tool).
+ * [👤semio📚ui💻index🔖mcpapp🔖mcpsceneviewer🛠️mcpsceneviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/s/McpSceneViewer/d/i/McpSceneViewer)
+ *
+ * Specs:
+ * - Dedicated viewer for scene-only tools (show_scene).
+ * - Forces scene rendering regardless of payload surface.
+ * - Uses JS flattenDesign (via mcpFlattenDesignForSemioSurface) for correct 3D plane computation.
+ */
+export const McpSceneViewer: React.FC = () => {
+  const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
+  const appRef = React.useRef<McpApp | null>(null);
+  const tryRefetchRef = React.useRef<() => void>(() => { });
+
+  const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
+    setPayload((cur) => {
+      if (!cur) return p;
+      const best = scoreMcpDiagramPayload(p) > scoreMcpDiagramPayload(cur) ? p : cur;
+      return mergeRichestDesignFromCandidates([cur, p], best) ?? p;
+    });
+  }, []);
+
+  const tryRefetchDesignFromServer = React.useCallback(async () => {
+    const client = appRef.current;
+    if (!client) return;
+    try {
+      const result = await client.callServerTool({ name: "show_scene", arguments: {} });
+      const p = parseDiagramPayloadFromToolResult(result);
+      if (p) mergeDiagramPayload(p);
+    } catch { /* Host may not proxy tools/call. */ }
+  }, [mergeDiagramPayload]);
+
+  React.useEffect(() => { tryRefetchRef.current = () => { void tryRefetchDesignFromServer(); }; }, [tryRefetchDesignFromServer]);
+
+  const { app, isConnected, error } = useApp({
+    appInfo: { name: "semio scene viewer", version: "1.0.0" },
+    capabilities: {},
+    onAppCreated: (a) => {
+      appRef.current = a;
+      a.ontoolinput = () => tryRefetchRef.current();
+      a.ontoolinputpartial = () => tryRefetchRef.current();
+      a.onhostcontextchanged = () => tryRefetchRef.current();
+      a.ontoolresult = (result) => { const p = parseDiagramPayloadFromToolResult(result); if (p) mergeDiagramPayload(p); };
+      a.ontoolcancelled = () => { };
+      a.onteardown = async () => ({});
+      a.onerror = console.error;
+    },
+  });
+
+  useHostStyles(app, app?.getHostContext());
+
+  React.useEffect(() => {
+    if (!app) return;
+    const h = app.getHostContext() as Record<string, unknown> | undefined;
+    if (!h) return;
+    let best: McpDiagramPayload | null = null;
+    for (const k of ["toolResult", "lastToolResult", "toolExecutionResult", "initialToolResult", "pendingToolResult"]) {
+      const v = h[k];
+      if (v === undefined) continue;
+      const p = parseDiagramPayloadFromToolResult(v);
+      if (p && (!best || scoreMcpDiagramPayload(p) > scoreMcpDiagramPayload(best))) best = p;
+    }
+    if (best) mergeDiagramPayload(best);
+  }, [app, mergeDiagramPayload]);
+
+  React.useEffect(() => {
+    if (!app || !isConnected) return;
+    const delays = [0, 50, 150, 400, 1200, 2500, 5000, 8000, 15000];
+    const ids = delays.map((d) => setTimeout(() => tryRefetchRef.current(), d));
+    return () => ids.forEach(clearTimeout);
+  }, [app, isConnected]);
+
+  const mcpTheme = useDocumentTheme();
+  React.useEffect(() => {
+    const el = document.documentElement;
+    if (mcpTheme === "dark") el.classList.add("dark"); else el.classList.remove("dark");
+  }, [mcpTheme]);
+
+  const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)" };
+  if (error) return <div style={{ ...shellStyle, color: "var(--color-text-danger, #dc2626)" }}><p>Error: {error.message}</p></div>;
+  if (!isConnected || !app) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Connecting to host…</p></div>;
+  if (!payload) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Waiting for design data…</p></div>;
+
+  const design = payload.design as Design | undefined;
+  const kit = payload.kit as Kit | undefined;
+  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit, "scene") : design;
+  if (!designFlat) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Loading scene…</p></div>;
+
+  return (
+    <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      <SemioScene design={designFlat} kit={kit} />
+    </div>
+  );
+};
+
+// #endregion 🔖McpSceneViewer
+
+// #region 🔖McpDiagramViewer
+// Specs: Dedicated MCP App diagram viewer — always renders SemioDiagram (2D only), ignoring payload surface/mode.
+// Summary: Standalone 2D-diagram-only MCP viewer component.
+
+/**
+ * MCP App diagram viewer: always renders {@link SemioDiagram} from tool results.
+ * Used when the MCP host loads `ui://semio/diagram-viewer` (show_diagram tool).
+ * [👤semio📚ui💻index🔖mcpapp🔖mcpdiagramviewer🛠️mcpdiagramviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/s/McpDiagramViewer/d/i/McpDiagramViewer)
+ *
+ * Specs:
+ * - Dedicated viewer for diagram-only tools (show_diagram).
+ * - Forces diagram rendering regardless of payload surface.
+ * - Uses JS flattenDesign (via mcpFlattenDesignForSemioSurface) for correct 2D center computation.
+ */
+export const McpDiagramViewer: React.FC = () => {
+  const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
+  const [selectedPieces, setSelectedPieces] = React.useState<Set<string>>(new Set());
+  const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
+  const appRef = React.useRef<McpApp | null>(null);
+  const tryRefetchRef = React.useRef<() => void>(() => { });
+
+  const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
+    setPayload((cur) => {
+      if (!cur) return p;
+      const best = scoreMcpDiagramPayload(p) > scoreMcpDiagramPayload(cur) ? p : cur;
+      return mergeRichestDesignFromCandidates([cur, p], best) ?? p;
+    });
+  }, []);
+
+  const tryRefetchDesignFromServer = React.useCallback(async () => {
+    const client = appRef.current;
+    if (!client) return;
+    try {
+      const result = await client.callServerTool({ name: "show_diagram", arguments: {} });
+      const p = parseDiagramPayloadFromToolResult(result);
+      if (p) mergeDiagramPayload(p);
+    } catch { /* Host may not proxy tools/call. */ }
+  }, [mergeDiagramPayload]);
+
+  React.useEffect(() => { tryRefetchRef.current = () => { void tryRefetchDesignFromServer(); }; }, [tryRefetchDesignFromServer]);
+
+  const { app, isConnected, error } = useApp({
+    appInfo: { name: "semio diagram viewer", version: "1.0.0" },
+    capabilities: {},
+    onAppCreated: (a) => {
+      appRef.current = a;
+      a.ontoolinput = () => tryRefetchRef.current();
+      a.ontoolinputpartial = () => tryRefetchRef.current();
+      a.onhostcontextchanged = () => tryRefetchRef.current();
+      a.ontoolresult = (result) => { const p = parseDiagramPayloadFromToolResult(result); if (p) mergeDiagramPayload(p); };
+      a.ontoolcancelled = () => { };
+      a.onteardown = async () => ({});
+      a.onerror = console.error;
+    },
+  });
+
+  useHostStyles(app, app?.getHostContext());
+
+  React.useEffect(() => {
+    if (!app) return;
+    const h = app.getHostContext() as Record<string, unknown> | undefined;
+    if (!h) return;
+    let best: McpDiagramPayload | null = null;
+    for (const k of ["toolResult", "lastToolResult", "toolExecutionResult", "initialToolResult", "pendingToolResult"]) {
+      const v = h[k];
+      if (v === undefined) continue;
+      const p = parseDiagramPayloadFromToolResult(v);
+      if (p && (!best || scoreMcpDiagramPayload(p) > scoreMcpDiagramPayload(best))) best = p;
+    }
+    if (best) mergeDiagramPayload(best);
+  }, [app, mergeDiagramPayload]);
+
+  React.useEffect(() => {
+    if (!app || !isConnected) return;
+    const delays = [0, 50, 150, 400, 1200, 2500, 5000, 8000, 15000];
+    const ids = delays.map((d) => setTimeout(() => tryRefetchRef.current(), d));
+    return () => ids.forEach(clearTimeout);
+  }, [app, isConnected]);
+
+  React.useEffect(() => {
+    if (!payload) return;
+    setSelectedPieces(new Set());
+    setSelectedConnections(new Set());
+  }, [payload]);
+
+  const mcpTheme = useDocumentTheme();
+  React.useEffect(() => {
+    const el = document.documentElement;
+    if (mcpTheme === "dark") el.classList.add("dark"); else el.classList.remove("dark");
+  }, [mcpTheme]);
+
+  const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
+    if (!appRef.current) return;
+    appRef.current.updateModelContext({ content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceGuids: Array.from(pieces), connectionGuids: Array.from(connections) } }) }] });
+  }, []);
+
+  const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)" };
+  if (error) return <div style={{ ...shellStyle, color: "var(--color-text-danger, #dc2626)" }}><p>Error: {error.message}</p></div>;
+  if (!isConnected || !app) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Connecting to host…</p></div>;
+  if (!payload) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Waiting for design data…</p></div>;
+
+  const design = payload.design as Design | undefined;
+  const kit = payload.kit as Kit | undefined;
+  const isDiff = payload.mode === "show-diagram-diff";
+  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit, "diagram", isDiff ? payload.designDiff : undefined) : design;
+  const hasDiagramPoints = (payload.points?.length ?? 0) > 0;
+  const fallbackDesign: Design = {
+    guid: "__mcp__",
+    pieces: (payload.points ?? []).map((pt) => ({ guid: pt.guid, id: pt.id, center: { u: pt.u, v: pt.v } })),
+    connections: (payload.lines ?? []).map((l) => ({
+      guid: l.guid,
+      connected: { piece: { guid: (payload.points ?? []).find((q) => q.u === l.sourceU && q.v === l.sourceV)?.guid ?? "" } },
+      connecting: { piece: { guid: (payload.points ?? []).find((q) => q.u === l.targetU && q.v === l.targetV)?.guid ?? "" } },
+    })),
+  } as unknown as Design;
+  const candidateDesign = (designFlat ?? design) as Design | undefined;
+  const candidateHasCenters = candidateDesign?.pieces?.some((pc) => pc.center) ?? false;
+  const diagramDesign = (candidateHasCenters ? candidateDesign! : (hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign))) as Design;
+  const pieceSelectionEnabled = payload.capabilities?.pieceSelection ?? false;
+  const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
+  const selectionEnabled = pieceSelectionEnabled || connectionSelectionEnabled;
+
+  return (
+    <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      <SemioDiagram
+        design={diagramDesign}
+        designDiff={isDiff ? payload.designDiff : undefined}
+        selectionEnabled={selectionEnabled}
+        pieceSelectionEnabled={pieceSelectionEnabled}
+        connectionSelectionEnabled={connectionSelectionEnabled}
+        selection={{ pieceGuids: Array.from(selectedPieces), connectionGuids: Array.from(selectedConnections) }}
+        onSelectionChange={(next) => {
+          const nextPieces = new Set(next.pieceGuids ?? []);
+          const nextConns = new Set(next.connectionGuids ?? []);
+          setSelectedPieces(nextPieces);
+          setSelectedConnections(nextConns);
+          sendSelectionUpdate(nextPieces, nextConns);
+        }}
+      />
+    </div>
+  );
+};
+
+// #endregion 🔖McpDiagramViewer
+
 /**
  * Mount the MCP design viewer as a standalone app.
  * Call this from the entry point TSX file after importing react-dom/client.
@@ -3847,6 +4221,34 @@ export const mountMcpDesignViewer = (createRoot: (container: HTMLElement) => { r
   createRoot(root).render(
     <React.StrictMode>
       <McpDesignViewer />
+    </React.StrictMode>,
+  );
+};
+
+/**
+ * Mount the MCP scene viewer (SemioScene only) as a standalone app.
+ * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpsceneviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpSceneViewer)
+ **/
+export const mountMcpSceneViewer = (createRoot: (container: HTMLElement) => { render: (element: React.ReactNode) => void }) => {
+  const root = document.getElementById("root");
+  if (!root) throw new Error("Missing #root element");
+  createRoot(root).render(
+    <React.StrictMode>
+      <McpSceneViewer />
+    </React.StrictMode>,
+  );
+};
+
+/**
+ * Mount the MCP diagram viewer (SemioDiagram only) as a standalone app.
+ * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpdiagramviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpDiagramViewer)
+ **/
+export const mountMcpDiagramViewer = (createRoot: (container: HTMLElement) => { render: (element: React.ReactNode) => void }) => {
+  const root = document.getElementById("root");
+  if (!root) throw new Error("Missing #root element");
+  createRoot(root).render(
+    <React.StrictMode>
+      <McpDiagramViewer />
     </React.StrictMode>,
   );
 };
@@ -3872,7 +4274,7 @@ if (import.meta.vitest) {
 
   describe("parseDiagramPayloadFromToolResult", () => {
     it("parses JSON from MCP text content blocks", () => {
-      const payload = { points: [], lines: [], kitArtifacts: { name: "K", designs: [], types: [], ports: [] } };
+      const payload = { points: [], lines: [], kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] } };
       const r = parseDiagramPayloadFromToolResult({
         content: [{ type: "text", text: JSON.stringify(payload) }],
       });
@@ -3880,19 +4282,19 @@ if (import.meta.vitest) {
     });
 
     it("parses structuredContent object (hosts that omit text content)", () => {
-      const inner = { points: [], lines: [], kitArtifacts: { name: "S", designs: [{ guid: "d1", name: "D" }], types: [], ports: [] } };
+      const inner = { points: [], lines: [], kitArtifacts: { name: "S", designs: [{ guid: "d1", name: "D" }], types: [], ports: [], connectors: [] } };
       const r = parseDiagramPayloadFromToolResult({ structuredContent: inner });
       expect(r?.kitArtifacts?.designs?.[0]?.guid).toBe("d1");
     });
 
     it("parses structuredContent JSON string", () => {
-      const inner = { points: [], lines: [], capabilities: {}, kitArtifacts: { designs: [], types: [], ports: [] } };
+      const inner = { points: [], lines: [], capabilities: {}, kitArtifacts: { designs: [], types: [], ports: [], connectors: [] } };
       const r = parseDiagramPayloadFromToolResult({ structuredContent: JSON.stringify(inner) });
       expect(r?.points).toEqual([]);
     });
 
     it("unwraps notification params", () => {
-      const payload = { points: [], lines: [], kitArtifacts: { name: "P", designs: [], types: [], ports: [] } };
+      const payload = { points: [], lines: [], kitArtifacts: { name: "P", designs: [], types: [], ports: [], connectors: [] } };
       const r = parseDiagramPayloadFromToolResult({
         params: { content: [{ type: "text", text: JSON.stringify(payload) }] },
       });
@@ -3900,7 +4302,7 @@ if (import.meta.vitest) {
     });
 
     it("reads nested kit payload under arbitrary host keys", () => {
-      const inner = { points: [], lines: [], kitArtifacts: { name: "Deep", designs: [], types: [], ports: [] } };
+      const inner = { points: [], lines: [], kitArtifacts: { name: "Deep", designs: [], types: [], ports: [], connectors: [] } };
       const r = parseDiagramPayloadFromToolResult({ wrapper: { data: inner } });
       expect(r?.kitArtifacts?.name).toBe("Deep");
     });
@@ -3910,7 +4312,7 @@ if (import.meta.vitest) {
         points: [],
         lines: [],
         capabilities: { pieceSelection: false, connectionSelection: false },
-        kitArtifacts: { designs: [], types: [], ports: [] },
+        kitArtifacts: { designs: [], types: [], ports: [], connectors: [] },
       };
       const full = {
         points: [],
@@ -3922,6 +4324,7 @@ if (import.meta.vitest) {
           designs: [{ guid: "d1", name: "D", variant: "", view: "" }],
           types: [{ guid: "t1", name: "T", variant: "" }],
           ports: [],
+          connectors: [],
         },
       };
       const r = parseDiagramPayloadFromToolResult({
@@ -3944,6 +4347,7 @@ if (import.meta.vitest) {
           designs: new Array(12).fill(null).map((_, i) => ({ guid: `d${i}`, name: "", variant: "", view: "" })),
           types: [],
           ports: [],
+          connectors: [],
         },
       };
       const full = {
@@ -3952,7 +4356,7 @@ if (import.meta.vitest) {
         points: [],
         lines: [],
         capabilities: { pieceSelection: false, connectionSelection: false },
-        kitArtifacts: { name: "Metabolism", designs: [{ guid: "dg1", name: "D", variant: "", view: "" }], types: [], ports: [] },
+        kitArtifacts: { name: "Metabolism", designs: [{ guid: "dg1", name: "D", variant: "", view: "" }], types: [], ports: [], connectors: [] },
         design: { guid: "dg1", pieces: [{ guid: "p1" }], connections: [] },
         kit: { name: "Metabolism", designs: [], types: [] },
       };
@@ -3977,7 +4381,7 @@ if (import.meta.vitest) {
         points: [],
         lines: [],
         capabilities: { pieceSelection: false, connectionSelection: false },
-        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design: {
           guid: "dg1",
           pieces: new Array(40).fill(null).map((_, i) => ({ guid: `s${i}`, center: { u: 0, v: 0 } })),
@@ -3991,7 +4395,7 @@ if (import.meta.vitest) {
         points: [],
         lines: [],
         capabilities: { pieceSelection: false, connectionSelection: false },
-        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design: {
           guid: "dg1",
           pieces: new Array(3).fill(null).map((_, i) => ({
@@ -4012,7 +4416,7 @@ if (import.meta.vitest) {
     });
 
     it("reads text from embedded resource content blocks", () => {
-      const payload = { points: [], lines: [], kitArtifacts: { name: "Res", designs: [], types: [], ports: [] } };
+      const payload = { points: [], lines: [], kitArtifacts: { name: "Res", designs: [], types: [], ports: [], connectors: [] } };
       const r = parseDiagramPayloadFromToolResult({
         content: [{ type: "resource", resource: { uri: "x", mimeType: "text/plain", text: JSON.stringify(payload) } }],
       });
@@ -4025,7 +4429,7 @@ if (import.meta.vitest) {
         lines: [],
         mode: "show-scene",
         capabilities: { pieceSelection: true, connectionSelection: false },
-        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design: { guid: "dg", pieces: [], connections: [] },
         kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] },
       };
@@ -4055,7 +4459,7 @@ if (import.meta.vitest) {
         lines: [],
         mode: "show-scene",
         capabilities: {},
-        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design: { guid: "dg", pieces: [{ guid: "p0" }], connections: [] },
         kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] },
       };
@@ -4116,7 +4520,7 @@ if (import.meta.vitest) {
           surface: "design",
           points: [],
           lines: [],
-          kitArtifacts: { designs: [], types: [], ports: [] },
+          kitArtifacts: { designs: [], types: [], ports: [], connectors: [] },
         } as McpDiagramPayload),
       ).toBe("design");
     });
@@ -4127,7 +4531,7 @@ if (import.meta.vitest) {
           surface: "diagram",
           points: [],
           lines: [],
-          kitArtifacts: { designs: [], types: [], ports: [] },
+          kitArtifacts: { designs: [], types: [], ports: [], connectors: [] },
         } as McpDiagramPayload),
       ).toBe("design");
     });
@@ -4137,7 +4541,7 @@ if (import.meta.vitest) {
           mode: "show-design",
           points: [],
           lines: [],
-          kitArtifacts: { designs: [], types: [], ports: [] },
+          kitArtifacts: { designs: [], types: [], ports: [], connectors: [] },
         } as McpDiagramPayload),
       ).toBe("design");
     });
@@ -4147,7 +4551,7 @@ if (import.meta.vitest) {
           mode: "show-scene",
           points: [],
           lines: [],
-          kitArtifacts: { designs: [], types: [], ports: [] },
+          kitArtifacts: { designs: [], types: [], ports: [], connectors: [] },
         } as McpDiagramPayload),
       ).toBe("scene");
     });
@@ -4164,11 +4568,33 @@ if (import.meta.vitest) {
         points: [],
         lines: [],
         capabilities: {},
-        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design: { guid: "dg", pieces: [{ guid: "p0" }], connections: [] } as unknown as Design,
         kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
       } as McpDiagramPayload);
       expect(vm.surface).toBe("design");
+    });
+
+    it("falls back to points/lines when design pieces have no centers", () => {
+      const vm = mcpMapPayloadToDesignViewerViewModel({
+        mode: "show-diagram",
+        points: [{ guid: "p1", id: "p1", u: 0, v: 0, status: "default" }, { guid: "p2", id: "p2", u: 3, v: 0, status: "default" }],
+        lines: [{ guid: "c1", sourceU: 0, sourceV: 0, targetU: 3, targetV: 0, status: "default" }],
+        design: { guid: "dg", pieces: [{ guid: "p1" }, { guid: "p2" }], connections: [] } as unknown as Design,
+      } as McpDiagramPayload);
+      expect(vm.diagramDesign.pieces?.length).toBe(2);
+      expect(vm.diagramDesign.pieces?.[0]?.center).toEqual({ u: 0, v: 0 });
+      expect(vm.diagramDesign.connections?.length).toBe(1);
+    });
+
+    it("uses design when pieces have centers even without points/lines", () => {
+      const vm = mcpMapPayloadToDesignViewerViewModel({
+        mode: "show-diagram",
+        points: [],
+        lines: [],
+        design: { guid: "dg", pieces: [{ guid: "p1", center: { u: 1, v: 2 } }], connections: [] } as unknown as Design,
+      } as McpDiagramPayload);
+      expect(vm.diagramDesign.pieces?.[0]?.center).toEqual({ u: 1, v: 2 });
     });
   });
 
@@ -4209,7 +4635,7 @@ if (import.meta.vitest) {
         points: Array.from({ length: 200 }, (_, i) => mkPoint(i)),
         lines: Array.from({ length: 199 }, (_, i) => mkLine(i)),
         capabilities: {},
-        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
       };
 
       const showDesign: McpDiagramPayload = {
@@ -4218,7 +4644,7 @@ if (import.meta.vitest) {
         points: [],
         lines: [],
         capabilities: {},
-        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design,
         kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
       };
@@ -4229,7 +4655,7 @@ if (import.meta.vitest) {
         points: [],
         lines: [],
         capabilities: {},
-        kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+        kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design,
         kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
       };
@@ -4282,7 +4708,7 @@ if (import.meta.vitest) {
         isKitViewerPayloadSufficient({
           points: [],
           lines: [],
-          kitArtifacts: { designs: [], types: [], ports: [] },
+          kitArtifacts: { designs: [], types: [], ports: [], connectors: [] },
         }),
       ).toBe(false);
     });
@@ -4292,7 +4718,7 @@ if (import.meta.vitest) {
         isKitViewerPayloadSufficient({
           points: [],
           lines: [],
-          kitArtifacts: { name: "K", designs: [], types: [], ports: [] },
+          kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         }),
       ).toBe(true);
     });
@@ -4330,7 +4756,7 @@ if (import.meta.vitest) {
         ],
       } as unknown as Kit);
 
-      expect(data.ports).toEqual([
+      expect(data.connectors).toEqual([
         {
           guid: "connector-guid",
           typeGuid: "kind-guid",
@@ -4350,6 +4776,7 @@ if (import.meta.vitest) {
           mandatory: undefined,
         },
       ]);
+      expect(data.ports).toEqual([]);
     });
 
     it("returns shallow kit kinds without requiring connector expansion", () => {
@@ -4364,6 +4791,36 @@ if (import.meta.vitest) {
       expect(data.types).toEqual([{ guid: "kind-guid", name: "Kind" }]);
       expect(data.designs).toEqual([{ guid: "design-guid", name: "Design" }]);
       expect(data.ports).toEqual([]);
+      expect(data.connectors).toEqual([]);
+    });
+
+    it("maps kit-level ports separately from type connectors", () => {
+      const data = buildKitDataFromKit({
+        guid: "kit-guid",
+        name: "Kit",
+        version: "1",
+        ports: [{ guid: "port-entity", name: "P1", description: "d" }],
+        types: [
+          {
+            guid: "kind-guid",
+            name: "Kind",
+            connectors: [{ guid: "conn-1", name: "C1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 1, z: 0 } }],
+          },
+        ],
+      } as unknown as Kit);
+
+      expect(data.ports).toEqual([{ guid: "port-entity", name: "P1", description: "d" }]);
+      expect(data.connectors).toEqual([
+        {
+          guid: "conn-1",
+          typeGuid: "kind-guid",
+          id: "C1",
+          port: undefined,
+          name: "C1",
+          description: undefined,
+          mandatory: undefined,
+        },
+      ]);
     });
   });
 
@@ -4378,7 +4835,7 @@ if (import.meta.vitest) {
             { guid: "l", name: "L", parent: { guid: "ellipsoid" } },
           ],
         },
-        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true },
+        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true, connectorDataEnabled: true },
       );
 
       expect(getKitNodePath(hierarchy, "kind:l").map((node) => node.label)).toEqual(["Kit", "Metabolism", "Types", "Capsule", "Ellipsoid", "L"]);
@@ -4394,25 +4851,30 @@ if (import.meta.vitest) {
             { guid: "balcony", name: "Balcony", parent: { guid: "capsule" } },
           ],
         },
-        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true },
+        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true, connectorDataEnabled: true },
       );
 
       expect(getKitChildNodes(hierarchy, hierarchy.nodesByKey.get("kind:capsule")!).map((node) => node.label)).toEqual(["Balcony", "Ellipsoid"]);
       expect(getKitChildNodes(hierarchy, hierarchy.nodesByKey.get("kind:ellipsoid")!)).toEqual([]);
     });
 
-    it("attaches ports beneath their resolved kind parent and derives port selection", () => {
+    it("attaches connectors beneath their resolved kind parent and derives connector selection", () => {
       const hierarchy = buildKitHierarchy(
         {
           name: "Metabolism",
           types: [{ guid: "l", name: "L" }],
-          ports: [{ guid: "entry", typeGuid: "l", name: "Entry" }],
+          connectors: [{ guid: "entry", typeGuid: "l", name: "Entry" }],
         },
-        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true },
+        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true, connectorDataEnabled: true },
       );
 
-      expect(getKitNodePath(hierarchy, "port:entry").map((node) => node.label)).toEqual(["Kit", "Metabolism", "Types", "L", "Entry"]);
-      expect(getKitNodeSelection(hierarchy.nodesByKey.get("port:entry")!)).toEqual({ designGuids: [], typeGuids: [], portGuids: ["entry"] });
+      expect(getKitNodePath(hierarchy, "connector:entry").map((node) => node.label)).toEqual(["Kit", "Metabolism", "Types", "L", "Entry"]);
+      expect(getKitNodeSelection(hierarchy.nodesByKey.get("connector:entry")!)).toEqual({
+        designGuids: [],
+        typeGuids: [],
+        portGuids: [],
+        connectorGuids: ["entry"],
+      });
     });
 
     it("falls back to the first populated group when no artifact is selected", () => {
@@ -4422,11 +4884,11 @@ if (import.meta.vitest) {
           designs: [{ guid: "tower", name: "Tower" }],
           types: [{ guid: "capsule", name: "Capsule" }],
         },
-        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true },
+        { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true, connectorDataEnabled: true },
       );
 
       expect(getDefaultKitNodeKey(hierarchy)).toBe("design:tower");
-      expect(getSelectedKitNodeKey(hierarchy, { designGuids: [], typeGuids: [], portGuids: [] })).toBeUndefined();
+      expect(getSelectedKitNodeKey(hierarchy, { designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] })).toBeUndefined();
     });
   });
 
@@ -4571,28 +5033,62 @@ if (import.meta.vitest) {
     });
 
     it("derives selected and removed imported scene colors from the shared scene tokens", () => {
-      document.documentElement.style.setProperty("--muted-foreground", "#888888");
-      document.documentElement.style.setProperty("--accent", "#123456");
-      document.documentElement.style.setProperty("--accent-secondary", "#abcdef");
-      document.documentElement.style.setProperty("--color-removed", "#ff0000");
-      document.documentElement.style.setProperty("--color-new", "#00ff00");
-      document.documentElement.style.setProperty("--color-modified", "#ffff00");
-      document.documentElement.style.setProperty("--color-changed-selected", "#654321");
-      document.documentElement.style.setProperty("--color-changed-hovered", "#fedcba");
+      const originalDocument = (globalThis as typeof globalThis & { document?: Document }).document;
+      const originalGetComputedStyle = globalThis.getComputedStyle;
+      const computedValues: Record<string, string> = {
+        "--muted-foreground": "#888888",
+        "--accent": "#123456",
+        "--accent-secondary": "#abcdef",
+        "--color-removed": "#ff0000",
+        "--color-new": "#00ff00",
+        "--color-modified": "#ffff00",
+        "--color-changed-selected": "#654321",
+        "--color-changed-hovered": "#fedcba",
+      };
 
-      const selectedState = getSceneModelColorState("default", true, false);
-      const removedState = getSceneModelColorState("removed", false, false);
+      Object.defineProperty(globalThis, "document", {
+        value: { documentElement: {} },
+        configurable: true,
+      });
+      Object.defineProperty(globalThis, "getComputedStyle", {
+        value: () => ({
+          getPropertyValue: (name: string) => computedValues[name] ?? "",
+        }),
+        configurable: true,
+      });
 
-      expect(selectedState.meshColor).toBe("#123456");
-      expect(selectedState.lineColor).toBe("#123456");
-      expect(selectedState.emissiveColor).toBe("#123456");
-      expect(selectedState.emissiveIntensity).toBe(0.35);
-      expect(selectedState.opacity).toBe(1);
-      expect(removedState.meshColor).toBe("#ff0000");
-      expect(removedState.lineColor).toBe("#ff0000");
-      expect(removedState.emissiveColor).toBe("#ff0000");
-      expect(removedState.emissiveIntensity).toBe(0.4);
-      expect(removedState.opacity).toBe(0.35);
+      try {
+        const selectedState = getSceneModelColorState("default", true, false);
+        const removedState = getSceneModelColorState("removed", false, false);
+
+        expect(selectedState.meshColor).toBe("#123456");
+        expect(selectedState.lineColor).toBe("#123456");
+        expect(selectedState.emissiveColor).toBe("#123456");
+        expect(selectedState.emissiveIntensity).toBe(0.35);
+        expect(selectedState.opacity).toBe(1);
+        expect(removedState.meshColor).toBe("#ff0000");
+        expect(removedState.lineColor).toBe("#ff0000");
+        expect(removedState.emissiveColor).toBe("#ff0000");
+        expect(removedState.emissiveIntensity).toBe(0.4);
+        expect(removedState.opacity).toBe(0.35);
+      } finally {
+        if (originalDocument === undefined) {
+          delete (globalThis as typeof globalThis & { document?: Document }).document;
+        } else {
+          Object.defineProperty(globalThis, "document", {
+            value: originalDocument,
+            configurable: true,
+          });
+        }
+        if (originalGetComputedStyle === undefined) {
+          delete (globalThis as typeof globalThis & { getComputedStyle?: typeof globalThis.getComputedStyle }).getComputedStyle;
+        } else {
+          Object.defineProperty(globalThis, "getComputedStyle", {
+            value: originalGetComputedStyle,
+            configurable: true,
+          });
+        }
+      }
     });
   });
 

@@ -1,12 +1,12 @@
 {
   "title": "Implement Rust Session Backend Service",
   "status": "open",
-  "description": "Implement the Rust session-backend service as described in the implementation plan. Single binary bin.rs backed by PostgreSQL with temporal relational tables, session actors, domain/semio commands, conflict handling, and historical artifact views.",
+  "description": "Implement the Rust session-backend service as specified in the implementation plan (.repo/✍️/rust-session-backend-implementation-plan.md). This includes: session domain types (SessionId, FieldPatch, PropertyKey, ConflictPolicy), session state management, PostgreSQL schema with migrations, persistence layer, HTTP/WebSocket API with axum, session actor with single-writer semantics, conflict resolution with property clocks, semio presence state, and tests. All code goes into the existing semio/rs crate with the session feature flag. Binary at src/bin/bin.rs.",
   "github": {
-    "issue": "https://github.com/usalu/semio/issues/1273"
+    "issue": "https://github.com/usalu/semio/issues/1274"
   },
   "goal": "🎯r2603",
   "sessions": [
-    "⚪2d5b6e20d91044aba2cba2bc6f1b0ed2"
+    "⚪ef07f15066d440d2aaaefdab675a7e4f"
   ]
 }

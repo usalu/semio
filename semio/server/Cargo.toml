@@ -1,0 +1,36 @@
+# #region 🔖Header
+# [👤semio📚server💻semio-session](repo://p/u/semio/b/l/server/f/Cargo.toml)
+# 2026 Ueli Saluz <ueli@semio-tech.de>
+# AGPL-3.0
+# Session backend service Cargo manifest.
+# #endregion 🔖Header
+
+[package]
+name = "semio-session"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "semio-session"
+path = "src/main.rs"
+
+[dependencies]
+semio = { path = "../rs" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+uuid = { version = "1.20", features = ["v7", "serde"] }
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.8", features = ["ws"] }
+sqlx-core = { version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "migrate", "json", "offline"] }
+sqlx-postgres = { version = "0.8", features = ["uuid", "time", "migrate", "json", "offline"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+time = { version = "0.3", features = ["serde", "formatting", "parsing"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+futures = "0.3"
+tokio-stream = "0.1"
+dashmap = "6"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }

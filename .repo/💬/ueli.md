@@ -94,7 +94,6 @@ This MUST NOT happen.
 ## 🔬coda
 
 coda:
-Extend the s
 
 coda desktop and coda mcp need to work together. desktop needs to update whenever something is happening in the mcp server and show every single event along with all possible information. Introduce an event system for that purpose. Furhter coda desktop needs to be useable without the mcp server. All calls where agents produce output offer the possiblity to manually pass in the output (e.g the result from translate or validate)
 
@@ -120,6 +119,8 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+In the codebase the schema is not yet always aligned. E.g. ports are sometimes confused with connectors. e.g. semio ui and engine mcp show metabolism has 120 ports but that is not true. Whenever a kit is serialized it must always have the Kit schema.
 
 There is an error with drag. The descendants of other dragged pieces are not ignored properly. E.g. in semio/algorithms/Drag `b0` is dragged but all the descendants of `b0` are also dragged (with piece diffs).
 

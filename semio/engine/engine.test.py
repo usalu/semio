@@ -684,6 +684,31 @@ class TestMcp:
         assert payload["types"][1]["parent"] == {"guid": "root-kind"}
         assert payload["types"][1]["description"] == "Child kind"
 
+    def test_build_kit_artifact_data_splits_kit_ports_and_type_connectors(self):
+        """kitArtifacts.ports lists Port entities; kitArtifacts.connectors lists flattened Connector rows."""
+        payload = engine._build_kit_artifact_data(
+            {
+                "name": "K",
+                "version": "1",
+                "ports": [{"guid": "port-entity", "name": "Wall inlet"}],
+                "designs": [],
+                "types": [
+                    {
+                        "guid": "t1",
+                        "name": "T",
+                        "connectors": [
+                            {"guid": "c1", "name": "C1", "port": {"guid": "port-entity"}},
+                        ],
+                    }
+                ],
+            }
+        )
+        assert payload["ports"] == [{"guid": "port-entity", "name": "Wall inlet"}]
+        assert len(payload["connectors"]) == 1
+        assert payload["connectors"][0]["guid"] == "c1"
+        assert payload["connectors"][0]["typeGuid"] == "t1"
+        assert payload["connectors"][0]["port"] == "port-entity"
+
     def test_start_working_in_local_kit_clears_design_and_type(self):
         """start_working_in_local_kit clears any previously set design and type."""
         mock_ctx = type("MockCtx", (), {"session": object()})()

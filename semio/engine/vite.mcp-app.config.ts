@@ -47,12 +47,13 @@ function zodJitlessPlugin(): Plugin {
 // (so Vite doesn't try to parse stubbed `*.json` as real JSON).
 // Summary: Stub heavy deps + semio assets (JSON-safe) to keep the MCP App fast and reliable.
 
-const STUB_EMPTY = path.resolve(__dirname, "stubs/empty.js");
 // NOTE: Do NOT stub `three` / `@react-three/*`.
 // `semio/ui/index.tsx` imports named exports at module scope and an ESM stub
 // that doesn't provide those exact exports can crash the bundle before React mounts.
 // We only stub semio assets and unrelated heavy deps.
-const STUBBED_PREFIXES = ["@semio/assets", "cytoscape", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
+// cytoscape is NOT stubbed: flattenDesign uses cytoscape headless BFS for 2D layout (diagram centers + planes).
+// Stubbing it breaks the diagram entirely because cy.elements() returns undefined → TypeError.
+const STUBBED_PREFIXES = ["@semio/assets", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
 // #region 🔖MeshoptNoopPlugin
 // Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module
