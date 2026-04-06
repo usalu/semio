@@ -1,7 +1,7 @@
 {
   "title": "Synchronize Diagram Pan And Zoom",
   "status": "closed",
-  "summary": "Fixed all compilation errors in the semio-session crate and got it building and passing all tests. (1) Resolved sqlx/rusqlite libsqlite3-sys conflict by depending on sqlx-core and sqlx-postgres sub-crates directly instead of the umbrella sqlx crate. (2) Updated all sqlx import paths across all source files. (3) Fixed connection query tuple overflow by using Row::get instead of query_as for 17-column queries. (4) Added 29 unit tests covering domain types, command serde, and error HTTP status mapping. All pass.",
+  "summary": "Fixed three root causes for empty diagram and missing 3D models in the MCP App:\n\n1. **Diagram payload truncation fix** (`main.py` `_build_app_payload`): For diagram-only modes (`show-diagram`, `show-diagram-diff`, `select-pieces`, `select-connections`, `select-pieces-and-connections`), `kit` is now omitted from the payload. This reduces payload from ~2.5MB to ~160KB (design + kitArtifacts + points + lines), well under host truncation limits. The JS `McpDiagramViewer` falls back to the Python-enriched design (which has centers computed by `_enrich_design`/`flattenDesignDict`) when `kit` is absent.\n\n2. **Missing 3D models fix** (`main.py` `_select_best_model_file_guids`): Added GLB fallback search mirroring JS `buildScenePieceAssets` (lines 2110-2118 in index.tsx). If the best model (first untagged or first) has a non-GLB file, the function now searches ALL models for any GLB/GLTF file to inline. Previously, types like base/tambour/capsule/capital whose first model wasn't a GLB had no file inlined, so the JS loaded from HTTP URLs which were CSP-blocked. Also extracted `_is_gltf_file` helper.\n\n3. **Rebuilt `semio/engine/dist/mcp-app.html`** (7.0MB, 3629 modules). All 175 engine tests pass.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪433ba041e2d449dd983f41a0b3e83961",
@@ -18,6 +18,7 @@
     "⚪084299190cac4061a0fc375a60cf2c5e",
     "⚪fae9bc1dde254df7804c5414c9d74d46",
     "⚪53c1915741c44596982f39bc285d2b9a",
-    "⚪3c1201012bae4516bdb62f5c31b5fac1"
+    "⚪3c1201012bae4516bdb62f5c31b5fac1",
+    "⚪2f21d438894c41f1bc750a96cb37d449"
   ]
 }

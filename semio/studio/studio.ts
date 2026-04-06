@@ -907,3 +907,1133 @@ export async function createFolderKitStore(adapter: KitFolderAdapter): Promise<F
 }
 
 // #endregion 🔖FolderKitStore
+
+// #region 🔖SessionKitStore
+// [👤semio👥studio💻studio🔖sessionkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/SessionKitStore)
+// Server-backed kit store implementing UndoableKitStore.
+// Specs: Connects to a semio-session backend via HTTP+WS. Commands are sent via HTTP POST,
+// events received via WebSocket. Local Kit state is maintained in-memory and updated on
+// accepted domain events. Baseline snapshots and incremental diffs are stored server-side.
+// Supports undo/redo with a local command stack. Lookback history via server API.
+// Used by: sketchpad, desktop, any frontend needing real-time collaborative kit editing.
+
+/**
+ * Configuration for creating a SessionKitStore.
+ *
+ * Specs: serverUrl is the base URL (e.g. http://localhost:8080). sessionId is optional —
+ * if omitted, a new session is created. kitName is used when creating a new session.
+ * personId and clientId identify this frontend instance for presence.
+ * [👤semio👥studio💻studio🔖sessionkitstore🛠️sessionkitstoreconfig](repo://p/u/semio/b/l/studio/f/studio.ts/s/SessionKitStore/d/i/SessionKitStoreConfig)
+ **/
+export interface SessionKitStoreConfig {
+  serverUrl: string;
+  sessionId?: string;
+  kitName?: string;
+  personId?: string;
+  clientId?: string;
+}
+
+/**
+ * Server event received via WebSocket.
+ *
+ * Specs: Mirrors the Rust SessionEvent enum. Used internally by SessionKitStore
+ * to update local state on server-side changes.
+ **/
+interface ServerEvent {
+  event: string;
+  command_id?: { "0": string };
+  domain_version?: number;
+  semio_version?: number;
+  changes?: ServerEntityChange[];
+  person_id?: { "0": string };
+  frontend_id?: string;
+  update?: ServerSemioUpdate;
+}
+
+interface ServerEntityChange {
+  op: "Created" | "Updated" | "Deleted";
+  entity_kind: string;
+  entity_id: string;
+  snapshot?: Record<string, any>;
+  changed_fields?: Record<string, any>;
+}
+
+interface ServerSemioUpdate {
+  kind: string;
+  u?: number;
+  v?: number;
+  position?: [number, number, number];
+  forward?: [number, number, number];
+  up?: [number, number, number];
+  piece_ids?: string[];
+  design_ids?: string[];
+}
+
+/**
+ * Presence state for one person on one frontend.
+ *
+ * Specs: Tracks cursor position, camera look, selection, and display metadata.
+ * Updated by SemioUpdated events from the server.
+ **/
+export interface PresenceState {
+  personId: string;
+  frontendId: string;
+  displayName?: string;
+  color?: string;
+  cursor?: { u: number; v: number };
+  look?: { position: [number, number, number]; forward: [number, number, number]; up: [number, number, number] };
+  selectedPieceIds: string[];
+  selectedDesignIds: string[];
+}
+
+/**
+ * Server-backed kit store with undo/redo and real-time sync.
+ *
+ * Specs: Connects to semio-session server via HTTP for commands and WS for events.
+ * On connect: fetches snapshot to initialize local Kit. On mutation: sends DomainCommand
+ * via POST, waits for Accepted event via WS. On WS event: applies entity changes to
+ * local Kit and notifies subscribers. Undo/redo operates on local command stack.
+ * Provides presence tracking via semio commands.
+ * [👤semio👥studio💻studio🔖sessionkitstore🛠️sessionkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/SessionKitStore/d/i/SessionKitStore)
+ **/
+export class SessionKitStore implements UndoableKitStore {
+  private kit: Kit;
+  private listeners: Set<() => void> = new Set();
+  private undoStack: KitChange[] = [];
+  private redoStack: KitChange[] = [];
+  private dirty: boolean = false;
+  private disposed: boolean = false;
+  private status: KitStoreStatus;
+  private transacting: boolean = false;
+  private error?: Error;
+  private lastSyncedAt?: string;
+  private ws: WebSocket | null = null;
+  private domainVersion: number = 0;
+  private semioVersion: number = 0;
+  private presences: Map<string, PresenceState> = new Map();
+  private presenceListeners: Set<() => void> = new Set();
+  private entityListeners: Map<string, Set<() => void>> = new Map();
+  private collectionListeners: Map<string, Set<() => void>> = new Map();
+  private propertyListeners: Map<string, Set<() => void>> = new Map();
+
+  readonly serverUrl: string;
+  readonly sessionId: string;
+  readonly personId: string;
+  readonly clientId: string;
+
+  private constructor(kit: Kit, config: SessionKitStoreConfig & { sessionId: string }, status: KitStoreStatus) {
+    this.kit = kit;
+    this.serverUrl = config.serverUrl;
+    this.sessionId = config.sessionId;
+    this.personId = config.personId ?? guid();
+    this.clientId = config.clientId ?? guid();
+    this.status = status;
+  }
+
+  /**
+   * Creates a SessionKitStore by connecting to the server.
+   * If sessionId is provided, fetches the existing session snapshot.
+   * If not, creates a new session on the server.
+   *
+   * Specs: Factory method handling async connection. Establishes WebSocket
+   * for real-time events after initial snapshot load.
+   **/
+  static async create(config: SessionKitStoreConfig): Promise<SessionKitStore> {
+    let sessionId = config.sessionId;
+    let kitName = config.kitName ?? "New Kit";
+
+    if (!sessionId) {
+      const resp = await fetch(`${config.serverUrl}/sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kit_name: kitName }),
+      });
+      if (!resp.ok) throw new Error(`Failed to create session: ${resp.statusText}`);
+      const body = await resp.json();
+      sessionId = body.session_id;
+    }
+
+    const snapResp = await fetch(`${config.serverUrl}/sessions/${sessionId}/snapshot`);
+    if (!snapResp.ok) throw new Error(`Failed to load snapshot: ${snapResp.statusText}`);
+    const snapshot = await snapResp.json();
+
+    const kit: Kit = {
+      guid: snapshot.kit?.kit_id ?? guid(),
+      name: snapshot.kit?.name ?? kitName,
+      version: snapshot.kit?.version,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const store = new SessionKitStore(kit, { ...config, sessionId: sessionId! }, "ready");
+    store.domainVersion = snapshot.domain_version ?? 0;
+    store.semioVersion = snapshot.semio_version ?? 0;
+    store.lastSyncedAt = new Date().toISOString();
+    store.connectWebSocket();
+    return store;
+  }
+
+  private connectWebSocket(): void {
+    const wsUrl = this.serverUrl.replace(/^http/, "ws") + `/sessions/${this.sessionId}/ws`;
+    this.ws = new WebSocket(wsUrl);
+    this.ws.onmessage = (event) => {
+      try {
+        const data: ServerEvent = JSON.parse(typeof event.data === "string" ? event.data : "");
+        this.handleServerEvent(data);
+      } catch (e) {
+        // Ignore unparseable messages
+      }
+    };
+    this.ws.onclose = () => {
+      if (!this.disposed) {
+        this.status = "offline";
+        this.notify();
+        // Auto-reconnect after 2 seconds
+        setTimeout(() => {
+          if (!this.disposed) this.connectWebSocket();
+        }, 2000);
+      }
+    };
+    this.ws.onerror = () => {
+      this.status = "offline";
+      this.notify();
+    };
+    this.ws.onopen = () => {
+      this.status = "ready";
+      this.error = undefined;
+      this.notify();
+    };
+  }
+
+  private handleServerEvent(event: ServerEvent): void {
+    switch (event.event) {
+      case "DomainCommandAccepted": {
+        if (event.domain_version !== undefined) {
+          this.domainVersion = event.domain_version;
+        }
+        if (event.changes) {
+          const before = this.kit;
+          this.applyServerChanges(event.changes);
+          this.lastSyncedAt = new Date().toISOString();
+          // Notify granular listeners
+          for (const change of event.changes) {
+            this.notifyEntityListeners(change.entity_kind, change.entity_id);
+            this.notifyCollectionListeners(change.entity_kind);
+            if (change.op === "Updated" && change.changed_fields) {
+              for (const field of Object.keys(change.changed_fields)) {
+                this.notifyPropertyListeners(change.entity_kind, change.entity_id, field);
+              }
+            }
+          }
+        }
+        this.dirty = false;
+        this.notify();
+        break;
+      }
+      case "SemioUpdated": {
+        if (event.semio_version !== undefined) {
+          this.semioVersion = event.semio_version;
+        }
+        if (event.person_id && event.frontend_id && event.update) {
+          const key = `${event.person_id["0"]}:${event.frontend_id}`;
+          let presence = this.presences.get(key) ?? {
+            personId: event.person_id["0"],
+            frontendId: event.frontend_id,
+            selectedPieceIds: [],
+            selectedDesignIds: [],
+          };
+          switch (event.update.kind) {
+            case "CursorMoved":
+              presence.cursor = { u: event.update.u!, v: event.update.v! };
+              break;
+            case "LookChanged":
+              presence.look = { position: event.update.position!, forward: event.update.forward!, up: event.update.up! };
+              break;
+            case "SelectionChanged":
+              presence.selectedPieceIds = event.update.piece_ids ?? [];
+              presence.selectedDesignIds = event.update.design_ids ?? [];
+              break;
+            case "PresenceCleared":
+              this.presences.delete(key);
+              this.notifyPresenceListeners();
+              this.notify();
+              return;
+          }
+          this.presences.set(key, presence);
+          this.notifyPresenceListeners();
+        }
+        this.notify();
+        break;
+      }
+      case "SessionClosed":
+        this.status = "offline";
+        this.notify();
+        break;
+    }
+  }
+
+  private applyServerChanges(changes: ServerEntityChange[]): void {
+    for (const change of changes) {
+      switch (change.op) {
+        case "Created":
+          this.applyCreatedEntity(change.entity_kind, change.entity_id, change.snapshot ?? {});
+          break;
+        case "Updated":
+          this.applyUpdatedEntity(change.entity_kind, change.entity_id, change.changed_fields ?? {});
+          break;
+        case "Deleted":
+          this.applyDeletedEntity(change.entity_kind, change.entity_id);
+          break;
+      }
+    }
+  }
+
+  private applyCreatedEntity(entityKind: string, entityId: string, snapshot: Record<string, any>): void {
+    const entity = { guid: entityId, ...snapshot };
+    switch (entityKind) {
+      case "type":
+        this.kit = { ...this.kit, types: [...(this.kit.types ?? []), entity as any] };
+        break;
+      case "design":
+        this.kit = { ...this.kit, designs: [...(this.kit.designs ?? []), entity as any] };
+        break;
+      case "author":
+        this.kit = { ...this.kit, authors: [...(this.kit.authors ?? []), entity as any] };
+        break;
+      case "tag":
+        this.kit = { ...this.kit, tags: [...(this.kit.tags ?? []), entity as any] };
+        break;
+      case "concept":
+        this.kit = { ...this.kit, concepts: [...(this.kit.concepts ?? []), entity as any] };
+        break;
+      case "port":
+        this.kit = { ...this.kit, ports: [...(this.kit.ports ?? []), entity as any] };
+        break;
+      case "quality":
+        this.kit = { ...this.kit, qualities: [...(this.kit.qualities ?? []), entity as any] };
+        break;
+      case "file":
+        this.kit = { ...this.kit, files: [...(this.kit.files ?? []), entity as any] };
+        break;
+      case "folder":
+        this.kit = { ...this.kit, folders: [...(this.kit.folders ?? []), entity as any] };
+        break;
+    }
+  }
+
+  private applyUpdatedEntity(entityKind: string, entityId: string, changedFields: Record<string, any>): void {
+    const updateInArray = <T extends { guid: string }>(arr: T[] | undefined, id: string, fields: Record<string, any>): T[] => {
+      return (arr ?? []).map((item) => (item.guid === id ? { ...item, ...fields } : item));
+    };
+    switch (entityKind) {
+      case "kit":
+        this.kit = { ...this.kit, ...changedFields };
+        break;
+      case "type":
+        this.kit = { ...this.kit, types: updateInArray(this.kit.types, entityId, changedFields) };
+        break;
+      case "design":
+        this.kit = { ...this.kit, designs: updateInArray(this.kit.designs, entityId, changedFields) };
+        break;
+      case "author":
+        this.kit = { ...this.kit, authors: updateInArray(this.kit.authors, entityId, changedFields) };
+        break;
+      case "tag":
+        this.kit = { ...this.kit, tags: updateInArray(this.kit.tags, entityId, changedFields) };
+        break;
+      case "concept":
+        this.kit = { ...this.kit, concepts: updateInArray(this.kit.concepts, entityId, changedFields) };
+        break;
+      case "port":
+        this.kit = { ...this.kit, ports: updateInArray(this.kit.ports, entityId, changedFields) };
+        break;
+      case "quality":
+        this.kit = { ...this.kit, qualities: updateInArray(this.kit.qualities, entityId, changedFields) };
+        break;
+      case "file":
+        this.kit = { ...this.kit, files: updateInArray(this.kit.files, entityId, changedFields) };
+        break;
+      case "folder":
+        this.kit = { ...this.kit, folders: updateInArray(this.kit.folders, entityId, changedFields) };
+        break;
+    }
+  }
+
+  private applyDeletedEntity(entityKind: string, entityId: string): void {
+    const removeFromArray = <T extends { guid: string }>(arr: T[] | undefined, id: string): T[] => {
+      return (arr ?? []).filter((item) => item.guid !== id);
+    };
+    switch (entityKind) {
+      case "type":
+        this.kit = { ...this.kit, types: removeFromArray(this.kit.types, entityId) };
+        break;
+      case "design":
+        this.kit = { ...this.kit, designs: removeFromArray(this.kit.designs, entityId) };
+        break;
+      case "author":
+        this.kit = { ...this.kit, authors: removeFromArray(this.kit.authors, entityId) };
+        break;
+      case "tag":
+        this.kit = { ...this.kit, tags: removeFromArray(this.kit.tags, entityId) };
+        break;
+      case "concept":
+        this.kit = { ...this.kit, concepts: removeFromArray(this.kit.concepts, entityId) };
+        break;
+      case "port":
+        this.kit = { ...this.kit, ports: removeFromArray(this.kit.ports, entityId) };
+        break;
+      case "quality":
+        this.kit = { ...this.kit, qualities: removeFromArray(this.kit.qualities, entityId) };
+        break;
+      case "file":
+        this.kit = { ...this.kit, files: removeFromArray(this.kit.files, entityId) };
+        break;
+      case "folder":
+        this.kit = { ...this.kit, folders: removeFromArray(this.kit.folders, entityId) };
+        break;
+    }
+  }
+
+  getSnapshot(): KitStoreSnapshot {
+    return {
+      kit: this.kit,
+      sync: {
+        status: this.status,
+        dirty: this.dirty,
+        readonly: false,
+        lastSyncedAt: this.lastSyncedAt,
+        error: this.error,
+      },
+    };
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  transact<T>(label: string, run: () => T): T {
+    const before = this.kit;
+    this.transacting = true;
+    try {
+      const result = run();
+      const after = this.kit;
+      if (before !== after && !this.disposed) {
+        const forward = getKitDiff(before, after);
+        const backward = inverseKitDiff(before, forward);
+        this.undoStack.push({ forward, backward });
+        this.redoStack = [];
+      }
+      return result;
+    } finally {
+      this.transacting = false;
+    }
+  }
+
+  apply(diff: KitDiff, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = applyKitDiff(this.kit, diff);
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, this.kit);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    // Send diff as domain commands to server
+    this.sendKitDiffToServer(diff).catch((e) => {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    });
+    this.notify();
+  }
+
+  replace(next: Kit, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = next;
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, next);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.sendKitDiffToServer(getKitDiff(before, next)).catch((e) => {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    });
+    this.notify();
+  }
+
+  private async sendKitDiffToServer(diff: KitDiff): Promise<void> {
+    const commands: any[] = [];
+    // Kit-level fields
+    const kitFields: Record<string, any> = {};
+    if (diff.name !== undefined) kitFields.name = diff.name;
+    if (diff.version !== undefined) kitFields.version = diff.version;
+    if (diff.description !== undefined) kitFields.description = diff.description;
+    if (diff.icon !== undefined) kitFields.icon = diff.icon;
+    if (diff.image !== undefined) kitFields.image = diff.image;
+    if (diff.remote !== undefined) kitFields.remote = diff.remote;
+    if (diff.homepage !== undefined) kitFields.homepage = diff.homepage;
+    if (diff.license !== undefined) kitFields.license = diff.license;
+    if (diff.preview !== undefined) kitFields.preview = diff.preview;
+    if (Object.keys(kitFields).length > 0) {
+      commands.push({ kind: "PatchKit", payload: { fields: kitFields } });
+    }
+    // Collection diffs
+    const collectionMap: Record<string, { create: string; patch: string; delete: string }> = {
+      types: { create: "CreateType", patch: "PatchType", delete: "DeleteType" },
+      designs: { create: "CreateDesign", patch: "PatchDesign", delete: "DeleteDesign" },
+      authors: { create: "CreateAuthor", patch: "PatchAuthor", delete: "DeleteAuthor" },
+      tags: { create: "CreateTag", patch: "PatchTag", delete: "DeleteTag" },
+      concepts: { create: "CreateConcept", patch: "PatchConcept", delete: "DeleteConcept" },
+      ports: { create: "CreatePort", patch: "PatchPort", delete: "DeletePort" },
+      qualities: { create: "CreateQuality", patch: "PatchQuality", delete: "DeleteQuality" },
+      files: { create: "CreateFile", patch: "PatchFile", delete: "DeleteFile" },
+      folders: { create: "CreateFolder", patch: "PatchFolder", delete: "DeleteFolder" },
+    };
+    for (const [key, ops] of Object.entries(collectionMap)) {
+      const collDiff = (diff as any)[key];
+      if (!collDiff) continue;
+      if (collDiff.added) {
+        for (const item of collDiff.added) {
+          commands.push({ kind: ops.create, payload: { entity_id: item.guid ?? guid(), fields: item } });
+        }
+      }
+      if (collDiff.updated) {
+        for (const item of collDiff.updated) {
+          commands.push({ kind: ops.patch, payload: { entity_id: item.guid, fields: item } });
+        }
+      }
+      if (collDiff.removed) {
+        for (const item of collDiff.removed) {
+          commands.push({ kind: ops.delete, payload: { entity_id: item.guid } });
+        }
+      }
+    }
+    if (commands.length === 0) return;
+    const batch = commands.length === 1 ? commands[0] : { kind: "Batch", payload: { commands } };
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/domain`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        command_id: { "0": guid() },
+        client_id: { "0": this.clientId },
+        request_id: { "0": guid() },
+        actor_person_id: { "0": this.personId },
+        base_domain_version: this.domainVersion,
+        ...batch,
+      }),
+    });
+    if (!resp.ok) {
+      throw new Error(`Failed to send command: ${resp.statusText}`);
+    }
+  }
+
+  async save(): Promise<void> {
+    // Server-backed: save is implicit on command submission
+    this.dirty = false;
+    this.lastSyncedAt = new Date().toISOString();
+    this.notify();
+  }
+
+  async reload(): Promise<void> {
+    this.status = "loading";
+    this.notify();
+    try {
+      const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/snapshot`);
+      if (!resp.ok) throw new Error(`Failed to reload: ${resp.statusText}`);
+      const snapshot = await resp.json();
+      this.kit = {
+        guid: snapshot.kit?.kit_id ?? this.kit.guid,
+        name: snapshot.kit?.name ?? this.kit.name,
+        version: snapshot.kit?.version,
+        createdAt: this.kit.createdAt,
+        updatedAt: new Date().toISOString(),
+      };
+      this.domainVersion = snapshot.domain_version ?? 0;
+      this.semioVersion = snapshot.semio_version ?? 0;
+      this.dirty = false;
+      this.undoStack = [];
+      this.redoStack = [];
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+    this.listeners.clear();
+    this.presenceListeners.clear();
+    this.entityListeners.clear();
+    this.collectionListeners.clear();
+    this.propertyListeners.clear();
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  undo(): void {
+    const change = this.undoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.backward);
+    this.redoStack.push(change);
+    this.dirty = true;
+    this.sendKitDiffToServer(change.backward).catch(() => {});
+    this.notify();
+  }
+
+  redo(): void {
+    const change = this.redoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.forward);
+    this.undoStack.push(change);
+    this.dirty = true;
+    this.sendKitDiffToServer(change.forward).catch(() => {});
+    this.notify();
+  }
+
+  // #region 🔖Presence
+
+  /**
+   * Send cursor position to server for this person.
+   **/
+  async sendCursor(u: number, v: number): Promise<void> {
+    await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: { "0": this.clientId },
+        person_id: { "0": this.personId },
+        frontend_id: this.clientId,
+        base_semio_version: this.semioVersion,
+        kind: "UpsertCursor",
+        payload: { u, v },
+      }),
+    });
+  }
+
+  /**
+   * Send camera look to server for this person.
+   **/
+  async sendLook(position: [number, number, number], forward: [number, number, number], up: [number, number, number]): Promise<void> {
+    await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: { "0": this.clientId },
+        person_id: { "0": this.personId },
+        frontend_id: this.clientId,
+        base_semio_version: this.semioVersion,
+        kind: "UpsertLook",
+        payload: { position, forward, up },
+      }),
+    });
+  }
+
+  /**
+   * Send piece/design selection to server for this person.
+   **/
+  async sendSelection(pieceIds: string[], designIds: string[]): Promise<void> {
+    await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: { "0": this.clientId },
+        person_id: { "0": this.personId },
+        frontend_id: this.clientId,
+        base_semio_version: this.semioVersion,
+        kind: "SetSelection",
+        payload: { piece_ids: pieceIds, design_ids: designIds },
+      }),
+    });
+  }
+
+  /**
+   * Clear this person's presence from the server.
+   **/
+  async clearPresence(): Promise<void> {
+    await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: { "0": this.clientId },
+        person_id: { "0": this.personId },
+        frontend_id: this.clientId,
+        base_semio_version: this.semioVersion,
+        kind: "ClearPresence",
+        payload: null,
+      }),
+    });
+  }
+
+  /**
+   * Get all currently known presences.
+   **/
+  getPresences(): PresenceState[] {
+    return Array.from(this.presences.values());
+  }
+
+  /**
+   * Subscribe to presence changes.
+   **/
+  subscribePresence(listener: () => void): () => void {
+    this.presenceListeners.add(listener);
+    return () => {
+      this.presenceListeners.delete(listener);
+    };
+  }
+
+  // #endregion 🔖Presence
+
+  // #region 🔖History
+
+  /**
+   * Get kit state at a named lookback point (e.g. "1min", "5h", "1d").
+   **/
+  async getKitAtLookback(lookback: string): Promise<Kit> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at/${lookback}`);
+    if (!resp.ok) throw new Error(`Failed to get kit at lookback ${lookback}: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Get kit state at a specific domain version.
+   **/
+  async getKitAtVersion(version: number): Promise<Kit> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at-version/${version}`);
+    if (!resp.ok) throw new Error(`Failed to get kit at version ${version}: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Trigger history compaction on the server.
+   **/
+  async compactHistory(): Promise<{ snapshots_created: number; logs_deleted: number }> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/history/compact`, { method: "POST" });
+    if (!resp.ok) throw new Error(`Failed to compact: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Get available lookback tokens.
+   **/
+  async getLookbackTokens(): Promise<string[]> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/history/lookback-tokens`);
+    if (!resp.ok) throw new Error(`Failed to get tokens: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Current domain version from the server.
+   **/
+  getDomainVersion(): number {
+    return this.domainVersion;
+  }
+
+  /**
+   * Current semio version from the server.
+   **/
+  getSemioVersion(): number {
+    return this.semioVersion;
+  }
+
+  // #endregion 🔖History
+
+  // #region 🔖GranularSubscriptions
+
+  /**
+   * Subscribe to changes on a specific entity by kind and guid.
+   * Listener fires only when that entity is created, updated, or deleted.
+   **/
+  subscribeEntity(entityKind: string, entityId: string, listener: () => void): () => void {
+    const key = `${entityKind}:${entityId}`;
+    if (!this.entityListeners.has(key)) this.entityListeners.set(key, new Set());
+    this.entityListeners.get(key)!.add(listener);
+    return () => {
+      this.entityListeners.get(key)?.delete(listener);
+    };
+  }
+
+  /**
+   * Subscribe to changes on a collection (e.g. "type", "design").
+   * Listener fires when any entity of that kind is created or deleted.
+   **/
+  subscribeCollection(entityKind: string, listener: () => void): () => void {
+    if (!this.collectionListeners.has(entityKind)) this.collectionListeners.set(entityKind, new Set());
+    this.collectionListeners.get(entityKind)!.add(listener);
+    return () => {
+      this.collectionListeners.get(entityKind)?.delete(listener);
+    };
+  }
+
+  /**
+   * Subscribe to changes on a specific property of a specific entity.
+   * Listener fires only when that exact field changes.
+   **/
+  subscribeProperty(entityKind: string, entityId: string, field: string, listener: () => void): () => void {
+    const key = `${entityKind}:${entityId}:${field}`;
+    if (!this.propertyListeners.has(key)) this.propertyListeners.set(key, new Set());
+    this.propertyListeners.get(key)!.add(listener);
+    return () => {
+      this.propertyListeners.get(key)?.delete(listener);
+    };
+  }
+
+  private notifyEntityListeners(entityKind: string, entityId: string): void {
+    const key = `${entityKind}:${entityId}`;
+    this.entityListeners.get(key)?.forEach((l) => l());
+  }
+
+  private notifyCollectionListeners(entityKind: string): void {
+    this.collectionListeners.get(entityKind)?.forEach((l) => l());
+  }
+
+  private notifyPropertyListeners(entityKind: string, entityId: string, field: string): void {
+    const key = `${entityKind}:${entityId}:${field}`;
+    this.propertyListeners.get(key)?.forEach((l) => l());
+  }
+
+  private notifyPresenceListeners(): void {
+    this.presenceListeners.forEach((l) => l());
+  }
+
+  // #endregion 🔖GranularSubscriptions
+
+  private notify(): void {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+}
+
+/**
+ * Creates a SessionKitStore by connecting to a semio-session server.
+ *
+ * Specs: Factory function matching the provider pattern.
+ * [👤semio👥studio💻studio🔖sessionkitstore🛠️createsessionkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/SessionKitStore/d/i/createSessionKitStore)
+ **/
+export async function createSessionKitStore(config: SessionKitStoreConfig): Promise<SessionKitStore> {
+  return SessionKitStore.create(config);
+}
+
+// #endregion 🔖SessionKitStore
+
+// #region 🔖GranularHooks
+// [👤semio👥studio💻studio🔖granularhooks](repo://p/u/semio/b/l/studio/f/studio.ts/s/GranularHooks)
+// React hooks for 100% granular entity/collection/property-level subscriptions.
+// Specs: Each hook uses useSyncExternalStore under the hood. Hooks subscribe to the
+// minimum scope needed and only re-render when that scope changes. For SessionKitStore,
+// hooks also subscribe to granular entity/collection/property listeners for optimal updates.
+// For other KitStore implementations, hooks fall back to global subscribe with selector comparison.
+
+import { useSyncExternalStore, useRef, useCallback } from "react";
+import type { Type, Design, Author, Tag, Concept, Port, Quality, File as SemioFile, Folder } from "@semio/js";
+
+// #region 🔖SelectorHook
+
+/**
+ * Core selector hook for any KitStore. Selects a value from the snapshot and only
+ * re-renders when the selected value changes (via Object.is comparison).
+ *
+ * Specs: Uses useSyncExternalStore with a memoized getSnapshot that tracks the
+ * previous selected value. Returns the cached value if Object.is(prev, next) is true.
+ **/
+export function useKitStoreSelector<T>(store: KitStore, selector: (snap: KitStoreSnapshot) => T): T {
+  const cachedRef = useRef<{ value: T; initialized: boolean }>({ value: undefined as T, initialized: false });
+  const getSnapshot = useCallback(() => {
+    const next = selector(store.getSnapshot());
+    if (cachedRef.current.initialized && Object.is(cachedRef.current.value, next)) {
+      return cachedRef.current.value;
+    }
+    cachedRef.current = { value: next, initialized: true };
+    return next;
+  }, [store, selector]);
+  const subscribe = useCallback((cb: () => void) => store.subscribe(cb), [store]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+// #endregion 🔖SelectorHook
+
+// #region 🔖KitHooks
+
+/**
+ * Returns the full Kit snapshot. Re-renders on any kit change.
+ **/
+export function useKit(store: KitStore): Kit {
+  return useKitStoreSelector(store, (s) => s.kit);
+}
+
+/**
+ * Returns the kit sync state. Re-renders on status changes.
+ **/
+export function useKitSyncState(store: KitStore): KitSyncState {
+  return useKitStoreSelector(store, (s) => s.sync);
+}
+
+/**
+ * Returns the kit name. Re-renders only when name changes.
+ **/
+export function useKitName(store: KitStore): string {
+  return useKitStoreSelector(store, (s) => s.kit.name);
+}
+
+/**
+ * Returns the kit version. Re-renders only when version changes.
+ **/
+export function useKitVersion(store: KitStore): string | undefined {
+  return useKitStoreSelector(store, (s) => s.kit.version);
+}
+
+/**
+ * Returns the kit description. Re-renders only when description changes.
+ **/
+export function useKitDescription(store: KitStore): string | undefined {
+  return useKitStoreSelector(store, (s) => s.kit.description);
+}
+
+/**
+ * Returns the kit icon. Re-renders only when icon changes.
+ **/
+export function useKitIcon(store: KitStore): string | undefined {
+  return useKitStoreSelector(store, (s) => s.kit.icon);
+}
+
+/**
+ * Returns the kit image. Re-renders only when image changes.
+ **/
+export function useKitImage(store: KitStore): string | undefined {
+  return useKitStoreSelector(store, (s) => s.kit.image);
+}
+
+/**
+ * Returns the kit remote URL. Re-renders only when remote changes.
+ **/
+export function useKitRemote(store: KitStore): string | undefined {
+  return useKitStoreSelector(store, (s) => s.kit.remote);
+}
+
+/**
+ * Returns the kit homepage URL. Re-renders only when homepage changes.
+ **/
+export function useKitHomepage(store: KitStore): string | undefined {
+  return useKitStoreSelector(store, (s) => s.kit.homepage);
+}
+
+/**
+ * Returns the kit license. Re-renders only when license changes.
+ **/
+export function useKitLicense(store: KitStore): string | undefined {
+  return useKitStoreSelector(store, (s) => s.kit.license);
+}
+
+/**
+ * Returns any arbitrary kit field by key. Re-renders only when that field changes.
+ **/
+export function useKitField<K extends keyof Kit>(store: KitStore, field: K): Kit[K] {
+  return useKitStoreSelector(store, (s) => s.kit[field]);
+}
+
+// #endregion 🔖KitHooks
+
+// #region 🔖CollectionHooks
+
+/**
+ * Returns all types. Re-renders when types collection changes.
+ **/
+export function useTypes(store: KitStore): Type[] {
+  return useKitStoreSelector(store, (s) => s.kit.types ?? []);
+}
+
+/**
+ * Returns a single type by guid. Re-renders only when that type changes.
+ **/
+export function useType(store: KitStore, typeGuid: string): Type | undefined {
+  return useKitStoreSelector(store, (s) => (s.kit.types ?? []).find((t) => t.guid === typeGuid));
+}
+
+/**
+ * Returns a single type field by guid and field key. Re-renders only when that field changes.
+ **/
+export function useTypeField<K extends keyof Type>(store: KitStore, typeGuid: string, field: K): Type[K] | undefined {
+  return useKitStoreSelector(store, (s) => {
+    const t = (s.kit.types ?? []).find((t) => t.guid === typeGuid);
+    return t ? t[field] : undefined;
+  });
+}
+
+/**
+ * Returns all designs. Re-renders when designs collection changes.
+ **/
+export function useDesigns(store: KitStore): Design[] {
+  return useKitStoreSelector(store, (s) => s.kit.designs ?? []);
+}
+
+/**
+ * Returns a single design by guid. Re-renders only when that design changes.
+ **/
+export function useDesign(store: KitStore, designGuid: string): Design | undefined {
+  return useKitStoreSelector(store, (s) => (s.kit.designs ?? []).find((d) => d.guid === designGuid));
+}
+
+/**
+ * Returns a single design field by guid and field key. Re-renders only when that field changes.
+ **/
+export function useDesignField<K extends keyof Design>(store: KitStore, designGuid: string, field: K): Design[K] | undefined {
+  return useKitStoreSelector(store, (s) => {
+    const d = (s.kit.designs ?? []).find((d) => d.guid === designGuid);
+    return d ? d[field] : undefined;
+  });
+}
+
+/**
+ * Returns all authors. Re-renders when authors collection changes.
+ **/
+export function useAuthors(store: KitStore): Author[] {
+  return useKitStoreSelector(store, (s) => s.kit.authors ?? []);
+}
+
+/**
+ * Returns a single author by guid. Re-renders only when that author changes.
+ **/
+export function useAuthor(store: KitStore, authorGuid: string): Author | undefined {
+  return useKitStoreSelector(store, (s) => (s.kit.authors ?? []).find((a) => a.guid === authorGuid));
+}
+
+/**
+ * Returns all tags. Re-renders when tags collection changes.
+ **/
+export function useTags(store: KitStore): Tag[] {
+  return useKitStoreSelector(store, (s) => s.kit.tags ?? []);
+}
+
+/**
+ * Returns a single tag by guid. Re-renders only when that tag changes.
+ **/
+export function useTag(store: KitStore, tagGuid: string): Tag | undefined {
+  return useKitStoreSelector(store, (s) => (s.kit.tags ?? []).find((t) => t.guid === tagGuid));
+}
+
+/**
+ * Returns all concepts. Re-renders when concepts collection changes.
+ **/
+export function useConcepts(store: KitStore): Concept[] {
+  return useKitStoreSelector(store, (s) => s.kit.concepts ?? []);
+}
+
+/**
+ * Returns a single concept by guid. Re-renders only when that concept changes.
+ **/
+export function useConcept(store: KitStore, conceptGuid: string): Concept | undefined {
+  return useKitStoreSelector(store, (s) => (s.kit.concepts ?? []).find((c) => c.guid === conceptGuid));
+}
+
+/**
+ * Returns all ports. Re-renders when ports collection changes.
+ **/
+export function usePorts(store: KitStore): Port[] {
+  return useKitStoreSelector(store, (s) => s.kit.ports ?? []);
+}
+
+/**
+ * Returns a single port by guid. Re-renders only when that port changes.
+ **/
+export function usePort(store: KitStore, portGuid: string): Port | undefined {
+  return useKitStoreSelector(store, (s) => (s.kit.ports ?? []).find((p) => p.guid === portGuid));
+}
+
+/**
+ * Returns all qualities. Re-renders when qualities collection changes.
+ **/
+export function useQualities(store: KitStore): Quality[] {
+  return useKitStoreSelector(store, (s) => s.kit.qualities ?? []);
+}
+
+/**
+ * Returns a single quality by guid. Re-renders only when that quality changes.
+ **/
+export function useQuality(store: KitStore, qualityGuid: string): Quality | undefined {
+  return useKitStoreSelector(store, (s) => (s.kit.qualities ?? []).find((q) => q.guid === qualityGuid));
+}
+
+// #endregion 🔖CollectionHooks
+
+// #region 🔖PresenceHooks
+
+/**
+ * Returns all current presences. Re-renders when any presence changes.
+ * Only works with SessionKitStore.
+ **/
+export function usePresences(store: KitStore): PresenceState[] {
+  const subscribe = useCallback(
+    (cb: () => void) => {
+      if (store instanceof SessionKitStore) {
+        return store.subscribePresence(cb);
+      }
+      return store.subscribe(cb);
+    },
+    [store],
+  );
+  const getSnapshot = useCallback(() => {
+    if (store instanceof SessionKitStore) {
+      return store.getPresences();
+    }
+    return [];
+  }, [store]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/**
+ * Returns presence for a specific person. Re-renders only when that person's presence changes.
+ * Only works with SessionKitStore.
+ **/
+export function usePresence(store: KitStore, personId: string, frontendId: string): PresenceState | undefined {
+  const presences = usePresences(store);
+  return presences.find((p) => p.personId === personId && p.frontendId === frontendId);
+}
+
+// #endregion 🔖PresenceHooks
+
+// #region 🔖SessionHooks
+
+/**
+ * Returns the current domain version. Only works with SessionKitStore.
+ **/
+export function useDomainVersion(store: KitStore): number {
+  return useKitStoreSelector(store, () => {
+    if (store instanceof SessionKitStore) return store.getDomainVersion();
+    return 0;
+  });
+}
+
+/**
+ * Returns the current semio version. Only works with SessionKitStore.
+ **/
+export function useSemioVersion(store: KitStore): number {
+  return useKitStoreSelector(store, () => {
+    if (store instanceof SessionKitStore) return store.getSemioVersion();
+    return 0;
+  });
+}
+
+// #endregion 🔖SessionHooks
+
+// #endregion 🔖GranularHooks

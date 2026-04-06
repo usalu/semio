@@ -166,6 +166,35 @@ pub enum SessionStatus {
 
 // #endregion 🔖Domain
 
+// #region 🔖Lookback
+// Specs: Named lookback points define retention boundaries for kit history. Each token maps to seconds.
+// Summary: Configurable lookback points for historical kit snapshot retention and auto-compaction.
+
+pub const LOOKBACK_POINTS: &[(&str, i64)] = &[
+    ("1min", 60),
+    ("5min", 300),
+    ("10min", 600),
+    ("30min", 1800),
+    ("1h", 3600),
+    ("5h", 18000),
+    ("1d", 86400),
+    ("3d", 259200),
+    ("7d", 604800),
+    ("1mo", 2592000),
+    ("6mo", 15552000),
+    ("1y", 31536000),
+];
+
+pub fn lookback_seconds(token: &str) -> Option<i64> {
+    LOOKBACK_POINTS.iter().find(|(t, _)| *t == token).map(|(_, s)| *s)
+}
+
+pub fn lookback_tokens() -> Vec<&'static str> {
+    LOOKBACK_POINTS.iter().map(|(t, _)| *t).collect()
+}
+
+// #endregion 🔖Lookback
+
 // #region 🔖Command
 // Specs: CommandEnvelope carries per-command metadata. DomainCommand enumerates all CRUD variants. SemioCommand handles presence mutations. CommandResult reports outcome.
 // Summary: Explicit command types for domain and semio mutations.
@@ -496,6 +525,7 @@ pub async fn run_migrations(pool: &PgPool) {
     create_runtime_tables(pool).await;
     create_core_tables(pool).await;
     create_semio_tables(pool).await;
+    create_history_tables(pool).await;
     tracing::info!("database migrations complete");
 }
 
@@ -781,6 +811,38 @@ async fn create_semio_tables(pool: &PgPool) {
     )", "semio.selection_design").await;
 }
 
+async fn create_history_tables(pool: &PgPool) {
+    exec(pool, "CREATE TABLE IF NOT EXISTS history.domain_commit (
+        session_id UUID NOT NULL,
+        domain_version BIGINT NOT NULL,
+        command_id UUID NOT NULL,
+        committed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (session_id, domain_version)
+    )", "history.domain_commit").await;
+
+    exec(pool, "CREATE TABLE IF NOT EXISTS history.kit_snapshot (
+        session_id UUID NOT NULL,
+        domain_version BIGINT NOT NULL,
+        kit_json JSONB NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (session_id, domain_version)
+    )", "history.kit_snapshot").await;
+
+    exec(pool, "CREATE TABLE IF NOT EXISTS history.entity_change_log (
+        session_id UUID NOT NULL,
+        domain_version BIGINT NOT NULL,
+        changes_json JSONB NOT NULL,
+        PRIMARY KEY (session_id, domain_version)
+    )", "history.entity_change_log").await;
+
+    exec(pool, "CREATE TABLE IF NOT EXISTS history.compaction_config (
+        session_id UUID NOT NULL,
+        lookback_tokens JSONB NOT NULL DEFAULT '[]'::jsonb,
+        last_compacted_at TIMESTAMPTZ,
+        PRIMARY KEY (session_id)
+    )", "history.compaction_config").await;
+}
+
 // #endregion 🔖Schema
 
 // #region 🔖Persistence
@@ -797,6 +859,21 @@ pub async fn create_session(pool: &PgPool, session_id: Uuid, kit_id: Uuid, kit_n
         .bind(session_id).bind(kit_id).execute(&mut *tx).await?;
     sqlx_core::query::query("INSERT INTO core.kit (session_id, kit_id, name) VALUES ($1, $2, $3)")
         .bind(session_id).bind(kit_id).bind(kit_name).execute(&mut *tx).await?;
+    // Store initial baseline snapshot at version 0
+    let initial_kit = serde_json::json!({
+        "guid": kit_id, "name": kit_name,
+        "types": [], "designs": [], "authors": [], "tags": [],
+        "createdAt": chrono_now_iso(), "updatedAt": chrono_now_iso(),
+    });
+    sqlx_core::query::query(
+        "INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, 0, $2)"
+    ).bind(session_id).bind(&initial_kit).execute(&mut *tx).await?;
+    // Store initial compaction config with default lookback tokens
+    let default_tokens: Vec<&str> = lookback_tokens();
+    let tokens_json = serde_json::to_value(&default_tokens).unwrap_or(serde_json::json!([]));
+    sqlx_core::query::query(
+        "INSERT INTO history.compaction_config (session_id, lookback_tokens) VALUES ($1, $2)"
+    ).bind(session_id).bind(&tokens_json).execute(&mut *tx).await?;
     tx.commit().await?;
     Ok(())
 }
@@ -1024,6 +1101,317 @@ pub async fn mark_command_accepted(pool: &PgPool, command_id: Uuid, accepted_ver
     Ok(())
 }
 
+// #region 🔖History
+// Specs: History persistence stores domain commits with timestamps, full kit snapshots at baselines, and
+// incremental entity change logs. Supports lookback-based kit reconstruction and auto-compaction.
+// Summary: History storage: domain commits, kit snapshots, entity change logs, lookback reconstruction, compaction.
+
+pub async fn record_domain_commit(pool: &PgPool, session_id: Uuid, domain_version: DomainVersion, command_id: Uuid) -> Result<(), SessionError> {
+    sqlx_core::query::query(
+        "INSERT INTO history.domain_commit (session_id, domain_version, command_id) VALUES ($1, $2, $3)
+         ON CONFLICT (session_id, domain_version) DO NOTHING"
+    ).bind(session_id).bind(domain_version).bind(command_id).execute(pool).await?;
+    Ok(())
+}
+
+pub async fn store_kit_snapshot(pool: &PgPool, session_id: Uuid, domain_version: DomainVersion, kit_json: &serde_json::Value) -> Result<(), SessionError> {
+    sqlx_core::query::query(
+        "INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, $2, $3)
+         ON CONFLICT (session_id, domain_version) DO UPDATE SET kit_json = $3, created_at = now()"
+    ).bind(session_id).bind(domain_version).bind(kit_json).execute(pool).await?;
+    Ok(())
+}
+
+pub async fn store_entity_change_log(pool: &PgPool, session_id: Uuid, domain_version: DomainVersion, changes: &[EntityChange]) -> Result<(), SessionError> {
+    let changes_json = serde_json::to_value(changes).unwrap_or(serde_json::json!([]));
+    sqlx_core::query::query(
+        "INSERT INTO history.entity_change_log (session_id, domain_version, changes_json) VALUES ($1, $2, $3)
+         ON CONFLICT (session_id, domain_version) DO NOTHING"
+    ).bind(session_id).bind(domain_version).bind(&changes_json).execute(pool).await?;
+    Ok(())
+}
+
+pub async fn get_latest_snapshot_before(pool: &PgPool, session_id: Uuid, target_version: DomainVersion) -> Result<Option<(DomainVersion, serde_json::Value)>, SessionError> {
+    let row = sqlx_core::query_as::query_as::<_, (i64, serde_json::Value)>(
+        "SELECT domain_version, kit_json FROM history.kit_snapshot
+         WHERE session_id = $1 AND domain_version <= $2
+         ORDER BY domain_version DESC LIMIT 1"
+    ).bind(session_id).bind(target_version).fetch_optional(pool).await?;
+    Ok(row)
+}
+
+pub async fn get_change_logs_in_range(pool: &PgPool, session_id: Uuid, from_version_exclusive: DomainVersion, to_version_inclusive: DomainVersion) -> Result<Vec<(DomainVersion, serde_json::Value)>, SessionError> {
+    let rows = sqlx_core::query_as::query_as::<_, (i64, serde_json::Value)>(
+        "SELECT domain_version, changes_json FROM history.entity_change_log
+         WHERE session_id = $1 AND domain_version > $2 AND domain_version <= $3
+         ORDER BY domain_version ASC"
+    ).bind(session_id).bind(from_version_exclusive).bind(to_version_inclusive).fetch_all(pool).await?;
+    Ok(rows)
+}
+
+pub async fn get_version_at_time(pool: &PgPool, session_id: Uuid, seconds_ago: i64) -> Result<Option<DomainVersion>, SessionError> {
+    let row = sqlx_core::query_as::query_as::<_, (i64,)>(
+        "SELECT MAX(domain_version) FROM history.domain_commit
+         WHERE session_id = $1 AND committed_at <= now() - make_interval(secs => $2::double precision)"
+    ).bind(session_id).bind(seconds_ago as f64).fetch_optional(pool).await?;
+    Ok(row.map(|(v,)| v))
+}
+
+pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
+    let types: Vec<serde_json::Value> = state.types.values().filter(|t| t.lifecycle.is_active()).map(|t| {
+        serde_json::json!({
+            "guid": t.type_id, "name": t.name,
+            "description": t.description, "icon": t.icon, "image": t.image,
+            "folder": t.folder, "unit": t.unit, "stock": t.stock,
+            "isAbstract": t.is_abstract, "virtual": t.virtual_type,
+            "parentType": t.parent_type_id, "location": t.location_id,
+        })
+    }).collect();
+    let designs: Vec<serde_json::Value> = state.designs.values().filter(|d| d.lifecycle.is_active()).map(|d| {
+        let pieces: Vec<serde_json::Value> = d.pieces.values().filter(|p| p.lifecycle.is_active()).map(|p| {
+            serde_json::json!({
+                "guid": p.piece_id, "name": p.name, "type": p.type_id,
+                "center": p.center.map(|c| serde_json::json!({"u": c[0], "v": c[1]})),
+                "isHidden": p.is_hidden, "isLocked": p.is_locked,
+                "color": p.color, "description": p.description,
+            })
+        }).collect();
+        let connections: Vec<serde_json::Value> = d.connections.values().filter(|c| c.lifecycle.is_active()).map(|c| {
+            serde_json::json!({
+                "guid": c.connection_id,
+                "connected": {"piece": c.connected_piece_id},
+                "connecting": {"piece": c.connecting_piece_id},
+                "gap": c.gap, "shift": c.shift, "rise": c.rise,
+                "rotation": c.rotation, "turn": c.turn, "tilt": c.tilt,
+                "u": c.u, "v": c.v, "description": c.description,
+            })
+        }).collect();
+        serde_json::json!({
+            "guid": d.design_id, "name": d.name,
+            "description": d.description, "icon": d.icon, "image": d.image,
+            "unit": d.unit, "isAbstract": d.is_abstract,
+            "pieces": pieces, "connections": connections,
+        })
+    }).collect();
+    let authors: Vec<serde_json::Value> = state.authors.values().filter(|a| a.lifecycle.is_active()).map(|a| {
+        serde_json::json!({"guid": a.author_id, "name": a.name, "email": a.email})
+    }).collect();
+    let tags: Vec<serde_json::Value> = state.tags.values().filter(|t| t.lifecycle.is_active()).map(|t| {
+        serde_json::json!({"guid": t.tag_id, "name": t.name, "description": t.description, "icon": t.icon})
+    }).collect();
+    serde_json::json!({
+        "guid": state.kit.kit_id, "name": state.kit.name,
+        "version": state.kit.version, "description": state.kit.description,
+        "icon": state.kit.icon, "image": state.kit.image,
+        "preview": state.kit.preview, "remote": state.kit.remote,
+        "homepage": state.kit.homepage, "license": state.kit.license,
+        "types": types, "designs": designs, "authors": authors, "tags": tags,
+        "createdAt": chrono_now_iso(), "updatedAt": chrono_now_iso(),
+    })
+}
+
+fn chrono_now_iso() -> String {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH).unwrap_or_default();
+    let secs = now.as_secs();
+    let nanos = now.subsec_nanos();
+    format!("{}.{:09}Z", secs, nanos)
+}
+
+pub fn apply_change_log_to_kit(kit: &mut serde_json::Value, changes: &serde_json::Value) {
+    let changes_arr = match changes.as_array() {
+        Some(a) => a,
+        None => return,
+    };
+    for change in changes_arr {
+        let op = change.get("op").and_then(|v| v.as_str()).unwrap_or("");
+        let entity_kind = change.get("entity_kind").and_then(|v| v.as_str()).unwrap_or("");
+        let entity_id = change.get("entity_id").and_then(|v| v.as_str()).unwrap_or("");
+        match op {
+            "Created" => {
+                let snapshot = change.get("snapshot").cloned().unwrap_or(serde_json::json!({}));
+                let mut entity = snapshot.clone();
+                if !entity.get("guid").is_some() {
+                    entity["guid"] = serde_json::Value::String(entity_id.to_string());
+                }
+                match entity_kind {
+                    "type" => push_to_array(kit, "types", entity),
+                    "design" => push_to_array(kit, "designs", entity),
+                    "author" => push_to_array(kit, "authors", entity),
+                    "tag" => push_to_array(kit, "tags", entity),
+                    "piece" => {
+                        if let Some(design_id) = change.get("snapshot").and_then(|s| s.get("design_id")).and_then(|v| v.as_str()) {
+                            push_to_design_array(kit, design_id, "pieces", entity);
+                        }
+                    }
+                    "connection" => {
+                        if let Some(design_id) = change.get("snapshot").and_then(|s| s.get("design_id")).and_then(|v| v.as_str()) {
+                            push_to_design_array(kit, design_id, "connections", entity);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            "Updated" => {
+                let changed_fields = change.get("changed_fields").cloned().unwrap_or(serde_json::json!({}));
+                match entity_kind {
+                    "kit" => {
+                        if let Some(obj) = kit.as_object_mut() {
+                            if let Some(fields) = changed_fields.as_object() {
+                                for (k, v) in fields {
+                                    obj.insert(k.clone(), v.clone());
+                                }
+                            }
+                        }
+                    }
+                    "type" | "design" | "author" | "tag" => {
+                        let collection_key = match entity_kind { "type" => "types", "design" => "designs", "author" => "authors", "tag" => "tags", _ => "" };
+                        update_in_array(kit, collection_key, entity_id, &changed_fields);
+                    }
+                    _ => {}
+                }
+            }
+            "Deleted" => {
+                match entity_kind {
+                    "type" => remove_from_array(kit, "types", entity_id),
+                    "design" => remove_from_array(kit, "designs", entity_id),
+                    "author" => remove_from_array(kit, "authors", entity_id),
+                    "tag" => remove_from_array(kit, "tags", entity_id),
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn push_to_array(kit: &mut serde_json::Value, key: &str, item: serde_json::Value) {
+    if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
+        arr.push(item);
+    } else {
+        kit[key] = serde_json::json!([item]);
+    }
+}
+
+fn push_to_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, item: serde_json::Value) {
+    if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
+        for d in designs.iter_mut() {
+            if d.get("guid").and_then(|g| g.as_str()) == Some(design_id) {
+                if let Some(arr) = d.get_mut(key).and_then(|v| v.as_array_mut()) {
+                    arr.push(item.clone());
+                } else {
+                    d[key] = serde_json::json!([item]);
+                }
+                break;
+            }
+        }
+    }
+}
+
+fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, fields: &serde_json::Value) {
+    if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
+        for item in arr.iter_mut() {
+            if item.get("guid").and_then(|g| g.as_str()) == Some(entity_id) {
+                if let Some(obj) = item.as_object_mut() {
+                    if let Some(f) = fields.as_object() {
+                        for (k, v) in f {
+                            obj.insert(k.clone(), v.clone());
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+
+fn remove_from_array(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
+    if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
+        arr.retain(|item| item.get("guid").and_then(|g| g.as_str()) != Some(entity_id));
+    }
+}
+
+pub async fn reconstruct_kit_at_version(pool: &PgPool, session_id: Uuid, target_version: DomainVersion) -> Result<serde_json::Value, SessionError> {
+    let (snap_version, mut kit) = get_latest_snapshot_before(pool, session_id, target_version).await?
+        .ok_or_else(|| SessionError::Internal("no baseline snapshot found".to_string()))?;
+    if snap_version < target_version {
+        let logs = get_change_logs_in_range(pool, session_id, snap_version, target_version).await?;
+        for (_version, changes) in &logs {
+            apply_change_log_to_kit(&mut kit, changes);
+        }
+    }
+    Ok(kit)
+}
+
+pub async fn get_kit_at_lookback(pool: &PgPool, session_id: Uuid, lookback_token: &str) -> Result<serde_json::Value, SessionError> {
+    let seconds = lookback_seconds(lookback_token)
+        .ok_or_else(|| SessionError::Validation(format!("unknown lookback token: {}", lookback_token)))?;
+    let target_version = get_version_at_time(pool, session_id, seconds).await?
+        .ok_or_else(|| SessionError::Internal("no version found at lookback time".to_string()))?;
+    reconstruct_kit_at_version(pool, session_id, target_version).await
+}
+
+pub async fn compact_history(pool: &PgPool, session_id: Uuid, current_state: &SessionState) -> Result<CompactionResult, SessionError> {
+    let mut snapshots_created = 0u32;
+    let mut logs_deleted = 0u64;
+    let current_version = current_state.domain_version;
+    // Create snapshot at current version (always keep latest)
+    let current_kit = serialize_session_kit(current_state);
+    store_kit_snapshot(pool, session_id, current_version, &current_kit).await?;
+    snapshots_created += 1;
+    // For each lookback boundary, create a snapshot at the boundary version
+    for &(token, seconds) in LOOKBACK_POINTS {
+        let boundary_version = get_version_at_time(pool, session_id, seconds).await?;
+        if let Some(bv) = boundary_version {
+            if bv > 0 {
+                let existing = get_latest_snapshot_before(pool, session_id, bv).await?;
+                match existing {
+                    Some((sv, _)) if sv == bv => {} // already have snapshot at exact version
+                    _ => {
+                        match reconstruct_kit_at_version(pool, session_id, bv).await {
+                            Ok(kit) => {
+                                store_kit_snapshot(pool, session_id, bv, &kit).await?;
+                                snapshots_created += 1;
+                            }
+                            Err(_) => {
+                                tracing::warn!("compaction: could not reconstruct kit at version {} for lookback {}", bv, token);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // Delete change logs that are fully covered by snapshots
+    // Keep logs newer than the oldest lookback boundary
+    let oldest_seconds = LOOKBACK_POINTS.last().map(|(_, s)| *s).unwrap_or(31536000);
+    let oldest_version = get_version_at_time(pool, session_id, oldest_seconds).await?;
+    if let Some(ov) = oldest_version {
+        if ov > 0 {
+            let result = sqlx_core::query::query(
+                "DELETE FROM history.entity_change_log
+                 WHERE session_id = $1 AND domain_version < $2
+                 AND domain_version IN (
+                     SELECT ecl.domain_version FROM history.entity_change_log ecl
+                     WHERE ecl.session_id = $1 AND ecl.domain_version < $2
+                     AND EXISTS (SELECT 1 FROM history.kit_snapshot ks
+                                 WHERE ks.session_id = $1 AND ks.domain_version >= ecl.domain_version)
+                 )"
+            ).bind(session_id).bind(ov).execute(pool).await?;
+            logs_deleted = result.rows_affected();
+        }
+    }
+    Ok(CompactionResult { snapshots_created, logs_deleted })
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CompactionResult {
+    pub snapshots_created: u32,
+    pub logs_deleted: u64,
+}
+
+// #endregion 🔖History
+
 // #endregion 🔖Persistence
 
 // #region 🔖Actor
@@ -1083,6 +1471,15 @@ impl SessionActor {
         let changes = self.apply_domain_command(&command, new_version, cmd_id).await?;
         bump_domain_version(&self.pool, session_id, new_version).await?;
         mark_command_accepted(&self.pool, cmd_id, new_version).await?;
+        // Record history: domain commit + entity change log
+        record_domain_commit(&self.pool, session_id, new_version, cmd_id).await?;
+        store_entity_change_log(&self.pool, session_id, new_version, &changes).await?;
+        // Auto-compact every 50 versions
+        if new_version % 50 == 0 {
+            if let Err(e) = compact_history(&self.pool, session_id, &self.state).await {
+                tracing::warn!("compaction failed at version {}: {}", new_version, e);
+            }
+        }
         self.state.domain_version = new_version;
         let event = SessionEvent::DomainCommandAccepted { command_id: envelope.command_id, domain_version: new_version, changes };
         let _ = self.event_tx.send(event);
@@ -1311,6 +1708,10 @@ pub fn router(state: AppState) -> Router<()> {
         .route("/sessions/{session_id}/snapshot", get(handler_get_snapshot))
         .route("/sessions/{session_id}/commands/domain", post(handler_post_domain_command))
         .route("/sessions/{session_id}/commands/semio", post(handler_post_semio_command))
+        .route("/sessions/{session_id}/kit/at/{lookback}", get(handler_get_kit_at_lookback))
+        .route("/sessions/{session_id}/kit/at-version/{version}", get(handler_get_kit_at_version))
+        .route("/sessions/{session_id}/history/compact", post(handler_compact_history))
+        .route("/sessions/{session_id}/history/lookback-tokens", get(handler_get_lookback_tokens))
         .route("/sessions/{session_id}/ws", get(ws_handler))
         .with_state(state)
 }
@@ -1377,6 +1778,38 @@ async fn handler_post_semio_command(
         .await.map_err(|_| SessionError::ActorGone)?;
     rx.await.map_err(|_| SessionError::ActorGone)??;
     Ok(Json(serde_json::json!({"status": "ok"})))
+}
+
+async fn handler_get_kit_at_lookback(
+    State(state): State<AppState>, Path((session_id, lookback)): Path<(Uuid, String)>,
+) -> Result<Json<serde_json::Value>, SessionError> {
+    let kit = get_kit_at_lookback(&state.pool, session_id, &lookback).await?;
+    Ok(Json(kit))
+}
+
+async fn handler_get_kit_at_version(
+    State(state): State<AppState>, Path((session_id, version)): Path<(Uuid, i64)>,
+) -> Result<Json<serde_json::Value>, SessionError> {
+    let kit = reconstruct_kit_at_version(&state.pool, session_id, version).await?;
+    Ok(Json(kit))
+}
+
+async fn handler_compact_history(
+    State(state): State<AppState>, Path(session_id): Path<Uuid>,
+) -> Result<Json<CompactionResult>, SessionError> {
+    let handle = state.directory.get_or_activate(SessionId(session_id)).await
+        .ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
+    let (tx, rx) = oneshot::channel();
+    handle.command_tx.send(ActorMessage::GetSnapshot { reply: tx }).await.map_err(|_| SessionError::ActorGone)?;
+    let _snapshot = rx.await.map_err(|_| SessionError::ActorGone)?;
+    // Load full state for compaction
+    let session_state = load_session_state(&state.pool, session_id).await?;
+    let result = compact_history(&state.pool, session_id, &session_state).await?;
+    Ok(Json(result))
+}
+
+async fn handler_get_lookback_tokens() -> Json<Vec<&'static str>> {
+    Json(lookback_tokens())
 }
 
 // #endregion 🔖Api
@@ -2337,6 +2770,538 @@ mod tests {
     }
 
     // #endregion 🔖Metabolism Diff Tests
+
+    // #region 🔖Lookback Tests
+
+    #[test]
+    fn lookback_seconds_known_tokens() {
+        assert_eq!(lookback_seconds("1min"), Some(60));
+        assert_eq!(lookback_seconds("5min"), Some(300));
+        assert_eq!(lookback_seconds("10min"), Some(600));
+        assert_eq!(lookback_seconds("30min"), Some(1800));
+        assert_eq!(lookback_seconds("1h"), Some(3600));
+        assert_eq!(lookback_seconds("5h"), Some(18000));
+        assert_eq!(lookback_seconds("1d"), Some(86400));
+        assert_eq!(lookback_seconds("3d"), Some(259200));
+        assert_eq!(lookback_seconds("7d"), Some(604800));
+        assert_eq!(lookback_seconds("1mo"), Some(2592000));
+        assert_eq!(lookback_seconds("6mo"), Some(15552000));
+        assert_eq!(lookback_seconds("1y"), Some(31536000));
+    }
+
+    #[test]
+    fn lookback_seconds_unknown_token() {
+        assert_eq!(lookback_seconds("99x"), None);
+        assert_eq!(lookback_seconds(""), None);
+    }
+
+    #[test]
+    fn lookback_tokens_returns_all_12() {
+        let tokens = lookback_tokens();
+        assert_eq!(tokens.len(), 12);
+        assert_eq!(tokens[0], "1min");
+        assert_eq!(tokens[11], "1y");
+    }
+
+    #[test]
+    fn lookback_points_ordered_ascending() {
+        let mut prev = 0i64;
+        for &(_, secs) in LOOKBACK_POINTS {
+            assert!(secs > prev, "lookback points must be in ascending order");
+            prev = secs;
+        }
+    }
+
+    // #endregion 🔖Lookback Tests
+
+    // #region 🔖History Unit Tests
+
+    #[test]
+    fn serialize_session_kit_has_required_fields() {
+        let sid = Uuid::now_v7();
+        let kid = Uuid::now_v7();
+        let state = SessionState {
+            session_id: SessionId(sid), domain_version: 5, semio_version: 0,
+            status: SessionStatus::Active,
+            kit: KitState { kit_id: kid, name: "TestKit".into(), version: Some("1.0".into()), description: Some("A test".into()), icon: None, image: None, preview: None, remote: None, homepage: None, license: None, lifecycle: Lifecycle::Active },
+            authors: BTreeMap::new(), locations: BTreeMap::new(), folders: BTreeMap::new(), files: BTreeMap::new(),
+            tags: BTreeMap::new(), concepts: BTreeMap::new(), ports: BTreeMap::new(), qualities: BTreeMap::new(),
+            types: BTreeMap::new(), designs: BTreeMap::new(), semio_people: BTreeMap::new(),
+        };
+        let kit_json = serialize_session_kit(&state);
+        assert_eq!(kit_json["name"].as_str().unwrap(), "TestKit");
+        assert_eq!(kit_json["version"].as_str().unwrap(), "1.0");
+        assert_eq!(kit_json["description"].as_str().unwrap(), "A test");
+        assert!(kit_json["types"].as_array().unwrap().is_empty());
+        assert!(kit_json["designs"].as_array().unwrap().is_empty());
+        assert!(kit_json["guid"].as_str().is_some());
+        assert!(kit_json["createdAt"].as_str().is_some());
+    }
+
+    #[test]
+    fn serialize_session_kit_with_types_and_designs() {
+        let kit_json_src = load_metabolism_kit_json();
+        let kid = Uuid::parse_str(kit_json_src["guid"].as_str().unwrap()).unwrap();
+        let mut state = SessionState {
+            session_id: SessionId(Uuid::now_v7()), domain_version: 10, semio_version: 0,
+            status: SessionStatus::Active,
+            kit: KitState { kit_id: kid, name: "Metabolism".into(), version: None, description: None, icon: None, image: None, preview: None, remote: None, homepage: None, license: None, lifecycle: Lifecycle::Active },
+            authors: BTreeMap::new(), locations: BTreeMap::new(), folders: BTreeMap::new(), files: BTreeMap::new(),
+            tags: BTreeMap::new(), concepts: BTreeMap::new(), ports: BTreeMap::new(), qualities: BTreeMap::new(),
+            types: BTreeMap::new(), designs: BTreeMap::new(), semio_people: BTreeMap::new(),
+        };
+        // Add 3 types
+        for i in 0..3 {
+            let tid = Uuid::now_v7();
+            state.types.insert(tid, TypeState {
+                type_id: tid, name: format!("Type{}", i), parent_type_id: None, description: None,
+                icon: None, image: None, folder: None, unit: None, stock: None, is_abstract: None,
+                virtual_type: None, location_id: None,
+                connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+            });
+        }
+        let kit_json = serialize_session_kit(&state);
+        assert_eq!(kit_json["types"].as_array().unwrap().len(), 3);
+        assert_eq!(kit_json["name"].as_str().unwrap(), "Metabolism");
+    }
+
+    #[test]
+    fn apply_change_log_create_type() {
+        let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [], "designs": []});
+        let type_id = Uuid::now_v7();
+        let changes = serde_json::json!([{
+            "op": "Created",
+            "entity_kind": "type",
+            "entity_id": type_id.to_string(),
+            "snapshot": {"guid": type_id.to_string(), "name": "NewType"}
+        }]);
+        apply_change_log_to_kit(&mut kit, &changes);
+        let types = kit["types"].as_array().unwrap();
+        assert_eq!(types.len(), 1);
+        assert_eq!(types[0]["name"].as_str().unwrap(), "NewType");
+    }
+
+    #[test]
+    fn apply_change_log_update_kit_name() {
+        let mut kit = serde_json::json!({"guid": "abc", "name": "OldName", "types": []});
+        let changes = serde_json::json!([{
+            "op": "Updated",
+            "entity_kind": "kit",
+            "entity_id": "abc",
+            "changed_fields": {"name": "NewName"}
+        }]);
+        apply_change_log_to_kit(&mut kit, &changes);
+        assert_eq!(kit["name"].as_str().unwrap(), "NewName");
+    }
+
+    #[test]
+    fn apply_change_log_delete_type() {
+        let type_id = Uuid::now_v7().to_string();
+        let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [
+            {"guid": type_id, "name": "ToDelete"},
+            {"guid": "other", "name": "Keep"}
+        ]});
+        let changes = serde_json::json!([{
+            "op": "Deleted",
+            "entity_kind": "type",
+            "entity_id": type_id,
+        }]);
+        apply_change_log_to_kit(&mut kit, &changes);
+        let types = kit["types"].as_array().unwrap();
+        assert_eq!(types.len(), 1);
+        assert_eq!(types[0]["name"].as_str().unwrap(), "Keep");
+    }
+
+    #[test]
+    fn apply_change_log_update_type_fields() {
+        let type_id = Uuid::now_v7().to_string();
+        let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [
+            {"guid": type_id, "name": "OldName", "description": null}
+        ]});
+        let changes = serde_json::json!([{
+            "op": "Updated",
+            "entity_kind": "type",
+            "entity_id": type_id,
+            "changed_fields": {"name": "NewTypeName", "description": "Updated desc"}
+        }]);
+        apply_change_log_to_kit(&mut kit, &changes);
+        let types = kit["types"].as_array().unwrap();
+        assert_eq!(types[0]["name"].as_str().unwrap(), "NewTypeName");
+        assert_eq!(types[0]["description"].as_str().unwrap(), "Updated desc");
+    }
+
+    #[test]
+    fn apply_multiple_change_logs_sequentially() {
+        let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [], "designs": []});
+        let t1 = Uuid::now_v7().to_string();
+        let t2 = Uuid::now_v7().to_string();
+        // First: create two types
+        let changes1 = serde_json::json!([
+            {"op": "Created", "entity_kind": "type", "entity_id": t1, "snapshot": {"guid": t1, "name": "A"}},
+            {"op": "Created", "entity_kind": "type", "entity_id": t2, "snapshot": {"guid": t2, "name": "B"}},
+        ]);
+        apply_change_log_to_kit(&mut kit, &changes1);
+        assert_eq!(kit["types"].as_array().unwrap().len(), 2);
+        // Second: delete one type, update the other
+        let changes2 = serde_json::json!([
+            {"op": "Deleted", "entity_kind": "type", "entity_id": t1},
+            {"op": "Updated", "entity_kind": "type", "entity_id": t2, "changed_fields": {"name": "B_updated"}},
+        ]);
+        apply_change_log_to_kit(&mut kit, &changes2);
+        let types = kit["types"].as_array().unwrap();
+        assert_eq!(types.len(), 1);
+        assert_eq!(types[0]["name"].as_str().unwrap(), "B_updated");
+    }
+
+    #[test]
+    fn compaction_result_serde() {
+        let r = CompactionResult { snapshots_created: 3, logs_deleted: 42 };
+        let json = serde_json::to_string(&r).unwrap();
+        assert!(json.contains("snapshots_created"));
+        assert!(json.contains("logs_deleted"));
+    }
+
+    // #endregion 🔖History Unit Tests
+
+    // #region 🔖E2E Testcontainer Tests
+
+    /// Check if Docker/testcontainers are available at runtime.
+    fn docker_available() -> bool {
+        std::process::Command::new("docker").arg("info").output().map(|o| o.status.success()).unwrap_or(false)
+    }
+
+    #[tokio::test]
+    async fn e2e_session_lifecycle_with_postgres() {
+        if !docker_available() {
+            eprintln!("[SKIP] Docker not available, skipping E2E test");
+            return;
+        }
+        use testcontainers::runners::AsyncRunner;
+        use testcontainers_modules::postgres::Postgres;
+
+        let pg = Postgres::default().start().await.expect("start postgres container");
+        let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
+        let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
+
+        let pool = create_pool(&db_url).await;
+        run_migrations(&pool).await;
+
+        // Create session
+        let session_id = Uuid::now_v7();
+        let kit_id = Uuid::now_v7();
+        create_session(&pool, session_id, kit_id, "E2E Kit").await.unwrap();
+
+        // Verify session meta
+        let (dv, sv) = load_session_meta(&pool, session_id).await.unwrap();
+        assert_eq!(dv, 0);
+        assert_eq!(sv, 0);
+
+        // Verify initial baseline snapshot exists
+        let snapshot = get_latest_snapshot_before(&pool, session_id, 0).await.unwrap();
+        assert!(snapshot.is_some());
+        let (snap_version, snap_kit) = snapshot.unwrap();
+        assert_eq!(snap_version, 0);
+        assert_eq!(snap_kit["name"].as_str().unwrap(), "E2E Kit");
+
+        // Load session state
+        let state = load_session_state(&pool, session_id).await.unwrap();
+        assert_eq!(state.kit.name, "E2E Kit");
+        assert_eq!(state.domain_version, 0);
+    }
+
+    #[tokio::test]
+    async fn e2e_domain_commands_and_history() {
+        if !docker_available() {
+            eprintln!("[SKIP] Docker not available, skipping E2E test");
+            return;
+        }
+        use testcontainers::runners::AsyncRunner;
+        use testcontainers_modules::postgres::Postgres;
+
+        let pg = Postgres::default().start().await.expect("start postgres container");
+        let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
+        let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
+
+        let pool = create_pool(&db_url).await;
+        run_migrations(&pool).await;
+
+        let session_id = Uuid::now_v7();
+        let kit_id = Uuid::now_v7();
+        create_session(&pool, session_id, kit_id, "History Kit").await.unwrap();
+
+        // Start actor
+        let state = load_session_state(&pool, session_id).await.unwrap();
+        let (cmd_tx, cmd_rx) = mpsc::channel(256);
+        let (event_tx, mut event_rx) = broadcast::channel(256);
+        let pool_clone = pool.clone();
+        tokio::spawn(async move {
+            let mut actor = SessionActor::new(state, pool_clone, event_tx);
+            actor.run(cmd_rx).await;
+        });
+
+        // Send CreateType command
+        let type_id = Uuid::now_v7();
+        let cmd_id = Uuid::now_v7();
+        let (reply_tx, reply_rx) = oneshot::channel();
+        cmd_tx.send(ActorMessage::DomainCommand {
+            envelope: CommandEnvelope {
+                command_id: CommandId(cmd_id), client_id: ClientId(Uuid::now_v7()),
+                request_id: RequestId(Uuid::now_v7()), actor_person_id: PersonId(Uuid::now_v7()),
+                base_domain_version: 0,
+            },
+            command: DomainCommand::CreateType(CreateEntity {
+                entity_id: type_id, fields: serde_json::json!({"name": "Tower"}),
+            }),
+            reply: reply_tx,
+        }).await.unwrap();
+        let result = reply_rx.await.unwrap().unwrap();
+        assert!(matches!(result, CommandResult::Accepted { domain_version: 1 }));
+
+        // Verify domain_commit was recorded
+        let commit = sqlx_core::query_as::query_as::<_, (i64, Uuid)>(
+            "SELECT domain_version, command_id FROM history.domain_commit WHERE session_id = $1 AND domain_version = 1"
+        ).bind(session_id).fetch_optional(&pool).await.unwrap();
+        assert!(commit.is_some());
+
+        // Verify entity_change_log was recorded
+        let log = sqlx_core::query_as::query_as::<_, (i64, serde_json::Value)>(
+            "SELECT domain_version, changes_json FROM history.entity_change_log WHERE session_id = $1 AND domain_version = 1"
+        ).bind(session_id).fetch_optional(&pool).await.unwrap();
+        assert!(log.is_some());
+        let (_, changes) = log.unwrap();
+        let changes_arr = changes.as_array().unwrap();
+        assert!(!changes_arr.is_empty());
+        assert_eq!(changes_arr[0]["op"].as_str().unwrap(), "Created");
+
+        // Reconstruct kit at version 1
+        let kit_v1 = reconstruct_kit_at_version(&pool, session_id, 1).await.unwrap();
+        let types = kit_v1["types"].as_array().unwrap();
+        assert_eq!(types.len(), 1);
+        assert_eq!(types[0]["name"].as_str().unwrap(), "Tower");
+
+        // Verify event was broadcast
+        let event = event_rx.recv().await.unwrap();
+        assert!(matches!(event, SessionEvent::DomainCommandAccepted { .. }));
+
+        drop(cmd_tx);
+    }
+
+    #[tokio::test]
+    async fn e2e_http_api_with_postgres() {
+        if !docker_available() {
+            eprintln!("[SKIP] Docker not available, skipping E2E test");
+            return;
+        }
+        use testcontainers::runners::AsyncRunner;
+        use testcontainers_modules::postgres::Postgres;
+
+        let pg = Postgres::default().start().await.expect("start postgres container");
+        let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
+        let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
+
+        let pool = create_pool(&db_url).await;
+        run_migrations(&pool).await;
+
+        let app_state = AppState::new(pool);
+        let app = router(app_state);
+
+        // Start server on random port
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
+
+        let client = reqwest::Client::new();
+        let base = format!("http://{}", addr);
+
+        // Health check
+        let resp = client.get(format!("{}/health", base)).send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        assert_eq!(resp.text().await.unwrap(), "ok");
+
+        // Create session
+        let resp = client.post(format!("{}/sessions", base))
+            .json(&serde_json::json!({"kit_name": "API Test Kit"}))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let body: serde_json::Value = resp.json().await.unwrap();
+        let session_id = body["session_id"].as_str().unwrap();
+        let _kit_id = body["kit_id"].as_str().unwrap();
+
+        // Get snapshot
+        let resp = client.get(format!("{}/sessions/{}/snapshot", base, session_id))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let snapshot: serde_json::Value = resp.json().await.unwrap();
+        assert_eq!(snapshot["domain_version"].as_i64().unwrap(), 0);
+
+        // Get lookback tokens
+        let resp = client.get(format!("{}/sessions/{}/history/lookback-tokens", base, session_id))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let tokens: Vec<String> = resp.json().await.unwrap();
+        assert_eq!(tokens.len(), 12);
+        assert_eq!(tokens[0], "1min");
+
+        // Send domain command
+        let cmd_id = Uuid::now_v7();
+        let type_id = Uuid::now_v7();
+        let resp = client.post(format!("{}/sessions/{}/commands/domain", base, session_id))
+            .json(&serde_json::json!({
+                "command_id": cmd_id, "client_id": Uuid::now_v7(),
+                "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                "base_domain_version": 0,
+                "kind": "CreateType",
+                "payload": {"entity_id": type_id, "fields": {"name": "APIType"}}
+            }))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let result: serde_json::Value = resp.json().await.unwrap();
+        assert_eq!(result["status"].as_str().unwrap(), "Accepted");
+        assert_eq!(result["domain_version"].as_i64().unwrap(), 1);
+
+        // Get kit at version 1
+        let resp = client.get(format!("{}/sessions/{}/kit/at-version/1", base, session_id))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let kit: serde_json::Value = resp.json().await.unwrap();
+        let types = kit["types"].as_array().unwrap();
+        assert_eq!(types.len(), 1);
+        assert_eq!(types[0]["name"].as_str().unwrap(), "APIType");
+
+        // Compact history
+        let resp = client.post(format!("{}/sessions/{}/history/compact", base, session_id))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+    }
+
+    #[tokio::test]
+    async fn e2e_metabolism_full_kit_history() {
+        if !docker_available() {
+            eprintln!("[SKIP] Docker not available, skipping E2E test");
+            return;
+        }
+        use testcontainers::runners::AsyncRunner;
+        use testcontainers_modules::postgres::Postgres;
+
+        let pg = Postgres::default().start().await.expect("start postgres container");
+        let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
+        let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
+
+        let pool = create_pool(&db_url).await;
+        run_migrations(&pool).await;
+
+        let session_id = Uuid::now_v7();
+        let kit_json = load_metabolism_kit_json();
+        let kit_id = Uuid::parse_str(kit_json["guid"].as_str().unwrap()).unwrap();
+        create_session(&pool, session_id, kit_id, "Metabolism").await.unwrap();
+
+        let state = load_session_state(&pool, session_id).await.unwrap();
+        let (cmd_tx, cmd_rx) = mpsc::channel(256);
+        let (event_tx, _) = broadcast::channel(256);
+        let pool_clone = pool.clone();
+        tokio::spawn(async move {
+            let mut actor = SessionActor::new(state, pool_clone, event_tx);
+            actor.run(cmd_rx).await;
+        });
+
+        // Create all 49 types via batch
+        let types_json = kit_json["types"].as_array().unwrap();
+        let mut commands: Vec<DomainCommand> = Vec::new();
+        for t in types_json {
+            let guid = Uuid::parse_str(t["guid"].as_str().unwrap()).unwrap();
+            commands.push(DomainCommand::CreateType(CreateEntity {
+                entity_id: guid, fields: serde_json::json!({"name": t["name"]}),
+            }));
+        }
+        let batch = DomainCommand::Batch(DomainBatch { commands });
+        let (reply_tx, reply_rx) = oneshot::channel();
+        cmd_tx.send(ActorMessage::DomainCommand {
+            envelope: CommandEnvelope {
+                command_id: CommandId(Uuid::now_v7()), client_id: ClientId(Uuid::now_v7()),
+                request_id: RequestId(Uuid::now_v7()), actor_person_id: PersonId(Uuid::now_v7()),
+                base_domain_version: 0,
+            },
+            command: batch,
+            reply: reply_tx,
+        }).await.unwrap();
+        let result = reply_rx.await.unwrap().unwrap();
+        assert!(matches!(result, CommandResult::Accepted { domain_version: 1 }));
+
+        // Verify kit at version 1 has all 49 types
+        let kit_v1 = reconstruct_kit_at_version(&pool, session_id, 1).await.unwrap();
+        let reconstructed_types = kit_v1["types"].as_array().unwrap();
+        assert_eq!(reconstructed_types.len(), 49, "reconstructed kit at v1 should have 49 types");
+
+        // Verify baseline at version 0 has 0 types
+        let kit_v0 = reconstruct_kit_at_version(&pool, session_id, 0).await.unwrap();
+        let empty_vec = vec![];
+        let v0_types = kit_v0["types"].as_array().unwrap_or(&empty_vec);
+        assert_eq!(v0_types.len(), 0, "baseline at v0 should have 0 types");
+
+        drop(cmd_tx);
+    }
+
+    #[tokio::test]
+    async fn e2e_multi_frontend_websocket() {
+        if !docker_available() {
+            eprintln!("[SKIP] Docker not available, skipping E2E test");
+            return;
+        }
+        use testcontainers::runners::AsyncRunner;
+        use testcontainers_modules::postgres::Postgres;
+
+        let pg = Postgres::default().start().await.expect("start postgres container");
+        let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
+        let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
+
+        let pool = create_pool(&db_url).await;
+        run_migrations(&pool).await;
+
+        let app_state = AppState::new(pool.clone());
+        let app = router(app_state);
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
+
+        let client = reqwest::Client::new();
+        let base = format!("http://{}", addr);
+
+        // Create session
+        let resp = client.post(format!("{}/sessions", base))
+            .json(&serde_json::json!({"kit_name": "WS Test Kit"}))
+            .send().await.unwrap();
+        let body: serde_json::Value = resp.json().await.unwrap();
+        let session_id = body["session_id"].as_str().unwrap().to_string();
+
+        // Connect two WebSocket frontends
+        let ws_url = format!("ws://{}/sessions/{}/ws", addr, session_id);
+        let (ws1, _) = tokio_tungstenite::connect_async(&ws_url).await.expect("ws1 connect");
+        let (ws2, _) = tokio_tungstenite::connect_async(&ws_url).await.expect("ws2 connect");
+        let (mut _ws1_write, mut ws1_read) = ws1.split();
+        let (mut _ws2_write, mut ws2_read) = ws2.split();
+
+        // Send domain command via HTTP
+        let cmd_id = Uuid::now_v7();
+        let type_id = Uuid::now_v7();
+        let resp = client.post(format!("{}/sessions/{}/commands/domain", base, session_id))
+            .json(&serde_json::json!({
+                "command_id": cmd_id, "client_id": Uuid::now_v7(),
+                "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                "base_domain_version": 0,
+                "kind": "CreateType",
+                "payload": {"entity_id": type_id, "fields": {"name": "WSType"}}
+            }))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+
+        // Both WebSocket frontends should receive the event
+        let msg1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await;
+        let msg2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await;
+        assert!(msg1.is_ok(), "ws1 should receive event");
+        assert!(msg2.is_ok(), "ws2 should receive event");
+    }
+
+    // #endregion 🔖E2E Testcontainer Tests
 }
 
 // #endregion 🔖Tests

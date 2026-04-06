@@ -3511,11 +3511,19 @@ def _enrich_design(kit: dict, design: dict) -> dict:
         return design
 
 
+def _is_gltf_file(file: dict) -> bool:
+    """Return True if this kit file is a GLB or GLTF by name."""
+    name = (file.get("name") or "").lower()
+    return name.endswith(".glb") or name.endswith(".gltf")
+
+
 def _select_best_model_file_guids(kit: dict, design: dict | None) -> set[str]:
-    """Return file GUIDs for the best (untagged or first) model of each type used in the design.
-    Mirrors the JS selectBestModel logic so the same files are inlined that the scene will actually load."""
+    """Return file GUIDs for the GLB/GLTF model file to inline per type used in the design.
+    Mirrors JS buildScenePieceAssets: picks the untagged (or first) model, then falls back
+    to any model with a GLB/GLTF file if the best model's file isn't a GLB/GLTF."""
     if not design:
         return set()
+    files_by_guid = {f.get("guid"): f for f in kit.get("files", []) if f.get("guid")}
     type_guids = {(p.get("type") or {}).get("guid") for p in design.get("pieces", [])}
     type_guids.discard(None)
     result: set[str] = set()
@@ -3523,12 +3531,20 @@ def _select_best_model_file_guids(kit: dict, design: dict | None) -> set[str]:
         if typ.get("guid") not in type_guids:
             continue
         models = typ.get("models") or []
+        # Mirror JS selectBestModel: prefer first untagged model, else first model.
         best = next((m for m in models if not m.get("tags")), models[0] if models else None)
-        if not best:
+        best_file_guid = (best.get("file") or {}).get("guid") if best else None
+        best_file = files_by_guid.get(best_file_guid) if best_file_guid else None
+        if best_file and _is_gltf_file(best_file):
+            result.add(best_file_guid)
             continue
-        file_guid = (best.get("file") or {}).get("guid")
-        if file_guid:
-            result.add(file_guid)
+        # Fallback: mirror JS buildScenePieceAssets lines 2110-2118: find any model with a GLB file.
+        for m in models:
+            fguid = (m.get("file") or {}).get("guid")
+            f = files_by_guid.get(fguid) if fguid else None
+            if f and _is_gltf_file(f):
+                result.add(fguid)
+                break
     return result
 
 
@@ -3570,14 +3586,12 @@ def _mcp_app_surface_for_mode(mode: str) -> str:
 
 
 def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> dict[str, typing.Any]:
-    """Build mode-appropriate payload: diagram data for diagram modes, design/kit for scene/design modes."""
+    """Build mode-appropriate payload: diagram data for diagram modes, design/kit for scene/design modes.
+    Diagram-only modes omit kit (~2.3MB of GLB blobs) to stay under host payload truncation limits.
+    The JS diagram renderer uses Python-enriched piece centers from enriched_design instead."""
     kit = _get_session_kit(ctx)
     design = _get_session_design(ctx)
     enriched_design = _enrich_design(kit, design)
-    kit_for_ui = _strip_kit_blobs(kit, design=enriched_design)
-    # Strip designs list from kit: current design is already in payload["design"],
-    # and kit.designs (4.6MB for large kits) is redundant overhead that causes host truncation.
-    kit_for_ui.pop("designs", None)
 
     payload: dict[str, typing.Any] = {
         "mode": mode,
@@ -3588,8 +3602,14 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
         },
         "kitArtifacts": _build_kit_artifact_data(kit),
         "design": enriched_design,
-        "kit": kit_for_ui,
     }
+
+    # For diagram-only modes, omit kit (saves ~2.3MB of GLB blobs).
+    # The diagram uses Python-precomputed centers from enriched_design — no kit GLBs needed.
+    if mode not in _DIAGRAM_MODES:
+        kit_for_ui = _strip_kit_blobs(kit, design=enriched_design)
+        kit_for_ui.pop("designs", None)
+        payload["kit"] = kit_for_ui
 
     if mode in _DIAGRAM_MODES or mode in _SPLIT_SCENE_DIAGRAM_MODES:
         diagram_data = _build_diagram_data(kit, design.get("guid"), design_diff, design=design)
