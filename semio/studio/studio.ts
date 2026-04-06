@@ -351,8 +351,8 @@ export function createSqliteFolderPersistenceFactory(adapter: SqliteAdapter): Pe
 
 import {
   type Kit,
-  type KitDiff,
   type KitChange,
+  type KitDiff,
   type KitStore,
   type KitStoreSnapshot,
   type KitStoreStatus,
@@ -361,11 +361,11 @@ import {
   KitSchema,
   applyKitDiff,
   getKitDiff,
-  inverseKitDiff,
-  guid,
   getSqlJs,
-  sqliteToKit,
+  guid,
+  inverseKitDiff,
   kitToSqlite,
+  sqliteToKit,
 } from "@semio/js";
 
 /**
@@ -1497,7 +1497,7 @@ export class SessionKitStore implements UndoableKitStore {
     this.kit = applyKitDiff(this.kit, change.backward);
     this.redoStack.push(change);
     this.dirty = true;
-    this.sendKitDiffToServer(change.backward).catch(() => {});
+    this.sendKitDiffToServer(change.backward).catch(() => { });
     this.notify();
   }
 
@@ -1507,7 +1507,7 @@ export class SessionKitStore implements UndoableKitStore {
     this.kit = applyKitDiff(this.kit, change.forward);
     this.undoStack.push(change);
     this.dirty = true;
-    this.sendKitDiffToServer(change.forward).catch(() => {});
+    this.sendKitDiffToServer(change.forward).catch(() => { });
     this.notify();
   }
 
@@ -1745,8 +1745,8 @@ export async function createSessionKitStore(config: SessionKitStoreConfig): Prom
 // hooks also subscribe to granular entity/collection/property listeners for optimal updates.
 // For other KitStore implementations, hooks fall back to global subscribe with selector comparison.
 
-import { useSyncExternalStore, useRef, useCallback } from "react";
-import type { Type, Design, Author, Tag, Concept, Port, Quality, File as SemioFile, Folder } from "@semio/js";
+import type { Author, Concept, Design, Port, Quality, Tag, Type } from "@semio/js";
+import { useCallback, useRef, useSyncExternalStore } from "react";
 
 // #region 🔖SelectorHook
 

@@ -1,9 +1,9 @@
-// #region 🔖Header
+mod header { // 🔖Header
 // 💻 semio/algorithms/native-bridges/rs/src/main.rs
 // Specs: Read JSON op+payload from stdin; write JSON {ok,result,error} to stdout.
 // Summary: Rust native bridge for algorithms Storybook proxy using semio/rs library only.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+} // 🔖Header
 
 use semio::delete_pieces_and_connections_in_design;
 use semio::flatten_design;

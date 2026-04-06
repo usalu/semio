@@ -1,0 +1,13 @@
+{
+  "title": "Use Mod Instead of Region for Rust Sections",
+  "status": "closed",
+  "description": "All Rust code in the repo must use `mod` instead of `// #region` for sections. This involves:\n1. Finding all Rust files and replacing region markers with mod blocks\n2. Adjusting the repo CLI section handling for Rust to emit mod instead of region comments\n3. Adding a statute/convention rule for Rust sections using mod\n4. Fixing all Rust code to compile with the new structure",
+  "summary": "Converted all Rust code from `// #region 🔖Name` / `// #endregion 🔖Name` section comments to `mod name { // 🔖Name` / `} // 🔖Name` mod blocks, with `use super::*;` inside each mod and `pub use name::*;` after each section.\n\nChanges:\n1. **repo/cli/main.go**: Updated `RustLanguage` to use mod-based section regex patterns and format functions. Added `RustSectionNameToModName()` helper, `FormatSectionStart/End/Both/Header` overrides, `ScanComments` override for detecting legacy region comments, and `BreachCodeRustRegionComment` statute.\n\n2. **semio/rs/lib.rs** (15012 lines): Converted all 61 region markers to mod blocks. Moved `#![allow(...)]` crate attributes before any mod items. Function-internal sub-regions (inside `export_design_model()`) use plain `// 🔖Name` labels since mod blocks aren't valid inside function bodies. Compiles with 7 warnings.\n\n3. **semio/server/bin.rs** (3386 lines): Converted all region markers to mod blocks. Made crate-root `use` statements `pub use` so child mods can access them via `use super::*;`. Unwrapped `mod main` (fn main must be at crate root). Fixed double `mod tests` wrapping by merging outer section mod with inner `#[cfg(test)] mod tests`. Fixed trait impl pub visibility errors. Compiles with 1 warning.\n\n4. **semio/algorithms/native-bridges/rs/src/main.rs** (99 lines): Converted header region to mod block. Compiles cleanly.\n\nAll 3 Rust crates compile successfully with `cargo check --workspace`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1278"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪659a47d59ae945108bca77d986c7c442"
+  ]
+}

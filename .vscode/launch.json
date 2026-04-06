@@ -36,7 +36,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "mcp:inspector"],
+      "runtimeArgs": [
+        "run",
+        "mcp:inspector"
+      ],
       "env": {
         "HOST": "0.0.0.0",
         "CLIENT_PORT": "6274",
@@ -74,7 +77,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:elements:ui:storybook"],
+      "runtimeArgs": [
+        "run",
+        "dev:elements:ui:storybook"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {
@@ -121,7 +127,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:algorithms"],
+      "runtimeArgs": [
+        "run",
+        "dev:algorithms"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {
@@ -135,7 +144,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:desktop"],
+      "runtimeArgs": [
+        "run",
+        "dev:desktop"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -176,7 +188,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:sites:play"],
+      "runtimeArgs": [
+        "run",
+        "dev:sites:play"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {
@@ -220,7 +235,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:ui"],
+      "runtimeArgs": [
+        "run",
+        "dev:ui"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "serverReadyAction": {
@@ -233,8 +251,12 @@
       "name": "🛠️dev👤semio⌨️vscode",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/semio/vscode"],
-      "outFiles": ["${workspaceFolder}/semio/vscode/out/**/*.js"]
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/semio/vscode"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/semio/vscode/out/**/*.js"
+      ]
     },
     {
       "name": "🛠️dev👤semio⌨️vscode (integrated)",
@@ -270,7 +292,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:coda-desktop"],
+      "runtimeArgs": [
+        "run",
+        "dev:coda-desktop"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -279,7 +304,13 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "uv",
-      "runtimeArgs": ["--directory", "coda/engine", "run", "coda.py", "--mcp-stdio"],
+      "runtimeArgs": [
+        "--directory",
+        "coda/engine",
+        "run",
+        "coda.py",
+        "--mcp-stdio"
+      ],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
         "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
@@ -333,7 +364,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "mcp:inspector"],
+      "runtimeArgs": [
+        "run",
+        "mcp:inspector"
+      ],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
         "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
@@ -350,8 +384,12 @@
       "name": "🛠️dev🧰repo⌨️vscode",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/repo/vscode"],
-      "outFiles": ["${workspaceFolder}/repo/vscode/out/**/*.js"]
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/repo/vscode"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/repo/vscode/out/**/*.js"
+      ]
     },
     {
       "name": "🛠️dev🧰repo⌨️vscode (integrated)",
@@ -389,7 +427,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:3dm"],
+      "runtimeArgs": [
+        "run",
+        "build:3dm"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -398,7 +439,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:assets"],
+      "runtimeArgs": [
+        "run",
+        "build:assets"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -407,7 +451,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:desktop"],
+      "runtimeArgs": [
+        "run",
+        "build:desktop"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -416,7 +463,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:engine"],
+      "runtimeArgs": [
+        "run",
+        "build:engine"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -425,7 +475,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:sites"],
+      "runtimeArgs": [
+        "run",
+        "build:sites"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -434,7 +487,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:coda-desktop"],
+      "runtimeArgs": [
+        "run",
+        "build:coda-desktop"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -443,7 +499,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:repo-cli"],
+      "runtimeArgs": [
+        "run",
+        "build:repo-cli"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -452,7 +511,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:repo-server"],
+      "runtimeArgs": [
+        "run",
+        "build:repo-server"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -461,7 +523,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:repo-vscode"],
+      "runtimeArgs": [
+        "run",
+        "build:repo-vscode"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -472,7 +537,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "publish:desktop"],
+      "runtimeArgs": [
+        "run",
+        "publish:desktop"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -481,7 +549,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "publish:play"],
+      "runtimeArgs": [
+        "run",
+        "publish:play"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -490,7 +561,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "publish:sketchpad"],
+      "runtimeArgs": [
+        "run",
+        "publish:sketchpad"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -499,7 +573,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "publish:docs"],
+      "runtimeArgs": [
+        "run",
+        "publish:docs"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -508,7 +585,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "publish:coda-desktop"],
+      "runtimeArgs": [
+        "run",
+        "publish:coda-desktop"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     }

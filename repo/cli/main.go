@@ -83,18 +83,22 @@ import (
 //
 //go:embed templates/renderers/text.tpl
 var textTemplateContent string
+
 // [🧰repo⌨️cli💻main🔖templates🪨markdowntemplatecontent](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/markdownTemplateContent)
 //
 //go:embed templates/renderers/markdown.tpl
 var markdownTemplateContent string
+
 // [🧰repo⌨️cli💻main🔖templates🪨prompttemplatesfs](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/promptTemplatesFS)
 //
 //go:embed templates/prompts/*.tpl
 var promptTemplatesFS embed.FS
+
 // [🧰repo⌨️cli💻main🔖templates🪨agenttemplatesfs](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/agentTemplatesFS)
 //
 //go:embed templates/agents/*.tpl
 var agentTemplatesFS embed.FS
+
 // [🧰repo⌨️cli💻main🔖templates🪨summarytemplatesfs](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/summaryTemplatesFS)
 //
 //go:embed templates/summaries/*.tpl
@@ -104,6 +108,7 @@ var (
 	textTpl *template.Template
 	mdTpl   *template.Template
 )
+
 // [🧰repo⌨️cli💻main🔖templates🛠️templatefuncmap](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/templateFuncMap)
 // templateFuncMap holds the data fields for a templateFuncMap record.
 func templateFuncMap() template.FuncMap {
@@ -127,6 +132,7 @@ func templateFuncMap() template.FuncMap {
 	fm["pathToUriPath"] = PathToUriPath
 	return fm
 }
+
 // [🧰repo⌨️cli💻main🔖templates🛠️colornametoansi](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/colorNameToANSI)
 // colorNameToANSI holds the data fields for a colorNameToANSI record.
 func colorNameToANSI(name string) string {
@@ -147,11 +153,13 @@ func colorNameToANSI(name string) string {
 		return ""
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖templates🛠️inittemplates](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/initTemplates)
 func initTemplates() {
 	textTpl = template.Must(template.New("text").Funcs(templateFuncMap()).Parse(textTemplateContent))
 	mdTpl = template.Must(template.New("md").Funcs(templateFuncMap()).Parse(markdownTemplateContent))
 }
+
 // [🧰repo⌨️cli💻main🔖templates🛠️rendertemplate](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/renderTemplate)
 // [🧰repo⌨️cli💻maingo🔖templates🛠️rendertemplate](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/renderTemplate)
 func renderTemplate(tpl *template.Template, name string, data interface{}) string {
@@ -236,6 +244,7 @@ func buildFolderRoots(folders []Folder) []*TreeNode {
 	}
 	return roots
 }
+
 // [🧰repo⌨️cli💻main🔖engineevents🛠️attachfilestofolders](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/attachFilesToFolders)
 func attachFilesToFolders(root *TreeNode, files []File, fileNodes map[string]*TreeNode) {
 	folderNodeByPath := make(map[string]*TreeNode)
@@ -287,6 +296,7 @@ func cloneTreeNode(node *TreeNode) *TreeNode {
 	}
 	return &copyNode
 }
+
 // [🧰repo⌨️cli💻main🔖engineevents🛠️buildpolicyentitykindtree](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/buildPolicyEntityKindTree)
 func buildPolicyEntityKindTree(groups []Territory) []*TreeNode {
 	statutesByEntityKind := make(map[string]map[Statute]bool)
@@ -380,6 +390,7 @@ func spansEntireFile(lines map[int]struct{}, content string, lineCount int) bool
 	}
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖engineevents🛠️inferentitykindfromstatute](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/inferEntityKindFromStatute)
 // inferEntityKindFromStatute holds the data fields for a inferEntityKindFromStatute record.
 func inferEntityKindFromStatute(statute Statute) string {
@@ -418,6 +429,7 @@ type Artifact struct {
 	URI  string `json:"uri"`
 	Note string `json:"note,omitempty"`
 }
+
 // [🧰repo⌨️cli💻main🔖engineevents✂️errpayload](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/ErrPayload)
 type ErrPayload struct {
 	Code    string `json:"code"`
@@ -473,6 +485,7 @@ const (
 	CmdSection Command = "section"
 	CmdDef     Command = "definition"
 )
+
 // [🧰repo⌨️cli💻main🔖enginerequests✂️request](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Requests/d/i/Request)
 type Request struct {
 	Command  Command
@@ -575,15 +588,18 @@ func (e *Engine) runGraphQL(ctx context.Context, req Request, out chan<- Event) 
 	out <- Event{Kind: KindResult, Command: string(req.Command), Data: payload}
 	e.emitDone(out, exitCodeOK, "ok")
 }
+
 // [🧰repo⌨️cli💻main🔖engine🛠️emitstart](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/emitStart)
 func (e *Engine) emitStart(out chan<- Event, req Request) {
 	out <- Event{Kind: KindStart, Command: string(req.Command)}
 }
+
 // [🧰repo⌨️cli💻main🔖engine🛠️emiterror](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/emitError)
 // emitError holds the data fields for a emitError record.
 func (e *Engine) emitError(out chan<- Event, req Request, payload ErrPayload) {
 	out <- Event{Kind: KindError, Command: string(req.Command), Error: &payload}
 }
+
 // [🧰repo⌨️cli💻main🔖engine🛠️emitdone](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/emitDone)
 func (e *Engine) emitDone(out chan<- Event, code int, status string) {
 	out <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: code, Status: status}}
@@ -725,6 +741,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 func Execute(factory EngineFactory) error {
 	return NewRoot(factory).Execute()
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️defaultenginefactory](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/defaultEngineFactory)
 // defaultEngineFactory holds the data fields for a defaultEngineFactory record.
 func defaultEngineFactory(config Config) (*Engine, error) {
@@ -743,6 +760,7 @@ func defaultEngineFactory(config Config) (*Engine, error) {
 	}
 	return NewEngine(exec), nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️main](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/main)
 func main() {
 	if err := Execute(defaultEngineFactory); err != nil {
@@ -825,6 +843,7 @@ func syncCommand(factory EngineFactory, config *Config) *cobra.Command {
 	sync.AddCommand(syncManagementCommand(factory, config))
 	return sync
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️syncmanagementcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/syncManagementCommand)
 // syncManagementCommand holds the data fields for a syncManagementCommand record.
 func syncManagementCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -837,6 +856,7 @@ func syncManagementCommand(factory EngineFactory, config *Config) *cobra.Command
 		},
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️mcpcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/mcpCommand)
 // mcpCommand holds the data fields for a mcpCommand record.
 func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -864,6 +884,7 @@ func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Initialize and exit without starting server")
 	return cmd
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️servemcp](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/serveMcp)
 func serveMcp(ctx context.Context, engine *Engine) error {
 	_ = ctx
@@ -916,6 +937,7 @@ func graphqlCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().StringVarP(&variablesJSON, "vars", "v", "", "GraphQL variables JSON")
 	return cmd
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️auditcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/auditCommand)
 // auditCommand holds the data fields for a auditCommand record.
 func auditCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -952,6 +974,7 @@ func auditCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().StringVar(&scope, "scope", "", "Scope to analyze")
 	return cmd
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️autofixcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/autofixCommand)
 // autofixCommand holds the data fields for a autofixCommand record.
 func autofixCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -1128,6 +1151,7 @@ func AllEntityEmojis() []string {
 	add(EmojiDefinitions)
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖entityemojiscommand🛠️entityemojiscommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Entity%20Emojis%20Command/d/i/entityEmojisCommand)
 // [🧰repo⌨️cli💻maingo🔖cliadapter🛠️entityemojiscommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/entityEmojisCommand)
 func entityEmojisCommand(config *Config) *cobra.Command {
@@ -1200,6 +1224,7 @@ func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
 	bindTreeFlags(cmd)
 	return cmd
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️flattentreenodes](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/flattenTreeNodes)
 // flattenTreeNodes holds the data fields for a flattenTreeNodes record.
 func flattenTreeNodes(node *TreeNode, out *[]*TreeNode) {
@@ -1210,6 +1235,7 @@ func flattenTreeNodes(node *TreeNode, out *[]*TreeNode) {
 		flattenTreeNodes(c, out)
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️listcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/listCommand)
 // listCommand holds the data fields for a listCommand record.
 func listCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -1304,6 +1330,7 @@ func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().Bool("sorted", false, "Collect all results and sort by ID before output")
 	return cmd
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️bindtreeflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bindTreeFlags)
 type boolFlagSpec struct {
 	Name  string
@@ -1390,6 +1417,7 @@ func bindTreeFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("no-policy-name", nil, "Exclude specific policies")
 	cmd.Flags().String("query", "", "Bleve full-text search query")
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️querycommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/queryCommand)
 // queryCommand holds the data fields for a queryCommand record.
 func queryCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -1783,6 +1811,7 @@ func runTestScope(scope testScope, cmd *cobra.Command) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runalltests](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runAllTests)
 // runAllTests holds the data fields for a runAllTests record.
 func runAllTests(cmd *cobra.Command) error {
@@ -1874,11 +1903,13 @@ func runBundleTests(bundleRoot string, lang string, fileFilter string, testFilte
 	}
 	return fmt.Errorf("unknown language %q for bundle %s", lang, bundleRoot)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️uvexists](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/uvExists)
 func uvExists() bool {
 	_, err := exec.LookPath("uv")
 	return err == nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️detectjstestrunner](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/detectJSTestRunner)
 func detectJSTestRunner(absRoot string, testFilter string) (string, []string) {
 
@@ -1979,6 +2010,7 @@ func runFileTests(filePath string, lang string, testFilter string, cmd *cobra.Co
 	}
 	return fmt.Errorf("unsupported language %q for file test", lang)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runsectiontests](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runSectionTests)
 func runSectionTests(filePath string, lang string, section string, cmd *cobra.Command) error {
 
@@ -2058,6 +2090,7 @@ func collectGoTestsInSection(filePath string, sectionName string) string {
 	}
 	return "^(" + strings.Join(testNames, "|") + ")$"
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️rundefinitiontest](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runDefinitionTest)
 // runDefinitionTest holds the data fields for a runDefinitionTest record.
 func runDefinitionTest(filePath string, lang string, bundleRoot string, testName string, cmd *cobra.Command) error {
@@ -2238,6 +2271,7 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(checkCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️extractllmfromargs](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/extractLLMFromArgs)
 func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 
@@ -2279,6 +2313,7 @@ func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 	}
 	return foundLLM, remaining
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️extractclientfromargs](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/extractClientFromArgs)
 // extractClientFromArgs holds the data fields for a extractClientFromArgs record.
 func extractClientFromArgs(cmd *cobra.Command, args []string) (string, []string) {
@@ -2329,6 +2364,7 @@ func addLLMFlags(cmd *cobra.Command) {
 		cmd.Flags().Bool(llm, false, fmt.Sprintf("Use %s as LLM", llm))
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️addclientflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/addClientFlags)
 // addClientFlags holds the data fields for a addClientFlags record.
 func addClientFlags(cmd *cobra.Command) {
@@ -2505,6 +2541,7 @@ func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(searchCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️ticketcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ticketCommand)
 // ticketCommand holds the data fields for a ticketCommand record.
 func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -3150,6 +3187,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(reopenCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️interactioncommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/interactionCommand)
 // interactionCommand holds the data fields for a interactionCommand record.
 func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -3267,6 +3305,7 @@ func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(treeCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️statutecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/statuteCommand)
 // statuteCommand holds the data fields for a statuteCommand record.
 func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -3372,6 +3411,7 @@ func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(treeCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️checkpointcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/checkpointCommand)
 func checkpointCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "checkpoint", Short: "Checkpoint management commands"}
@@ -3409,6 +3449,7 @@ func checkpointCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(listCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️contributorcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/contributorCommand)
 // contributorCommand holds the data fields for a contributorCommand record.
 func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -3522,6 +3563,7 @@ func technologyCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 	return cmd
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🪨headingemojire](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/headingEmojiRe)
 // headingEmojiRe holds the data fields for a headingEmojiRe record.
 var headingEmojiRe = regexp.MustCompile(`^[\x{1F000}-\x{1FFFF}\x{2600}-\x{27FF}\x{FE00}-\x{FE0F}]+\s*`)
@@ -3554,6 +3596,7 @@ func ExtractMarkdownSection(content string, sectionName string) string {
 	text := strings.TrimSpace(strings.Join(result, "\n"))
 	return text
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️islicensetext](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/isLicenseText)
 // isLicenseText holds the data fields for a isLicenseText record.
 func isLicenseText(text string) bool {
@@ -3585,6 +3628,7 @@ func isHeaderMetaLine(text string) bool {
 	}
 	return false
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️extractfileheadersummary](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractFileHeaderSummary)
 func ExtractFileHeaderSummary(filePath string) string {
 	absPath := filepath.Join(rootDir, filePath)
@@ -3724,6 +3768,7 @@ func ExtractFileHeaderRequirements(filePath string) string {
 	}
 	return strings.TrimSpace(strings.Join(requirementsLines, "\n"))
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️extractsectionleadcomments](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractSectionLeadComments)
 func ExtractSectionLeadComments(content string, section Section, prefix string) (requirements string, summary string) {
 	lines := strings.Split(content, "\n")
@@ -3784,6 +3829,7 @@ func ExtractDefinitionDocstring(content string, def Definition, prefix string) (
 	}
 	return strings.TrimSpace(requirements), strings.TrimSpace(summary)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️findtechnologybyname](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/findTechnologyByName)
 // findTechnologyByName holds the data fields for a findTechnologyByName record.
 func findTechnologyByName(name string) *Technology {
@@ -3795,6 +3841,7 @@ func findTechnologyByName(name string) *Technology {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️walktechnologyfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/walkTechnologyFiles)
 // walkTechnologyFiles holds the data fields for a walkTechnologyFiles record.
 func walkTechnologyFiles(technology *Technology) []File {
@@ -3842,6 +3889,7 @@ type EntityEntry struct {
 	URI  string
 	Text string
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️generatetechnologyrequirements](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateTechnologyRequirements)
 func GenerateTechnologyRequirements(technologyName string) error {
 	technology := findTechnologyByName(technologyName)
@@ -4055,6 +4103,7 @@ func GenerateTechnologyDocs(technologyName string) error {
 	outputPath := filepath.Join(rootDir, technology.Root, "DOCS.md")
 	return WriteTextFile(outputPath, sb.String())
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️generatetechnologytodos](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateTechnologyTodos)
 // GenerateTechnologyTodos holds the data fields for a GenerateTechnologyTodos record.
 func GenerateTechnologyTodos(technologyName string) error {
@@ -4102,6 +4151,7 @@ func GenerateTechnologyTodos(technologyName string) error {
 	outputPath := filepath.Join(rootDir, technology.Root, "TODOS.md")
 	return WriteTextFile(outputPath, sb.String())
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️findfolderreadmes](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/findFolderReadmes)
 // findFolderReadmes holds the data fields for a findFolderReadmes record.
 func findFolderReadmes(bundleRoot string) []string {
@@ -4129,6 +4179,7 @@ func findFolderReadmes(bundleRoot string) []string {
 	})
 	return readmes
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️bundlecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bundleCommand)
 // bundleCommand holds the data fields for a bundleCommand record.
 func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -4245,6 +4296,7 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(treeCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️foldercommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/folderCommand)
 // folderCommand holds the data fields for a folderCommand record.
 func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -4316,6 +4368,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(deleteCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️bindstreamflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bindStreamFlags)
 // bindStreamFlags holds the data fields for a bindStreamFlags record.
 func bindStreamFlags(cmd *cobra.Command) {
@@ -4366,6 +4419,7 @@ func bindStreamFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("match-case", false, "Match case for filter")
 	cmd.Flags().Bool("match-whole-word", false, "Match whole word for filter")
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️bindstatusflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bindStatusFlags)
 // bindStatusFlags holds the data fields for a bindStatusFlags record.
 func bindStatusFlags(cmd *cobra.Command) {
@@ -4373,6 +4427,7 @@ func bindStatusFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("closed", false, "Show only closed items")
 	cmd.Flags().String("status", "", "Filter by status (open or closed)")
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️getstatusfilter](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/getStatusFilter)
 // getStatusFilter holds the data fields for a getStatusFilter record.
 func getStatusFilter(cmd *cobra.Command) *string {
@@ -4393,6 +4448,7 @@ func getStatusFilter(cmd *cobra.Command) *string {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️getbundleswithopentickets](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/getBundlesWithOpenTickets)
 // getBundlesWithOpenTickets holds the data fields for a getBundlesWithOpenTickets record.
 func getBundlesWithOpenTickets() map[string]bool {
@@ -4418,6 +4474,7 @@ func getBundlesWithOpenTickets() map[string]bool {
 	}
 	return bundlesWithOpenTickets
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️getstreamoptions](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/getStreamOptions)
 // getStreamOptions holds the data fields for a getStreamOptions record.
 func getStreamOptions(cmd *cobra.Command) StreamOptions {
@@ -4604,6 +4661,7 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 		MatchWholeWord:         matchWholeWord,
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️filecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/fileCommand)
 // fileCommand holds the data fields for a fileCommand record.
 func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -4894,6 +4952,7 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(listCmd)
 	return root
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️movecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/moveCommand)
 // moveCommand holds the data fields for a moveCommand record.
 func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -4961,6 +5020,7 @@ func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️integratecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/integrateCommand)
 func integrateCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -5025,6 +5085,7 @@ func integrateCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().String("parent-section", "", "Parent section name")
 	return cmd
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🛠️extractcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/extractCommand)
 // extractCommand holds the data fields for a extractCommand record.
 func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -5149,11 +5210,13 @@ var EntityKinds = []string{
 	"section", "definition", "goal", "ticket", "draft", "todo",
 	"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🪨resourcekinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/ResourceKinds)
 // ResourceKinds holds the data fields for a ResourceKinds record.
 var ResourceKinds = []string{
 	"repo", "technology", "bundle", "folder", "file", "section", "definition",
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🪨diffablekinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/DiffableKinds)
 // DiffableKinds holds the data fields for a DiffableKinds record.
 var DiffableKinds = []string{
@@ -5161,6 +5224,7 @@ var DiffableKinds = []string{
 	"technology", "bundle", "folder", "file", "section", "definition",
 	"goal", "ticket", "contributor", "checkpoint", "interaction", "session",
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🪨relatedtofilekinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/RelatedToFileKinds)
 // RelatedToFileKinds holds the data fields for a RelatedToFileKinds record.
 var RelatedToFileKinds = []string{
@@ -5497,6 +5561,7 @@ func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode
 
 	return rootGoals
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️countopensubgoals](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/countOpenSubgoals)
 func countOpenSubgoals(g *GoalNode) int {
 	c := 0
@@ -5508,6 +5573,7 @@ func countOpenSubgoals(g *GoalNode) int {
 	}
 	return c
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️countopentickets](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/countOpenTickets)
 // countOpenTickets holds the data fields for a countOpenTickets record.
 func countOpenTickets(g *GoalNode) int {
@@ -5527,6 +5593,7 @@ func countOpenTickets(g *GoalNode) int {
 	}
 	return c
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️rendergoaltree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/renderGoalTree)
 // renderGoalTree holds the data fields for a renderGoalTree record.
 func renderGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool, useMD bool) string {
@@ -5537,6 +5604,7 @@ func renderGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 	}
 	return renderGoalTreeNodes(roots, format)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️goalnodetodata](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/goalNodeToData)
 // goalNodeToData holds the data fields for a goalNodeToData record.
 func goalNodeToData(n *GoalNode) map[string]interface{} {
@@ -5549,6 +5617,7 @@ func goalNodeToData(n *GoalNode) map[string]interface{} {
 		"description": n.Description,
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️ticketnodetodata](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/ticketNodeToData)
 // ticketNodeToData holds the data fields for a ticketNodeToData record.
 func ticketNodeToData(n *TicketNode) map[string]interface{} {
@@ -5563,6 +5632,7 @@ func ticketNodeToData(n *TicketNode) map[string]interface{} {
 	}
 	return data
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️rendergoaltreenodes](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/renderGoalTreeNodes)
 // renderGoalTreeNodes holds the data fields for a renderGoalTreeNodes record.
 func renderGoalTreeNodes(roots []*GoalNode, format string) string {
@@ -5637,6 +5707,7 @@ func renderGoalTreeNodes(roots []*GoalNode, format string) string {
 	}
 	return sb.String()
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🪨rendersectiontree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/renderSectionTree)
 func renderSectionTree(root *Section, isTTY bool, useMD bool) string {
 	var sb strings.Builder
@@ -5692,6 +5763,7 @@ func renderSectionTree(root *Section, isTTY bool, useMD bool) string {
 	render(root, "", true, true)
 	return sb.String()
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️renderticketlist](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/renderTicketList)
 // renderTicketList holds the data fields for a renderTicketList record.
 func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
@@ -6157,6 +6229,7 @@ func PropagateParentIDs(node *TreeNode, parentArtifactID string) {
 		PropagateParentIDs(child, currentID)
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️buildsectiontreenode](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/buildSectionTreeNode)
 // buildSectionTreeNode holds the data fields for a buildSectionTreeNode record.
 func buildSectionTreeNode(s *Section) *TreeNode {
@@ -6271,6 +6344,7 @@ func buildStatuteTree(kinds []Statute) []*TreeNode {
 
 	return buildNodes(rootEntries, orderedRootKeys)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️buildterritorytree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/buildTerritoryTree)
 // buildTerritoryTree holds the data fields for a buildTerritoryTree record.
 func buildTerritoryTree(groups []Territory) []*TreeNode {
@@ -6361,6 +6435,7 @@ func FilterMonorepoTree(root *TreeNode, filter *TreeFilter) *TreeNode {
 
 	return filtered
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️filternode](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/filterNode)
 func filterNode(node *TreeNode, filter *TreeFilter) *TreeNode {
 	if node.Kind != TreeNodeCategory {
@@ -6425,6 +6500,7 @@ func collapseFilteredKinds(node *TreeNode, filter *TreeFilter) {
 	}
 	node.Children = newChildren
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️searchmonorepotreewithcache](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/searchMonorepoTreeWithCache)
 func searchMonorepoTreeWithCache(ctx context.Context, root *TreeNode, query string) *TreeNode {
 	if query == "" {
@@ -6441,6 +6517,7 @@ func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	}
 	return searchTreeInMemory(root, query)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️levenshtein](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/levenshtein)
 // levenshtein holds the data fields for a levenshtein record.
 func levenshtein(a, b string) int {
@@ -6479,6 +6556,7 @@ func levenshtein(a, b string) int {
 	}
 	return prev[lb]
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️fuzzycontains](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/fuzzyContains)
 // fuzzyContains holds the data fields for a fuzzyContains record.
 func fuzzyContains(text, term string) bool {
@@ -6509,6 +6587,7 @@ func fuzzyContains(text, term string) bool {
 	}
 	return false
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️searchtreeinmemory](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/searchTreeInMemory)
 // searchTreeInMemory holds the data fields for a searchTreeInMemory record.
 func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
@@ -6583,11 +6662,13 @@ func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
 	}
 	return pruned
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️pruneunmatched](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/pruneUnmatched)
 // pruneUnmatched holds the data fields for a pruneUnmatched record.
 func pruneUnmatched(node *TreeNode, matchedIDs map[string]bool) *TreeNode {
 	return pruneUnmatchedInner(node, matchedIDs, false)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️pruneunmatchedinner](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/pruneUnmatchedInner)
 // pruneUnmatchedInner holds the data fields for a pruneUnmatchedInner record.
 func pruneUnmatchedInner(node *TreeNode, matchedIDs map[string]bool, ancestorMatched bool) *TreeNode {
@@ -6726,6 +6807,7 @@ func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLa
 		renderTreeNodeText(sb, c, newPrefix, i == len(node.Children)-1, false)
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️rendertreenodemarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/renderTreeNodeMarkdown)
 // renderTreeNodeMarkdown holds the data fields for a renderTreeNodeMarkdown record.
 func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) {
@@ -6764,6 +6846,7 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🪨cacheschemaversion](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/cacheSchemaVersion)
 // cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
 const cacheSchemaVersion = 2
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache✂️cachemeta](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/cacheMeta)
 // cacheMeta holds the data fields for a cacheMeta record.
 type cacheMeta struct {
@@ -6777,6 +6860,7 @@ type cacheMeta struct {
 	SubWorkingHash    string            `json:"SubWorkingHash"`
 	Fingerprint       string            `json:"Fingerprint"`
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️getcachedir](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/getCacheDir)
 // getCacheDir holds the data fields for a getCacheDir record.
 func getCacheDir() string {
@@ -6784,6 +6868,7 @@ func getCacheDir() string {
 	h := sha256.Sum256([]byte(abs))
 	return filepath.Join(GetRepoMetaDir(), "cache", hex.EncodeToString(h[:]))
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️computecompositefingerprint](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/computeCompositeFingerprint)
 func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	meta = &cacheMeta{
@@ -6894,6 +6979,7 @@ func hashSemioMetaState(repoRoot string) string {
 	sort.Strings(entries)
 	return hashString(strings.Join(entries, "|"))
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️treenodescopepath](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/treeNodeScopePath)
 func treeNodeScopePath(node *TreeNode) string {
 	if node.Data == nil {
@@ -6922,6 +7008,7 @@ func hashString(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️loadcachemeta](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/loadCacheMeta)
 // loadCacheMeta holds the data fields for a loadCacheMeta record.
 func loadCacheMeta() (*cacheMeta, error) {
@@ -6939,6 +7026,7 @@ func loadCacheMeta() (*cacheMeta, error) {
 	}
 	return &m, nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️savecachemeta](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/saveCacheMeta)
 // saveCacheMeta holds the data fields for a saveCacheMeta record.
 func saveCacheMeta(m *cacheMeta) error {
@@ -6952,6 +7040,7 @@ func saveCacheMeta(m *cacheMeta) error {
 	}
 	return os.WriteFile(filepath.Join(dir, "meta.json"), data, 0644)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️getchangedpathsfromgit](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/getChangedPathsFromGit)
 // getChangedPathsFromGit holds the data fields for a getChangedPathsFromGit record.
 func getChangedPathsFromGit(repoRoot string) []string {
@@ -6982,6 +7071,7 @@ func getChangedPathsFromGit(repoRoot string) []string {
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️expandpathswithancestors](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/expandPathsWithAncestors)
 // expandPathsWithAncestors holds the data fields for a expandPathsWithAncestors record.
 func expandPathsWithAncestors(paths []string) []string {
@@ -7030,6 +7120,7 @@ func expandPathsWithAncestors(paths []string) []string {
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️pathtonodesmap](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/pathToNodesMap)
 func pathToNodesMap(root *TreeNode) map[string][]*TreeNode {
 	m := make(map[string][]*TreeNode)
@@ -7048,6 +7139,7 @@ func pathToNodesMap(root *TreeNode) map[string][]*TreeNode {
 	walk(root)
 	return m
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️ensurecacheindexed](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/ensureCacheIndexed)
 // ensureCacheIndexed holds the data fields for a ensureCacheIndexed record.
 func ensureCacheIndexed(ctx context.Context, root *TreeNode) (bleve.Index, error) {
@@ -7194,6 +7286,7 @@ func ensureCacheIndexed(ctx context.Context, root *TreeNode) (bleve.Index, error
 	}
 	return idx, nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️querycacheindex](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/queryCacheIndex)
 // queryCacheIndex holds the data fields for a queryCacheIndex record.
 func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error) {
@@ -7226,10 +7319,12 @@ func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error)
 func getTreeCachePath() string {
 	return filepath.Join(getCacheDir(), "tree.json.gz")
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️gettreecachemetapath](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/getTreeCacheMetaPath)
 func getTreeCacheMetaPath() string {
 	return filepath.Join(getCacheDir(), "tree-meta.json")
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️savetreecache](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/saveTreeCache)
 // saveTreeCache holds the data fields for a saveTreeCache record.
 func saveTreeCache(tree *TreeNode, meta *cacheMeta) error {
@@ -7262,6 +7357,7 @@ func saveTreeCache(tree *TreeNode, meta *cacheMeta) error {
 	}
 	return os.WriteFile(getTreeCacheMetaPath(), metaData, 0644)
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️loadtreecache](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/loadTreeCache)
 func loadTreeCache() (*TreeNode, *cacheMeta, error) {
 	metaData, err := os.ReadFile(getTreeCacheMetaPath())
@@ -7294,6 +7390,7 @@ func loadTreeCache() (*TreeNode, *cacheMeta, error) {
 	}
 	return &tree, &meta, nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️buildmonorepotreecached](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/BuildMonorepoTreeCached)
 // BuildMonorepoTreeCached holds the data fields for a BuildMonorepoTreeCached record.
 func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
@@ -7383,6 +7480,7 @@ const (
 	ColorDim    = "\033[2m"
 	ColorBold   = "\033[1m"
 )
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖ansi🛠️colorize](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/ANSI/d/i/colorize)
 // colorize holds the data fields for a colorize record.
 func colorize(s string, color string, enabled bool) string {
@@ -7497,6 +7595,7 @@ func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream
 	}
 	return exitCode, nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️formatresult](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/formatResult)
 func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	var raw map[string]interface{}
@@ -7752,6 +7851,7 @@ func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, str
 	}
 	return exitCode, nil
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️formatmarkdownresult](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/formatMarkdownResult)
 // formatMarkdownResult holds the data fields for a formatMarkdownResult record.
 func formatMarkdownResult(command string, data json.RawMessage) string {
@@ -7903,6 +8003,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 
 	return renderEntityMarkdownLink("root", payload) + "\n"
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️formatmarkdownfile](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/formatMarkdownFile)
 // formatMarkdownFile holds the data fields for a formatMarkdownFile record.
 func formatMarkdownFile(file map[string]interface{}) string {
@@ -7992,6 +8093,7 @@ func toolErrorResult(err error) ToolResult {
 	output.Error(fmt.Sprintf("Error: %v", err))
 	return ToolResult{Output: *output, Error: err.Error()}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️toolerrormsg](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/toolErrorMsg)
 // toolErrorMsg holds the data fields for a toolErrorMsg record.
 func toolErrorMsg(msg string) ToolResult {
@@ -8018,6 +8120,7 @@ func toolResultFromEvents(events []Event, data interface{}) ToolResult {
 	}
 	return ToolResult{Output: *output, Data: data}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️toolresultfromtreelist](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/toolResultFromTreeList)
 // toolResultFromTreeList holds the data fields for a toolResultFromTreeList record.
 func toolResultFromTreeList(nodeKind TreeNodeKind) ToolResult {
@@ -8041,6 +8144,7 @@ func toolResultFromTreeList(nodeKind TreeNodeKind) ToolResult {
 	output.Plain(sb.String())
 	return ToolResult{Output: *output}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️toolresultfromtreerender](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/toolResultFromTreeRender)
 // toolResultFromTreeRender holds the data fields for a toolResultFromTreeRender record.
 func toolResultFromTreeRender(nodeKind TreeNodeKind) ToolResult {
@@ -8085,6 +8189,7 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 func mermaidEscapeLabel(s string) string {
 	return strings.ReplaceAll(s, "\"", "'")
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidtechnologyemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidTechnologyEmoji)
 // [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidtechnologyemoji](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidTechnologyEmoji)
 func mermaidTechnologyEmoji(kind TechnologyKind) string {
@@ -8097,6 +8202,7 @@ func mermaidTechnologyEmoji(kind TechnologyKind) string {
 		return EmojiTechnologyUser
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidbundleemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidBundleEmoji)
 // [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidbundleemoji](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidBundleEmoji)
 func mermaidBundleEmoji(kind BundleKind) string {
@@ -8115,6 +8221,7 @@ func mermaidBundleEmoji(kind BundleKind) string {
 		return EmojiBundleLibrary
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidfileemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidFileEmoji)
 // [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidfileemoji](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidFileEmoji)
 func mermaidFileEmoji(kind string) string {
@@ -8137,6 +8244,7 @@ func mermaidFileEmoji(kind string) string {
 		return EmojiFileCode
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbytechnologiesbundlesfoldersfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByTechnologiesBundlesFoldersFiles)
 // [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbytechnologiesbundlesfoldersfiles](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByTechnologiesBundlesFoldersFiles)
 func MermaidLocByTechnologiesBundlesFoldersFiles() string {
@@ -8289,6 +8397,7 @@ func MermaidLocByTechnologiesBundlesFoldersFiles() string {
 	}
 	return sb.String()
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbycontributors](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByContributors)
 // [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbycontributors](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByContributors)
 func MermaidLocByContributors() string {
@@ -8325,6 +8434,7 @@ func MermaidLocByContributors() string {
 	}
 	return sb.String()
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbylanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByLanguage)
 // [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbylanguage](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByLanguage)
 func MermaidLocByLanguage() string {
@@ -8364,6 +8474,7 @@ func MermaidLocByLanguage() string {
 	}
 	return sb.String()
 }
+
 // [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidCommand)
 // [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidcommand](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidCommand)
 func mermaidCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -8942,11 +9053,13 @@ func normalizeBundleLabel(name string) string {
 	}
 	return "semio/" + name
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️normalizebundleid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/normalizeBundleID)
 // normalizeBundleID holds the data fields for a normalizeBundleID record.
 func normalizeBundleID(name string) string {
 	return normalizeBundleLabel(name)
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️bundlepathprefix](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/bundlePathPrefix)
 // bundlePathPrefix holds the data fields for a bundlePathPrefix record.
 func bundlePathPrefix(name string) string {
@@ -8994,6 +9107,7 @@ func (e FolderKind) String() string {
 // DeriveFolderKind infers and returns the folder kind from the given input.
 // [🧰repo⌨️cli💻main🔖graphqltypes🪨folderkindcache](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/folderKindCache)
 var folderKindCache sync.Map
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️derivefolderkind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveFolderKind)
 // DeriveFolderKind holds the data fields for a DeriveFolderKind record.
 func DeriveFolderKind(path string) FolderKind {
@@ -10187,6 +10301,7 @@ type SemanticChange struct {
 	ToPath   string
 	Lines    LineMetrics
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️newticketdiffset](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/newTicketDiffSet)
 // newTicketDiffSet holds the data fields for a newTicketDiffSet record.
 func newTicketDiffSet() TicketDiffSet {
@@ -10209,6 +10324,7 @@ func newTicketDiffs() *TicketDiffs {
 		Definitions: newTicketDiffSet(),
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️addticketdiffentry](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/addTicketDiffEntry)
 // addTicketDiffEntry holds the data fields for a addTicketDiffEntry record.
 func addTicketDiffEntry(set *TicketDiffSet, change SemanticChange) {
@@ -10224,6 +10340,7 @@ func addTicketDiffEntry(set *TicketDiffSet, change SemanticChange) {
 		set.Modified = append(set.Modified, TicketFile{Path: change.Path, Lines: lines})
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️mergelinemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/mergeLineMetrics)
 // mergeLineMetrics holds the data fields for a mergeLineMetrics record.
 func mergeLineMetrics(target *LineMetrics, add LineMetrics) {
@@ -10248,6 +10365,7 @@ func computeLineMetricsForDiff(diff *DiffLines, baseCheckpoint, filePath string)
 	}
 	return LineMetrics{Added: len(diff.Added), Removed: len(diff.Removed)}
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️buildcodebasepathset](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildCodebasePathSet)
 func buildCodebasePathSet(codebase *Codebase) map[string]struct{} {
 	result := make(map[string]struct{})
@@ -10289,6 +10407,7 @@ func buildFolderLineTotals(files []string, baseCheckpoint string, bundles []Bund
 	}
 	return currentTotals, baseTotals
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️buildbundlelinetotals](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildBundleLineTotals)
 // buildBundleLineTotals holds the data fields for a buildBundleLineTotals record.
 func buildBundleLineTotals(files []string, baseCheckpoint string, bundles []Bundle) (map[string]int, map[string]int) {
@@ -10305,6 +10424,7 @@ func buildBundleLineTotals(files []string, baseCheckpoint string, bundles []Bund
 	}
 	return currentTotals, baseTotals
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️extractfileprefix](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/extractFilePrefix)
 // extractFilePrefix holds the data fields for a extractFilePrefix record.
 func extractFilePrefix(path string) string {
@@ -10319,6 +10439,7 @@ func extractFilePrefix(path string) string {
 	}
 	return path
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️reconcilerenamepairs](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/reconcileRenamePairs)
 // reconcileRenamePairs holds the data fields for a reconcileRenamePairs record.
 func reconcileRenamePairs(diffSet *TicketDiffSet, matchKey func(path string) string) {
@@ -10378,6 +10499,7 @@ func reconcileRenamePairs(diffSet *TicketDiffSet, matchKey func(path string) str
 	diffSet.Deleted = remainingDeleted
 	diffSet.Renamed = append(diffSet.Renamed, renamed...)
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️buildsectiondiffs](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildSectionDiffs)
 // buildSectionDiffs holds the data fields for a buildSectionDiffs record.
 func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
@@ -10456,6 +10578,7 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint s
 
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖graphqltypes🛠️builddefinitiondiffs](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildDefinitionDiffs)
 // buildDefinitionDiffs holds the data fields for a buildDefinitionDiffs record.
 func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
@@ -11032,6 +11155,7 @@ func (p *GitHubManagementProvider) CreateIssue(title, body string, milestone *in
 func (p *GitHubManagementProvider) CloseIssue(issueURL string) error {
 	return ghCloseIssue(issueURL)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️reopenissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ReopenIssue)
 // ReopenIssue holds the data fields for a ReopenIssue record.
 func (p *GitHubManagementProvider) ReopenIssue(issueURL string) error {
@@ -11042,6 +11166,7 @@ func (p *GitHubManagementProvider) ReopenIssue(issueURL string) error {
 func (p *GitHubManagementProvider) DeleteIssue(issueURLOrNumber string) error {
 	return ghDeleteIssue(issueURLOrNumber)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueTitle)
 // UpdateIssueTitle holds the data fields for a UpdateIssueTitle record.
 func (p *GitHubManagementProvider) UpdateIssueTitle(issueURL, title string) error {
@@ -11111,6 +11236,7 @@ func (p *GitHubManagementProvider) RemoveLabels(issueURL string, labels []string
 func (p *GitHubManagementProvider) AddIssueToProject(issueURL string) {
 	ghAddIssueToProject(issueURL)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️assignissuetocurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AssignIssueToCurrentUser)
 func (p *GitHubManagementProvider) AssignIssueToCurrentUser(issueURL string) {
 	ghAssignIssueToCurrentUser(issueURL)
@@ -11127,6 +11253,7 @@ func (p *GitHubManagementProvider) AddSubIssue(parentIssueURL, childIssueURL str
 func (p *GitHubManagementProvider) UpdateIssueMilestone(issueURL, milestoneTitle string) error {
 	return ghUpdateIssueMilestone(issueURL, milestoneTitle)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️clearissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ClearIssueMilestone)
 func (p *GitHubManagementProvider) ClearIssueMilestone(issueURL string) error {
 	return ghClearIssueMilestone(issueURL)
@@ -11137,16 +11264,19 @@ func (p *GitHubManagementProvider) ClearIssueMilestone(issueURL string) error {
 func (p *GitHubManagementProvider) CreateMilestone(title, description string) (int, error) {
 	return ghCreateMilestone(title, description)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updatemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateMilestone)
 // UpdateMilestone holds the data fields for a UpdateMilestone record.
 func (p *GitHubManagementProvider) UpdateMilestone(number int, title, description, state, dueOn string) error {
 	return ghUpdateMilestone(number, title, description, state, dueOn)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deletemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteMilestone)
 // DeleteMilestone holds the data fields for a DeleteMilestone record.
 func (p *GitHubManagementProvider) DeleteMilestone(number int) error {
 	return ghDeleteMilestone(number)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestone)
 // GetMilestone holds the data fields for a GetMilestone record.
 func (p *GitHubManagementProvider) GetMilestone(number int) (*ManagementMilestone, error) {
@@ -11156,11 +11286,13 @@ func (p *GitHubManagementProvider) GetMilestone(number int) (*ManagementMileston
 	}
 	return &ManagementMilestone{Number: m.Number, Title: m.Title, Description: m.Description, URL: m.URL, DueOn: m.DueOn, State: m.State}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getmilestonetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestoneTitle)
 // GetMilestoneTitle holds the data fields for a GetMilestoneTitle record.
 func (p *GitHubManagementProvider) GetMilestoneTitle(number int) (string, error) {
 	return ghGetMilestoneTitle(number)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️findmilestonebytitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/FindMilestoneByTitle)
 func (p *GitHubManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
 	m, err := ghFindMilestoneByTitle(title)
@@ -11172,6 +11304,7 @@ func (p *GitHubManagementProvider) FindMilestoneByTitle(title string) (*Manageme
 	}
 	return &ManagementMilestone{Number: m.Number, Title: m.Title, Description: m.Description, URL: m.URL, DueOn: m.DueOn, State: m.State}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listissuesforlabelsync](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListIssuesForLabelSync)
 // ListIssuesForLabelSync holds the data fields for a ListIssuesForLabelSync record.
 func (p *GitHubManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, error) {
@@ -11196,6 +11329,7 @@ func (p *GitHubManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, 
 func (p *GitHubManagementProvider) ListOpenIssuesWithLabel(label string) ([]string, error) {
 	return ghListOpenIssuesWithLabel(label)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listrepolabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListRepoLabels)
 // ListRepoLabels holds the data fields for a ListRepoLabels record.
 func (p *GitHubManagementProvider) ListRepoLabels() ([]ManagementLabel, error) {
@@ -11215,25 +11349,30 @@ func (p *GitHubManagementProvider) ListRepoLabels() ([]ManagementLabel, error) {
 func (p *GitHubManagementProvider) CreateRepoLabel(name string) error {
 	return ghCreateRepoLabel(name)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deleterepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteRepoLabel)
 // DeleteRepoLabel holds the data fields for a DeleteRepoLabel record.
 func (p *GitHubManagementProvider) DeleteRepoLabel(name string) error {
 	return ghDeleteRepoLabel(name)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️syncrepolabelcatalog](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/SyncRepoLabelCatalog)
 func (p *GitHubManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
 	return ghSyncRepoLabelCatalog(validLabels)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️creategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateGoalIssue)
 // CreateGoalIssue holds the data fields for a CreateGoalIssue record.
 func (p *GitHubManagementProvider) CreateGoalIssue(title, description string, milestone *int) (string, error) {
 	return ghCreateGoalIssue(title, description, milestone)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateGoalIssue)
 // UpdateGoalIssue holds the data fields for a UpdateGoalIssue record.
 func (p *GitHubManagementProvider) UpdateGoalIssue(issueURL, title, description string) error {
 	return ghUpdateGoalIssue(issueURL, title, description)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getcurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetCurrentUser)
 // GetCurrentUser holds the data fields for a GetCurrentUser record.
 func (p *GitHubManagementProvider) GetCurrentUser() string {
@@ -11243,45 +11382,58 @@ func (p *GitHubManagementProvider) GetCurrentUser() string {
 // NullManagementProvider is a no-op implementation of ManagementProvider.
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider✂️nullmanagementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/NullManagementProvider)
 type NullManagementProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Kind)
 func (p *NullManagementProvider) Kind() string { return "none" }
 
 // Configure holds the data fields for a Configure record.
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Configure)
 func (p *NullManagementProvider) Configure(repoRoot string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️createissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateIssue)
 // CreateIssue holds the data fields for a CreateIssue record.
 func (p *NullManagementProvider) CreateIssue(title, body string, milestone *int) (string, error) {
 	return "", nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️closeissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CloseIssue)
 // CloseIssue holds the data fields for a CloseIssue record.
 func (p *NullManagementProvider) CloseIssue(issueURL string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️reopenissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ReopenIssue)
 func (p *NullManagementProvider) ReopenIssue(issueURL string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deleteissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteIssue)
 // DeleteIssue holds the data fields for a DeleteIssue record.
 func (p *NullManagementProvider) DeleteIssue(issueURLOrNumber string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueTitle)
 // UpdateIssueTitle holds the data fields for a UpdateIssueTitle record.
 func (p *NullManagementProvider) UpdateIssueTitle(issueURL, title string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuebody](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueBody)
 func (p *NullManagementProvider) UpdateIssueBody(issueURL, body string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissuedetails](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueDetails)
 func (p *NullManagementProvider) GetIssueDetails(issueURL string) (*ManagementIssue, error) {
 	return nil, nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissuenodeid](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueNodeID)
 // GetIssueNodeID holds the data fields for a GetIssueNodeID record.
 func (p *NullManagementProvider) GetIssueNodeID(issueURL string) (string, error) { return "", nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissueparenturl](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueParentURL)
 // GetIssueParentURL holds the data fields for a GetIssueParentURL record.
 func (p *NullManagementProvider) GetIssueParentURL(issueURL string) (string, error) { return "", nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addcomment](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddComment)
 // AddComment holds the data fields for a AddComment record.
 func (p *NullManagementProvider) AddComment(issueURL, comment string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addlabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddLabels)
 func (p *NullManagementProvider) AddLabels(issueURL string, labels []string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️removelabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/RemoveLabels)
 // RemoveLabels holds the data fields for a RemoveLabels record.
 func (p *NullManagementProvider) RemoveLabels(issueURL string, labels []string) error { return nil }
@@ -11289,8 +11441,10 @@ func (p *NullManagementProvider) RemoveLabels(issueURL string, labels []string) 
 // AddIssueToProject holds the data fields for a AddIssueToProject record.
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addissuetoproject](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddIssueToProject)
 func (p *NullManagementProvider) AddIssueToProject(issueURL string) {}
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️assignissuetocurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AssignIssueToCurrentUser)
 func (p *NullManagementProvider) AssignIssueToCurrentUser(issueURL string) {}
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addsubissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddSubIssue)
 // AddSubIssue holds the data fields for a AddSubIssue record.
 func (p *NullManagementProvider) AddSubIssue(parentIssueURL, childIssueURL string) error {
@@ -11312,11 +11466,13 @@ func (p *NullManagementProvider) ClearIssueMilestone(issueURL string) error { re
 func (p *NullManagementProvider) CreateMilestone(title, description string) (int, error) {
 	return 0, nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updatemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateMilestone)
 // UpdateMilestone holds the data fields for a UpdateMilestone record.
 func (p *NullManagementProvider) UpdateMilestone(number int, title, description, state, dueOn string) error {
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deletemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteMilestone)
 // DeleteMilestone holds the data fields for a DeleteMilestone record.
 func (p *NullManagementProvider) DeleteMilestone(number int) error { return nil }
@@ -11330,6 +11486,7 @@ func (p *NullManagementProvider) GetMilestone(number int) (*ManagementMilestone,
 // GetMilestoneTitle holds the data fields for a GetMilestoneTitle record.
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getmilestonetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestoneTitle)
 func (p *NullManagementProvider) GetMilestoneTitle(number int) (string, error) { return "", nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️findmilestonebytitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/FindMilestoneByTitle)
 func (p *NullManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
 	return nil, nil
@@ -11346,8 +11503,10 @@ func (p *NullManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, er
 func (p *NullManagementProvider) ListOpenIssuesWithLabel(label string) ([]string, error) {
 	return nil, nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listrepolabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListRepoLabels)
 func (p *NullManagementProvider) ListRepoLabels() ([]ManagementLabel, error) { return nil, nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️createrepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateRepoLabel)
 // CreateRepoLabel holds the data fields for a CreateRepoLabel record.
 func (p *NullManagementProvider) CreateRepoLabel(name string) error { return nil }
@@ -11355,15 +11514,18 @@ func (p *NullManagementProvider) CreateRepoLabel(name string) error { return nil
 // DeleteRepoLabel holds the data fields for a DeleteRepoLabel record.
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deleterepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteRepoLabel)
 func (p *NullManagementProvider) DeleteRepoLabel(name string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️syncrepolabelcatalog](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/SyncRepoLabelCatalog)
 // SyncRepoLabelCatalog holds the data fields for a SyncRepoLabelCatalog record.
 func (p *NullManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️creategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateGoalIssue)
 func (p *NullManagementProvider) CreateGoalIssue(title, description string, milestone *int) (string, error) {
 	return "", nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateGoalIssue)
 // UpdateGoalIssue holds the data fields for a UpdateGoalIssue record.
 func (p *NullManagementProvider) UpdateGoalIssue(issueURL, title, description string) error {
@@ -11387,6 +11549,7 @@ type GitVersionControlProvider struct{}
 // Kind holds the data fields for a Kind record.
 // [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Kind)
 func (p *GitVersionControlProvider) Kind() string { return "git" }
+
 // [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️repourl](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/RepoURL)
 // RepoURL holds the data fields for a RepoURL record.
 func (p *GitVersionControlProvider) RepoURL() (string, error) {
@@ -11400,6 +11563,7 @@ func (p *GitVersionControlProvider) RepoURL() (string, error) {
 // Configure holds the data fields for a Configure record.
 // [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Configure)
 func (p *GitVersionControlProvider) Configure(repoRoot string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️checkpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Checkpoint)
 // Checkpoint holds the data fields for a Checkpoint record.
 func (p *GitVersionControlProvider) Checkpoint(repoRoot string, description string) (string, error) {
@@ -11420,6 +11584,7 @@ func (p *GitVersionControlProvider) Checkpoint(repoRoot string, description stri
 	}
 	return sha, nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️currentcheckpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/CurrentCheckpoint)
 func (p *GitVersionControlProvider) CurrentCheckpoint(repoRoot string) (string, error) {
 	stdout, stderr, exitCode := ExecCommand("git", []string{"rev-parse", "HEAD"}, repoRoot)
@@ -11428,6 +11593,7 @@ func (p *GitVersionControlProvider) CurrentCheckpoint(repoRoot string) (string, 
 	}
 	return strings.TrimSpace(stdout), nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️checkin](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Checkin)
 // Checkin holds the data fields for a Checkin record.
 func (p *GitVersionControlProvider) Checkin(repoRoot string, contributor string) error {
@@ -11512,6 +11678,7 @@ func (p *GitVersionControlProvider) CurrentBranch(repoRoot string) (string, erro
 	}
 	return strings.TrimSpace(stdout), nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️stagedfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/StagedFiles)
 // StagedFiles holds the data fields for a StagedFiles record.
 func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, error) {
@@ -11527,6 +11694,7 @@ func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, erro
 	}
 	return files, nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️stageall](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/StageAll)
 // StageAll holds the data fields for a StageAll record.
 func (p *GitVersionControlProvider) StageAll(repoRoot string) error {
@@ -11546,9 +11714,11 @@ func (p *GitVersionControlProvider) StageAll(repoRoot string) error {
 // DevcontainerSandboxProvider holds the data fields for a devcontainer sandbox provider record.
 // [🧰repo⌨️cli💻main🔖providers🔖devcontainersandboxprovider✂️devcontainersandboxprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/DevcontainerSandboxProvider)
 type DevcontainerSandboxProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖devcontainersandboxprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/Kind)
 // Kind holds the data fields for a Kind record.
 func (p *DevcontainerSandboxProvider) Kind() string { return "devcontainer" }
+
 // [🧰repo⌨️cli💻main🔖providers🔖devcontainersandboxprovider🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/Configure)
 // Configure holds the data fields for a Configure record.
 func (p *DevcontainerSandboxProvider) Configure(repoRoot string) error { return nil }
@@ -11562,9 +11732,11 @@ func (p *DevcontainerSandboxProvider) Configure(repoRoot string) error { return 
 // CopilotEditorProvider holds the data fields for a copilot editor provider record.
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️copiloteditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CopilotEditorProvider)
 type CopilotEditorProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
 // Kind holds the data fields for a Kind record.
 func (p *CopilotEditorProvider) Kind() string { return "copilot-chat" }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
 // Configure holds the data fields for a Configure record.
 func (p *CopilotEditorProvider) Configure(repoRoot string) error {
@@ -11579,26 +11751,31 @@ func (p *CopilotEditorProvider) Configure(repoRoot string) error {
 	}
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
 // ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CopilotEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveCopilotEvent(nativeEvent, toolKind)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
 // FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *CopilotEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	return formatVSCodeHookOutput(hookEventName, result)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
 // NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *CopilotEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return vsCodeEventFromHookEvent(event, parentInfo)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
 // GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *CopilotEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateCopilotConfig(repoRoot)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
 // HookMapping holds the data fields for a HookMapping record.
 func (p *CopilotEditorProvider) HookMapping() EditorHookMapping {
@@ -11608,9 +11785,11 @@ func (p *CopilotEditorProvider) HookMapping() EditorHookMapping {
 // CursorEditorProvider holds the data fields for a cursor editor provider record.
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️cursoreditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CursorEditorProvider)
 type CursorEditorProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
 // Kind holds the data fields for a Kind record.
 func (p *CursorEditorProvider) Kind() string { return "cursor-chat" }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
 // Configure holds the data fields for a Configure record.
 func (p *CursorEditorProvider) Configure(repoRoot string) error {
@@ -11625,27 +11804,32 @@ func (p *CursorEditorProvider) Configure(repoRoot string) error {
 	}
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
 // ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CursorEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveCursorEvent(nativeEvent, toolKind)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
 // FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *CursorEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
 // NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *CursorEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
 // GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *CursorEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateCursorConfig(repoRoot)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
 // HookMapping holds the data fields for a HookMapping record.
 func (p *CursorEditorProvider) HookMapping() EditorHookMapping {
@@ -11655,6 +11839,7 @@ func (p *CursorEditorProvider) HookMapping() EditorHookMapping {
 // WindsurfEditorProvider holds the data fields for a windsurf editor provider record.
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️windsurfeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/WindsurfEditorProvider)
 type WindsurfEditorProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
 // Kind holds the data fields for a Kind record.
 func (p *WindsurfEditorProvider) Kind() string { return "windsurf-chat" }
@@ -11673,27 +11858,32 @@ func (p *WindsurfEditorProvider) Configure(repoRoot string) error {
 	}
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
 // ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *WindsurfEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveWindsurfEvent(nativeEvent, toolKind)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
 // FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *WindsurfEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
 // NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *WindsurfEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
 // GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *WindsurfEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateWindsurfConfig(repoRoot)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
 // HookMapping holds the data fields for a HookMapping record.
 func (p *WindsurfEditorProvider) HookMapping() EditorHookMapping {
@@ -11703,9 +11893,11 @@ func (p *WindsurfEditorProvider) HookMapping() EditorHookMapping {
 // ClaudeCodeEditorProvider holds the data fields for a claude code editor provider record.
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️claudecodeeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ClaudeCodeEditorProvider)
 type ClaudeCodeEditorProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
 // Kind holds the data fields for a Kind record.
 func (p *ClaudeCodeEditorProvider) Kind() string { return "claude-code" }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
 // Configure holds the data fields for a Configure record.
 func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
@@ -11720,27 +11912,32 @@ func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
 	}
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
 // ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *ClaudeCodeEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
 // FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *ClaudeCodeEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
 // NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *ClaudeCodeEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
 // GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *ClaudeCodeEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateClaudeCodeConfig(repoRoot)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
 // HookMapping holds the data fields for a HookMapping record.
 func (p *ClaudeCodeEditorProvider) HookMapping() EditorHookMapping {
@@ -11750,9 +11947,11 @@ func (p *ClaudeCodeEditorProvider) HookMapping() EditorHookMapping {
 // DroidEditorProvider holds the data fields for a droid editor provider record.
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️droideditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/DroidEditorProvider)
 type DroidEditorProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
 // Kind holds the data fields for a Kind record.
 func (p *DroidEditorProvider) Kind() string { return "droid" }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
 // Configure holds the data fields for a Configure record.
 func (p *DroidEditorProvider) Configure(repoRoot string) error {
@@ -11773,22 +11972,26 @@ func (p *DroidEditorProvider) Configure(repoRoot string) error {
 func (p *DroidEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
 // FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *DroidEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
 // NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *DroidEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
 // GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *DroidEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateDroidConfig(repoRoot)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
 // HookMapping holds the data fields for a HookMapping record.
 func (p *DroidEditorProvider) HookMapping() EditorHookMapping {
@@ -11798,31 +12001,38 @@ func (p *DroidEditorProvider) HookMapping() EditorHookMapping {
 // CodexEditorProvider holds the data fields for a codex editor provider record.
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️codexeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CodexEditorProvider)
 type CodexEditorProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
 // Kind holds the data fields for a Kind record.
 func (p *CodexEditorProvider) Kind() string { return "codex" }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
 // Configure holds the data fields for a Configure record.
 func (p *CodexEditorProvider) Configure(repoRoot string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
 // ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CodexEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
 // FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *CodexEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
 // NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *CodexEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
 // GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *CodexEditorProvider) GenerateHookConfig(repoRoot string) (string, error) { return "", nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
 // HookMapping holds the data fields for a HookMapping record.
 func (p *CodexEditorProvider) HookMapping() EditorHookMapping {
@@ -11832,33 +12042,40 @@ func (p *CodexEditorProvider) HookMapping() EditorHookMapping {
 // AntigravityEditorProvider holds the data fields for an antigravity editor provider record.
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️antigravityeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/AntigravityEditorProvider)
 type AntigravityEditorProvider struct{}
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
 // Kind holds the data fields for a Kind record.
 func (p *AntigravityEditorProvider) Kind() string { return "antigravity-chat" }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
 // Configure holds the data fields for a Configure record.
 func (p *AntigravityEditorProvider) Configure(repoRoot string) error { return nil }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
 // ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *AntigravityEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
 // FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *AntigravityEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
 // NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *AntigravityEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
 // GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *AntigravityEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return "", nil
 }
+
 // [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
 // HookMapping holds the data fields for a HookMapping record.
 func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
@@ -11958,6 +12175,7 @@ func DefaultSandboxProvider() SandboxProvider {
 // mgmtProvider holds the data fields for a mgmtProvider record.
 // [🧰repo⌨️cli💻main🔖providers🔖providerregistry🪨mgmtprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/mgmtProvider)
 var mgmtProvider ManagementProvider = DefaultManagementProvider()
+
 // [🧰repo⌨️cli💻main🔖providers🔖providerregistry🛠️getmanagementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/GetManagementProvider)
 // GetManagementProvider holds the data fields for a GetManagementProvider record.
 func GetManagementProvider() ManagementProvider { return mgmtProvider }
@@ -12515,6 +12733,7 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 	}
 	return defRanges
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖languages🪨arrowfuncpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/arrowFuncPattern)
 // arrowFuncPattern holds the data fields for a arrowFuncPattern record.
 var arrowFuncPattern = regexp.MustCompile(`=\s*(?:\([^)]*\)|[A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*[^=]+)?\s*=>\s*`)
@@ -12522,9 +12741,11 @@ var arrowFuncPattern = regexp.MustCompile(`=\s*(?:\([^)]*\)|[A-Za-z_][A-Za-z0-9_
 // funcExprPattern holds the data fields for a funcExprPattern record.
 // [🧰repo⌨️cli💻main🔖types🔖languages🪨funcexprpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/funcExprPattern)
 var funcExprPattern = regexp.MustCompile(`=\s*(?:async\s+)?function\b`)
+
 // [🧰repo⌨️cli💻main🔖types🔖languages🪨classexprpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/classExprPattern)
 // classExprPattern holds the data fields for a classExprPattern record.
 var classExprPattern = regexp.MustCompile(`=\s*class\b`)
+
 // [🧰repo⌨️cli💻main🔖types🔖languages🛠️refinedefinitionkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/refineDefinitionKind)
 // refineDefinitionKind holds the data fields for a refineDefinitionKind record.
 func refineDefinitionKind(rawKind string, line string) string {
@@ -12536,6 +12757,7 @@ func refineDefinitionKind(rawKind string, line string) string {
 	}
 	return rawKind
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖languages🛠️extractdefinitionkeyword](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/extractDefinitionKeyword)
 // extractDefinitionKeyword holds the data fields for a extractDefinitionKeyword record.
 func extractDefinitionKeyword(fullMatch, name string) string {
@@ -13649,26 +13871,143 @@ type RustLanguage struct {
 // NewRustLanguage MUST initialize all required fields and return a valid RustLanguage.
 // NewRustLanguage creates and returns a new RustLanguage instance.
 // [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️newrustlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/NewRustLanguage)
+// RustSectionNameToModName MUST convert a display section name to a valid Rust mod identifier.
+// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️rustsectionnametomodname](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/RustSectionNameToModName)
+func RustSectionNameToModName(name string) string {
+	var buf strings.Builder
+	runes := []rune(name)
+	for i, r := range runes {
+		if r >= 'A' && r <= 'Z' {
+			if i > 0 {
+				prev := runes[i-1]
+				if (prev >= 'a' && prev <= 'z') || (prev >= '0' && prev <= '9') {
+					buf.WriteRune('_')
+				}
+			}
+			buf.WriteRune(r - 'A' + 'a')
+		} else if r >= 'a' && r <= 'z' {
+			buf.WriteRune(r)
+		} else if r >= '0' && r <= '9' {
+			buf.WriteRune(r)
+		} else {
+			if buf.Len() > 0 {
+				last := []rune(buf.String())
+				if last[len(last)-1] != '_' {
+					buf.WriteRune('_')
+				}
+			}
+		}
+	}
+	result := strings.Trim(buf.String(), "_")
+	if result == "" {
+		return "section"
+	}
+	return result
+}
+
 func NewRustLanguage() *RustLanguage {
 	return &RustLanguage{
 		BaseLanguage: BaseLanguage{
 			name:               "rust",
 			extensions:         []string{".rs"},
-			sectionStart:       regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
-			sectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
-			definitionRegexp:   regexp.MustCompile(`^(?:pub\s+)?(?:fn|struct|enum|trait|impl|type|const|static|mod)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+			sectionStart:       regexp.MustCompile(`(?i)^\s*(?:pub(?:\(crate\))?\s+)?mod\s+\w+\s*\{\s*//\s*(🔖.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*\}\s*//\s*(🔖.+?)\s*$`),
+			definitionRegexp:   regexp.MustCompile(`^(?:pub\s+)?(?:fn|struct|enum|trait|impl|type|const|static)\s+([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "//",
 			blockCommentStart:  "/*",
 			blockCommentEnd:    "*/",
-			sectionStartFmt:    "// #region 🔖%s",
-			sectionEndFmt:      "// #endregion 🔖%s",
-			sectionBothFmt:     "\n// #region 🔖%s\n\n// #endregion 🔖%s\n",
+			sectionStartFmt:    "",
+			sectionEndFmt:      "",
+			sectionBothFmt:     "",
 			supportsHeaders:    true,
 			usesIndentScoping:  false,
-			policySectionStart: regexp.MustCompile(`(?i)^\s*//\s*#region(?:\s+(\S.*?))?\s*$`),
-			policySectionEnd:   regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(\S.*?))?\s*$`),
+			policySectionStart: regexp.MustCompile(`(?i)^\s*(?:pub(?:\(crate\))?\s+)?mod\s+\w+\s*\{\s*//\s*(🔖\S.*?)\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*\}\s*//\s*(🔖\S.*?)\s*$`),
 		},
 	}
+}
+
+// FormatSectionStart MUST produce a well-formed Rust mod section start string.
+// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️formatsectionstart](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/FormatSectionStart)
+func (l *RustLanguage) FormatSectionStart(name string) string {
+	return fmt.Sprintf("mod %s { // 🔖%s", RustSectionNameToModName(name), name)
+}
+
+// FormatSectionEnd MUST produce a well-formed Rust mod section end string.
+// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️formatsectionend](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/FormatSectionEnd)
+func (l *RustLanguage) FormatSectionEnd(name string) string {
+	return fmt.Sprintf("} // 🔖%s", name)
+}
+
+// FormatSectionBoth MUST produce a well-formed Rust mod section both string.
+// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️formatsectionboth](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/FormatSectionBoth)
+func (l *RustLanguage) FormatSectionBoth(name string) string {
+	modName := RustSectionNameToModName(name)
+	return fmt.Sprintf("\nmod %s { // 🔖%s\n\n} // 🔖%s\n", modName, name, name)
+}
+
+// FormatHeader MUST produce a well-formed Rust mod header string.
+// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️formatheader](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/FormatHeader)
+func (l *RustLanguage) FormatHeader(fileId, fileUri, summary, contributors, license, requirements string) string {
+	cp := l.commentPrefix
+	var b strings.Builder
+	b.WriteString(l.FormatSectionStart("Header"))
+	b.WriteString("\n")
+	b.WriteString(cp + " [" + fileId + "](" + fileUri + ")\n")
+	for _, line := range strings.Split(contributors, "\n") {
+		if strings.TrimSpace(line) != "" {
+			b.WriteString(cp + " " + line + "\n")
+		}
+	}
+	b.WriteString("\n")
+	for _, line := range strings.Split(license, "\n") {
+		if line == "" {
+			b.WriteString(cp + "\n")
+		} else {
+			b.WriteString(cp + " " + line + "\n")
+		}
+	}
+	b.WriteString("\n")
+	if summary != "" {
+		for _, line := range strings.Split(summary, "\n") {
+			if line == "" {
+				b.WriteString(cp + "\n")
+			} else {
+				b.WriteString(cp + " " + line + "\n")
+			}
+		}
+		b.WriteString("\n")
+	}
+	if requirements != "" {
+		for _, line := range strings.Split(requirements, "\n") {
+			if line == "" {
+				b.WriteString(cp + "\n")
+			} else {
+				b.WriteString(cp + " " + line + "\n")
+			}
+		}
+		b.WriteString("\n")
+	}
+	b.WriteString(l.FormatSectionEnd("Header"))
+	b.WriteString("\n")
+	return b.String()
+}
+
+// ScanComments MUST detect legacy region comments in Rust files.
+// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️scancomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/ScanComments)
+func (l *RustLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
+	breachs := l.BaseLanguage.ScanComments(ctx, file, content, lines)
+	legacyStart := regexp.MustCompile(`(?i)^\s*//\s*#region\b`)
+	legacyEnd := regexp.MustCompile(`(?i)^\s*//\s*#endregion\b`)
+	for i, line := range lines {
+		if legacyStart.MatchString(line) || legacyEnd.MatchString(line) {
+			breachs = append(breachs, ctx.CreateBreach(
+				fmt.Sprintf("Legacy region comment in Rust file %s:%d", file, i+1),
+				BreachCodeRustRegionComment,
+				file, i+1, 0, strings.TrimSpace(line)))
+		}
+	}
+	return breachs
 }
 
 // ExtraOrphanDefinitions MUST operate on the RustLanguage receiver and return consistent results.
@@ -14062,6 +14401,7 @@ func (a GitAuthor) String() string {
 	}
 	return a.Name
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖languages🛠️parsegitauthor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/parseGitAuthor)
 func parseGitAuthor(s string) GitAuthor {
 	res := GitAuthor{}
@@ -14602,6 +14942,7 @@ const (
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
 	BreachSemioNoUiDependency                          Statute = "semio/import/no-ui-dependency"
+	BreachCodeRustRegionComment                        Statute = "code/rust/region-comment-instead-of-mod"
 )
 
 // statuteInfoTable holds the data fields for a statuteInfoTable record.
@@ -15059,6 +15400,13 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Priority:    BreachPriorityHigh,
 		Reason:      "semio.* files must be self-contained and not import from UI dependencies",
 		Solution:    "Remove the UI dependency import and use only non-UI alternatives",
+		Autofixable: false,
+	},
+	BreachCodeRustRegionComment: {
+		Kind:        BreachCodeRustRegionComment,
+		Priority:    BreachPriorityHigh,
+		Reason:      "Rust files must use mod blocks for sections instead of region comments",
+		Solution:    "Replace // #region with mod section_name { // 🔖Name and // #endregion with } // 🔖Name",
 		Autofixable: false,
 	},
 }
@@ -15642,6 +15990,7 @@ func GetRepoMetaDir() string {
 func GetRepoMetaPath(path string) string {
 	return filepath.Join(GetRepoMetaDir(), path)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️findreporoot](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/findRepoRoot)
 func findRepoRoot(startDir string) string {
 	if strings.TrimSpace(startDir) == "" {
@@ -15701,6 +16050,7 @@ var (
 	gitignoreLoaded bool
 	gitignoreMutex  sync.Mutex
 )
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️getgitignore](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/getGitignore)
 // getGitignore holds the data fields for a getGitignore record.
 func getGitignore() *ignore.GitIgnore {
@@ -15719,6 +16069,7 @@ func getGitignore() *ignore.GitIgnore {
 	gitignoreLoaded = true
 	return cachedGitignore
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️isgitignored](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/isGitIgnored)
 // isGitIgnored holds the data fields for a isGitIgnored record.
 func isGitIgnored(filePath string) bool {
@@ -15727,6 +16078,7 @@ func isGitIgnored(filePath string) bool {
 	}
 	return isIgnoredByGitignore(filePath)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️isignoredbygitignore](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/isIgnoredByGitignore)
 func isIgnoredByGitignore(filePath string) bool {
 	relPath := normalizeRepoPath(filePath)
@@ -15739,6 +16091,7 @@ func isIgnoredByGitignore(filePath string) bool {
 	}
 	return ign.MatchesPath(relPath)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️policyappliestoscope](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/policyAppliesToScope)
 // policyAppliesToScope holds the data fields for a policyAppliesToScope record.
 func policyAppliesToScope(policyID string, scope Scope) bool {
@@ -15751,6 +16104,7 @@ func policyAppliesToScope(policyID string, scope Scope) bool {
 		return true
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️issourcefile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/isSourceFile)
 // isSourceFile holds the data fields for a isSourceFile record.
 func isSourceFile(filePath string) bool {
@@ -15804,6 +16158,7 @@ func WriteTextFile(filePath string, content string) error {
 	}
 	return os.WriteFile(filePath, []byte(content), 0644)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils✂️formatterplan](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/formatterPlan)
 // formatterPlan holds the data fields for a formatterPlan record.
 type formatterPlan struct {
@@ -15811,6 +16166,7 @@ type formatterPlan struct {
 	args        []string
 	requirement []string
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️runformattercommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterCommand)
 // runFormatterCommand holds the data fields for a runFormatterCommand record.
 func runFormatterCommand(binary string, args []string, workDir string) error {
@@ -15869,6 +16225,7 @@ func formatterPlansForLanguage(languageName string, relPath string) []formatterP
 		return []formatterPlan{prettierPlan}
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️isformatterplanavailable](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/isFormatterPlanAvailable)
 // isFormatterPlanAvailable holds the data fields for a isFormatterPlanAvailable record.
 func isFormatterPlanAvailable(plan formatterPlan, workDir string) bool {
@@ -15888,6 +16245,7 @@ func isFormatterPlanAvailable(plan formatterPlan, workDir string) bool {
 	}
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️fallbackformattext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/fallbackFormatText)
 // fallbackFormatText holds the data fields for a fallbackFormatText record.
 func fallbackFormatText(content string) string {
@@ -15904,6 +16262,7 @@ func fallbackFormatText(content string) string {
 	}
 	return formatted
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️runformatterafterautofix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterAfterAutofix)
 // runFormatterAfterAutofix holds the data fields for a runFormatterAfterAutofix record.
 func runFormatterAfterAutofix(relPath string, language LanguagePlugin) error {
@@ -16013,6 +16372,7 @@ func LoadGitignore(cwd string) ([]string, error) {
 	}
 	return patterns, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️matchesignorepattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/matchesIgnorePattern)
 func matchesIgnorePattern(path string, isDir bool, pattern string) bool {
 	pattern = NormalizePath(strings.TrimSpace(pattern))
@@ -16087,6 +16447,7 @@ func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGiti
 	}
 	return files, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖utils🛠️globbyextension](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/globByExtension)
 // globByExtension holds the data fields for a globByExtension record.
 func globByExtension(root string, patternBase string, exts []string, ignorePatterns []string, respectGitignore bool) ([]string, error) {
@@ -16854,6 +17215,7 @@ func NormalizeSectionPath(sectionPath string) []string {
 	}
 	return parts
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonlinestart](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonLineStart)
 // jsonLineStart holds the data fields for a jsonLineStart record.
 func jsonLineStart(content string, index int) int {
@@ -16877,6 +17239,7 @@ func jsonLineIndent(content string, index int) string {
 	}
 	return content[start:end]
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsoniswhitespace](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonIsWhitespace)
 // jsonIsWhitespace holds the data fields for a jsonIsWhitespace record.
 func jsonIsWhitespace(ch byte) bool {
@@ -16925,6 +17288,7 @@ func jsonFindMatching(content string, start int, open byte, close byte) (int, bo
 	}
 	return -1, false
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonfindrootobjectrange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonFindRootObjectRange)
 // jsonFindRootObjectRange holds the data fields for a jsonFindRootObjectRange record.
 func jsonFindRootObjectRange(content string) (int, int, bool) {
@@ -16940,6 +17304,7 @@ func jsonFindRootObjectRange(content string) (int, int, bool) {
 	}
 	return -1, -1, false
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonfindobjectrange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonFindObjectRange)
 // jsonFindObjectRange holds the data fields for a jsonFindObjectRange record.
 func jsonFindObjectRange(content string, locations map[string]*JsonSectionLocation, path string) (int, int, bool) {
@@ -16966,6 +17331,7 @@ func jsonObjectHasEntries(content string, start, end int) bool {
 	}
 	return false
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonfindfirstkeyindent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonFindFirstKeyIndent)
 func jsonFindFirstKeyIndent(content string, start, end int) string {
 	depth := 0
@@ -17015,6 +17381,7 @@ func jsonFindFirstKeyIndent(content string, start, end int) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsoninsertentry](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonInsertEntry)
 // jsonInsertEntry holds the data fields for a jsonInsertEntry record.
 func jsonInsertEntry(content string, objectStart, objectEnd int, entry string) (string, bool) {
@@ -17035,6 +17402,7 @@ func jsonInsertEntry(content string, objectStart, objectEnd int, entry string) (
 	}
 	return content[:objectEnd] + insert + content[objectEnd:], true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonreplacekey](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonReplaceKey)
 // jsonReplaceKey holds the data fields for a jsonReplaceKey record.
 func jsonReplaceKey(content string, keyStart, keyEnd int, newName string) string {
@@ -17154,6 +17522,7 @@ func FindSection(sections []Section, name string) *Section {
 // PolicyFunc is a function type for policy func callbacks.
 // [🧰repo⌨️cli💻main🔖types🔖policies✂️policyfunc](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/PolicyFunc)
 type PolicyFunc func(ctx *PolicyContext) []Breach
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🪨policies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/policies)
 // policies holds the data fields for a policies record.
 var policies = []PolicyDef{
@@ -17306,6 +17675,14 @@ var policies = []PolicyDef{
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Kinds: []Statute{
 					BreachCodeDocsMissingReadme,
+				},
+			},
+			{
+				Name:        "Rust",
+				Description: "Rust-specific section breachs",
+				Scopes:      []string{"**/*.rs"},
+				Kinds: []Statute{
+					BreachCodeRustRegionComment,
 				},
 			},
 		},
@@ -17732,6 +18109,7 @@ func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope strin
 		Excerpt: excerpt,
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️extractfilefromscope](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/extractFileFromScope)
 // extractFileFromScope holds the data fields for a extractFileFromScope record.
 func extractFileFromScope(scope string) string {
@@ -17769,12 +18147,15 @@ var specKeywordPattern = regexp.MustCompile(`\b(MUST(\s+NOT)?|SHOULD(\s+NOT)?|SH
 func isSpecText(text string) bool {
 	return specKeywordPattern.MatchString(text)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🪨specimplsyntaxbacktick](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/specImplSyntaxBacktick)
 // specImplSyntaxBacktick holds the data fields for a specImplSyntaxBacktick record.
 var specImplSyntaxBacktick = regexp.MustCompile("`[^`]+`")
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🪨specimplsyntaxfunccall](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/specImplSyntaxFuncCall)
 // specImplSyntaxFuncCall holds the data fields for a specImplSyntaxFuncCall record.
 var specImplSyntaxFuncCall = regexp.MustCompile(`[A-Za-z_]\w*\.\w+\(|[A-Z]\w+\(`)
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️hasimplementationsyntax](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/hasImplementationSyntax)
 func hasImplementationSyntax(text string) (bool, string) {
 	if specImplSyntaxBacktick.MatchString(text) {
@@ -18075,6 +18456,7 @@ func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 func (ctx *PolicyContext) IsDefinitionDocLine(filePath string, lineNum int) bool {
 	return ctx.DefinitionDocLines(filePath)[lineNum]
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️randomstring](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/randomString)
 func randomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -18121,6 +18503,7 @@ func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach,
 	}
 	return breachs, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️matchesscope](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/matchesScope)
 // matchesScope holds the data fields for a matchesScope record.
 func matchesScope(policyScopes []string, targetScope Scope) bool {
@@ -18146,6 +18529,7 @@ func matchesScope(policyScopes []string, targetScope Scope) bool {
 	}
 	return false
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️headerpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/headerPolicy)
 // headerPolicy holds the data fields for a headerPolicy record.
 func headerPolicy(ctx *PolicyContext) []Breach {
@@ -18352,6 +18736,7 @@ func headerPolicy(ctx *PolicyContext) []Breach {
 	}
 	return ctx.FilterIgnored(breachs)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️istestorbenchmarkfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/isTestOrBenchmarkFile)
 // isTestOrBenchmarkFile holds the data fields for a isTestOrBenchmarkFile record.
 func isTestOrBenchmarkFile(file string) bool {
@@ -18361,11 +18746,13 @@ func isTestOrBenchmarkFile(file string) bool {
 	lowerPath := strings.ToLower(file)
 	return strings.Contains(lowerPath, "/tests/") || strings.Contains(lowerPath, ".tests/") || strings.Contains(lowerPath, "/test/") || strings.Contains(lowerPath, ".test/") || strings.Contains(lowerPath, "/benchmark/") || strings.Contains(lowerPath, ".benchmark/")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️isexporteddefinition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/isExportedDefinition)
 // isExportedDefinition holds the data fields for a isExportedDefinition record.
 func isExportedDefinition(name string, line string, langName string) bool {
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️requiresdefinitionrequirements](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/requiresDefinitionRequirements)
 // requiresDefinitionRequirements holds the data fields for a requiresDefinitionRequirements record.
 func requiresDefinitionRequirements(line string, langName string) bool {
@@ -18393,9 +18780,11 @@ func requiresDefinitionRequirements(line string, langName string) bool {
 	}
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🪨semiomarkdownlinkpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/semioMarkdownLinkPattern)
 // semioMarkdownLinkPattern holds the data fields for a semioMarkdownLinkPattern record.
 var semioMarkdownLinkPattern = regexp.MustCompile(`\[(.*?)\]\((repo://[^)\s]+)\)`)
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️parsesemioidentificationlink](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/parseSemioIdentificationLink)
 // parseSemioIdentificationLink holds the data fields for a parseSemioIdentificationLink record.
 func parseSemioIdentificationLink(commentText string, uriKind string) (string, string, bool) {
@@ -18420,6 +18809,7 @@ func parseSemioIdentificationLink(commentText string, uriKind string) (string, s
 	}
 	return idValue, uriValue, true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️sectionpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/sectionPolicy)
 // sectionPolicy holds the data fields for a sectionPolicy record.
 func sectionPolicy(ctx *PolicyContext) []Breach {
@@ -19129,6 +19519,7 @@ func commentPolicy(ctx *PolicyContext) []Breach {
 	}
 	return ctx.FilterIgnored(breachs)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️truncate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/truncate)
 // truncate holds the data fields for a truncate record.
 func truncate(s string, maxLen int) string {
@@ -19137,6 +19528,7 @@ func truncate(s string, maxLen int) string {
 	}
 	return s[:maxLen]
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️requirementspolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/requirementsPolicy)
 // requirementsPolicy holds the data fields for a requirementsPolicy record.
 func requirementsPolicy(ctx *PolicyContext) []Breach {
@@ -19247,6 +19639,7 @@ func requirementsPolicy(ctx *PolicyContext) []Breach {
 	}
 	return ctx.FilterIgnored(breachs)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️codepolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/codePolicy)
 // codePolicy holds the data fields for a codePolicy record.
 func codePolicy(ctx *PolicyContext) []Breach {
@@ -19259,6 +19652,7 @@ func codePolicy(ctx *PolicyContext) []Breach {
 	breachs = append(breachs, docsPolicy(ctx)...)
 	return breachs
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️emojipolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/emojiPolicy)
 // emojiPolicy holds the data fields for a emojiPolicy record.
 func emojiPolicy(ctx *PolicyContext) []Breach {
@@ -19316,6 +19710,7 @@ func emojiPolicy(ctx *PolicyContext) []Breach {
 	}
 	return breachs
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️docspolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/docsPolicy)
 // docsPolicy holds the data fields for a docsPolicy record.
 func docsPolicy(ctx *PolicyContext) []Breach {
@@ -19355,6 +19750,7 @@ func docsPolicy(ctx *PolicyContext) []Breach {
 	}
 	return breachs
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️devdocspolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/devDocsPolicy)
 // devDocsPolicy holds the data fields for a devDocsPolicy record.
 func devDocsPolicy(ctx *PolicyContext) []Breach {
@@ -19422,6 +19818,7 @@ func devDocsPolicy(ctx *PolicyContext) []Breach {
 	}
 	return ctx.FilterIgnored(breachs)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️sketchpadpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/sketchpadPolicy)
 // sketchpadPolicy holds the data fields for a sketchpadPolicy record.
 func sketchpadPolicy(ctx *PolicyContext) []Breach {
@@ -19520,6 +19917,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Breach {
 	}
 	return ctx.FilterIgnored(breachs)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️repopolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/repoPolicy)
 // repoPolicy holds the data fields for a repoPolicy record.
 func repoPolicy(ctx *PolicyContext) []Breach {
@@ -19570,6 +19968,7 @@ func repoPolicy(ctx *PolicyContext) []Breach {
 
 	return ctx.FilterIgnored(breachs)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️systempolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/systemPolicy)
 // systemPolicy holds the data fields for a systemPolicy record.
 func systemPolicy(ctx *PolicyContext) []Breach {
@@ -19590,6 +19989,7 @@ func systemPolicy(ctx *PolicyContext) []Breach {
 	}
 	return ctx.FilterIgnored(breachs)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️folderpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/folderPolicy)
 // folderPolicy holds the data fields for a folderPolicy record.
 func folderPolicy(ctx *PolicyContext) []Breach {
@@ -19644,17 +20044,20 @@ func folderPolicy(ctx *PolicyContext) []Breach {
 	_ = err
 	return breachs
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies✂️godfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/Godfile)
 // Godfile holds the data fields for a Godfile record.
 type Godfile struct {
 	Exact map[string]bool
 	Globs []string
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️isglobpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/isGlobPattern)
 // isGlobPattern holds the data fields for a isGlobPattern record.
 func isGlobPattern(value string) bool {
 	return strings.ContainsAny(value, "*?[{")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️loadgodfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/loadGodfile)
 // loadGodfile holds the data fields for a loadGodfile record.
 func loadGodfile() (*Godfile, error) {
@@ -19680,6 +20083,7 @@ func loadGodfile() (*Godfile, error) {
 	}
 	return result, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️godfilematchespath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/godfileMatchesPath)
 // godfileMatchesPath holds the data fields for a godfileMatchesPath record.
 func godfileMatchesPath(godfile *Godfile, relPath string) bool {
@@ -19698,6 +20102,7 @@ func godfileMatchesPath(godfile *Godfile, relPath string) bool {
 	}
 	return false
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️filepolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/filePolicy)
 // filePolicy holds the data fields for a filePolicy record.
 func filePolicy(ctx *PolicyContext) []Breach {
@@ -19733,6 +20138,7 @@ func filePolicy(ctx *PolicyContext) []Breach {
 	})
 	return breachs
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖policies🛠️semiopolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/semioPolicy)
 // semioPolicy validates that semio.* files do not import UI dependencies.
 func semioPolicy(ctx *PolicyContext) []Breach {
@@ -20057,6 +20463,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖codebase🛠️countsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/countSections)
 // countSections holds the data fields for a countSections record.
 func countSections(sections []Section) int {
@@ -20116,6 +20523,7 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖codebase🛠️extractfilepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/extractFilePath)
 // extractFilePath holds the data fields for a extractFilePath record.
 func extractFilePath(scope string) string {
@@ -20204,6 +20612,7 @@ func BuildCodebaseSections(ctx *CodebaseContext) []CodebaseSection {
 	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖codebase🛠️addsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/addSections)
 // addSections holds the data fields for a addSections record.
 func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, content string, sections []Section, parentPath string) {
@@ -20804,6 +21213,7 @@ func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, checkpoint string) []Co
 	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖codebase🛠️addsectionsforcontent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/addSectionsForContent)
 // addSectionsForContent holds the data fields for a addSectionsForContent record.
 func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, content string, sections []Section, parentPath string) {
@@ -20936,11 +21346,13 @@ func GetImportantFilePath(year, month, day int, slug string) string {
 func GetTicketJsonPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.json")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️normalizeticketkeyword](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/normalizeTicketKeyword)
 // normalizeTicketKeyword holds the data fields for a normalizeTicketKeyword record.
 func normalizeTicketKeyword(value string) string {
 	return strings.ToUpper(strings.TrimSpace(value))
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️hasticketkeyword](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/hasTicketKeyword)
 // hasTicketKeyword holds the data fields for a hasTicketKeyword record.
 func hasTicketKeyword(text, keyword string) bool {
@@ -20988,11 +21400,13 @@ func LatestTicket() (*Ticket, error) {
 	})
 	return &tickets[0], nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldcontinueticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldContinueTicket)
 // shouldContinueTicket holds the data fields for a shouldContinueTicket record.
 func shouldContinueTicket(prompt string) bool {
 	return hasTicketKeyword(prompt, "CONTINUE")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldskipticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldSkipTicket)
 // shouldSkipTicket holds the data fields for a shouldSkipTicket record.
 func shouldSkipTicket(prompt string) bool {
@@ -21211,6 +21625,7 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 	})
 	return ticket, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghgetmilestonetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghGetMilestoneTitle)
 // ghGetMilestoneTitle holds the data fields for a ghGetMilestoneTitle record.
 func ghGetMilestoneTitle(number int) (string, error) {
@@ -21220,6 +21635,7 @@ func ghGetMilestoneTitle(number int) (string, error) {
 	}
 	return strings.TrimSpace(stdout), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghcreateissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghCreateIssue)
 // ghCreateIssue holds the data fields for a ghCreateIssue record.
 func ghCreateIssue(title, body string, milestone *int) (string, error) {
@@ -21242,11 +21658,13 @@ func ghCreateIssue(title, body string, milestone *int) (string, error) {
 	}
 	return issueURL, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️buildtechnologylinkargs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/buildTechnologyLinkArgs)
 // buildTechnologyLinkArgs holds the data fields for a buildTechnologyLinkArgs record.
 func buildTechnologyLinkArgs(issueURL string) []string {
 	return []string{"project", "item-add", "2", "--owner", "usalu", "--url", issueURL}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghaddissuetoproject](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghAddIssueToProject)
 // ghAddIssueToProject holds the data fields for a ghAddIssueToProject record.
 func ghAddIssueToProject(issueURL string) {
@@ -21255,6 +21673,7 @@ func ghAddIssueToProject(issueURL string) {
 	}
 	ExecCommand("gh", buildTechnologyLinkArgs(issueURL), "")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghgetcurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghGetCurrentUser)
 // ghGetCurrentUser holds the data fields for a ghGetCurrentUser record.
 func ghGetCurrentUser() string {
@@ -21264,6 +21683,7 @@ func ghGetCurrentUser() string {
 	}
 	return strings.TrimSpace(stdout)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghassignissuetocurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghAssignIssueToCurrentUser)
 // ghAssignIssueToCurrentUser holds the data fields for a ghAssignIssueToCurrentUser record.
 func ghAssignIssueToCurrentUser(issueURL string) {
@@ -21346,6 +21766,7 @@ func ListFilesAtCheckpoint(checkpoint string) ([]string, error) {
 	files = filterGitIgnored(files)
 	return files, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatpromptheading](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatPromptHeading)
 // formatPromptHeading holds the data fields for a formatPromptHeading record.
 func formatPromptHeading(body string) string {
@@ -21354,6 +21775,7 @@ func formatPromptHeading(body string) string {
 	}
 	return "# 🤖 Prompt\n\n" + body
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatsummaryheading](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatSummaryHeading)
 // formatSummaryHeading holds the data fields for a formatSummaryHeading record.
 func formatSummaryHeading(body string) string {
@@ -21362,6 +21784,7 @@ func formatSummaryHeading(body string) string {
 	}
 	return "# 🔍 Summary\n\n" + body
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️replacesectioncontent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/replaceSectionContent)
 // replaceSectionContent holds the data fields for a replaceSectionContent record.
 func replaceSectionContent(content, sectionHeading, newContent string) string {
@@ -21428,6 +21851,7 @@ func normalizeTicketFileInput(filePath string) string {
 	}
 	return normalizeRepoPath(normalized)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖ticketfileresolution🛠️normalizeticketfileinputs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/Ticket%20File%20Resolution/d/i/normalizeTicketFileInputs)
 // normalizeTicketFileInputs holds the data fields for a normalizeTicketFileInputs record.
 func normalizeTicketFileInputs(files []string) []string {
@@ -21487,6 +21911,7 @@ func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
 	}
 	return filtered
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghaddcomment](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghAddComment)
 // ghAddComment holds the data fields for a ghAddComment record.
 func ghAddComment(issueURL, comment string) error {
@@ -21497,6 +21922,7 @@ func ghAddComment(issueURL, comment string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghaddlabels](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghAddLabels)
 // ghAddLabels holds the data fields for a ghAddLabels record.
 func ghAddLabels(issueURL string, labels []string) error {
@@ -21513,6 +21939,7 @@ func ghAddLabels(issueURL string, labels []string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghcloseissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghCloseIssue)
 // ghCloseIssue holds the data fields for a ghCloseIssue record.
 func ghCloseIssue(issueURL string) error {
@@ -21523,6 +21950,7 @@ func ghCloseIssue(issueURL string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghreopenissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghReopenIssue)
 // ghReopenIssue holds the data fields for a ghReopenIssue record.
 func ghReopenIssue(issueURL string) error {
@@ -21533,6 +21961,7 @@ func ghReopenIssue(issueURL string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghupdateissuetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghUpdateIssueTitle)
 // ghUpdateIssueTitle holds the data fields for a ghUpdateIssueTitle record.
 func ghUpdateIssueTitle(issueURL, title string) error {
@@ -21543,6 +21972,7 @@ func ghUpdateIssueTitle(issueURL, title string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghupdateissuebody](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghUpdateIssueBody)
 // ghUpdateIssueBody holds the data fields for a ghUpdateIssueBody record.
 func ghUpdateIssueBody(issueURL, body string) error {
@@ -21553,6 +21983,7 @@ func ghUpdateIssueBody(issueURL, body string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets✂️ghissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghIssue)
 // ghIssue holds the data fields for a ghIssue record.
 type ghIssue struct {
@@ -21568,6 +21999,7 @@ type ghIssue struct {
 		Name string `json:"name"`
 	} `json:"labels"`
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets✂️ghmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghMilestone)
 // ghMilestone holds the data fields for a ghMilestone record.
 type ghMilestone struct {
@@ -21578,11 +22010,13 @@ type ghMilestone struct {
 	DueOn       string `json:"due_on"`
 	State       string `json:"state"`
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets✂️ghlabel](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghLabel)
 // ghLabel holds the data fields for a ghLabel record.
 type ghLabel struct {
 	Name string `json:"name"`
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghgetissuedetails](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghGetIssueDetails)
 // ghGetIssueDetails holds the data fields for a ghGetIssueDetails record.
 func ghGetIssueDetails(issueURL string) (*ghIssue, error) {
@@ -21597,6 +22031,7 @@ func ghGetIssueDetails(issueURL string) (*ghIssue, error) {
 	}
 	return &issue, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghgetmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghGetMilestone)
 func ghGetMilestone(number int) (*ghMilestone, error) {
 	args := []string{"api", fmt.Sprintf("repos/:owner/:repo/milestones/%d", number)}
@@ -21610,6 +22045,7 @@ func ghGetMilestone(number int) (*ghMilestone, error) {
 	}
 	return &milestone, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghfindmilestonebytitle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghFindMilestoneByTitle)
 // ghFindMilestoneByTitle holds the data fields for a ghFindMilestoneByTitle record.
 func ghFindMilestoneByTitle(title string) (*ghMilestone, error) {
@@ -21636,6 +22072,7 @@ func ghFindMilestoneByTitle(title string) (*ghMilestone, error) {
 	}
 	return nil, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghupdateissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghUpdateIssueMilestone)
 // ghUpdateIssueMilestone holds the data fields for a ghUpdateIssueMilestone record.
 func ghUpdateIssueMilestone(issueURL, milestoneTitle string) error {
@@ -21649,6 +22086,7 @@ func ghUpdateIssueMilestone(issueURL, milestoneTitle string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghclearissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghClearIssueMilestone)
 // ghClearIssueMilestone holds the data fields for a ghClearIssueMilestone record.
 func ghClearIssueMilestone(issueURL string) error {
@@ -21671,6 +22109,7 @@ func ghClearIssueMilestone(issueURL string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghremovelabels](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghRemoveLabels)
 // ghRemoveLabels holds the data fields for a ghRemoveLabels record.
 func ghRemoveLabels(issueURL string, labels []string) error {
@@ -21687,6 +22126,7 @@ func ghRemoveLabels(issueURL string, labels []string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghlistissuesforlabelsync](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghListIssuesForLabelSync)
 // ghListIssuesForLabelSync holds the data fields for a ghListIssuesForLabelSync record.
 func ghListIssuesForLabelSync() ([]ghIssue, error) {
@@ -21701,6 +22141,7 @@ func ghListIssuesForLabelSync() ([]ghIssue, error) {
 	}
 	return issues, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghlistrepolabels](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghListRepoLabels)
 // ghListRepoLabels holds the data fields for a ghListRepoLabels record.
 func ghListRepoLabels() ([]ghLabel, error) {
@@ -21715,6 +22156,7 @@ func ghListRepoLabels() ([]ghLabel, error) {
 	}
 	return labels, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghcreaterepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghCreateRepoLabel)
 func ghCreateRepoLabel(name string) error {
 	if strings.TrimSpace(name) == "" {
@@ -21727,6 +22169,7 @@ func ghCreateRepoLabel(name string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghdeleterepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghDeleteRepoLabel)
 // ghDeleteRepoLabel holds the data fields for a ghDeleteRepoLabel record.
 func ghDeleteRepoLabel(name string) error {
@@ -21740,6 +22183,7 @@ func ghDeleteRepoLabel(name string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghsyncrepolabelcatalog](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghSyncRepoLabelCatalog)
 func ghSyncRepoLabelCatalog(validLabels map[string]bool) error {
 	labels, err := ghListRepoLabels()
@@ -21778,6 +22222,7 @@ func ghSyncRepoLabelCatalog(validLabels map[string]bool) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️extractmilestonenumber](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/extractMilestoneNumber)
 // extractMilestoneNumber holds the data fields for a extractMilestoneNumber record.
 func extractMilestoneNumber(milestoneURL string) int {
@@ -22097,6 +22542,7 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ticketmatcheskinds](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ticketMatchesKinds)
 // ticketMatchesKinds holds the data fields for a ticketMatchesKinds record.
 func ticketMatchesKinds(t *Ticket, opts StreamOptions) bool {
@@ -22182,6 +22628,7 @@ func LoadTechnologies() []Technology {
 	technologyCacheLoaded = true
 	return technologyCache
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️istechnologydir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/isTechnologyDir)
 // isTechnologyDir holds the data fields for a isTechnologyDir record.
 func isTechnologyDir(name string) bool {
@@ -22198,6 +22645,7 @@ func isTechnologyDir(name string) bool {
 	}
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️loadtechnologiesinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/loadTechnologiesInternal)
 // loadTechnologiesInternal holds the data fields for a loadTechnologiesInternal record.
 func loadTechnologiesInternal() []Technology {
@@ -22439,6 +22887,7 @@ func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️bundlematcheskinds](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/bundleMatchesKinds)
 // bundleMatchesKinds holds the data fields for a bundleMatchesKinds record.
 func bundleMatchesKinds(b Bundle, opts StreamOptions) bool {
@@ -22494,6 +22943,7 @@ func bundleMatchesKinds(b Bundle, opts StreamOptions) bool {
 
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️loadpackages](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/loadPackages)
 // loadPackages holds the data fields for a loadPackages record.
 func loadPackages(bundleRoot string) []Package {
@@ -22744,6 +23194,7 @@ func matchesFilter(name string, opts StreamOptions) bool {
 
 	return strings.Contains(target, pattern)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️matchesquery](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/matchesQuery)
 // matchesQuery holds the data fields for a matchesQuery record.
 func matchesQuery(text string, opts StreamOptions) bool {
@@ -22773,12 +23224,14 @@ func matchesQuery(text string, opts StreamOptions) bool {
 	}
 	return results.Total > 0
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets✂️queryableitem](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/queryableItem)
 // queryableItem holds the data fields for a queryableItem record.
 type queryableItem struct {
 	text string
 	idx  int
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️blevefilteritems](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/bleveFilterItems)
 // bleveFilterItems holds the data fields for a bleveFilterItems record.
 func bleveFilterItems(items []queryableItem, query string) map[int]bool {
@@ -22821,6 +23274,7 @@ func bleveFilterItems(items []queryableItem, query string) map[int]bool {
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldincludekind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldIncludeKind)
 // shouldIncludeKind holds the data fields for a shouldIncludeKind record.
 func shouldIncludeKind(kind string, opts StreamOptions) bool {
@@ -22844,6 +23298,7 @@ func shouldIncludeKind(kind string, opts StreamOptions) bool {
 	}
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldincludebundlekind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldIncludeBundleKind)
 // shouldIncludeBundleKind holds the data fields for a shouldIncludeBundleKind record.
 func shouldIncludeBundleKind(kind BundleKind, opts StreamOptions) bool {
@@ -22867,6 +23322,7 @@ func shouldIncludeBundleKind(kind BundleKind, opts StreamOptions) bool {
 	}
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldincludefolderkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldIncludeFolderKind)
 // shouldIncludeFolderKind holds the data fields for a shouldIncludeFolderKind record.
 func shouldIncludeFolderKind(kind FolderKind, opts StreamOptions) bool {
@@ -22890,6 +23346,7 @@ func shouldIncludeFolderKind(kind FolderKind, opts StreamOptions) bool {
 	}
 	return true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldincludedefinitionkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldIncludeDefinitionKind)
 // shouldIncludeDefinitionKind holds the data fields for a shouldIncludeDefinitionKind record.
 func shouldIncludeDefinitionKind(kind DefinitionKind, opts StreamOptions) bool {
@@ -23183,11 +23640,13 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️flattensections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/flattenSections)
 // flattenSections holds the data fields for a flattenSections record.
 func flattenSections(sections []Section) []Section {
 	return flattenSectionsWithPrefix(sections, "")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️flattensectionswithprefix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/flattenSectionsWithPrefix)
 // flattenSectionsWithPrefix holds the data fields for a flattenSectionsWithPrefix record.
 func flattenSectionsWithPrefix(sections []Section, prefix string) []Section {
@@ -23205,6 +23664,7 @@ func flattenSectionsWithPrefix(sections []Section, prefix string) []Section {
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️hydratesectionmetadata](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/hydrateSectionMetadata)
 // hydrateSectionMetadata holds the data fields for a hydrateSectionMetadata record.
 func hydrateSectionMetadata(s *Section, filePath string, prefix string) {
@@ -23368,6 +23828,7 @@ func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	}
 	return bestMatch
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatlinemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatLineMetrics)
 // formatLineMetrics holds the data fields for a formatLineMetrics record.
 func formatLineMetrics(metrics *LineMetrics) string {
@@ -23386,6 +23847,7 @@ func formatLineMetrics(metrics *LineMetrics) string {
 	}
 	return " " + strings.Join(parts, " ")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatpathwithbundle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatPathWithBundle)
 // formatPathWithBundle holds the data fields for a formatPathWithBundle record.
 func formatPathWithBundle(path string, bundles []Bundle) string {
@@ -23412,6 +23874,7 @@ func formatPathWithBundle(path string, bundles []Bundle) string {
 	}
 	return bundleLabel + "/" + path
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatsemanticpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatSemanticPath)
 // formatSemanticPath holds the data fields for a formatSemanticPath record.
 func formatSemanticPath(path string, bundles []Bundle) string {
@@ -23419,6 +23882,7 @@ func formatSemanticPath(path string, bundles []Bundle) string {
 	remainder := path[len(filePath):]
 	return formatPathWithBundle(filePath, bundles) + remainder
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatdeletedpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatDeletedPath)
 // formatDeletedPath holds the data fields for a formatDeletedPath record.
 func formatDeletedPath(path string, bundles []Bundle) string {
@@ -23430,6 +23894,7 @@ func formatDeletedPath(path string, bundles []Bundle) string {
 	}
 	return base + "<del>" + remainder + "</del>"
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️commonprefixlength](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/commonPrefixLength)
 // commonPrefixLength holds the data fields for a commonPrefixLength record.
 func commonPrefixLength(a, b string) int {
@@ -23446,6 +23911,7 @@ func commonPrefixLength(a, b string) int {
 	}
 	return idx
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️commonsuffixlength](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/commonSuffixLength)
 // commonSuffixLength holds the data fields for a commonSuffixLength record.
 func commonSuffixLength(a, b string, prefix int) int {
@@ -23462,6 +23928,7 @@ func commonSuffixLength(a, b string, prefix int) int {
 	}
 	return idx
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatrenamedelta](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatRenameDelta)
 // formatRenameDelta holds the data fields for a formatRenameDelta record.
 func formatRenameDelta(from, to string) string {
@@ -23474,12 +23941,14 @@ func formatRenameDelta(from, to string) string {
 	toMiddle := to[prefix : len(to)-suffix]
 	return from[:prefix] + "<del>" + fromMiddle + "</del>" + toMiddle + from[len(from)-suffix:]
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatrenamepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatRenamePath)
 func formatRenamePath(from, to string, bundles []Bundle) string {
 	fromFormatted := formatSemanticPath(from, bundles)
 	toFormatted := formatSemanticPath(to, bundles)
 	return formatRenameDelta(fromFormatted, toFormatted)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️appenddifflines](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/appendDiffLines)
 // appendDiffLines holds the data fields for a appendDiffLines record.
 func appendDiffLines(lines *[]string, diffSet TicketDiffSet, iconAdded, iconChanged, iconRemoved, iconRenamed string, bundles []Bundle, formatter func(string) string, renameFormatter func(string, string) string) {
@@ -23512,6 +23981,7 @@ func appendDiffLines(lines *[]string, diffSet TicketDiffSet, iconAdded, iconChan
 		}
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️generatemetricscomment](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/generateMetricsComment)
 // generateMetricsComment holds the data fields for a generateMetricsComment record.
 func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
@@ -24297,6 +24767,7 @@ func ToolFolderTree(path string) ToolResult {
 	printTree(output, absPath, "")
 	return ToolResult{Output: *output}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️printtree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/printTree)
 // printTree holds the data fields for a printTree record.
 func printTree(output *CommandOutput, dir, prefix string) {
@@ -24456,6 +24927,7 @@ func DefinitionHeaderUri(filePath string, sectionPath string, name string) strin
 	data := map[string]interface{}{"id": val}
 	return GetArtifactURI("definition", data)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🛠️generatefileheader](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/generateFileHeader)
 // generateFileHeader holds the data fields for a generateFileHeader record.
 func generateFileHeader(path string, language LanguagePlugin) string {
@@ -25452,6 +25924,7 @@ type ExportResult struct {
 	Sections     int    `json:"sections"`
 	Definitions  int    `json:"definitions"`
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️folderkindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/folderKindToInt)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️folderkindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/folderKindToInt)
 func folderKindToInt(k FolderKind) int {
@@ -25462,6 +25935,7 @@ func folderKindToInt(k FolderKind) int {
 		return 0
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️technologykindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/technologyKindToInt)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️technologykindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/technologyKindToInt)
 func technologyKindToInt(k TechnologyKind) int {
@@ -25476,6 +25950,7 @@ func technologyKindToInt(k TechnologyKind) int {
 		return 0
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️bundlekindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/bundleKindToInt)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️bundlekindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/bundleKindToInt)
 func bundleKindToInt(k BundleKind) int {
@@ -25498,6 +25973,7 @@ func bundleKindToInt(k BundleKind) int {
 		return 0
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️filekindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/fileKindToInt)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️filekindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/fileKindToInt)
 func fileKindToInt(kind string) int {
@@ -25522,6 +25998,7 @@ func fileKindToInt(kind string) int {
 		return 0
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️definitionkindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/definitionKindToInt)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️definitionkindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/definitionKindToInt)
 func definitionKindToInt(k DefinitionKind) int {
@@ -25538,6 +26015,7 @@ func definitionKindToInt(k DefinitionKind) int {
 		return 0
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️seedkindtables](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/seedKindTables)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️seedkindtables](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/seedKindTables)
 func seedKindTables(tx *sql.Tx) error {
@@ -25709,6 +26187,7 @@ func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	}
 	return result, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportfoldersnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFoldersNew)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportfoldersnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFoldersNew)
 func exportFoldersNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs map[string]int64) (int, error) {
@@ -25767,6 +26246,7 @@ func exportFoldersNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs
 	}
 	return len(folders), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️extractreadmesummary](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/extractReadmeSummary)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️extractreadmesummary](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/extractReadmeSummary)
 func extractReadmeSummary(content string) string {
@@ -25790,6 +26270,7 @@ func extractReadmeSummary(content string) string {
 	}
 	return strings.TrimSpace(strings.Join(summaryLines, "\n"))
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exporttechnologiesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportTechnologiesNew)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exporttechnologiesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportTechnologiesNew)
 func exportTechnologiesNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int64, technologyIDs map[string]int64) (int, error) {
@@ -25824,6 +26305,7 @@ func exportTechnologiesNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int
 	}
 	return len(technologies), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportbundlesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportBundlesNew)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportbundlesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportBundlesNew)
 func exportBundlesNew(tx *sql.Tx, ctx RepoContext, technologyIDs map[string]int64, folderIDs map[string]int64) (int, error) {
@@ -25863,6 +26345,7 @@ func exportBundlesNew(tx *sql.Tx, ctx RepoContext, technologyIDs map[string]int6
 	}
 	return count, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportfilesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFilesNew)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportfilesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFilesNew)
 func exportFilesNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs map[string]int64, fileIDs map[string]int64) (int, error) {
@@ -25905,6 +26388,7 @@ func exportFilesNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs m
 	}
 	return len(files), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportsectionsnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsNew)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportsectionsnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsNew)
 func exportSectionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, sectionIDs map[string]int64) (int, error) {
@@ -25939,6 +26423,7 @@ func exportSectionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, se
 	}
 	return totalSections, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportsectionsrecursivenew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsRecursiveNew)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportsectionsrecursivenew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsRecursiveNew)
 func exportSectionsRecursiveNew(stmt *sql.Stmt, sections []Section, fileID int64, filePath string, content string, commentPrefix string, sectionIDs map[string]int64) (int, error) {
@@ -25972,6 +26457,7 @@ func exportSectionsRecursiveNew(stmt *sql.Stmt, sections []Section, fileID int64
 	}
 	return count, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportdefinitionsnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportDefinitionsNew)
 // [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportdefinitionsnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportDefinitionsNew)
 func exportDefinitionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, sectionIDs map[string]int64) (int, error) {
@@ -26151,6 +26637,7 @@ func NewResolver(rootDir string) *Resolver {
 func NewResolverWithContext(rootDir string, ctx RepoContext) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: ctx}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖graphqlresolver🛠️context](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver/d/i/context)
 // context holds the data fields for a context record.
 func (r *Resolver) context() RepoContext {
@@ -26196,6 +26683,7 @@ func NewRepoContext(rootDir string) RepoContext {
 	ctx.bundles = LoadBundles()
 	return ctx
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️managementprov](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ManagementProv)
 // ManagementProv holds the data fields for a ManagementProv record.
 func (c *repoContext) ManagementProv() ManagementProvider { return c.managementProvider }
@@ -27087,6 +27575,7 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 	}
 	return &FixResult{Fixed: fixed, Remaining: len(remaining), Breachs: remainingPtrs}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️replacementidentificationline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/replacementIdentificationLine)
 func replacementIdentificationLine(existingLine string, commentPrefix string, idValue string, uriValue string) string {
 	link := "[" + idValue + "](" + uriValue + ")"
@@ -27122,6 +27611,7 @@ func inferDefinitionKindFromLine(line string) DefinitionKind {
 		return DefinitionKindImplementation
 	}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️applyautofixes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/applyAutofixes)
 func applyAutofixes(file string, breachs []Breach) (int, error) {
 	absPath := filepath.Join(rootDir, file)
@@ -28583,6 +29073,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 	}
 	return fixed, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️applysystemautofixes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/applySystemAutofixes)
 // applySystemAutofixes holds the data fields for a applySystemAutofixes record.
 func applySystemAutofixes(breachs []Breach) (int, error) {
@@ -29026,6 +29517,7 @@ func (c *repoContext) ContributorRemove(github string) error {
 	})
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️updategoalmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/updateGoalMilestone)
 func updateGoalMilestone(goal *Goal, number int) (int, error) {
 	repoUrl, err := getGhRepoUrl()
@@ -29044,6 +29536,7 @@ func updateGoalMilestone(goal *Goal, number int) (int, error) {
 	}
 	return number, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ensuregoalmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ensureGoalMilestone)
 // ensureGoalMilestone holds the data fields for a ensureGoalMilestone record.
 func ensureGoalMilestone(goal *Goal) (*ManagementMilestone, error) {
@@ -29333,6 +29826,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 	fmt.Println("GitHub sync completed.")
 	return true, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🪨](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/_)
 // _ holds the data fields for a _ record.
 var _ RepoContext = (*repoContext)(nil)
@@ -29592,6 +30086,7 @@ func (c *defaultContext) TodoChange(input TodoChangeInput) (*Todo, error) { retu
 // TodoDelete performs the todo delete operation on the default context.
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️tododelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TodoDelete)
 func (c *defaultContext) TodoDelete(id string) (bool, error) { return false, nil }
+
 // [🧰repo⌨️cli💻main🔖types🔖defaultcontext🪨](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/_)
 // _ holds the data fields for a _ record.
 var _ RepoContext = (*defaultContext)(nil)
@@ -32391,6 +32886,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖queryresolvers✂️queryresolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/queryResolver)
 // queryResolver holds the data fields for a queryResolver record.
 type queryResolver struct{ *Resolver }
@@ -33852,6 +34348,7 @@ func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	}
 	return make(map[string]interface{})
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️getstringarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/getStringArg)
 func getStringArg(args map[string]interface{}, key string) (string, bool, error) {
 	value, ok := args[key]
@@ -33877,6 +34374,7 @@ func requireStringArg(args map[string]interface{}, key string) (string, error) {
 	}
 	return value, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️getintarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/getIntArg)
 // getIntArg holds the data fields for a getIntArg record.
 func getIntArg(args map[string]interface{}, key string) (int, bool, error) {
@@ -33890,6 +34388,7 @@ func getIntArg(args map[string]interface{}, key string) (int, bool, error) {
 	}
 	return int(number), true, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️requireintarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/requireIntArg)
 // requireIntArg holds the data fields for a requireIntArg record.
 func requireIntArg(args map[string]interface{}, key string) (int, error) {
@@ -33924,6 +34423,7 @@ func getStringSliceArg(args map[string]interface{}, key string) ([]string, bool,
 	}
 	return result, true, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️getboolarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/getBoolArg)
 // getBoolArg holds the data fields for a getBoolArg record.
 func getBoolArg(args map[string]interface{}, key string) (bool, bool, error) {
@@ -33967,6 +34467,7 @@ func requireFolderPath(path string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖paths🛠️requirefiletargetpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Paths/d/i/requireFileTargetPath)
 // requireFileTargetPath holds the data fields for a requireFileTargetPath record.
 func requireFileTargetPath(path string) error {
@@ -33982,6 +34483,7 @@ func requireFileTargetPath(path string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖paths🛠️requirefoldertargetpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Paths/d/i/requireFolderTargetPath)
 // requireFolderTargetPath holds the data fields for a requireFolderTargetPath record.
 func requireFolderTargetPath(path string) error {
@@ -34016,6 +34518,7 @@ func jsonToYaml(jsonStr string) (string, error) {
 	}
 	return string(yamlBytes), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖graphql🛠️gql](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/GraphQL/d/i/gql)
 // gql holds the data fields for a gql record.
 func gql(query string, variables map[string]interface{}) (string, error) {
@@ -34065,6 +34568,7 @@ func handleEnhancePrompt(ctx context.Context, request mcp.GetPromptRequest) (*mc
 		},
 	), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️handlerefactorprompt](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/handleRefactorPrompt)
 func handleRefactorPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
@@ -34095,6 +34599,7 @@ func handleTestPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.G
 		},
 	), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️handlecomplyprompt](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/handleComplyPrompt)
 // handleComplyPrompt holds the data fields for a handleComplyPrompt record.
 func handleComplyPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
@@ -34110,6 +34615,7 @@ func handleComplyPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp
 		},
 	), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️analyze](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/analyze)
 func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -34123,6 +34629,7 @@ func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	result := ToolAnalyze(scope, nil)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️fix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/fix)
 func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -34136,6 +34643,7 @@ func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult,
 	result := ToolFix(scope)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️policycheck](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/policyCheck)
 // policyCheck holds the data fields for a policyCheck record.
 func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34154,6 +34662,7 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	result := ToolPolicyCheck(id, scope)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketOpen)
 // ticketOpen holds the data fields for a ticketOpen record.
 func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34171,6 +34680,7 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	result := ToolTicketOpen(title, prompt, llm, client, draft, noManagement, goal, parent, noManagement, issue)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketread](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketRead)
 func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -34256,6 +34766,7 @@ func resolveTicketForReopen(path string) (int, int, int, string, error) {
 	}
 	return ticket.Year, ticket.Month, ticket.Day, ticket.Slug, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketClose)
 // ticketClose holds the data fields for a ticketClose record.
 func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34295,6 +34806,7 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, "", "", noManagement)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️draftdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/draftDelete)
 // draftDelete holds the data fields for a draftDelete record.
 func draftDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34306,6 +34818,7 @@ func draftDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	result := ToolDraftDelete(slug)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️todocreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/todoCreate)
 func todoCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -34327,6 +34840,7 @@ func todoCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	}
 	return textResult(payload), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️tododelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/todoDelete)
 func todoDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -34345,6 +34859,7 @@ func todoDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	}
 	return textResult(payload), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️goalopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/goalOpen)
 // goalOpen holds the data fields for a goalOpen record.
 func goalOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34362,6 +34877,7 @@ func goalOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	result := ToolGoalCreate(title, description, prompt, dueDate, llm, client, noManagement, parent, milestone)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️goalclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/goalClose)
 // goalClose holds the data fields for a goalClose record.
 func goalClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34379,6 +34895,7 @@ func goalClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolR
 	result := ToolGoalClose(id, summary, noManagement)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️goalreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/goalReopen)
 func goalReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -34406,6 +34923,7 @@ func goalReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	result := ToolGoalReopen(id, prompt, llm, client, title, description, dueDate, noManagement)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️export](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/export)
 // export holds the data fields for a export record.
 func export(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34426,6 +34944,7 @@ func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	result := ToolContributorAdd(github)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️contributorremove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/contributorRemove)
 // contributorRemove holds the data fields for a contributorRemove record.
 func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34437,6 +34956,7 @@ func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	result := ToolContributorRemove(github)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️foldercreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/folderCreate)
 // folderCreate holds the data fields for a folderCreate record.
 func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34476,6 +34996,7 @@ func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	result := ToolFolderDelete(path)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️filecreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/fileCreate)
 // fileCreate holds the data fields for a fileCreate record.
 func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34551,6 +35072,7 @@ func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	result := ToolSectionMove(file, oldName, newName)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️sectiondelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/sectionDelete)
 // sectionDelete holds the data fields for a sectionDelete record.
 func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34566,6 +35088,7 @@ func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	result := ToolSectionDelete(file, section)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️sectionintegrate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/sectionIntegrate)
 func sectionIntegrate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -34608,6 +35131,7 @@ func sectionExtract(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	result := ToolExtract(sourceFile, sourceSection, targetFile)
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️artifactmove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/artifactMove)
 // artifactMove holds the data fields for a artifactMove record.
 func artifactMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34666,6 +35190,7 @@ func artifactMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 
 	return toolResultToMCP(result)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️mcptree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/mcpTree)
 // mcpTree holds the data fields for a mcpTree record.
 func mcpTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -34678,6 +35203,7 @@ func mcpTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	tree = FilterMonorepoTree(tree, &filter)
 	return textResult(RenderMonorepoTreeMarkdown(tree)), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️graphqlquery](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/graphqlQuery)
 func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
@@ -34769,6 +35295,7 @@ func handleBundlesResource(ctx context.Context, request mcp.ReadResourceRequest)
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlebundleresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleBundleResource)
 // handleBundleResource holds the data fields for a handleBundleResource record.
 func handleBundleResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -34809,6 +35336,7 @@ func handleBundleResource(ctx context.Context, request mcp.ReadResourceRequest) 
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefoldersresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFoldersResource)
 func handleFoldersResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Folders { repo { folders { id path name kind } } }`
@@ -34828,6 +35356,7 @@ func handleFoldersResource(ctx context.Context, request mcp.ReadResourceRequest)
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefolderresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFolderResource)
 func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
@@ -34849,6 +35378,7 @@ func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) 
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefilesresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFilesResource)
 func handleFilesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Files { repo { files { id path name kind extension } } }`
@@ -34868,6 +35398,7 @@ func handleFilesResource(ctx context.Context, request mcp.ReadResourceRequest) (
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefileresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFileResource)
 // handleFileResource holds the data fields for a handleFileResource record.
 func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -34890,6 +35421,7 @@ func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlesectionsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleSectionsResource)
 func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
@@ -34911,6 +35443,7 @@ func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlesectionresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleSectionResource)
 // handleSectionResource holds the data fields for a handleSectionResource record.
 func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -34945,6 +35478,7 @@ func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest)
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handledefinitionsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleDefinitionsResource)
 // handleDefinitionsResource holds the data fields for a handleDefinitionsResource record.
 func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -34967,6 +35501,7 @@ func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequ
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handledefinitionresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleDefinitionResource)
 // handleDefinitionResource holds the data fields for a handleDefinitionResource record.
 func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -34998,6 +35533,7 @@ func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceReque
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handleticketsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleTicketsResource)
 // handleTicketsResource holds the data fields for a handleTicketsResource record.
 func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35018,6 +35554,7 @@ func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest)
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handleticketresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleTicketResource)
 // handleTicketResource holds the data fields for a handleTicketResource record.
 func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35048,6 +35585,7 @@ func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) 
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlegoalsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleGoalsResource)
 func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	goals, err := ListGoals()
@@ -35070,6 +35608,7 @@ func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) (
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlegoalresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleGoalResource)
 // handleGoalResource holds the data fields for a handleGoalResource record.
 func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35104,6 +35643,7 @@ func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 	}
 	return nil, fmt.Errorf("goal not found: %s", goalPath)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlepoliciesresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handlePoliciesResource)
 // handlePoliciesResource holds the data fields for a handlePoliciesResource record.
 func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35124,6 +35664,7 @@ func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlepolicyresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handlePolicyResource)
 // handlePolicyResource holds the data fields for a handlePolicyResource record.
 func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35148,6 +35689,7 @@ func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) 
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlestatutesresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleStatutesResource)
 // handleStatutesResource holds the data fields for a handleStatutesResource record.
 func handleStatutesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35168,6 +35710,7 @@ func handleStatutesResource(ctx context.Context, request mcp.ReadResourceRequest
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlestatuteresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleStatuteResource)
 // handleStatuteResource holds the data fields for a handleStatuteResource record.
 func handleStatuteResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35213,6 +35756,7 @@ func handleContributorsResource(ctx context.Context, request mcp.ReadResourceReq
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlecontributorresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleContributorResource)
 // handleContributorResource holds the data fields for a handleContributorResource record.
 func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35237,6 +35781,7 @@ func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequ
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlecheckpointsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleCheckpointsResource)
 // handleCheckpointsResource holds the data fields for a handleCheckpointsResource record.
 func handleCheckpointsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -35257,6 +35802,7 @@ func handleCheckpointsResource(ctx context.Context, request mcp.ReadResourceRequ
 		},
 	}, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlecheckpointresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleCheckpointResource)
 func handleCheckpointResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	return nil, fmt.Errorf("checkpoint resource not implemented")
@@ -35413,6 +35959,7 @@ func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	files = filterGitIgnored(files)
 	return files, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️normalizerepopath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/normalizeRepoPath)
 func normalizeRepoPath(path string) string {
 	normalized := NormalizePath(path)
@@ -35448,6 +35995,7 @@ func isRepoExcludedPath(path string) bool {
 	}
 	return false
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️filterconsideredfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/filterConsideredFiles)
 // filterConsideredFiles holds the data fields for a filterConsideredFiles record.
 func filterConsideredFiles(files []string) []string {
@@ -35630,6 +36178,7 @@ func GetBundleByPath(path string) *Bundle {
 	}
 	return bestMatch
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️findbundleinfo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/findBundleInfo)
 // findBundleInfo holds the data fields for a findBundleInfo record.
 func findBundleInfo(path string) (name, root string, ok bool) {
@@ -35653,6 +36202,7 @@ func findBundleInfo(path string) (name, root string, ok bool) {
 	}
 	return "", "", false
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️resolveparentidfrompath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/resolveParentIDFromPath)
 // resolveParentIDFromPath holds the data fields for a resolveParentIDFromPath record.
 func resolveParentIDFromPath(dirPath string) string {
@@ -35751,6 +36301,7 @@ func buildFolderID(path string, bundleID *string) string {
 	}
 	return parentID + emojiText(EmojiFolderRequired) + Flat(name)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️buildfileid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/buildFileID)
 // buildFileID holds the data fields for a buildFileID record.
 func buildFileID(path string, bundleID *string) string {
@@ -35774,6 +36325,7 @@ func buildFileID(path string, bundleID *string) string {
 	}
 	return GetArtifactID("file", map[string]interface{}{"path": normalized, "kind": kind, "parentId": parentID})
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️buildsectionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/buildSectionID)
 // buildSectionID holds the data fields for a buildSectionID record.
 func buildSectionID(fileID string, sectionPath []string) string {
@@ -35795,6 +36347,7 @@ func buildSectionID(fileID string, sectionPath []string) string {
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️istestfunctionname](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/isTestFunctionName)
 // isTestFunctionName holds the data fields for a isTestFunctionName record.
 func isTestFunctionName(name string) bool {
@@ -35810,6 +36363,7 @@ func isTestFunctionName(name string) bool {
 	}
 	return false
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️builddefinitionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/buildDefinitionID)
 // buildDefinitionID holds the data fields for a buildDefinitionID record.
 func buildDefinitionID(fileID string, sectionPath []string, name string, kind DefinitionKind) string {
@@ -35861,6 +36415,7 @@ func FlattenSections(sections []Section) []Section {
 	flatten(sections)
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️computesectionlinemap](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/computeSectionLineMap)
 // computeSectionLineMap holds the data fields for a computeSectionLineMap record.
 func computeSectionLineMap(sections []Section, diffLines []int, parentPath string) map[string][]int {
@@ -35887,6 +36442,7 @@ func computeSectionLineMap(sections []Section, diffLines []int, parentPath strin
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️computeaffectedsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/computeAffectedSections)
 func computeAffectedSections(filePath string, sections []Section, defs []DefinitionRange, addedLineMap map[string][]int, removedLineMap map[string][]int, parentPath string) []TicketSection {
 	var result []TicketSection
@@ -35934,6 +36490,7 @@ func computeAffectedSections(filePath string, sections []Section, defs []Definit
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️setdifference](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/setDifference)
 // setDifference holds the data fields for a setDifference record.
 func setDifference(a, b []int) []int {
@@ -35949,6 +36506,7 @@ func setDifference(a, b []int) []int {
 	}
 	return diff
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️setintersection](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/setIntersection)
 // setIntersection holds the data fields for a setIntersection record.
 func setIntersection(a, b []int) []int {
@@ -35964,6 +36522,7 @@ func setIntersection(a, b []int) []int {
 	}
 	return intersection
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️uniquestrings](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/uniqueStrings)
 // uniqueStrings holds the data fields for a uniqueStrings record.
 func uniqueStrings(strs []string) []string {
@@ -35977,6 +36536,7 @@ func uniqueStrings(strs []string) []string {
 	}
 	return result
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️computelinesinrange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/computeLinesInRange)
 func computeLinesInRange(changedLines []int, startLine, endLine int) []int {
 	var result []int
@@ -36200,6 +36760,7 @@ func ParseContributorIdentity(line string) (name, email string, ok bool) {
 	}
 	return strings.TrimSpace(m[1]), strings.TrimSpace(m[2]), true
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🛠️findsectionfordefinition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/findSectionForDefinition)
 func findSectionForDefinition(sections []Section, startLine, endLine int, prefix string) string {
 	for _, s := range sections {
@@ -36938,6 +37499,7 @@ type HookResultBase struct {
 // IsAllowed holds the data fields for a IsAllowed record.
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️isallowed](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/IsAllowed)
 func (h HookResultBase) IsAllowed() bool { return h.Allowed }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️getmessage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/GetMessage)
 // GetMessage holds the data fields for a GetMessage record.
 func (h HookResultBase) GetMessage() string { return h.Message }
@@ -37447,6 +38009,7 @@ func extractTestStartingFromInput(input json.RawMessage, toolArgs string) (labs 
 
 	return nil, tests, timeout
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extracttestendedfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractTestEndedFromInput)
 // extractTestEndedFromInput holds the data fields for a extractTestEndedFromInput record.
 func extractTestEndedFromInput(input json.RawMessage) (files []string, succeeded []string, failed []string) {
@@ -37506,6 +38069,7 @@ func extractTestEndedFromInput(input json.RawMessage) (files []string, succeeded
 	}
 	return files, succeeded, failed
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractbuildbundlesfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractBuildBundlesFromInput)
 func extractBuildBundlesFromInput(input json.RawMessage, toolArgs string) []string {
 	var toolInput map[string]interface{}
@@ -37570,6 +38134,7 @@ func extractBuildEndedFromInput(input json.RawMessage) (succeeded []string, fail
 	}
 	return succeeded, failed
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcodeeditfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCodeEditFromInput)
 // extractCodeEditFromInput holds the data fields for a extractCodeEditFromInput record.
 func extractCodeEditFromInput(input json.RawMessage, toolArgs string) (path string, old string, new_ string, all bool) {
@@ -37685,6 +38250,7 @@ func extractTerminalEndedFromInput(input json.RawMessage) (command string, pid s
 	}
 	return command, pid, terminated, stdout, stderr
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractchatfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractChatFromInput)
 func extractChatFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
@@ -37757,6 +38323,7 @@ func extractReportFromInput(input json.RawMessage) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcheckpointmessagefrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCheckpointMessageFromInput)
 func extractCheckpointMessageFromInput(input json.RawMessage, repoRoot string) string {
 	if len(input) > 0 {
@@ -37778,6 +38345,7 @@ func extractCheckpointMessageFromInput(input json.RawMessage, repoRoot string) s
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcheckpointshafrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCheckpointSHAFromInput)
 // extractCheckpointSHAFromInput holds the data fields for a extractCheckpointSHAFromInput record.
 func extractCheckpointSHAFromInput(input json.RawMessage) string {
@@ -37793,6 +38361,7 @@ func extractCheckpointSHAFromInput(input json.RawMessage) string {
 	}
 	return GetGitCheckpoint()
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️normalizeparentsessionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/normalizeParentSessionID)
 // normalizeParentSessionID holds the data fields for a normalizeParentSessionID record.
 func normalizeParentSessionID(parent string) string {
@@ -37805,6 +38374,7 @@ func normalizeParentSessionID(parent string) string {
 	}
 	return parent
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractparentfrommap](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractParentFromMap)
 func extractParentFromMap(data map[string]interface{}) string {
 	for _, key := range []string{"parent", "parentInfo", "parent_info", "parentSessionId", "parent_session_id", "parentId", "parent_id"} {
@@ -37817,6 +38387,7 @@ func extractParentFromMap(data map[string]interface{}) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractparentfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractParentFromInput)
 func extractParentFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
@@ -37845,6 +38416,7 @@ func extractParentFromInput(input json.RawMessage) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolveparentsessionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveParentSessionID)
 // resolveParentSessionID holds the data fields for a resolveParentSessionID record.
 func resolveParentSessionID(parentInfo string, input json.RawMessage) string {
@@ -37898,6 +38470,7 @@ func extractTranscriptFromInput(input json.RawMessage) string {
 	}
 	return findNestedStringValue(data, "transcript", "transcript_path", "transcriptPath", "log_path", "logPath")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractmessageidfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractMessageIDFromInput)
 // extractMessageIDFromInput holds the data fields for a extractMessageIDFromInput record.
 func extractMessageIDFromInput(input json.RawMessage) string {
@@ -37915,6 +38488,7 @@ func extractMessageIDFromInput(input json.RawMessage) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractparentmessageidfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractParentMessageIDFromInput)
 func extractParentMessageIDFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
@@ -37945,6 +38519,7 @@ func normalizeHookPath(path string) string {
 	path = NormalizePath(path)
 	return strings.TrimPrefix(path, "./")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️ensureticketagent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/ensureTicketAgent)
 // ensureTicketAgent holds the data fields for a ensureTicketAgent record.
 func ensureTicketAgent(ticket *Ticket, sessionID string, client string) int {
@@ -38153,6 +38728,7 @@ func ValidateHookEvent(s string) (HookEvent, error) {
 	}
 	return "", fmt.Errorf("invalid hook event %q, valid events: %s", s, strings.Join(hookEventStrings(), ", "))
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️hookeventstrings](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/hookEventStrings)
 func hookEventStrings() []string {
 	result := make([]string, len(AllHookEvents))
@@ -38347,6 +38923,7 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 	return cmd
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️configuregithooks](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/configureGitHooks)
 // configureGitHooks holds the data fields for a configureGitHooks record.
 func configureGitHooks(repoRoot string) error {
@@ -38394,6 +38971,7 @@ cd "$repo_root"
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️unsetlocalcorehookspath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/unsetLocalCoreHooksPath)
 // unsetLocalCoreHooksPath holds the data fields for a unsetLocalCoreHooksPath record.
 func unsetLocalCoreHooksPath(repoRoot string) error {
@@ -38414,6 +38992,7 @@ func unsetLocalCoreHooksPath(repoRoot string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🪨getclienthookmappings](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/getClientHookMappings)
 func getClientHookMappings() []ClientHookMapping {
 	var mappings []ClientHookMapping
@@ -38469,6 +39048,7 @@ func generateCopilotConfig(repoRoot string) (string, error) {
 	}
 	return string(out) + "\n", nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatecursorconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateCursorConfig)
 // generateCursorConfig holds the data fields for a generateCursorConfig record.
 func generateCursorConfig(repoRoot string) (string, error) {
@@ -38544,6 +39124,7 @@ func generateCursorConfig(repoRoot string) (string, error) {
 	}
 	return string(out) + "\n", nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatewindsurfconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateWindsurfConfig)
 func generateWindsurfConfig(repoRoot string) (string, error) {
 	c := "./repo/cli/cli"
@@ -38587,6 +39168,7 @@ func generateWindsurfConfig(repoRoot string) (string, error) {
 	}
 	return string(out) + "\n", nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generateclaudecodeconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateClaudeCodeConfig)
 // generateClaudeCodeConfig holds the data fields for a generateClaudeCodeConfig record.
 func generateClaudeCodeConfig(repoRoot string) (string, error) {
@@ -38647,6 +39229,7 @@ func generateClaudeCodeConfig(repoRoot string) (string, error) {
 	}
 	return string(out) + "\n", nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatedroidconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateDroidConfig)
 // generateDroidConfig holds the data fields for a generateDroidConfig record.
 func generateDroidConfig(repoRoot string) (string, error) {
@@ -38670,6 +39253,7 @@ func generateDroidConfig(repoRoot string) (string, error) {
 	}
 	return string(out) + "\n", nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatekiroconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateKiroConfig)
 // generateKiroConfig holds the data fields for a generateKiroConfig record.
 func generateKiroConfig(repoRoot string) (string, error) {
@@ -38719,12 +39303,15 @@ var updateCmd = &cobra.Command{
 	Short: "Update dependencies (npm, python, rust, go, dotnet)",
 	RunE:  runUpdate,
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🪨updatedryrun](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateDryRun)
 // updateDryRun holds the data fields for a updateDryRun record.
 var updateDryRun bool
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🪨updateapply](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateApply)
 // updateApply holds the data fields for a updateApply record.
 var updateApply bool
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️init](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/init)
 // init holds the data fields for a init record.
 func init() {
@@ -38779,6 +39366,7 @@ type Constraint struct {
 	Dependency string
 	MaxMajor   int
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️runupdate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/runUpdate)
 // runUpdate holds the data fields for a runUpdate record.
 func runUpdate(cmd *cobra.Command, args []string) error {
@@ -38853,6 +39441,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	fmt.Println("\n=== Update Complete ===")
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️loadupdateconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/loadUpdateConfig)
 // loadUpdateConfig holds the data fields for a loadUpdateConfig record.
 func loadUpdateConfig(rootDir string) (*UpdateConfig, error) {
@@ -38952,6 +39541,7 @@ func runCommand(dir, name string, args ...string) error {
 	fmt.Printf("  Running: %s %s in %s\n", name, strings.Join(args, " "), dir)
 	return cmd.Run()
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️runcommandquiet](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/runCommandQuiet)
 func runCommandQuiet(dir, name string, args ...string) (string, error) {
 	cmd := exec.Command(name, args...)
@@ -38959,6 +39549,7 @@ func runCommandQuiet(dir, name string, args ...string) (string, error) {
 	output, err := cmd.Output()
 	return string(output), err
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updatenpm](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateNpm)
 // updateNpm holds the data fields for a updateNpm record.
 func updateNpm(rootDir string, config *UpdateConfig, dryRun bool) {
@@ -38973,6 +39564,7 @@ func updateNpm(rootDir string, config *UpdateConfig, dryRun bool) {
 	}
 	fmt.Println("[NPM] Done.")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updatepython](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updatePython)
 func updatePython(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[Python] Updating Python packages...")
@@ -38995,6 +39587,7 @@ func updatePython(rootDir string, config *UpdateConfig, dryRun bool) {
 	}
 	fmt.Println("[Python] Done.")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updaterust](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateRust)
 // updateRust holds the data fields for a updateRust record.
 func updateRust(rootDir string, config *UpdateConfig, dryRun bool) {
@@ -39017,6 +39610,7 @@ func updateRust(rootDir string, config *UpdateConfig, dryRun bool) {
 	}
 	fmt.Println("[Rust] Done.")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updatego](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateGo)
 // updateGo holds the data fields for a updateGo record.
 func updateGo(rootDir string, config *UpdateConfig, dryRun bool) {
@@ -39038,6 +39632,7 @@ func updateGo(rootDir string, config *UpdateConfig, dryRun bool) {
 	}
 	fmt.Println("[Go] Done.")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updatedotnet](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateDotNet)
 func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[.NET] Updating .NET packages...")
@@ -39764,6 +40359,7 @@ func ghCreateMilestone(title, description string) (int, error) {
 	num, _ := strconv.Atoi(strings.TrimSpace(stdout))
 	return num, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghupdatemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghUpdateMilestone)
 // ghUpdateMilestone holds the data fields for a ghUpdateMilestone record.
 func ghUpdateMilestone(number int, title, description, state, dueOn string) error {
@@ -39790,6 +40386,7 @@ func ghUpdateMilestone(number int, title, description, state, dueOn string) erro
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghdeletemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghDeleteMilestone)
 // ghDeleteMilestone holds the data fields for a ghDeleteMilestone record.
 func ghDeleteMilestone(number int) error {
@@ -39800,6 +40397,7 @@ func ghDeleteMilestone(number int) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghcreategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghCreateGoalIssue)
 // ghCreateGoalIssue holds the data fields for a ghCreateGoalIssue record.
 func ghCreateGoalIssue(title, description string, milestone *int) (string, error) {
@@ -39821,6 +40419,7 @@ func ghCreateGoalIssue(title, description string, milestone *int) (string, error
 	}
 	return issueURL, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghupdategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghUpdateGoalIssue)
 // ghUpdateGoalIssue holds the data fields for a ghUpdateGoalIssue record.
 func ghUpdateGoalIssue(issueURL, title, description string) error {
@@ -39837,26 +40436,31 @@ func ghUpdateGoalIssue(issueURL, title, description string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️goaldepth](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/goalDepth)
 // goalDepth holds the data fields for a goalDepth record.
 func goalDepth(goalID string) int {
 	return strings.Count(goalID, "/")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️isrootgoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/isRootGoal)
 // isRootGoal holds the data fields for a isRootGoal record.
 func isRootGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) == 0
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️isfirstgengoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/isFirstGenGoal)
 // isFirstGenGoal holds the data fields for a isFirstGenGoal record.
 func isFirstGenGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) == 1
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️isdeepergoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/isDeeperGoal)
 // isDeeperGoal holds the data fields for a isDeeperGoal record.
 func isDeeperGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) >= 2
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getrootgoalid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/getRootGoalID)
 // getRootGoalID holds the data fields for a getRootGoalID record.
 func getRootGoalID(goalID string) string {
@@ -39865,6 +40469,7 @@ func getRootGoalID(goalID string) string {
 	}
 	return goalID
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getparentgoalid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/getParentGoalID)
 func getParentGoalID(goalID string) string {
 	if idx := strings.LastIndex(goalID, "/"); idx != -1 {
@@ -39872,6 +40477,7 @@ func getParentGoalID(goalID string) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getrootgoalmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/getRootGoalMilestone)
 // getRootGoalMilestone holds the data fields for a getRootGoalMilestone record.
 func getRootGoalMilestone(goalID string) (*int, error) {
@@ -39889,6 +40495,7 @@ func getRootGoalMilestone(goalID string) (*int, error) {
 	}
 	return &n, nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getparentgoalissuenodeid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/getParentGoalIssueNodeID)
 // getParentGoalIssueNodeID holds the data fields for a getParentGoalIssueNodeID record.
 func getParentGoalIssueNodeID(goalID string) (string, error) {
@@ -39905,6 +40512,7 @@ func getParentGoalIssueNodeID(goalID string) (string, error) {
 	}
 	return ghGetIssueNodeID(parentGoal.Management.Issue)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghgetissuenodeid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghGetIssueNodeID)
 func ghGetIssueNodeID(issueURL string) (string, error) {
 	args := []string{"issue", "view", issueURL, "--json", "id", "--jq", ".id"}
@@ -39914,6 +40522,7 @@ func ghGetIssueNodeID(issueURL string) (string, error) {
 	}
 	return strings.TrimSpace(stdout), nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghgetissueparenturl](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghGetIssueParentURL)
 // ghGetIssueParentURL holds the data fields for a ghGetIssueParentURL record.
 func ghGetIssueParentURL(issueURL string) (string, error) {
@@ -39980,6 +40589,7 @@ func ghAddSubIssue(parentIssueURL, childIssueURL string) error {
 	}
 	return nil
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️parseissuenumber](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/parseIssueNumber)
 // parseIssueNumber holds the data fields for a parseIssueNumber record.
 func parseIssueNumber(issueURL string) (int, error) {
@@ -40464,6 +41074,7 @@ func removeLineFromMarkdown(path, name string) {
 	}
 	os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🛠️removelinefromfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/removeLineFromFile)
 func removeLineFromFile(path string, lineNum int) {
 	content, _ := os.ReadFile(path)
@@ -40487,6 +41098,7 @@ type SemanticId struct {
 	Emoji string
 	Value string
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️emojitext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/emojiText)
 // emojiText holds the data fields for a emojiText record.
 func emojiText(emoji string) string {
@@ -40515,6 +41127,7 @@ func (s SemanticId) String() string {
 	}
 	return fmt.Sprintf("%s%s", emojiText(s.Emoji), s.Value)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologykindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/technologyKindEmoji)
 // technologyKindEmoji holds the data fields for a technologyKindEmoji record.
 func technologyKindEmoji(data map[string]interface{}) string {
@@ -40539,6 +41152,7 @@ func technologyKindEmoji(data map[string]interface{}) string {
 	}
 	return emojiText(EmojiTechnologyUser)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundlekindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/bundleKindEmoji)
 func bundleKindEmoji(data map[string]interface{}) string {
 	bKind, _ := data["kind"].(string)
@@ -40585,6 +41199,7 @@ func fileKindEmoji(data map[string]interface{}) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderkindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/folderKindEmoji)
 // folderKindEmoji holds the data fields for a folderKindEmoji record.
 func folderKindEmoji(data map[string]interface{}) string {
@@ -40596,6 +41211,7 @@ func folderKindEmoji(data map[string]interface{}) string {
 	}
 	return emojiText(EmojiFolderRequired)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionkindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/definitionKindEmoji)
 func definitionKindEmoji(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
@@ -40609,6 +41225,7 @@ func definitionKindEmoji(data map[string]interface{}) string {
 	}
 	return emojiText(EmojiDefinitionImpl)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️goalartifactid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/goalArtifactID)
 // goalArtifactID holds the data fields for a goalArtifactID record.
 func goalArtifactID(rawGoalID string) string {
@@ -40710,6 +41327,7 @@ func semioIDToContributorGithub(semioID string) string {
 	}
 	return flat
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️interactionkindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/interactionKindEmoji)
 func interactionKindEmoji(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
@@ -40725,6 +41343,7 @@ func interactionKindEmoji(data map[string]interface{}) string {
 	}
 	return emojiText(EmojiInteractionStarted)
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️interactionkindfromemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/interactionKindFromEmoji)
 // interactionKindFromEmoji holds the data fields for a interactionKindFromEmoji record.
 func interactionKindFromEmoji(emoji string) string {
@@ -40740,6 +41359,7 @@ func interactionKindFromEmoji(emoji string) string {
 	}
 	return "started"
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologykindcodefromemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/technologyKindCodeFromEmoji)
 // technologyKindCodeFromEmoji holds the data fields for a technologyKindCodeFromEmoji record.
 func technologyKindCodeFromEmoji(emoji string) string {
@@ -40787,6 +41407,7 @@ func folderKindCodeFromEmoji(emoji string) string {
 	}
 	return "org"
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionkindcodefromemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/definitionKindCodeFromEmoji)
 // definitionKindCodeFromEmoji holds the data fields for a definitionKindCodeFromEmoji record.
 func definitionKindCodeFromEmoji(emoji string) string {
@@ -40840,6 +41461,7 @@ func TechnologyKindToCode(k TechnologyKind) string {
 	}
 	return "u"
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundlekindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/bundleKindCode)
 // bundleKindCode holds the data fields for a bundleKindCode record.
 func bundleKindCode(data map[string]interface{}) string {
@@ -40884,6 +41506,7 @@ func BundleKindToCode(k BundleKind) string {
 	}
 	return "l"
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderkindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/folderKindCode)
 // folderKindCode holds the data fields for a folderKindCode record.
 func folderKindCode(data map[string]interface{}) string {
@@ -40893,6 +41516,7 @@ func folderKindCode(data map[string]interface{}) string {
 	}
 	return "req"
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderkindtocode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/FolderKindToCode)
 func FolderKindToCode(k FolderKind) string {
 	if k == FolderKindOrganization {
@@ -40900,6 +41524,7 @@ func FolderKindToCode(k FolderKind) string {
 	}
 	return "req"
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionkindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/definitionKindCode)
 // definitionKindCode holds the data fields for a definitionKindCode record.
 func definitionKindCode(data map[string]interface{}) string {
@@ -40914,12 +41539,14 @@ func definitionKindCode(data map[string]interface{}) string {
 	}
 	return "i"
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️interactionkindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/interactionKindCode)
 // interactionKindCode holds the data fields for a interactionKindCode record.
 func interactionKindCode(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
 	return kind
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️containsurisection](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/containsUriSection)
 // containsUriSection holds the data fields for a containsUriSection record.
 func containsUriSection(uri string) bool {
@@ -40931,6 +41558,7 @@ func containsUriSection(uri string) bool {
 func containsUriDefinition(uri string) bool {
 	return strings.HasPrefix(uri, "repo://definition/")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileandsectionsfromuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileandsectionsfromuri)
 // extractFileAndSectionsFromUri extracts the file path and section names from a URI.
 // Supports new format repo://section/{{id}} where ID encodes file+sections as emojis.
@@ -40988,6 +41616,7 @@ func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []
 	}
 	return filePath, sectionParts
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileanddefinitionfromuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileanddefinitionfromuri)
 // extractFileAndDefinitionFromUri extracts the file path and definition name from a URI.
 // Supports new format repo://definition/{{id}} where ID encodes file+sections+definition as emojis.
@@ -41531,6 +42160,7 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 	}
 	return "repo://" + kind + "/" + id
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildfolderurifrompath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/buildFolderUriFromPath)
 // buildFolderUriFromPath holds the data fields for a buildFolderUriFromPath record.
 func buildFolderUriFromPath(path string) string {
@@ -41992,6 +42622,7 @@ func IdToDefinitionName(id string) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologyemojifromcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/technologyEmojiFromCode)
 // technologyEmojiFromCode holds the data fields for a technologyEmojiFromCode record.
 func technologyEmojiFromCode(code string) string {
@@ -42005,6 +42636,7 @@ func technologyEmojiFromCode(code string) string {
 	}
 	return EmojiTechnologyUser
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundleemojifromcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/bundleEmojiFromCode)
 func bundleEmojiFromCode(code string) string {
 	switch code {
@@ -42025,6 +42657,7 @@ func bundleEmojiFromCode(code string) string {
 	}
 	return EmojiBundleLibrary
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderemojifromcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/folderEmojiFromCode)
 // folderEmojiFromCode holds the data fields for a folderEmojiFromCode record.
 func folderEmojiFromCode(code string) string {
@@ -42047,6 +42680,7 @@ func definitionEmojiFromCode(code string) string {
 	}
 	return EmojiDefinitionImpl
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️urisubpathtoid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/uriSubPathToId)
 // uriSubPathToId holds the data fields for a uriSubPathToId record.
 func uriSubPathToId(parentId string, subPath string) string {
@@ -42113,6 +42747,7 @@ func uriSubPathToId(parentId string, subPath string) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️urisubpathtoidfromfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/uriSubPathToIdFromFile)
 // uriSubPathToIdFromFile holds the data fields for a uriSubPathToIdFromFile record.
 func uriSubPathToIdFromFile(fileId string, subPath string) string {
@@ -42138,6 +42773,7 @@ func uriSubPathToIdFromFile(fileId string, subPath string) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️parsesectionandrest](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/parseSectionAndRest)
 func parseSectionAndRest(parentId string, sRest string) string {
 	parts := strings.SplitN(sRest, "/s/", 2)
@@ -42160,11 +42796,13 @@ func parseSectionAndRest(parentId string, sRest string) string {
 	}
 	return parseSectionAndRest(sectionId, parts[1])
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️splitsectionuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/splitSectionUri)
 // splitSectionUri holds the data fields for a splitSectionUri record.
 func splitSectionUri(path string) []string {
 	return strings.Split(path, "/s/")
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️parsegoaluri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/parseGoalUri)
 func parseGoalUri(rest string) string {
 	parts := strings.SplitN(rest, "/", 2)
@@ -42244,6 +42882,7 @@ func extractFinishedStr(data map[string]interface{}) string {
 	}
 	return finishedStr
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖entityrendering🛠️sanitizeprop](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering/d/i/sanitizeProp)
 func sanitizeProp(v string) string {
 	v = strings.ReplaceAll(v, "\r\n", " ")
@@ -42264,6 +42903,7 @@ func sanitizeSingleLine(v string) string {
 	v = strings.ReplaceAll(v, "\r", " ")
 	return v
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖entityrendering🛠️collectentityprops](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering/d/i/collectEntityProps)
 // collectEntityProps holds the data fields for a collectEntityProps record.
 func collectEntityProps(kind string, data map[string]interface{}, truncateDesc bool) []string {
@@ -42409,6 +43049,7 @@ func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) str
 		"IsTTY": isTTY,
 	}))
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️inferentitykind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/inferEntityKind)
 func inferEntityKind(key string) string {
 	key = strings.ToLower(key)
@@ -42444,6 +43085,7 @@ func inferEntityKind(key string) string {
 	}
 	return ""
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️renderentitymarkdownlink](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/renderEntityMarkdownLink)
 // renderEntityMarkdownLink holds the data fields for a renderEntityMarkdownLink record.
 func renderEntityMarkdownLink(kind string, data map[string]interface{}) string {
@@ -42456,6 +43098,7 @@ func renderEntityMarkdownLink(kind string, data map[string]interface{}) string {
 		"Props": props,
 	}))
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️renderentitymarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/renderEntityMarkdown)
 // renderEntityMarkdown holds the data fields for a renderEntityMarkdown record.
 func renderEntityMarkdown(kind string, data map[string]interface{}) string {
@@ -42468,6 +43111,7 @@ func renderEntityMarkdown(kind string, data map[string]interface{}) string {
 		"Props": props,
 	}))
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️getterminalwidth](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/getTerminalWidth)
 // getTerminalWidth holds the data fields for a getTerminalWidth record.
 func getTerminalWidth() int {
@@ -42479,6 +43123,7 @@ func getTerminalWidth() int {
 	}
 	return 120
 }
+
 // [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️truncateansi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/truncateANSI)
 func truncateANSI(s string, maxVisible int) string {
 	if maxVisible <= 0 {

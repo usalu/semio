@@ -3701,8 +3701,17 @@ export const McpDesignViewer: React.FC = () => {
         </div>
       );
     }
+    // [DEBUG] Log design/diagram info for split view
+    const _dbgDes = (vm.designFlat ?? vm.design) as Design | undefined;
+    const _dbgPcs = _dbgDes?.pieces?.length ?? 0;
+    const _dbgCtr = _dbgDes?.pieces?.filter((p: any) => p.center).length ?? 0;
+    const _dbgNZ = _dbgDes?.pieces?.filter((p: any) => p.center && (p.center.u !== 0 || p.center.v !== 0)).length ?? 0;
+    const _dbgPts = payload.points?.length ?? 0;
     return (
       <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+        <div style={{ position: "absolute", top: 4, left: 4, zIndex: 9999, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 11, padding: "4px 8px", borderRadius: 4, fontFamily: "monospace", pointerEvents: "none", lineHeight: 1.5 }}>
+          [DEBUG] split pieces={_dbgPcs} w/center={_dbgCtr} non-zero={_dbgNZ} pts={_dbgPts} flat={String(!!vm.designFlat)}
+        </div>
         <SemioDesign design={(vm.designFlat ?? vm.design) as Design} kit={vm.kit} designDiff={vm.isDiff ? vm.designDiff : undefined} splitLayout="always" {...selectionProps} />
       </div>
     );
@@ -4187,8 +4196,21 @@ export const McpDiagramViewer: React.FC = () => {
   const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
   const selectionEnabled = pieceSelectionEnabled || connectionSelectionEnabled;
 
+  // [DEBUG] Diagnose empty diagram
+  const _dbgPieces = diagramDesign?.pieces?.length ?? 0;
+  const _dbgWithCenter = diagramDesign?.pieces?.filter((p: any) => p.center).length ?? 0;
+  const _dbgNonZero = diagramDesign?.pieces?.filter((p: any) => p.center && (p.center.u !== 0 || p.center.v !== 0)).length ?? 0;
+  const _dbgHasDesign = !!design;
+  const _dbgHasKit = !!kit;
+  const _dbgPoints = payload.points?.length ?? 0;
+  const _dbgMode = payload.mode ?? "?";
+  const _dbgSrc = candidateHasCenters ? "design" : (hasDiagramPoints ? "fallback-pts" : "fallback");
+
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      <div style={{ position: "absolute", top: 4, left: 4, zIndex: 9999, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 11, padding: "4px 8px", borderRadius: 4, fontFamily: "monospace", pointerEvents: "none", lineHeight: 1.5 }}>
+        [DEBUG] mode={_dbgMode} src={_dbgSrc} pieces={_dbgPieces} w/center={_dbgWithCenter} non-zero={_dbgNonZero} pts={_dbgPoints} design={String(_dbgHasDesign)} kit={String(_dbgHasKit)}
+      </div>
       <SemioDiagram
         design={diagramDesign}
         designDiff={isDiff ? payload.designDiff : undefined}

@@ -1,32 +1,43 @@
-// #region 🔖Header
+mod header { // 🔖Header
 // [👤semio📚server💻semio-session](repo://p/u/semio/b/l/server/f/bin.rs)
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 // AGPL-3.0
 // Specs: Single-binary session-backend consolidating domain, command, event, state, error, schema, persistence, actor, directory, API, and WS modules.
 // Summary: Consolidated session-backend service for semio. PostgreSQL-backed, single-writer actor per session, HTTP+WS API with axum, in-memory state with typed entity structs, property-clock conflict resolution.
-// #endregion 🔖Header
+} // 🔖Header
 
-// #region 🔖Domain
+
+
+pub use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
+pub use axum::extract::{Path, State};
+pub use axum::http::StatusCode;
+pub use axum::response::{IntoResponse, Response};
+pub use axum::routing::{get, post};
+pub use axum::{Json, Router};
+pub use dashmap::DashMap;
+pub use futures::{SinkExt, StreamExt};
+pub use serde::{Deserialize, Serialize};
+pub use sqlx_core::row::Row;
+pub use sqlx_postgres::{PgPool, PgPoolOptions};
+pub use std::collections::BTreeMap;
+pub use std::sync::Arc;
+#[cfg(test)]
+pub use testcontainers::runners::AsyncRunner;
+#[cfg(test)]
+pub use testcontainers_modules::postgres::Postgres;
+pub use thiserror::Error;
+pub use tokio::sync::{broadcast, mpsc, oneshot};
+pub use uuid::Uuid;
+
+
+mod domain { // 🔖Domain
 // Specs: Newtype IDs wrap Uuid for session-scoped identity. FieldPatch distinguishes no-change/set/clear. PropertyKey enumerates all mutable properties. ConflictPolicy defines per-property merge behaviour.
 // Summary: Session domain newtypes, FieldPatch, PropertyKey, ConflictPolicy, EntityKind, Lifecycle, SessionStatus.
 
-use std::collections::BTreeMap;
-use std::sync::Arc;
 
-use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-use axum::extract::{Path, State};
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post};
-use axum::{Json, Router};
-use dashmap::DashMap;
-use futures::{SinkExt, StreamExt};
-use serde::{Deserialize, Serialize};
-use sqlx_postgres::{PgPool, PgPoolOptions};
-use thiserror::Error;
-use tokio::sync::{broadcast, mpsc, oneshot};
-use uuid::Uuid;
 
+
+use super::*;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SessionId(pub Uuid);
 
@@ -45,8 +56,10 @@ pub struct PersonId(pub Uuid);
 pub type DomainVersion = i64;
 pub type SemioVersion = i64;
 
-// #region 🔖FieldPatch
+mod field_patch { // 🔖FieldPatch
 
+
+use super::*;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "op", content = "value")]
 pub enum FieldPatch<T> {
@@ -86,7 +99,8 @@ impl<T> RequiredFieldPatch<T> {
     }
 }
 
-// #endregion 🔖FieldPatch
+} // 🔖FieldPatch
+pub use field_patch::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -164,12 +178,15 @@ pub enum SessionStatus {
     Closed,
 }
 
-// #endregion 🔖Domain
+} // 🔖Domain
+pub use domain::*;
 
-// #region 🔖Lookback
+mod lookback { // 🔖Lookback
 // Specs: Named lookback points define retention boundaries for kit history. Each token maps to seconds.
 // Summary: Configurable lookback points for historical kit snapshot retention and auto-compaction.
 
+
+use super::*;
 pub const LOOKBACK_POINTS: &[(&str, i64)] = &[
     ("1min", 60),
     ("5min", 300),
@@ -193,12 +210,15 @@ pub fn lookback_tokens() -> Vec<&'static str> {
     LOOKBACK_POINTS.iter().map(|(t, _)| *t).collect()
 }
 
-// #endregion 🔖Lookback
+} // 🔖Lookback
+pub use lookback::*;
 
-// #region 🔖Command
+mod command { // 🔖Command
 // Specs: CommandEnvelope carries per-command metadata. DomainCommand enumerates all CRUD variants. SemioCommand handles presence mutations. CommandResult reports outcome.
 // Summary: Explicit command types for domain and semio mutations.
 
+
+use super::*;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommandEnvelope {
     pub command_id: CommandId,
@@ -296,12 +316,15 @@ pub struct ConflictDetail {
     pub reason: String,
 }
 
-// #endregion 🔖Command
+} // 🔖Command
+pub use command::*;
 
-// #region 🔖Event
+mod event { // 🔖Event
 // Specs: SessionEvent enumerates all broadcastable events. EntityChange describes domain mutations. SemioUpdate describes semio state changes.
 // Summary: Broadcast event types for domain and semio state changes.
 
+
+use super::*;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "event")]
 pub enum SessionEvent {
@@ -328,12 +351,15 @@ pub enum SemioUpdate {
     PresenceCleared,
 }
 
-// #endregion 🔖Event
+} // 🔖Event
+pub use event::*;
 
-// #region 🔖State
+mod state { // 🔖State
 // Specs: SessionState holds full typed in-memory state for one session. Entity states mirror canonical DB rows.
 // Summary: In-memory session state loaded from and persisted to PostgreSQL.
 
+
+use super::*;
 #[derive(Debug, Clone)]
 pub struct SessionState {
     pub session_id: SessionId,
@@ -468,12 +494,15 @@ pub struct SemioPersonState {
 #[derive(Debug, Clone)]
 pub struct LookState { pub position: [f64; 3], pub forward: [f64; 3], pub up: [f64; 3] }
 
-// #endregion 🔖State
+} // 🔖State
+pub use state::*;
 
-// #region 🔖Error
+mod error { // 🔖Error
 // Specs: SessionError covers all service error cases. ErrorBody serializes error details for HTTP responses.
 // Summary: Error types and HTTP response mapping for the session backend.
 
+
+use super::*;
 #[derive(Error, Debug)]
 pub enum SessionError {
     #[error("session not found: {0}")]
@@ -495,7 +524,7 @@ pub enum SessionError {
 }
 
 #[derive(Serialize)]
-struct ErrorBody { error: String, detail: String }
+pub struct ErrorBody { error: String, detail: String }
 
 impl IntoResponse for SessionError {
     fn into_response(self) -> Response {
@@ -513,12 +542,15 @@ impl IntoResponse for SessionError {
     }
 }
 
-// #endregion 🔖Error
+} // 🔖Error
+pub use error::*;
 
-// #region 🔖Schema
+mod schema { // 🔖Schema
 // Specs: Migrations create all schemas, enums, and tables on startup. Schema names: runtime, core, history, semio.
 // Summary: SQL schema creation and migration for the session backend.
 
+
+use super::*;
 pub async fn run_migrations(pool: &PgPool) {
     create_schemas(pool).await;
     create_enums(pool).await;
@@ -843,12 +875,15 @@ async fn create_history_tables(pool: &PgPool) {
     )", "history.compaction_config").await;
 }
 
-// #endregion 🔖Schema
+} // 🔖Schema
+pub use schema::*;
 
-// #region 🔖Persistence
+mod persistence { // 🔖Persistence
 // Specs: Pool creates a connection pool from DATABASE_URL. Session CRUD creates, loads, and updates session metadata.
 // Summary: PostgreSQL persistence: pool creation, session CRUD, snapshot loading.
 
+
+use super::*;
 pub async fn create_pool(database_url: &str) -> PgPool {
     PgPoolOptions::new().max_connections(20).connect(database_url).await.expect("failed to connect to PostgreSQL")
 }
@@ -1034,7 +1069,6 @@ async fn load_pieces_into_designs(pool: &PgPool, sid: Uuid, designs: &mut BTreeM
 }
 
 async fn load_connections_into_designs(pool: &PgPool, sid: Uuid, designs: &mut BTreeMap<Uuid, DesignState>) -> Result<(), SessionError> {
-    use sqlx_core::row::Row;
     let rows = sqlx_core::query::query(
         "SELECT connection_id, design_id, connected_piece_id, connected_design_piece_id, connected_connector_id,
                 connecting_piece_id, connecting_design_piece_id, connecting_connector_id,
@@ -1101,11 +1135,13 @@ pub async fn mark_command_accepted(pool: &PgPool, command_id: Uuid, accepted_ver
     Ok(())
 }
 
-// #region 🔖History
+mod history { // 🔖History
 // Specs: History persistence stores domain commits with timestamps, full kit snapshots at baselines, and
 // incremental entity change logs. Supports lookback-based kit reconstruction and auto-compaction.
 // Summary: History storage: domain commits, kit snapshots, entity change logs, lookback reconstruction, compaction.
 
+
+use super::*;
 pub async fn record_domain_commit(pool: &PgPool, session_id: Uuid, domain_version: DomainVersion, command_id: Uuid) -> Result<(), SessionError> {
     sqlx_core::query::query(
         "INSERT INTO history.domain_commit (session_id, domain_version, command_id) VALUES ($1, $2, $3)
@@ -1210,7 +1246,7 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
     })
 }
 
-fn chrono_now_iso() -> String {
+pub fn chrono_now_iso() -> String {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH).unwrap_or_default();
     let secs = now.as_secs();
@@ -1285,7 +1321,7 @@ pub fn apply_change_log_to_kit(kit: &mut serde_json::Value, changes: &serde_json
     }
 }
 
-fn push_to_array(kit: &mut serde_json::Value, key: &str, item: serde_json::Value) {
+pub fn push_to_array(kit: &mut serde_json::Value, key: &str, item: serde_json::Value) {
     if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
         arr.push(item);
     } else {
@@ -1293,7 +1329,7 @@ fn push_to_array(kit: &mut serde_json::Value, key: &str, item: serde_json::Value
     }
 }
 
-fn push_to_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, item: serde_json::Value) {
+pub fn push_to_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, item: serde_json::Value) {
     if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
         for d in designs.iter_mut() {
             if d.get("guid").and_then(|g| g.as_str()) == Some(design_id) {
@@ -1308,7 +1344,7 @@ fn push_to_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str,
     }
 }
 
-fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, fields: &serde_json::Value) {
+pub fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, fields: &serde_json::Value) {
     if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
         for item in arr.iter_mut() {
             if item.get("guid").and_then(|g| g.as_str()) == Some(entity_id) {
@@ -1325,7 +1361,7 @@ fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, fiel
     }
 }
 
-fn remove_from_array(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
+pub fn remove_from_array(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
     if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
         arr.retain(|item| item.get("guid").and_then(|g| g.as_str()) != Some(entity_id));
     }
@@ -1410,14 +1446,18 @@ pub struct CompactionResult {
     pub logs_deleted: u64,
 }
 
-// #endregion 🔖History
+} // 🔖History
+pub use history::*;
 
-// #endregion 🔖Persistence
+} // 🔖Persistence
+pub use persistence::*;
 
-// #region 🔖Actor
+mod actor { // 🔖Actor
 // Specs: ActorMessage is the inbox message kind. SessionActor processes commands one at a time in arrival order.
 // Summary: Session actor: single-writer task processing commands sequentially.
 
+
+use super::*;
 pub enum ActorMessage {
     DomainCommand { envelope: CommandEnvelope, command: DomainCommand, reply: oneshot::Sender<Result<CommandResult, SessionError>> },
     SemioCommand { envelope: SemioEnvelope, command: SemioCommand, reply: oneshot::Sender<Result<(), SessionError>> },
@@ -1624,7 +1664,7 @@ impl SessionActor {
         Ok(())
     }
 
-    fn build_snapshot(&self) -> SessionSnapshot {
+    pub fn build_snapshot(&self) -> SessionSnapshot {
         let kit_json = serde_json::json!({
             "kit_id": self.state.kit.kit_id, "name": self.state.kit.name,
             "version": self.state.kit.version, "description": self.state.kit.description,
@@ -1635,12 +1675,15 @@ impl SessionActor {
     }
 }
 
-// #endregion 🔖Actor
+} // 🔖Actor
+pub use actor::*;
 
-// #region 🔖Directory
+mod directory { // 🔖Directory
 // Specs: SessionHandle holds the sender to an active session actor. SessionDirectory provides get-or-create semantics.
 // Summary: Session directory: process-global registry mapping SessionId to actor handles.
 
+
+use super::*;
 #[derive(Clone)]
 pub struct SessionHandle {
     pub command_tx: mpsc::Sender<ActorMessage>,
@@ -1682,12 +1725,15 @@ impl SessionDirectory {
     pub fn remove(&self, session_id: &Uuid) { self.sessions.remove(session_id); }
 }
 
-// #endregion 🔖Directory
+} // 🔖Directory
+pub use directory::*;
 
-// #region 🔖Api
+mod api { // 🔖Api
 // Specs: AppState holds shared resources. Router defines all HTTP endpoints.
 // Summary: HTTP API routes for session management and command submission.
 
+
+use super::*;
 #[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
@@ -1719,10 +1765,10 @@ pub fn router(state: AppState) -> Router<()> {
 async fn health() -> &'static str { "ok" }
 
 #[derive(Deserialize)]
-struct CreateSessionRequest { kit_name: String }
+pub struct CreateSessionRequest { kit_name: String }
 
 #[derive(Serialize)]
-struct CreateSessionResponse { session_id: Uuid, kit_id: Uuid }
+pub struct CreateSessionResponse { session_id: Uuid, kit_id: Uuid }
 
 async fn handler_create_session(
     State(state): State<AppState>, Json(req): Json<CreateSessionRequest>,
@@ -1745,7 +1791,7 @@ async fn handler_get_snapshot(
 }
 
 #[derive(Deserialize)]
-struct DomainCommandRequest {
+pub struct DomainCommandRequest {
     #[serde(flatten)] envelope: CommandEnvelope,
     #[serde(flatten)] command: DomainCommand,
 }
@@ -1763,7 +1809,7 @@ async fn handler_post_domain_command(
 }
 
 #[derive(Deserialize)]
-struct SemioCommandRequest {
+pub struct SemioCommandRequest {
     #[serde(flatten)] envelope: SemioEnvelope,
     #[serde(flatten)] command: SemioCommand,
 }
@@ -1812,12 +1858,15 @@ async fn handler_get_lookback_tokens() -> Json<Vec<&'static str>> {
     Json(lookback_tokens())
 }
 
-// #endregion 🔖Api
+} // 🔖Api
+pub use api::*;
 
-// #region 🔖Ws
+mod ws { // 🔖Ws
 // Specs: WebSocket handler upgrades HTTP to WS and streams session events.
 // Summary: WebSocket handler for real-time session event streaming.
 
+
+use super::*;
 pub async fn ws_handler(
     ws: WebSocketUpgrade, State(state): State<AppState>, Path(session_id): Path<Uuid>,
 ) -> impl IntoResponse {
@@ -1846,11 +1895,13 @@ async fn handle_socket(socket: WebSocket, state: AppState, session_id: Uuid) {
     tracing::debug!("ws connection closed for session {}", session_id);
 }
 
-// #endregion 🔖Ws
+} // 🔖Ws
+pub use ws::*;
 
-// #region 🔖Main
+// 🔖Main
 // Specs: Main bootstraps tracing, database, and HTTP server.
 // Summary: Entry point for the semio session-backend service.
+
 
 #[tokio::main]
 async fn main() {
@@ -1872,55 +1923,57 @@ async fn main() {
     axum::serve(listener, app_router).await.unwrap();
 }
 
-// #endregion 🔖Main
+// 🔖Main End
 
-// #region 🔖Tests
+#[cfg(test)]
 // Specs: Tests cover domain types, commands, events, serde, error HTTP mapping, and integration with metabolism/nakagin data.
 // Summary: Comprehensive tests for all domain types, serialization, error mapping, and integration with real asset data.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    // #region 🔖Domain Tests
+mod tests { // 🔖Tests
 
+use super::*;
+    mod domain_tests { // 🔖Domain Tests
+
+
+use super::*;
     #[test]
-    fn session_id_newtype() {
+    pub fn session_id_newtype() {
         let u = Uuid::now_v7();
         let s = SessionId(u);
         assert_eq!(s.0, u);
     }
 
     #[test]
-    fn command_id_newtype() {
+    pub fn command_id_newtype() {
         let u = Uuid::now_v7();
         let c = CommandId(u);
         assert_eq!(c.0, u);
     }
 
     #[test]
-    fn client_id_newtype() {
+    pub fn client_id_newtype() {
         let u = Uuid::now_v7();
         let c = ClientId(u);
         assert_eq!(c.0, u);
     }
 
     #[test]
-    fn request_id_newtype() {
+    pub fn request_id_newtype() {
         let u = Uuid::now_v7();
         let r = RequestId(u);
         assert_eq!(r.0, u);
     }
 
     #[test]
-    fn person_id_newtype() {
+    pub fn person_id_newtype() {
         let u = Uuid::now_v7();
         let p = PersonId(u);
         assert_eq!(p.0, u);
     }
 
     #[test]
-    fn field_patch_set() {
+    pub fn field_patch_set() {
         let fp: FieldPatch<String> = FieldPatch::Set("hello".to_string());
         let json_str = serde_json::to_string(&fp).unwrap();
         let parsed: FieldPatch<String> = serde_json::from_str(&json_str).unwrap();
@@ -1928,14 +1981,14 @@ mod tests {
     }
 
     #[test]
-    fn field_patch_clear() {
+    pub fn field_patch_clear() {
         let fp: FieldPatch<String> = FieldPatch::Clear;
         let json_str = serde_json::to_string(&fp).unwrap();
         assert!(json_str.contains("null") || json_str.contains("Clear"));
     }
 
     #[test]
-    fn entity_kind_serde_roundtrip() {
+    pub fn entity_kind_serde_roundtrip() {
         let kinds = vec![
             EntityKind::Kit, EntityKind::Type, EntityKind::Design,
             EntityKind::Piece, EntityKind::Connection, EntityKind::Author,
@@ -1948,34 +2001,37 @@ mod tests {
     }
 
     #[test]
-    fn lifecycle_active_default() {
+    pub fn lifecycle_active_default() {
         let l = Lifecycle::Active;
         assert!(matches!(l, Lifecycle::Active));
     }
 
     #[test]
-    fn lifecycle_tombstoned() {
+    pub fn lifecycle_tombstoned() {
         let l = Lifecycle::Tombstoned { at: 42, by: CommandId(Uuid::nil()) };
         if let Lifecycle::Tombstoned { at, .. } = l { assert_eq!(at, 42); } else { panic!(); }
     }
 
     #[test]
-    fn conflict_policy_last_writer_wins() {
+    pub fn conflict_policy_last_writer_wins() {
         assert_eq!(conflict_policy(PropertyKey::KitName), ConflictPolicy::RejectIfChanged);
     }
 
     #[test]
-    fn session_status_display() {
+    pub fn session_status_display() {
         let s = SessionStatus::Active;
         assert_eq!(format!("{:?}", s), "Active");
     }
 
-    // #endregion 🔖Domain Tests
+    } // 🔖Domain Tests
+    pub use domain_tests::*;
 
-    // #region 🔖Command Tests
+    mod command_tests { // 🔖Command Tests
 
+
+use super::*;
     #[test]
-    fn command_envelope_serde() {
+    pub fn command_envelope_serde() {
         let env = CommandEnvelope {
             command_id: CommandId(Uuid::nil()),
             client_id: ClientId(Uuid::nil()),
@@ -1988,7 +2044,7 @@ mod tests {
     }
 
     #[test]
-    fn create_type_command_serde() {
+    pub fn create_type_command_serde() {
         let cmd = DomainCommand::CreateType(CreateEntity {
             entity_id: Uuid::now_v7(),
             fields: serde_json::json!({"name": "TestType"}),
@@ -1998,7 +2054,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_type_command_serde() {
+    pub fn delete_type_command_serde() {
         let cmd = DomainCommand::DeleteType(DeleteEntity {
             entity_id: Uuid::now_v7(),
         });
@@ -2007,7 +2063,7 @@ mod tests {
     }
 
     #[test]
-    fn create_design_command_serde() {
+    pub fn create_design_command_serde() {
         let cmd = DomainCommand::CreateDesign(CreateEntity {
             entity_id: Uuid::now_v7(),
             fields: serde_json::json!({"name": "TestDesign"}),
@@ -2017,7 +2073,7 @@ mod tests {
     }
 
     #[test]
-    fn create_piece_command_serde() {
+    pub fn create_piece_command_serde() {
         let cmd = DomainCommand::CreatePiece(CreatePiece {
             piece_id: Uuid::now_v7(),
             design_id: Uuid::now_v7(),
@@ -2028,7 +2084,7 @@ mod tests {
     }
 
     #[test]
-    fn create_connection_command_serde() {
+    pub fn create_connection_command_serde() {
         let cmd = DomainCommand::CreateConnection(CreateConnection {
             connection_id: Uuid::now_v7(),
             design_id: Uuid::now_v7(),
@@ -2039,7 +2095,7 @@ mod tests {
     }
 
     #[test]
-    fn batch_command_serde() {
+    pub fn batch_command_serde() {
         let cmd = DomainCommand::Batch(DomainBatch {
             commands: vec![
                 DomainCommand::CreateType(CreateEntity { entity_id: Uuid::now_v7(), fields: serde_json::json!({"name": "A"}) }),
@@ -2051,14 +2107,14 @@ mod tests {
     }
 
     #[test]
-    fn semio_command_cursor_serde() {
+    pub fn semio_command_cursor_serde() {
         let cmd = SemioCommand::UpsertCursor(UpsertCursor { u: 1.0, v: 2.0 });
         let json = serde_json::to_string(&cmd).unwrap();
         assert!(json.contains("UpsertCursor"));
     }
 
     #[test]
-    fn semio_command_look_serde() {
+    pub fn semio_command_look_serde() {
         let cmd = SemioCommand::UpsertLook(UpsertLook {
             position: [1.0, 2.0, 3.0], forward: [0.0, 0.0, 1.0], up: [0.0, 1.0, 0.0],
         });
@@ -2067,62 +2123,68 @@ mod tests {
     }
 
     #[test]
-    fn command_result_serde() {
+    pub fn command_result_serde() {
         let r = CommandResult::Accepted { domain_version: 5 };
         let json = serde_json::to_string(&r).unwrap();
         assert!(json.contains("Accepted"));
         assert!(json.contains("5"));
     }
 
-    // #endregion 🔖Command Tests
+    } // 🔖Command Tests
+    pub use command_tests::*;
 
-    // #region 🔖Error Tests
+    mod error_tests { // 🔖Error Tests
 
-    fn status_of(err: SessionError) -> StatusCode {
+
+use super::*;
+    pub fn status_of(err: SessionError) -> StatusCode {
         err.into_response().status()
     }
 
     #[test]
-    fn session_not_found_returns_404() {
+    pub fn session_not_found_returns_404() {
         assert_eq!(status_of(SessionError::SessionNotFound("x".into())), StatusCode::NOT_FOUND);
     }
 
     #[test]
-    fn entity_not_found_returns_404() {
+    pub fn entity_not_found_returns_404() {
         assert_eq!(status_of(SessionError::EntityNotFound { kind: "type".into(), guid: "abc".into() }), StatusCode::NOT_FOUND);
     }
 
     #[test]
-    fn conflict_returns_409() {
+    pub fn conflict_returns_409() {
         assert_eq!(status_of(SessionError::Conflict { property: "name".into(), reason: "changed".into() }), StatusCode::CONFLICT);
     }
 
     #[test]
-    fn validation_returns_400() {
+    pub fn validation_returns_400() {
         assert_eq!(status_of(SessionError::Validation("bad".into())), StatusCode::BAD_REQUEST);
     }
 
     #[test]
-    fn actor_gone_returns_503() {
+    pub fn actor_gone_returns_503() {
         assert_eq!(status_of(SessionError::ActorGone), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[test]
-    fn idempotent_duplicate_returns_200() {
+    pub fn idempotent_duplicate_returns_200() {
         assert_eq!(status_of(SessionError::IdempotentDuplicate("cmd".into())), StatusCode::OK);
     }
 
     #[test]
-    fn internal_returns_500() {
+    pub fn internal_returns_500() {
         assert_eq!(status_of(SessionError::Internal("oops".into())), StatusCode::INTERNAL_SERVER_ERROR);
     }
 
-    // #endregion 🔖Error Tests
+    } // 🔖Error Tests
+    pub use error_tests::*;
 
-    // #region 🔖Event Tests
+    mod event_tests { // 🔖Event Tests
 
+
+use super::*;
     #[test]
-    fn session_event_domain_accepted_serde() {
+    pub fn session_event_domain_accepted_serde() {
         let ev = SessionEvent::DomainCommandAccepted {
             command_id: CommandId(Uuid::nil()),
             domain_version: 1,
@@ -2139,7 +2201,7 @@ mod tests {
     }
 
     #[test]
-    fn session_event_semio_updated_serde() {
+    pub fn session_event_semio_updated_serde() {
         let ev = SessionEvent::SemioUpdated {
             semio_version: 3,
             person_id: PersonId(Uuid::nil()),
@@ -2151,14 +2213,14 @@ mod tests {
     }
 
     #[test]
-    fn session_event_closed_serde() {
+    pub fn session_event_closed_serde() {
         let ev = SessionEvent::SessionClosed;
         let json = serde_json::to_string(&ev).unwrap();
         assert!(json.contains("SessionClosed"));
     }
 
     #[test]
-    fn entity_change_variants_serde() {
+    pub fn entity_change_variants_serde() {
         let created = EntityChange::Created { entity_kind: EntityKind::Piece, entity_id: Uuid::nil(), snapshot: serde_json::json!({}) };
         let updated = EntityChange::Updated { entity_kind: EntityKind::Kit, entity_id: Uuid::nil(), changed_fields: serde_json::json!({"name": "x"}) };
         let deleted = EntityChange::Deleted { entity_kind: EntityKind::Connection, entity_id: Uuid::nil() };
@@ -2169,7 +2231,7 @@ mod tests {
     }
 
     #[test]
-    fn semio_update_variants_serde() {
+    pub fn semio_update_variants_serde() {
         let updates = vec![
             SemioUpdate::CursorMoved { u: 0.5, v: 0.5 },
             SemioUpdate::LookChanged { position: [1.0, 2.0, 3.0], forward: [0.0, 0.0, 1.0], up: [0.0, 1.0, 0.0] },
@@ -2182,12 +2244,15 @@ mod tests {
         }
     }
 
-    // #endregion 🔖Event Tests
+    } // 🔖Event Tests
+    pub use event_tests::*;
 
-    // #region 🔖State Tests
+    mod state_tests { // 🔖State Tests
 
+
+use super::*;
     #[test]
-    fn session_state_creation() {
+    pub fn session_state_creation() {
         let sid = Uuid::now_v7();
         let kid = Uuid::now_v7();
         let state = SessionState {
@@ -2203,7 +2268,7 @@ mod tests {
     }
 
     #[test]
-    fn type_state_with_connectors() {
+    pub fn type_state_with_connectors() {
         let tid = Uuid::now_v7();
         let cid = Uuid::now_v7();
         let mut ts = TypeState {
@@ -2220,7 +2285,7 @@ mod tests {
     }
 
     #[test]
-    fn design_state_with_pieces_and_connections() {
+    pub fn design_state_with_pieces_and_connections() {
         let did = Uuid::now_v7();
         let p1 = Uuid::now_v7();
         let p2 = Uuid::now_v7();
@@ -2252,11 +2317,14 @@ mod tests {
         assert_eq!(ds.connections.len(), 1);
     }
 
-    // #endregion 🔖State Tests
+    } // 🔖State Tests
+    pub use state_tests::*;
 
-    // #region 🔖Metabolism Integration Tests
+    mod metabolism_integration_tests { // 🔖Metabolism Integration Tests
 
-    fn load_metabolism_kit_json() -> serde_json::Value {
+
+use super::*;
+    pub fn load_metabolism_kit_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
             .join("assets/semio/metabolism.kit.semio.json");
@@ -2265,20 +2333,20 @@ mod tests {
     }
 
     #[test]
-    fn metabolism_kit_parses_49_types() {
+    pub fn metabolism_kit_parses_49_types() {
         let kit = load_metabolism_kit_json();
         let types = kit["types"].as_array().expect("types array");
         assert_eq!(types.len(), 49, "metabolism kit should have 49 types");
     }
 
     #[test]
-    fn metabolism_kit_name() {
+    pub fn metabolism_kit_name() {
         let kit = load_metabolism_kit_json();
         assert_eq!(kit["name"].as_str().unwrap(), "Metabolism");
     }
 
     #[test]
-    fn metabolism_kit_has_authors() {
+    pub fn metabolism_kit_has_authors() {
         let kit = load_metabolism_kit_json();
         let authors = kit["authors"].as_array().expect("authors array");
         assert!(!authors.is_empty());
@@ -2286,14 +2354,14 @@ mod tests {
     }
 
     #[test]
-    fn metabolism_kit_has_designs() {
+    pub fn metabolism_kit_has_designs() {
         let kit = load_metabolism_kit_json();
         let designs = kit["designs"].as_array().expect("designs array");
         assert_eq!(designs.len(), 10, "metabolism kit has 10 designs");
     }
 
     #[test]
-    fn metabolism_build_types_in_session_state() {
+    pub fn metabolism_build_types_in_session_state() {
         let kit_json = load_metabolism_kit_json();
         let types_json = kit_json["types"].as_array().unwrap();
         let kit_id = Uuid::now_v7();
@@ -2325,7 +2393,7 @@ mod tests {
     }
 
     #[test]
-    fn metabolism_create_type_commands_for_all_types() {
+    pub fn metabolism_create_type_commands_for_all_types() {
         let kit_json = load_metabolism_kit_json();
         let types_json = kit_json["types"].as_array().unwrap();
         let mut commands: Vec<DomainCommand> = Vec::new();
@@ -2341,11 +2409,14 @@ mod tests {
         assert!(json.contains("Capsule"));
     }
 
-    // #endregion 🔖Metabolism Integration Tests
+    } // 🔖Metabolism Integration Tests
+    pub use metabolism_integration_tests::*;
 
-    // #region 🔖Nakagin Integration Tests
+    mod nakagin_integration_tests { // 🔖Nakagin Integration Tests
 
-    fn load_nakagin_design_json() -> serde_json::Value {
+
+use super::*;
+    pub fn load_nakagin_design_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
             .join("assets/semio/nakagin-capsule-tower.shallow.design.semio.json");
@@ -2353,7 +2424,7 @@ mod tests {
         serde_json::from_str(&data).expect("parse nakagin design JSON")
     }
 
-    fn load_nakagin_diff_json() -> serde_json::Value {
+    pub fn load_nakagin_diff_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
             .join("assets/semio/nakagin-capsule-tower.with-diff.design.semio.json");
@@ -2362,27 +2433,27 @@ mod tests {
     }
 
     #[test]
-    fn nakagin_design_parses_180_pieces() {
+    pub fn nakagin_design_parses_180_pieces() {
         let design = load_nakagin_design_json();
         let pieces = design["pieces"].as_array().unwrap();
         assert_eq!(pieces.len(), 180, "nakagin design should have 180 pieces");
     }
 
     #[test]
-    fn nakagin_design_parses_179_connections() {
+    pub fn nakagin_design_parses_179_connections() {
         let design = load_nakagin_design_json();
         let conns = design["connections"].as_array().unwrap();
         assert_eq!(conns.len(), 179, "nakagin design should have 179 connections");
     }
 
     #[test]
-    fn nakagin_design_name() {
+    pub fn nakagin_design_name() {
         let design = load_nakagin_design_json();
         assert_eq!(design["name"].as_str().unwrap(), "Nakagin Capsule Tower");
     }
 
     #[test]
-    fn nakagin_build_design_state() {
+    pub fn nakagin_build_design_state() {
         let design_json = load_nakagin_design_json();
         let design_id = Uuid::parse_str(design_json["guid"].as_str().unwrap()).unwrap();
         let mut ds = DesignState {
@@ -2438,7 +2509,7 @@ mod tests {
     }
 
     #[test]
-    fn nakagin_diff_has_diff_status() {
+    pub fn nakagin_diff_has_diff_status() {
         let diff_json = load_nakagin_diff_json();
         let pieces = diff_json["pieces"].as_array().unwrap();
         assert!(!pieces.is_empty());
@@ -2451,7 +2522,7 @@ mod tests {
     }
 
     #[test]
-    fn nakagin_create_piece_commands_for_all_pieces() {
+    pub fn nakagin_create_piece_commands_for_all_pieces() {
         let design_json = load_nakagin_design_json();
         let design_id = Uuid::parse_str(design_json["guid"].as_str().unwrap()).unwrap();
         let pieces_json = design_json["pieces"].as_array().unwrap();
@@ -2465,7 +2536,7 @@ mod tests {
     }
 
     #[test]
-    fn nakagin_create_connection_commands_for_all_connections() {
+    pub fn nakagin_create_connection_commands_for_all_connections() {
         let design_json = load_nakagin_design_json();
         let design_id = Uuid::parse_str(design_json["guid"].as_str().unwrap()).unwrap();
         let conns_json = design_json["connections"].as_array().unwrap();
@@ -2485,12 +2556,15 @@ mod tests {
         assert_eq!(commands.len(), 179, "should create 179 CreateConnection commands");
     }
 
-    // #endregion 🔖Nakagin Integration Tests
+    } // 🔖Nakagin Integration Tests
+    pub use nakagin_integration_tests::*;
 
-    // #region 🔖Multi-Frontend Tests
+    mod multi_frontend_tests { // 🔖Multi-Frontend Tests
 
+
+use super::*;
     #[test]
-    fn multi_frontend_cursor_events() {
+    pub fn multi_frontend_cursor_events() {
         let person_a = PersonId(Uuid::now_v7());
         let person_b = PersonId(Uuid::now_v7());
         let events: Vec<SessionEvent> = vec![
@@ -2506,7 +2580,7 @@ mod tests {
     }
 
     #[test]
-    fn multi_frontend_selection_independence() {
+    pub fn multi_frontend_selection_independence() {
         let pid_a = PersonId(Uuid::now_v7());
         let pid_b = PersonId(Uuid::now_v7());
         let piece1 = Uuid::now_v7();
@@ -2528,7 +2602,7 @@ mod tests {
     }
 
     #[test]
-    fn multi_frontend_look_changes() {
+    pub fn multi_frontend_look_changes() {
         let pid = PersonId(Uuid::now_v7());
         let events = vec![
             SessionEvent::SemioUpdated {
@@ -2615,12 +2689,15 @@ mod tests {
         assert_eq!(f3_count, 10);
     }
 
-    // #endregion 🔖Multi-Frontend Tests
+    } // 🔖Multi-Frontend Tests
+    pub use multi_frontend_tests::*;
 
-    // #region 🔖Full Metabolism + Nakagin Session Test
+    mod full_metabolism_nakagin_session_test { // 🔖Full Metabolism + Nakagin Session Test
 
+
+use super::*;
     #[test]
-    fn full_session_with_metabolism_types_and_nakagin_design() {
+    pub fn full_session_with_metabolism_types_and_nakagin_design() {
         let kit_json = load_metabolism_kit_json();
         let design_json = load_nakagin_design_json();
         let session_id = Uuid::now_v7();
@@ -2718,11 +2795,14 @@ mod tests {
         assert_eq!(state.domain_version, 409);
     }
 
-    // #endregion 🔖Full Metabolism + Nakagin Session Test
+    } // 🔖Full Metabolism + Nakagin Session Test
+    pub use full_metabolism_nakagin_session_test::*;
 
-    // #region 🔖Metabolism Diff Tests
+    mod metabolism_diff_tests { // 🔖Metabolism Diff Tests
 
-    fn load_metabolism_diff_json() -> serde_json::Value {
+
+use super::*;
+    pub fn load_metabolism_diff_json() -> serde_json::Value {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent().unwrap()
             .join("assets/semio/metabolism.kit.diff.semio.json");
@@ -2731,7 +2811,7 @@ mod tests {
     }
 
     #[test]
-    fn metabolism_diff_has_removed_types() {
+    pub fn metabolism_diff_has_removed_types() {
         let diff = load_metabolism_diff_json();
         let types = diff.get("types").expect("types key");
         let removed = types.get("removed");
@@ -2740,7 +2820,7 @@ mod tests {
     }
 
     #[test]
-    fn metabolism_diff_roundtrip_commands() {
+    pub fn metabolism_diff_roundtrip_commands() {
         let diff = load_metabolism_diff_json();
         let mut commands: Vec<DomainCommand> = Vec::new();
         if let Some(removed) = diff.get("types").and_then(|t| t.get("removed")).and_then(|r| r.as_array()) {
@@ -2769,12 +2849,15 @@ mod tests {
         assert!(matches!(back, DomainCommand::Batch(_)));
     }
 
-    // #endregion 🔖Metabolism Diff Tests
+    } // 🔖Metabolism Diff Tests
+    pub use metabolism_diff_tests::*;
 
-    // #region 🔖Lookback Tests
+    mod lookback_tests { // 🔖Lookback Tests
 
+
+use super::*;
     #[test]
-    fn lookback_seconds_known_tokens() {
+    pub fn lookback_seconds_known_tokens() {
         assert_eq!(lookback_seconds("1min"), Some(60));
         assert_eq!(lookback_seconds("5min"), Some(300));
         assert_eq!(lookback_seconds("10min"), Some(600));
@@ -2790,13 +2873,13 @@ mod tests {
     }
 
     #[test]
-    fn lookback_seconds_unknown_token() {
+    pub fn lookback_seconds_unknown_token() {
         assert_eq!(lookback_seconds("99x"), None);
         assert_eq!(lookback_seconds(""), None);
     }
 
     #[test]
-    fn lookback_tokens_returns_all_12() {
+    pub fn lookback_tokens_returns_all_12() {
         let tokens = lookback_tokens();
         assert_eq!(tokens.len(), 12);
         assert_eq!(tokens[0], "1min");
@@ -2804,7 +2887,7 @@ mod tests {
     }
 
     #[test]
-    fn lookback_points_ordered_ascending() {
+    pub fn lookback_points_ordered_ascending() {
         let mut prev = 0i64;
         for &(_, secs) in LOOKBACK_POINTS {
             assert!(secs > prev, "lookback points must be in ascending order");
@@ -2812,12 +2895,15 @@ mod tests {
         }
     }
 
-    // #endregion 🔖Lookback Tests
+    } // 🔖Lookback Tests
+    pub use lookback_tests::*;
 
-    // #region 🔖History Unit Tests
+    mod history_unit_tests { // 🔖History Unit Tests
 
+
+use super::*;
     #[test]
-    fn serialize_session_kit_has_required_fields() {
+    pub fn serialize_session_kit_has_required_fields() {
         let sid = Uuid::now_v7();
         let kid = Uuid::now_v7();
         let state = SessionState {
@@ -2839,7 +2925,7 @@ mod tests {
     }
 
     #[test]
-    fn serialize_session_kit_with_types_and_designs() {
+    pub fn serialize_session_kit_with_types_and_designs() {
         let kit_json_src = load_metabolism_kit_json();
         let kid = Uuid::parse_str(kit_json_src["guid"].as_str().unwrap()).unwrap();
         let mut state = SessionState {
@@ -2866,7 +2952,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_change_log_create_type() {
+    pub fn apply_change_log_create_type() {
         let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [], "designs": []});
         let type_id = Uuid::now_v7();
         let changes = serde_json::json!([{
@@ -2882,7 +2968,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_change_log_update_kit_name() {
+    pub fn apply_change_log_update_kit_name() {
         let mut kit = serde_json::json!({"guid": "abc", "name": "OldName", "types": []});
         let changes = serde_json::json!([{
             "op": "Updated",
@@ -2895,7 +2981,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_change_log_delete_type() {
+    pub fn apply_change_log_delete_type() {
         let type_id = Uuid::now_v7().to_string();
         let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [
             {"guid": type_id, "name": "ToDelete"},
@@ -2913,7 +2999,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_change_log_update_type_fields() {
+    pub fn apply_change_log_update_type_fields() {
         let type_id = Uuid::now_v7().to_string();
         let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [
             {"guid": type_id, "name": "OldName", "description": null}
@@ -2931,7 +3017,7 @@ mod tests {
     }
 
     #[test]
-    fn apply_multiple_change_logs_sequentially() {
+    pub fn apply_multiple_change_logs_sequentially() {
         let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [], "designs": []});
         let t1 = Uuid::now_v7().to_string();
         let t2 = Uuid::now_v7().to_string();
@@ -2954,19 +3040,22 @@ mod tests {
     }
 
     #[test]
-    fn compaction_result_serde() {
+    pub fn compaction_result_serde() {
         let r = CompactionResult { snapshots_created: 3, logs_deleted: 42 };
         let json = serde_json::to_string(&r).unwrap();
         assert!(json.contains("snapshots_created"));
         assert!(json.contains("logs_deleted"));
     }
 
-    // #endregion 🔖History Unit Tests
+    } // 🔖History Unit Tests
+    pub use history_unit_tests::*;
 
-    // #region 🔖E2E Testcontainer Tests
+    mod e2_e_testcontainer_tests { // 🔖E2E Testcontainer Tests
 
     /// Check if Docker/testcontainers are available at runtime.
-    fn docker_available() -> bool {
+
+use super::*;
+    pub fn docker_available() -> bool {
         std::process::Command::new("docker").arg("info").output().map(|o| o.status.success()).unwrap_or(false)
     }
 
@@ -2976,8 +3065,6 @@ mod tests {
             eprintln!("[SKIP] Docker not available, skipping E2E test");
             return;
         }
-        use testcontainers::runners::AsyncRunner;
-        use testcontainers_modules::postgres::Postgres;
 
         let pg = Postgres::default().start().await.expect("start postgres container");
         let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
@@ -3015,8 +3102,6 @@ mod tests {
             eprintln!("[SKIP] Docker not available, skipping E2E test");
             return;
         }
-        use testcontainers::runners::AsyncRunner;
-        use testcontainers_modules::postgres::Postgres;
 
         let pg = Postgres::default().start().await.expect("start postgres container");
         let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
@@ -3092,8 +3177,6 @@ mod tests {
             eprintln!("[SKIP] Docker not available, skipping E2E test");
             return;
         }
-        use testcontainers::runners::AsyncRunner;
-        use testcontainers_modules::postgres::Postgres;
 
         let pg = Postgres::default().start().await.expect("start postgres container");
         let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
@@ -3180,8 +3263,6 @@ mod tests {
             eprintln!("[SKIP] Docker not available, skipping E2E test");
             return;
         }
-        use testcontainers::runners::AsyncRunner;
-        use testcontainers_modules::postgres::Postgres;
 
         let pg = Postgres::default().start().await.expect("start postgres container");
         let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
@@ -3247,8 +3328,6 @@ mod tests {
             eprintln!("[SKIP] Docker not available, skipping E2E test");
             return;
         }
-        use testcontainers::runners::AsyncRunner;
-        use testcontainers_modules::postgres::Postgres;
 
         let pg = Postgres::default().start().await.expect("start postgres container");
         let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
@@ -3301,7 +3380,6 @@ mod tests {
         assert!(msg2.is_ok(), "ws2 should receive event");
     }
 
-    // #endregion 🔖E2E Testcontainer Tests
-}
-
-// #endregion 🔖Tests
+    } // 🔖E2E Testcontainer Tests
+    pub use e2_e_testcontainer_tests::*;
+} // 🔖Tests

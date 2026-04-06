@@ -120,6 +120,31 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+---
+
+Introduce a
+
+`validateKitDiff(diff:KitDiff): Report`
+
+---
+
+semio:
+
+```graphql
+type Docks {
+
+  mandatory: Side[]
+
+  side: Side!
+  designPiece: PieceId
+  connector: ConnectorId
+}
+```
+
+`findExtendableSides(design:Design): Side[]` finds all sides of pieces where new pieces can be added.
+
+---
+
 In the codebase the schema is not yet always aligned. E.g. ports are sometimes confused with connectors. e.g. semio ui and engine mcp show metabolism has 120 ports but that is not true. Whenever a kit is serialized it must always have the Kit schema.
 
 There is an error with drag. The descendants of other dragged pieces are not ignored properly. E.g. in semio/algorithms/Drag `b0` is dragged but all the descendants of `b0` are also dragged (with piece diffs).
@@ -353,6 +378,8 @@ There MUST be only one schema, no migrations or legacy api support.
 ## 👤semio📚ui
 
 semio ui:
+
+When a diff is displayed add a
 
 semio ui diagram:
 

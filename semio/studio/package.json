@@ -1,36 +1,36 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "projectType": "library",
-  "name": "@semio/studio",
-  "version": "0.1.0",
-  "type": "module",
-  "description": "semio · studio — Y.js CRDT runtime and kit persistence providers",
-  "exports": {
-    ".": "./studio.ts"
-  },
-  "dependencies": {
-    "@semio/js": "*",
-    "yjs": "^13.6.29",
-    "y-indexeddb": "^9.0.12"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    }
-  },
-  "author": {
-    "name": "Ueli Saluz",
-    "email": "ueli@semio-tech.com",
-    "url": "https://github.com/usalu"
-  },
-  "license": "AGPL-3.0-or-later",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/usalu/semio.git",
-    "directory": "semio/studio"
-  },
-  "bundleKind": "lib"
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "name": "@semio/studio",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "semio · studio — Y.js CRDT runtime and kit persistence providers",
+    "exports": {
+        ".": "./studio.ts"
+    },
+    "dependencies": {
+        "@semio/js": "*",
+        "yjs": "^13.6.29",
+        "y-indexeddb": "^9.0.12"
+    },
+    "peerDependencies": {
+        "react": ">=18.0.0"
+    },
+    "peerDependenciesMeta": {
+        "react": {
+            "optional": true
+        }
+    },
+    "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.com",
+        "url": "https://github.com/usalu"
+    },
+    "license": "AGPL-3.0-or-later",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/usalu/semio.git",
+        "directory": "semio/studio"
+    },
+    "bundleKind": "lib"
 }

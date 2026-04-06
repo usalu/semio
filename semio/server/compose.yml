@@ -1,8 +1,8 @@
 # #region 🔖Header
-# [🧰repo💻compose](repo://p/i/repo/f/compose.yml)
+# [👤semio📚server💻compose](repo://p/u/semio/b/l/server/f/compose.yml)
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 # AGPL-3.0
-# Docker Compose for repo server stack: PostgreSQL, Next.js web, pg-boss worker, Caddy reverse proxy.
+# Docker Compose for the semio server stack with repo web services and the semio session backend.
 # #endregion 🔖Header
 
 services:
@@ -16,7 +16,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ../../repo/postgres/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-semio} -d ${POSTGRES_DB:-semio_repo}"]
       interval: 5s
@@ -29,7 +29,7 @@ services:
   # #region 🔖Web
   web:
     build:
-      context: ./server
+      context: ../../repo/server
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
@@ -50,7 +50,7 @@ services:
   # #region 🔖Worker
   worker:
     build:
-      context: ./server
+      context: ../../repo/server
       dockerfile: Dockerfile
     restart: unless-stopped
     command: ["node", "-e", "require('tsx/esm');import('./lib/worker.ts')"]
@@ -72,7 +72,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./server/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../repo/server/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
@@ -81,14 +81,16 @@ services:
 
   # #region 🔖Session
   session:
-    build:
-      context: ../semio/rs
-      dockerfile: Dockerfile.session
+    image: rust:1.89-bookworm
     restart: unless-stopped
+    working_dir: /workspace/semio/server
+    command: ["cargo", "run", "--bin", "semio-session"]
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-semio}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-semio_repo}
       SESSION_HOST: 0.0.0.0
       SESSION_PORT: 8788
+    volumes:
+      - ../..:/workspace
     depends_on:
       postgres:
         condition: service_healthy
