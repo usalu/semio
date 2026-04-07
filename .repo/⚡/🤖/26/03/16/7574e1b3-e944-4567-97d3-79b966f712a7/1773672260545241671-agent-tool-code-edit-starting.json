@@ -1,0 +1,28 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.code.edit.starting",
+    "second": "2026-03-16T14:44:20Z",
+    "session": "7574e1b3-e944-4567-97d3-79b966f712a7"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "pre_write_code",
+      "trajectory_id": "7574e1b3-e944-4567-97d3-79b966f712a7",
+      "timestamp": "2026-03-16T14:44:20.420817587Z",
+      "execution_id": "2f27430f-777c-45fd-a591-e79d51c28f09",
+      "tool_info": {
+        "edits": [
+          {
+            "old_string": "logFiles := getLogFiles(t, tmpDir)\n\n\t// After removing redundant files, only session.json files should exist\n\t// Count session.json files instead of individual event files\n\tsessionCount := 0\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tsessionCount++\n\t\t}\n\t}\n\tif sessionCount \u003c 16 {\n\t\tt.Fatalf(\"expected at least 16 session.json files, got %d\", sessionCount)\n\t}",
+            "new_string": "logFiles := getLogFiles(t, tmpDir)\n\n\t// After removing redundant files, only session.json files should exist\n\t// All events with the same session_id should be in one session.json file\n\tsessionCount := 0\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tsessionCount++\n\t\t}\n\t}\n\tif sessionCount != 1 {\n\t\tt.Fatalf(\"expected exactly 1 session.json file for all events, got %d\", sessionCount)\n\t}\n\t\n\t// Verify that all 16 events are in the session.json file\n\tvar sessionFile string\n\tfor _, f := range logFiles {\n\t\tif strings.HasSuffix(f, \"session.json\") {\n\t\t\tsessionFile = f\n\t\t\tbreak\n\t\t}\n\t}\n\t\n\tdata, err := os.ReadFile(sessionFile)\n\tif err != nil {\n\t\tt.Fatalf(\"cannot read session.json: %v\", err)\n\t}\n\t\n\tvar meta SessionMeta\n\tif err := json.Unmarshal(data, \u0026meta); err != nil {\n\t\tt.Fatalf(\"cannot unmarshal session.json: %v\", err)\n\t}\n\t\n\t// Should have 16 events (1 prompt + 15 agent events)\n\texpectedEventCount := 16\n\tif len(meta.Events) != expectedEventCount {\n\t\tt.Fatalf(\"expected %d events in session.json, got %d\", expectedEventCount, len(meta.Events))\n\t}"
+          }
+        ],
+        "file_path": "/workspaces/semio/repo/cli/main_test.go"
+      }
+    }
+  },
+  "response": {}
+}

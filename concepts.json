@@ -1,0 +1,44 @@
+{
+    "semio": {
+        "concepts": [
+            "kit",
+            "design",
+            "type",
+            "model",
+            "connector",
+            "port",
+            "prop",
+            "layer",
+            "group",
+            "stat",
+            "attribute",
+            "concept",
+            "tag"
+        ],
+        "devs": [
+            "repo",
+            "folder",
+            "bundle",
+            "file",
+            "section",
+            "definition",
+            "policy",
+            "breach",
+            "codebase",
+            "scope",
+            "ui",
+            "dry-run"
+        ],
+        "semio/js": {
+            "sketchpad": {
+                "concepts": [
+                    "action",
+                    "context",
+                    "options",
+                    "args",
+                    "dry-run"
+                ]
+            }
+        }
+    }
+}

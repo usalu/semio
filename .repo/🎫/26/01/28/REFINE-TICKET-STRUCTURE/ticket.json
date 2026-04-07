@@ -1,0 +1,10 @@
+{
+  "title": "Refine Ticket Structure",
+  "status": "closed",
+  "description": "Remove ticket progress command and deduplicate ticket.json fields",
+  "summary": "Refactored ticket structure: removed progress command and deduplicated JSON storage",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/249"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"
+}

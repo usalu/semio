@@ -1,0 +1,10 @@
+{
+  "title": "Restrict Ticket Sessions to Open Reopen Operations",
+  "status": "closed",
+  "description": "Ensure ticket sessions are only appended when ticket open or ticket reopen is executed through CLI/MCP. Hooks and ticket close must not append sessions.",
+  "summary": "Removed session appends from hook tracking and ticket close so sessions are only added by ticket open/reopen; updated hook and lifecycle tests to enforce the behavior.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪019c9c56dd2170919533f0d61caa3991"
+  ]
+}

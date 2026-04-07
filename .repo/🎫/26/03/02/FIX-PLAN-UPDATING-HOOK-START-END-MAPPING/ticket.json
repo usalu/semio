@@ -1,0 +1,13 @@
+{
+  "title": "Fix Plan Updating Hook Start End Mapping",
+  "status": "closed",
+  "description": "plan.updating should map to starting and ended events without duplicate dispatch",
+  "summary": "Split plan updating hook into starting and ended mappings to avoid duplicate event dispatch, and updated hook tests accordingly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/740"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary",
+  "sessions": [
+    "⚪019cac21efc47300b7d3487fb5e437d9"
+  ]
+}

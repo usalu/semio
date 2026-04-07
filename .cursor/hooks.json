@@ -1,0 +1,95 @@
+{
+  "hooks": {
+    "afterAgentResponse": [
+      {
+        "command": "./repo/cli/cli hook afterAgentResponse cursor-chat"
+      }
+    ],
+    "afterAgentThought": [
+      {
+        "command": "./repo/cli/cli hook afterAgentThought cursor-chat"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "./repo/cli/cli hook afterFileEdit cursor-chat"
+      }
+    ],
+    "afterMCPExecution": [
+      {
+        "command": "./repo/cli/cli hook afterMCPExecution cursor-chat"
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "./repo/cli/cli hook afterShellExecution cursor-chat"
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "./repo/cli/cli hook beforeMCPExecution cursor-chat"
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "./repo/cli/cli hook beforeReadFile cursor-chat"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "./repo/cli/cli hook beforeShellExecution cursor-chat"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "./repo/cli/cli hook beforeSubmitPrompt cursor-chat"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "./repo/cli/cli hook postToolUse cursor-chat"
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "command": "./repo/cli/cli hook postToolUseFailure cursor-chat"
+      }
+    ],
+    "preCompact": [
+      {
+        "command": "./repo/cli/cli hook preCompact cursor-chat"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "./repo/cli/cli hook preToolUse cursor-chat"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "./repo/cli/cli hook sessionEnd cursor-chat"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "./repo/cli/cli hook sessionStart cursor-chat"
+      }
+    ],
+    "stop": [
+      {
+        "command": "./repo/cli/cli hook stop cursor-chat"
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": "./repo/cli/cli hook subagentStart cursor-chat"
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "./repo/cli/cli hook subagentStop cursor-chat"
+      }
+    ]
+  },
+  "version": 1
+}

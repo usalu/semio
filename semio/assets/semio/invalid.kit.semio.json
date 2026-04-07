@@ -1,0 +1,197 @@
+{
+  "guid": "019ab664-0000-0000-0000-000000000001",
+  "name": "Invalid Kit",
+  "types": [
+    {
+      "guid": "019ab664-1111-1111-1111-111111111111",
+      "name": "Duplicate Type Name",
+      "models": [
+        {
+          "guid": "019ab664-1111-1111-1111-111111110001",
+          "name": "Duplicate Model Name",
+          "file": {
+            "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000"
+          }
+        },
+        {
+          "guid": "019ab664-1111-1111-1111-111111110002",
+          "name": "Duplicate Model Name",
+          "file": {
+            "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
+          }
+        }
+      ],
+      "connectors": [
+        {
+          "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
+          "name": "Duplicate Connector Name",
+          "t": 0,
+          "point": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "direction": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          }
+        },
+        {
+          "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
+          "name": "Duplicate Connector Name",
+          "t": 0.5,
+          "point": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "direction": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          }
+        }
+      ]
+    },
+    {
+      "guid": "019ab664-2222-2222-2222-222222222222",
+      "name": "Duplicate Type Name"
+    }
+  ],
+  "designs": [
+    {
+      "guid": "019ab664-3333-3333-3333-333333333333",
+      "name": "Duplicate Design Name",
+      "pieces": [
+        {
+          "guid": "019ab664-4444-4444-4444-444444444444",
+          "name": "Duplicate Piece Name",
+          "type": {
+            "guid": "019ab664-1111-1111-1111-111111111111"
+          },
+          "plane": {
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "xAxis": {
+              "x": 1,
+              "y": 0,
+              "z": 0
+            },
+            "yAxis": {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            }
+          }
+        },
+        {
+          "guid": "019ab664-5555-5555-5555-555555555555",
+          "name": "Duplicate Piece Name",
+          "type": {
+            "guid": "019ab664-2222-2222-2222-222222222222"
+          },
+          "plane": {
+            "origin": {
+              "x": 5,
+              "y": 0,
+              "z": 0
+            },
+            "xAxis": {
+              "x": 1,
+              "y": 0,
+              "z": 0
+            },
+            "yAxis": {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            }
+          }
+        }
+      ],
+      "connections": [
+        {
+          "guid": "019ab664-3333-3333-3333-333333333333",
+          "connected": {
+            "piece": {
+              "guid": "019ab664-4444-4444-4444-444444444444"
+            },
+            "connector": {
+              "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+            }
+          },
+          "connecting": {
+            "piece": {
+              "guid": "019ab664-5555-5555-5555-555555555555"
+            },
+            "connector": {
+              "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+            }
+          }
+        }
+      ],
+      "layers": [
+        {
+          "guid": "019ab664-3333-3333-3333-333333330001",
+          "path": "Duplicate.Layer.Path"
+        },
+        {
+          "guid": "019ab664-3333-3333-3333-333333330002",
+          "path": "Duplicate.Layer.Path"
+        }
+      ]
+    },
+    {
+      "guid": "019ab664-6666-6666-6666-666666666666",
+      "name": "Duplicate Design Name"
+    }
+  ],
+  "qualities": [
+    {
+      "guid": "019ab664-7777-7777-7777-777777777777",
+      "name": "Duplicate Quality Name",
+      "key": "duplicate-quality"
+    },
+    {
+      "guid": "019ab664-8888-8888-8888-888888888888",
+      "name": "Duplicate Quality Name",
+      "key": "duplicate-quality-2"
+    }
+  ],
+  "ports": [
+    {
+      "guid": "019ab664-9999-9999-9999-999999999999",
+      "name": "Duplicate Port Name"
+    },
+    {
+      "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
+      "name": "Duplicate Port Name"
+    }
+  ],
+  "files": [
+    {
+      "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000",
+      "name": "duplicate-file.txt",
+      "remote": "file1.txt"
+    },
+    {
+      "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
+      "name": "duplicate-file.txt",
+      "remote": "file2.txt"
+    }
+  ],
+  "folders": [
+    {
+      "guid": "019ab664-DDDD-DDDD-DDDD-DDDDDDDD0000",
+      "name": "duplicate-folder"
+    },
+    {
+      "guid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
+      "name": "duplicate-folder"
+    }
+  ]
+}

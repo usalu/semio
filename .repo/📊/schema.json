@@ -1,0 +1,144 @@
+{
+  "timestamp": "2025-12-23T14:11:39.065Z",
+  "summary": {
+    "typescript": {
+      "entities": 27,
+      "idTypes": 21
+    },
+    "python": {
+      "entities": 26,
+      "idTypes": 21
+    },
+    "csharp": {
+      "entities": 26,
+      "idTypes": 21
+    },
+    "grasshopper": {
+      "components": 0,
+      "params": 60,
+      "goos": 60
+    },
+    "database": {
+      "entities": 27,
+      "relationships": 13
+    },
+    "port": {
+      "topLevelFields": 18
+    },
+    "software": {
+      "entities": 96,
+      "relationships": 64
+    },
+    "errors": 0,
+    "warnings": 21
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "entity": "Attribute",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Location",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Author",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "File",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Folder",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Benchmark",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Quality",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Port",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Prop",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Model",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Connector",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Tag",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Concept",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Type",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Layer",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Piece",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Group",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Connection",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Stat",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Design",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    },
+    {
+      "entity": "Kit",
+      "message": "Missing Grasshopper component",
+      "source": "grasshopper"
+    }
+  ],
+  "status": "warning"
+}

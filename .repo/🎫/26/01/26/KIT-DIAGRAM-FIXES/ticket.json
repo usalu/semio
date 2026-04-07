@@ -1,0 +1,8 @@
+{
+  "title": "Kit Diagram Fixes",
+  "status": "closed",
+  "summary": "Fixed Kit diagram pan/zoom, edge alignment, and styling parity with Design app.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/216"
+  }
+}

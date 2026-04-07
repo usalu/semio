@@ -1,0 +1,147 @@
+Symbol,Code,Abbreviation,Name
+👤,Au,Aut,Author
+👥,Au*,Auts*,Authors
+!,!Pf,!Pfm,Assess Performance
+👥,Bs,Bas,Base
+🧱,Bd,Mbd,Model BLock Definition
+📍,Bi,Bin,Block Instance
+📍,Bi*,Bin*,Block Instances
+💾,Ca,Cac,Cache
+⌖,Ce?,Cen,Center
+💥,Cl?,Col?,Collider
+🧲,Cd,Cnd,Connected
+🧲,Cg,Cng,Connecting
+🖌️,Cl,Col,Colour
+🖇️,Co,Con,Connection
+🖇️,Co*,Cons*,Connections
+✅,CF*,CFas*,Compatible Ports
+⌚,CA,CAt,Created At
+👶,CNa,CNa,Child Name
+🍼,CFa,Dns,Child Factor
+💬,Dc?,Dsc?,Description
+📖,Df,Def,Definition
+🗺️,Dg,Dgm,Diagram
+📁,Di?,Dir?,Directory
+🥇,Dl,Dfl,Default
+🥇,De,Dft?,Default
+➡️,Dr,Drn,Direction
+🏙️,Dn,Dsn,Design
+🏙️,Dn*,Dsns*,Designs
+📺,DP,DPt,Diagram Point
+:,:Dg,:Dgm,Draw Diagram
+🪣,Em,Emp,Empty
+▢,En,Ent,Entity
+📤,Ex,Exp,Export
+👨‍👩‍👧‍👦,Fa?,Fam?,Port
+🔑,FK,FKy,Foreign Key
+🔀,Fl,Flp,Flipped
+📌,Fx,Fix,Fixed
+🧩,Ge,Geo,Geometry
+↕️,Gp?,Gap?,Gap
+🆔,GI,GId,Globally Unique Identifier
+🖧,Gr*,Grp*,Group
+🏠,Hp?,Hmp?,Homepage
+🪙,Ic?,Ico?,Icon
+🆔,Id,Id,Identifier
+🆔,Id?,Id?,Identifier
+🪪,Id,Id,Identifier
+↘️,In,Inp,Input
+🖼️,Im,Img,Image
+🦶,Ip?,Imp?,Imperial
+📊,Jc,Jac,Jaccard Index
+🗃️️️,Kt,Kit,Kit
+📄,Ln?,Lcn?,License
+📚,LN,LNa,Layer Name
+❌,Lg,Log,Log
+📛,Na,Nam,Name
+📛,NN,NNa,New Name
+⇱,MD,MPD,Module Part Diagonal
+✉️,Mm,Mim,Mime
+,Mo*,MoM*,Monoceros Modules
+🏠,Ob,Obj,Object
+🏘️,Ob*,Obj*,Objects
+📛,ON,ONa,Old Name
+⌱,Og,Org,Origin
+↗️,Ou,Out,Output
+🪁,Pp?,Pap?,Paper
+👪,Pa,Par,Parent
+∿,Ph,Pth,Path
+⚒️,Pr,Prs,Parse
+🔢,Pl,Plu,Plural
+⭕,Pc,Pce,Piece
+⭕,Pc*,Pces*,Pieces
+:,:Ge,:Geo,Preview Geometry
+:,:Po,:Por,Preview Connector
+🔑,PK,PKy,Primary Key
+🔌,Po,Por,Connector
+🔌,Po+,Pors+,Connectors
+🎫,Pp,Prp,Props
+◳,Pn,Pln,Plane
+◳,Pn?,Pln?,Plane
+✖️,Pt,Pnt,Point
+✖️,Pt,Pnt,Point
+🔮,Pv,Prv,Preview
+🏷️️,At,Atr,Attribute
+🏷️️,At*,Atr*,Attributes
+🪜,Rs?,Ris?,Rise
+🍾,Re,Rel,Release
+☁️,Rm?,Rmt?,Remote
+💾,Rp,Rep,Model
+📜,Rl*,Rul*,Policies
+🔄,Rt?,Rot?,Rotation
+🏃‍♂️,Ru,Run,Run Component
+?,?Co,?Con,Select Connection
+?,?Dn,?Dsn,Select Design
+?,?Pc,?Pce,Select Piece
+?,?Pc,?Pces,Select Pieces
+?,?Rp,?Rep,Select Model
+?,?Ro,?Roo,Select Root
+📦,S,Set,Set
+◾,Sc?,Scl,Scale
+↔️,Sd,Sde,Side
+🌱,SD,SDn,Source Design
+⏩,Sf,Sft,Shift
+🧊,Sh,Shd,Shader
+□,Sl,Slt,Slot
+⊞,Sl*,Slts*,Slots
+:,:Dn,:Dsn,Show Design
+⁐,⁐Dn,⁐Dsn,Sort Design
+✅,Su,Suc,Success
+💍,T,T,T
+🌳,TD,TDn,Target Design
+⚖️️,tf,trf,Transition Factor
+🏷️️,Tg*,Tags*,Tags
+∡,Tl?,Tlt?,Tilt
+▦,Tr,Trf,Transform
+🛞,Tu?,Tur?,Turn
+🧩,Ty,Typ,Type
+🧩,Ty,Typ,Type
+🧩,Ty*,Typs*,Types
+📎,Ui?,Uri,Uri
+🔗,Ur,Url,Unique Resource Locator
+🔗,UR,UrR,Url Remote Path
+🔗,UL,ULP,Url Local Path
+🔗,UP*,UrP,Url Paths
+Ⓜ️,Ut,Unt,Unit
+Ⓜ️,Ut?,Unt?,Unit
+🔄,Up,Upd,Update
+🔀,Vn?,Vnt,Variant
+➡️,Vc,Vec,Vector
+🔀,Ve?,Ver?,Version
+🥽,Vw?,Vew?,View
+🛂,Vd,Vld,Validate
+🏷️️,Vl,Val,Value
+🔢,Vl?,Val?,Value
+📦,Vo?,Vol?,Volume
++,+Tx,+Txt,Write Text
+🎚️,X,X,X
+🎚️,X,X,X
+➡️,X?,X,X
+➡️,XA,XAx,XAxis
+🎚️,Y,Y,Y
+🎚️,Y,Y,Y
+⬆️,Y?,Y?,Y
+➡️,YA,YAx,YAxis
+🎚️,Z,Z,Z
+🎚️,Z,Z,Z
+➡️,ZA,ZAx,ZAxis

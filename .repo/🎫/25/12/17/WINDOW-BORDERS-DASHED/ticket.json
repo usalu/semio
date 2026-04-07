@@ -1,0 +1,6 @@
+{
+  "title": "Sketchpad windows have continuous dashed borders",
+  "status": "closed",
+  "description": "The windows dont have a border on the bottom and on the right. Make the window border dashed.",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

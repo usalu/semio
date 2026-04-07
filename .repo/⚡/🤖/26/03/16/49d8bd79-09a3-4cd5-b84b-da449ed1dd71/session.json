@@ -1,0 +1,1871 @@
+{
+  "id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+  "uri": "semiorepo://session/49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+  "client": "windsurf-chat",
+  "second": "2026-03-16T23:40:48Z",
+  "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:40:48Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:40:48.041229401Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:40:48Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:40:48.105070646Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:40:48Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:40:48.509326537Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:40:48Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:40:48.513622169Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:41:04Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:04.290303407Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:41:04Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:04.346838188Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:41:04Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:04.498720436Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:41:04Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:04.546841814Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:41:11Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:11.82102646Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:41:11Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:11.842164204Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:41:12Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:11.986207374Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:41:12Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:12.010719313Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:41:17Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:17.569516319Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:41:17Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:17.615985314Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:41:17Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:17.753176349Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:41:17Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:17.803372672Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:41:54Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:41:54.536067491Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:42:16Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:42:16.163388788Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:42:26Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:42:26.744926371Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:42:26Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:42:26.754145458Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:42:27Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:42:27.076010765Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:42:27Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:42:27.12837447Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:43:10Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:43:10.896585767Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:43:53Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:43:53.628781965Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:44:02Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:44:02.629660797Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:44:02Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:44:02.798581879Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:44:02Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:44:02.808021926Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:44:09Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:44:09.726479327Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "npm run build",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:44:40Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:44:40.532060151Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "  for (const symbol of symbols) {\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else {\n      addScope(symbol.name, symbol.kind);\n    }\n  }\n\n  return Array.from(scopes);\n}\n\nasync function getAnalyzeLensIds(document: vscode.TextDocument): Promise\u003cstring[]\u003e {\n  const lenses = await getCodeLenses(document);\n  return lenses",
+                "new_string": "  for (const symbol of symbols) {\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else {\n      addScope(symbol.name, symbol.kind);\n    }\n  }\n\n  if (scopes.size === 0) {\n    return collectNativeDefinitionFallbackScopes(document);\n  }\n\n  return Array.from(scopes);\n}\n\nasync function getAnalyzeLensIds(document: vscode.TextDocument): Promise\u003cstring[]\u003e {\n  const lenses = await getCodeLenses(document);\n  return lenses"
+              }
+            ],
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:44:49Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:44:49.293808408Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "  for (const symbol of symbols) {\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else {\n      addScope(symbol.name, symbol.kind);\n    }\n  }\n\n  return Array.from(scopes);\n}\n\nasync function getAnalyzeLensIds(document: vscode.TextDocument): Promise\u003cstring[]\u003e {\n  const lenses = await getCodeLenses(document);\n  return lenses",
+                "new_string": "  for (const symbol of symbols) {\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else {\n      addScope(symbol.name, symbol.kind);\n    }\n  }\n\n  if (scopes.size === 0) {\n    return collectNativeDefinitionFallbackScopes(document);\n  }\n\n  return Array.from(scopes);\n}\n\nasync function getAnalyzeLensIds(document: vscode.TextDocument): Promise\u003cstring[]\u003e {\n  const lenses = await getCodeLenses(document);\n  return lenses"
+              }
+            ],
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:44:55Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:44:55.524772263Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "npm run build",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:44:55Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:44:55.562974183Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test -- --grep \"Analyze CodeLens covers native definition scopes in TypeScript and Go files\"",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:45:14Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:45:14.44930871Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:46:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:46:57.726989821Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/out/test/extension.test.js"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:46:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:46:57.781316178Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:46:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:46:57.80376036Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test -- --grep \"Analyze CodeLens covers\"",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:46:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:46:57.897205733Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/out/test/extension.test.js"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:46:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:46:57.958219157Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:47:37Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:47:37.064642967Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test -- --grep \"Analyze CodeLens covers every definition entity in TypeScript and Go files\"",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:47:37Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:47:37.181061881Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test -- --grep \"Analyze CodeLens covers native definition scopes in TypeScript and Go files\"",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:48:26Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:48:26.415406268Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\nimport re\ntext = Path('/workspaces/semio/repo/vscode/extension.ts').read_text()\n# extract emojis from ENTITY_EMOJIS map entries\nemojis = re.findall(r'\\[\"([^\"]+)\",\\s*\"[^\"]+\"\\]', text)\n# sort longest first and escape\nemoji_alt = '|'.join(sorted((re.escape(e) for e in emojis), key=len, reverse=True))\npattern = r'(?:\\[((?:' + emoji_alt + r')[^\\]]+)\\]\\((semiorepo:\\/\\/[^)]+)\\)|((?:' + emoji_alt + r')[^\\s/\"\\'\\[\\]()]+))'\nregex = re.compile(pattern)\nprint('emoji count', len(emojis))\nprint('regex ok', bool(regex))\n# count matches and specifically definition ids\nmatches = list(regex.finditer(text))\nprint('all matches', len(matches))\ndef_ids = []\nfor m in matches:\n    val = m.group(1) or m.group(3)\n    if '🛠️' in val or '✂️' in val or '🪨' in val or '🧪' in val:\n        def_ids.append(val)\nprint('definition-like matches', len(def_ids))\nprint(def_ids[:10])\nPY",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:49:09Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:49:09.722430511Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test -- --grep 'Analyze CodeLens covers every definition entity in TypeScript and Go files'",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:49:47Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:49:47.480808203Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test -- --grep 'Entity ID Regex Matching Test Suite'",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:50:29Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:50:29.235710588Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:50:29Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:50:29.254071621Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:50:29Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:50:29.421578175Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:50:29Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:50:29.433311762Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:50:50Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:50:50.545416594Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "        }),\n      );\n    }\n  \n    lenses.push(...(await collectNativeDefinitionCodeLenses(document, token)));\n  \n    return lenses;\n  }\n}",
+                "new_string": "        }),\n      );\n    }\n  \n    const nativeDefinitionLenses = await collectNativeDefinitionCodeLenses(document, token);\n    lenses.push(...nativeDefinitionLenses);\n\n    if (document.uri.fsPath.endsWith(\"/repo/vscode/extension.ts\") || document.uri.fsPath.endsWith(\"/repo/go/events.go\")) {\n      log(\"[DEBUG] CodeLens counts\", document.uri.fsPath, \"total\", lenses.length, \"native\", nativeDefinitionLenses.length);\n      log(\"[DEBUG] Analyze lens sample\", lenses.filter((lens) =\u003e lens.command?.command === \"semio.analyze\").slice(0, 20).map((lens) =\u003e String(lens.command?.arguments?.[0] ?? \"\")));\n    }\n  \n    return lenses;\n  }\n}"
+              }
+            ],
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:50:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:50:57.821443789Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "        }),\n      );\n    }\n  \n    lenses.push(...(await collectNativeDefinitionCodeLenses(document, token)));\n  \n    return lenses;\n  }\n}",
+                "new_string": "        }),\n      );\n    }\n  \n    const nativeDefinitionLenses = await collectNativeDefinitionCodeLenses(document, token);\n    lenses.push(...nativeDefinitionLenses);\n\n    if (document.uri.fsPath.endsWith(\"/repo/vscode/extension.ts\") || document.uri.fsPath.endsWith(\"/repo/go/events.go\")) {\n      log(\"[DEBUG] CodeLens counts\", document.uri.fsPath, \"total\", lenses.length, \"native\", nativeDefinitionLenses.length);\n      log(\"[DEBUG] Analyze lens sample\", lenses.filter((lens) =\u003e lens.command?.command === \"semio.analyze\").slice(0, 20).map((lens) =\u003e String(lens.command?.arguments?.[0] ?? \"\")));\n    }\n  \n    return lenses;\n  }\n}"
+              }
+            ],
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:51:08Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:51:08.70405577Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "npm run build",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:51:21Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:51:21.688831782Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "rm -f activation.log \u0026\u0026 xvfb-run -a npm test -- --grep 'Analyze CodeLens covers every definition entity in TypeScript and Go files'",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:51:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:51:57.118443952Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/activation.log"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:51:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:51:57.335297418Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/activation.log"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:52:28Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:52:28.159567184Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:52:37Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:52:37.26863471Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:52:47Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:52:46.98837894Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:53:00Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:53:00.66916322Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:53:11Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:53:11.211119864Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "npm run build",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:53:24Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:53:24.523236244Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test -- --grep 'Analyze CodeLens covers native definition scopes in TypeScript and Go files'",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:54:01Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:54:01.484852158Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:54:17Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:54:17.420940831Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.test.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:54:25Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:54:25.478930258Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "npm run build \u0026\u0026 xvfb-run -a npm test -- --grep 'Analyze CodeLens covers every definition entity in TypeScript and Go files'",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:55:13Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:55:13.30811911Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:55:13Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:55:13.515552706Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:55:59Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:55:59.62024879Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\npath = Path('/workspaces/semio/repo/vscode/extension.ts')\ntext = path.read_text()\nmarker = '\\n/**\\n * [🧰semiorepo🖱️vscode💻extension🔖providers🛠️semiocodelensprovider]'\ninsert_after = 'function isDefinitionEntityId(id: string): boolean {\\n  for (const [emoji, entityKind] of ENTITY_EMOJIS.entries()) {\\n    if (id.includes(emoji) \u0026\u0026 entityKind.startsWith(\"definition-\")) {\\n      return true;\\n    }\\n  }\\n  return false;\\n}\\n'\nif marker not in text:\n    raise SystemExit('marker not found')\nif 'async function collectNativeDefinitionCodeLenses' in text:\n    raise SystemExit('helper already present')\nblock = '''\nconst NATIVE_DEFINITION_SYMBOL_KINDS = new Set\u003cvscode.SymbolKind\u003e([\n  vscode.SymbolKind.Class,\n  vscode.SymbolKind.Constant,\n  vscode.SymbolKind.Constructor,\n  vscode.SymbolKind.Enum,\n  vscode.SymbolKind.EnumMember,\n  vscode.SymbolKind.Field,\n  vscode.SymbolKind.Function,\n  vscode.SymbolKind.Interface,\n  vscode.SymbolKind.Method,\n  vscode.SymbolKind.Module,\n  vscode.SymbolKind.Namespace,\n  vscode.SymbolKind.Property,\n  vscode.SymbolKind.Struct,\n  vscode.SymbolKind.TypeParameter,\n  vscode.SymbolKind.Variable,\n]);\n\nfunction getDocumentRelativePath(document: vscode.TextDocument): string | null {\n  if (document.uri.scheme !== \"file\") return null;\n  const root = getWorkspaceRoot();\n  if (!root) return null;\n  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\\\/g, \"/\");\n  if (!relativePath || relativePath.startsWith(\"..\")) return null;\n  return relativePath;\n}\n\nfunction buildNativeDefinitionScope(relativePath: string, definitionName: string): string {\n  return `${relativePath}§${definitionName}`;\n}\n\nfunction isDocumentSymbol(value: vscode.DocumentSymbol | vscode.SymbolInformation): value is vscode.DocumentSymbol {\n  return \"selectionRange\" in value;\n}\n\nfunction collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): Array\u003c{ name: string; range: vscode.Range }\u003e {\n  const patternsByLanguage: Partial\u003cRecord\u003cstring, RegExp[]\u003e\u003e = {\n    typescript: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    typescriptreact: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    javascript: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    javascriptreact: [\n      /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n      /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n    ],\n    go: [\n      /^\\s*func\\s+(?:\\([^)]+\\)\\s*)?([A-Za-z_][\\w]*)\\b/,\n      /^\\s*type\\s+([A-Za-z_][\\w]*)\\b/,\n      /^\\s*const\\s+([A-Za-z_][\\w]*)\\b/,\n      /^\\s*var\\s+([A-Za-z_][\\w]*)\\b/,\n    ],\n  };\n  const patterns = patternsByLanguage[document.languageId] ?? [];\n  if (patterns.length === 0) return [];\n  const results: Array\u003c{ name: string; range: vscode.Range }\u003e = [];\n  const seen = new Set\u003cstring\u003e();\n  for (let lineIndex = 0; lineIndex \u003c document.lineCount; lineIndex++) {\n    const textLine = document.lineAt(lineIndex).text;\n    for (const pattern of patterns) {\n      const match = pattern.exec(textLine);\n      if (!match?.[1]) continue;\n      const name = match[1];\n      const key = `${lineIndex}:${name}`;\n      if (seen.has(key)) continue;\n      seen.add(key);\n      const startCharacter = textLine.indexOf(name);\n      if (startCharacter \u003c 0) continue;\n      results.push({\n        name,\n        range: new vscode.Range(lineIndex, startCharacter, lineIndex, startCharacter + name.length),\n      });\n      break;\n    }\n  }\n  return results;\n}\n\nasync function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise\u003cvscode.CodeLens[]\u003e {\n  if (!shouldAnalyzeFile(document)) return [];\n  const relativePath = getDocumentRelativePath(document);\n  if (!relativePath) return [];\n  const symbols = await vscode.commands.executeCommand\u003cArray\u003cvscode.DocumentSymbol | vscode.SymbolInformation\u003e\u003e(\n    \"vscode.executeDocumentSymbolProvider\",\n    document.uri,\n  ) ?? [];\n  const scopes = new Map\u003cstring, vscode.CodeLens\u003e();\n\n  const addLens = (name: string, range: vscode.Range): void =\u003e {\n    if (!name) return;\n    const scope = buildNativeDefinitionScope(relativePath, name);\n    if (scopes.has(scope)) return;\n    scopes.set(scope, new vscode.CodeLens(range, {\n      title: \"Analyze\",\n      command: \"semio.analyze\",\n      arguments: [scope],\n    }));\n  };\n\n  const visitDocumentSymbol = (symbol: vscode.DocumentSymbol): void =\u003e {\n    if (token.isCancellationRequested) return;\n    if (NATIVE_DEFINITION_SYMBOL_KINDS.has(symbol.kind)) {\n      addLens(symbol.name, symbol.selectionRange);\n    }\n    for (const child of symbol.children) {\n      visitDocumentSymbol(child);\n    }\n  };\n\n  for (const symbol of symbols) {\n    if (token.isCancellationRequested) break;\n    if (isDocumentSymbol(symbol)) {\n      visitDocumentSymbol(symbol);\n    } else if (NATIVE_DEFINITION_SYMBOL_KINDS.has(symbol.kind)) {\n      addLens(symbol.name, symbol.location.range);\n    }\n  }\n\n  if (scopes.size == 0) {\n    for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n      addLens(fallback.name, fallback.range);\n    }\n  }\n\n  return Array.from(scopes.values());\n}\n'''\ntext = text.replace(insert_after + marker, insert_after + block + marker, 1)\npath.write_text(text)\nPY",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:56:12Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:56:12.302713824Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:56:12Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:56:12.485164687Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:56:12Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:56:12.496902549Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:56:46Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:56:46.406553709Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "  function collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): Array\u003c{ name: string; range: vscode.Range }\u003e {\n    const patternsByLanguage: Partial\u003cRecord\u003cstring, RegExp[]\u003e\u003e = {\n      typescript: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\b/,\n      ],\n      typescriptreact: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\b/,\n      ],\n      javascript: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\b/,\n      ],\n      javascriptreact: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\b/,\n      ],\n      go: [\n        /^\\s*func\\s+(?:\\([^)]+\\)\\s*)?([A-Za-z_][\\w]*)\b/,\n        /^\\s*type\\s+([A-Za-z_][\\w]*)\b/,\n        /^\\s*const\\s+([A-Za-z_][\\w]*)\b/,\n        /^\\s*var\\s+([A-Za-z_][\\w]*)\b/,\n      ],\n    };",
+                "new_string": "  function collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): Array\u003c{ name: string; range: vscode.Range }\u003e {\n    const patternsByLanguage: Partial\u003cRecord\u003cstring, RegExp[]\u003e\u003e = {\n      typescript: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n      ],\n      typescriptreact: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n      ],\n      javascript: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n      ],\n      javascriptreact: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n      ],\n      go: [\n        /^\\s*func\\s+(?:\\([^)]+\\)\\s*)?([A-Za-z_][\\w]*)\\b/,\n        /^\\s*type\\s+([A-Za-z_][\\w]*)\\b/,\n        /^\\s*const\\s+([A-Za-z_][\\w]*)\\b/,\n        /^\\s*var\\s+([A-Za-z_][\\w]*)\\b/,\n      ],\n    };"
+              },
+              {
+                "old_string": "    if (scopes.size == 0) {\n      for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n        addLens(fallback.name, fallback.range);\n      }\n    }",
+                "new_string": "    if (scopes.size === 0) {\n      for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n        addLens(fallback.name, fallback.range);\n      }\n    }"
+              }
+            ],
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:57:04Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:57:04.329900625Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "  function collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): Array\u003c{ name: string; range: vscode.Range }\u003e {\n    const patternsByLanguage: Partial\u003cRecord\u003cstring, RegExp[]\u003e\u003e = {\n      typescript: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\b/,\n      ],\n      typescriptreact: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\b/,\n      ],\n      javascript: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\b/,\n      ],\n      javascriptreact: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\b/,\n      ],\n      go: [\n        /^\\s*func\\s+(?:\\([^)]+\\)\\s*)?([A-Za-z_][\\w]*)\b/,\n        /^\\s*type\\s+([A-Za-z_][\\w]*)\b/,\n        /^\\s*const\\s+([A-Za-z_][\\w]*)\b/,\n        /^\\s*var\\s+([A-Za-z_][\\w]*)\b/,\n      ],\n    };",
+                "new_string": "  function collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): Array\u003c{ name: string; range: vscode.Range }\u003e {\n    const patternsByLanguage: Partial\u003cRecord\u003cstring, RegExp[]\u003e\u003e = {\n      typescript: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n      ],\n      typescriptreact: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?enum\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n      ],\n      javascript: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n      ],\n      javascriptreact: [\n        /^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:default\\s+)?class\\s+([A-Za-z_$][\\w$]*)\\b/,\n        /^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\b/,\n      ],\n      go: [\n        /^\\s*func\\s+(?:\\([^)]+\\)\\s*)?([A-Za-z_][\\w]*)\\b/,\n        /^\\s*type\\s+([A-Za-z_][\\w]*)\\b/,\n        /^\\s*const\\s+([A-Za-z_][\\w]*)\\b/,\n        /^\\s*var\\s+([A-Za-z_][\\w]*)\\b/,\n      ],\n    };"
+              },
+              {
+                "old_string": "    if (scopes.size == 0) {\n      for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n        addLens(fallback.name, fallback.range);\n      }\n    }",
+                "new_string": "    if (scopes.size === 0) {\n      for (const fallback of collectNativeDefinitionFallbackRanges(document)) {\n        addLens(fallback.name, fallback.range);\n      }\n    }"
+              }
+            ],
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:57:19Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:57:19.121516402Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "npm run build \u0026\u0026 xvfb-run -a npm test -- --grep 'Analyze CodeLens covers native definition scopes in TypeScript and Go files'",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T23:57:40Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:57:40.9448337Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T23:57:41Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:57:41.142114221Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-16T23:57:52Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:57:52.894526315Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-03-16T23:57:58Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:57:58.197006097Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "edits": null,
+            "file_path": "/workspaces/semio/repo/vscode/extension.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:58:04Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:58:04.426126515Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "npm run build",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:58:22Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:58:22.006142857Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\nlines = Path('/workspaces/semio/repo/vscode/extension.ts').read_text().splitlines()\nfor i in range(2053,2058):\n    print(i, repr(lines[i-1]))\nPY",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:58:36Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:58:36.468210335Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "python - \u003c\u003c'PY'\nfrom pathlib import Path\npath = Path('/workspaces/semio/repo/vscode/extension.ts')\nlines = path.read_text().splitlines()\nlines[2055] = '  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\\\\\\\/g, \"/\");'\npath.write_text('\\n'.join(lines) + '\\n')\nPY",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:58:58Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:58:58.026399843Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "npm run build",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:59:27Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:59:26.978519888Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "xvfb-run -a npm test -- --grep 'Analyze CodeLens covers native definition scopes in TypeScript and Go files'",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a972f8ef06d740c53143bd96eb9f2380227f8629",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-16T23:59:57Z",
+        "session": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "49d8bd79-09a3-4cd5-b84b-da449ed1dd71",
+          "timestamp": "2026-03-16T23:59:57.488445807Z",
+          "execution_id": "21593eeb-ca0a-47be-84dd-3eb0aa1f0215",
+          "tool_info": {
+            "command_line": "bash -lc \"xvfb-run -a npm test -- --grep 'Analyze CodeLens covers native definition scopes in TypeScript and Go files' 2\u003e\u00261 | grep '\\[DEBUG\\]'\"",
+            "cwd": "/workspaces/semio/repo/vscode"
+          }
+        }
+      },
+      "response": {}
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T13:19:19Z",
+    "session": "2a39a043-95b0-4799-9962-b925b33477cf"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T13:19:19.247Z",
+      "hook_event_name": "PostToolUse",
+      "session_id": "2a39a043-95b0-4799-9962-b925b33477cf",
+      "tool_name": "read_file",
+      "tool_input": {
+        "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+        "startLine": 620,
+        "endLine": 670
+      },
+      "tool_response": "",
+      "tool_use_id": "toolu_01TRJXBA5Hiwq3CFc87AgKog__vscode-1773658270522",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

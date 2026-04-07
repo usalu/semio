@@ -1,0 +1,15 @@
+{
+  "title": "Fix Engine Mcp App Csp Eval Violation From Zod Jit",
+  "status": "open",
+  "description": "The MCP app at ui://semio/design-viewer is broken because Zod v4 (dependency of @modelcontextprotocol/ext-apps) uses `new Function()` for JIT compilation, which violates CSP script-src policy. Need to disable Zod JIT or replace it at build time.",
+  "summary": "Fixed two issues with the MCP App: (1) **CSP eval violation**: Zod v4 (dep of @modelcontextprotocol/ext-apps) uses `new Function()` for JIT compilation. Added `zodJitlessPlugin` to vite.mcp-app.config.ts that patches Zod's `allowsEval` to return false and neutralizes `Doc.compile()`. Built output now has zero eval/Function calls. (2) **Black screen crash**: The previous mcp-app.tsx imported KitArtifactSelect from @semio/ui, which barrel-imports Three.js, @semio/js, @react-three etc. Top-level side effects like `const SEMIO_TO_THREE_BASIS = toThreeRotation()` crashed at module init. Fix: inlined a lightweight standalone KitArtifactSelect directly in mcp-app.tsx, removed @semio/ui dependency entirely, removed stub plugin. Bundle is now 322KB (95KB gzip) with only React + MCP SDK deps. All 164 engine tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1104"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪17440693e45245cfab8a22e00f6e9998",
+    "⚪10fd8a2df737469b9154e51611414019",
+    "⚪d8ad9c1d7f8f48fd909997087d2d7ea6"
+  ]
+}

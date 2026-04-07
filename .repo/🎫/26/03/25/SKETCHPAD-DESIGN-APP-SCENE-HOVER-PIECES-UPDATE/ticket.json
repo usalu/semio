@@ -1,0 +1,15 @@
+{
+  "title": "Sketchpad Design App Scene Hover Pieces Update",
+  "status": "closed",
+  "description": "Mouse hover in the sketchpad design app 3D scene should update the pieces to hover state. When the user hovers over a piece in the scene, it should be reflected in the hover pieces context/state.",
+  "summary": "Restored deleted hover fix code. All three changes re-applied: 1) Added useThree import and invalidate() calls in GLTFMesh/FBXMesh/OBJMesh useEffect after applyHighlightToLoadedScene (needed for demand frameloop), 2) Added store?.change({ hover }) in useDesignAppHover setter to sync DesignStore alongside XState (root cause fix), 3) Added stopPropagation and ThreeEvent typing to handlePointerEnter/handlePointerLeave in ModelPiece. Build verified successful.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1088"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪4d31a16f46c142598a7363db7529b6cb",
+    "⚪01f6559881274769825d866b90369e2b",
+    "⚪90599b7a08884c74888fbd6557913dfb"
+  ]
+}

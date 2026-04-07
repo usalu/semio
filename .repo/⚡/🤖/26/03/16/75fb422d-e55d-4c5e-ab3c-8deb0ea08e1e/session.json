@@ -1,0 +1,622 @@
+{
+  "id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+  "uri": "repo://session/75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+  "client": "copilot-chat",
+  "second": "2026-03-16T13:43:09Z",
+  "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:09Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:08.992Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "list_dir",
+          "tool_input": {
+            "path": "/workspaces/semio/semio/sketchpad/sketchpad"
+          },
+          "tool_use_id": "toolu_bdrk_01GaU1jkBUgw3iuewdDTZVGq__vscode-1773658270560",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:09Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:09.513Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/sketchpad/sketchpad/**",
+            "isRegexp": true,
+            "query": "Stepper|stepper"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01RKDcryEJBeVth1uRjwxYb2__vscode-1773658270559",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:09Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:09.582Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "list_dir",
+          "tool_input": {
+            "path": "/workspaces/semio/semio/sketchpad/sketchpad"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01GaU1jkBUgw3iuewdDTZVGq__vscode-1773658270560",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:09Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:09.648Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/sketchpad/sketchpad/**",
+            "isRegexp": true,
+            "query": "connection\\.x|connection\\.y"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01PUKRMjTp4bqKDbGw1d2Usf__vscode-1773658270558",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:14Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:14.069Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/elements/ui/**",
+            "isRegexp": true,
+            "query": "export.*Stepper|function Stepper|const Stepper"
+          },
+          "tool_use_id": "toolu_bdrk_01ESMeJeBWyiKxwUUYBJ6Zmp__vscode-1773658270561",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:14Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:14.099Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Design.tsx",
+            "startLine": 5635,
+            "endLine": 5660
+          },
+          "tool_use_id": "toolu_bdrk_01Dyzh4uo8ApBrSsdhjuZp4B__vscode-1773658270562",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:14Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:14.641Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Design.tsx",
+            "startLine": 5635,
+            "endLine": 5660
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01Dyzh4uo8ApBrSsdhjuZp4B__vscode-1773658270562",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:14Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:14.673Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/elements/ui/**",
+            "isRegexp": true,
+            "query": "export.*Stepper|function Stepper|const Stepper"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01ESMeJeBWyiKxwUUYBJ6Zmp__vscode-1773658270561",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:20Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:20.131Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3120,
+            "filePath": "/workspaces/elements/ui/elements.tsx",
+            "startLine": 2920
+          },
+          "tool_use_id": "toolu_bdrk_019Cez1Bcnowcse4CzExKQuV__vscode-1773658270563",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:20Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:20.628Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3120,
+            "filePath": "/workspaces/elements/ui/elements.tsx",
+            "startLine": 2920
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_019Cez1Bcnowcse4CzExKQuV__vscode-1773658270563",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:24Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:24.609Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3200,
+            "filePath": "/workspaces/elements/ui/elements.tsx",
+            "startLine": 3120
+          },
+          "tool_use_id": "toolu_bdrk_01LE73dbY8TuvYcmUNthxeBJ__vscode-1773658270564",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:25Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:25.131Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3200,
+            "filePath": "/workspaces/elements/ui/elements.tsx",
+            "startLine": 3120
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01LE73dbY8TuvYcmUNthxeBJ__vscode-1773658270564",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:31Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:31.642Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/elements/ui/elements.tsx",
+            "isRegexp": false,
+            "query": "value={internalValue}"
+          },
+          "tool_use_id": "toolu_bdrk_01VuPY3Vs62sgh9Taxf73DKc__vscode-1773658270565",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:32Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:32.201Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/elements/ui/elements.tsx",
+            "isRegexp": false,
+            "query": "value={internalValue}"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01VuPY3Vs62sgh9Taxf73DKc__vscode-1773658270565",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:36Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:36.167Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/elements/ui/elements.tsx",
+            "isRegexp": true,
+            "query": "value=\\{internalValue"
+          },
+          "tool_use_id": "toolu_bdrk_01RjhfK2cuCJTsUe9M1rbzUi__vscode-1773658270566",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:36Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:36.619Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/elements/ui/elements.tsx",
+            "isRegexp": true,
+            "query": "value=\\{internalValue"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01RjhfK2cuCJTsUe9M1rbzUi__vscode-1773658270566",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:40Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:40.332Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3100,
+            "filePath": "/workspaces/elements/ui/elements.tsx",
+            "startLine": 3075
+          },
+          "tool_use_id": "toolu_bdrk_01VzfxPhSb2x9aWaxXGxDmxB__vscode-1773658270567",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:40Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:40.810Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3100,
+            "filePath": "/workspaces/elements/ui/elements.tsx",
+            "startLine": 3075
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01VzfxPhSb2x9aWaxXGxDmxB__vscode-1773658270567",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:49Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:49.281Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/elements/ui/elements.tsx",
+            "isRegexp": true,
+            "query": "^(export )?function Input|^const Input|^export const Input"
+          },
+          "tool_use_id": "toolu_bdrk_01WYQ7sFVypMMDJjgDpDcXey__vscode-1773658270568",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:49Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:49.724Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/elements/ui/elements.tsx",
+            "isRegexp": true,
+            "query": "^(export )?function Input|^const Input|^export const Input"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01WYQ7sFVypMMDJjgDpDcXey__vscode-1773658270568",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-16T13:43:53Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:53.906Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2470,
+            "filePath": "/workspaces/elements/ui/elements.tsx",
+            "startLine": 2340
+          },
+          "tool_use_id": "toolu_bdrk_019MeXexQf75jnePDVMp4b5f__vscode-1773658270569",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-16T13:43:54Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:43:54.559Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2470,
+            "filePath": "/workspaces/elements/ui/elements.tsx",
+            "startLine": 2340
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_019MeXexQf75jnePDVMp4b5f__vscode-1773658270569",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-16T13:44:23Z",
+        "session": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T13:44:23.878Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "75fb422d-e55d-4c5e-ab3c-8deb0ea08e1e",
+          "agent_id": "d2b719cb-37cf-425a-82f5-29f140c554f2",
+          "agent_type": "default",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

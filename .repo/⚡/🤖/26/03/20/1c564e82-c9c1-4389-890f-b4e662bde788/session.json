@@ -1,0 +1,616 @@
+{
+  "id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+  "uri": "repo://session/1c564e82-c9c1-4389-890f-b4e662bde788",
+  "client": "windsurf-chat",
+  "second": "2026-03-20T23:29:31Z",
+  "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:29:31Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:29:31.77204394Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:29:31Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:29:31.966991583Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:29:31Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:29:31.970446378Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:30:03Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:30:03.554704822Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:30:03Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:30:03.705804475Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:31:14Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:31:14.597262157Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:31:14Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:31:14.724715963Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-20T23:31:56Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:31:56.838137619Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "command_line": "python3 - \u003c\u003c'PY'\nfrom pathlib import Path\ntext = Path('/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx').read_text()\nneedle = 'export default Sketchpad'\nidx = text.find(needle)\nprint('first_index', idx)\nprint(text[idx-120:idx+220])\nPY",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:37:31Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:37:31.718306224Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:37:31Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:37:31.857848611Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-20T23:38:14Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:38:14.128265254Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "command_line": "python3 - \u003c\u003c'PY'\nfrom pathlib import Path\np = Path('/workspaces/semio/semio/sketchpad/sketchpad/Sketchpad.tsx')\ntext = p.read_text()\nmarker = '// #endregion Sketchpad Components'\nidx = text.find(marker)\nif idx == -1:\n    raise SystemExit('marker not found')\nprefix = text[:idx]\nnew_tail = '''// #endregion Sketchpad Components\n\nexport { Sketchpad };\nexport default Sketchpad;\n\n// #endregion Apps\n\n\n// #endregion 🔖SketchpadCore\n'''\np.write_text(prefix + new_tail)\nprint('trimmed_sketchpad_tail')\nPY",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-03-20T23:38:29Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:38:29.781033278Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "command_line": "npm run build",
+            "cwd": "/workspaces/semio/semio/sketchpad"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:38:54Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:38:54.670868975Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:38:54Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:38:54.784051145Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:39:26Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:39:26.795518332Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:39:26Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:39:26.927543419Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:39:35Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:39:35.469342175Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/apps"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:39:35Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:39:35.566292412Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/apps"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:39:43Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:39:43.951317035Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/apps/index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:39:44Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:39:44.076397083Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/apps/index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:40:02Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:40:02.090143007Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/pages"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:40:02Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:40:02.197590454Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio/semio/sketchpad/sketchpad/pages"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-20T23:40:09Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:40:09.588940329Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "mcp_server_name": "repo",
+            "mcp_tool_arguments": {
+              "query": "Sketchpad optional kit store factories home toolbar import kit regression"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-03-20T23:40:23Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:40:23.72656431Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "mcp_server_name": "repo",
+            "mcp_tool_arguments": {
+              "query": "Sketchpad optional kit store factories home toolbar import kit regression"
+            },
+            "mcp_tool_name": "search"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:40:39Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:40:39.299890629Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-20T23:40:42Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:40:42.493086852Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "file_path": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "817594299c34a25da264b78078885480d9ee9b6f",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-20T23:41:34Z",
+        "session": "1c564e82-c9c1-4389-890f-b4e662bde788"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "1c564e82-c9c1-4389-890f-b4e662bde788",
+          "timestamp": "2026-03-20T23:41:34.390629752Z",
+          "execution_id": "1e0e5350-04c9-4fc2-beef-7893d94a5227",
+          "tool_info": {
+            "command_line": "git show HEAD:semio/sketchpad/sketchpad/Sketchpad.tsx | tail -n 220",
+            "cwd": "/workspaces/semio"
+          }
+        }
+      },
+      "response": {}
+    }
+  ]
+}

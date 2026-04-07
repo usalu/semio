@@ -1,0 +1,288 @@
+{
+  "title": "Fix Play Storybook Double Launch",
+  "status": "closed",
+  "prompt": "Fix duplicated Storybook startup so the play storybook command only starts one Storybook server on one port.",
+  "summary": "Refactored the JS Storybook launcher to reuse an existing listener on port 6006 instead of failing with a silent exact-port exit, and added launcher coverage in the existing JS unit tests.",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "started": "2026-03-02T13:02:37.396104953Z",
+  "finished": "2026-03-02T17:57:17.884150808Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-02 13:02:37",
+        "finished": "2026-03-02 13:07:11"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Fix duplicated Storybook startup so the play storybook command only starts one Storybook server on one port.",
+      "llm": "gpt-5-3-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-03-02 17:49:14",
+        "finished": "2026-03-02 17:57:17"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Investigate the current dev:storybook crash when launched under VS Code debug with NODE_OPTIONS hooks and fix the root cause.",
+      "llm": "gpt-5-3-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 149,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/dev.ts",
+              "lines": {
+                "added": 169,
+                "removed": 33
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "🧪semio/js/semio.test.ts",
+              "lines": {
+                "added": 313,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/dev.ts#Dev",
+              "lines": {
+                "added": 169,
+                "removed": 33
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "💻semio/js/dev.ts#Dev§storybook",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§vite",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/dev.ts#Dev§STORYBOOK_ADDRESS",
+              "lines": {
+                "added": 15,
+                "removed": 15
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§STORYBOOK_LISTEN_NUMBER",
+              "lines": {
+                "added": 14,
+                "removed": 15
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§isWindows",
+              "lines": {
+                "added": 13,
+                "removed": 13
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§npmCmd",
+              "lines": {
+                "added": 12,
+                "removed": 13
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§isStorybookIndexPayload",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§readLaunchKind",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§spawnScript",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§bindChildSignals",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§isEntrypoint",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§isWindows",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§npmCmd",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§vite",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§storybook",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio/js/dev.ts#Dev§STORYBOOK_ADDRESS",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§bindChildSignals",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§isEntrypoint",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§isStorybookIndexPayload",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§readLaunchKind",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§spawnScript",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§STORYBOOK_LISTEN_NUMBER",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

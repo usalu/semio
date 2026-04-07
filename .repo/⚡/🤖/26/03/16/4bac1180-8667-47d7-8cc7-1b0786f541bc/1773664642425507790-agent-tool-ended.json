@@ -1,0 +1,36 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.tool.ended",
+    "second": "2026-03-16T12:37:22Z",
+    "session": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "4bac1180-8667-47d7-8cc7-1b0786f541bc",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/4bac1180-8667-47d7-8cc7-1b0786f541bc.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "mcp__repo__ticket_reopen",
+      "tool_input": {
+        "path": "26/03/16/AUTO-FORMAT-AFTER-AGENT-CODE-EDIT-HOOK",
+        "prompt": "Decouple formatter from autofix. The hook should just run the formatter directly, not call runFormatterAfterAutofix which includes fallback text cleanup logic.",
+        "client": "claude-code",
+        "llm": "opus-4-6",
+        "no_github": true
+      },
+      "tool_response": [
+        {
+          "type": "text",
+          "text": "\n🔓 Ticket reopened: AUTO-FORMAT-AFTER-AGENT-CODE-EDIT-HOOK"
+        }
+      ],
+      "tool_use_id": "toolu_016BwbEGZQ3kgRDNnJ8Qw5Kh"
+    }
+  },
+  "response": {}
+}

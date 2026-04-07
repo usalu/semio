@@ -1,0 +1,13 @@
+{
+  "title": "Refactor Semio UI Stories And API Consistency",
+  "status": "closed",
+  "description": "Refactor semio/ui cleanly: 1) Use general UI elements/configs from elements/ui, 2) All stories must have same naming patterns (first story is always Default with max features minimal setup), 3) All components must use minimal data (Diagram only design, Scene only filtered kit with one model and file per type), 4) All stories must work (Kit is broken), 5) Design, Diagram, Scene must have equal API and Story layout and naming.",
+  "summary": "Fixed the semio/ui Kit Storybook crash by switching the story to the shallow kit asset and normalizing connector port references in SemioKit data derivation so raw guid objects are never rendered as React children. Added inline regression tests in semio/ui index.tsx and verified with semio/ui package tests and a successful Storybook build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1136"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪79108593f9c84576a5f41ab22d6c716c"
+  ]
+}

@@ -1,0 +1,3921 @@
+{
+  "id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+  "uri": "semiorepo://s/b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+  "checkpoint": "5c0ab8b008efbe1510e11efe66a0fd119419a013",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-10T19:59:42Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T19:59:42.062Z",
+          "hook_event_name": "SubagentStart",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "agent_id": "5d17a268-7d48-482d-b572-fac097229471",
+          "agent_type": "Explore",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.started acknowledged",
+            "hookEventName": "SubagentStart"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+        "second": "🎆26🌙03☀️10⏰19⌚59⏱️42",
+        "session": "⚪5d17a2687d48482db572fac097229471"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T19:59:54.627Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "prompt": "I need a thorough exploration of how `mime` field is used in `File` and `Blob` structures across the entire semio codebase. \n\nFor each programming language and file, I need:\n1. The exact struct/class/interface definition for File and Blob\n2. Where mime is used in File (to be removed)\n3. Where mime is used/missing in Blob (to be added if missing)\n4. Any SQL schema definitions related to file/blob\n5. Any GraphQL schema definitions\n6. Any JSON schema definitions\n7. How blobs are encoded/decoded (especially data URI format)\n\nKey files to check:\n- semio/go/semio.go - Go structs\n- semio/go/kit_sqlite.go - Go SQLite operations\n- semio/js/semio.ts - TypeScript types\n- semio/py/semio.py - Python classes\n- semio/engine/engine.py - Python engine\n- semio/gh/Semio.Grasshopper/Semio.cs - C# classes\n- semio/rs/src/lib.rs or similar - Rust structs\n- semio/graphql/schema.graphql - GraphQL schema\n- semio/sqlite/schema.sql or similar - SQLite schema\n- semio/jsonschema/ - JSON schemas\n- semio/js/sketchpad*.tsx or similar sketchpad files - Sketchpad UI\n- semio/engine/sqliteschema.ts - SQLite TS schema\n\nFor each file, provide:\n1. The exact line numbers of the relevant definitions\n2. The full text of those definitions (enough context for editing)\n3. Any places where file.mime is referenced\n\nAlso look for:\n- Any migration code\n- Any test files that reference mime on file\n- Any example JSON/data files that have mime on file objects\n\nReturn ALL findings with exact file paths, line ranges, and full code snippets. Be as thorough as possible - I need to make precise edits.",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.prompt.submitting acknowledged",
+            "hookEventName": "UserPromptSubmit"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "prompt": "I need a thorough exploration of how `mime` field is used in `File` and `Blob` structures across the entire semio codebase. \n\nFor each programming language and file, I need:\n1. The exact struct/class/interface definition for File and Blob\n2. Where mime is used in File (to be removed)\n3. Where mime is used/missing in Blob (to be added if missing)\n4. Any SQL schema definitions related to file/blob\n5. Any GraphQL schema definitions\n6. Any JSON schema definitions\n7. How blobs are encoded/decoded (especially data URI format)\n\nKey files to check:\n- semio/go/semio.go - Go structs\n- semio/go/kit_sqlite.go - Go SQLite operations\n- semio/js/semio.ts - TypeScript types\n- semio/py/semio.py - Python classes\n- semio/engine/engine.py - Python engine\n- semio/gh/Semio.Grasshopper/Semio.cs - C# classes\n- semio/rs/src/lib.rs or similar - Rust structs\n- semio/graphql/schema.graphql - GraphQL schema\n- semio/sqlite/schema.sql or similar - SQLite schema\n- semio/jsonschema/ - JSON schemas\n- semio/js/sketchpad*.tsx or similar sketchpad files - Sketchpad UI\n- semio/engine/sqliteschema.ts - SQLite TS schema\n\nFor each file, provide:\n1. The exact line numbers of the relevant definitions\n2. The full text of those definitions (enough context for editing)\n3. Any places where file.mime is referenced\n\nAlso look for:\n- Any migration code\n- Any test files that reference mime on file\n- Any example JSON/data files that have mime on file objects\n\nReturn ALL findings with exact file paths, line ranges, and full code snippets. Be as thorough as possible - I need to make precise edits.",
+        "second": "🎆26🌙03☀️10⏰19⌚59⏱️55",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:13.754Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 100,
+            "query": "mime",
+            "isRegexp": false
+          },
+          "tool_use_id": "toolu_019vZuAV3jiT9nVGwQ7dCpma__vscode-1773054464536",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️14",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:13.923Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/go/*.go",
+            "maxResults": 20
+          },
+          "tool_use_id": "toolu_01Rrh1ZXARaZC3Ey1qqkCame__vscode-1773054464537",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️14",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:14.082Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/py/*.py",
+            "maxResults": 20
+          },
+          "tool_use_id": "toolu_013g9fPpPMBFwBLTtj8w7Wkh__vscode-1773054464538",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️15",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:14.244Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/rs/src/*.rs",
+            "maxResults": 20
+          },
+          "tool_use_id": "toolu_01XnVt6dBCdKA1PgCvVKewoA__vscode-1773054464539",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️15",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:14.426Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/graphql/*.graphql",
+            "maxResults": 20
+          },
+          "tool_use_id": "toolu_01GYdproKJ4HcxEoieeZa4AG__vscode-1773054464540",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️15",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:14.608Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/sqlite/*.sql",
+            "maxResults": 20
+          },
+          "tool_use_id": "toolu_01DZTAkSmqWo2Fpe3cer2iab__vscode-1773054464541",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️15",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:24.726Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 100,
+            "query": "mime",
+            "isRegexp": false
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_019vZuAV3jiT9nVGwQ7dCpma__vscode-1773054464536",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️27",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:25.437Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/go/*.go",
+            "maxResults": 20
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01Rrh1ZXARaZC3Ey1qqkCame__vscode-1773054464537",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️27",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:26.478Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/py/*.py",
+            "maxResults": 20
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_013g9fPpPMBFwBLTtj8w7Wkh__vscode-1773054464538",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️28",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:26.862Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/rs/src/*.rs",
+            "maxResults": 20
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01XnVt6dBCdKA1PgCvVKewoA__vscode-1773054464539",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️28",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:27.332Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/graphql/*.graphql",
+            "maxResults": 20
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01GYdproKJ4HcxEoieeZa4AG__vscode-1773054464540",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️28",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:28.211Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/sqlite/*.sql",
+            "maxResults": 20
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01DZTAkSmqWo2Fpe3cer2iab__vscode-1773054464541",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️29",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:35.471Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "isRegexp": true,
+            "query": "type File|struct File|class File|interface File|type Blob|struct Blob|class Blob|interface Blob"
+          },
+          "tool_use_id": "toolu_01CfQswX7rftqWphQxuqADLZ__vscode-1773054464545",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️36",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:35.670Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/js/semio.ts",
+            "maxResults": 20
+          },
+          "tool_use_id": "toolu_014FZEdGXbLQPwfBh9NsZYku__vscode-1773054464546",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️37",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:34.811Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_use_id": "toolu_011bBD7pVXiqZK4qHGhQaCyk__vscode-1773054464542",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio🛠️floatequal",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️optboolequal",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️optfloatequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️ptrfloat64",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️ptrstring",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🪨assetspath",
+            "loc": 12
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️36",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:35.023Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/sqlite/schema.sql",
+            "startLine": 1,
+            "endLine": 150
+          },
+          "tool_use_id": "toolu_01PL5xWsLLq2bjGbjJZx3gk1__vscode-1773054464543",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️author",
+            "loc": 11
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️benchmark",
+            "loc": 14
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️file",
+            "loc": 16
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️folder",
+            "loc": 12
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️kit",
+            "loc": 16
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️port",
+            "loc": 10
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️portcompatibility",
+            "loc": 10
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️quality",
+            "loc": 20
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️semio",
+            "loc": 7
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️tag",
+            "loc": 9
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️type",
+            "loc": 22
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio🛂sqlite💻schema📌1📌150"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️36",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:35.273Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/graphql/schema.graphql",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_use_id": "toolu_016zsQ2n4eigeCCHi42GoQ6N__vscode-1773054464544",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio🛂graphql💻schema✂️datetime",
+            "loc": 2
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️kit",
+            "loc": 23
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️node",
+            "loc": 6
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️pageinfo",
+            "loc": 21
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️query",
+            "loc": 9
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️typenodeconnection",
+            "loc": 11
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️typenodeedge",
+            "loc": 11
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio🛂graphql💻schema📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️36",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:45.144Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "isRegexp": true,
+            "query": "type File|struct File|class File|interface File|type Blob|struct Blob|class Blob|interface Blob"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01CfQswX7rftqWphQxuqADLZ__vscode-1773054464545",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️46",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:44.182Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_011bBD7pVXiqZK4qHGhQaCyk__vscode-1773054464542",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio🛠️floatequal",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️optboolequal",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️optfloatequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️ptrfloat64",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️ptrstring",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🪨assetspath",
+            "loc": 12
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️45",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:45.661Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/js/semio.ts",
+            "maxResults": 20
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_014FZEdGXbLQPwfBh9NsZYku__vscode-1773054464546",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️46",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:48.675Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/gh/**/*.cs",
+            "maxResults": 20
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01AzMMCM4v7Eb2hcVoFZ6Fb5__vscode-1773054464547",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️49",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:49.390Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/sqlite/schema.sql",
+            "startLine": 1,
+            "endLine": 150
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01PL5xWsLLq2bjGbjJZx3gk1__vscode-1773054464543",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️author",
+            "loc": 11
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️benchmark",
+            "loc": 14
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️file",
+            "loc": 16
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️folder",
+            "loc": 12
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️kit",
+            "loc": 16
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️port",
+            "loc": 10
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️portcompatibility",
+            "loc": 10
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️quality",
+            "loc": 20
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️semio",
+            "loc": 7
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️tag",
+            "loc": 9
+          },
+          {
+            "id": "👤semio🛂sqlite💻schema🛠️type",
+            "loc": 22
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio🛂sqlite💻schema📌1📌150"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️50",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:49.790Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/workspaces/semio/semio/graphql/schema.graphql",
+            "startLine": 1,
+            "endLine": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_016zsQ2n4eigeCCHi42GoQ6N__vscode-1773054464544",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio🛂graphql💻schema✂️datetime",
+            "loc": 2
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️kit",
+            "loc": 23
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️node",
+            "loc": 6
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️pageinfo",
+            "loc": 21
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️query",
+            "loc": 9
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️typenodeconnection",
+            "loc": 11
+          },
+          {
+            "id": "👤semio🛂graphql💻schema✂️typenodeedge",
+            "loc": 11
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio🛂graphql💻schema📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️50",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:55.210Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 300,
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 100
+          },
+          "tool_use_id": "toolu_01MrmGGJm7ajUoSTfr1piVWp__vscode-1773054464548",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio🛠️areattributesequal",
+            "loc": 25
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areauthoridsequal",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areconceptidsequal",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aredesignidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arelayeridsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arelocationidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areportidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areportidslicesequal",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arepropsequal",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aretypeidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️guid",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️normalizeoptint",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️optboolequal",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️optstringequal",
+            "loc": 9
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌100📌300"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️56",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:55.401Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 250,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_015TQscguNvrT41Rw2Q9ZcdT__vscode-1773054464549",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio🛠️cn",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deepequal",
+            "loc": 21
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️generateuniquename",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️generator",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️guid",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️jaccard",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️normalize",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️round",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️seededrandom",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️tosemiorotation",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️tothreequaternion",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️tothreerotation",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🪨arraysequal",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨diffstatus",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨diffstatusschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨iconwidth",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tolerance",
+            "loc": 15
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌1📌250"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️56",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:55.605Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 1900,
+            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "startLine": 1760
+          },
+          "tool_use_id": "toolu_01NaJ6WB17gD3QpXnGu6aeXX__vscode-1773054464550",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚py💻semio🛠️file",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️filecontext",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileid",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileinput",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileinputnode",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileoutput",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileprops",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️folderguidfield",
+            "loc": 6
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚py💻semio📌1760📌1900"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️56",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:55.805Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 600,
+            "filePath": "/workspaces/semio/semio/rs/semio.rs",
+            "startLine": 480
+          },
+          "tool_use_id": "toolu_01XKyHn8bMU1B1NuuRbDjmcn__vscode-1773054464551",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚rs💻semio🛠️file",
+            "loc": 20
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️fileid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️port",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️portid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️quality",
+            "loc": 32
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️qualityid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚rs💻semio🪨qualitykind",
+            "loc": 6
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚rs💻semio📌480📌600"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️56",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:00:55.996Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 100,
+            "filePath": "/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_01AKLD8PgzRcrSYCJmrPvjUL__vscode-1773054464552",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚gh🛅semiograsshopper💻semiograsshopper📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚00⏱️57",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:12.685Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 300,
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01MrmGGJm7ajUoSTfr1piVWp__vscode-1773054464548",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio🛠️areattributesequal",
+            "loc": 25
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areauthoridsequal",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areconceptidsequal",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aredesignidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arelayeridsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arelocationidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areportidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️areportidslicesequal",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️arepropsequal",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️aretypeidsequal",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️guid",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️normalizeoptint",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️optboolequal",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️optstringequal",
+            "loc": 9
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌100📌300"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️13",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:13.241Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 250,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_015TQscguNvrT41Rw2Q9ZcdT__vscode-1773054464549",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio🛠️cn",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deepequal",
+            "loc": 21
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️generateuniquename",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️generator",
+            "loc": 16
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️guid",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️jaccard",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️normalize",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️round",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️seededrandom",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️tosemiorotation",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️tothreequaternion",
+            "loc": 2
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️tothreerotation",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚js💻semio🪨arraysequal",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨diffstatus",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨diffstatusschema",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🪨iconwidth",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨tolerance",
+            "loc": 15
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌1📌250"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️14",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:13.858Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 1900,
+            "filePath": "/workspaces/semio/semio/py/semio.py",
+            "startLine": 1760
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01NaJ6WB17gD3QpXnGu6aeXX__vscode-1773054464550",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚py💻semio🛠️file",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️filecontext",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileid",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileinput",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileinputnode",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileoutput",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️fileprops",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚py💻semio🛠️folderguidfield",
+            "loc": 6
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚py💻semio📌1760📌1900"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️14",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:14.101Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 600,
+            "filePath": "/workspaces/semio/semio/rs/semio.rs",
+            "startLine": 480
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01XKyHn8bMU1B1NuuRbDjmcn__vscode-1773054464551",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚rs💻semio🛠️file",
+            "loc": 20
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️fileid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️port",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️portid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️quality",
+            "loc": 32
+          },
+          {
+            "id": "👤semio📚rs💻semio🛠️qualityid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚rs💻semio🪨qualitykind",
+            "loc": 6
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚rs💻semio📌480📌600"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️14",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:14.536Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 100,
+            "filePath": "/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01AKLD8PgzRcrSYCJmrPvjUL__vscode-1773054464552",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚gh🛅semiograsshopper💻semiograsshopper📌1📌100"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️15",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:20.332Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "isRegexp": true,
+            "query": "struct Blob|type Blob|class Blob|BlobMimeField|BlobField|FileSchema|BlobSchema"
+          },
+          "tool_use_id": "toolu_0165j3SEgpuYZfszz9X3mqdz__vscode-1773054464553",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️21",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:21.079Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/jsonschema/*.json",
+            "maxResults": 20
+          },
+          "tool_use_id": "toolu_01UoPGYTHcyqVyVYgdfvrhW6__vscode-1773054464557",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️22",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:20.520Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 600,
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 300
+          },
+          "tool_use_id": "toolu_011wBXsGA8hN4dJQHQ7goWwN__vscode-1773054464554",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio✂️attribute",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributediff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributeid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️author",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authordiff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authorid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarkid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️camera",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectionid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectorid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coord",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️fileid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folderid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layerid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️location",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modelid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️pieceid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️plane",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️point",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualityid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️sideid",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typeid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vec",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vector",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️deepequal",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️normalize",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️round",
+            "loc": 7
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌300📌600"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️21",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:20.707Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2500,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 2300
+          },
+          "tool_use_id": "toolu_01VNGLpfyCmuE6rd6JLbJ8hp__vscode-1773054464555",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️authordiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️authorsdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️file",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyauthordiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyfilediff",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefile",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getauthordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfilediff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseauthordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversefilediff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeauthordiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergefilediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefile",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authorsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨fileschema",
+            "loc": 14
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌2300📌2500"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️21",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:20.887Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 200,
+            "filePath": "/workspaces/semio/semio/go/kit_sqlite.go",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_01PShfa6vZU4uCWZRiReiGk5__vscode-1773054464556",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️kitfromsqlite",
+            "loc": 53
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️loaddesigns",
+            "loc": 42
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️loadtypes",
+            "loc": 56
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻kitsqlite📌1📌200"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️22",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:36.097Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "file_search",
+          "tool_input": {
+            "query": "**/semio/jsonschema/*.json",
+            "maxResults": 20
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01UoPGYTHcyqVyVYgdfvrhW6__vscode-1773054464557",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️37",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:34.603Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 600,
+            "filePath": "/workspaces/semio/semio/go/semio.go",
+            "startLine": 300
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_011wBXsGA8hN4dJQHQ7goWwN__vscode-1773054464554",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio✂️attribute",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributediff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributeid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️author",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authordiff",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authorid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarkid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️camera",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectionid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectorid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coord",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️fileid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folderid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layerid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️location",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationdiff",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modelid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️pieceid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️plane",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️point",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualityid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️sideid",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typeid",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vec",
+            "loc": 4
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vector",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️deepequal",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️normalize",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️round",
+            "loc": 7
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻semio📌300📌600"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️37",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:35.155Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2500,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 2300
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01VNGLpfyCmuE6rd6JLbJ8hp__vscode-1773054464555",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️authordiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio✂️authorsdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️file",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyauthordiff",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyfilediff",
+            "loc": 11
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefile",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getauthordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfilediff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inverseauthordiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversefilediff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergeauthordiff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergefilediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefile",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨authorsdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨fileschema",
+            "loc": 14
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌2300📌2500"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️37",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:37.449Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 200,
+            "filePath": "/workspaces/semio/semio/go/kit_sqlite.go",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01PShfa6vZU4uCWZRiReiGk5__vscode-1773054464556",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️kitfromsqlite",
+            "loc": 53
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️loaddesigns",
+            "loc": 42
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️loadtypes",
+            "loc": 56
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻kitsqlite📌1📌200"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️38",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:38.423Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "isRegexp": true,
+            "query": "struct Blob|type Blob|class Blob|BlobMimeField|BlobField|FileSchema|BlobSchema"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_0165j3SEgpuYZfszz9X3mqdz__vscode-1773054464553",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️39",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:44.396Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "query": "data:application|base64,|blob.*mime|file.*blob|importKit|exportKit",
+            "isRegexp": false
+          },
+          "tool_use_id": "toolu_01YVJA6pXVqvGdE3wBt78vEq__vscode-1773054464558",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️45",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:45.141Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "isRegexp": false,
+            "query": "Blob",
+            "includePattern": "**/semio/go/*.go"
+          },
+          "tool_use_id": "toolu_01H8Fzbve8nbYWZMVSyw9uB8__vscode-1773054464562",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️46",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:44.572Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2600,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 2370
+          },
+          "tool_use_id": "toolu_011VM4vVk1yVWdR2jQzAtM7o__vscode-1773054464559",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️authorsdiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio✂️file",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filesdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folder",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folderdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyfilediff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefile",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefolder",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfilediff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfolderdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversefilediff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergefilediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefile",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefolder",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨fileschema",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderschema",
+            "loc": 11
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌2370📌2600"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️45",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:44.751Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 150,
+            "filePath": "/workspaces/semio/semio/go/kit_sqlite.go",
+            "startLine": 100
+          },
+          "tool_use_id": "toolu_01GLZ5JTq4nw842qevGCgjFW__vscode-1773054464560",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️loadtypes",
+            "loc": 51
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻kitsqlite📌100📌150"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️45",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:44.943Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 300,
+            "filePath": "/workspaces/semio/semio/py/semio.test.py",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_017xnP7Ydj7X3V3hXqaTnGp1__vscode-1773054464561",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚py🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚py🥼semiotest📌1📌300"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️45",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:55.233Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "isRegexp": false,
+            "query": "Blob",
+            "includePattern": "**/semio/go/*.go"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01H8Fzbve8nbYWZMVSyw9uB8__vscode-1773054464562",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️56",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:53.697Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2600,
+            "filePath": "/workspaces/semio/semio/js/semio.ts",
+            "startLine": 2370
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_011VM4vVk1yVWdR2jQzAtM7o__vscode-1773054464559",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚js💻semio✂️authorsdiff",
+            "loc": 12
+          },
+          {
+            "id": "👤semio📚js💻semio✂️file",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filediff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️filesdiff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folder",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio✂️folderdiff",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️applyfilediff",
+            "loc": 19
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefile",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️deserializefolder",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfilediff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️getfolderdiff",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️inversefilediff",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️mergefilediff",
+            "loc": 3
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefile",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🛠️serializefolder",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filediffschema",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚js💻semio🪨fileschema",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚js💻semio🪨filesdiffschema",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderdiffschema",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚js💻semio🪨folderschema",
+            "loc": 11
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚js💻semio📌2370📌2600"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️55",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:58.052Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 50,
+            "query": "data:application|base64,|blob.*mime|file.*blob|importKit|exportKit",
+            "isRegexp": false
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01YVJA6pXVqvGdE3wBt78vEq__vscode-1773054464558",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚01⏱️58",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:01:59.852Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 150,
+            "filePath": "/workspaces/semio/semio/go/kit_sqlite.go",
+            "startLine": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01GLZ5JTq4nw842qevGCgjFW__vscode-1773054464560",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️loadtypes",
+            "loc": 51
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻kitsqlite📌100📌150"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️00",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:00.049Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 300,
+            "filePath": "/workspaces/semio/semio/py/semio.test.py",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_017xnP7Ydj7X3V3hXqaTnGp1__vscode-1773054464561",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚py🥼semiotest"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚py🥼semiotest📌1📌300"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️00",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:05.886Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 30,
+            "includePattern": "**/semio/gh/Semio.Grasshopper/*.cs",
+            "isRegexp": true,
+            "query": "File|Blob|class|struct"
+          },
+          "tool_use_id": "toolu_01NCYbDiciijdvphAvAAUPET__vscode-1773054464564",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️06",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:06.414Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 30,
+            "includePattern": "**/semio/engine/*.py",
+            "isRegexp": false,
+            "query": "File|Blob|mime"
+          },
+          "tool_use_id": "toolu_01SQhEwPBjz71nDe87b7N1bb__vscode-1773054464567",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️07",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:05.694Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 650,
+            "filePath": "/workspaces/semio/semio/go/kit_sqlite.go",
+            "startLine": 500
+          },
+          "tool_use_id": "toolu_01WynGMLCt3P4SfCtA6mrdPD__vscode-1773054464563",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️blobdecode",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️blobencode",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️buildfilepath",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️buildfolderpath",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️kitfromzip",
+            "loc": 44
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️kittozip",
+            "loc": 43
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻kitsqlite📌500📌650"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️06",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:06.074Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3000,
+            "filePath": "/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs",
+            "startLine": 100
+          },
+          "tool_use_id": "toolu_01Db7USpMLgP4w6cT9qprnqF__vscode-1773054464565",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️applydiffcomponent",
+            "loc": 44
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializecomponent",
+            "loc": 34
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializediffcomponent",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializeidcomponent",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffcomponent",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffgoo",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffparam",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitycomponent",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffcomponent",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffgoo",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffparam",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitygoo",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidcomponent",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidgoo",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidparam",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityparam",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️enumgoo",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️enumparam",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️goo",
+            "loc": 47
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idcomponent",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idgoo",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idparam",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️param",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️passthroughcomponent",
+            "loc": 70
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializecomponent",
+            "loc": 36
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializediffcomponent",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializeidcomponent",
+            "loc": 13
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio📚gh🛅semiograsshopper💻semiograsshopper📌100📌3000"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️07",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:06.250Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 200,
+            "filePath": "/workspaces/semio/semio/jsonschema/kit.json",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_016C1PGbbJphkDKq5zhkNFNY__vscode-1773054464566",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "👤semio🛂jsonschema⚙️kit📌1📌200"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️07",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:15.995Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 30,
+            "includePattern": "**/semio/gh/Semio.Grasshopper/*.cs",
+            "isRegexp": true,
+            "query": "File|Blob|class|struct"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01NCYbDiciijdvphAvAAUPET__vscode-1773054464564",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️17",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:15.732Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 650,
+            "filePath": "/workspaces/semio/semio/go/kit_sqlite.go",
+            "startLine": 500
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01WynGMLCt3P4SfCtA6mrdPD__vscode-1773054464563",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️blobdecode",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️blobencode",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️buildfilepath",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️buildfolderpath",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️kitfromzip",
+            "loc": 44
+          },
+          {
+            "id": "👤semio📚go💻kitsqlite🛠️kittozip",
+            "loc": 43
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚go💻kitsqlite📌500📌650"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️17",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:17.668Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 30,
+            "includePattern": "**/semio/engine/*.py",
+            "isRegexp": false,
+            "query": "File|Blob|mime"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01SQhEwPBjz71nDe87b7N1bb__vscode-1773054464567",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️18",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:20.582Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 3000,
+            "filePath": "/workspaces/semio/semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs",
+            "startLine": 100
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_01Db7USpMLgP4w6cT9qprnqF__vscode-1773054464565",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️applydiffcomponent",
+            "loc": 44
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializecomponent",
+            "loc": 34
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializediffcomponent",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️deserializeidcomponent",
+            "loc": 13
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffcomponent",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffgoo",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️diffparam",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitycomponent",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffcomponent",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffgoo",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitydiffparam",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entitygoo",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidcomponent",
+            "loc": 9
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidgoo",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityidparam",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️entityparam",
+            "loc": 8
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️enumgoo",
+            "loc": 24
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️enumparam",
+            "loc": 10
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️goo",
+            "loc": 47
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idcomponent",
+            "loc": 6
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idgoo",
+            "loc": 5
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️idparam",
+            "loc": 7
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️param",
+            "loc": 15
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️passthroughcomponent",
+            "loc": 70
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializecomponent",
+            "loc": 36
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializediffcomponent",
+            "loc": 14
+          },
+          {
+            "id": "👤semio📚gh🛅semiograsshopper💻semiograsshopper🛠️serializeidcomponent",
+            "loc": 13
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio📚gh🛅semiograsshopper💻semiograsshopper📌100📌3000"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️21",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:21.281Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 200,
+            "filePath": "/workspaces/semio/semio/jsonschema/kit.json",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_016C1PGbbJphkDKq5zhkNFNY__vscode-1773054464566",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "👤semio🛂jsonschema⚙️kit📌1📌200"
+        ],
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️22",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-10T20:02:50.420Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "b3c2d762-47bd-40f1-b9ac-445cff10cb5c",
+          "agent_id": "5d17a268-7d48-482d-b572-fac097229471",
+          "agent_type": "Explore",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.ended acknowledged",
+            "hookEventName": "SubagentStop"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️10⏰20⌚02⏱️51",
+        "session": "⚪b3c2d76247bd40f1b9ac445cff10cb5c"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "a0992e8d-b3d5-4a69-9718-a80a0aaba6af",
+  "uri": "semiorepo://s/a0992e8d-b3d5-4a69-9718-a80a0aaba6af",
+  "contributor": "🧑‍💻ueli",
+  "client": "cursor-chat",
+  "second": "2026-03-13T12:41:15Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "conversation_id": "a0992e8d-b3d5-4a69-9718-a80a0aaba6af",
+          "generation_id": "a0992e8d-b3d5-4a69-9718-a80a0aaba6af",
+          "model": "tab",
+          "file_path": "\\workspaces\\semio\\coda\\programming\\AGENTS.md",
+          "content": "# 🧾 Specification\n\n## 🕸️ Systems\n\n### Project, Program, Space, Adjacency\n\n## 🛠️ Mechanisms\n\n## 📛 Concepts\n\n### Project\n\n### Program\n\n### Space\n",
+          "hook_event_name": "beforeTabFileRead",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": null
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "llm": "tab",
+        "parent": "",
+        "ranges": [
+          "🛅🗃️workspaces🗃️semio🗃️semiocoda🗃️programming📃agents📌1"
+        ],
+        "second": "🎆26🌙03☀️13⏰12⌚41⏱️15",
+        "session": "⚪a0992e8db3d54a699718a80a0aaba6af"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Extend Repo Mechanism With Todos",
+  "status": "closed",
+  "description": "The repo mechanism should be extanded with: todos...",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/312"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repotodomechanism"
+}

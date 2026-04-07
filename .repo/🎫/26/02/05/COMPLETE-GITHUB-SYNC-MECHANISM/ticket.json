@@ -1,0 +1,10 @@
+{
+  "title": "Complete GitHub Sync Mechanism",
+  "status": "closed",
+  "description": "The sync github mechanism is not complete. It should sync all local tickets and goals. This means checking that the title matches, checking that the status matches, checking that the parent matches. Whenever something doesnt match, it should be changed.",
+  "summary": "Enhanced the sync github mechanism to ensure full parity between local data and GitHub. Updated the sync logic for both goals and tickets to reconcile titles, descriptions (prompts), and statuses (including reopening closed issues). Implemented parent-child linking for tickets and deeper goals using GitHub Sub-issues. Added helper functions for body updates and extended metadata fetching.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/406"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters"
+}

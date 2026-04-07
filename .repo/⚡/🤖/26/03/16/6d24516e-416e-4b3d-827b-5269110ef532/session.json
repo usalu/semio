@@ -1,0 +1,33 @@
+{
+  "id": "6d24516e-416e-4b3d-827b-5269110ef532",
+  "uri": "repo://session/6d24516e-416e-4b3d-827b-5269110ef532",
+  "client": "copilot-chat",
+  "second": "2026-03-16T14:16:19Z",
+  "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6d24516e-416e-4b3d-827b-5269110ef532.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-03-16T14:16:19Z",
+        "session": "6d24516e-416e-4b3d-827b-5269110ef532",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6d24516e-416e-4b3d-827b-5269110ef532.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-16T14:16:18.352Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "6d24516e-416e-4b3d-827b-5269110ef532",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/6d24516e-416e-4b3d-827b-5269110ef532.jsonl",
+          "prompt": "Continue",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

@@ -1,0 +1,541 @@
+{
+  "timestamp": "2025-12-23T13:11:22.248Z",
+  "summary": {
+    "errors": 70,
+    "warnings": 62,
+    "total": 132
+  },
+  "errors": [
+    {
+      "key": "semio.sketchpad.app.feedback.subtitle.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.subtitle.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.subtitle.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.subtitle.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.kind.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.kind.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.kind.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.kind.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.title.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.title.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.title.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.title.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.titlePlaceholder.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.titlePlaceholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.titlePlaceholder.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.titlePlaceholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.description.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.description.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.description.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.description.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.bugDescriptionPlaceholder.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.bugDescriptionPlaceholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.bugDescriptionPlaceholder.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.bugDescriptionPlaceholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.ideaDescriptionPlaceholder.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.ideaDescriptionPlaceholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.ideaDescriptionPlaceholder.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.ideaDescriptionPlaceholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.app.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.app.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.app.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.app.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.appPlaceholder.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.appPlaceholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.appPlaceholder.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.appPlaceholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.name.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.name.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.name.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.name.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.namePlaceholder.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.namePlaceholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.namePlaceholder.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.namePlaceholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.email.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.email.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.email.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.email.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.emailPlaceholder.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.emailPlaceholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.emailPlaceholder.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.emailPlaceholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.submit.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.submit.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.submit.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.submit.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.submitting.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.submitting.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.submitting.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.form.submitting.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.kind.bug.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.kind.bug.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.kind.bug.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.kind.bug.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.kind.idea.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.kind.idea.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.kind.idea.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.kind.idea.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.home.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.home.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.home.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.home.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.kit.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.kit.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.kit.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.kit.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.design.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.design.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.design.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.design.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.type.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.type.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.type.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.type.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.quality.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.quality.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.quality.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.quality.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.docs.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.docs.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.docs.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.docs.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.feedback.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.feedback.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.appOption.feedback.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.appOption.feedback.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.optional.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.optional.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.optional.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.optional.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.success.thankYou.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.success.thankYou.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.success.thankYou.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.success.thankYou.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.success.goHome.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.success.goHome.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.success.goHome.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.success.goHome.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.titleRequired.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.error.titleRequired.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.titleRequired.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.error.titleRequired.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.descriptionRequired.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.error.descriptionRequired.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.descriptionRequired.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.error.descriptionRequired.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.appRequired.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.error.appRequired.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.appRequired.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.error.appRequired.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.submitFailed.label.normal",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.error.submitFailed.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.submitFailed.label.beginner",
+      "message": "Missing German translation for key: semio.sketchpad.app.feedback.error.submitFailed.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.toolbar.send.label",
+      "message": "Missing English translation for UI element: semio.sketchpad.app.feedback.toolbar.send"
+    },
+    {
+      "key": "semio.sketchpad.app.home.settings.device.label",
+      "message": "Missing English translation for UI element: semio.sketchpad.app.home.settings.device"
+    },
+    {
+      "key": "semio.sketchpad.app.home.toolbar.showTemporary.label",
+      "message": "Missing English translation for UI element: semio.sketchpad.app.home.toolbar.showTemporary"
+    },
+    {
+      "key": "semio.sketchpad.app.home.toolbar.showLocal.label",
+      "message": "Missing English translation for UI element: semio.sketchpad.app.home.toolbar.showLocal"
+    },
+    {
+      "key": "semio.sketchpad.app.home.toolbar.showRemote.label",
+      "message": "Missing English translation for UI element: semio.sketchpad.app.home.toolbar.showRemote"
+    },
+    {
+      "key": "semio.sketchpad.app.home.canvas.label",
+      "message": "Missing English translation for UI element: semio.sketchpad.app.home.canvas"
+    },
+    {
+      "key": "semio.sketchpad.app.kit.kitApp.createChild.label",
+      "message": "Missing English translation for UI element: semio.sketchpad.app.kit.kitApp.createChild"
+    },
+    {
+      "key": "semio.sketchpad.filter.concepts.label",
+      "message": "Missing English translation for UI element: semio.sketchpad.filter.concepts"
+    }
+  ],
+  "warnings": [
+    {
+      "key": "semio.sketchpad.app.feedback.form.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.form.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.form.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.form.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.kind.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.kind.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.kind.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.kind.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.bugReport.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.bugReport.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.bugReport.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.bugReport.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.featureIdea.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.featureIdea.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.featureIdea.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.featureIdea.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.title.placeholder.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.title.placeholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.title.placeholder.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.title.placeholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.description.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.description.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.description.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.description.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.description.bugPlaceholder.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.description.bugPlaceholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.description.bugPlaceholder.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.description.bugPlaceholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.description.ideaPlaceholder.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.description.ideaPlaceholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.description.ideaPlaceholder.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.description.ideaPlaceholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.placeholder.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.placeholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.placeholder.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.placeholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.home.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.home.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.home.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.home.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.kit.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.kit.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.kit.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.kit.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.design.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.design.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.design.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.design.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.type.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.type.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.type.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.type.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.quality.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.quality.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.quality.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.quality.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.docs.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.docs.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.docs.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.docs.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.feedback.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.feedback.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.app.options.feedback.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.app.options.feedback.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.name.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.name.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.name.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.name.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.name.placeholder.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.name.placeholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.name.placeholder.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.name.placeholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.email.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.email.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.email.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.email.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.email.placeholder.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.email.placeholder.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.email.placeholder.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.email.placeholder.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.submit.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.submit.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.submit.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.submit.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.submitting.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.submitting.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.submitting.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.submitting.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.success.title.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.success.title.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.success.title.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.success.title.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.title.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.error.title.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.title.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.error.title.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.message.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.error.message.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.message.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.error.message.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.retry.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.error.retry.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.error.retry.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.error.retry.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.validation.titleRequired.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.validation.titleRequired.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.validation.titleRequired.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.validation.titleRequired.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.validation.descriptionRequired.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.validation.descriptionRequired.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.validation.descriptionRequired.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.validation.descriptionRequired.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.validation.appRequired.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.validation.appRequired.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.validation.appRequired.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.validation.appRequired.label.beginner"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.validation.invalidEmail.label.normal",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.validation.invalidEmail.label.normal"
+    },
+    {
+      "key": "semio.sketchpad.app.feedback.validation.invalidEmail.label.beginner",
+      "message": "Extra German translation key (not in English): semio.sketchpad.app.feedback.validation.invalidEmail.label.beginner"
+    }
+  ],
+  "status": "error"
+}

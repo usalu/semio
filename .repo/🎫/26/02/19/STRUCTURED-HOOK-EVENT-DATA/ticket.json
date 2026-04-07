@@ -1,0 +1,10 @@
+{
+  "title": "Structured Hook Event Data",
+  "status": "closed",
+  "description": "Refactor HookResult to return event-specific data matching the YAML schema and add raw field",
+  "summary": "Refactored HookResult to return structured event-specific data matching the YAML schema. Added HookPlanStep struct, 15 extraction functions, populateEventData dispatcher, and 30+ tests. Each event type now returns its specific fields (session, timestamp, client, parent, sha, prompt, chat, name, input, response, steps, query, include, exclude, path, old, new, all, command, pid, terminated, stdout, stderr) plus a raw field with the original input JSON.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/631"
+  },
+  "goal": "🎯hooks🎯eventdata"
+}

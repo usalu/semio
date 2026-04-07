@@ -1,0 +1,44 @@
+{
+  "id": "sess-think3",
+  "uri": "repo://session/sess-think3",
+  "client": "cursor-chat",
+  "second": "2026-03-30T22:35:45Z",
+  "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.starting",
+        "second": "2026-03-30T22:35:45Z",
+        "session": "sess-think3"
+      },
+      "native": {
+        "event": {
+          "session_id": "sess-think3",
+          "text": "About to think"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.starting",
+        "second": "2026-03-30T22:36:27Z",
+        "session": "sess-think3"
+      },
+      "native": {
+        "event": {
+          "session_id": "sess-think3",
+          "text": "About to think"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

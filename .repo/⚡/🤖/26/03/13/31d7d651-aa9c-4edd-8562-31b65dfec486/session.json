@@ -1,0 +1,59 @@
+{
+  "id": "31d7d651-aa9c-4edd-8562-31b65dfec486",
+  "uri": "semiorepo://s/31d7d651-aa9c-4edd-8562-31b65dfec486",
+  "checkpoint": "b246a0ee16a521dcd1034a05b47033ddfcd3916b",
+  "contributor": "🧑‍💻ueli",
+  "client": "claude-code",
+  "second": "2026-03-13T10:48:44Z",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/31d7d651-aa9c-4edd-8562-31b65dfec486.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "session_id": "31d7d651-aa9c-4edd-8562-31b65dfec486",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/31d7d651-aa9c-4edd-8562-31b65dfec486.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionStart",
+          "source": "startup"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b246a0ee16a521dcd1034a05b47033ddfcd3916b",
+        "client": "claude-code",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰10⌚48⏱️44",
+        "session": "⚪31d7d651aa9c4edd856231b65dfec486",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/31d7d651-aa9c-4edd-8562-31b65dfec486.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "session_id": "31d7d651-aa9c-4edd-8562-31b65dfec486",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/31d7d651-aa9c-4edd-8562-31b65dfec486.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b246a0ee16a521dcd1034a05b47033ddfcd3916b",
+        "client": "claude-code",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰10⌚48⏱️55",
+        "session": "⚪31d7d651aa9c4edd856231b65dfec486",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/31d7d651-aa9c-4edd-8562-31b65dfec486.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

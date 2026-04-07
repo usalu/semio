@@ -1,0 +1,13 @@
+{
+  "title": "Consolidate Sketchpad Files",
+  "status": "closed",
+  "description": "Consolidate Sketchpad.tsx and index.ts into index.tsx",
+  "summary": "Consolidated Sketchpad files",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1029"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪a6017d5b1ae04d4b81bbd9d55caf55eb"
+  ]
+}

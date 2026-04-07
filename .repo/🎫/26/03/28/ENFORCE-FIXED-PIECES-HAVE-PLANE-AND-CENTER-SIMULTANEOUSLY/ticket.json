@@ -1,0 +1,13 @@
+{
+  "title": "Enforce Fixed Pieces Have Plane And Center Simultaneously",
+  "status": "closed",
+  "description": "Fixed pieces MUST have a plane and a center simultaneously. Currently some programming languages/code/docs/algorithms/tests only assume planes. Refactor/extend it everywhere: TypeScript, Python, C#, Rust, Go, documentation, specs, schemas, and tests.",
+  "summary": "Enforced the invariant that fixed pieces MUST have both plane AND center set simultaneously across all languages, schemas, docs, and tests.\n\nChanges by language/area:\n- **TypeScript** (semio/js/index.ts): `deletePiecesAndConnectionsInDesign` now includes `center: {u:0,v:0}` in diff. `isFixedPiece` checks both plane and center with consistency validation. `flattenDesign` root identification checks both.\n- **Python** (semio/py/main.py): `findFixedPieces` checks both with ValueError on inconsistency. Three flatten root identification checks updated (lines ~8116, ~13156, ~13361).\n- **C#** (semio/net/Semio/Semio.cs): Two flatten root checks updated (lines ~7349, ~7624).\n- **Go** (semio/go/semio.go): Two flatten root checks updated (lines ~9941, ~10738). Delete test now asserts center values.\n- **Rust** (semio/rs/lib.rs): Already correct (sets both plane and center in delete).\n- **Grasshopper** (semio/gh/Semio.Grasshopper/Semio.Grasshopper.cs): Flatten root check updated to check both plane and center.\n- **UI** (semio/ui/index.tsx): 7 scene building locations updated to check both plane and center. Test fixtures updated with testCenter.\n- **Sketchpad** (semio/sketchpad/index.tsx): `isTransformable` check updated to require both plane and center.\n- **Fixture** (semio/assets/semio/nakagin-capsule-tower.deleted.design.diff.semio.json): Added `center: {u:0,v:0}` to all 10 updated piece diffs.\n- **Docs** (semio/AGENTS.md): Updated fixed piece definition to require both plane and center. Mathematical definition updated.\n- **JSON Schema** (semio/jsonschema/kit.json): Updated plane/center field descriptions.\n- **GraphQL** (semio/graphql/schema.graphql): Updated plane/center field descriptions.\n\nAll tests pass: TS 108/108, Python 48/49 (1 pre-existing), Go all, Rust 40/40, C# 45/46 (1 pre-existing), UI 139/139.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1161"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪47bcde96ce3c40929bad89f4f9a7b576"
+  ]
+}

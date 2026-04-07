@@ -1,0 +1,13 @@
+{
+  "title": "Fix Mcp App Tools to Use Official Mcp Apps Protocol",
+  "status": "closed",
+  "description": "Fix the semio engine MCP app tools (show_design, show_diagram, etc.) to use the official MCP Apps protocol with @modelcontextprotocol/ext-apps/react. Currently the UI hangs because the tools use a custom protocol instead of the standard MCP Apps protocol with ui:// resources, tool meta, and the App class for postMessage communication.",
+  "summary": "Migrated MCP app tools from custom semio:init/semio:ready/semio:selectionChange postMessage protocol to official MCP Apps protocol. Key changes:\n\n1. **main.py**: Changed _APP_RESOURCE_URI to ui://semio/design-viewer. Added _build_diagram_data() that pre-computes diagram points/lines from kit/design data via flattenDesignDict. Added @mcp.resource with text/html;profile=mcp-app MIME type. All 8 app tools now use meta={\"ui\": {\"resourceUri\": ...}} and return JSON strings with pre-computed diagram data instead of structuredContent/_meta dicts.\n\n2. **mcp-app.tsx**: Rewrote as standalone lightweight SVG diagram renderer using React + @modelcontextprotocol/ext-apps/react useApp hook. No @semio/ui imports — renders circles for pieces and lines for connections with pan/zoom/selection. 320KB built (96KB gzip).\n\n3. **vite.mcp-app.config.ts**: Simplified to minimal config with viteSingleFile plugin. No complex aliases needed since app is standalone.\n\n4. **engine.test.py**: Updated all 11 MCP app tool tests from old structuredContent/_meta assertions to new JSON string format with points/lines/capabilities. All 164 tests pass.\n\n5. **semio/ui/index.tsx**: Updated McpDesignViewer component to use new McpDiagramPayload format (points/lines/capabilities) instead of old McpDesignViewerPayload.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1098"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪c02d2963859b4bf08db1e2d87d0248e4"
+  ]
+}

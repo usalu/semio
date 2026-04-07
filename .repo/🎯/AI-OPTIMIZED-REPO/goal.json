@@ -1,0 +1,14 @@
+{
+  "title": "AI-optimized Repo",
+  "description": "AI-optimized Repo goal",
+  "prompt": "Goal for AI-optimized repository improvements",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "windsurf-chat",
+  "llm": "sonnet-4-5",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/39"
+  }
+}

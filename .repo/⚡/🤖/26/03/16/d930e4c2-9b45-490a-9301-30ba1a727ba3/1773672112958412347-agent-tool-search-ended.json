@@ -1,0 +1,38 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T14:41:52Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/workspaces/elements/ui/elements.tsx",
+        "offset": 5405,
+        "limit": 80
+      },
+      "tool_response": {
+        "type": "text",
+        "file": {
+          "filePath": "/workspaces/elements/ui/elements.tsx",
+          "content": "  const [isHovered, setIsHovered] = React.useState(false);\n  const hasChildren = hasNonEmptyChildren(children);\n  const isExpandable = expandable ?? hasChildren;\n  const baseClasses = `relative flex items-center gap-[6px] hover:bg-hover-panel select-none overflow-hidden min-w-0 group ${isExpandable ? \"cursor-foldable\" : \"cursor-selectable\"}`;\n  const stateClasses = `${isSelected ? \"bg-active-base text-active-foreground\" : \"\"} ${isHighlighted ? \"bg-active-base text-active-foreground\" : \"\"}`;\n  const itemClasses = `${baseClasses} ${stateClasses} ${className}`;\n\n  if (isExpandable \u0026\u0026 resolvedLabel) {\n    return (\n      \u003c\u003e\n        \u003cdiv\n          data-slot=\"tree-item-row\"\n          role=\"treeitem\"\n          id={id}\n          className={itemClasses}\n          style={{ paddingLeft: `${detailPanelIndentPx(level)}px` }}\n          draggable={draggable}\n          onDragStart={onDragStart}\n          onDragOver={onDragOver}\n          onDragLeave={onDragLeave}\n          onDrop={onDrop}\n          onDoubleClick={(event) =\u003e {\n            if (!onDoubleClick) return;\n            event.preventDefault();\n            event.stopPropagation();\n            onDoubleClick(event);\n          }}\n          onMouseEnter={() =\u003e setIsHovered(true)}\n          onMouseLeave={() =\u003e setIsHovered(false)}\n        \u003e\n          \u003cIndentationLines level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} /\u003e\n          \u003cbutton\n            className=\"flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable\"\n            onClick={(e) =\u003e {\n              e.preventDefault();\n              e.stopPropagation();\n              setOpen(!open);\n            }}\n          \u003e\n            {loading ? \u003cSpinner size=\"small\" className=\"text-muted-foreground\" /\u003e : open ? \u003cChevronDownIcon className=\"size-[14px] flex-shrink-0\" /\u003e : \u003cChevronRightIcon className=\"size-[14px] flex-shrink-0\" /\u003e}\n          \u003c/button\u003e\n          {icon \u0026\u0026 \u003cspan className=\"flex items-center justify-center flex-shrink-0\"\u003e{icon}\u003c/span\u003e}\n          \u003cspan\n            data-slot=\"tree-label\"\n            className=\"flex-1 text-xs font-normal truncate text-foreground cursor-selectable\"\n            onClick={(e) =\u003e {\n              if (e.detail \u003e 1) return;\n              e.preventDefault();\n              e.stopPropagation();\n              onClick?.(e);\n            }}\n          \u003e\n            {resolvedLabel as React.ReactNode}\n          \u003c/span\u003e\n          {actions.length \u003e 0 \u0026\u0026 (\n            \u003cdiv className=\"flex items-center gap-single\"\u003e\n              {actions.map((action, index) =\u003e (\n                \u003cAction\n                  key={index}\n                  onClick={(e) =\u003e {\n                    e.preventDefault();\n                    e.stopPropagation();\n                    action.onClick();\n                  }}\n                  id={action.id}\n                  icon={action.icon}\n                /\u003e\n              ))}\n            \u003c/div\u003e\n          )}\n        \u003c/div\u003e\n        {open \u0026\u0026 (\n          \u003cTreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree }}\u003e\n            \u003cdiv className=\"flex flex-col gap-y-[2px]\"\u003e{children}\u003c/div\u003e\n          \u003c/TreeContext.Provider\u003e\n        )}\n      \u003c/\u003e\n    );\n  }\n",
+          "numLines": 80,
+          "startLine": 5405,
+          "totalLines": 10337
+        }
+      },
+      "tool_use_id": "toolu_01PK59NTg7vnBMnqohE4zsfy"
+    }
+  },
+  "response": {}
+}

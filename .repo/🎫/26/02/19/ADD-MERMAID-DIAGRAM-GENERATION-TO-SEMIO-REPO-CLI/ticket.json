@@ -1,0 +1,10 @@
+{
+  "title": "Add Mermaid Diagram Generation to Semio Repo CLI",
+  "status": "closed",
+  "description": "Implement mermaid command with loc-by-projects-bundles-folders-files, loc-by-contributors, and loc-by-language subcommands that generate treemap-beta mermaid diagrams",
+  "summary": "Added mermaid command to CLI with three subcommands: loc-by-projects-bundles-folders-files, loc-by-contributors, and loc-by-language. Each generates treemap-beta mermaid diagram strings for LOC visualization. All 6 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/635"
+  },
+  "goal": "🎯repocli🎯mermaiddiagrams"
+}

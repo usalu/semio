@@ -1,0 +1,10 @@
+{
+  "title": "Fix Dotnet Tests Not Showing in Vscode Test Explorer",
+  "status": "closed",
+  "description": "Investigate and fix .NET tests not appearing in VS Code Test Explorer.",
+  "summary": "Fixed three issues",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/484"
+  },
+  "goal": "🎯r2603🎯runningnet🎯testednet"
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Refactor Entity Ids and Test Coverage",
+  "status": "closed",
+  "description": "Adapt all entity ID implementations and tests to match updated repo requirements. Flat strings are slugged and lowercased. Every ID is full, globally unique and treelike. Extract all IDs and refactor/extend existing tests.",
+  "summary": "Removed @ from project URIs and aligned ID/URI tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/574"
+  },
+  "goal": "🎯semiorepo🎯specs"
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "type": "module",
+  "name": "@semio/docs",
+  "version": "0.1.0",
+  "description": "semio \u22c5 docs",
+  "scripts": {
+    "dev": "vite --port 4321 --host 0.0.0.0",
+    "build": "vite build",
+    "publish": "vite build && npm publish"
+  },
+  "dependencies": {
+    "@elements/ui": "*",
+    "@semio/js": "*",
+    "@semio/sketchpad": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "AGPL-3.0-or-later",
+  "bundleKind": "site"
+}

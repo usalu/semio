@@ -1,0 +1,391 @@
+{
+  "config": {
+    "configFile": "C:\\git\\semio.tech\\semio\\js\\js\\playwright.config.ts",
+    "rootDir": "C:/git/semio.tech/semio/js/semio",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../reports/playwright.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/git/semio.tech/semio/js/semio/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/git/semio.tech/semio/js/semio",
+        "testIgnore": [],
+        "testMatch": [
+          "**/sketchpad.test.ts"
+        ],
+        "timeout": 0
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "3way",
+    "version": "1.56.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev:sketchpad -- --port 5173",
+      "url": "http://localhost:5173",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "sketchpad.test.ts",
+      "file": "sketchpad.test.ts",
+      "column": 0,
+      "line": 0,
+      "requirements": [],
+      "suites": [
+        {
+          "title": "sketchpad",
+          "file": "sketchpad.test.ts",
+          "line": 567,
+          "column": 6,
+          "requirements": [
+            {
+              "title": "Design",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 88569,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[TEST] Setting input files: C:\\git\\semio.tech\\semio\\assets\\semio\\metabolism.zip\n"
+                        },
+                        {
+                          "text": "[TEST] File set via file chooser\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Metabolism': \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Page text contains 'Loading': \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Metabolism cell visible: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[TEST] Double-clicked on Metabolism cell\n"
+                        },
+                        {
+                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
+                        },
+                        {
+                          "text": "[initDesign] Design visible: true\n"
+                        },
+                        {
+                          "text": "[initDesign] About to double-click on design via JS\n"
+                        },
+                        {
+                          "text": "[initDesign] Double-clicked on design via JS: true\n"
+                        },
+                        {
+                          "text": "[Design Test] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\n"
+                        },
+                        {
+                          "text": "[Design Test] Is design URL: true\n"
+                        },
+                        {
+                          "text": "[Design Test] ReactFlow elements count: \u001b[33m1\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Window/Panel elements count: \u001b[33m48\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] hasDiagram: \u001b[33mtrue\u001b[39m hasScene: \u001b[33mtrue\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Navbar is visible\n"
+                        },
+                        {
+                          "text": "[Design Test] Footer is visible\n"
+                        },
+                        {
+                          "text": "[Design Test] Piece count: \u001b[33m2880\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design Test] Pan 1 took 49ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Pan 2 took 40ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Hover (mouse enter) took 846ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Unhover (mouse leave) took 1103ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Hover timing: hover=846ms, unhover=1103ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Hover cycle times: 1572, 4, 7ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Starting scene pan operations on three.js canvas\n"
+                        },
+                        {
+                          "text": "[Design Test] Scene Pan 1 took 235ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Scene Pan 2 took 1093ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Scene Pan 3 took 295ms\n"
+                        },
+                        {
+                          "text": "[Design Test] Average subsequent scene pan time: 694ms\n"
+                        },
+                        {
+                          "text": "[Design] Testing Design app sidepanel toggles\n"
+                        },
+                        {
+                          "text": "[Design] Left sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Design] Right sidepanel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Design] HUD panel toggle visible: false\n"
+                        },
+                        {
+                          "text": "[Design] Panel toggle verification complete: left=false, hud=false, right=false\n"
+                        },
+                        {
+                          "text": "[Design] Testing toolbar visibility and selection tools\n"
+                        },
+                        {
+                          "text": "[Design] Toolbar visible: true\n"
+                        },
+                        {
+                          "text": "[Design] Testing individual tools\n"
+                        },
+                        {
+                          "text": "[Design] Selection tool visible: true\n"
+                        },
+                        {
+                          "text": "[Design] Lasso tool visible: true\n"
+                        },
+                        {
+                          "text": "[Design] Testing selection tool activation\n"
+                        },
+                        {
+                          "text": "[Design] Selection tool active state: on\n"
+                        },
+                        {
+                          "text": "[Design] Testing lasso tool activation\n"
+                        },
+                        {
+                          "text": "[Design] Lasso tool active state: on\n"
+                        },
+                        {
+                          "text": "[Design] Toolbar and selection tools test complete\n"
+                        },
+                        {
+                          "text": "[Design Test] Verifying design properties details section\n"
+                        },
+                        {
+                          "text": "[Design Test] Right sidepanel visible: false\n"
+                        },
+                        {
+                          "text": "[Design Test] Verifying flat planes and centers match expected asset data\n"
+                        },
+                        {
+                          "text": "[Design Test] Comparing 180 computed pieces with 180 expected flat pieces\n"
+                        },
+                        {
+                          "text": "[Design Test] Flat planes/centers verification: 180 matches, 0 mismatches\n"
+                        },
+                        {
+                          "text": "[Design] Testing selection state\n"
+                        },
+                        {
+                          "text": "[Design] Initial designApp state: {\"designGuid\":\"37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\"}\n"
+                        },
+                        {
+                          "text": "[Design] Piece count for selection: \u001b[33m2880\u001b[39m\n"
+                        },
+                        {
+                          "text": "[Design] After click designApp state: {\"designGuid\":\"37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\"}\n"
+                        },
+                        {
+                          "text": "[Design] Selection pieces: []\n"
+                        },
+                        {
+                          "text": "[Design] Selection state test complete\n"
+                        },
+                        {
+                          "text": "[Design] Testing panel toggle independence\n"
+                        },
+                        {
+                          "text": "[Design] Panel toggle workbench not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Design] Panel toggle toolbar not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Design] Panel toggle details not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Design] Panel toggle chat not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Design] Panel toggle settings not visible, skipping\n"
+                        },
+                        {
+                          "text": "[Design] Panel independence results: {\n  \"workbench\": {\n    \"toggled\": false,\n    \"independent\": true\n  },\n  \"toolbar\": {\n    \"toggled\": false,\n    \"independent\": true\n  },\n  \"details\": {\n    \"toggled\": false,\n    \"independent\": true\n  },\n  \"chat\": {\n    \"toggled\": false,\n    \"independent\": true\n  },\n  \"settings\": {\n    \"toggled\": false,\n    \"independent\": true\n  }\n}\n"
+                        },
+                        {
+                          "text": "[Design] 0/5 panels toggled successfully\n"
+                        },
+                        {
+                          "text": "[Design] 5/5 panels are independent\n"
+                        },
+                        {
+                          "text": "[Design] Panel toggle independence test complete\n"
+                        },
+                        {
+                          "text": "[Design] Testing drag and drop setup\n"
+                        },
+                        {
+                          "text": "[Design] Scene canvas visible for drag and drop: true\n"
+                        },
+                        {
+                          "text": "[Design] Left sidepanel toggle clicked for drag and drop\n"
+                        },
+                        {
+                          "text": "[Design] Left sidepanel visible: false\n"
+                        },
+                        {
+                          "text": "[Design] Falling back to workbench panel for drag and drop\n"
+                        },
+                        {
+                          "text": "[Design] Found 0 avatars in workbench panel\n"
+                        },
+                        {
+                          "text": "[Design] No avatars found initially. Expanding collapsed sections...\n"
+                        },
+                        {
+                          "text": "[Design] Found 0 closed sections\n"
+                        },
+                        {
+                          "text": "[Design] Found 0 draggable type avatars\n"
+                        },
+                        {
+                          "text": "[Design] No type avatars found, skipping drag and drop verification\n"
+                        },
+                        {
+                          "text": "[Design] Design has 180 existing pieces\n"
+                        },
+                        {
+                          "text": "[Design] Plane validation: 1 valid, 179 non-standard, 0 without plane\n"
+                        },
+                        {
+                          "text": "[Design] Note: The Nakagin Capsule Tower has rotated capsules, so most pieces have non-standard plane orientation - this is expected.\n"
+                        },
+                        {
+                          "text": "[Design] Drag and drop setup test complete\n"
+                        },
+                        {
+                          "text": "[Design] Testing diagram node drag to update piece center\n"
+                        },
+                        {
+                          "text": "[Design] Found 2880 piece nodes for drag test\n"
+                        },
+                        {
+                          "text": "[Design] Testing drag on piece node: piece-0-739c5e32-217f-4d03-b7b6-78b9c0cda46a\n"
+                        },
+                        {
+                          "text": "[Design] Piece center before drag: u=undefined, v=undefined\n"
+                        },
+                        {
+                          "text": "[Design] Dragging piece node from (346.1953125, 397.9921875) to (446.1953125, 447.9921875)\n"
+                        },
+                        {
+                          "text": "[Design] Piece center after drag: u=undefined, v=undefined\n"
+                        },
+                        {
+                          "text": "[Design] Could not compare centers - centerBeforeDrag or centerAfterDrag is null/undefined\n"
+                        },
+                        {
+                          "text": "[Design] Diagram node drag test complete\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-03T10:49:19.039Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1f96767271edc4239dfa-04d6a37c53e07d4a2f57",
+              "file": "sketchpad.test.ts",
+              "line": 1343,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-01-03T10:49:14.877Z",
+    "duration": 93214.81700000001,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

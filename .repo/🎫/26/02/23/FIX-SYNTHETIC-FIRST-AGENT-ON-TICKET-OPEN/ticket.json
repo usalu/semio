@@ -1,0 +1,16 @@
+{
+  "title": "Fix Synthetic First Agent on Ticket Open",
+  "status": "closed",
+  "description": "CreateTicket and ReopenTicket both inject a synthetic TicketAgent with generateHookSessionID() + a fake agent.prompt.submitting event. This results in two agents when only one should exist: the synthetic (wrong) first and the real session second. Remove the synthetic agent from both CreateTicket and ReopenTicket, update tests accordingly.",
+  "summary": "Removed synthetic TicketAgent creation from both CreateTicket and ReopenTicket. Both functions were injecting a fake agent with generateHookSessionID() and a synthetic agent.prompt.submitting event, causing every new ticket to have a wrong first agent. The prompt/llm/client info is already captured in Interactions[0]. Updated 3 test assertions: TestTicketLifecycle_NoManagement (0 agents after open, 0 after reopen), TestTrackHookInOpenTicketUsesStableSessionIDs (0 agents at open, 1 after first real hook at agents[0]). All 17 TrackHook/Ticket tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/671"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms",
+  "sessions": [
+    "⚪17718684020839440968890966976999947655",
+    "⚪a8b1592e5f8d40eca3414b52c0170499",
+    "⚪fe4ce050c50e4cb0bbc9f7b8ed5e3420",
+    "⚪6ed5c1ec2f9f4c1f87c224464f5d686a"
+  ]
+}

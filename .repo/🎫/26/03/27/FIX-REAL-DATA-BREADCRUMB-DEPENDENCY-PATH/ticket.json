@@ -1,0 +1,11 @@
+{
+  "title": "Fix Real Data Breadcrumb Dependency Path",
+  "status": "closed",
+  "description": "Investigate and fix breadcrumb construction mismatch between semio/ui story and real-data semio engine MCP kit sessions. Reproduce using /workspaces/semio/semio/assets/semio/metabolism and design guid 9a890dd4-0a9c-48ac-920a-9e62666465ef, update implementation and existing tests so breadcrumb dependency path always builds with real data.",
+  "summary": "Fixed the follow-up MCP kit viewer regression where SemioKit showed 'No metadata available' for real kits. The engine now preserves kit, design, and kind metadata fields in kitArtifacts instead of stripping them, while keeping parent references for breadcrumb dependency chains. Added regression assertions for metabolism folder payload content and direct payload building.",
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪3538ccd04d23405faa69da307f115420",
+    "⚪c8b5bf1edbe641db81e72794fa343661"
+  ]
+}

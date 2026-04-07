@@ -1,0 +1,13 @@
+{
+  "title": "Refactor Event Hook Architecture",
+  "status": "closed",
+  "description": "Refactor the event and hook architecture in repo CLI to match the new layout with renamed events (searching→search.starting, code.editing→code.edit.starting, etc.) and new events (test, build). Update all HookEvent constants, HookResult types, dispatch logic, tool classification, editor providers, configure command, and tests.",
+  "summary": "Refactored event hook architecture with renamed and new test/build events. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/687"
+  },
+  "goal": "🎯shippable🎯clifoundation",
+  "sessions": [
+    "⚪8553afbd303f45c0ac3d24e724f624ce"
+  ]
+}

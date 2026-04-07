@@ -1,0 +1,13 @@
+{
+  "title": "Export Exactly Sqlite Schema",
+  "status": "closed",
+  "description": "The export command must use exactly the schema from repo/sqlite/schema.sql. Currently the exportSchemaSQL const in cli/main.go uses a simplified 7-table schema (repo, folder, project, bundle, file, section, definition) that doesn't match schema.sql. Schema.sql also has syntax errors (missing commas). Fix schema.sql, replace exportSchemaSQL with the correct schema, seed all kind tables, create a synthetic checkpoint for folder/file FK requirements, update all INSERT statements to match the new schema columns, and update the tests to match.",
+  "summary": "Fixed schema.sql syntax errors (missing commas). Replaced simplified 7-table exportSchemaSQL with full 25-table schema matching schema.sql exactly. Updated INSERT functions to use checkpoint_id and _kind_id FK columns. Added seedKindTables(), folderKindToInt(). Synthetic contributor/release/version/checkpoint created on export. Updated all 4 export tests. All pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/745"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism",
+  "sessions": [
+    "⚪17724300113457244985104279981522824187"
+  ]
+}

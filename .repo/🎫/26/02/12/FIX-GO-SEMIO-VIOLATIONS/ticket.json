@@ -1,0 +1,10 @@
+{
+  "title": "Fix Go Semio Breachs",
+  "status": "closed",
+  "description": "Fix all 299 policy breachs in semio/go/semio.go by adding section summaries, definition summaries, spec comments, and wrapping orphan definitions in sections.",
+  "summary": "Fixed all 299 policy breachs in semio/go/semio.go to 0. Added Imports section for orphan definitions, MUST-keyword summaries for 34 sections, summary comments for 186 exported definitions, RFC2119 spec comments for 77 exported functions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/536"
+  },
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections"
+}

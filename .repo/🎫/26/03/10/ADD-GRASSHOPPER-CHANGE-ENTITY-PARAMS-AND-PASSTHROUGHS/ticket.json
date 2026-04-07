@@ -1,0 +1,13 @@
+{
+  "title": "Add Grasshopper Change Entity Params And Passthroughs",
+  "status": "closed",
+  "description": "Semio GH: add param and passthrough component for every semio change entity (kit, design, and all others) and ensure build succeeds.",
+  "summary": "Refined change components to use native typed diff params/goos for forward/backward and explicit before/after entity naming; added missing native diff param/goo classes for Author, Benchmark, Port, Prop, Tag, Concept, Layer, Group, Stat; updated all change components accordingly and verified net8 build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/829"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013⚪17731778700940321164046629709665471027"
+  ]
+}

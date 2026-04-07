@@ -1,0 +1,10 @@
+Benchmark,C#,Go,TypeScript,Python,Rust
+Roundtrip/Metabolism,136.511,0.4862,138.608,0,20.735
+Diff/Metabolism,,,,,
+Flatten Design/Nakagin Capsule Tower,0.259,0.0094,0.088,43.152,0.489
+Flatten Design/Nakagin Capsule Tower/Slanted,0.026,0.0061,0.033,44.177,0.491
+Flatten Design/Nakagin Capsule Tower/Twisted,0.027,0.0060,0.033,43.141,0.536
+Flatten Design/Nakagin Capsule Tower/Dancing,0.028,0.0062,0.033,49.007,0.502
+Flatten Design/Capsule Dream,3.190,0.7303,4.026,956.209,72.879
+Validation/Invalid Kit,0.081,0.0137,0.147,0,0.003
+Validation/Metabolism,2.438,0.6726,1.968,0,1.438

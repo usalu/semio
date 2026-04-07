@@ -1,0 +1,7 @@
+{
+  "title": "Fix Mcp Server Graphql",
+  "status": "closed",
+  "description": "Fix the MCP server which fails with GraphQL errors. Convert all MCP tool handlers from broken GraphQL queries to direct Tool* function calls. Add uri field to Goal type. Ensure MCP tools return same output as CLI. Extend tests.",
+  "summary": "Fixed MCP server GraphQL errors: added uri field to goalType, converted all MCP tool handlers from broken GraphQL mutations to direct Tool* calls, fixed 9 resource handler queries with wrong field names, fixed project detection for non-@ dirs, fixed emojiText U+FE0E, fixed ParseSections API compatibility, added 22 new MCP tool tests, updated dev docs",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary"
+}

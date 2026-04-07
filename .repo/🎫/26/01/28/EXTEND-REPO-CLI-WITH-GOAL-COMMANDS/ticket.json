@@ -1,0 +1,10 @@
+{
+  "title": "Extend Repo CLI with Goal Commands",
+  "status": "closed",
+  "description": "Extend repo CLI, VS Code extension, and GraphQL to support enhanced ticket commands (goal, parent, no-github) and new goal commands.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/242"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

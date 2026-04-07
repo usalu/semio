@@ -1,0 +1,13 @@
+{
+  "title": "Add KitKind Enum to Rust Lib",
+  "status": "closed",
+  "description": "Add KitKind Enum to Rust Lib",
+  "summary": "Added KitKind enum with 5 variants (File, Folder, Archive, Remote, Temporary) serializing to lowercase strings. Added ALL_KIT_KINDS constant. Added 5 tests: completeness, serialization, deserialization, Kit JSON roundtrip, in-memory modification. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1072"
+  },
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo",
+  "sessions": [
+    "⚪fdb076acfd9e4114b4557806b6c26308"
+  ]
+}

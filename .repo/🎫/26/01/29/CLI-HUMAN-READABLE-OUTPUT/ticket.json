@@ -1,0 +1,10 @@
+{
+  "title": "CLI Human Readable Output",
+  "status": "closed",
+  "description": "Ensure CLI commands return colored, compact text output by default, and JSON only with --json flag.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/274"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

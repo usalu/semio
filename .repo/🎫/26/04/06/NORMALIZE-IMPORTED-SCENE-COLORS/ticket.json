@@ -1,0 +1,10 @@
+{
+  "title": "Normalize Imported Scene Colors",
+  "status": "closed",
+  "description": "Overwrite imported scene mesh colors and line colors with homogeneous colors in semio/ui scene rendering, matching the sketchpad behavior. Update the existing semio/ui test file to cover imported mesh and line material normalization and interactive recoloring. Run the relevant tests and finish the ticket.",
+  "summary": "Normalized imported semio/ui scene assets to replace embedded mesh, line, and point colors with homogeneous scene materials, then recolor them through shared interaction/status state. Extended the existing semio/ui index.tsx tests to cover material replacement and recoloring. Verified the new scene tests pass; the full semio/ui suite still has a pre-existing Rust cargo dependency conflict in ExportDesignModel.",
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪c0d447db117e4d19b3e8fa0ca4f3ab4d"
+  ]
+}

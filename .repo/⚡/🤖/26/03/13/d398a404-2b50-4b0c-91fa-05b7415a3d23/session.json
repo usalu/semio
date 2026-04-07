@@ -1,0 +1,59 @@
+{
+  "id": "d398a404-2b50-4b0c-91fa-05b7415a3d23",
+  "uri": "semiorepo://s/d398a404-2b50-4b0c-91fa-05b7415a3d23",
+  "checkpoint": "b246a0ee16a521dcd1034a05b47033ddfcd3916b",
+  "contributor": "🧑‍💻ueli",
+  "client": "claude-code",
+  "second": "2026-03-13T10:48:44Z",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d398a404-2b50-4b0c-91fa-05b7415a3d23.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "session_id": "d398a404-2b50-4b0c-91fa-05b7415a3d23",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d398a404-2b50-4b0c-91fa-05b7415a3d23.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionStart",
+          "source": "startup"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b246a0ee16a521dcd1034a05b47033ddfcd3916b",
+        "client": "claude-code",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰10⌚48⏱️44",
+        "session": "⚪d398a4042b504b0c91fa05b7415a3d23",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d398a404-2b50-4b0c-91fa-05b7415a3d23.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "session_id": "d398a404-2b50-4b0c-91fa-05b7415a3d23",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d398a404-2b50-4b0c-91fa-05b7415a3d23.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "claude-code",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰22⌚25⏱️28",
+        "session": "⚪d398a4042b504b0c91fa05b7415a3d23",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d398a404-2b50-4b0c-91fa-05b7415a3d23.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

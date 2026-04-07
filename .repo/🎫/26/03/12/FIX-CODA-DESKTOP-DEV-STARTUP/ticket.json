@@ -1,0 +1,13 @@
+{
+  "title": "Fix Coda Desktop Dev Startup",
+  "status": "closed",
+  "description": "Coda desktop fails to start with 'ENOSPC: System limit for number of file watchers reached'. The Cursor Nx Language Server (nrwl.angular-console) was consuming 935k out of 1M inotify watches. Fixed by killing the process to free watches, then retrying the dev server.",
+  "summary": "Fixed 3 issues blocking coda desktop dev startup: (1) inotify watch limit exhausted by Cursor Nx LS (PID 17865 using 935k/1M watches) — killed process to free watches; (2) vite.main.config.ts was empty causing main.js to be built without CJS format, then rejected by Node due to package.json \"type\":\"module\" — added CJS lib build config and removed \"type\":\"module\"; (3) globals.css used @variant dark which is not valid in Tailwind v4 — replaced with @custom-variant declaration and .dark CSS rule; (4) vite.renderer.config.ts used import.meta.url incompatible with CJS package — replaced with __dirname directly. App now starts and runs, only ECONNREFUSED on port 8080 (expected, coda MCP backend not running).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/858"
+  },
+  "goal": "🎯r2603🎯runningnet",
+  "sessions": [
+    "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9⚪17733440543377599897867420746507526784"
+  ]
+}

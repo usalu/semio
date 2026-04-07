@@ -1,0 +1,12 @@
+{
+  "title": "Add Dev Command for Launching 3dm UI in VSCode",
+  "status": "open",
+  "description": "Add a dev command for launching the 3dm UI in VSCode. The command should open the UI development server (which runs on port 5174) in a VSCode browser preview or similar mechanism for easy development.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/837"
+  },
+  "goal": "🎯r2603🎯runningnet",
+  "sessions": [
+    "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96⚪17732330614550273394283067044741059606"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Fix Scene Not Showing in MCP App",
+  "status": "closed",
+  "description": "Fix Scene Not Showing in MCP App",
+  "summary": "Fixed two bugs causing the scene not to show in the MCP app:\n\n1. **`_enrich_design` shallow-design bug** (`semio/engine/main.py`): `flattenDesignDict` reads the design from `kit[\"designs\"]`, which may have a shallow entry (no pieces) when the session design was hydrated from a sibling `.design.semio.json` file. Fixed by injecting the full session design into a shallow-copied kit before calling `flattenDesignDict`, ensuring all pieces receive `plane`/`center` values.\n\n2. **Vitest config hardcoded root** (`elements/ui/vitest.config.ts`): The shared vitest config used `root: dirname(fileURLToPath(import.meta.url))` which always resolved to `elements/ui/`, so `semio/ui`'s `npm test` ran `elements/ui/index.tsx` tests instead of `semio/ui/index.tsx`. Fixed by switching to `root: process.cwd()` — each bundle's test command now runs its own in-source tests.\n\nResults: elements/ui 12/12 pass, semio/ui 194/194 pass (previously 0 semio/ui tests ran), Python 57/57 pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1221"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪60a0a4b91ad54f5ea987deec90405993"
+  ]
+}

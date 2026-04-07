@@ -1,0 +1,2159 @@
+{
+  "id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+  "uri": "semiorepo://s/9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+  "checkpoint": "5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-09T16:23:12Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:23:12.327Z",
+          "hook_event_name": "SubagentStart",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "agent_id": "d278180b-e83a-40f5-8e0c-cf1e1c383131",
+          "agent_type": "Explore",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.started acknowledged",
+            "hookEventName": "SubagentStart"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+        "second": "🎆26🌙03☀️09⏰16⌚23⏱️12",
+        "session": "⚪d278180be83a40f58e0ccf1e1c383131"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:23:26.134Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "prompt": "Thorough investigation. Read ALL struct definitions from `semio/go/semio.go` that I need for implementing diff operations. Use `sed -n` to read specific line ranges from the ACTUAL file on disk.\n\nI need the COMPLETE struct definitions for:\n1. Connector and ConnectorDiff (search for 'type Connector struct' and 'type ConnectorDiff struct')\n2. Connection and ConnectionDiff (search for 'type Connection struct' and 'type ConnectionDiff struct')  \n3. Piece and PieceDiff\n4. Model and ModelDiff\n5. Type and TypeDiff (already known, but confirm)\n6. Design and DesignDiff (already known, but confirm)\n7. Kit and KitDiff\n8. Attribute and AttributeDiff\n9. Author and AuthorDiff\n10. ConnectorsDiff, ConnectionsDiff, PiecesDiff, ModelsDiff\n11. Side and SideDiff\n12. Point, Vector, PointDiff, VectorDiff, Plane, PlaneDiff\n13. Prop and PropDiff, PropsDiff\n14. Stat and StatDiff, StatsDiff\n15. Layer and LayerDiff, LayersDiff\n16. Group and GroupDiff, GroupsDiff\n\nFor each, use `grep -n 'type XXX struct' semio/go/semio.go` to find line numbers, then `sed -n 'START,ENDp' semio/go/semio.go` to read the full struct.\n\nReturn ALL struct field names, types, and JSON tags for each struct.",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.prompt.submitting acknowledged",
+            "hookEventName": "UserPromptSubmit"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.prompt.submitting",
+        "parent": "",
+        "prompt": "Thorough investigation. Read ALL struct definitions from `semio/go/semio.go` that I need for implementing diff operations. Use `sed -n` to read specific line ranges from the ACTUAL file on disk.\n\nI need the COMPLETE struct definitions for:\n1. Connector and ConnectorDiff (search for 'type Connector struct' and 'type ConnectorDiff struct')\n2. Connection and ConnectionDiff (search for 'type Connection struct' and 'type ConnectionDiff struct')  \n3. Piece and PieceDiff\n4. Model and ModelDiff\n5. Type and TypeDiff (already known, but confirm)\n6. Design and DesignDiff (already known, but confirm)\n7. Kit and KitDiff\n8. Attribute and AttributeDiff\n9. Author and AuthorDiff\n10. ConnectorsDiff, ConnectionsDiff, PiecesDiff, ModelsDiff\n11. Side and SideDiff\n12. Point, Vector, PointDiff, VectorDiff, Plane, PlaneDiff\n13. Prop and PropDiff, PropsDiff\n14. Stat and StatDiff, StatsDiff\n15. Layer and LayerDiff, LayersDiff\n16. Group and GroupDiff, GroupsDiff\n\nFor each, use `grep -n 'type XXX struct' semio/go/semio.go` to find line numbers, then `sed -n 'START,ENDp' semio/go/semio.go` to read the full struct.\n\nReturn ALL struct field names, types, and JSON tags for each struct.",
+        "second": "🎆26🌙03☀️09⏰16⌚23⏱️26",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:23:46.263Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n 'type .* struct {' semio/go/semio.go | head -80",
+            "explanation": "Find all struct definitions and their line numbers",
+            "goal": "Locate all struct definitions in semio.go",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01WLyGKasDHSWWxHJT2Lf7Wk__vscode-1773054462808",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio✂️attribute",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️author",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authordiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authorsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmark",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarkdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarkid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarksdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️camera",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️concept",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectionid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connector",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectordiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectorsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coord",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coorddiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️file",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️filediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️fileid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️filesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folder",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folderdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folderid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️foldersdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️group",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layer",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layerdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layerid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layersdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️location",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️model",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modeldiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modelid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modelsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piece",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️pieceid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️plane",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️planediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️point",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️pointdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️port",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️prop",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualitiesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️quality",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualitydiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualityid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️sideid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tag",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vec",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vector",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vectordiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️type",
+            "loc": 1
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚23⏱️46",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:24:00.215Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n 'type .* struct {' semio/go/semio.go | head -80",
+            "explanation": "Find all struct definitions and their line numbers",
+            "goal": "Locate all struct definitions in semio.go",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` grep -n 'type .* struct {' semio/go/semio.go | head -80`, and this is the output of running that command instead:\n104:type AttributeId struct {\n110:type LocationId struct {\n116:type AuthorId struct {\n122:type FileId struct {\n128:type FolderId struct {\n134:type BenchmarkId struct {\n140:type QualityId struct {\n146:type PortId struct {\n152:type PropId struct {\n158:type TagId struct {\n164:type ConceptId struct {\n170:type ModelId struct {\n176:type ConnectorId struct {\n182:type TypeId struct {\n188:type LayerId struct {\n194:type PieceId struct {\n200:type GroupId struct {\n206:type SideId struct {\n214:type ConnectionId struct {\n220:type StatId struct {\n226:type DesignId struct {\n232:type KitId struct {\n244:type Coord struct {\n251:type Vec struct {\n258:type Point struct {\n266:type Vector struct {\n274:type Plane struct {\n282:type Camera struct {\n296:type Attribute struct {\n305:type AttributeDiff struct {\n313:type AttributesDiff struct {\n330:type Location struct {\n340:type LocationDiff struct {\n355:type Author struct {\n366:type AuthorDiff struct {\n374:type AuthorsDiff struct {\n391:type File struct {\n408:type FileDiff struct {\n422:type FilesDiff struct {\n439:type Folder struct {\n451:type FolderDiff struct {\n460:type FoldersDiff struct {\n477:type Benchmark struct {\n491:type BenchmarkDiff struct {\n504:type BenchmarksDiff struct {\n534:type Quality struct {\n557:type QualityDiff struct {\n577:type QualitiesDiff struct {\n594:type Port struct {\n607:type PortDiff struct {\n673:type PortsDiff struct {\n690:type Prop struct {\n700:type PropDiff struct {\n709:type PropsDiff struct {\n726:type Tag struct {\n738:type TagDiff struct {\n811:type TagsDiff struct {\n828:type Concept struct {\n840:type ConceptDiff struct {\n913:type ConceptsDiff struct {\n930:type Model struct {\n941:type ModelDiff struct {\n951:type ModelsDiff struct {\n968:type Connector struct {\n983:type PointDiff struct {\n991:type VectorDiff struct {\n999:type ConnectorDiff struct {\n1013:type ConnectorsDiff struct {\n1030:type Type struct {\n1055:type TypeDiff struct {\n1196:type TypesDiff struct {\n1213:type Layer struct {\n1225:type LayerDiff struct {\n1236:type LayersDiff struct {\n1253:type Piece struct {\n1272:type CoordDiff struct {\n1279:type PlaneDiff struct {\n1287:type PieceDiff struct {\n1305:type PiecesDiff struct {\n1322:type Group struct {\n",
+          "tool_use_id": "toolu_bdrk_01WLyGKasDHSWWxHJT2Lf7Wk__vscode-1773054462808",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio✂️attribute",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️attributesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️author",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authordiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️authorsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmark",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarkdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarkid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️benchmarksdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️camera",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️concept",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️conceptsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectionid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connector",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectordiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectorid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectorsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coord",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coorddiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️file",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️filediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️fileid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️filesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folder",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folderdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️folderid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️foldersdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️group",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layer",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layerdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layerid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️layersdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️location",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️locationid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️model",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modeldiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modelid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️modelsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piece",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️pieceid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️plane",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️planediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️point",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️pointdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️port",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️portsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️prop",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️propsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualitiesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️quality",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualitydiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️qualityid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️sideid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tag",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️tagsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typeid",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️typesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vec",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vector",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️vectordiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio🛠️type",
+            "loc": 1
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚24⏱️00",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:24:05.301Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n 'type .* struct {' semio/go/semio.go | tail -30",
+            "explanation": "Get remaining struct definitions",
+            "goal": "Find remaining structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_018B58z4bnqK7Fw4rt2XwsQz__vscode-1773054462809",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio✂️cameradiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connection",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectionsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coorddiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️design",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️domainlocation",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️fix",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️group",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kit",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecenode",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️planediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️problem",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️problemserialized",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️side",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️sidediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️stat",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationcontext",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationresult",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationresultserialized",
+            "loc": 1
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚24⏱️05",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:24:18.233Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "grep -n 'type .* struct {' semio/go/semio.go | tail -30",
+            "explanation": "Get remaining struct definitions",
+            "goal": "Find remaining structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` grep -n 'type .* struct {' semio/go/semio.go | tail -30`, and this is the output of running that command instead:\n1272:type CoordDiff struct {\n1279:type PlaneDiff struct {\n1287:type PieceDiff struct {\n1305:type PiecesDiff struct {\n1322:type Group struct {\n1333:type GroupDiff struct {\n1343:type GroupsDiff struct {\n1360:type Side struct {\n1368:type SideDiff struct {\n1382:type Connection struct {\n1400:type ConnectionDiff struct {\n1417:type ConnectionsDiff struct {\n1434:type Stat struct {\n1445:type StatDiff struct {\n1455:type StatsDiff struct {\n1472:type Design struct {\n1502:type CameraDiff struct {\n1510:type DesignDiff struct {\n1537:type DesignsDiff struct {\n1554:type Kit struct {\n1581:type KitDiff struct {\n1606:type KitsDiff struct {\n4951:type DomainLocation struct {\n4959:type Fix struct {\n4966:type Problem struct {\n4977:type ValidationResult struct {\n4983:type ValidationContext struct {\n5833:type ProblemSerialized struct {\n5844:type ValidationResultSerialized struct {\n6176:type pieceNode struct {\n",
+          "tool_use_id": "toolu_bdrk_018B58z4bnqK7Fw4rt2XwsQz__vscode-1773054462809",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "👤semio📚go💻semio✂️cameradiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connection",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectiondiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️connectionsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️coorddiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️design",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️designsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️domainlocation",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️fix",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️group",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️groupsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kit",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️kitsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecenode",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️piecesdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️planediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️problem",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️problemserialized",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️side",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️sidediff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️stat",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️statsdiff",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationcontext",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationresult",
+            "loc": 1
+          },
+          {
+            "id": "👤semio📚go💻semio✂️validationresultserialized",
+            "loc": 1
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚24⏱️18",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:24:25.732Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '244,328p' semio/go/semio.go",
+            "explanation": "Read Coord, Vec, Point, Vector, Plane, Camera, Attribute, AttributeDiff, AttributesDiff structs",
+            "goal": "Read geometry and attribute structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01FVBgH4HtYiDXa8336gDGaB__vscode-1773054462810",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚24⏱️26",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:24:38.743Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '244,328p' semio/go/semio.go",
+            "explanation": "Read Coord, Vec, Point, Vector, Plane, Camera, Attribute, AttributeDiff, AttributesDiff structs",
+            "goal": "Read geometry and attribute structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '244,328p' semio/go/semio.go`, and this is the output of running that command instead:\ntype Coord struct {\n        U float64 `json:\"u\"`\n        V float64 `json:\"v\"`\n}\n\n// Vec represents a 2D vector with U and V components.\n// [👤semio📚go💻semio🔖weakentities✂️vec](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Weak%20Entities/d/i/Vec)                                                    type Vec struct {\n        U float64 `json:\"u\"`\n        V float64 `json:\"v\"`\n}\n\n// Point represents a 3D point with X, Y and Z components.\n// [👤semio📚go💻semio🔖weakentities✂️point](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Weak%20Entities/d/i/Point)                                                type Point struct {\n        X float64 `json:\"x\"`\n        Y float64 `json:\"y\"`\n        Z float64 `json:\"z\"`\n}\n\n// Vector represents a 3D vector with X, Y and Z components.\n// [👤semio📚go💻semio🔖weakentities✂️vector](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Weak%20Entities/d/i/Vector)                                              type Vector struct {\n        X float64 `json:\"x\"`\n        Y float64 `json:\"y\"`\n        Z float64 `json:\"z\"`\n}\n\n// Plane represents a 3D plane defined by origin, X-axis and Y-axis.\n// [👤semio📚go💻semio🔖weakentities✂️plane](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Weak%20Entities/d/i/Plane)                                                type Plane struct {\n        Origin Point  `json:\"origin\"`\n        XAxis  Vector `json:\"xAxis\"`\n        YAxis  Vector `json:\"yAxis\"`\n}\n\n// Camera represents a 3D camera with position, forward and up vectors.\n// [👤semio📚go💻semio🔖weakentities✂️camera](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Weak%20Entities/d/i/Camera)                                              type Camera struct {\n        Position Point  `json:\"position\"`\n        Forward  Vector `json:\"forward\"`\n        Up       Vector `json:\"up\"`\n}\n\n// #endregion 🔖Weak Entities\n\n// #region 🔖Attribute\n// [👤semio📚go💻semio🔖attribute](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Att\nribute)                                                                         // Attribute MUST define the key-value metadata entity and its diff types.\n\n// Attribute represents a key-value metadata entry with optional definition.\n// [👤semio📚go💻semio🔖attribute✂️attribute](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Attribute/d/i/Attribute)                                                 type Attribute struct {\n        Guid       string  `json:\"guid\"`\n        Key        string  `json:\"key\"`\n        Value      *string `json:\"value,omitempty\"`\n        Definition *string `json:\"definition,omitempty\"`\n}\n\n// AttributeDiff represents changes to an attribute entity.\n// [👤semio📚go💻semio🔖attribute✂️attributediff](semiorepo://p/u/semio/b/l/go/f/\nsemio.go/s/Attribute/d/i/AttributeDiff)                                         type AttributeDiff struct {\n        Key        *string `json:\"key,omitempty\"`\n        Value      *string `json:\"value,omitempty\"`\n        Definition *string `json:\"definition,omitempty\"`\n}\n\n// AttributesDiff represents a collection of attribute additions, removals and u\npdates.                                                                         // [👤semio📚go💻semio🔖attribute✂️attributesdiff](semiorepo://p/u/semio/b/l/go/f\n/semio.go/s/Attribute/d/i/AttributesDiff)                                       type AttributesDiff struct {\n        Removed []AttributeId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Attribute AttributeId   `json:\"attribute\"`\n                Diff      AttributeDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Attribute `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Attribute\n\n// #region 🔖Location\n// [👤semio📚go💻semio🔖location](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Loca\ntion)                                                                           // Location MUST define geographic location entities and their diff types.\n\n// Location represents a geographic location with longitude, latitude and option\nal altitude.                                                                    ",
+          "tool_use_id": "toolu_bdrk_01FVBgH4HtYiDXa8336gDGaB__vscode-1773054462810",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚24⏱️39",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:24:46.539Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '330,470p' semio/go/semio.go",
+            "explanation": "Read Location, Author, AuthorsDiff, File, FilesDiff, Folder, FoldersDiff structs",
+            "goal": "Read author/file/folder structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01CjyATP5zoU1yiPZavTnRpF__vscode-1773054462811",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚24⏱️47",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:24:59.080Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '330,470p' semio/go/semio.go",
+            "explanation": "Read Location, Author, AuthorsDiff, File, FilesDiff, Folder, FoldersDiff structs",
+            "goal": "Read author/file/folder structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '330,470p' semio/go/semio.go`, and this is the output of running that command instead:\ntype Location struct {\n        Guid       string      `json:\"guid\"`\n        Longitude  float64     `json:\"longitude\"`\n        Latitude   float64     `json:\"latitude\"`\n        Altitude   *float64    `json:\"altitude,omitempty\"`\n        Attributes []Attribute `json:\"attributes,omitempty\"`\n}\n\n// LocationDiff represents changes to a location entity.\n// [👤semio📚go💻semio🔖location✂️locationdiff](semiorepo://p/u/semio/b/l/go/f/se\nmio.go/s/Location/d/i/LocationDiff)                                             type LocationDiff struct {\n        Longitude  *float64        `json:\"longitude,omitempty\"`\n        Latitude   *float64        `json:\"latitude,omitempty\"`\n        Altitude   *float64        `json:\"altitude,omitempty\"`\n        Attributes *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// #endregion 🔖Location\n\n// #region 🔖Author\n// [👤semio📚go💻semio🔖author](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Author\n)                                                                               // Author MUST define authorship entities and their diff types.\n\n// Author represents a named authorship entity with optional email.\n// [👤semio📚go💻semio🔖author✂️author](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Author/d/i/Author)                                                             type Author struct {\n        Guid       string      `json:\"guid\"`\n        Name       string      `json:\"name\"`\n        Email      *string     `json:\"email,omitempty\"`\n        Attributes []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt  string      `json:\"createdAt,omitempty\"`\n        UpdatedAt  string      `json:\"updatedAt,omitempty\"`\n}\n\n// AuthorDiff represents changes to an author entity.\n// [👤semio📚go💻semio🔖author✂️authordiff](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Author/d/i/AuthorDiff)                                                     type AuthorDiff struct {\n        Name       *string         `json:\"name,omitempty\"`\n        Email      *string         `json:\"email,omitempty\"`\n        Attributes *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// AuthorsDiff represents a collection of author additions, removals and updates\n.                                                                               // [👤semio📚go💻semio🔖author✂️authorsdiff](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Author/d/i/AuthorsDiff)                                                   type AuthorsDiff struct {\n        Removed []AuthorId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Author AuthorId   `json:\"author\"`\n                Diff   AuthorDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Author `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Author\n\n// #region 🔖File\n// [👤semio📚go💻semio🔖file](semiorepo://p/u/semio/b/l/go/f/semio.go/s/File)\n// File MUST define file reference entities and their diff types.\n\n// File represents a file reference entity with name, remote URL and metadata.\n// [👤semio📚go💻semio🔖file✂️file](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Fil\ne/d/i/File)                                                                     type File struct {\n        Guid        string      `json:\"guid\"`\n        Name        string      `json:\"name\"`\n        Mime        *string     `json:\"mime,omitempty\"`\n        Remote      *string     `json:\"remote,omitempty\"`\n        Folder      *FolderId   `json:\"folder,omitempty\"`\n        Size        *int64      `json:\"size,omitempty\"`\n        Hash        *string     `json:\"hash,omitempty\"`\n        Blob        *string     `json:\"blob,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt   string      `json:\"createdAt,omitempty\"`\n        UpdatedAt   string      `json:\"updatedAt,omitempty\"`\n}\n\n// FileDiff represents changes to a file entity.\n// [👤semio📚go💻semio🔖file✂️filediff](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/File/d/i/FileDiff)                                                             type FileDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Mime        *string         `json:\"mime,omitempty\"`\n        Remote      *string         `json:\"remote,omitempty\"`\n        Size        *int64          `json:\"size,omitempty\"`\n        Hash        *string         `json:\"hash,omitempty\"`\n        Blob        *string         `json:\"blob,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Folder      *FolderId       `json:\"folder,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// FilesDiff represents a collection of file additions, removals and updates.\n// [👤semio📚go💻semio🔖file✂️filesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/\ns/File/d/i/FilesDiff)                                                           type FilesDiff struct {\n        Removed []FileId `json:\"removed,omitempty\"`\n        Updated []struct {\n                File FileId   `json:\"file\"`\n                Diff FileDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []File `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖File\n\n// #region 🔖Folder\n// [👤semio📚go💻semio🔖folder](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Folder\n)                                                                               // Folder MUST define folder hierarchy entities and their diff types.\n\n// Folder represents a folder hierarchy entity with name and parent reference.\n// [👤semio📚go💻semio🔖folder✂️folder](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Folder/d/i/Folder)                                                             type Folder struct {\n        Guid        string      `json:\"guid\"`\n        Name        string      `json:\"name\"`\n        Parent      *FolderId   `json:\"parent,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt   string      `json:\"createdAt,omitempty\"`\n        UpdatedAt   string      `json:\"updatedAt,omitempty\"`\n}\n\n// FolderDiff represents changes to a folder entity.\n// [👤semio📚go💻semio🔖folder✂️folderdiff](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Folder/d/i/FolderDiff)                                                     type FolderDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Parent      *FolderId       `json:\"parent,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// FoldersDiff represents a collection of folder additions, removals and updates\n.                                                                               // [👤semio📚go💻semio🔖folder✂️foldersdiff](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Folder/d/i/FoldersDiff)                                                   type FoldersDiff struct {\n        Removed []FolderId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Folder FolderId   `json:\"folder\"`\n                Diff   FolderDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Folder `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Folder\n\n",
+          "tool_use_id": "toolu_bdrk_01CjyATP5zoU1yiPZavTnRpF__vscode-1773054462811",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚24⏱️59",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:25:07.528Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '477,700p' semio/go/semio.go",
+            "explanation": "Read Benchmark, Quality, Port, PortDiff, PortsDiff, Prop structs",
+            "goal": "Read benchmark/quality/port/prop structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01KDWBRMDMKtjZNGzvh3CzUh__vscode-1773054462812",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚25⏱️08",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:25:20.460Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '477,700p' semio/go/semio.go",
+            "explanation": "Read Benchmark, Quality, Port, PortDiff, PortsDiff, Prop structs",
+            "goal": "Read benchmark/quality/port/prop structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '477,700p' semio/go/semio.go`, and this is the output of running that command instead:\ntype Benchmark struct {\n        Guid        string      `json:\"guid\"`\n        Name        string      `json:\"name\"`\n        Icon        *string     `json:\"icon,omitempty\"`\n        Min         *float64    `json:\"min,omitempty\"`\n        MinExcluded *bool       `json:\"minExcluded,omitempty\"`\n        Max         *float64    `json:\"max,omitempty\"`\n        MaxExcluded *bool       `json:\"maxExcluded,omitempty\"`\n        Definition  *string     `json:\"definition,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n}\n\n// BenchmarkDiff represents changes to a benchmark entity.\n// [👤semio📚go💻semio🔖benchmark✂️benchmarkdiff](semiorepo://p/u/semio/b/l/go/f/\nsemio.go/s/Benchmark/d/i/BenchmarkDiff)                                         type BenchmarkDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Icon        *string         `json:\"icon,omitempty\"`\n        Min         *float64        `json:\"min,omitempty\"`\n        MinExcluded *bool           `json:\"minExcluded,omitempty\"`\n        Max         *float64        `json:\"max,omitempty\"`\n        MaxExcluded *bool           `json:\"maxExcluded,omitempty\"`\n        Definition  *string         `json:\"definition,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// BenchmarksDiff represents a collection of benchmark additions, removals and u\npdates.                                                                         // [👤semio📚go💻semio🔖benchmark✂️benchmarksdiff](semiorepo://p/u/semio/b/l/go/f\n/semio.go/s/Benchmark/d/i/BenchmarksDiff)                                       type BenchmarksDiff struct {\n        Removed []BenchmarkId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Benchmark BenchmarkId   `json:\"benchmark\"`\n                Diff      BenchmarkDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Benchmark `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Benchmark\n\n// #region 🔖Quality\n// [👤semio📚go💻semio🔖quality](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Quali\nty)                                                                             // Quality MUST define measurable quality entities and their diff types.\n\n// QualityKind is a bitfield enum for quality scope classification.\n// [👤semio📚go💻semio🔖quality✂️qualitykind](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Quality/d/i/QualityKind)                                                 type QualityKind int\n\nconst (\n        QualityKindGeneral QualityKind = 1 \u003c\u003c iota\n        QualityKindType\n        QualityKindDesign\n        QualityKindPiece\n        QualityKindConnection\n        QualityKindConnector\n)\n\n// Quality represents a measurable property with formula, units and benchmarks.\n// [👤semio📚go💻semio🔖quality✂️quality](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Quality/d/i/Quality)                                                         type Quality struct {\n        Guid                string      `json:\"guid\"`\n        Key                 string      `json:\"key\"`\n        Name                string      `json:\"name\"`\n        Kind                QualityKind `json:\"kind,omitempty\"`\n        Default             *float64    `json:\"default,omitempty\"`\n        Formula             *string     `json:\"formula,omitempty\"`\n        DefaultSiUnit       *string     `json:\"defaultSiUnit,omitempty\"`\n        DefaultImperialUnit *string     `json:\"defaultImperialUnit,omitempty\"`\n        Min                 *float64    `json:\"min,omitempty\"`\n        MinExcluded         *bool       `json:\"minExcluded,omitempty\"`\n        Max                 *float64    `json:\"max,omitempty\"`\n        MaxExcluded         *bool       `json:\"maxExcluded,omitempty\"`\n        CanScale            *bool       `json:\"canScale,omitempty\"`\n        Benchmarks          []Benchmark `json:\"benchmarks,omitempty\"`\n        Definition          *string     `json:\"definition,omitempty\"`\n        Attributes          []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt           string      `json:\"createdAt,omitempty\"`\n        UpdatedAt           string      `json:\"updatedAt,omitempty\"`\n}\n\n// QualityDiff represents changes to a quality entity.\n// [👤semio📚go💻semio🔖quality✂️qualitydiff](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Quality/d/i/QualityDiff)                                                 type QualityDiff struct {\n        Key                 *string         `json:\"key,omitempty\"`\n        Name                *string         `json:\"name,omitempty\"`\n        Kind                *QualityKind    `json:\"kind,omitempty\"`\n        Default             *float64        `json:\"default,omitempty\"`\n        Formula             *string         `json:\"formula,omitempty\"`\n        DefaultSiUnit       *string         `json:\"defaultSiUnit,omitempty\"`\n        DefaultImperialUnit *string         `json:\"defaultImperialUnit,omitempty\n\"`                                                                                      Min                 *float64        `json:\"min,omitempty\"`\n        MinExcluded         *bool           `json:\"minExcluded,omitempty\"`\n        Max                 *float64        `json:\"max,omitempty\"`\n        MaxExcluded         *bool           `json:\"maxExcluded,omitempty\"`\n        CanScale            *bool           `json:\"canScale,omitempty\"`\n        Benchmarks          *BenchmarksDiff `json:\"benchmarks,omitempty\"`\n        Definition          *string         `json:\"definition,omitempty\"`\n        Attributes          *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// QualitiesDiff represents a collection of quality additions, removals and upda\ntes.                                                                            // [👤semio📚go💻semio🔖quality✂️qualitiesdiff](semiorepo://p/u/semio/b/l/go/f/se\nmio.go/s/Quality/d/i/QualitiesDiff)                                             type QualitiesDiff struct {\n        Removed []QualityId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Quality QualityId   `json:\"quality\"`\n                Diff    QualityDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Quality `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Quality\n\n// #region 🔖Port\n// [👤semio📚go💻semio🔖port](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Port)\n// Port MUST define connector port entities and their diff types.\n\n// Port represents a named connector port with compatible port references.\n// [👤semio📚go💻semio🔖port✂️port](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Por\nt/d/i/Port)                                                                     type Port struct {\n        Guid            string      `json:\"guid\"`\n        Name            string      `json:\"name\"`\n        Description     *string     `json:\"description,omitempty\"`\n        Icon            *string     `json:\"icon,omitempty\"`\n        CompatiblePorts []PortId    `json:\"compatiblePorts,omitempty\"`\n        Attributes      []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt       string      `json:\"createdAt,omitempty\"`\n        UpdatedAt       string      `json:\"updatedAt,omitempty\"`\n}\n\n// PortDiff represents changes to a port entity.\n// [👤semio📚go💻semio🔖port✂️portdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Port/d/i/PortDiff)                                                             type PortDiff struct {\n        Name            *string         `json:\"name,omitempty\"`\n        Description     *string         `json:\"description,omitempty\"`\n        Icon            *string         `json:\"icon,omitempty\"`\n        CompatiblePorts []PortId        `json:\"compatiblePorts,omitempty\"`\n        Attributes      *AttributesDiff `json:\"attributes,omitempty\"`\n        setFields       map[string]bool `json:\"-\"`\n}\n\n// UnmarshalJSON MUST populate the setFields map for all present JSON keys.\n// UnmarshalJSON deserializes JSON while tracking which fields were explicitly s\net.                                                                             // [👤semio📚go💻semio🔖port🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Port/d/i/UnmarshalJSON)                                                   func (d *PortDiff) UnmarshalJSON(data []byte) error {\n        type Alias PortDiff\n        aux := \u0026struct {\n                *Alias\n        }{\n                Alias: (*Alias)(d),\n        }\n        var rawMap map[string]json.RawMessage\n        if err := json.Unmarshal(data, \u0026rawMap); err != nil {\n                return err\n        }\n        d.setFields = make(map[string]bool)\n        for key := range rawMap {\n                d.setFields[key] = true\n        }\n        return json.Unmarshal(data, aux)\n}\n\n// HasField MUST return false when setFields is nil.\n// HasField returns whether a JSON field was present in the unmarshaled data.\n// [👤semio📚go💻semio🔖port🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Port/d/i/HasField)                                                             func (d *PortDiff) HasField(field string) bool {\n        if d.setFields == nil {\n                return false\n        }\n        return d.setFields[field]\n}\n\n// SetField marks a JSON field as explicitly set (even if nil).\nfunc (d *PortDiff) SetField(field string) {\n        if d.setFields == nil {\n                d.setFields = make(map[string]bool)\n        }\n        d.setFields[field] = true\n}\n\n// MarshalJSON includes null for fields tracked in setFields.\nfunc (d PortDiff) MarshalJSON() ([]byte, error) {\n        result := make(map[string]interface{})\n        if d.Name != nil {\n                result[\"name\"] = d.Name\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"name\"] {\n                result[\"name\"] = nil\n        }\n        if d.Description != nil {\n                result[\"description\"] = d.Description\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"description\"] {\n                result[\"description\"] = nil\n        }\n        return json.Marshal(result)\n}\n\n// PortsDiff represents a collection of port additions, removals and updates.\n// [👤semio📚go💻semio🔖port✂️portsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/\ns/Port/d/i/PortsDiff)                                                           type PortsDiff struct {\n        Removed []PortId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Port PortId   `json:\"port\"`\n                Diff PortDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Port `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Port\n\n// #region 🔖Prop\n// [👤semio📚go💻semio🔖prop](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Prop)\n// Prop MUST define property value entities and their diff types.\n\n// Prop represents a quality property value with optional unit.\n// [👤semio📚go💻semio🔖prop✂️prop](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Pro\np/d/i/Prop)                                                                     type Prop struct {\n        Guid       string      `json:\"guid\"`\n        Quality    QualityId   `json:\"quality\"`\n        Value      string      `json:\"value\"`\n        Unit       *string     `json:\"unit,omitempty\"`\n        Attributes []Attribute `json:\"attributes,omitempty\"`\n}\n\n// PropDiff represents changes to a prop entity.\n// [👤semio📚go💻semio🔖prop✂️propdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Prop/d/i/PropDiff)                                                             type PropDiff struct {\n",
+          "tool_use_id": "toolu_bdrk_01KDWBRMDMKtjZNGzvh3CzUh__vscode-1773054462812",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚25⏱️21",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:25:28.391Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_01KDWBRMDMKtjZNGzvh3CzUh__vscode-1773054462812/content.txt",
+            "startLine": 1,
+            "endLine": 230
+          },
+          "tool_use_id": "toolu_bdrk_016EWfw1p7MAqcPYa5nkhPMX__vscode-1773054462813",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01kdwbrmdmktjzngzvh3czuhvscode1773054462812📃content"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01kdwbrmdmktjzngzvh3czuhvscode1773054462812📃content📌1📌230"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚25⏱️29",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:25:41.736Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_01KDWBRMDMKtjZNGzvh3CzUh__vscode-1773054462812/content.txt",
+            "startLine": 1,
+            "endLine": 230
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_016EWfw1p7MAqcPYa5nkhPMX__vscode-1773054462813",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01kdwbrmdmktjzngzvh3czuhvscode1773054462812📃content"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01kdwbrmdmktjzngzvh3czuhvscode1773054462812📃content📌1📌230"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚25⏱️42",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:25:46.697Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '700,970p' semio/go/semio.go",
+            "explanation": "Read PropDiff, PropsDiff, Tag, TagDiff, TagsDiff, Concept, ConceptDiff, ConceptsDiff structs",
+            "goal": "Read prop/tag/concept structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_018Yyk6xUSa2q93CmxVV88vF__vscode-1773054462814",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚25⏱️47",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:25:58.584Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '700,970p' semio/go/semio.go",
+            "explanation": "Read PropDiff, PropsDiff, Tag, TagDiff, TagsDiff, Concept, ConceptDiff, ConceptsDiff structs",
+            "goal": "Read prop/tag/concept structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '700,970p' semio/go/semio.go`, and this is the output of running that command instead:\ntype PropDiff struct {\n        Quality    *QualityId      `json:\"quality,omitempty\"`\n        Value      *string         `json:\"value,omitempty\"`\n        Unit       *string         `json:\"unit,omitempty\"`\n        Attributes *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// PropsDiff represents a collection of prop additions, removals and updates.\n// [👤semio📚go💻semio🔖prop✂️propsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/\ns/Prop/d/i/PropsDiff)                                                           type PropsDiff struct {\n        Removed []PropId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Prop PropId   `json:\"prop\"`\n                Diff PropDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Prop `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Prop\n\n// #region 🔖Tag\n// [👤semio📚go💻semio🔖tag](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Tag)\n// Tag MUST define tag classification entities and their diff types.\n\n// Tag represents a named classification tag with optional description and icon.\n// [👤semio📚go💻semio🔖tag✂️tag](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Tag/d\n/i/Tag)                                                                         type Tag struct {\n        Guid        string      `json:\"guid\"`\n        Name        string      `json:\"name\"`\n        Description *string     `json:\"description,omitempty\"`\n        Icon        *string     `json:\"icon,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt   string      `json:\"createdAt,omitempty\"`\n        UpdatedAt   string      `json:\"updatedAt,omitempty\"`\n}\n\n// TagDiff represents changes to a tag entity.\n// [👤semio📚go💻semio🔖tag✂️tagdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/T\nag/d/i/TagDiff)                                                                 type TagDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Icon        *string         `json:\"icon,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n        setFields   map[string]bool `json:\"-\"`\n}\n\n// UnmarshalJSON MUST populate the setFields map for all present JSON keys.\n// UnmarshalJSON deserializes JSON while tracking which fields were explicitly s\net.                                                                             // [👤semio📚go💻semio🔖tag🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Tag/d/i/UnmarshalJSON)                                                     func (d *TagDiff) UnmarshalJSON(data []byte) error {\n        type Alias TagDiff\n        aux := \u0026struct {\n                *Alias\n        }{\n                Alias: (*Alias)(d),\n        }\n        var rawMap map[string]json.RawMessage\n        if err := json.Unmarshal(data, \u0026rawMap); err != nil {\n                return err\n        }\n        d.setFields = make(map[string]bool)\n        for key := range rawMap {\n                d.setFields[key] = true\n        }\n        return json.Unmarshal(data, aux)\n}\n\n// HasField MUST return false when setFields is nil.\n// HasField returns whether a JSON field was present in the unmarshaled data.\n// [👤semio📚go💻semio🔖tag🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/s/\nTag/d/i/HasField)                                                               func (d *TagDiff) HasField(field string) bool {\n        if d.setFields == nil {\n                return false\n        }\n        return d.setFields[field]\n}\n\n// SetField marks a JSON field as explicitly set (even if nil).\nfunc (d *TagDiff) SetField(field string) {\n        if d.setFields == nil {\n                d.setFields = make(map[string]bool)\n        }\n        d.setFields[field] = true\n}\n\n// MarshalJSON includes null for fields tracked in setFields.\nfunc (d TagDiff) MarshalJSON() ([]byte, error) {\n        result := make(map[string]interface{})\n        if d.Name != nil {\n                result[\"name\"] = d.Name\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"name\"] {\n                result[\"name\"] = nil\n        }\n        if d.Description != nil {\n                result[\"description\"] = d.Description\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"description\"] {\n                result[\"description\"] = nil\n        }\n        if d.Icon != nil {\n                result[\"icon\"] = d.Icon\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"icon\"] {\n                result[\"icon\"] = nil\n        }\n        if d.Attributes != nil {\n                result[\"attributes\"] = d.Attributes\n        }\n        return json.Marshal(result)\n}\n\n// TagsDiff represents a collection of tag additions, removals and updates.\n// [👤semio📚go💻semio🔖tag✂️tagsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/\nTag/d/i/TagsDiff)                                                               type TagsDiff struct {\n        Removed []TagId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Tag  TagId   `json:\"tag\"`\n                Diff TagDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Tag `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Tag\n\n// #region 🔖Concept\n// [👤semio📚go💻semio🔖concept](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Conce\npt)                                                                             // Concept MUST define concept categorization entities and their diff types.\n\n// Concept represents a named categorization concept with optional description.\n// [👤semio📚go💻semio🔖concept✂️concept](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Concept/d/i/Concept)                                                         type Concept struct {\n        Guid        string      `json:\"guid\"`\n        Name        string      `json:\"name\"`\n        Description *string     `json:\"description,omitempty\"`\n        Icon        *string     `json:\"icon,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt   string      `json:\"createdAt,omitempty\"`\n        UpdatedAt   string      `json:\"updatedAt,omitempty\"`\n}\n\n// ConceptDiff represents changes to a concept entity.\n// [👤semio📚go💻semio🔖concept✂️conceptdiff](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Concept/d/i/ConceptDiff)                                                 type ConceptDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Icon        *string         `json:\"icon,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n        setFields   map[string]bool `json:\"-\"`\n}\n\n// UnmarshalJSON MUST populate the setFields map for all present JSON keys.\n// UnmarshalJSON deserializes JSON while tracking which fields were explicitly s\net.                                                                             // [👤semio📚go💻semio🔖concept🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/se\nmio.go/s/Concept/d/i/UnmarshalJSON)                                             func (d *ConceptDiff) UnmarshalJSON(data []byte) error {\n        type Alias ConceptDiff\n        aux := \u0026struct {\n                *Alias\n        }{\n                Alias: (*Alias)(d),\n        }\n        var rawMap map[string]json.RawMessage\n        if err := json.Unmarshal(data, \u0026rawMap); err != nil {\n                return err\n        }\n        d.setFields = make(map[string]bool)\n        for key := range rawMap {\n                d.setFields[key] = true\n        }\n        return json.Unmarshal(data, aux)\n}\n\n// HasField MUST return false when setFields is nil.\n// HasField returns whether a JSON field was present in the unmarshaled data.\n// [👤semio📚go💻semio🔖concept🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Concept/d/i/HasField)                                                       func (d *ConceptDiff) HasField(field string) bool {\n        if d.setFields == nil {\n                return false\n        }\n        return d.setFields[field]\n}\n\n// SetField marks a JSON field as explicitly set (even if nil).\nfunc (d *ConceptDiff) SetField(field string) {\n        if d.setFields == nil {\n                d.setFields = make(map[string]bool)\n        }\n        d.setFields[field] = true\n}\n\n// MarshalJSON includes null for fields tracked in setFields.\nfunc (d ConceptDiff) MarshalJSON() ([]byte, error) {\n        result := make(map[string]interface{})\n        if d.Name != nil {\n                result[\"name\"] = d.Name\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"name\"] {\n                result[\"name\"] = nil\n        }\n        if d.Description != nil {\n                result[\"description\"] = d.Description\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"description\"] {\n                result[\"description\"] = nil\n        }\n        if d.Icon != nil {\n                result[\"icon\"] = d.Icon\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"icon\"] {\n                result[\"icon\"] = nil\n        }\n        if d.Attributes != nil {\n                result[\"attributes\"] = d.Attributes\n        }\n        return json.Marshal(result)\n}\n\n// ConceptsDiff represents a collection of concept additions, removals and updat\nes.                                                                             // [👤semio📚go💻semio🔖concept✂️conceptsdiff](semiorepo://p/u/semio/b/l/go/f/sem\nio.go/s/Concept/d/i/ConceptsDiff)                                               type ConceptsDiff struct {\n        Removed []ConceptId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Concept ConceptId   `json:\"concept\"`\n                Diff    ConceptDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Concept `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Concept\n\n// #region 🔖Model\n// [👤semio📚go💻semio🔖model](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Model)\n// Model MUST define 3D model reference entities and their diff types.\n\n// Model represents a 3D model reference associated with a file and tags.\n// [👤semio📚go💻semio🔖model✂️model](semiorepo://p/u/semio/b/l/go/f/semio.go/s/M\nodel/d/i/Model)                                                                 type Model struct {\n        Guid        string      `json:\"guid\"`\n        File        FileId      `json:\"file\"`\n        Name        *string     `json:\"name,omitempty\"`\n        Tags        []TagId     `json:\"tags,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n}\n\n// ModelDiff represents changes to a model entity.\n// [👤semio📚go💻semio🔖model✂️modeldiff](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Model/d/i/ModelDiff)                                                         type ModelDiff struct {\n        File        *FileId         `json:\"file,omitempty\"`\n        Name        *string         `json:\"name,omitempty\"`\n        Tags        []TagId         `json:\"tags,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// ModelsDiff represents a collection of model additions, removals and updates.\n// [👤semio📚go💻semio🔖model✂️modelsdiff](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Model/d/i/ModelsDiff)                                                       type ModelsDiff struct {\n        Removed []ModelId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Model ModelId   `json:\"model\"`\n                Diff  ModelDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Model `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Model\n\n// #region 🔖Connector\n// [👤semio📚go💻semio🔖connector](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Con\nnector)                                                                         // Connector MUST define spatial connector entities and their diff types.\n\n// Connector represents a spatial connection point on a type with position and d\nirection.                                                                       // [👤semio📚go💻semio🔖connector✂️connector](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Connector/d/i/Connector)                                                 type Connector struct {\n        Guid        string      `json:\"guid\"`\n        Name        *string     `json:\"name,omitempty\"`\n",
+          "tool_use_id": "toolu_bdrk_018Yyk6xUSa2q93CmxVV88vF__vscode-1773054462814",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚25⏱️59",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:26:03.580Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 275,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_018Yyk6xUSa2q93CmxVV88vF__vscode-1773054462814/content.txt",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_bdrk_013XZa5BJnKSJZiBYqdXTicN__vscode-1773054462815",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk018yyk6xusa2q93cmxvv88vfvscode1773054462814📃content"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk018yyk6xusa2q93cmxvv88vfvscode1773054462814📃content📌1📌275"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚26⏱️04",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:26:16.455Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 275,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_018Yyk6xUSa2q93CmxVV88vF__vscode-1773054462814/content.txt",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_013XZa5BJnKSJZiBYqdXTicN__vscode-1773054462815",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk018yyk6xusa2q93cmxvv88vfvscode1773054462814📃content"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk018yyk6xusa2q93cmxvv88vfvscode1773054462814📃content📌1📌275"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚26⏱️17",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:26:22.229Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '968,1220p' semio/go/semio.go",
+            "explanation": "Read Connector, PointDiff, VectorDiff, ConnectorDiff, ConnectorsDiff, Type, TypeDiff structs",
+            "goal": "Read connector and type structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01CzYM7DBVvQ7iL8SyHnZATM__vscode-1773054462816",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚26⏱️22",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:26:34.533Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '968,1220p' semio/go/semio.go",
+            "explanation": "Read Connector, PointDiff, VectorDiff, ConnectorDiff, ConnectorsDiff, Type, TypeDiff structs",
+            "goal": "Read connector and type structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '968,1220p' semio/go/semio.go`, and this is the output of running that command instead:\ntype Connector struct {\n        Guid        string      `json:\"guid\"`\n        Name        *string     `json:\"name,omitempty\"`\n        Point       Point       `json:\"point\"`\n        Direction   Vector      `json:\"direction\"`\n        T           float64     `json:\"t\"`\n        Mandatory   *bool       `json:\"mandatory,omitempty\"`\n        Port        *PortId     `json:\"port,omitempty\"`\n        Props       []Prop      `json:\"props,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n}\n\n// PointDiff represents changes to a 3D point.\n// [👤semio📚go💻semio🔖connector✂️pointdiff](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Connector/d/i/PointDiff)                                                 type PointDiff struct {\n        X *float64 `json:\"x,omitempty\"`\n        Y *float64 `json:\"y,omitempty\"`\n        Z *float64 `json:\"z,omitempty\"`\n}\n\n// VectorDiff represents changes to a 3D vector.\n// [👤semio📚go💻semio🔖connector✂️vectordiff](semiorepo://p/u/semio/b/l/go/f/sem\nio.go/s/Connector/d/i/VectorDiff)                                               type VectorDiff struct {\n        X *float64 `json:\"x,omitempty\"`\n        Y *float64 `json:\"y,omitempty\"`\n        Z *float64 `json:\"z,omitempty\"`\n}\n\n// ConnectorDiff represents changes to a connector entity.\n// [👤semio📚go💻semio🔖connector✂️connectordiff](semiorepo://p/u/semio/b/l/go/f/\nsemio.go/s/Connector/d/i/ConnectorDiff)                                         type ConnectorDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Point       *PointDiff      `json:\"point,omitempty\"`\n        Direction   *VectorDiff     `json:\"direction,omitempty\"`\n        T           *float64        `json:\"t,omitempty\"`\n        Mandatory   *bool           `json:\"mandatory,omitempty\"`\n        Port        *PortId         `json:\"port,omitempty\"`\n        Props       *PropsDiff      `json:\"props,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// ConnectorsDiff represents a collection of connector additions, removals and u\npdates.                                                                         // [👤semio📚go💻semio🔖connector✂️connectorsdiff](semiorepo://p/u/semio/b/l/go/f\n/semio.go/s/Connector/d/i/ConnectorsDiff)                                       type ConnectorsDiff struct {\n        Removed []ConnectorId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Connector ConnectorId   `json:\"connector\"`\n                Diff      ConnectorDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Connector `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Connector\n\n// #region 🔖Type\n// [👤semio📚go💻semio🔖type](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Type)\n// Type MUST define component type entities and their diff types.\n\n// Type represents a component type with models, connectors and hierarchical inh\neritance.                                                                       // [👤semio📚go💻semio🔖type✂️type](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Typ\ne/d/i/Type)                                                                     type Type struct {\n        Guid        string      `json:\"guid\"`\n        Name        string      `json:\"name\"`\n        Parent      *TypeId     `json:\"parent,omitempty\"`\n        IsAbstract  *bool       `json:\"isAbstract,omitempty\"`\n        Virtual     *bool       `json:\"virtual,omitempty\"`\n        Unit        *string     `json:\"unit,omitempty\"`\n        Stock       *int        `json:\"stock,omitempty\"`\n        Location    *LocationId `json:\"location,omitempty\"`\n        Folder      *string     `json:\"folder,omitempty\"`\n        Models      []Model     `json:\"models,omitempty\"`\n        Connectors  []Connector `json:\"connectors,omitempty\"`\n        Props       []Prop      `json:\"props,omitempty\"`\n        Authors     []AuthorId  `json:\"authors,omitempty\"`\n        Concepts    []ConceptId    `json:\"concepts,omitempty\"`\n        Icon        *string     `json:\"icon,omitempty\"`\n        Image       *string     `json:\"image,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt   string      `json:\"createdAt,omitempty\"`\n        UpdatedAt   string      `json:\"updatedAt,omitempty\"`\n}\n\n// TypeDiff represents changes to a type entity.\n// [👤semio📚go💻semio🔖type✂️typediff](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Type/d/i/TypeDiff)                                                             type TypeDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Parent      *TypeId         `json:\"parent,omitempty\"`\n        IsAbstract  *bool           `json:\"isAbstract,omitempty\"`\n        Virtual     *bool           `json:\"virtual,omitempty\"`\n        Unit        *string         `json:\"unit,omitempty\"`\n        Stock       *int            `json:\"stock,omitempty\"`\n        Location    *LocationId     `json:\"location,omitempty\"`\n        Folder      *string         `json:\"folder,omitempty\"`\n        Models      *ModelsDiff     `json:\"models,omitempty\"`\n        Connectors  *ConnectorsDiff `json:\"connectors,omitempty\"`\n        Props       *PropsDiff      `json:\"props,omitempty\"`\n        Authors     []AuthorId      `json:\"authors,omitempty\"`\n        Concepts    []ConceptId        `json:\"concepts,omitempty\"`\n        Icon        *string         `json:\"icon,omitempty\"`\n        Image       *string         `json:\"image,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n        setFields   map[string]bool `json:\"-\"`\n}\n\n// UnmarshalJSON MUST populate the setFields map for all present JSON keys.\n// UnmarshalJSON deserializes JSON while tracking which fields were explicitly s\net.                                                                             // [👤semio📚go💻semio🔖type🛠️unmarshaljson](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Type/d/i/UnmarshalJSON)                                                   func (d *TypeDiff) UnmarshalJSON(data []byte) error {\n        type Alias TypeDiff\n        aux := \u0026struct {\n                *Alias\n        }{\n                Alias: (*Alias)(d),\n        }\n        var rawMap map[string]json.RawMessage\n        if err := json.Unmarshal(data, \u0026rawMap); err != nil {\n                return err\n        }\n        d.setFields = make(map[string]bool)\n        for key := range rawMap {\n                d.setFields[key] = true\n        }\n        return json.Unmarshal(data, aux)\n}\n\n// HasField MUST return false when setFields is nil.\n// HasField returns whether a JSON field was present in the unmarshaled data.\n// [👤semio📚go💻semio🔖type🛠️hasfield](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Type/d/i/HasField)                                                             func (d *TypeDiff) HasField(field string) bool {\n        if d.setFields == nil {\n                return false\n        }\n        return d.setFields[field]\n}\n\n// SetField marks a JSON field as explicitly set (even if nil).\nfunc (d *TypeDiff) SetField(field string) {\n        if d.setFields == nil {\n                d.setFields = make(map[string]bool)\n        }\n        d.setFields[field] = true\n}\n\n// MarshalJSON includes null for fields tracked in setFields.\nfunc (d TypeDiff) MarshalJSON() ([]byte, error) {\n        result := make(map[string]interface{})\n        if d.Name != nil {\n                result[\"name\"] = d.Name\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"name\"] {\n                result[\"name\"] = nil\n        }\n        if d.Parent != nil {\n                result[\"parent\"] = d.Parent\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"parent\"] {\n                result[\"parent\"] = nil\n        }\n        if d.IsAbstract != nil {\n                result[\"isAbstract\"] = d.IsAbstract\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"isAbstract\"] {\n                result[\"isAbstract\"] = nil\n        }\n        if d.Virtual != nil {\n                result[\"virtual\"] = d.Virtual\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"virtual\"] {\n                result[\"virtual\"] = nil\n        }\n        if d.Unit != nil {\n                result[\"unit\"] = d.Unit\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"unit\"] {\n                result[\"unit\"] = nil\n        }\n        if d.Stock != nil {\n                result[\"stock\"] = d.Stock\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"stock\"] {\n                result[\"stock\"] = nil\n        }\n        if d.Location != nil {\n                result[\"location\"] = d.Location\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"location\"] {\n                result[\"location\"] = nil\n        }\n        if d.Folder != nil {\n                result[\"folder\"] = d.Folder\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"folder\"] {\n                result[\"folder\"] = nil\n        }\n        if d.Models != nil {\n                result[\"models\"] = d.Models\n        }\n        if d.Connectors != nil {\n                result[\"connectors\"] = d.Connectors\n        }\n        if d.Props != nil {\n                result[\"props\"] = d.Props\n        }\n        if len(d.Authors) \u003e 0 {\n                result[\"authors\"] = d.Authors\n        }\n        if len(d.Concepts) \u003e 0 {\n                result[\"concepts\"] = d.Concepts\n        }\n        if d.Icon != nil {\n                result[\"icon\"] = d.Icon\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"icon\"] {\n                result[\"icon\"] = nil\n        }\n        if d.Image != nil {\n                result[\"image\"] = d.Image\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"image\"] {\n                result[\"image\"] = nil\n        }\n        if d.Description != nil {\n                result[\"description\"] = d.Description\n        } else if d.setFields != nil \u0026\u0026 d.setFields[\"description\"] {\n                result[\"description\"] = nil\n        }\n        if d.Attributes != nil {\n                result[\"attributes\"] = d.Attributes\n        }\n        return json.Marshal(result)\n}\n\n// TypesDiff represents a collection of type additions, removals and updates.\n// [👤semio📚go💻semio🔖type✂️typesdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/\ns/Type/d/i/TypesDiff)                                                           type TypesDiff struct {\n        Removed []TypeId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Type TypeId   `json:\"type\"`\n                Diff TypeDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Type `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Type\n\n// #region 🔖Layer\n// [👤semio📚go💻semio🔖layer](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Layer)\n// Layer MUST define layer hierarchy entities and their diff types.\n\n// Layer represents a named layer with visibility, lock and color properties.\n// [👤semio📚go💻semio🔖layer✂️layer](semiorepo://p/u/semio/b/l/go/f/semio.go/s/L\nayer/d/i/Layer)                                                                 type Layer struct {\n        Guid        string      `json:\"guid\"`\n        Path        string      `json:\"path\"`\n        IsHidden    *bool       `json:\"isHidden,omitempty\"`\n        IsLocked    *bool       `json:\"isLocked,omitempty\"`\n        Color       *string     `json:\"color,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n",
+          "tool_use_id": "toolu_bdrk_01CzYM7DBVvQ7iL8SyHnZATM__vscode-1773054462816",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚26⏱️35",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:26:41.596Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 260,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_01CzYM7DBVvQ7iL8SyHnZATM__vscode-1773054462816/content.txt",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_bdrk_014GFC8sGeSEmGvYe7NuDLP5__vscode-1773054462817",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01czym7dbvvq7il8syhnzatmvscode1773054462816📃content"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01czym7dbvvq7il8syhnzatmvscode1773054462816📃content📌1📌260"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚26⏱️42",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:26:54.671Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 260,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_01CzYM7DBVvQ7iL8SyHnZATM__vscode-1773054462816/content.txt",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_014GFC8sGeSEmGvYe7NuDLP5__vscode-1773054462817",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01czym7dbvvq7il8syhnzatmvscode1773054462816📃content"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk01czym7dbvvq7il8syhnzatmvscode1773054462816📃content📌1📌260"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚26⏱️55",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:27:00.998Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '1220,1480p' semio/go/semio.go",
+            "explanation": "Read Layer/LayerDiff/LayersDiff, Piece/CoordDiff/PlaneDiff/PieceDiff/PiecesDiff, Group/GroupDiff/GroupsDiff, Side/SideDiff structs",
+            "goal": "Read layer/piece/group/side structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_018E7dVp6atQbDFZkDYKsaBs__vscode-1773054462818",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚27⏱️01",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:27:13.187Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '1220,1480p' semio/go/semio.go",
+            "explanation": "Read Layer/LayerDiff/LayersDiff, Piece/CoordDiff/PlaneDiff/PieceDiff/PiecesDiff, Group/GroupDiff/GroupsDiff, Side/SideDiff structs",
+            "goal": "Read layer/piece/group/side structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '1220,1480p' semio/go/semio.go`, and this is the output of running that command instead:\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n}\n\n// LayerDiff represents changes to a layer entity.\n// [👤semio📚go💻semio🔖layer✂️layerdiff](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Layer/d/i/LayerDiff)                                                         type LayerDiff struct {\n        Path        *string         `json:\"path,omitempty\"`\n        IsHidden    *bool           `json:\"isHidden,omitempty\"`\n        IsLocked    *bool           `json:\"isLocked,omitempty\"`\n        Color       *string         `json:\"color,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// LayersDiff represents a collection of layer additions, removals and updates.\n// [👤semio📚go💻semio🔖layer✂️layersdiff](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Layer/d/i/LayersDiff)                                                       type LayersDiff struct {\n        Removed []LayerId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Layer LayerId   `json:\"layer\"`\n                Diff  LayerDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Layer `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Layer\n\n// #region 🔖Piece\n// [👤semio📚go💻semio🔖piece](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Piece)\n// Piece MUST define placed piece entities and their diff types.\n\n// Piece represents a placed component instance within a design.\n// [👤semio📚go💻semio🔖piece✂️piece](semiorepo://p/u/semio/b/l/go/f/semio.go/s/P\niece/d/i/Piece)                                                                 type Piece struct {\n        Guid        string      `json:\"guid\"`\n        Name        *string     `json:\"name,omitempty\"`\n        Type        *TypeId     `json:\"type,omitempty\"`\n        Design      *DesignId   `json:\"design,omitempty\"`\n        Plane       *Plane      `json:\"plane,omitempty\"`\n        Center      *Coord      `json:\"center,omitempty\"`\n        Scale       *float64    `json:\"scale,omitempty\"`\n        MirrorPlane *Plane      `json:\"mirrorPlane,omitempty\"`\n        Props       []Prop      `json:\"props,omitempty\"`\n        IsHidden    *bool       `json:\"isHidden,omitempty\"`\n        IsLocked    *bool       `json:\"isLocked,omitempty\"`\n        Color       *string     `json:\"color,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n}\n\n// CoordDiff represents changes to a 2D coordinate.\n// [👤semio📚go💻semio🔖piece✂️coorddiff](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Piece/d/i/CoordDiff)                                                         type CoordDiff struct {\n        U *float64 `json:\"u,omitempty\"`\n        V *float64 `json:\"v,omitempty\"`\n}\n\n// PlaneDiff represents changes to a 3D plane.\n// [👤semio📚go💻semio🔖piece✂️planediff](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Piece/d/i/PlaneDiff)                                                         type PlaneDiff struct {\n        Origin *PointDiff  `json:\"origin,omitempty\"`\n        XAxis  *VectorDiff `json:\"xAxis,omitempty\"`\n        YAxis  *VectorDiff `json:\"yAxis,omitempty\"`\n}\n\n// PieceDiff represents changes to a piece entity.\n// [👤semio📚go💻semio🔖piece✂️piecediff](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Piece/d/i/PieceDiff)                                                         type PieceDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Type        *TypeId         `json:\"type,omitempty\"`\n        Design      *DesignId       `json:\"design,omitempty\"`\n        Plane       *PlaneDiff      `json:\"plane,omitempty\"`\n        Center      *CoordDiff      `json:\"center,omitempty\"`\n        Scale       *float64        `json:\"scale,omitempty\"`\n        MirrorPlane *PlaneDiff      `json:\"mirrorPlane,omitempty\"`\n        Props       *PropsDiff      `json:\"props,omitempty\"`\n        IsHidden    *bool           `json:\"isHidden,omitempty\"`\n        IsLocked    *bool           `json:\"isLocked,omitempty\"`\n        Color       *string         `json:\"color,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// PiecesDiff represents a collection of piece additions, removals and updates.\n// [👤semio📚go💻semio🔖piece✂️piecesdiff](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Piece/d/i/PiecesDiff)                                                       type PiecesDiff struct {\n        Removed []PieceId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Piece PieceId   `json:\"piece\"`\n                Diff  PieceDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Piece `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Piece\n\n// #region 🔖Group\n// [👤semio📚go💻semio🔖group](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Group)\n// Group MUST define piece grouping entities and their diff types.\n\n// Group represents a named collection of pieces within a design.\n// [👤semio📚go💻semio🔖group✂️group](semiorepo://p/u/semio/b/l/go/f/semio.go/s/G\nroup/d/i/Group)                                                                 type Group struct {\n        Guid        string      `json:\"guid\"`\n        Pieces      []PieceId   `json:\"pieces,omitempty\"`\n        Name        *string     `json:\"name,omitempty\"`\n        Color       *string     `json:\"color,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n}\n\n// GroupDiff represents changes to a group entity.\n// [👤semio📚go💻semio🔖group✂️groupdiff](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Group/d/i/GroupDiff)                                                         type GroupDiff struct {\n        Pieces      []PieceId       `json:\"pieces,omitempty\"`\n        Name        *string         `json:\"name,omitempty\"`\n        Color       *string         `json:\"color,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// GroupsDiff represents a collection of group additions, removals and updates.\n// [👤semio📚go💻semio🔖group✂️groupsdiff](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Group/d/i/GroupsDiff)                                                       type GroupsDiff struct {\n        Removed []GroupId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Group GroupId   `json:\"group\"`\n                Diff  GroupDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Group `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Group\n\n// #region 🔖Side\n// [👤semio📚go💻semio🔖side](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Side)\n// Side MUST define connection side reference entities and their diff types.\n\n// Side represents one end of a connection referencing a piece and optional conn\nector.                                                                          // [👤semio📚go💻semio🔖side✂️side](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Sid\ne/d/i/Side)                                                                     type Side struct {\n        Piece       PieceId      `json:\"piece\"`\n        DesignPiece *PieceId     `json:\"designPiece,omitempty\"`\n        Connector   *ConnectorId `json:\"connector,omitempty\"`\n}\n\n// SideDiff represents changes to a connection side.\n// [👤semio📚go💻semio🔖side✂️sidediff](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Side/d/i/SideDiff)                                                             type SideDiff struct {\n        Piece       *PieceId     `json:\"piece,omitempty\"`\n        DesignPiece *PieceId     `json:\"designPiece,omitempty\"`\n        Connector   *ConnectorId `json:\"connector,omitempty\"`\n}\n\n// #endregion 🔖Side\n\n// #region 🔖Connection\n// [👤semio📚go💻semio🔖connection](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Co\nnnection)                                                                       // Connection MUST define spatial connection entities and their diff types.\n\n// Connection represents a spatial relationship between two pieces with transfor\nm parameters.                                                                   // [👤semio📚go💻semio🔖connection✂️connection](semiorepo://p/u/semio/b/l/go/f/se\nmio.go/s/Connection/d/i/Connection)                                             type Connection struct {\n        Guid        string      `json:\"guid\"`\n        Connected   Side        `json:\"connected\"`\n        Connecting  Side        `json:\"connecting\"`\n        Gap         float64     `json:\"gap\"`\n        Shift       float64     `json:\"shift\"`\n        Rise        float64     `json:\"rise\"`\n        Rotation    float64     `json:\"rotation\"`\n        Turn        float64     `json:\"turn\"`\n        Tilt        float64     `json:\"tilt\"`\n        U           float64     `json:\"u\"`\n        V           float64     `json:\"v\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n}\n\n// ConnectionDiff represents changes to a connection entity.\n// [👤semio📚go💻semio🔖connection✂️connectiondiff](semiorepo://p/u/semio/b/l/go/\nf/semio.go/s/Connection/d/i/ConnectionDiff)                                     type ConnectionDiff struct {\n        Connected   *SideDiff       `json:\"connected,omitempty\"`\n        Connecting  *SideDiff       `json:\"connecting,omitempty\"`\n        Gap         *float64        `json:\"gap,omitempty\"`\n        Shift       *float64        `json:\"shift,omitempty\"`\n        Rise        *float64        `json:\"rise,omitempty\"`\n        Rotation    *float64        `json:\"rotation,omitempty\"`\n        Turn        *float64        `json:\"turn,omitempty\"`\n        Tilt        *float64        `json:\"tilt,omitempty\"`\n        U           *float64        `json:\"u,omitempty\"`\n        V           *float64        `json:\"v,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// ConnectionsDiff represents a collection of connection additions, removals and\n updates.                                                                       // [👤semio📚go💻semio🔖connection✂️connectionsdiff](semiorepo://p/u/semio/b/l/go\n/f/semio.go/s/Connection/d/i/ConnectionsDiff)                                   type ConnectionsDiff struct {\n        Removed []ConnectionId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Connection ConnectionId   `json:\"connection\"`\n                Diff       ConnectionDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Connection `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Connection\n\n// #region 🔖Stat\n// [👤semio📚go💻semio🔖stat](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Stat)\n// Stat MUST define statistical measure entities and their diff types.\n\n// Stat represents a statistical quality measurement with min and max bounds.\n// [👤semio📚go💻semio🔖stat✂️stat](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Sta\nt/d/i/Stat)                                                                     type Stat struct {\n        Guid       string      `json:\"guid\"`\n        Quality    QualityId   `json:\"quality\"`\n        Min        *float64    `json:\"min,omitempty\"`\n        Max        *float64    `json:\"max,omitempty\"`\n        Unit       *string     `json:\"unit,omitempty\"`\n        Attributes []Attribute `json:\"attributes,omitempty\"`\n}\n\n// StatDiff represents changes to a stat entity.\n// [👤semio📚go💻semio🔖stat✂️statdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Stat/d/i/StatDiff)                                                             type StatDiff struct {\n        Quality    *QualityId      `json:\"quality,omitempty\"`\n        Min        *float64        `json:\"min,omitempty\"`\n        Max        *float64        `json:\"max,omitempty\"`\n        Unit       *string         `json:\"unit,omitempty\"`\n        Attributes *AttributesDiff `json:\"attributes,omitempty\"`\n}\n\n// StatsDiff represents a collection of stat additions, removals and updates.\n// [👤semio📚go💻semio🔖stat✂️statsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/\ns/Stat/d/i/StatsDiff)                                                           type StatsDiff struct {\n        Removed []StatId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Stat StatId   `json:\"stat\"`\n                Diff StatDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Stat `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Stat\n\n// #region 🔖Design\n// [👤semio📚go💻semio🔖design](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Design\n)                                                                               // Design MUST define assembly design entities and their diff types.\n\n// Design represents an assembly of pieces, connections, layers and groups.\n// [👤semio📚go💻semio🔖design✂️design](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Design/d/i/Design)                                                             type Design struct {\n        Guid        string       `json:\"guid\"`\n        Name        string       `json:\"name\"`\n        Parent      *DesignId    `json:\"parent,omitempty\"`\n        IsAbstract  *bool        `json:\"isAbstract,omitempty\"`\n        Unit        *string      `json:\"unit,omitempty\"`\n        Folder      *string      `json:\"folder,omitempty\"`\n        CanScale    *bool        `json:\"canScale,omitempty\"`\n        CanMirror   *bool        `json:\"canMirror,omitempty\"`\n",
+          "tool_use_id": "toolu_bdrk_018E7dVp6atQbDFZkDYKsaBs__vscode-1773054462818",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚27⏱️13",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:27:20.089Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 270,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_018E7dVp6atQbDFZkDYKsaBs__vscode-1773054462818/content.txt",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_bdrk_01G9jkPLN2Z8zEgEpNhXKLtr__vscode-1773054462819",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk018e7dvp6atqbdfzkdyksabsvscode1773054462818📃content"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk018e7dvp6atqbdfzkdyksabsvscode1773054462818📃content📌1📌270"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚27⏱️20",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:27:32.950Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 270,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_018E7dVp6atQbDFZkDYKsaBs__vscode-1773054462818/content.txt",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01G9jkPLN2Z8zEgEpNhXKLtr__vscode-1773054462819",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk018e7dvp6atqbdfzkdyksabsvscode1773054462818📃content"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk018e7dvp6atqbdfzkdyksabsvscode1773054462818📃content📌1📌270"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚27⏱️33",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:27:38.455Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '1480,1630p' semio/go/semio.go",
+            "explanation": "Read Design (continued), CameraDiff, DesignDiff, DesignsDiff, Kit, KitDiff, KitsDiff structs",
+            "goal": "Read design and kit structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_013NeLwLfy4YniNay46inEzF__vscode-1773054462820",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚27⏱️39",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:27:50.737Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '1480,1630p' semio/go/semio.go",
+            "explanation": "Read Design (continued), CameraDiff, DesignDiff, DesignsDiff, Kit, KitDiff, KitsDiff structs",
+            "goal": "Read design and kit structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '1480,1630p' semio/go/semio.go`, and this is the output of running that command instead:\n        CanMirror   *bool        `json:\"canMirror,omitempty\"`\n        View        *Camera      `json:\"view,omitempty\"`\n        Pieces      []Piece      `json:\"pieces,omitempty\"`\n        Connections []Connection `json:\"connections,omitempty\"`\n        Stats       []Stat       `json:\"stats,omitempty\"`\n        Props       []Prop       `json:\"props,omitempty\"`\n        Layers      []Layer      `json:\"layers,omitempty\"`\n        ActiveLayer *LayerId     `json:\"activeLayer,omitempty\"`\n        Groups      []Group      `json:\"groups,omitempty\"`\n        Location    *LocationId  `json:\"location,omitempty\"`\n        Authors     []AuthorId   `json:\"authors,omitempty\"`\n        Concepts    []ConceptId     `json:\"concepts,omitempty\"`\n        Icon        *string      `json:\"icon,omitempty\"`\n        Image       *string      `json:\"image,omitempty\"`\n        Description *string      `json:\"description,omitempty\"`\n        Attributes  []Attribute  `json:\"attributes,omitempty\"`\n        CreatedAt   string       `json:\"createdAt,omitempty\"`\n        UpdatedAt   string       `json:\"updatedAt,omitempty\"`\n}\n\n// CameraDiff represents changes to a camera view.\n// [👤semio📚go💻semio🔖design✂️cameradiff](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Design/d/i/CameraDiff)                                                     type CameraDiff struct {\n        Position *PointDiff  `json:\"position,omitempty\"`\n        Forward  *VectorDiff `json:\"forward,omitempty\"`\n        Up       *VectorDiff `json:\"up,omitempty\"`\n}\n\n// DesignDiff represents changes to a design entity.\n// [👤semio📚go💻semio🔖design✂️designdiff](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Design/d/i/DesignDiff)                                                     type DesignDiff struct {\n        Name        *string          `json:\"name,omitempty\"`\n        Parent      *DesignId        `json:\"parent,omitempty\"`\n        IsAbstract  *bool            `json:\"isAbstract,omitempty\"`\n        Unit        *string          `json:\"unit,omitempty\"`\n        Folder      *string          `json:\"folder,omitempty\"`\n        CanScale    *bool            `json:\"canScale,omitempty\"`\n        CanMirror   *bool            `json:\"canMirror,omitempty\"`\n        View        *CameraDiff      `json:\"view,omitempty\"`\n        Pieces      *PiecesDiff      `json:\"pieces,omitempty\"`\n        Connections *ConnectionsDiff `json:\"connections,omitempty\"`\n        Stats       *StatsDiff       `json:\"stats,omitempty\"`\n        Props       *PropsDiff       `json:\"props,omitempty\"`\n        Layers      *LayersDiff      `json:\"layers,omitempty\"`\n        ActiveLayer *LayerId         `json:\"activeLayer,omitempty\"`\n        Groups      *GroupsDiff      `json:\"groups,omitempty\"`\n        Location    *LocationId      `json:\"location,omitempty\"`\n        Authors     []AuthorId       `json:\"authors,omitempty\"`\n        Concepts    []ConceptId         `json:\"concepts,omitempty\"`\n        Icon        *string          `json:\"icon,omitempty\"`\n        Image       *string          `json:\"image,omitempty\"`\n        Description *string          `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff  `json:\"attributes,omitempty\"`\n}\n\n// DesignsDiff represents a collection of design additions, removals and updates\n.                                                                               // [👤semio📚go💻semio🔖design✂️designsdiff](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Design/d/i/DesignsDiff)                                                   type DesignsDiff struct {\n        Removed []DesignId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Design DesignId   `json:\"design\"`\n                Diff   DesignDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Design `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Design\n\n// #region 🔖Kit\n// [👤semio📚go💻semio🔖kit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit)\n// Kit MUST define the root kit container entity and its diff types.\n\n// Kit represents the root container for all domain entities.\n// [👤semio📚go💻semio🔖kit✂️kit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit/d\n/i/Kit)                                                                         type Kit struct {\n        Guid        string      `json:\"guid\"`\n        Name        string      `json:\"name\"`\n        Version     string      `json:\"version\"`\n        Types       []Type      `json:\"types,omitempty\"`\n        Designs     []Design    `json:\"designs,omitempty\"`\n        Tags        []Tag       `json:\"tags,omitempty\"`\n        Concepts    []Concept   `json:\"concepts,omitempty\"`\n        Ports       []Port      `json:\"ports,omitempty\"`\n        Qualities   []Quality   `json:\"qualities,omitempty\"`\n        Files       []File      `json:\"files,omitempty\"`\n        Folders     []Folder    `json:\"folders,omitempty\"`\n        Authors     []Author    `json:\"authors,omitempty\"`\n        Remote      *string     `json:\"remote,omitempty\"`\n        Homepage    *string     `json:\"homepage,omitempty\"`\n        License     *string     `json:\"license,omitempty\"`\n        Preview     *string     `json:\"preview,omitempty\"`\n        Icon        *string     `json:\"icon,omitempty\"`\n        Image       *string     `json:\"image,omitempty\"`\n        Description *string     `json:\"description,omitempty\"`\n        Attributes  []Attribute `json:\"attributes,omitempty\"`\n        CreatedAt   string      `json:\"createdAt,omitempty\"`\n        UpdatedAt   string      `json:\"updatedAt,omitempty\"`\n}\n\n// KitDiff represents changes to a kit entity.\n// [👤semio📚go💻semio🔖kit✂️kitdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/K\nit/d/i/KitDiff)                                                                 type KitDiff struct {\n        Name        *string         `json:\"name,omitempty\"`\n        Version     *string         `json:\"version,omitempty\"`\n        Types       *TypesDiff      `json:\"types,omitempty\"`\n        Designs     *DesignsDiff    `json:\"designs,omitempty\"`\n        Tags        *TagsDiff       `json:\"tags,omitempty\"`\n        Concepts    *ConceptsDiff   `json:\"concepts,omitempty\"`\n        Ports       *PortsDiff      `json:\"ports,omitempty\"`\n        Qualities   *QualitiesDiff  `json:\"qualities,omitempty\"`\n        Files       *FilesDiff      `json:\"files,omitempty\"`\n        Folders     *FoldersDiff    `json:\"folders,omitempty\"`\n        Authors     *AuthorsDiff    `json:\"authors,omitempty\"`\n        Remote      *string         `json:\"remote,omitempty\"`\n        Homepage    *string         `json:\"homepage,omitempty\"`\n        License     *string         `json:\"license,omitempty\"`\n        Preview     *string         `json:\"preview,omitempty\"`\n        Icon        *string         `json:\"icon,omitempty\"`\n        Image       *string         `json:\"image,omitempty\"`\n        Description *string         `json:\"description,omitempty\"`\n        Attributes  *AttributesDiff `json:\"attributes,omitempty\"`\n        UpdatedAt   *string         `json:\"updatedAt,omitempty\"`\n}\n\n// KitsDiff represents a collection of kit additions, removals and updates.\n// [👤semio📚go💻semio🔖kit✂️kitsdiff](semiorepo://p/u/semio/b/l/go/f/semio.go/s/\nKit/d/i/KitsDiff)                                                               type KitsDiff struct {\n        Removed []KitId `json:\"removed,omitempty\"`\n        Updated []struct {\n                Kit  KitId   `json:\"kit\"`\n                Diff KitDiff `json:\"diff\"`\n        } `json:\"updated,omitempty\"`\n        Added []Kit `json:\"added,omitempty\"`\n}\n\n// #endregion 🔖Kit\n\n// #region 🔖Serialization\n// [👤semio📚go💻semio🔖serialization](semiorepo://p/u/semio/b/l/go/f/semio.go/s\n/Serialization)                                                                 // Serialization MUST provide JSON marshaling and unmarshaling for kit data.\n\n// SerializeKit MUST return valid JSON with two-space indentation.\n// SerializeKit marshals a kit to indented JSON bytes.\n// [👤semio📚go💻semio🔖serialization🛠️serializekit](semiorepo://p/u/semio/b/l/go\n/f/semio.go/s/Serialization/d/i/SerializeKit)                                   func SerializeKit(kit Kit) ([]byte, error) {\n        return json.MarshalIndent(kit, \"\", \"  \")\n}\n\n// DeserializeKit MUST return an error if the data is not valid kit JSON.\n// DeserializeKit unmarshals JSON bytes into a kit.\n// [👤semio📚go💻semio🔖serialization🛠️deserializekit](semiorepo://p/u/semio/b/l/\ngo/f/semio.go/s/Serialization/d/i/DeserializeKit)                               ",
+          "tool_use_id": "toolu_bdrk_013NeLwLfy4YniNay46inEzF__vscode-1773054462820",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚27⏱️51",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:27:57.005Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 160,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_013NeLwLfy4YniNay46inEzF__vscode-1773054462820/content.txt",
+            "startLine": 1
+          },
+          "tool_use_id": "toolu_bdrk_01UoHuYrHcsPm8wQnCeBEnwR__vscode-1773054462821",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk013nelwlfy4yninay46inezfvscode1773054462820📃content"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk013nelwlfy4yninay46inezfvscode1773054462820📃content📌1📌160"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚27⏱️57",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:28:09.940Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 160,
+            "filePath": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/chat-session-resources/c916fc53-f589-4cee-a1c6-a4542a7f47d9/toolu_bdrk_013NeLwLfy4YniNay46inEzF__vscode-1773054462820/content.txt",
+            "startLine": 1
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01UoHuYrHcsPm8wQnCeBEnwR__vscode-1773054462821",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk013nelwlfy4yninay46inezfvscode1773054462820📃content"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🛅🛅🗃️home🗃️vscode🛅vscodeserver🗃️data🗃️user🗃️workspacestorage🗃️26249932fdb4f192e6be60a6ba3b0700🗃️githubcopilotchat🗃️chatsessionresources🗃️c916fc53f5894ceea1c6a4542a7f47d9🗃️toolubdrk013nelwlfy4yninay46inezfvscode1773054462820📃content📌1📌160"
+        ],
+        "second": "🎆26🌙03☀️09⏰16⌚28⏱️10",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:28:20.160Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '104,242p' semio/go/semio.go",
+            "explanation": "Read all Id struct definitions",
+            "goal": "Read all XxxId structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_use_id": "toolu_bdrk_01HdJnNkxuArf3Cb27evw8hZ__vscode-1773054462822",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚28⏱️20",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:28:33.167Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "sed -n '104,242p' semio/go/semio.go",
+            "explanation": "Read all Id struct definitions",
+            "goal": "Read all XxxId structs",
+            "isBackground": false,
+            "timeout": 5000
+          },
+          "tool_response": "Note: The tool simplified the command to ` sed -n '104,242p' semio/go/semio.go`, and this is the output of running that command instead:\ntype AttributeId struct {\n        Guid string `json:\"guid\"`\n}\n\n// LocationId identifies a location entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️locationid](semiorepo://p/u/semio/b/l/go/f/sem\nio.go/s/Entity%20IDs/d/i/LocationId)                                            type LocationId struct {\n        Guid string `json:\"guid\"`\n}\n\n// AuthorId identifies an author entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️authorid](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Entity%20IDs/d/i/AuthorId)                                                type AuthorId struct {\n        Guid string `json:\"guid\"`\n}\n\n// FileId identifies a file entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️fileid](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Entity%20IDs/d/i/FileId)                                                    type FileId struct {\n        Guid string `json:\"guid\"`\n}\n\n// FolderId identifies a folder entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️folderid](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Entity%20IDs/d/i/FolderId)                                                type FolderId struct {\n        Guid string `json:\"guid\"`\n}\n\n// BenchmarkId identifies a benchmark entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️benchmarkid](semiorepo://p/u/semio/b/l/go/f/se\nmio.go/s/Entity%20IDs/d/i/BenchmarkId)                                          type BenchmarkId struct {\n        Guid string `json:\"guid\"`\n}\n\n// QualityId identifies a quality entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️qualityid](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Entity%20IDs/d/i/QualityId)                                              type QualityId struct {\n        Guid string `json:\"guid\"`\n}\n\n// PortId identifies a port entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️portid](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Entity%20IDs/d/i/PortId)                                                    type PortId struct {\n        Guid string `json:\"guid\"`\n}\n\n// PropId identifies a prop entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️propid](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Entity%20IDs/d/i/PropId)                                                    type PropId struct {\n        Guid string `json:\"guid\"`\n}\n\n// TagId identifies a tag entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️tagid](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Entity%20IDs/d/i/TagId)                                                      type TagId struct {\n        Guid string `json:\"guid\"`\n}\n\n// ConceptId identifies a concept entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️conceptid](semiorepo://p/u/semio/b/l/go/f/semi\no.go/s/Entity%20IDs/d/i/ConceptId)                                              type ConceptId struct {\n        Guid string `json:\"guid\"`\n}\n\n// ModelId identifies a model entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️modelid](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Entity%20IDs/d/i/ModelId)                                                  type ModelId struct {\n        Guid string `json:\"guid\"`\n}\n\n// ConnectorId identifies a connector entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️connectorid](semiorepo://p/u/semio/b/l/go/f/se\nmio.go/s/Entity%20IDs/d/i/ConnectorId)                                          type ConnectorId struct {\n        Guid string `json:\"guid\"`\n}\n\n// TypeId identifies a type entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️typeid](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Entity%20IDs/d/i/TypeId)                                                    type TypeId struct {\n        Guid string `json:\"guid\"`\n}\n\n// LayerId identifies a layer entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️layerid](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Entity%20IDs/d/i/LayerId)                                                  type LayerId struct {\n        Guid string `json:\"guid\"`\n}\n\n// PieceId identifies a piece entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️pieceid](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Entity%20IDs/d/i/PieceId)                                                  type PieceId struct {\n        Guid string `json:\"guid\"`\n}\n\n// GroupId identifies a group entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️groupid](semiorepo://p/u/semio/b/l/go/f/semio.\ngo/s/Entity%20IDs/d/i/GroupId)                                                  type GroupId struct {\n        Guid string `json:\"guid\"`\n}\n\n// SideId identifies a connection side by piece, design piece and connector refe\nrences.                                                                         // [👤semio📚go💻semio🔖entityids✂️sideid](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Entity%20IDs/d/i/SideId)                                                    type SideId struct {\n        Piece       PieceId      `json:\"piece\"`\n        DesignPiece *PieceId     `json:\"designPiece,omitempty\"`\n        Connector   *ConnectorId `json:\"connector,omitempty\"`\n}\n\n// ConnectionId identifies a connection entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️connectionid](semiorepo://p/u/semio/b/l/go/f/s\nemio.go/s/Entity%20IDs/d/i/ConnectionId)                                        type ConnectionId struct {\n        Guid string `json:\"guid\"`\n}\n\n// StatId identifies a stat entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️statid](semiorepo://p/u/semio/b/l/go/f/semio.g\no/s/Entity%20IDs/d/i/StatId)                                                    type StatId struct {\n        Guid string `json:\"guid\"`\n}\n\n// DesignId identifies a design entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️designid](semiorepo://p/u/semio/b/l/go/f/semio\n.go/s/Entity%20IDs/d/i/DesignId)                                                type DesignId struct {\n        Guid string `json:\"guid\"`\n}\n\n// KitId identifies a kit entity by GUID.\n// [👤semio📚go💻semio🔖entityids✂️kitid](semiorepo://p/u/semio/b/l/go/f/semio.go\n/s/Entity%20IDs/d/i/KitId)                                                      type KitId struct {\n        Guid string `json:\"guid\"`\n}\n\n// #endregion 🔖Entity IDs\n\n// #region 🔖Weak Entities\n// [👤semio📚go💻semio🔖weakentities](semiorepo://p/u/semio/b/l/go/f/semio.go/s/\nWeak%20Entities)                                                                // Weak Entities MUST define value types that exist only as part of parent entit\nies.                                                                            \n// Coord represents a 2D coordinate with U and V components.\n",
+          "tool_use_id": "toolu_bdrk_01HdJnNkxuArf3Cb27evw8hZ__vscode-1773054462822",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚28⏱️33",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-09T16:29:53.417Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "9ea2ddd3-031f-45d4-8b59-2e9e87572e02",
+          "agent_id": "d278180b-e83a-40f5-8e0c-cf1e1c383131",
+          "agent_type": "Explore",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.ended acknowledged",
+            "hookEventName": "SubagentStop"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀5e44b3c3710539f1f4ef531fe9cdbc52ea123f09",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️09⏰16⌚29⏱️54",
+        "session": "⚪9ea2ddd3031f45d48b592e9e87572e02"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Remove Detail Tree Label Gap in Sketchpad Panel",
+  "status": "open",
+  "description": "Remove the empty spacer before detail panel tree labels like Name, Description, Connection, Authors, and Attributes in the sketchpad details panel by fixing the shared tree label layout. Update existing tests to cover the label tree layout behavior and verify the affected UI package tests pass.",
+  "summary": "Restored the deleted detail-tree label gap fix in the shared elements/ui Label renderer, along with the regression test and the repaired lint/test wiring for the consolidated index.tsx bundle. Revalidated the package with passing @elements/ui tests and lint.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1089"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪0b45f10987d24c6dad5c68307918b698",
+    "⚪caccce860a8145fabdd30e39e842e18a",
+    "⚪b4b141e8be71423eaf96aa6a0c9b4d24"
+  ]
+}

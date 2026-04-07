@@ -1,0 +1,4 @@
+- Identify why gitignored paths like go/server/server are still included by the repo CLI.
+- Extend repo ignore resolution to honor gitignore directory exclusions consistently.
+- Update README.md and AGENTS.md to reflect the finalized ignore behavior.
+- Update ticket log/summary and close with affected files.

@@ -1,0 +1,10 @@
+{
+  "title": "Next.js PostgreSQL Server Migration",
+  "status": "closed",
+  "description": "Implement the full architecture migration from Go server + SQLite to Next.js + PostgreSQL + pg-boss. This includes: PostgreSQL schema, Next.js server with auth/API/dashboard, Go CLI refactoring to use server APIs, pg-boss background workers, Discord integration, Docker Compose deployment, migration tooling for existing history, and comprehensive testing.",
+  "summary": "Fixed drag output so children move with parents. nativeDragPieces now takes kit + rawDesign + flatDesign, applies the drag diff to the raw design, then re-flattens so child positions are recomputed from the connection tree. Previously the diff was applied to the already-flattened design, leaving children at stale absolute positions.",
+  "goal": "🎯nextjspostgresmigration",
+  "sessions": [
+    "⚪4abfcd5cfe8944bb912ce0a4466c91c3"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Memory Leak Investigation",
+  "status": "closed",
+  "description": "Find out why the memory of the container is slowly filling up.",
+  "summary": "Added copy to clipboard (Ctrl+C) feature to all semio UI Design components (SemioDiagram, SemioDesign, PieceSelection, ConnectionSelection). Implemented a new 🔖Clipboard region with:\n\n1. `buildDesignClipboardData` pure function with 4 modes:\n   - No diff + no selection: copies the full design\n   - No diff + selection present: copies only selected pieces and connections\n   - Diff present + no selection: copies the full diff\n   - Diff + selection present: copies only selected parts of the diff (filters added/removed/updated by guid)\n\n2. `useDesignClipboard` hook that listens for Ctrl+C (or Cmd+C) keydown on a container element, computes clipboard data via `buildDesignClipboardData`, and writes serialized JSON to the clipboard. Respects native text selection (doesn't override when text is selected).\n\n3. Wired into `SemioDiagram` (via existing container ref) and `SemioDesign` (via new ref). Both containers are now focusable (tabIndex=0). PieceSelection and ConnectionSelection inherit the behavior through SemioDiagram.\n\n4. Added 8 unit tests covering all 4 clipboard modes plus edge cases (empty selection, filtered updates).\n\nAll 148 tests pass.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪e8b786e2e8af4997b9389c3d2c5a9d65"
+  ]
+}

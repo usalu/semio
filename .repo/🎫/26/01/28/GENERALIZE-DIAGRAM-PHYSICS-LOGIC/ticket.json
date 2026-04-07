@@ -1,0 +1,8 @@
+{
+  "title": "Generalize Diagram Physics Logic",
+  "status": "closed",
+  "summary": "Successfully generalized the D3 force-directed simulation logic from Kit.tsx into a reusable Diagram component in elements.tsx. This refactor centralized the physics engine, state management for node positions, and interaction handling (dragging, selection, and \"reheating\" simulations). The Kit app diagram now consumes this shared infrastructure, resulting in cleaner code and easier maintenance of complex graph layouts across different apps. Standardized coordinate systems and force configurations ensure consistent behavior throughout the Sketchpad. Documentation has been updated to reflect the new architecture and requirements.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/251"
+  }
+}

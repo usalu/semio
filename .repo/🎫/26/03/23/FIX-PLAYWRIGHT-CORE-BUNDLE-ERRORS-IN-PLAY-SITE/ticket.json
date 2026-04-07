@@ -1,0 +1,13 @@
+{
+  "title": "Fix Playwright Core Bundle Errors in Play Site",
+  "status": "closed",
+  "description": "Vite dependency optimizer tries to bundle playwright-core which requires chromium-bidi. Need to exclude playwright-related packages from Vite's dep optimization in the play site.",
+  "summary": "Fixed Vite dependency optimization errors in semio play site. Added `@playwright/test`, `playwright`, and `playwright-core` to `optimizeDeps.exclude` in `vite.config.ts`. Root cause: `@semio/sketchpad/index.tsx` imports from `@playwright/test` (type imports + dynamic test imports), causing Vite's esbuild pre-bundler to scan `playwright-core` which has unresolvable `chromium-bidi` imports. Verified dev server starts cleanly with no errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1038"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪a8def680e01a48368cccae74ced3b07a"
+  ]
+}

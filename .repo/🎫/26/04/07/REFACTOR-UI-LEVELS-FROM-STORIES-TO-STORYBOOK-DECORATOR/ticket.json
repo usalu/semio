@@ -1,0 +1,13 @@
+{
+  "title": "Refactor UI Levels from Stories to Storybook Decorator",
+  "status": "closed",
+  "description": "Currently the different UI levels in elements/ui are separate stories. Refactor them to use a storybook decorator instead, so levels can be toggled via toolbar/args rather than being individual stories.",
+  "summary": "Refactored UI levels from separate per-level stories to a global storybook decorator. Added a Level toolbar dropdown (base/window/panel/overlay/temporary) to preview.ts globals alongside the existing Theme toolbar. Simplified withLevel.tsx to read from context.globals.level and wrap every story in LevelProvider with the appropriate background. Removed createLevelRender functions and ~165 level stories (Base/Window/Panel/Overlay/Temporary) across 33 story files. All 21 tests pass, storybook builds clean.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1279"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪b9a8ca7a6578403e9779fe90cdcd130d"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Add Markdown Output Format",
+  "status": "closed",
+  "description": "Introduce a global --md flag that outputs the result in markdown format. Markdown should be used by the mcp server. Make sure every command has three different output formats: human colored text with ids used by the cli, markdown with uris used by mcp and json mode that has all information.",
+  "summary": "Implemented --md flag for Markdown output",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/305"
+  },
+  "goal": "🎯aioptimizedrepo"
+}

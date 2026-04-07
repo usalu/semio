@@ -1,0 +1,22 @@
+{
+  "name": "@semio/grasshopper",
+  "version": "1.0.0",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "semio/grasshopper/Semio.Grasshopper",
+  "projectType": "application",
+  "scripts": {
+    "build:gh": "tsx ./build.ts",
+    "build:yak": "tsx ./yak/build.ts",
+    "build": "npm run build:gh && npm run build:yak",
+    "test": "dotnet test ../Semio.Grasshopper.Tests/Semio.Grasshopper.Tests.csproj",
+    "publish": "tsx ./yak/publish.ts"
+  },
+  "devDependencies": {
+    "@semio/net": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  }
+}

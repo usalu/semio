@@ -1,0 +1,7 @@
+{
+  "title": "Extend Github Sync for Hierarchical Goals",
+  "status": "closed",
+  "description": "Extend the GitHub sync mechanism for goals. Currently all goals are linked to milestones. Instead, only top-level goals (without parent) should be milestones. All child goals should be GitHub issues with the goal label. Migrate existing goals to the new system. No backwards compatibility needed.",
+  "summary": "Implemented three-tier hierarchical GitHub sync: root goals as milestones, first-gen children as issues with milestone, deeper goals as sub-issues without milestone. Fixed milestone lookup bug (gh CLI needs title not number). Migrated all existing goals, cleaned non-root goal.json files, deleted orphaned milestones.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

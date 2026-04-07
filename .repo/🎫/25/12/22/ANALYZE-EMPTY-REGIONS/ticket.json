@@ -1,0 +1,6 @@
+{
+  "title": "ANALYZE-EMPTY-REGIONS",
+  "status": "closed",
+  "description": "Extend the analyze and fix code hook to check and remove empty regions.",
+  "goal": "🎯aioptimizedrepo"
+}

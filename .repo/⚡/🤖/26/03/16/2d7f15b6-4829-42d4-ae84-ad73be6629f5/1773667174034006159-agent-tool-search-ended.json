@@ -1,0 +1,29 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T13:19:33Z",
+    "session": "2d7f15b6-4829-42d4-ae84-ad73be6629f5",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2d7f15b6-4829-42d4-ae84-ad73be6629f5.jsonl"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T13:19:33.890Z",
+      "hook_event_name": "PostToolUse",
+      "session_id": "2d7f15b6-4829-42d4-ae84-ad73be6629f5",
+      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2d7f15b6-4829-42d4-ae84-ad73be6629f5.jsonl",
+      "tool_name": "read_file",
+      "tool_input": {
+        "endLine": 675,
+        "filePath": "/workspaces/semio/semio/sketchpad/sketchpad/Home.tsx",
+        "startLine": 553
+      },
+      "tool_response": "",
+      "tool_use_id": "toolu_bdrk_01QjiFp28XiBaTMMWfv27aVo__vscode-1773658270524",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

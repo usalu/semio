@@ -1,0 +1,10 @@
+{
+  "title": "Fix Codebase Sections and Tickets",
+  "status": "closed",
+  "description": "Sections in codebase explorer and Ticket view are empty after previous optimization.",
+  "summary": "Fixed empty sections and tickets in explorer. Updated normalizeSectionTree to handle both GraphQL and raw CLI JSON structures. Tickets failure likely due to missing Repo fields in previous optimization, but TicketsProvider fetches independently via TicketsDocument.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/279"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"
+}

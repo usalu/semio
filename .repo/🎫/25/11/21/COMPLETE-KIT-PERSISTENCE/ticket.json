@@ -1,0 +1,7 @@
+{
+  "title": "Complete Kit Persistence",
+  "status": "closed",
+  "description": "Migration from old format",
+  "summary": "Migrated sqlite schema to new format",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp"
+}

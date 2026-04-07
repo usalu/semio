@@ -1,0 +1,10 @@
+{
+  "title": "Fix Missing Hook Case for agent.tool.searching.ended",
+  "status": "closed",
+  "description": "The PostToolUse hook is failing with \"unknown hook event: agent.tool.searching.ended\". The dispatchHook function in main.go has a case for HookAgentToolSearching but is missing a case for HookAgentToolSearched (agent.tool.searching.ended). Need to add the missing case.",
+  "summary": "Added search event enrichment to execute safe search commands, map matched/read lines to definition IDs, and emit definitions[{id,loc}] for agent.tool.search.starting/ended; added focused tests.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪019c9e9757ee7f929ab2c3b57f4b1b7e"
+  ]
+}

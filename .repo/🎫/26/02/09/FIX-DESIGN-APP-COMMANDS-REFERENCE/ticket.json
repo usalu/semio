@@ -1,0 +1,5 @@
+{
+  "title": "Fix Design App Commands Reference",
+  "status": "closed",
+  "summary": "Fixed Design app panel hotkeys to use useDesignAppTogglePanel output instead of undefined appCommands and documented the command binding requirements in README.md and AGENTS.md."
+}

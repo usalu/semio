@@ -1,0 +1,39 @@
+{
+    "programs": [
+        {
+            "id": "0",
+            "name": "Office Room",
+            "din276": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche"
+        }
+    ],
+    "byKind": [
+        {
+            "kind": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "constraints": {
+                "min": 300
+            }
+        }
+    ],
+    "adjancency": [
+        {
+            "from": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "to": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "type": "mandatory"
+        },
+        {
+            "from": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "to": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "type": "desirable"
+        },
+        {
+            "from": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "to": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "type": "neutral"
+        },
+        {
+            "from": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "to": "Grundfläche.Brutto-Grundfläche.Netto-Raumfläche.Nutzungsfläche.Büroarbeit.Großraumbürofläche",
+            "type": "negative"
+        }
+    ]
+}

@@ -1,0 +1,6 @@
+{
+  "title": "Fix sql.js WASM loading for vitest tests",
+  "status": "closed",
+  "description": "Fix sql.js WASM loading for vitest tests",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism"
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Native Analyze Code Lens",
+  "status": "closed",
+  "description": "Dont add Analyze on top of emoji docstrings, but implement it for every programming language using native detection of definitions.",
+  "summary": "Implemented native definition detection for Analyze CodeLens using DocumentSymbolProvider",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/902"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension",
+  "sessions": [
+    "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746⚪17735304397095395405328763363129660419"
+  ]
+}

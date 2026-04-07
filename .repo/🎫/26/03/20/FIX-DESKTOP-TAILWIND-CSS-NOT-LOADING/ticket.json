@@ -1,0 +1,13 @@
+{
+  "title": "Fix Desktop Tailwind CSS Not Loading",
+  "status": "closed",
+  "description": "The desktop globals.css has @import \"tailwindcss\" source(\"../js\") which restricts Tailwind scanning to only semio/js. The desktop's own renderer.tsx classes are never generated. Fix by following sketchpad's pattern.",
+  "summary": "Fixed Tailwind CSS not loading in desktop app. The globals.css had @import \"tailwindcss\" source(\"../js\") which restricted class scanning to only semio/js, meaning the desktop's own renderer.tsx classes were never generated. Changed to @import \"../ui/globals.css\" (matching sketchpad's pattern) which chains through the shared UI globals with unrestricted Tailwind scanning. Verified 106KB of CSS is now generated with all required utility classes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/996"
+  },
+  "goal": "🎯desktop",
+  "sessions": [
+    "⚪a6042c1ec6d043909a32fb20a0d20355"
+  ]
+}

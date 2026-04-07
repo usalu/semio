@@ -1,0 +1,58 @@
+    public static string Normalize(string val) => string.IsNullOrEmpty(val) ? "" : val;
+    public static float Jaccard(IEnumerable<string> a, IEnumerable<string> b)
+    public static bool UriIsNotAbsoluteFilePath(string uri)
+    public static bool IsValidMime(string mime)
+    public static string ParseMimeFromUrl(string url)
+    public static IconKind ParseIconKind(string icon)
+    public static string DatastringFromUrl(string url)
+    public static string ReadAndEncode(string filename) => $"data:{ParseMimeFromUrl(filename)};base64,{Convert.ToBase64String(System.IO.File.ReadAllBytes(filename))}";
+    public static string Encode(string text, EncodeMode mode = EncodeMode.Urlsafe,
+    public static string Decode(string text, EncodeMode mode = EncodeMode.Urlsafe,
+    public static string Serialize(this object obj, string indent = "")
+    public static string GenerateRandomId(int seed)
+        public static float Convert(float value, string fromUnit, string toUnit)
+        public static string GetArticle(string word) => string.IsNullOrEmpty(word) ? string.Empty : "aeiou".IndexOf(word.ToLower()[0]) >= 0 ? "an" : "a";
+    public static ValidationResult Parse(string json)
+    public static bool AreEqual(ValidationResult a, ValidationResult b)
+    public static ValidationResult ValidateKit(Kit kit)
+    public static float DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+    public static bool IsOrthogonal(Vector a, Vector b) => Math.Abs(DotProduct(a, b)) < Constants.Tolerance;
+    public static Plane DefaultComputeChildPlane(
+    public static string EncodeNameAndVariant(string name, string variant = "") => Utility.Encode(name) + "," + Utility.Encode(variant);
+    public static string EncodeNameAndVariantAndView(string name, string variant = "", string view = "") => EncodeNameAndVariant(name, variant) + "," + Utility.Encode(view);
+    public static void CreateKit(string uri, Kit input) => HandleErrors(GetApi().CreateKit(Utility.Encode(uri), input).Result);
+    public static void DeleteKit(string uri) => HandleErrors(GetApi().DeleteKit(Utility.Encode(uri)).Result);
+    public static void PutType(string kitUrl, Type input) => HandleErrors(GetApi().PutType(Utility.Encode(kitUrl), Utility.Encode(input.Name), input).Result);
+    public static void RemoveType(string kitUrl, TypeId id) => HandleErrors(GetApi().RemoveType(Utility.Encode(kitUrl), Utility.Encode(id.Guid)).Result);
+    public static void PutDesign(string kitUrl, Design input) => HandleErrors(GetApi().PutDesign(Utility.Encode(kitUrl), Utility.Encode(input.Name), input).Result);
+    public static void RemoveDesign(string kitUrl, DesignId id) => HandleErrors(GetApi().RemoveDesign(Utility.Encode(kitUrl), Utility.Encode(id.Guid)).Result);
+    public static Kit LoadKit(string kitDirectory)
+    public static void SaveKit(string kitDirectory, Kit kit)
+    public static Kit ApplyKitDiff(string kitDirectory, KitDiff diff)
+    public static Kit AddTypeToKit(string kitDirectory, Type type)
+    public static Kit RemoveTypeFromKit(string kitDirectory, string typeGuid)
+    public static Kit SetTypeInKit(string kitDirectory, Type type)
+    public static Kit AddDesignToKit(string kitDirectory, Design design)
+    public static Kit RemoveDesignFromKit(string kitDirectory, string designGuid)
+    public static Kit SetDesignInKit(string kitDirectory, Design design)
+    public static Kit AddPortToKit(string kitDirectory, Port port)
+    public static Kit RemovePortFromKit(string kitDirectory, string portGuid)
+    public static Kit AddTagToKit(string kitDirectory, Tag tag)
+    public static Kit RemoveTagFromKit(string kitDirectory, string tagGuid)
+    public static Kit AddConceptToKit(string kitDirectory, Concept concept)
+    public static Kit RemoveConceptFromKit(string kitDirectory, string conceptGuid)
+    public static Kit AddFileToKit(string kitDirectory, File file)
+    public static Kit RemoveFileFromKit(string kitDirectory, string fileGuid)
+    public static Kit AddAttributeToKit(string kitDirectory, Attribute attribute)
+    public static Kit RemoveAttributeFromKit(string kitDirectory, string attributeGuid)
+    public static bool KitExists(string kitDirectory)
+    public static void CreateKit(string kitDirectory, Kit kit)
+    public static void DeleteKit(string kitDirectory)
+    public static KitImportResult ImportKit(string zipPath)
+    public static void ExportKit(Kit kit, Dictionary<string, byte[]> files, string zipPath, string schemaSQL)
+    public static void ExportToZip(Kit kit, Dictionary<string, byte[]> files, string zipPath)
+    public static KitDiff GetKitDiff(Kit before, Kit after)
+    public static KitDiff InverseKitDiff(Kit original, KitDiff appliedDiff)
+    public static Kit ApplyKitDiff(Kit baseKit, KitDiff diff)
+    public static bool AreKitsEqual(Kit a, Kit b)
+    public static bool AreKitDiffsEqual(KitDiff a, KitDiff b)

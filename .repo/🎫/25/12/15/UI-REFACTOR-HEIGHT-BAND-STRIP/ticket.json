@@ -1,0 +1,6 @@
+{
+  "title": "Refactor UI system with standardized heights, Band/Strip components",
+  "status": "closed",
+  "description": "\"The ui system needs to be more tightly integrated with itself. Bands horizontal only, optionally scrollable. New Strip component. Standardized heights: tiny/small/medium/large.\"",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

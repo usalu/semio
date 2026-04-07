@@ -1,0 +1,75 @@
+{
+  "id": "unknown",
+  "uri": "repo://session/unknown",
+  "second": "2026-04-06T09:45:14Z",
+  "checkpoint": "4d012f66008e3b4e273487435634070a3440e4ce",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "4d012f66008e3b4e273487435634070a3440e4ce",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-06T09:45:14Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "38b4c2af98b28228aa39132cfad8316ed6afb085",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-06T12:40:40Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "a0c7c7e9899c38b08335a4720ca9d45a5f59ded8",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-06T13:00:56Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f1816ca91148201a34abeaf70be5db3a43275289",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-06T13:26:52Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "0ea2a67005088b10bed4a39f68f716d61da7b334",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-06T21:07:31Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "9d9035056d484725f407115ab92d11e3b71aeaf2",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-06T22:44:08Z",
+        "session": "unknown"
+      },
+      "response": {}
+    }
+  ]
+}

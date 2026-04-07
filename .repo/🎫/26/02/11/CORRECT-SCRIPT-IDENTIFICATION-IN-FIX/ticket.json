@@ -1,0 +1,10 @@
+{
+  "title": "Correct Script Identification in Fix",
+  "status": "closed",
+  "description": "Ensure script files with shebangs are correctly identified and shebangs are preserved during fix command.",
+  "summary": "Corrected ScanComments to ignore shebang headers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/491"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters"
+}

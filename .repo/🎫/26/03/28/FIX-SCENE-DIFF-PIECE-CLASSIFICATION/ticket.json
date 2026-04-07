@@ -1,0 +1,10 @@
+{
+  "title": "Fix Scene Diff Piece Classification",
+  "status": "closed",
+  "description": "Investigate and fix semio UI scene diff showing many deleted pieces that are not deleted. Expected behavior: only modified pieces should differ from diagram, with the exception that child pieces of modified connections are also displayed as modified in the scene because connections are otherwise invisible there. Update existing implementation and extend existing tests without creating new test files. Verify with relevant test runs.",
+  "summary": "Fixed scene diff piece classification in semio/ui by preserving the last renderable piece plane when the next diff version lacks one, which prevents persisted pieces from being shown as deleted in the scene. Added a regression test covering the scene-only fallback and changed-connection child promotion behavior. Verified with `npm --workspace semio/ui test` (139 passing).",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪0700543052174cf19e756a218b58e5c0"
+  ]
+}

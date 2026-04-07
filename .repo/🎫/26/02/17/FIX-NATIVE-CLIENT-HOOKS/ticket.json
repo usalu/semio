@@ -1,0 +1,10 @@
+{
+  "title": "Fix Native Client Hooks",
+  "status": "closed",
+  "description": "Fix all hook configs to use native hook formats for Copilot, Claude Code, Cursor, Windsurf, and Droid. Current configs use markdown instructions that agents ignore. Need proper JSON hook configs.",
+  "summary": "Claude Code hooks fixed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/608"
+  },
+  "goal": "🎯aioptimizedrepo"
+}

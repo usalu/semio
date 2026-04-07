@@ -1,0 +1,10 @@
+{
+  "title": "Repo CLI and VSCode Extension Improvements",
+  "status": "closed",
+  "description": "CLI: Add query parameter with bleve prefiltering to all list/tree commands. Fix statutes to be properly nested as tree. Add policy tree command. VSCode Extension: Replace filter refresh button with clear button. Use native VSCode search input for filter. Indicate active filter state. Fix copied IDs to use full artifact IDs. Show finish ticket button only when ticket is open, reopen only when closed. Move domain logic from extension to repo binary (search feature). Extend existing test file to cover everything.",
+  "summary": "Bulk close",
+  "goal": "🎯aioptimizedrepo🎯repoclient",
+  "sessions": [
+    "⚪17721131429412644611029322366258940419"
+  ]
+}

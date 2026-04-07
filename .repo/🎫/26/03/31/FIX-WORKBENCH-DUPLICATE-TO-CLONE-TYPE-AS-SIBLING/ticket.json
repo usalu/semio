@@ -1,0 +1,12 @@
+{
+  "title": "Fix Workbench Duplicate to Clone Type as Sibling",
+  "status": "open",
+  "description": "Duplicate in workbench should duplicate the type (not add a piece) as a sibling with name 'typename Copy', placed underneath in the workbench tree.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1224"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪9b4ed4f672c1403abf831bd4b9de108c"
+  ]
+}

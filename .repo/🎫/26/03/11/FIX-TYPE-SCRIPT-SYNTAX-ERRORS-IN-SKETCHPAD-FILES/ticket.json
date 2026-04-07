@@ -1,0 +1,9 @@
+{
+  "title": "Fix TypeScript Syntax Errors in Sketchpad Files",
+  "status": "open",
+  "description": "Fix all TypeScript syntax errors in semio/js/sketchpad/Quality.tsx and semio/js/sketchpad/Sketchpad.tsx. The errors are caused by incomplete code edits - missing closing braces, missing method declarations, orphaned code fragments, etc.",
+  "goal": "🎯quality🎯fix",
+  "sessions": [
+    "🔀60dfe07aee2143680c0313abaff78931f318b398⚪17732436657099927601050836845433188907"
+  ]
+}

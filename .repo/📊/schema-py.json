@@ -1,0 +1,1273 @@
+{
+  "timestamp": "2025-12-23T14:11:39.045Z",
+  "entities": [
+    {
+      "name": "Attribute",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "definition",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Location",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "longitude",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "latitude",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "altitude",
+          "type": "number",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Author",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "rank",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "File",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "mime",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "remote",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "folder",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "hash",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "createdBy",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "updatedBy",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Folder",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "createdBy",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "updatedBy",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Benchmark",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "min_excluded",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "max_excluded",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Quality",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "uri",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "scalable",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "kind",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "si",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "imperial",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "min_excluded",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "max_excluded",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "default",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "formula",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "folder",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "created_at",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime.datetime",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Port",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "compatiblePorts",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Prop",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime.datetime",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Model",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "file",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "tags",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Connector",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "id_",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "is_mandatory",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "port",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "compatiblePorts",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "point",
+          "type": "Point",
+          "optional": false
+        },
+        {
+          "name": "direction",
+          "type": "Vector",
+          "optional": false
+        },
+        {
+          "name": "t",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Tag",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Concept",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Type",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "variant",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "is_abstract",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "folder",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "stock",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "is_virtual",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "can_scale",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "can_mirror",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "location",
+          "type": "Location",
+          "optional": true
+        },
+        {
+          "name": "created_at",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime.datetime",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Layer",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "is_hidden",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "is_locked",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Piece",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "id_",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "type",
+          "type": "TypeId",
+          "optional": true
+        },
+        {
+          "name": "designPiece",
+          "type": "\"DesignId\"",
+          "optional": true
+        },
+        {
+          "name": "plane",
+          "type": "Plane",
+          "optional": true
+        },
+        {
+          "name": "center",
+          "type": "Coord",
+          "optional": true
+        },
+        {
+          "name": "scale",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "mirrorPlane",
+          "type": "Plane",
+          "optional": true
+        },
+        {
+          "name": "is_hidden",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "is_locked",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Group",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Connection",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "connected",
+          "type": "Side",
+          "optional": false
+        },
+        {
+          "name": "connecting",
+          "type": "Side",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "gap",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "shift",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "rise",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "rotation",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "turn",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "tilt",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "u",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "v",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Stat",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "key",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "min_excluded",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "max_excluded",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime.datetime",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Design",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "variant",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "view",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "parent",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "is_abstract",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "folder",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "activeLayer",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "location",
+          "type": "Location",
+          "optional": true
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "can_scale",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "can_mirror",
+          "type": "boolean",
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime.datetime",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Kit",
+      "fields": [
+        {
+          "name": "guid",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "uri",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "icon",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "preview",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "remote",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "homepage",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "license",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "created_at",
+          "type": "datetime.datetime",
+          "optional": false
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime.datetime",
+          "optional": false
+        }
+      ],
+      "hasId": true,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Coord",
+      "fields": [
+        {
+          "name": "u",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "v",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Point",
+      "fields": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "z",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Vector",
+      "fields": [
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "z",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Plane",
+      "fields": [
+        {
+          "name": "originX",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "originY",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "originZ",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "xAxisX",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "xAxisY",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "xAxisZ",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "yAxisX",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "yAxisY",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "yAxisZ",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "piece",
+          "type": "Piece",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": false,
+      "hasDiffs": false
+    },
+    {
+      "name": "Side",
+      "fields": [
+        {
+          "name": "piece",
+          "type": "PieceId",
+          "optional": false
+        },
+        {
+          "name": "designPiece",
+          "type": "PieceId",
+          "optional": true
+        },
+        {
+          "name": "connector",
+          "type": "ConnectorId",
+          "optional": false
+        }
+      ],
+      "hasId": false,
+      "hasDiff": false,
+      "hasDiffs": false
+    }
+  ],
+  "idTypes": [
+    "AttributeId",
+    "TagId",
+    "ConceptId",
+    "LocationId",
+    "AuthorId",
+    "FileId",
+    "FolderId",
+    "BenchmarkId",
+    "QualityId",
+    "PropId",
+    "ModelId",
+    "PortId",
+    "ConnectorId",
+    "TypeId",
+    "LayerId",
+    "PieceId",
+    "GroupId",
+    "ConnectionId",
+    "StatId",
+    "DesignId",
+    "KitId"
+  ],
+  "weakEntities": [
+    "Coord",
+    "Point",
+    "Vector",
+    "Plane",
+    "Side"
+  ]
+}

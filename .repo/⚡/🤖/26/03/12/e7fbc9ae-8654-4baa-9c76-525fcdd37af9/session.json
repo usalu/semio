@@ -1,0 +1,80 @@
+{
+  "id": "e7fbc9ae-8654-4baa-9c76-525fcdd37af9",
+  "uri": "repo://s/e7fbc9ae-8654-4baa-9c76-525fcdd37af9",
+  "contributor": "🧑‍💻ueli",
+  "client": "cursor-chat",
+  "second": "2026-03-12T11:06:44Z",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e7fbc9ae-8654-4baa-9c76-525fcdd37af9/e7fbc9ae-8654-4baa-9c76-525fcdd37af9.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "conversation_id": "e7fbc9ae-8654-4baa-9c76-525fcdd37af9",
+          "generation_id": "31620456-f7b8-4dd4-91d3-01f68da86ca7",
+          "model": "default",
+          "session_id": "e7fbc9ae-8654-4baa-9c76-525fcdd37af9",
+          "reason": "window_close",
+          "duration_ms": 0,
+          "is_background_agent": false,
+          "final_status": "completed",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e7fbc9ae-8654-4baa-9c76-525fcdd37af9/e7fbc9ae-8654-4baa-9c76-525fcdd37af9.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "llm": "default",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰11⌚06⏱️44",
+        "session": "⚪e7fbc9ae86544baa9c76525fcdd37af9",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e7fbc9ae-8654-4baa-9c76-525fcdd37af9/e7fbc9ae-8654-4baa-9c76-525fcdd37af9.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "conversation_id": "e7fbc9ae-8654-4baa-9c76-525fcdd37af9",
+          "generation_id": "31620456-f7b8-4dd4-91d3-01f68da86ca7",
+          "model": "default",
+          "session_id": "e7fbc9ae-8654-4baa-9c76-525fcdd37af9",
+          "reason": "window_close",
+          "duration_ms": 0,
+          "is_background_agent": false,
+          "final_status": "completed",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2.6.18",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e7fbc9ae-8654-4baa-9c76-525fcdd37af9/e7fbc9ae-8654-4baa-9c76-525fcdd37af9.jsonl"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀b206b77c4747a568056c9529317b17e33a0bd823",
+        "client": "cursor-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "llm": "default",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰13⌚15⏱️37",
+        "session": "⚪e7fbc9ae86544baa9c76525fcdd37af9",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/e7fbc9ae-8654-4baa-9c76-525fcdd37af9/e7fbc9ae-8654-4baa-9c76-525fcdd37af9.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

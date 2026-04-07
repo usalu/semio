@@ -1,0 +1,12 @@
+{
+  "title": "Fix Storybook Missing Template File",
+  "status": "open",
+  "description": "Storybook for elements/ui is failing to start due to a missing template file: `/workspaces/semio/node_modules/storybook/assets/server/mocker-runtime.template.js`. The error occurs during Vite startup, suggesting a corrupted or incomplete Storybook installation. Need to reinstall Storybook dependencies and verify the installation is complete.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/923"
+  },
+  "goal": "🎯r26002",
+  "sessions": [
+    "⚪cca702448f97493e83415eda93824f69"
+  ]
+}

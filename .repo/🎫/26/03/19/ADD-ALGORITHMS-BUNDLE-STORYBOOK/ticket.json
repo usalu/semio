@@ -1,0 +1,12 @@
+{
+  "title": "Add Algorithms Bundle Storybook",
+  "status": "closed",
+  "description": "Introduce semio-algorithms bundle with Storybook configured like elements/ui and add algorithm visualization stories using elements-ui primitives.",
+  "summary": "Add GoldenLayout IPO stories for Design algorithms and unblock tests",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪f6c09c16a5d14165857530b524ee68b1",
+    "⚪46b1ed18e7604de9a6fec9f2e1f0b88e",
+    "⚪c3af00cb5b25465e9235fb763bc2330c"
+  ]
+}

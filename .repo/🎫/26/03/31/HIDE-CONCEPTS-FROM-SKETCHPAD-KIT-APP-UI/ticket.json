@@ -1,0 +1,13 @@
+{
+  "title": "Hide Concepts From Sketchpad Kit App UI",
+  "status": "closed",
+  "description": "Remove CONCEPTS from the sketchpad kit app UI - diagram view, table view, toolbar filters, detail panel, selection/hover handlers. Ensure they are not rendered, selectable, or interactable anywhere in the app.",
+  "summary": "Removed all concept UI from the Kit app in sketchpad. 3 edits in semio/sketchpad/index.tsx: (1) Removed concept Action chips from both mobile and desktop Kit table rows. (2) Removed selectedConcepts-based table filtering that hid design rows not matching concept GUIDs. (3) Removed concepts from useKitAppSelectAll so concepts are never programmatically selected. Already clean from previous work: KitDiagramNodeKind, ArtifactKind, KitKindToggles, KitCreateActions, buildKitDiagramData kindGroups, visibleGuids, diagram hover/selection handlers, detail panel sections, artifactKinds breadcrumb, isKitDiagramNodeKind guard. Internal concept infrastructure preserved for data management. All 105 unit tests pass, 21 elements/ui tests pass, Vite production build succeeds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1220"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪40880f47375f44408af943e8de8d26d4"
+  ]
+}

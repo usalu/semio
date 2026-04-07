@@ -1,0 +1,116 @@
+{
+  "timestamp": "2025-12-23T14:11:39.057Z",
+  "rootEntity": {
+    "name": "kit",
+    "fields": [
+      {
+        "name": "name",
+        "type": "String",
+        "required": true,
+        "isArray": false
+      },
+      {
+        "name": "version",
+        "type": "String",
+        "required": false,
+        "isArray": false
+      },
+      {
+        "name": "types",
+        "type": "Type",
+        "required": false,
+        "isArray": true
+      },
+      {
+        "name": "tags",
+        "type": "Tag",
+        "required": false,
+        "isArray": true
+      },
+      {
+        "name": "concepts",
+        "type": "Concept",
+        "required": false,
+        "isArray": true
+      },
+      {
+        "name": "files",
+        "type": "File",
+        "required": false,
+        "isArray": true
+      },
+      {
+        "name": "designs",
+        "type": "Design",
+        "required": false,
+        "isArray": true
+      },
+      {
+        "name": "qualities",
+        "type": "Quality",
+        "required": false,
+        "isArray": true
+      },
+      {
+        "name": "authors",
+        "type": "Author",
+        "required": false,
+        "isArray": true
+      },
+      {
+        "name": "remoteUrl",
+        "type": "String",
+        "required": false,
+        "isArray": false
+      },
+      {
+        "name": "homepageUrl",
+        "type": "String",
+        "required": false,
+        "isArray": false
+      },
+      {
+        "name": "license",
+        "type": "String",
+        "required": false,
+        "isArray": false
+      },
+      {
+        "name": "icon",
+        "type": "String",
+        "required": false,
+        "isArray": false
+      },
+      {
+        "name": "image",
+        "type": "String",
+        "required": false,
+        "isArray": false
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "required": false,
+        "isArray": false
+      },
+      {
+        "name": "attributes",
+        "type": "Attribute",
+        "required": false,
+        "isArray": true
+      },
+      {
+        "name": "created",
+        "type": "String",
+        "required": true,
+        "isArray": false
+      },
+      {
+        "name": "updated",
+        "type": "String",
+        "required": true,
+        "isArray": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "title": "GRAPHQL-REFACTOR",
+  "status": "closed",
+  "description": "Consolidate types and refactor to use GraphQL as the primary API layer",
+  "goal": "🎯aioptimizedrepo"
+}

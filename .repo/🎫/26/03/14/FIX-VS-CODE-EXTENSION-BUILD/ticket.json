@@ -1,0 +1,12 @@
+{
+  "title": "Fix VS Code Extension Build",
+  "status": "open",
+  "description": "Get it working and building",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/903"
+  },
+  "goal": "🎯testgoaljsonlifecycletest1773348901476808286",
+  "sessions": [
+    "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746⚪17735323021564128867105276664683924430"
+  ]
+}

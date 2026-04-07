@@ -1,0 +1,11 @@
+{
+  "printWidth": 250,
+  "overrides": [
+    {
+      "files": "*.md",
+      "options": {
+        "tabWidth": 1
+      }
+    }
+  ]
+}

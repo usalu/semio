@@ -1,0 +1,31 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T15:06:44Z",
+    "session": "dc1a0640-a153-493d-84ba-68b2ae6d0ed3",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc1a0640-a153-493d-84ba-68b2ae6d0ed3.jsonl"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T15:06:44.663Z",
+      "hook_event_name": "PostToolUse",
+      "session_id": "dc1a0640-a153-493d-84ba-68b2ae6d0ed3",
+      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc1a0640-a153-493d-84ba-68b2ae6d0ed3.jsonl",
+      "tool_name": "run_in_terminal",
+      "tool_input": {
+        "command": "sleep 30 \u0026\u0026 tail -20 /tmp/design-test-output.log",
+        "explanation": "Wait and check if store update worked",
+        "goal": "Check progress",
+        "isBackground": false,
+        "timeout": 45000
+      },
+      "tool_response": "Note: The tool simplified the command to ` sleep 30 \u0026\u0026 tail -20 /tmp/design-test-output.log`, and this is the output of running that command instead:\n\n    Expected: \u003c 0.2\n    Received:   3.7\n\n      5220 |           if (diagramValue !== null) {\n      5221 |             expect(Math.abs((diagramValue.u ?? 0) - testXValue)).to\nBeLessThan(0.2);                                                                    \u003e 5222 |             expect(Math.abs((diagramValue.v ?? 0) - testYValue)).to\nBeLessThan(0.2);                                                                           |                                                                  ^\n      5223 |           }\n      5224 |         }\n      5225 |\n        at /workspaces/semio/semio/sketchpad/sketchpad.test.ts:5222:66\n\n    Error Context: test-results/sketchpad-sketchpad-Design-chromium/error-contex\nt.md                                                                            \n  Slow test file: [chromium] › sketchpad.test.ts (13.9m)\n  Consider running tests from slow files in parallel. See: https://playwright.de\nv/docs/test-parallel                                                              1 failed\n    [chromium] › sketchpad.test.ts:2575:3 › sketchpad › Design ─────────────────\n────────────────────                                                            ",
+      "tool_use_id": "toolu_bdrk_01CtDdSEefkXGZghSXvXkD7t__vscode-1773671759812",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

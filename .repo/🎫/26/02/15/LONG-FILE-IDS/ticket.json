@@ -1,0 +1,10 @@
+{
+  "title": "Long File Ids",
+  "status": "closed",
+  "description": "Fix file IDs to include the full parent chain (project, bundle, folder hierarchy). Currently buildFileID and File.GetID() return short IDs like 💻designtsx. They should return long IDs like 👤semio📚js🗃️sketchpad💻designtsx that include the full ancestor chain.",
+  "summary": "Bulk close",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪1a1a212aee684a078bc08dfcca485927"
+  ]
+}

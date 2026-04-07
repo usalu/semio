@@ -1,0 +1,28 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "cursor-chat",
+    "contributor": "unknown",
+    "kind": "agent.thinking.ended",
+    "second": "2026-03-16T16:39:04Z",
+    "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+  },
+  "native": {
+    "event": {
+      "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+      "generation_id": "0108126a-3d76-4dd3-9b07-650b9a5dbecb",
+      "text": "\nNow update the JS test to build report with only the keys in canonical (so we don't need convex_hull etc), and round floats to 6 decimals. Then expect report to match canonical. So we need to filter the report to only include keys that are in canonical, and round number values. So: const round6 = (x: number) =\u003e Math.round(x * 1e6) / 1e6; and when building report we round and only include keys that exist in insights and are in canonical. Or we build the full report with rounding and then when comparing we only compare canonical keys. So: build report with all keys we have, round numbers; then for (const k of Object.keys(canonical)) expect(report[k]).toEqual(canonical[k]). So we don't need report to have only canonical keys. We just need every canonical key to be in report and equal. So the report might have extra keys (euler_characteristic, etc). So we need to make sure the report has at least the canonical keys. So we need dimension_x, dimension_y, dimension_z, bounding_box_min, bounding_box_max, centroid, etc. And we need to round them. So in the test we build report with rounded values. Let me add a round6 helper and round all numeric fields and Point components.",
+      "duration_ms": 7780,
+      "model": "default",
+      "hook_event_name": "afterAgentThought",
+      "cursor_version": "2.6.19",
+      "workspace_roots": [
+        "/workspaces/semio"
+      ],
+      "user_email": "ueli.saluz@posteo.de",
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    }
+  },
+  "response": {}
+}

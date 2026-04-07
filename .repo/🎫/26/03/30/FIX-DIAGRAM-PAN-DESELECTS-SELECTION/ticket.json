@@ -1,0 +1,12 @@
+{
+  "title": "Fix Diagram Pan Deselects Selection",
+  "status": "open",
+  "description": "Fix Diagram Pan Deselects Selection",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1194"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪acfbf79e243a404d999c027ddbac85c1"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Research Cli Command Validation",
+  "status": "closed",
+  "description": "Research all command validation logic in main.go",
+  "summary": "Complete inventory of all cobra commands with validation logic",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/486"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

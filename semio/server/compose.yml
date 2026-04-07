@@ -1,0 +1,105 @@
+# #region 🔖Header
+# [👤semio📚server💻compose](repo://p/u/semio/b/l/server/f/compose.yml)
+# 2025 Ueli Saluz <ueli@semio-tech.com>
+# AGPL-3.0
+# Docker Compose for the semio server stack with repo web services and the semio session backend.
+# #endregion 🔖Header
+
+services:
+  # #region 🔖Postgres
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-semio_repo}
+      POSTGRES_USER: ${POSTGRES_USER:-semio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../repo/postgres/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-semio} -d ${POSTGRES_DB:-semio_repo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:5432:5432"
+  # #endregion 🔖Postgres
+
+  # #region 🔖Web
+  web:
+    build:
+      context: ../../repo/server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-semio}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-semio_repo}
+      APP_BASE_URL: ${APP_BASE_URL:-https://repo.semio.dev}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-}
+      UPLOAD_BLOB_ROOT: /srv/semio/blob
+    volumes:
+      - blob_data:/srv/semio/blob
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8787"
+  # #endregion 🔖Web
+
+  # #region 🔖Worker
+  worker:
+    build:
+      context: ../../repo/server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["node", "-e", "require('tsx/esm');import('./lib/worker.ts')"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-semio}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-semio_repo}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+    volumes:
+      - blob_data:/srv/semio/blob
+    depends_on:
+      postgres:
+        condition: service_healthy
+  # #endregion 🔖Worker
+
+  # #region 🔖ReverseProxy
+  reverse-proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../../repo/server/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+  # #endregion 🔖ReverseProxy
+
+  # #region 🔖Session
+  session:
+    image: rust:1.89-bookworm
+    restart: unless-stopped
+    working_dir: /workspace/semio/server
+    command: ["cargo", "run", "--bin", "semio-session"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-semio}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-semio_repo}
+      SESSION_HOST: 0.0.0.0
+      SESSION_PORT: 8788
+    volumes:
+      - ../..:/workspace
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8788"
+  # #endregion 🔖Session
+
+volumes:
+  postgres_data:
+  blob_data:
+  caddy_data:
+  caddy_config:

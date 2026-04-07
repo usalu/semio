@@ -1,0 +1,12 @@
+{
+  "title": "Normalize Lab Kind Terminology",
+  "status": "closed",
+  "description": "A special kind of files are labs. Labs contain tests. A test is a kind of definition. Around the codebase the term tests used for test files should be labs. Refactor naming and behavior accordingly, extend existing tests, and ensure compatibility across list/tree/rendering and model mappings.",
+  "summary": "Normalized file-kind terminology from test to lab across CLI and VS Code filter surfaces; updated derivation, flags, GraphQL enum, emoji mapping, and existing tests.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪17721104700578594284422118773920764617",
+    "⚪ad224132d4314315bc1f1c7b28538111",
+    "⚪9b57ce56af904029a6e9f3ff7d7669b9"
+  ]
+}

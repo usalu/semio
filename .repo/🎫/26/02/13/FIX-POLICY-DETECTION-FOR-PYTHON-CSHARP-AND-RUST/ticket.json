@@ -1,0 +1,10 @@
+{
+  "title": "Fix Policy Detection for Python CSharp and Rust",
+  "status": "closed",
+  "description": "Investigate and fix failing tests: TestSectionMissingIdentification for Python/CSharp/Rust and TestDefinitionMissingIdentification for Rust. Root causes: Python sectionStart regex cannot match # #region format, CSharp sectionStart regex cannot match // #region format, code policy scope excludes .rs files.",
+  "summary": "Fixed 4 failing tests (Python/CSharp/Rust section identification + Rust definition identification). Root causes: Python sectionStart regex didn't match # #region format, CSharp regex didn't match // #region format, code policy scope excluded .rs files. Also fixed Slugify camelCase splitting and updated fixture files with required identification comments.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/549"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms"
+}

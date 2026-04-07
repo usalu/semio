@@ -1,0 +1,26 @@
+{
+  "title": "Research Toolbar Implementation",
+  "status": "closed",
+  "prompt": "Research toolbar",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/504"
+  },
+  "goal": "sketchpad/toolbar",
+  "started": "2026-02-11T19:09:17.769382418Z",
+  "finished": "2026-02-18T15:30:18.290356017Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-11 19:09:17",
+        "finished": "2026-02-18 15:30:18"
+      },
+      "author": "kinansarak",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "d8f7005b643fe6f393319430779ae99b90c01d46",
+      "prompt": "Research toolbar",
+      "llm": "opus-4-6"
+    }
+  ]
+}

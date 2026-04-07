@@ -1,0 +1,15 @@
+{
+  "title": "Consistent Repo History",
+  "description": "Goal for Consistent Repo History",
+  "prompt": "Instructions for Consistent Repo History",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯aioptimizedrepo",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/404"
+  }
+}

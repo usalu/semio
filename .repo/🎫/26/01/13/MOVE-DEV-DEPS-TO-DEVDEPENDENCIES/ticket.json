@@ -1,0 +1,6 @@
+{
+  "title": "move-dev-deps-to-devdependencies",
+  "status": "closed",
+  "description": "Move @types/* and postcss-* packages from dependencies to devDependencies in js/semio/package.json",
+  "goal": "🎯aioptimizedrepo"
+}

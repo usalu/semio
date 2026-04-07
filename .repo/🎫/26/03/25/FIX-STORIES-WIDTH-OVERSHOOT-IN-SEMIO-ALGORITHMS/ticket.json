@@ -1,0 +1,12 @@
+{
+  "title": "Fix Stories Width Overshoot in Semio Algorithms",
+  "status": "open",
+  "description": "The stories in semio algorithms are overshooting their width instead of fitting the container. Need to investigate and fix the layout issues in the Storybook stories.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1076"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪aad021eb4f16436090114fa949f9505f"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Update Agent Hook Logging Path",
+  "status": "closed",
+  "description": "Change the logHook function to write logs to .repo/📜/🪝/🤖/{{session-id}}/{{timestamp}}_{{repo-agent-hook-event-kind}}.json instead of the current flat .repo/📜/YYMMDDHHMMSS_client_hook-kind.json. Update tests accordingly.",
+  "summary": "Aligned ticket sessions to stable hook session IDs by removing synthetic open/reopen sessions, ignoring request-scoped IDs, and preventing synthetic fallback sessions in hook tracking. Added regression tests for session inflation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/637"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

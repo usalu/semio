@@ -1,0 +1,13 @@
+{
+  "title": "Fix Drag Pieces In Design Implementation",
+  "status": "closed",
+  "description": "Fix dragPiecesInDesign across all languages (JS, Go, C#, Rust) to match spec:\n1. Fixed pieces must check center AND plane (not just center)\n2. Descendant filtering must check against ALL selected pieces (not just fixed pieces)\nAdd Go drag test. Update docs.",
+  "summary": "Removed didPanDragRef.current = false from handlePointerEnd in SemioDiagram. The flag was being reset before handleSvgClick could read it, causing click events that some browsers fire after pointer-capture drags to incorrectly clear the selection. handleSvgClick already owned the reset; handlePointerDown resets it at each drag start.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1191"
+  },
+  "goal": "🎯algorithms",
+  "sessions": [
+    "⚪c57e81626eaf4771ad2576585116aeaa"
+  ]
+}

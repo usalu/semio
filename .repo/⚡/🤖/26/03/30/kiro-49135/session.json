@@ -1,0 +1,29 @@
+{
+  "id": "kiro-49135",
+  "uri": "repo://session/kiro-49135",
+  "client": "kiro-cli",
+  "second": "2026-03-30T22:35:17Z",
+  "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "be08561bdc95d69047b7a3676c76fbac9e41489f",
+        "client": "kiro-cli",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-03-30T22:35:17Z",
+        "session": "kiro-49135"
+      },
+      "native": {
+        "event": {
+          "hook_event_name": "preToolUse",
+          "cwd": "/workspaces/semio",
+          "tool_name": "fs_write",
+          "tool_input": {}
+        }
+      },
+      "response": {}
+    }
+  ]
+}
