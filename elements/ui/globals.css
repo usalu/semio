@@ -621,6 +621,7 @@
   gap: var(--spacing-single);
   aspect-ratio: auto;
   font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 [data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]) > span {
@@ -644,6 +645,7 @@
   gap: var(--spacing-single);
   aspect-ratio: auto;
   font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 [data-slot="toolbar-zone"] [data-slot="action"] > span {
@@ -658,16 +660,15 @@
   flex-shrink: 0;
 }
 
-/* Keep toolbar settings controls visually uniform across command/non-command groups.
- * This only affects the settings zone, not the tools zone group picker. */
-[id="semio.sketchpad.toolbar.zone.settings"] [data-slot="toggle-group-item"][data-state="on"] {
-  background-color: transparent;
-  color: var(--foreground);
+/* Unify active-state visuals across all toolbar interactive elements. */
+[data-slot="toolbar-zone"] [data-slot="toggle-group-item"][data-state="on"] {
+  background-color: var(--active-base);
+  color: var(--active-foreground);
 }
 
-[id="semio.sketchpad.toolbar.zone.settings"] [data-slot="toggle-group-item"][data-state="on"]:hover {
-  background-color: var(--hover-panel);
-  color: var(--foreground);
+[data-slot="toolbar-zone"] [data-slot="toggle-group-item"][data-state="on"]:hover {
+  background-color: color-mix(in oklab, var(--active-base) 90%, black);
+  color: var(--active-foreground);
 }
 
 .dark {
