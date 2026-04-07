@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Level, LevelProvider, Stepper, getLevelBgClass } from "@elements/ui";
+import { Stepper } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -54,44 +54,6 @@ export const Default: Story = {
     const [value, setValue] = useState(args.value);
     return <Stepper {...args} value={value} onChange={setValue} />;
   },
-};
-
-const StepperDemo = ({ id }: { id: string }) => {
-  const [value, setValue] = useState(12);
-  return <Stepper {...defaultArgs} id={id} value={value} onChange={setValue} />;
-};
-
-const createLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <StepperDemo id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...defaultArgs, id: "stepper-base" },
-  render: createLevelRender("base", "stepper-base"),
-};
-
-export const Window: Story = {
-  args: { ...defaultArgs, id: "stepper-window" },
-  render: createLevelRender("window", "stepper-window"),
-};
-
-export const Panel: Story = {
-  args: { ...defaultArgs, id: "stepper-panel" },
-  render: createLevelRender("panel", "stepper-panel"),
-};
-
-export const Overlay: Story = {
-  args: { ...defaultArgs, id: "stepper-overlay" },
-  render: createLevelRender("overlay", "stepper-overlay"),
-};
-
-export const Temporary: Story = {
-  args: { ...defaultArgs, id: "stepper-temporary" },
-  render: createLevelRender("temporary", "stepper-temporary"),
 };
 
 // #endregion 🔖Stepper

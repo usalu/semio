@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Level, LevelProvider, Textarea, getLevelBgClass } from "@elements/ui";
+import { Textarea } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { nakagin } from "../nakagin";
 
@@ -50,39 +50,6 @@ const defaultArgs = {
 
 export const Default: Story = {
   args: defaultArgs,
-};
-
-const createLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <Textarea {...defaultArgs} id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...defaultArgs, id: "textarea-base" },
-  render: createLevelRender("base", "textarea-base"),
-};
-
-export const Window: Story = {
-  args: { ...defaultArgs, id: "textarea-window" },
-  render: createLevelRender("window", "textarea-window"),
-};
-
-export const Panel: Story = {
-  args: { ...defaultArgs, id: "textarea-panel" },
-  render: createLevelRender("panel", "textarea-panel"),
-};
-
-export const Overlay: Story = {
-  args: { ...defaultArgs, id: "textarea-overlay" },
-  render: createLevelRender("overlay", "textarea-overlay"),
-};
-
-export const Temporary: Story = {
-  args: { ...defaultArgs, id: "textarea-temporary" },
-  render: createLevelRender("temporary", "textarea-temporary"),
 };
 
 // #endregion 🔖Textarea

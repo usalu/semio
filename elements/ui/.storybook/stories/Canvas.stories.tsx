@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Canvas, DiagramNode, DiagramSkeleton, HorizontalWindows, Level, LevelProvider, Window, getLevelBgClass } from "@elements/ui";
+import { Canvas, DiagramNode, DiagramSkeleton, HorizontalWindows, Window } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Canvas
@@ -58,53 +58,6 @@ export const Default: Story = {
       <Canvas {...args} />
     </div>
   ),
-};
-
-const CanvasDemo = () => (
-  <HorizontalWindows>
-    <Window id="left" defaultSize={50}>
-      <WindowContent title="Left Window" color="bg-panel" />
-    </Window>
-    <Window id="right" defaultSize={50}>
-      <WindowContent title="Right Window" color="bg-base" />
-    </Window>
-  </HorizontalWindows>
-);
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`h-screen ${getLevelBgClass(level)}`}>
-      <Canvas>
-        <CanvasDemo />
-      </Canvas>
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { children: <CanvasDemo /> },
-  render: createLevelRender("base"),
-};
-
-export const Window_: Story = {
-  name: "Window",
-  args: { children: <CanvasDemo /> },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { children: <CanvasDemo /> },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { children: <CanvasDemo /> },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { children: <CanvasDemo /> },
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖Canvas

@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, Level, LevelProvider, Tree, TreeContent, TreeItem, getLevelBgClass } from "@elements/ui";
+import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { File, Folder, Settings } from "lucide-react";
 import React from "react";
@@ -115,39 +115,6 @@ export const Default: Story = {
       <Tree {...args} />
     </div>
   ),
-};
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`border p-4 ${getLevelBgClass(level)}`}>
-      <Tree sections={treeSections} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { sections: treeSections },
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  args: { sections: treeSections },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { sections: treeSections },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { sections: treeSections },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { sections: treeSections },
-  render: createLevelRender("temporary"),
 };
 
 const ControlTreeDemo = () => {

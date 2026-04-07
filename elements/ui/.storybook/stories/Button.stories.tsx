@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Button, ButtonCycle, Level, LevelProvider, getLevelBgClass } from "@elements/ui";
+import { Button, ButtonCycle } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Network, Plus } from "lucide-react";
 import { useState } from "react";
@@ -41,39 +41,6 @@ export const Default: Story = {
     id: "button-default",
     icon: <Plus />,
   },
-};
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <Button id={`button-${level}`} icon={<Plus />} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { id: "button-base", icon: <Plus /> },
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  args: { id: "button-window", icon: <Plus /> },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { id: "button-panel", icon: <Plus /> },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { id: "button-overlay", icon: <Plus /> },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { id: "button-temporary", icon: <Plus /> },
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖Button

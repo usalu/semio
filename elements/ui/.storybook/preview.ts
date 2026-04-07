@@ -28,6 +28,14 @@ enum Theme {
   DARK = "dark",
 }
 
+enum Level {
+  BASE = "base",
+  WINDOW = "window",
+  PANEL = "panel",
+  OVERLAY = "overlay",
+  TEMPORARY = "temporary",
+}
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -51,9 +59,25 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    level: {
+      description: "UI level for components",
+      toolbar: {
+        title: "Level",
+        icon: "component",
+        items: [
+          { value: Level.BASE, title: "Base" },
+          { value: Level.WINDOW, title: "Window" },
+          { value: Level.PANEL, title: "Panel" },
+          { value: Level.OVERLAY, title: "Overlay" },
+          { value: Level.TEMPORARY, title: "Temporary" },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
   initialGlobals: {
     theme: Theme.SYSTEM,
+    level: Level.BASE,
   },
   decorators: [withLevel, withTheme],
   tags: ["autodocs"],

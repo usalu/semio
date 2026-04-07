@@ -21,37 +21,13 @@ import type { Decorator } from "@storybook/react";
 import React from "react";
 import { Level, LevelProvider, getLevelBgClass } from "..";
 
-export const LevelShowcase: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const levels: Level[] = ["base", "window", "panel", "overlay", "temporary"];
-  return (
-    <div className="flex flex-col gap-4">
-      {levels.map((level) => (
-        <div key={level} className={`p-4 ${getLevelBgClass(level)} border`}>
-          <div className="text-xs text-muted-foreground mb-2 capitalize">{level}</div>
-          <LevelProvider level={level}>{children}</LevelProvider>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export const LevelWrapper: React.FC<{ level: Level; children: React.ReactNode }> = ({ level, children }) => {
-  const bgClass = getLevelBgClass(level);
-  return (
-    <div className={`p-4 ${bgClass} border min-w-[200px]`}>
-      <LevelProvider level={level}>{children}</LevelProvider>
-    </div>
-  );
-};
-
 export const withLevel: Decorator = (Story, context) => {
-  const level = context.args?.level as Level | undefined;
-  if (level) {
-    return (
-      <LevelWrapper level={level}>
+  const level = context.globals.level as Level;
+  return (
+    <LevelProvider level={level}>
+      <div className={`p-4 ${getLevelBgClass(level)}`}>
         <Story />
-      </LevelWrapper>
-    );
-  }
-  return <Story />;
+      </div>
+    </LevelProvider>
+  );
 };

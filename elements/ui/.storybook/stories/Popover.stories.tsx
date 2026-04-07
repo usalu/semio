@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Button, Input, Level, LevelProvider, Popover, PopoverContent, PopoverTrigger, getLevelBgClass } from "@elements/ui";
+import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Settings } from "lucide-react";
 
@@ -62,61 +62,6 @@ export const Default: Story = {
       </PopoverContent>
     </Popover>
   ),
-};
-
-const PopoverDemo = () => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <Button variant="default" id="popover-trigger-level">
-        <Settings />
-        Connection Settings
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent className="w-80" side="bottom" align="start">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm">Connection Parameters</h4>
-          <p className="text-sm text-muted-foreground">Configure spatial relationship between pieces.</p>
-        </div>
-        <div className="grid gap-double">
-          <Input id="gap-input-level" showLabel defaultValue="0" type="number" />
-          <Input id="rotation-input-level" showLabel defaultValue="0" type="number" min={0} max={360} />
-        </div>
-        <div className="flex justify-end gap-double">
-          <Button variant="default">Cancel</Button>
-          <Button>Save</Button>
-        </div>
-      </div>
-    </PopoverContent>
-  </Popover>
-);
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <PopoverDemo />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖Popover

@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Level, LevelProvider, Slider, getLevelBgClass } from "@elements/ui";
+import { Slider } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -56,44 +56,6 @@ export const Default: Story = {
     const [value, setValue] = useState(args.value);
     return <Slider {...args} value={value} onValueChange={setValue} />;
   },
-};
-
-const SliderDemo = ({ id }: { id: string }) => {
-  const [value, setValue] = useState([75]);
-  return <Slider {...defaultArgs} id={id} value={value} onValueChange={setValue} />;
-};
-
-const createLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <SliderDemo id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...defaultArgs, id: "slider-base" },
-  render: createLevelRender("base", "slider-base"),
-};
-
-export const Window: Story = {
-  args: { ...defaultArgs, id: "slider-window" },
-  render: createLevelRender("window", "slider-window"),
-};
-
-export const Panel: Story = {
-  args: { ...defaultArgs, id: "slider-panel" },
-  render: createLevelRender("panel", "slider-panel"),
-};
-
-export const Overlay: Story = {
-  args: { ...defaultArgs, id: "slider-overlay" },
-  render: createLevelRender("overlay", "slider-overlay"),
-};
-
-export const Temporary: Story = {
-  args: { ...defaultArgs, id: "slider-temporary" },
-  render: createLevelRender("temporary", "slider-temporary"),
 };
 
 // #endregion 🔖Slider

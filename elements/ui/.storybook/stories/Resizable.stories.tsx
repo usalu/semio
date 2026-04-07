@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Level, LevelProvider, ResizableHandle, ResizablePanel, ResizablePanelGroup, Panel as ResizableSidePanel, getLevelBgClass } from "@elements/ui";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup, Panel as ResizableSidePanel } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -79,73 +79,6 @@ export const Default: Story = {
       </ResizablePanel>
     </ResizablePanelGroup>
   ),
-};
-
-const createLevelRender = (level: Level) => (args: { direction: "horizontal" | "vertical" }) => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <ResizablePanelGroup {...args} className="w-[800px] h-[500px] border">
-        <ResizablePanel defaultSize={35} minSize={25}>
-          <div className="flex flex-col h-full p-small bg-muted/20">
-            <h3 className="text-sm font-semibold mb-4">Type Library</h3>
-            <div className="space-y-2 text-sm">
-              <div>Capsule J</div>
-              <div>Capsule K</div>
-              <div>Base</div>
-              <div>Tambour A</div>
-              <div>Capital</div>
-            </div>
-          </div>
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={65}>
-          <ResizablePanelGroup direction="vertical">
-            <ResizablePanel defaultSize={70} minSize={30}>
-              <div className="flex h-full items-center justify-center p-6 bg-muted/10">
-                <span className="font-semibold text-muted-foreground">3D Model View</span>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel defaultSize={30} minSize={20}>
-              <div className="flex flex-col h-full p-4">
-                <h3 className="text-sm font-semibold mb-2">Properties</h3>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <div>Volume: 25.0 m³</div>
-                  <div>Area: 10.0 m²</div>
-                  <div>Connections: 4</div>
-                </div>
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...Default.args },
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  args: { ...Default.args },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { ...Default.args },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { ...Default.args },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { ...Default.args },
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖Resizable

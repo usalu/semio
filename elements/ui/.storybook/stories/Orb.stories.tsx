@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Level, LevelProvider, Orb, getLevelBgClass } from "@elements/ui";
+import { Orb } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Orb
@@ -73,39 +73,6 @@ export const Hovered: Story = {
 export const Disabled: Story = {
   args: { ...defaultArgs, id: "orb-disabled", t: 0.75, disabled: true },
   render: (args) => <OrbInRing {...args} />,
-};
-
-const createLevelRender = (level: Level, id: string, t: number) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <OrbInRing id={id} t={t} radius={40} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...defaultArgs, id: "orb-base" },
-  render: createLevelRender("base", "orb-base", 0),
-};
-
-export const Window: Story = {
-  args: { ...defaultArgs, id: "orb-window", t: 0.25 },
-  render: createLevelRender("window", "orb-window", 0.25),
-};
-
-export const Panel: Story = {
-  args: { ...defaultArgs, id: "orb-panel", t: 0.5 },
-  render: createLevelRender("panel", "orb-panel", 0.5),
-};
-
-export const Overlay: Story = {
-  args: { ...defaultArgs, id: "orb-overlay", t: 0.75 },
-  render: createLevelRender("overlay", "orb-overlay", 0.75),
-};
-
-export const Temporary: Story = {
-  args: { ...defaultArgs, id: "orb-temporary", t: 1 },
-  render: createLevelRender("temporary", "orb-temporary", 1),
 };
 
 // #endregion 🔖Orb

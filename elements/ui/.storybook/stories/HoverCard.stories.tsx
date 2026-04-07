@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Aside, Avatar, AvatarFallback, AvatarImage, Button, Card, CardGrid, HoverCard, HoverCardContent, HoverCardTrigger, Level, LevelProvider, getLevelBgClass } from "@elements/ui";
+import { Aside, Avatar, AvatarFallback, AvatarImage, Button, Card, CardGrid, HoverCard, HoverCardContent, HoverCardTrigger } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { CalendarDays } from "lucide-react";
 
@@ -78,34 +78,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => <HoverCardExamples />,
-};
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <HoverCardExamples />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖HoverCard

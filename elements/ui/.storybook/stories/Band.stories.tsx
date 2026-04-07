@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Band, Button, Input, Level, LevelProvider, Strip, Toggle, getLevelBgClass } from "@elements/ui";
+import { Band, Button, Input, Strip, Toggle } from "@elements/ui";
 import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/assets";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -213,39 +213,6 @@ export const OverflowingVertical: Story = {
       <Band {...args} />
     </div>
   ),
-};
-
-const createLevelRender = (level: Level) => (args: typeof HorizontalWithToggles.args) => (
-  <LevelProvider level={level}>
-    <div className={`w-[600px] p-4 ${getLevelBgClass(level)}`}>
-      <Band {...args} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...HorizontalWithToggles.args },
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  args: { ...HorizontalWithToggles.args },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { ...HorizontalWithToggles.args },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { ...HorizontalWithToggles.args },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { ...HorizontalWithToggles.args },
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖Band

@@ -3999,6 +3999,25 @@ export const McpSceneViewer: React.FC = () => {
     });
   }, []);
 
+  const fetchedUrlsRef = React.useRef<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (!payload?.fetchUrl || fetchedUrlsRef.current.has(payload.fetchUrl)) return;
+    const url = payload.fetchUrl;
+    fetchedUrlsRef.current.add(url);
+    (async () => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const full = (await res.json()) as Record<string, unknown>;
+        const p = normalizeMcpDiagramPayload(full);
+        if (p) mergeDiagramPayload(p);
+      } catch {
+        /* Engine may not be reachable from iframe. */
+      }
+    })();
+  }, [payload?.fetchUrl, mergeDiagramPayload]);
+
   const tryRefetchDesignFromServer = React.useCallback(async () => {
     const client = appRef.current;
     if (!client) return;
@@ -4103,6 +4122,25 @@ export const McpDiagramViewer: React.FC = () => {
     });
   }, []);
 
+  const fetchedUrlsRef = React.useRef<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (!payload?.fetchUrl || fetchedUrlsRef.current.has(payload.fetchUrl)) return;
+    const url = payload.fetchUrl;
+    fetchedUrlsRef.current.add(url);
+    (async () => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const full = (await res.json()) as Record<string, unknown>;
+        const p = normalizeMcpDiagramPayload(full);
+        if (p) mergeDiagramPayload(p);
+      } catch {
+        /* Engine may not be reachable from iframe. */
+      }
+    })();
+  }, [payload?.fetchUrl, mergeDiagramPayload]);
+
   const tryRefetchDesignFromServer = React.useCallback(async () => {
     const client = appRef.current;
     if (!client) return;
@@ -4196,21 +4234,8 @@ export const McpDiagramViewer: React.FC = () => {
   const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
   const selectionEnabled = pieceSelectionEnabled || connectionSelectionEnabled;
 
-  // [DEBUG] Diagnose empty diagram
-  const _dbgPieces = diagramDesign?.pieces?.length ?? 0;
-  const _dbgWithCenter = diagramDesign?.pieces?.filter((p: any) => p.center).length ?? 0;
-  const _dbgNonZero = diagramDesign?.pieces?.filter((p: any) => p.center && (p.center.u !== 0 || p.center.v !== 0)).length ?? 0;
-  const _dbgHasDesign = !!design;
-  const _dbgHasKit = !!kit;
-  const _dbgPoints = payload.points?.length ?? 0;
-  const _dbgMode = payload.mode ?? "?";
-  const _dbgSrc = candidateHasCenters ? "design" : (hasDiagramPoints ? "fallback-pts" : "fallback");
-
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-      <div style={{ position: "absolute", top: 4, left: 4, zIndex: 9999, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 11, padding: "4px 8px", borderRadius: 4, fontFamily: "monospace", pointerEvents: "none", lineHeight: 1.5 }}>
-        [DEBUG] mode={_dbgMode} src={_dbgSrc} pieces={_dbgPieces} w/center={_dbgWithCenter} non-zero={_dbgNonZero} pts={_dbgPoints} design={String(_dbgHasDesign)} kit={String(_dbgHasKit)}
-      </div>
       <SemioDiagram
         design={diagramDesign}
         designDiff={isDiff ? payload.designDiff : undefined}

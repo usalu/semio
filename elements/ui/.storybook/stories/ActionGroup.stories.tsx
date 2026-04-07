@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { ActionGroup, ActionGroupItem, Level, LevelProvider, getLevelBgClass } from "@elements/ui";
+import { ActionGroup, ActionGroupItem } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Copy, Download, ExternalLink } from "lucide-react";
 
@@ -52,39 +52,6 @@ const ActionGroupDemo = () => (
 export const Default: Story = {
   args: { children: null },
   render: () => <ActionGroupDemo />,
-};
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <ActionGroupDemo />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { children: null },
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  args: { children: null },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { children: null },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { children: null },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { children: null },
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖ActionGroup

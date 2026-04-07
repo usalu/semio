@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Action, Level, LevelProvider, ToggleGroup, getLevelBgClass } from "@elements/ui";
+import { Action, ToggleGroup } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 
@@ -60,39 +60,6 @@ export const Default: Story = {
   },
 };
 
-const createSingleLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <ToggleGroup id={id} kind="single" defaultValue="standard" showLabel items={defaultItems} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { items: defaultItems },
-  render: createSingleLevelRender("base", "toggle-group-base"),
-};
-
-export const Window: Story = {
-  args: { items: defaultItems },
-  render: createSingleLevelRender("window", "toggle-group-window"),
-};
-
-export const Panel: Story = {
-  args: { items: defaultItems },
-  render: createSingleLevelRender("panel", "toggle-group-panel"),
-};
-
-export const Overlay: Story = {
-  args: { items: defaultItems },
-  render: createSingleLevelRender("overlay", "toggle-group-overlay"),
-};
-
-export const Temporary: Story = {
-  args: { items: defaultItems },
-  render: createSingleLevelRender("temporary", "toggle-group-temporary"),
-};
-
 export const Multiple: Story = {
   args: {
     id: "toggle-group-multiple",
@@ -101,39 +68,6 @@ export const Multiple: Story = {
     showLabel: true,
     items: multipleItems,
   },
-};
-
-const createMultipleLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <ToggleGroup id={id} kind="multiple" defaultValue={["box"]} showLabel items={multipleItems} />
-    </div>
-  </LevelProvider>
-);
-
-export const MultipleBase: Story = {
-  args: { items: multipleItems },
-  render: createMultipleLevelRender("base", "toggle-group-multiple-base"),
-};
-
-export const MultipleWindow: Story = {
-  args: { items: multipleItems },
-  render: createMultipleLevelRender("window", "toggle-group-multiple-window"),
-};
-
-export const MultiplePanel: Story = {
-  args: { items: multipleItems },
-  render: createMultipleLevelRender("panel", "toggle-group-multiple-panel"),
-};
-
-export const MultipleOverlay: Story = {
-  args: { items: multipleItems },
-  render: createMultipleLevelRender("overlay", "toggle-group-multiple-overlay"),
-};
-
-export const MultipleTemporary: Story = {
-  args: { items: multipleItems },
-  render: createMultipleLevelRender("temporary", "toggle-group-multiple-temporary"),
 };
 
 // #endregion 🔖ToggleGroup

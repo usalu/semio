@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Level, LevelProvider, Toggle, getLevelBgClass } from "@elements/ui";
+import { Toggle } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 
@@ -46,39 +46,6 @@ export const Default: Story = {
   args: defaultArgs,
 };
 
-const createLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <Toggle {...defaultArgs} id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...defaultArgs, id: "toggle-base" },
-  render: createLevelRender("base", "toggle-base"),
-};
-
-export const Window: Story = {
-  args: { ...defaultArgs, id: "toggle-window" },
-  render: createLevelRender("window", "toggle-window"),
-};
-
-export const Panel: Story = {
-  args: { ...defaultArgs, id: "toggle-panel" },
-  render: createLevelRender("panel", "toggle-panel"),
-};
-
-export const Overlay: Story = {
-  args: { ...defaultArgs, id: "toggle-overlay" },
-  render: createLevelRender("overlay", "toggle-overlay"),
-};
-
-export const Temporary: Story = {
-  args: { ...defaultArgs, id: "toggle-temporary" },
-  render: createLevelRender("temporary", "toggle-temporary"),
-};
-
 const withActionArgs = {
   id: "toggle-action",
   kind: "withAction" as const,
@@ -92,39 +59,6 @@ const withActionArgs = {
 
 export const WithAction: Story = {
   args: withActionArgs,
-};
-
-const createWithActionLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <Toggle {...withActionArgs} id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const WithActionBase: Story = {
-  args: { ...withActionArgs, id: "toggle-action-base" },
-  render: createWithActionLevelRender("base", "toggle-action-base"),
-};
-
-export const WithActionWindow: Story = {
-  args: { ...withActionArgs, id: "toggle-action-window" },
-  render: createWithActionLevelRender("window", "toggle-action-window"),
-};
-
-export const WithActionPanel: Story = {
-  args: { ...withActionArgs, id: "toggle-action-panel" },
-  render: createWithActionLevelRender("panel", "toggle-action-panel"),
-};
-
-export const WithActionOverlay: Story = {
-  args: { ...withActionArgs, id: "toggle-action-overlay" },
-  render: createWithActionLevelRender("overlay", "toggle-action-overlay"),
-};
-
-export const WithActionTemporary: Story = {
-  args: { ...withActionArgs, id: "toggle-action-temporary" },
-  render: createWithActionLevelRender("temporary", "toggle-action-temporary"),
 };
 
 const dropdownArgs = {
@@ -142,39 +76,6 @@ const dropdownArgs = {
 
 export const Dropdown: Story = {
   args: dropdownArgs,
-};
-
-const createDropdownLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <Toggle {...dropdownArgs} id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const DropdownBase: Story = {
-  args: { ...dropdownArgs, id: "toggle-dropdown-base" },
-  render: createDropdownLevelRender("base", "toggle-dropdown-base"),
-};
-
-export const DropdownWindow: Story = {
-  args: { ...dropdownArgs, id: "toggle-dropdown-window" },
-  render: createDropdownLevelRender("window", "toggle-dropdown-window"),
-};
-
-export const DropdownPanel: Story = {
-  args: { ...dropdownArgs, id: "toggle-dropdown-panel" },
-  render: createDropdownLevelRender("panel", "toggle-dropdown-panel"),
-};
-
-export const DropdownOverlay: Story = {
-  args: { ...dropdownArgs, id: "toggle-dropdown-overlay" },
-  render: createDropdownLevelRender("overlay", "toggle-dropdown-overlay"),
-};
-
-export const DropdownTemporary: Story = {
-  args: { ...dropdownArgs, id: "toggle-dropdown-temporary" },
-  render: createDropdownLevelRender("temporary", "toggle-dropdown-temporary"),
 };
 
 // #endregion 🔖Toggle

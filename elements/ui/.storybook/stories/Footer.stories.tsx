@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Footer, FooterItem, Level, LevelProvider, getLevelBgClass } from "@elements/ui";
+import { Footer } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { CheckCircle2 } from "lucide-react";
 
@@ -55,51 +55,6 @@ export const Default: Story = {
     ],
     isVisible: true,
   },
-};
-
-const defaultItems: FooterItem[] = [
-  {
-    id: "success",
-    content: (
-      <div className="flex items-center gap-unit">
-        <CheckCircle2 size={14} className="text-green-500" />
-        <span>Success</span>
-      </div>
-    ),
-    order: 0,
-  },
-  { id: "status", content: "Ready", order: 1 },
-  { id: "cursor", content: "Ln 1, Col 1", order: 2 },
-  { id: "encoding", content: "UTF-8", order: 3 },
-  { id: "language", content: "TypeScript", order: 4 },
-];
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <Footer items={defaultItems} isVisible />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖Footer

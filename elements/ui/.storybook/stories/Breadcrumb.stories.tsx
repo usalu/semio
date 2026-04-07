@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Breadcrumb, BreadcrumbItemData, Level, LevelProvider, NotFound, PageNavigation, getLevelBgClass } from "@elements/ui";
+import { Breadcrumb, BreadcrumbItemData, NotFound, PageNavigation } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AlertCircle, Home } from "lucide-react";
 import { MemoryRouter } from "react-router";
@@ -101,39 +101,6 @@ const defaultItems: BreadcrumbItemData[] = [
   },
   { id: "breadcrumb-page", content: "Capsule J" },
 ];
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <Breadcrumb items={defaultItems} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { items: defaultItems },
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  args: { items: defaultItems },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { items: defaultItems },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { items: defaultItems },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { items: defaultItems },
-  render: createLevelRender("temporary"),
-};
 
 // #endregion 🔖Breadcrumb
 

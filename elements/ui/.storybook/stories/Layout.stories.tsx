@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Canvas, Footer, HorizontalWindows, Layout, Level, LevelProvider, Navbar, Page, SidePanel, Window, getLevelBgClass } from "@elements/ui";
+import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Page, SidePanel, Window } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Info, Layers, Settings, User } from "lucide-react";
 import { useState } from "react";
@@ -131,122 +131,6 @@ export const Default: Story = {
       />
     );
   },
-};
-
-const LayoutDemo = () => {
-  const [leftSize, setLeftSize] = useState(250);
-  const [rightSize, setRightSize] = useState(300);
-  const [bottomSize, setBottomSize] = useState(200);
-
-  return (
-    <Layout
-      navbar={
-        <Navbar
-          items={[
-            { content: <Home size={20} />, key: "home" },
-            { content: <span className="font-bold">Application</span>, key: "title" },
-            { content: <input type="text" placeholder="Search..." className="px-2 py-1 bg-panel border rounded w-full" />, key: "search", className: "flex-1" },
-            { content: <Settings size={20} />, key: "settings" },
-            { content: <User size={20} />, key: "user" },
-          ]}
-        />
-      }
-      footer={
-        <Footer
-          items={[
-            { id: "status", content: "Ready", order: 0 },
-            { id: "cursor", content: "Ln 1, Col 1", order: 1 },
-            { id: "selection", content: "UTF-8", order: 2 },
-          ]}
-        />
-      }
-      leftPanel={{
-        visible: true,
-        size: leftSize,
-        onSizeChange: setLeftSize,
-        sections: [
-          {
-            id: "explorer",
-            content: <div className="p-double">Explorer content</div>,
-            defaultOpen: true,
-            order: 0,
-          },
-        ],
-      }}
-      rightPanel={{
-        visible: true,
-        size: rightSize,
-        onSizeChange: setRightSize,
-        sections: [
-          {
-            id: "properties",
-            content: <div className="p-double">Properties content</div>,
-            defaultOpen: true,
-            order: 0,
-          },
-        ],
-      }}
-      bottomPanel={{
-        visible: true,
-        size: bottomSize,
-        onSizeChange: setBottomSize,
-        sections: [
-          {
-            id: "console",
-            content: <div className="p-double font-mono text-xs">Console output...</div>,
-            defaultOpen: true,
-            order: 0,
-          },
-        ],
-      }}
-      canvas={
-        <Canvas>
-          <HorizontalWindows>
-            <Window id="main" defaultSize={50}>
-              <ExampleContent title="Main Window" />
-            </Window>
-            <Window id="side" defaultSize={50}>
-              <ExampleContent title="Side Window" />
-            </Window>
-          </HorizontalWindows>
-        </Canvas>
-      }
-    />
-  );
-};
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`h-screen ${getLevelBgClass(level)}`}>
-      <LayoutDemo />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { canvas: null },
-  render: createLevelRender("base"),
-};
-
-export const Window_: Story = {
-  name: "Window",
-  args: { canvas: null },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { canvas: null },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { canvas: null },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { canvas: null },
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖Layout

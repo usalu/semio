@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Level, LevelProvider, Table, TableAvatar, TableColumn, TableSkeleton, getLevelBgClass } from "@elements/ui";
+import { Table, TableAvatar, TableColumn, TableSkeleton } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { FileCode, FileImage, FolderIcon } from "lucide-react";
 
@@ -221,73 +221,6 @@ export const WithIconAvatars: Story = {
       </div>
     );
   },
-};
-
-const TableDemo = () => {
-  const columns: TableColumn<Person>[] = [
-    {
-      id: "name",
-      header: "Name",
-      accessor: (row) => (
-        <div className="flex items-center gap-double">
-          <TableAvatar name={row.name} icon={row.icon} />
-          <span>{row.name}</span>
-        </div>
-      ),
-      width: "35%",
-    },
-    {
-      id: "role",
-      header: "Role",
-      accessor: (row) => row.role,
-      width: "30%",
-    },
-    {
-      id: "email",
-      header: "Email",
-      accessor: (row) => row.email,
-      width: "35%",
-    },
-  ];
-
-  return (
-    <div className="h-96">
-      <Table columns={columns} data={sampleData} getRowId={(row) => row.id} />
-    </div>
-  );
-};
-
-const createLevelRender = (level: Level) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <TableDemo />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { columns: [], data: [] },
-  render: createLevelRender("base"),
-};
-
-export const Window: Story = {
-  args: { columns: [], data: [] },
-  render: createLevelRender("window"),
-};
-
-export const Panel: Story = {
-  args: { columns: [], data: [] },
-  render: createLevelRender("panel"),
-};
-
-export const Overlay: Story = {
-  args: { columns: [], data: [] },
-  render: createLevelRender("overlay"),
-};
-
-export const Temporary: Story = {
-  args: { columns: [], data: [] },
-  render: createLevelRender("temporary"),
 };
 
 // #endregion 🔖Table

@@ -18,7 +18,7 @@
 // #endregion 🔖Header
 
 import type { RingOrbData } from "@elements/ui";
-import { Level, LevelProvider, Ring, getLevelBgClass } from "@elements/ui";
+import { Ring } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -77,61 +77,6 @@ export const Default: Story = {
       />
     );
   },
-};
-
-const RingDemo = ({ id }: { id: string }) => {
-  const [orbs, setOrbs] = useState(defaultOrbs);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  return (
-    <Ring
-      {...defaultArgs}
-      id={id}
-      orbs={orbs.map((orb) => ({
-        ...orb,
-        selected: orb.id === selectedId,
-        hovered: orb.id === hoveredId,
-      }))}
-      onOrbChange={(orbId, _oldT, newT) => {
-        setOrbs((prev) => prev.map((orb) => (orb.id === orbId ? { ...orb, t: newT } : orb)));
-      }}
-      onOrbSelect={(orbId) => setSelectedId(orbId)}
-      onOrbHoverChange={(orbId, hovered) => setHoveredId(hovered ? orbId : null)}
-    />
-  );
-};
-
-const createLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <RingDemo id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...defaultArgs, id: "ring-base" },
-  render: createLevelRender("base", "ring-base"),
-};
-
-export const Window: Story = {
-  args: { ...defaultArgs, id: "ring-window" },
-  render: createLevelRender("window", "ring-window"),
-};
-
-export const Panel: Story = {
-  args: { ...defaultArgs, id: "ring-panel" },
-  render: createLevelRender("panel", "ring-panel"),
-};
-
-export const Overlay: Story = {
-  args: { ...defaultArgs, id: "ring-overlay" },
-  render: createLevelRender("overlay", "ring-overlay"),
-};
-
-export const Temporary: Story = {
-  args: { ...defaultArgs, id: "ring-temporary" },
-  render: createLevelRender("temporary", "ring-temporary"),
 };
 
 // #endregion 🔖Ring

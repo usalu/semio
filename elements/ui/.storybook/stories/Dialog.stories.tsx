@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Level, LevelProvider, getLevelBgClass } from "@elements/ui";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -71,66 +71,6 @@ export const Default: Story = {
       </Dialog>
     );
   },
-};
-
-const DialogDemo: React.FC<{ level: Level }> = ({ level }) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <LevelProvider level={level}>
-      <div className={`p-4 ${getLevelBgClass(level)}`}>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button id={`dialog-trigger-${level}`}>Add Capsule to Design</Button>
-          </DialogTrigger>
-          <DialogContent showCloseButton className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Add Capsule Instance</DialogTitle>
-              <DialogDescription>Configure the new capsule piece and its placement in the design.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Capsule Type</label>
-                <select className="w-full p-double border">
-                  <option>Capsule J (Standard)</option>
-                  <option>Capsule K (Corner)</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Quantity</label>
-                <input type="number" defaultValue={1} min={1} className="w-full p-double border rounded" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="default" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => setOpen(false)}>Add to Design</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </LevelProvider>
-  );
-};
-
-export const Base: Story = {
-  render: () => <DialogDemo level="base" />,
-};
-
-export const Window: Story = {
-  render: () => <DialogDemo level="window" />,
-};
-
-export const Panel: Story = {
-  render: () => <DialogDemo level="panel" />,
-};
-
-export const Overlay: Story = {
-  render: () => <DialogDemo level="overlay" />,
-};
-
-export const Temporary: Story = {
-  render: () => <DialogDemo level="temporary" />,
 };
 
 // #endregion 🔖Dialog

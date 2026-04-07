@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { Input, Level, LevelProvider, getLevelBgClass } from "@elements/ui";
+import { Input } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🔖Input
@@ -48,39 +48,6 @@ const defaultArgs = {
 
 export const Default: Story = {
   args: defaultArgs,
-};
-
-const createLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <Input {...defaultArgs} id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { ...defaultArgs, id: "input-base" },
-  render: createLevelRender("base", "input-base"),
-};
-
-export const Window: Story = {
-  args: { ...defaultArgs, id: "input-window" },
-  render: createLevelRender("window", "input-window"),
-};
-
-export const Panel: Story = {
-  args: { ...defaultArgs, id: "input-panel" },
-  render: createLevelRender("panel", "input-panel"),
-};
-
-export const Overlay: Story = {
-  args: { ...defaultArgs, id: "input-overlay" },
-  render: createLevelRender("overlay", "input-overlay"),
-};
-
-export const Temporary: Story = {
-  args: { ...defaultArgs, id: "input-temporary" },
-  render: createLevelRender("temporary", "input-temporary"),
 };
 
 // #endregion 🔖Input

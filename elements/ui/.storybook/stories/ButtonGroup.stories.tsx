@@ -17,7 +17,7 @@
 
 // #endregion 🔖Header
 
-import { ButtonGroup, ButtonGroupItem, Level, LevelProvider, getLevelBgClass } from "@elements/ui";
+import { ButtonGroup, ButtonGroupItem } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Network } from "lucide-react";
 
@@ -35,14 +35,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const ButtonGroupDemo = ({ id }: { id: string }) => (
-  <ButtonGroup id={id} showLabel>
-    <ButtonGroupItem id={`${id}-model`} icon={<Box />} onClick={() => {}} />
-    <ButtonGroupItem id={`${id}-diagram`} icon={<Network />} onClick={() => {}} />
-    <ButtonGroupItem id={`${id}-details`} icon={<List />} onClick={() => {}} />
-  </ButtonGroup>
-);
-
 export const Default: Story = {
   args: {
     id: "button-group-default",
@@ -56,39 +48,6 @@ export const Default: Story = {
       <ButtonGroupItem id="button-group-default-details" icon={<List />} onClick={() => {}} />
     </ButtonGroup>
   ),
-};
-
-const createLevelRender = (level: Level, id: string) => () => (
-  <LevelProvider level={level}>
-    <div className={`p-4 ${getLevelBgClass(level)}`}>
-      <ButtonGroupDemo id={id} />
-    </div>
-  </LevelProvider>
-);
-
-export const Base: Story = {
-  args: { id: "button-group-base", showLabel: true, children: null },
-  render: createLevelRender("base", "button-group-base"),
-};
-
-export const Window: Story = {
-  args: { id: "button-group-window", showLabel: true, children: null },
-  render: createLevelRender("window", "button-group-window"),
-};
-
-export const Panel: Story = {
-  args: { id: "button-group-panel", showLabel: true, children: null },
-  render: createLevelRender("panel", "button-group-panel"),
-};
-
-export const Overlay: Story = {
-  args: { id: "button-group-overlay", showLabel: true, children: null },
-  render: createLevelRender("overlay", "button-group-overlay"),
-};
-
-export const Temporary: Story = {
-  args: { id: "button-group-temporary", showLabel: true, children: null },
-  render: createLevelRender("temporary", "button-group-temporary"),
 };
 
 // #endregion 🔖ButtonGroup
