@@ -1,0 +1,10 @@
+{
+  "title": "Mixed Section and Definition Tree",
+  "status": "closed",
+  "description": "The section tree items are not showing the child definitions. Make sure the children are both sections and definitions, both in the same order as in the source code.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/254"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯reposectionmechanism"
+}

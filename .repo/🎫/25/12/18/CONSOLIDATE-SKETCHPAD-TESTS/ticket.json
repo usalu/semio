@@ -1,0 +1,6 @@
+{
+  "title": "Consolidate sketchpad tests from feature-based to app-based organization",
+  "status": "closed",
+  "description": "Consolidate all sketchpad tests from feature-based to app-based organization. One test per app covering all features.",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

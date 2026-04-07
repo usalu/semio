@@ -1,0 +1,30 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T14:25:59Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUseFailure",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/workspaces/elements/ui/src/elements.tsx",
+        "offset": 4481,
+        "limit": 200
+      },
+      "tool_use_id": "toolu_01JieVsZwF34ojMjRCrGiMuV",
+      "error": "File does not exist. Note: your current working directory is /workspaces/semio.",
+      "is_interrupt": false
+    }
+  },
+  "response": {}
+}

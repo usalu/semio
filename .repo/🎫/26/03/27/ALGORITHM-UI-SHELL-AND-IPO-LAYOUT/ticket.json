@@ -1,0 +1,12 @@
+{
+  "title": "Algorithm UI Shell And Ipo Layout",
+  "status": "open",
+  "description": "Align semio AlgorithmApp with elements/ui: fix TreeRow showing raw i18n ids in details panel; add IPO-style layout grouping input window kinds in one column with diff/output; extend TreeRow with label prop; run semio/ui tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1151"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪ee3dcdbb01d241dc993dd09fc5a78519"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Extend Cli with Hooks and Configure",
+  "status": "closed",
+  "description": "Implement hook command (git hooks: commit.starting/ended; agent hooks: agent.starting/ended, prompt.submit, compacting, tool.calling/ended, code.reading/edited, notification) and configure command that auto-configures pre-commit and agent hook configs for all supported clients. Remove old husky setup. Implement tool call blocking (deny git checkout/stash).",
+  "summary": "Added Input json.RawMessage to HookContext; hookCommand reads piped stdin (skips terminals) and stores the full client JSON payload. logHook includes it in the log entry. Added TestHookLoggingStdinInput. All 23 hook tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/607"
+  },
+  "goal": "🎯aioptimizedrepo"
+}

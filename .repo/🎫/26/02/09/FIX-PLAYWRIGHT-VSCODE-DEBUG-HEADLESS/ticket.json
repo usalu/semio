@@ -1,0 +1,5 @@
+{
+  "title": "Fix Playwright Vscode Debug Headless",
+  "status": "closed",
+  "summary": "Updated VS Code Playwright settings to run debug sessions headless in the devcontainer and documented the workflow."
+}

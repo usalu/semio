@@ -1,0 +1,13 @@
+{
+  "title": "Remove Coda and Semio Imports From Elements UI",
+  "status": "closed",
+  "description": "Remove all coda and semio imports from elements/ui. Refactor cleanly so elements/ui is fully self-contained with no dependencies on @semio/* or coda packages.",
+  "summary": "Removed all @semio and @coda imports from elements/ui. Replaced @semio/assets/icons import in index.tsx with direct lucide-react imports using the same semantic aliases. Replaced @semio/assets dependency with lucide-react in package.json. Removed @semio/assets path aliases from tsconfig.json. Removed @coda/desktop alias from .storybook/main.ts. TypeScript compilation passes cleanly with zero errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1086"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪9a745b4b43224e0da22585639e5aa956"
+  ]
+}

@@ -1,0 +1,374 @@
+{
+  "id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+  "uri": "semiorepo://s/dc7748a3-a373-4c66-998f-a5a1013458f3",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-13T12:25:55Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:25:54.525Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "type KitChange",
+            "includePattern": "**/semio/go/semio.go",
+            "isRegexp": false
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01JV9QZaiWV1ChBWUcL2b4rN__vscode-1773397499438",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚25⏱️55",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:26:43.489Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "multi_replace_string_in_file",
+          "tool_input": {
+            "explanation": "Update Kit Diff Helpers region to Kit Change Helpers, changing all 12 functions to return KitChange instead of KitDiff, with forward/backward/before/after semantics.",
+            "replacements": [
+              {
+                "filePath": "/workspaces/semio/semio/go/semio.go",
+                "oldString": "// #region 🔖Kit Diff Helpers\n// [👤semio📚go💻semio🔖kitdiffhelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers)\n// Kit Diff Helpers MUST provide convenience functions for single-entity kit diffs.\n\n// AddTypeToKit MUST return a diff with exactly one added type.\n// AddTypeToKit creates a diff that adds a single type to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddTypeToKit)\nfunc AddTypeToKit(typ Type) KitDiff {\n\treturn KitDiff{\n\t\tTypes: \u0026TypesDiff{\n\t\t\tAdded: []Type{typ},\n\t\t},\n\t}\n}\n\n// RemoveTypeFromKit MUST return a diff with exactly one removed type ID.\n// RemoveTypeFromKit creates a diff that removes a type by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveTypeFromKit)\nfunc RemoveTypeFromKit(typeGuid string) KitDiff {\n\treturn KitDiff{\n\t\tTypes: \u0026TypesDiff{\n\t\t\tRemoved: []TypeId{{Guid: typeGuid}},\n\t\t},\n\t}\n}\n\n// AddDesignToKit MUST return a diff with exactly one added design.\n// AddDesignToKit creates a diff that adds a single design to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddDesignToKit)\nfunc AddDesignToKit(design Design) KitDiff {\n\treturn KitDiff{\n\t\tDesigns: \u0026DesignsDiff{\n\t\t\tAdded: []Design{design},\n\t\t},\n\t}\n}\n\n// RemoveDesignFromKit MUST return a diff with exactly one removed design ID.\n// RemoveDesignFromKit creates a diff that removes a design by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveDesignFromKit)\nfunc RemoveDesignFromKit(designGuid string) KitDiff {\n\treturn KitDiff{\n\t\tDesigns: \u0026DesignsDiff{\n\t\t\tRemoved: []DesignId{{Guid: designGuid}},\n\t\t},\n\t}\n}\n\n// AddFileToKit MUST return a diff with exactly one added file.\n// AddFileToKit creates a diff that adds a single file to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddFileToKit)\nfunc AddFileToKit(file File) KitDiff {\n\treturn KitDiff{\n\t\tFiles: \u0026FilesDiff{\n\t\t\tAdded: []File{file},\n\t\t},\n\t}\n}\n\n// RemoveFileFromKit MUST return a diff with exactly one removed file ID.\n// RemoveFileFromKit creates a diff that removes a file by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveFileFromKit)\nfunc RemoveFileFromKit(fileGuid string) KitDiff {\n\treturn KitDiff{\n\t\tFiles: \u0026FilesDiff{\n\t\t\tRemoved: []FileId{{Guid: fileGuid}},\n\t\t},\n\t}\n}\n\n// AddPortToKit MUST return a diff with exactly one added port.\n// AddPortToKit creates a diff that adds a single port to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddPortToKit)\nfunc AddPortToKit(iface Port) KitDiff {\n\treturn KitDiff{\n\t\tPorts: \u0026PortsDiff{\n\t\t\tAdded: []Port{iface},\n\t\t},\n\t}\n}\n\n// RemovePortFromKit MUST return a diff with exactly one removed port ID.\n// RemovePortFromKit creates a diff that removes a port by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemovePortFromKit)\nfunc RemovePortFromKit(interfaceGuid string) KitDiff {\n\treturn KitDiff{\n\t\tPorts: \u0026PortsDiff{\n\t\t\tRemoved: []PortId{{Guid: interfaceGuid}},\n\t\t},\n\t}\n}\n\n// AddTagToKit MUST return a diff with exactly one added tag.\n// AddTagToKit creates a diff that adds a single tag to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddTagToKit)\nfunc AddTagToKit(tag Tag) KitDiff {\n\treturn KitDiff{\n\t\tTags: \u0026TagsDiff{\n\t\t\tAdded: []Tag{tag},\n\t\t},\n\t}\n}\n\n// RemoveTagFromKit MUST return a diff with exactly one removed tag ID.\n// RemoveTagFromKit creates a diff that removes a tag by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveTagFromKit)\nfunc RemoveTagFromKit(tagGuid string) KitDiff {\n\treturn KitDiff{\n\t\tTags: \u0026TagsDiff{\n\t\t\tRemoved: []TagId{{Guid: tagGuid}},\n\t\t},\n\t}\n}\n\n// AddConceptToKit MUST return a diff with exactly one added concept.\n// AddConceptToKit creates a diff that adds a single concept to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddConceptToKit)\nfunc AddConceptToKit(concept Concept) KitDiff {\n\treturn KitDiff{\n\t\tConcepts: \u0026ConceptsDiff{\n\t\t\tAdded: []Concept{concept},\n\t\t},\n\t}\n}\n\n// RemoveConceptFromKit MUST return a diff with exactly one removed concept ID.\n// RemoveConceptFromKit creates a diff that removes a concept by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveConceptFromKit)\nfunc RemoveConceptFromKit(conceptGuid string) KitDiff {\n\treturn KitDiff{\n\t\tConcepts: \u0026ConceptsDiff{\n\t\t\tRemoved: []ConceptId{{Guid: conceptGuid}},\n\t\t},\n\t}\n}\n\n// #endregion 🔖Kit Diff Helpers",
+                "newString": "// #region 🔖Kit Change Helpers\n// [👤semio📚go💻semio🔖kitchangehelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers)\n// Kit Change Helpers MUST provide convenience functions for single-entity kit changes.\n\n// AddTypeToKit MUST return a change with exactly one added type.\n// AddTypeToKit creates a change that adds a single type to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddTypeToKit)\nfunc AddTypeToKit(kit Kit, typ Type) KitChange {\n\tforward := KitDiff{\n\t\tTypes: \u0026TypesDiff{\n\t\t\tAdded: []Type{typ},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveTypeFromKit MUST return a change with exactly one removed type ID.\n// RemoveTypeFromKit creates a change that removes a type by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveTypeFromKit)\nfunc RemoveTypeFromKit(kit Kit, typeGuid string) KitChange {\n\tforward := KitDiff{\n\t\tTypes: \u0026TypesDiff{\n\t\t\tRemoved: []TypeId{{Guid: typeGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddDesignToKit MUST return a change with exactly one added design.\n// AddDesignToKit creates a change that adds a single design to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddDesignToKit)\nfunc AddDesignToKit(kit Kit, design Design) KitChange {\n\tforward := KitDiff{\n\t\tDesigns: \u0026DesignsDiff{\n\t\t\tAdded: []Design{design},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveDesignFromKit MUST return a change with exactly one removed design ID.\n// RemoveDesignFromKit creates a change that removes a design by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveDesignFromKit)\nfunc RemoveDesignFromKit(kit Kit, designGuid string) KitChange {\n\tforward := KitDiff{\n\t\tDesigns: \u0026DesignsDiff{\n\t\t\tRemoved: []DesignId{{Guid: designGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddFileToKit MUST return a change with exactly one added file.\n// AddFileToKit creates a change that adds a single file to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddFileToKit)\nfunc AddFileToKit(kit Kit, file File) KitChange {\n\tforward := KitDiff{\n\t\tFiles: \u0026FilesDiff{\n\t\t\tAdded: []File{file},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveFileFromKit MUST return a change with exactly one removed file ID.\n// RemoveFileFromKit creates a change that removes a file by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveFileFromKit)\nfunc RemoveFileFromKit(kit Kit, fileGuid string) KitChange {\n\tforward := KitDiff{\n\t\tFiles: \u0026FilesDiff{\n\t\t\tRemoved: []FileId{{Guid: fileGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddPortToKit MUST return a change with exactly one added port.\n// AddPortToKit creates a change that adds a single port to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddPortToKit)\nfunc AddPortToKit(kit Kit, iface Port) KitChange {\n\tforward := KitDiff{\n\t\tPorts: \u0026PortsDiff{\n\t\t\tAdded: []Port{iface},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemovePortFromKit MUST return a change with exactly one removed port ID.\n// RemovePortFromKit creates a change that removes a port by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemovePortFromKit)\nfunc RemovePortFromKit(kit Kit, interfaceGuid string) KitChange {\n\tforward := KitDiff{\n\t\tPorts: \u0026PortsDiff{\n\t\t\tRemoved: []PortId{{Guid: interfaceGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddTagToKit MUST return a change with exactly one added tag.\n// AddTagToKit creates a change that adds a single tag to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddTagToKit)\nfunc AddTagToKit(kit Kit, tag Tag) KitChange {\n\tforward := KitDiff{\n\t\tTags: \u0026TagsDiff{\n\t\t\tAdded: []Tag{tag},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveTagFromKit MUST return a change with exactly one removed tag ID.\n// RemoveTagFromKit creates a change that removes a tag by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveTagFromKit)\nfunc RemoveTagFromKit(kit Kit, tagGuid string) KitChange {\n\tforward := KitDiff{\n\t\tTags: \u0026TagsDiff{\n\t\t\tRemoved: []TagId{{Guid: tagGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddConceptToKit MUST return a change with exactly one added concept.\n// AddConceptToKit creates a change that adds a single concept to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddConceptToKit)\nfunc AddConceptToKit(kit Kit, concept Concept) KitChange {\n\tforward := KitDiff{\n\t\tConcepts: \u0026ConceptsDiff{\n\t\t\tAdded: []Concept{concept},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveConceptFromKit MUST return a change with exactly one removed concept ID.\n// RemoveConceptFromKit creates a change that removes a concept by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveConceptFromKit)\nfunc RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {\n\tforward := KitDiff{\n\t\tConcepts: \u0026ConceptsDiff{\n\t\t\tRemoved: []ConceptId{{Guid: conceptGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// #endregion 🔖Kit Change Helpers"
+              }
+            ]
+          },
+          "tool_use_id": "toolu_bdrk_01RKX2ZnNWduwSJWrXge5u95__vscode-1773397499439",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚26⏱️43",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:26:56.691Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "multi_replace_string_in_file",
+          "tool_input": {
+            "explanation": "Update Kit Diff Helpers region to Kit Change Helpers, changing all 12 functions to return KitChange instead of KitDiff, with forward/backward/before/after semantics.",
+            "replacements": [
+              {
+                "filePath": "/workspaces/semio/semio/go/semio.go",
+                "oldString": "// #region 🔖Kit Diff Helpers\n// [👤semio📚go💻semio🔖kitdiffhelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers)\n// Kit Diff Helpers MUST provide convenience functions for single-entity kit diffs.\n\n// AddTypeToKit MUST return a diff with exactly one added type.\n// AddTypeToKit creates a diff that adds a single type to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddTypeToKit)\nfunc AddTypeToKit(typ Type) KitDiff {\n\treturn KitDiff{\n\t\tTypes: \u0026TypesDiff{\n\t\t\tAdded: []Type{typ},\n\t\t},\n\t}\n}\n\n// RemoveTypeFromKit MUST return a diff with exactly one removed type ID.\n// RemoveTypeFromKit creates a diff that removes a type by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveTypeFromKit)\nfunc RemoveTypeFromKit(typeGuid string) KitDiff {\n\treturn KitDiff{\n\t\tTypes: \u0026TypesDiff{\n\t\t\tRemoved: []TypeId{{Guid: typeGuid}},\n\t\t},\n\t}\n}\n\n// AddDesignToKit MUST return a diff with exactly one added design.\n// AddDesignToKit creates a diff that adds a single design to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddDesignToKit)\nfunc AddDesignToKit(design Design) KitDiff {\n\treturn KitDiff{\n\t\tDesigns: \u0026DesignsDiff{\n\t\t\tAdded: []Design{design},\n\t\t},\n\t}\n}\n\n// RemoveDesignFromKit MUST return a diff with exactly one removed design ID.\n// RemoveDesignFromKit creates a diff that removes a design by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveDesignFromKit)\nfunc RemoveDesignFromKit(designGuid string) KitDiff {\n\treturn KitDiff{\n\t\tDesigns: \u0026DesignsDiff{\n\t\t\tRemoved: []DesignId{{Guid: designGuid}},\n\t\t},\n\t}\n}\n\n// AddFileToKit MUST return a diff with exactly one added file.\n// AddFileToKit creates a diff that adds a single file to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddFileToKit)\nfunc AddFileToKit(file File) KitDiff {\n\treturn KitDiff{\n\t\tFiles: \u0026FilesDiff{\n\t\t\tAdded: []File{file},\n\t\t},\n\t}\n}\n\n// RemoveFileFromKit MUST return a diff with exactly one removed file ID.\n// RemoveFileFromKit creates a diff that removes a file by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveFileFromKit)\nfunc RemoveFileFromKit(fileGuid string) KitDiff {\n\treturn KitDiff{\n\t\tFiles: \u0026FilesDiff{\n\t\t\tRemoved: []FileId{{Guid: fileGuid}},\n\t\t},\n\t}\n}\n\n// AddPortToKit MUST return a diff with exactly one added port.\n// AddPortToKit creates a diff that adds a single port to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddPortToKit)\nfunc AddPortToKit(iface Port) KitDiff {\n\treturn KitDiff{\n\t\tPorts: \u0026PortsDiff{\n\t\t\tAdded: []Port{iface},\n\t\t},\n\t}\n}\n\n// RemovePortFromKit MUST return a diff with exactly one removed port ID.\n// RemovePortFromKit creates a diff that removes a port by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemovePortFromKit)\nfunc RemovePortFromKit(interfaceGuid string) KitDiff {\n\treturn KitDiff{\n\t\tPorts: \u0026PortsDiff{\n\t\t\tRemoved: []PortId{{Guid: interfaceGuid}},\n\t\t},\n\t}\n}\n\n// AddTagToKit MUST return a diff with exactly one added tag.\n// AddTagToKit creates a diff that adds a single tag to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddTagToKit)\nfunc AddTagToKit(tag Tag) KitDiff {\n\treturn KitDiff{\n\t\tTags: \u0026TagsDiff{\n\t\t\tAdded: []Tag{tag},\n\t\t},\n\t}\n}\n\n// RemoveTagFromKit MUST return a diff with exactly one removed tag ID.\n// RemoveTagFromKit creates a diff that removes a tag by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveTagFromKit)\nfunc RemoveTagFromKit(tagGuid string) KitDiff {\n\treturn KitDiff{\n\t\tTags: \u0026TagsDiff{\n\t\t\tRemoved: []TagId{{Guid: tagGuid}},\n\t\t},\n\t}\n}\n\n// AddConceptToKit MUST return a diff with exactly one added concept.\n// AddConceptToKit creates a diff that adds a single concept to a kit.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/AddConceptToKit)\nfunc AddConceptToKit(concept Concept) KitDiff {\n\treturn KitDiff{\n\t\tConcepts: \u0026ConceptsDiff{\n\t\t\tAdded: []Concept{concept},\n\t\t},\n\t}\n}\n\n// RemoveConceptFromKit MUST return a diff with exactly one removed concept ID.\n// RemoveConceptFromKit creates a diff that removes a concept by GUID.\n// [👤semio📚go💻semio🔖kitdiffhelpers🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Diff%20Helpers/d/i/RemoveConceptFromKit)\nfunc RemoveConceptFromKit(conceptGuid string) KitDiff {\n\treturn KitDiff{\n\t\tConcepts: \u0026ConceptsDiff{\n\t\t\tRemoved: []ConceptId{{Guid: conceptGuid}},\n\t\t},\n\t}\n}\n\n// #endregion 🔖Kit Diff Helpers",
+                "newString": "// #region 🔖Kit Change Helpers\n// [👤semio📚go💻semio🔖kitchangehelpers](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers)\n// Kit Change Helpers MUST provide convenience functions for single-entity kit changes.\n\n// AddTypeToKit MUST return a change with exactly one added type.\n// AddTypeToKit creates a change that adds a single type to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addtypetokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddTypeToKit)\nfunc AddTypeToKit(kit Kit, typ Type) KitChange {\n\tforward := KitDiff{\n\t\tTypes: \u0026TypesDiff{\n\t\t\tAdded: []Type{typ},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveTypeFromKit MUST return a change with exactly one removed type ID.\n// RemoveTypeFromKit creates a change that removes a type by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removetypefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveTypeFromKit)\nfunc RemoveTypeFromKit(kit Kit, typeGuid string) KitChange {\n\tforward := KitDiff{\n\t\tTypes: \u0026TypesDiff{\n\t\t\tRemoved: []TypeId{{Guid: typeGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddDesignToKit MUST return a change with exactly one added design.\n// AddDesignToKit creates a change that adds a single design to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️adddesigntokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddDesignToKit)\nfunc AddDesignToKit(kit Kit, design Design) KitChange {\n\tforward := KitDiff{\n\t\tDesigns: \u0026DesignsDiff{\n\t\t\tAdded: []Design{design},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveDesignFromKit MUST return a change with exactly one removed design ID.\n// RemoveDesignFromKit creates a change that removes a design by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removedesignfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveDesignFromKit)\nfunc RemoveDesignFromKit(kit Kit, designGuid string) KitChange {\n\tforward := KitDiff{\n\t\tDesigns: \u0026DesignsDiff{\n\t\t\tRemoved: []DesignId{{Guid: designGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddFileToKit MUST return a change with exactly one added file.\n// AddFileToKit creates a change that adds a single file to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addfiletokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddFileToKit)\nfunc AddFileToKit(kit Kit, file File) KitChange {\n\tforward := KitDiff{\n\t\tFiles: \u0026FilesDiff{\n\t\t\tAdded: []File{file},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveFileFromKit MUST return a change with exactly one removed file ID.\n// RemoveFileFromKit creates a change that removes a file by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removefilefromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveFileFromKit)\nfunc RemoveFileFromKit(kit Kit, fileGuid string) KitChange {\n\tforward := KitDiff{\n\t\tFiles: \u0026FilesDiff{\n\t\t\tRemoved: []FileId{{Guid: fileGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddPortToKit MUST return a change with exactly one added port.\n// AddPortToKit creates a change that adds a single port to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addporttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddPortToKit)\nfunc AddPortToKit(kit Kit, iface Port) KitChange {\n\tforward := KitDiff{\n\t\tPorts: \u0026PortsDiff{\n\t\t\tAdded: []Port{iface},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemovePortFromKit MUST return a change with exactly one removed port ID.\n// RemovePortFromKit creates a change that removes a port by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removeportfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemovePortFromKit)\nfunc RemovePortFromKit(kit Kit, interfaceGuid string) KitChange {\n\tforward := KitDiff{\n\t\tPorts: \u0026PortsDiff{\n\t\t\tRemoved: []PortId{{Guid: interfaceGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddTagToKit MUST return a change with exactly one added tag.\n// AddTagToKit creates a change that adds a single tag to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addtagtokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddTagToKit)\nfunc AddTagToKit(kit Kit, tag Tag) KitChange {\n\tforward := KitDiff{\n\t\tTags: \u0026TagsDiff{\n\t\t\tAdded: []Tag{tag},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveTagFromKit MUST return a change with exactly one removed tag ID.\n// RemoveTagFromKit creates a change that removes a tag by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removetagfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveTagFromKit)\nfunc RemoveTagFromKit(kit Kit, tagGuid string) KitChange {\n\tforward := KitDiff{\n\t\tTags: \u0026TagsDiff{\n\t\t\tRemoved: []TagId{{Guid: tagGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// AddConceptToKit MUST return a change with exactly one added concept.\n// AddConceptToKit creates a change that adds a single concept to a kit.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️addconcepttokit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/AddConceptToKit)\nfunc AddConceptToKit(kit Kit, concept Concept) KitChange {\n\tforward := KitDiff{\n\t\tConcepts: \u0026ConceptsDiff{\n\t\t\tAdded: []Concept{concept},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// RemoveConceptFromKit MUST return a change with exactly one removed concept ID.\n// RemoveConceptFromKit creates a change that removes a concept by GUID.\n// [👤semio📚go💻semio🔖kitchangehelpers🛠️removeconceptfromkit](semiorepo://p/u/semio/b/l/go/f/semio.go/s/Kit%20Change%20Helpers/d/i/RemoveConceptFromKit)\nfunc RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {\n\tforward := KitDiff{\n\t\tConcepts: \u0026ConceptsDiff{\n\t\t\tRemoved: []ConceptId{{Guid: conceptGuid}},\n\t\t},\n\t}\n\tafter := ApplyKitDiff(kit, forward)\n\tbackward := InverseKitDiff(kit, forward)\n\treturn KitChange{Forward: forward, Backward: backward, Before: \u0026kit, After: \u0026after}\n}\n\n// #endregion 🔖Kit Change Helpers"
+              }
+            ]
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01RKX2ZnNWduwSJWrXge5u95__vscode-1773397499439",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚26⏱️57",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:27:01.512Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "AddTypeToKit\\|RemoveTypeFromKit\\|AddDesignToKit\\|RemoveDesignFromKit\\|AddFileToKit\\|RemoveFileFromKit\\|AddPortToKit\\|RemovePortFromKit\\|AddTagToKit\\|RemoveTagFromKit\\|AddConceptToKit\\|RemoveConceptFromKit",
+            "isRegexp": true,
+            "includePattern": "**/semio/go/**"
+          },
+          "tool_use_id": "toolu_bdrk_01NcgYd5RWYjGwXurJ5B3nsL__vscode-1773397499440",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚27⏱️02",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:27:14.822Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "AddTypeToKit\\|RemoveTypeFromKit\\|AddDesignToKit\\|RemoveDesignFromKit\\|AddFileToKit\\|RemoveFileFromKit\\|AddPortToKit\\|RemovePortFromKit\\|AddTagToKit\\|RemoveTagFromKit\\|AddConceptToKit\\|RemoveConceptFromKit",
+            "isRegexp": true,
+            "includePattern": "**/semio/go/**"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01NcgYd5RWYjGwXurJ5B3nsL__vscode-1773397499440",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚27⏱️15",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:27:18.416Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "isRegexp": true,
+            "query": "AddTypeToKit|RemoveTypeFromKit|AddDesignToKit|RemoveDesignFromKit|AddFileToKit|RemoveFileFromKit|AddPortToKit|RemovePortFromKit|AddTagToKit|RemoveTagFromKit|AddConceptToKit|RemoveConceptFromKit"
+          },
+          "tool_use_id": "toolu_bdrk_017ZqhmB4WnCbiCe7JaJtA4m__vscode-1773397499441",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚27⏱️18",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:27:30.136Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "isRegexp": true,
+            "query": "AddTypeToKit|RemoveTypeFromKit|AddDesignToKit|RemoveDesignFromKit|AddFileToKit|RemoveFileFromKit|AddPortToKit|RemovePortFromKit|AddTagToKit|RemoveTagFromKit|AddConceptToKit|RemoveConceptFromKit"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_017ZqhmB4WnCbiCe7JaJtA4m__vscode-1773397499441",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚27⏱️30",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:27:41.512Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio/semio/go \u0026\u0026 go build ./...",
+            "explanation": "Compile the Go package to verify the changes are syntactically correct.",
+            "goal": "Verify Go compilation",
+            "isBackground": false,
+            "timeout": 60000
+          },
+          "tool_use_id": "toolu_bdrk_01JaG2L8sqS4wTMo34yWZzK2__vscode-1773397499442",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "command": "cd /workspaces/semio/semio/go \u0026\u0026 go build ./...",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚27⏱️42",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:27:53.641Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "cd /workspaces/semio/semio/go \u0026\u0026 go build ./...",
+            "explanation": "Compile the Go package to verify the changes are syntactically correct.",
+            "goal": "Verify Go compilation",
+            "isBackground": false,
+            "timeout": 60000
+          },
+          "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio/semio/go \u0026\u0026 go build ./...`, and this is the output of running that command instead:\nvscode ➜ /workspaces/semio (ueli/latest) $  cd /workspaces/semio/semio/go \u0026\u0026 go \nbuild ./...\n",
+          "tool_use_id": "toolu_bdrk_01JaG2L8sqS4wTMo34yWZzK2__vscode-1773397499442",
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "hookEventName": "PostToolUse"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "command": "cd /workspaces/semio/semio/go \u0026\u0026 go build ./...",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚27⏱️54",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-13T12:28:01.489Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "dc7748a3-a373-4c66-998f-a5a1013458f3",
+          "agent_id": "96b48a02-66b3-44cc-85bb-6de0b18a3be2",
+          "agent_type": "semio",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.ended acknowledged",
+            "hookEventName": "SubagentStop"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰12⌚28⏱️02",
+        "session": "⚪dc7748a3a3734c66998fa5a1013458f3"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

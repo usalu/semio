@@ -1,0 +1,12 @@
+{
+  "title": "Hide Add and Duplicate Buttons for Abstract Types in Workbench",
+  "status": "closed",
+  "description": "In the sketchpad workbench panel, TypeTreeItem shows \"add piece\" and \"duplicate type\" action buttons. Abstract types (type.isAbstract === true) should not show either of these buttons since abstract types cannot be instantiated as pieces and shouldn't be duplicated.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1222"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪6575032cf16b41b580519b491f432e0c"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Include Event-Specific Data in Agent Hook Logs",
+  "status": "closed",
+  "description": "All logs from agent hooks contain only general information (kind, session, timestamp, client, transcript) in the `event` field and empty `response` for allowed events. Event-specific data (like command for terminal events, prompt for prompt-submitting, tool name/input for tool events, query/include/exclude for search events, path/old/new for code editing events, etc.) must be included in the logs. Add a `data` field to `HookLogEntry` that stores the marshaled `HookResult` (with `Raw` excluded via json:\"-\" to avoid duplicating `input`). Update tests to verify event-specific data is present in log files.",
+  "summary": "Added event-specific data to all agent hook logs. Changed HookResultBase.Raw json tag to json:\"-\" to prevent duplication. Added Data json.RawMessage field to HookLogEntry. Updated logHook to marshal the full HookResult into entry.Data so every log now contains structured event-specific fields (tool name/input, prompt, command, query/include/exclude, path/old/new). Updated 3 hook log tests to verify data field. All pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/640"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

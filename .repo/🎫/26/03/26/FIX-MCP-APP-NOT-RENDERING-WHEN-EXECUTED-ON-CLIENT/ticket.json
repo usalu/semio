@@ -1,0 +1,13 @@
+{
+  "title": "Fix Mcp App Not Rendering When Executed on Client",
+  "status": "closed",
+  "description": "Fix MCP App not rendering when executed on client. Check mcp-app.md reference and ensure everything is set up correctly in semio/engine and semio/ui. Previous investigation confirmed server-side meta serialization is correct. Need to find and fix root cause in built HTML, client-side initialization, or ext-apps library usage.",
+  "summary": "Root cause: The `registerAppTool` helper from `@modelcontextprotocol/ext-apps/server` normalizes tool `_meta` to include BOTH the nested key `_meta.ui.resourceUri` AND the flat key `_meta[\"ui/resourceUri\"]`. The `RESOURCE_URI_META_KEY` constant exported by the SDK is `\"ui/resourceUri\"` (flat). Semio's raw `@mcp.tool(meta={\"ui\": {\"resourceUri\": URI}})` only produced the nested key. Hosts looking for the flat key couldn't find the resource URI and therefore didn't render the MCP App UI.\n\nFix: Created `_APP_RESOURCE_META = {\"ui\": {\"resourceUri\": _APP_RESOURCE_URI}, \"ui/resourceUri\": _APP_RESOURCE_URI}` constant and updated all 9 tool decorators to use it. Added `ontoolcancelled` handler to match reference patterns. Rebuilt dist/mcp-app.html. All 164 engine tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1114"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪dbbe3f8c5ca7423a9f465614d629083d"
+  ]
+}

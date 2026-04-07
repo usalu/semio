@@ -1,0 +1,30 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.starting",
+    "second": "2026-03-16T14:48:13Z",
+    "session": "dc1a0640-a153-493d-84ba-68b2ae6d0ed3",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc1a0640-a153-493d-84ba-68b2ae6d0ed3.jsonl"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T14:48:13.877Z",
+      "hook_event_name": "PreToolUse",
+      "session_id": "dc1a0640-a153-493d-84ba-68b2ae6d0ed3",
+      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc1a0640-a153-493d-84ba-68b2ae6d0ed3.jsonl",
+      "tool_name": "run_in_terminal",
+      "tool_input": {
+        "command": "cd /workspaces/semio/semio/sketchpad \u0026\u0026 npx playwright test sketchpad.test.ts --grep \"Design\" --reporter=line --timeout=600000 2\u003e\u00261 | grep -v \"WebGL\\|THREE\\|WEBGL\\|texture\\|shader\\|renderer\\|GL_\\|framebuffer\\|drawElements\\|wasm\" | tail -100",
+        "explanation": "Run the Design test from the sketchpad directory so the dev server starts correctly",
+        "goal": "Run Design test",
+        "isBackground": true,
+        "timeout": 0
+      },
+      "tool_use_id": "toolu_bdrk_01QhqUiGGKmrv2j7Lo1a51wC__vscode-1773671759785",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Fix Auto Select Bug and Enable Standard Multi Selection in Kit Diagram",
+  "status": "closed",
+  "summary": "Fixed ID mismatch and enabled multi-selection in Kit diagram.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/247"
+  }
+}

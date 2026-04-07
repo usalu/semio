@@ -1,0 +1,31 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "cursor-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.starting",
+    "second": "2026-03-16T16:24:52Z",
+    "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+  },
+  "native": {
+    "event": {
+      "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+      "generation_id": "0108126a-3d76-4dd3-9b07-650b9a5dbecb",
+      "model": "default",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/workspaces/semio/semio/go/semio.go"
+      },
+      "tool_use_id": "tool_9cccda70-7339-454d-825d-4a051386479",
+      "hook_event_name": "preToolUse",
+      "cursor_version": "2.6.19",
+      "workspace_roots": [
+        "/workspaces/semio"
+      ],
+      "user_email": "ueli.saluz@posteo.de",
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    }
+  },
+  "response": {}
+}

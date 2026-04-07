@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "incremental": false,
+    "noEmit": true,
+    "types": [
+      "react",
+      "react-dom",
+      "vitest/importMeta"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@semio/algorithms": [
+        "./index.ts"
+      ],
+      "@semio/algorithms/*": [
+        "./*"
+      ],
+      "@semio/ui": [
+        "../ui/index.tsx"
+      ],
+      "@semio/ui/*": [
+        "../ui/*"
+      ],
+      "@semio/js": [
+        "../js/index.ts"
+      ],
+      "@semio/js/*": [
+        "../js/*"
+      ],
+      "@elements/ui": [
+        "../../elements/ui/index.tsx"
+      ],
+      "@elements/ui/elements": [
+        "../../elements/ui/index.tsx"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "storybook-static"
+  ]
+}

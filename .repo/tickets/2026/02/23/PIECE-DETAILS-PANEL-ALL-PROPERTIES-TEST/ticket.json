@@ -1,0 +1,26 @@
+{
+  "title": "Piece Details Panel All Properties Test",
+  "status": "closed",
+  "prompt": "Ensure a piece shows all details (ID, Type, Variant, Parent Connection with Connecting/Connected Piece+Port IDs, Plane Translation/Orientation, Diagram offsets) in the property panel when selected. Add comprehensive e2e test coverage for all piece detail properties.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/676"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-02-23T19:56:06.751148757Z",
+  "finished": "2026-03-05T13:26:26.565875839Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-23 19:56:06",
+        "finished": "2026-03-05 13:26:26"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "47c7c04e9e78a9c26d2e0bb07afd6f05ae06bffe",
+      "prompt": "Ensure a piece shows all details (ID, Type, Variant, Parent Connection with Connecting/Connected Piece+Port IDs, Plane Translation/Orientation, Diagram offsets) in the property panel when selected. Add comprehensive e2e test coverage for all piece detail properties.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

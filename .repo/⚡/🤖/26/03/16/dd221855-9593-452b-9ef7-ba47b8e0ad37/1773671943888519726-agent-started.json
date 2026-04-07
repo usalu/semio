@@ -1,0 +1,21 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.started",
+    "second": "2026-03-16T14:39:03Z",
+    "session": "dd221855-9593-452b-9ef7-ba47b8e0ad37",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/dd221855-9593-452b-9ef7-ba47b8e0ad37.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "dd221855-9593-452b-9ef7-ba47b8e0ad37",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/dd221855-9593-452b-9ef7-ba47b8e0ad37.jsonl",
+      "cwd": "/workspaces/semio",
+      "hook_event_name": "SessionStart",
+      "source": "startup"
+    }
+  },
+  "response": {}
+}

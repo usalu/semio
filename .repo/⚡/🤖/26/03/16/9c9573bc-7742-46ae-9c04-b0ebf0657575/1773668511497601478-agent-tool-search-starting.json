@@ -1,0 +1,29 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "cursor-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.starting",
+    "second": "2026-03-16T13:41:51Z",
+    "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+  },
+  "native": {
+    "event": {
+      "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+      "generation_id": "c421f306-6a0e-4fcd-b949-f3f75020b8ab",
+      "model": "default",
+      "content": "    areValidationResultsEqual,\n    export_design_model,\n    export_kit,\n    flattenDesignDict,\n    get_geometric_insights_for_model,\n    getKitChange,\n    getKitDiffDict,\n    import_kit,\n    inverseKitDiffDict,\n    parseValidationResult,\n    sumQualityInDesignDict,\n    validateKitDict,\n)\n\nTOLERANCE = 0.001\nASSETS_DIR = \"../assets/semio\"\nREPORTS_DIR = Path(__file__).resolve().parents[2] / \"reports\" / \"export-design-model\"\n\n\ndef load_json(filename: str) -\u003e dict:\n    path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, filename)\n    if not os.path.exists(path):\n        raise FileNotFoundError(f\"Asset not found: {path}\")\n    with open(path, \"r\", encoding=\"utf-8\") as f:\n        return json.load(f)\n\n\ndef load_kit(filename: str) -\u003e dict:\n    \"\"\"Load and normalize kit JSON for Kit.parse (flattens parent/folder refs, etc.).\"\"\"\n    data = load_json(filename)\n    if \"guid\" in data and \"uri\" not in data:\n        data[\"uri\"] = data[\"guid\"]\n    for key in [\"types\", \"designs\", \"files\", \"folders\", \"authors\", \"concepts\", \"models\", \"connectors\", \"pieces\", \"connections\", \"layers\", \"groups\", \"stats\", \"ports\", \"qualities\", \"attributes\"]:\n        if key not in data or data[key] is None:\n            data[key] = []\n    for collection in [\"types\", \"designs\", \"folders\"]:\n        if collection in data:\n            for item in data[collection]:\n                if \"parent\" in item and isinstance(item[\"parent\"], dict) and \"guid\" in item[\"parent\"]:\n                    item[\"parent\"] = item[\"parent\"][\"guid\"]",
+      "file_path": "/workspaces/semio/semio/py/semio.test.py",
+      "attachments": [],
+      "hook_event_name": "beforeReadFile",
+      "cursor_version": "2.6.19",
+      "workspace_roots": [
+        "/workspaces/semio"
+      ],
+      "user_email": "ueli.saluz@posteo.de",
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    }
+  },
+  "response": {}
+}

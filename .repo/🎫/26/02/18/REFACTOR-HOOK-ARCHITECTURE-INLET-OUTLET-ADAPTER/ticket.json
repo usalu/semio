@@ -1,0 +1,10 @@
+{
+  "title": "Refactor Hook Architecture Inlet-Outlet Adapter",
+  "status": "closed",
+  "description": "Refactor the hook architecture to use inlet adapter -\u003e neutral implementation -\u003e outlet adapter pattern. CLI should accept native client events (VSCode PreToolUse, Windsurf pre_read_code, etc.) and resolve them to neutral events based on client + stdin context. The native configs should fire native events, not neutral events.",
+  "summary": "Added HookAgentToolSearched (agent.tool.searching.ended) event for post-tool-use of search tools. resolvePostToolUse now returns HookAgentToolSearched for ToolKindCodeSearch. Added HookResultAgentToolSearched struct, RunHook case, trackHookInOpenTicket case, and updated windsurf post_read_code resolver. All test expectations updated.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/625"
+  },
+  "goal": "🎯devops"
+}

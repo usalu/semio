@@ -1,0 +1,36 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T14:31:37Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/workspaces/elements/ui/vitest.config.ts"
+      },
+      "tool_response": {
+        "type": "text",
+        "file": {
+          "filePath": "/workspaces/elements/ui/vitest.config.ts",
+          "content": "import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  test: {\n    environment: \"node\",\n    include: [\"elements.tsx\"],\n    passWithNoTests: true,\n  },\n});\n",
+          "numLines": 10,
+          "startLine": 1,
+          "totalLines": 10
+        }
+      },
+      "tool_use_id": "toolu_0198hJ1iaFjEA7RA3ePUgtSB"
+    }
+  },
+  "response": {}
+}

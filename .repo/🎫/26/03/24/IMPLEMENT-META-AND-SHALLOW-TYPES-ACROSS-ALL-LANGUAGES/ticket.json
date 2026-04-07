@@ -1,0 +1,13 @@
+{
+  "title": "Implement Meta And Shallow Types Across All Languages",
+  "status": "closed",
+  "description": "Implement *Meta and *Shallow types for Kit, Design, Type (and other entities) across all programming languages (Python, TypeScript/JS, Go, Rust, C#/.NET, GraphQL schema, JSON schema). Meta = all non-heavy properties, no child collections. Shallow = same as normal but child collections only have Meta information. Create test assets: metabolism.shallow.kit.semio.json, nakagin-capsule-tower.shallow.design.semio.json, tambour.shallow.type.semio.json, and .meta variants. Extend all tests.",
+  "summary": "Implemented *Meta and *Shallow types across all programming languages. Meta = all non-heavy properties, no child collections. Shallow = same as normal but child collections contain Meta items instead of full entities. TypeScript: 19 MetaSchemas + 19 ShallowSchemas + 6 conversion functions + 14 test cases. Go: 16 sub-entity Meta + 3 main Meta + 3 Shallow structs + 21 conversion functions + 8 tests. Rust: All Meta/Shallow structs with to_meta/to_shallow impl methods + 7 tests. Python: 19 Meta TypedDicts + 3 Shallow TypedDicts + 22 conversion functions + 7 tests. C#/.NET: All Meta/Shallow classes + MetaShallowConversions + 7 tests. Assets: 6 test JSON files. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1064"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪7607d1209cc84fc4b8b2b4df61c104d3"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Escape Multiline Properties in List Output",
+  "status": "closed",
+  "description": "Make sure the content of all properties of items are properly escaped into a single line string to be between property tags in CLI list output. Currently, multiline content like ticket summaries breaks the formatting.",
+  "summary": "Fixed multiline properties in CLI list output by escaping newlines (\\n, \\r\\n, \\r) to spaces in collectEntityProps's appendNonEmpty helper. This ensures all property values (summaries, descriptions, prompts, commit messages) are single-line strings when rendered between backtick delimiters in markdown output and in human-readable output. Added test TestCollectEntityProps_MultilineEscaped covering tickets, goals, policies, and commits with multiline content.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/446"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
+}

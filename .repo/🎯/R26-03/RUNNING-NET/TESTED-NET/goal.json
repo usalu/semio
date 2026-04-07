@@ -1,0 +1,15 @@
+{
+  "title": "Tested .NET",
+  "description": "Goal for Tested .NET",
+  "prompt": "Instructions for Tested .NET",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯r2603🎯runningnet",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/362"
+  }
+}

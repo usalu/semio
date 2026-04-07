@@ -1,0 +1,242 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// #region 🔖Devcontainer
+{
+  "name": "semio",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "runArgs": ["--shm-size=1gb"],
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    },
+    "ghcr.io/balazs23/devcontainers-features/nx:1": {},
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.25"
+    },
+    "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.14"
+    },
+    "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {
+      "version": "0.9.26"
+    },
+    "ghcr.io/jsburckhardt/devcontainer-features/ruff:1": {
+      "version": "0.14.13"
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "8.0",
+      "additionalVersions": "7.0 9.0 10.0"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "1.92",
+      "targets": "wasm32-unknown-unknown"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "2.52"
+    },
+    "ghcr.io/devcontainers/features/git-lfs:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/warrenbuckley/codespace-features/sqlite:1": {}
+  },
+  "workspaceFolder": "/workspaces/semio",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+  "postAttachCommand": "bash .devcontainer/post-attach.sh",
+  "forwardPorts": [
+    2507,
+    3000,
+    4000,
+    4321,
+    5678,
+    6006,
+    6274,
+    6277
+  ],
+  "portsAttributes": {
+    "2507": {
+      "label": "Engine API",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Sketchpad Dev",
+      "onAutoForward": "notify"
+    },
+    "4000": {
+      "label": "Play Dev",
+      "onAutoForward": "notify"
+    },
+    "4321": {
+      "label": "Docs Dev",
+      "onAutoForward": "notify"
+    },
+    "5678": {
+      "label": "Python Debugger",
+      "onAutoForward": "silent"
+    },
+    "6006": {
+      "label": "Storybook",
+      "onAutoForward": "notify"
+    },
+    "6274": {
+      "label": "MCP Inspector",
+      "onAutoForward": "notify"
+    },
+    "6277": {
+      "label": "MCP Inspector Proxy",
+      "onAutoForward": "notify"
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=${localWorkspaceFolderBasename}-claude,target=/home/vscode/.claude,type=volume",
+    "source=${localWorkspaceFolderBasename}-codex,target=/home/vscode/.codex,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-cursor,target=/home/vscode/.config/cursor,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-antigravity,target=/home/vscode/.config/antigravity,type=volume",
+    "source=${localWorkspaceFolderBasename}-config-openai,target=/home/vscode/.config/openai,type=volume",
+    "source=${localWorkspaceFolderBasename}-codeium,target=/home/vscode/.codeium,type=volume",
+    "source=${localWorkspaceFolderBasename}-gitkraken-desktop,target=/home/vscode/.gitkraken,type=volume",
+    "source=${localWorkspaceFolderBasename}-gitkraken-cli,target=/home/vscode/.local/share/GitKrakenCLI,type=volume",
+    "source=${localWorkspaceFolderBasename}-gitkraken-workspaces,target=/home/vscode/.local/share/gk,type=volume",
+    "source=${localWorkspaceFolderBasename}-f3d,target=/home/vscode/.config/F3D,type=volume",
+    "source=${localWorkspaceFolderBasename}-cursor-server,target=/home/vscode/.cursor-server,type=volume",
+    "source=${localWorkspaceFolderBasename}-antigravity-server,target=/home/vscode/.antigravity-server,type=volume",
+    "source=${localWorkspaceFolderBasename}-vscode-server,target=/home/vscode/.vscode-server,type=volume",
+    "source=${localWorkspaceFolderBasename}-windsurf-server,target=/home/vscode/.windsurf-server,type=volume",
+    "source=${localWorkspaceFolderBasename}-kiro,target=/home/vscode/.kiro,type=volume",
+    "source=${localWorkspaceFolderBasename}-ms-playwright,target=/home/vscode/.cache/ms-playwright,type=volume"
+  ],
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
+    "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
+    "SEMIO_GITKRAKEN_AUTO_START": "false",
+    "SEMIO_F3D_AUTO_START": "true",
+    "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL": "",
+    "LANG": "en_US.UTF-8",
+    "LC_ALL": "en_US.UTF-8",
+    "LC_CTYPE": "en_US.UTF-8",
+    "DISPLAY": ":99",
+    "ELECTRON_DISABLE_SANDBOX": "1",
+    "EDITOR": "code --wait"
+  },
+  "remoteEnv": {
+    "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright"
+  },
+  "customizations": {
+    "vscode": {
+      "remoteEnv": {
+        "VSCODE_AGENT_FOLDER": "/home/vscode/.antigravity-server"
+      },
+      "extensions": [
+        // #region 🔖Extensions Repo
+        "nrwl.angular-console",
+        // #endregion 🔖Extensions Repo
+        // #region 🔖Extensions GitHub
+        "github.vscode-pull-request-github",
+        "github.vscode-github-actions",
+        // #endregion 🔖Extensions GitHub
+        // #region 🔖Extensions Toml
+        "tamasfe.even-better-toml",
+        // #endregion 🔖Extensions Toml
+        // #region 🔖Extensions Yaml
+        "redhat.vscode-yaml",
+        // #endregion 🔖Extensions Yaml
+        // #region 🔖Extensions Data
+        "ms-toolsai.datawrangler",
+        "mechatroner.rainbow-csv",
+        // #endregion 🔖Extensions Data
+        // #region 🔖Extensions Graphql
+        "graphql.vscode-graphql",
+        "graphql.vscode-graphql-syntax",
+        // #endregion 🔖Extensions Graphql
+        // #region 🔖Extensions Formatter
+        "esbenp.prettier-vscode",
+        // #endregion 🔖Extensions Formatter
+        // #region 🔖Extensions JavaScript
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "unifiedjs.vscode-mdx",
+        "statelyai.stately-vscode",
+        "vitest.explorer",
+        "ms-playwright.playwright",
+        // #endregion 🔖Extensions JavaScript
+        // #region 🔖Extensions Dotnet
+        "ms-dotnettools.vscode-dotnet-pack",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        // #endregion 🔖Extensions Dotnet
+        // #region 🔖Extensions Python
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-toolsai.jupyter",
+        // #endregion 🔖Extensions Python
+        // #region 🔖Extensions Rust
+        "rust-lang.rust-analyzer",
+        // #endregion 🔖Extensions Rust
+        // #region 🔖Extensions Go
+        "golang.go",
+        // #endregion 🔖Extensions Go
+        // #region 🔖Extensions Ai
+        "github.copilot-chat",
+        "anthropic.claude-code",
+        "openai.chatgpt",
+        // #endregion 🔖Extensions Ai
+        // #region 🔖Extensions Utility
+        "mermaidchart.vscode-mermaid-chart",
+        "gruntfuggly.todo-tree",
+        "jebbs.plantuml",
+        "jock.svg"
+        // #endregion 🔖Extensions Utility
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "always"
+        },
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "prettier.configPath": ".prettierrc.json",
+        "prettier.ignorePath": ".prettierignore",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        },
+        "[csharp]": {
+          "editor.defaultFormatter": "ms-dotnettools.csharp"
+        },
+        "python.analysis.typeCheckingMode": "off",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestArgs": ["."],
+        "python.testing.cwd": "${containerWorkspaceFolder}",
+        "python.analysis.languageServerMode": "full",
+        "sqltools.useNodeRuntime": true,
+        "sqltools.connections": [
+          {
+            "name": "metabolism",
+            "database": "./examples/metabolism/.semio/kit.db",
+            "driver": "SQLite",
+            "previewLimit": 50
+          }
+        ],
+        "dotnet.defaultSolution": "Monorepo.sln",
+        "chat.agent.maxRequests": 5000,
+        "editor.minimap.enabled": true,
+        "[svg]": {
+          "editor.defaultFormatter": "jock.svg"
+        },
+        "rust-analyzer.linkedProjects": ["semio/rs/Cargo.toml"],
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
+// #endregion 🔖Devcontainer

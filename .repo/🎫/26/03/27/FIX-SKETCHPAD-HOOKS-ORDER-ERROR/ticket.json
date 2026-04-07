@@ -1,0 +1,13 @@
+{
+  "title": "Fix Sketchpad Hooks Order Error",
+  "status": "closed",
+  "description": "Fix React hooks order error in SketchpadScopeProvider - useEffect is called after conditional early return violating Rules of Hooks",
+  "summary": "Moved the useEffect for auto-importing kits from after the conditional early return (if !persistedKitsReady return null) to before it, fixing the React Rules of Hooks violation. The effect now guards internally with persistedKitsReady and looks up the store from the module-level stores Map. All 3 useEffects now run unconditionally in consistent order on every render.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1117"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪b37837fe0c4c4023b6c777a429a34c81"
+  ]
+}

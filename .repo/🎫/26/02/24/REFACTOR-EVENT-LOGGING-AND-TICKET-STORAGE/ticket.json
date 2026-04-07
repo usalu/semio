@@ -1,0 +1,15 @@
+{
+  "title": "Refactor Event Logging and Ticket Storage",
+  "status": "closed",
+  "description": "Remove agent events and diffs from tickets. Change logging paths to use checkpoint-id and session-id based paths. Store semantic code diffs when checkpoints are created.",
+  "summary": "Completed session event persistence refactor: agent and derived repo operation events now append to session.json events array, no standalone session event JSON files are written, session readers support events array, and existing hook tests were updated to validate session.json-only logging.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/694"
+  },
+  "goal": "🎯refactoring🎯cli",
+  "sessions": [
+    "⚪1412d2e737a14475b99fbdfe17d2a89a",
+    "⚪f2168563e2174355808ed0fe2e596984",
+    "⚪019cc507512e7f31808631e6b1c8f3bb"
+  ]
+}

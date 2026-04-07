@@ -1,0 +1,7 @@
+{
+  "title": "Remove Individual Preflight Commands From Launch Json",
+  "status": "closed",
+  "description": "Remove all individual preflight launch configurations, keep only the general preflight",
+  "summary": "Removed all 16 individual preflight launch configurations, kept only the general preflight. Also removed the semio/assets section which only had a preflight entry.",
+  "goal": "🎯aioptimizedrepo"
+}

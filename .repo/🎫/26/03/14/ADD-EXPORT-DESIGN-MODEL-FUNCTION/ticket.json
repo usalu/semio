@@ -1,0 +1,12 @@
+{
+  "title": "Add Export Design Model Function",
+  "status": "open",
+  "description": "Add export_design_model(format='.glb', tags=[], options={}) that exports the 3D model of a design. Implement for all programming languages (TypeScript, Python, C#/Grasshopper, Rust, Go). Each language must support GLB and expose all native framework export formats. Use block definitions for types and instances for pieces. Translate connection hierarchy to scene graph and planes to relative transformation matrices.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/880"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪17734948449070804297348334319761820163"
+  ]
+}

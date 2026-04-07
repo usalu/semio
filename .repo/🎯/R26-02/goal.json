@@ -1,0 +1,14 @@
+{
+  "title": "r26-02",
+  "description": "The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.",
+  "prompt": "Update the goal title to simply \"r26-02\" while keeping the same description and focus on sketchpad MVP functionality, updated documentation, and examples.",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-28"
+  },
+  "client": "claude-code",
+  "llm": "sonnet-4-5",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/10"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Repo MCP Tools",
+  "description": "Goal for Repo MCP Tools",
+  "prompt": "Instructions for Repo MCP Tools",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/389"
+  }
+}

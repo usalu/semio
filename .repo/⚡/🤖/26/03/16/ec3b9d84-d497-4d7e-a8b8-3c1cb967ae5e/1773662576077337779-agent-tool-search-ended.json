@@ -1,0 +1,28 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T12:02:55Z",
+    "session": "ec3b9d84-d497-4d7e-a8b8-3c1cb967ae5e"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T12:02:55.932Z",
+      "hook_event_name": "PostToolUse",
+      "session_id": "ec3b9d84-d497-4d7e-a8b8-3c1cb967ae5e",
+      "tool_name": "grep_search",
+      "tool_input": {
+        "maxResults": 15,
+        "includePattern": "**/semio/sketchpad/sketchpad/shared.ts",
+        "isRegexp": true,
+        "query": "registerKeyedAppEventHandlers|createKeyedSet|function.*SET_SELECTION"
+      },
+      "tool_response": "",
+      "tool_use_id": "toolu_01T2MyvmQm4Gfqf5k7W9CjhC__vscode-1773658270451",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

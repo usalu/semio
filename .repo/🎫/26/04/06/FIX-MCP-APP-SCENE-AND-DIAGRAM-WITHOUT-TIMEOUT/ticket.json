@@ -1,0 +1,14 @@
+{
+  "title": "Fix Mcp App Scene and Diagram Without Timeout",
+  "status": "open",
+  "description": "Keeping GLB blobs inline in the MCP App payload causes a 33MB payload (90 GLBs × 318KB avg = 28.6MB) and MCP timeout. Need to fix GLTF loading via the existing HTTP URL approach instead.\n\nThe HTTP URL `/api/app/files/{guid}` IS served, but needs CORS headers so the sandboxed iframe can fetch it. The CSP is already declared via `connectDomains` in `_mcp_app_html_resource_meta`. The HTTP endpoint may be missing `Access-Control-Allow-Origin: *` header.\n\nPlan:\n1. Revert `_strip_kit_blobs` to strip ALL blobs (not just non-GLBs) - restore original behavior\n2. Fix CORS on the `/api/app/files/{guid}` endpoint so the iframe can fetch it\n3. Fix CORS on the `/api/app/payload/{token}` fetchUrl endpoint\n4. Rebuild dist/mcp-app.html (only if JS changes needed)",
+  "summary": "Fixed MCP App timeout caused by inline GLB approach from previous ticket.\n\nRoot cause: keeping all 90 GLBs inline produced a 33MB payload (28.6MB of GLB blobs + 4.9MB kit metadata), causing MCP request timeout.\n\nFix: `_strip_kit_blobs` now accepts an optional `design` parameter. A new helper `_select_best_model_file_guids` mirrors the JS `selectBestModel` logic — it finds the untagged (or first) model for each type guid used in the design's pieces, then only keeps those specific GLB blobs inline. For the Nakagin design: 12 types → 12 GLBs → 1.97MB inline, total payload 7MB (vs 33MB all-inline or 5MB stripped). CORS was already correctly configured on the HTTP endpoints (`allow_origins=['*']`), so the HTTP URL fallback still works for non-selected GLBs.\n\nAll 174 engine tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1271"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪c7c9f012f65b492dbc2ca7baa439580a",
+    "⚪79574d4b0a5d4b249f3c4d7c2ec40268"
+  ]
+}

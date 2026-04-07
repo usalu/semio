@@ -1,0 +1,27 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.ended",
+    "second": "2026-03-16T13:21:14Z",
+    "session": "aed3474a-69f8-41a5-945b-1a4460d05e4e"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "post_mcp_tool_use",
+      "trajectory_id": "aed3474a-69f8-41a5-945b-1a4460d05e4e",
+      "timestamp": "2026-03-16T13:21:14.864460057Z",
+      "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
+      "tool_info": {
+        "mcp_result": "- [🎯Goals](repo://gs)\n  - [🎯🎯sketchpadimprovements🎫migratetoeslint10](repo://y/26/m/03/d/16/tk/MIGRATE-TO-ES-LINT-10) - `Migrate To ESLint 10` - `open` - `opened a long while ago` - `Migrate the repository to ESLint 10, update flat configuration and package metadata, and persist zero-touch developer configuration in existing repo settings so linting works without manual local setup.`\n",
+        "mcp_server_name": "repo",
+        "mcp_tool_arguments": {
+          "query": "eslint 10 migrate ticket MIGRATE-TO-ES-LINT-10"
+        },
+        "mcp_tool_name": "search"
+      }
+    }
+  },
+  "response": {}
+}

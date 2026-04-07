@@ -1,0 +1,867 @@
+{
+  "id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+  "uri": "repo://session/b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+  "client": "copilot-chat",
+  "second": "2026-03-23T00:42:47Z",
+  "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:42:47Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:42:47.179Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 40630,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 40620
+          },
+          "tool_use_id": "toolu_bdrk_01RBxm1YDMDTc75TcHAauVNz__vscode-1774226011342",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:42:53Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:42:53.659Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 10387,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 10377
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01JufawrfdtgMuYSck5UpD6a__vscode-1774226011337",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:42:53Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:42:53.684Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 15740,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 15730
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_018mfHeX3FgXnCZ5Devwzfsq__vscode-1774226011341",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:42:55Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:42:55.465Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 9878,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 9868
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01MN6kLp9xQMvpkRGWPNcQsL__vscode-1774226011335",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:42:56Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:42:56.685Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 12613,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 12603
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01YV7112nNgNwD5uFR6hdpVA__vscode-1774226011339",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:42:56Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:42:56.730Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 10426,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 10416
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_012dbKPeSr8ToczX6ZFt7eJX__vscode-1774226011338",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:42:56Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:42:56.709Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 40630,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 40620
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01RBxm1YDMDTc75TcHAauVNz__vscode-1774226011342",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:42:56Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:42:56.753Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 12650,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 12640
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01RPmdSG1syjAzVHZjiN99it__vscode-1774226011340",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:00Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:00.871Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 9755,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 9741
+          },
+          "tool_use_id": "toolu_bdrk_01RnNuXYPjFQfgr9zedTdB1W__vscode-1774226011344",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:03Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:03.391Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 9755,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 9741
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01RnNuXYPjFQfgr9zedTdB1W__vscode-1774226011344",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:03Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:03.414Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 9220,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 9204
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01Kzkh3j2vqhnqcW95tpkK4j__vscode-1774226011343",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:06Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:05.999Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "func \\(t \\*Ticket\\) GetURI\\(\\)",
+            "isRegexp": true,
+            "includePattern": "/workspaces/semio/repo/cli/main.go"
+          },
+          "tool_use_id": "toolu_bdrk_01A9sAj11FfhsE1uv625fgcs__vscode-1774226011345",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:06Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:06.030Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "func GetArtifactURI",
+            "isRegexp": true,
+            "includePattern": "/workspaces/semio/repo/cli/main.go"
+          },
+          "tool_use_id": "toolu_bdrk_01UHbtUfHSkdJ6gaPD9oMM2t__vscode-1774226011346",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:06Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:06.247Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "func \\(t \\*Ticket\\) GetURI\\(\\)",
+            "isRegexp": true,
+            "includePattern": "/workspaces/semio/repo/cli/main.go"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01A9sAj11FfhsE1uv625fgcs__vscode-1774226011345",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:06Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:06.281Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "query": "func GetArtifactURI",
+            "isRegexp": true,
+            "includePattern": "/workspaces/semio/repo/cli/main.go"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01UHbtUfHSkdJ6gaPD9oMM2t__vscode-1774226011346",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:09Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:09.054Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 10175,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 10162
+          },
+          "tool_use_id": "toolu_bdrk_01N1fgCNcAnqEq4rCiSjsFmo__vscode-1774226011347",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:09Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:09.073Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 42810,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 42792
+          },
+          "tool_use_id": "toolu_bdrk_014TwtVwkFuXdHYUBsjrrJwv__vscode-1774226011348",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:11Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:11.005Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 10175,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 10162
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01N1fgCNcAnqEq4rCiSjsFmo__vscode-1774226011347",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:11Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:11.624Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 42810,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 42792
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_014TwtVwkFuXdHYUBsjrrJwv__vscode-1774226011348",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:15Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:15.300Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "/workspaces/semio/repo/cli/main.go",
+            "isRegexp": true,
+            "query": "func \\(g \\*Goal\\) GetURI\\(\\)|func \\(s \\*Statute\\) GetURI\\(\\)"
+          },
+          "tool_use_id": "toolu_bdrk_01XyMF5P7dKJY7B7GRprBDHt__vscode-1774226011349",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:15Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:15.481Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "/workspaces/semio/repo/cli/main.go",
+            "isRegexp": true,
+            "query": "func \\(g \\*Goal\\) GetURI\\(\\)|func \\(s \\*Statute\\) GetURI\\(\\)"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01XyMF5P7dKJY7B7GRprBDHt__vscode-1774226011349",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:18Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:18.354Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 15150,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 15137
+          },
+          "tool_use_id": "toolu_bdrk_016frNjap9XkAtErYc2oJ6VD__vscode-1774226011350",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:19Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:19.768Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 15150,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 15137
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_016frNjap9XkAtErYc2oJ6VD__vscode-1774226011350",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:27Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:27.688Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "/workspaces/semio/repo/cli/main.go",
+            "isRegexp": true,
+            "query": "func buildFileUriFromPath|func buildSectionUriFromPath|func buildDefinitionUriFromIdValue"
+          },
+          "tool_use_id": "toolu_bdrk_01YUTUCGC597i31rcpg8i1cB__vscode-1774226011351",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:43:27Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:27.926Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "/workspaces/semio/repo/cli/main.go",
+            "isRegexp": true,
+            "query": "func buildFileUriFromPath|func buildSectionUriFromPath|func buildDefinitionUriFromIdValue"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01YUTUCGC597i31rcpg8i1cB__vscode-1774226011351",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:43:30Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:30.844Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2855,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 42837
+          },
+          "tool_use_id": "toolu_bdrk_01K9myCZT8FoVAwL7aCMkbHm__vscode-1774226011352",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:45:40Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:43:34.470Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 2855,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 42837
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01K9myCZT8FoVAwL7aCMkbHm__vscode-1774226011352",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:48:01Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:48:01.499Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "/workspaces/semio/repo/cli/main.go",
+            "isRegexp": false,
+            "query": "buildFileUriFromPath buildSectionUriFromPath buildDefinitionUriFromIdValue"
+          },
+          "tool_use_id": "toolu_bdrk_011GTmuJs6Cb93UZYTSqCe7r__vscode-1774226011353",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:48:01Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:48:01.834Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "/workspaces/semio/repo/cli/main.go",
+            "isRegexp": false,
+            "query": "buildFileUriFromPath buildSectionUriFromPath buildDefinitionUriFromIdValue"
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_011GTmuJs6Cb93UZYTSqCe7r__vscode-1774226011353",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-23T00:50:42Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:50:42.391Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 42860,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 42837
+          },
+          "tool_use_id": "toolu_bdrk_01AzRTTiwFVC5ukZL6KuC79A__vscode-1774226011354",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-03-23T00:50:44Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:50:44.208Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "tool_name": "read_file",
+          "tool_input": {
+            "endLine": 42860,
+            "filePath": "/workspaces/semio/repo/cli/main.go",
+            "startLine": 42837
+          },
+          "tool_response": "",
+          "tool_use_id": "toolu_bdrk_01AzRTTiwFVC5ukZL6KuC79A__vscode-1774226011354",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "83589326813fc70605d52b2a8ef10910163ade12",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-23T00:53:55Z",
+        "session": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-23T00:53:55.295Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "b3f0b8dc-6b93-46d2-9ec0-7fdbf894d60b",
+          "agent_id": "7fae65df-dfab-4a26-b580-ee4e7ed40217",
+          "agent_type": "Explore",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

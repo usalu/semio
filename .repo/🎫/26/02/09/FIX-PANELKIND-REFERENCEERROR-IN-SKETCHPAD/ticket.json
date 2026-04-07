@@ -1,0 +1,8 @@
+{
+  "title": "Fix PanelKind ReferenceError in Sketchpad",
+  "status": "closed",
+  "summary": "Fixed Uncaught ReferenceError: PanelKind is not defined in AppPanelToggles by importing PanelKind from ./shared.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/457"
+  }
+}

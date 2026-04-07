@@ -1,0 +1,13 @@
+{
+  "title": "Fix VS Code Monorepo Section",
+  "status": "closed",
+  "description": "Fix the monorepo section not showing any items in the VS Code extension",
+  "summary": "Fixed extractRepoResult returning empty object instead of data property",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1002"
+  },
+  "goal": "🎯fixvscodemonoreposection",
+  "sessions": [
+    "⚪975d4a9de9dd4e8dbdead1bb1333c208"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "cursor-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.starting",
+    "second": "2026-03-16T13:43:31Z",
+    "session": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+    "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+  },
+  "native": {
+    "event": {
+      "conversation_id": "9c9573bc-7742-46ae-9c04-b0ebf0657575",
+      "generation_id": "c421f306-6a0e-4fcd-b949-f3f75020b8ab",
+      "model": "default",
+      "content": "\n    # TODO: Automatic derive from Id model.\n    @abc.abstractmethod\n    def idMembers(self) -\u003e RecursiveAnyList:\n        \"\"\"🪪 The members that form the id of the entity within its parent.\"\"\"\n\n    def id(self) -\u003e str:\n        \"\"\"🆔 The id of the entity within its parent.\"\"\"\n        return create_id(self.idMembers())\n\n    def guid(self) -\u003e str:\n        \"\"\"🆔 A Globally Unique Identifier (GUID) of the entity.\"\"\"\n        localId = f\"{self.__class__.PLURAL.lower()}/{self.id()}\"\n        parent = self.parent_entity()\n        parentId = f\"{parent.guid()}/\" if parent is not None else \"\"\n        return parentId + localId\n\n    def clientId(self) -\u003e str:\n        \"\"\"🆔 The client id of the entity.\"\"\"\n        return self.id()\n\n    # TODO: Automatic emptying.\n\n    def empty(self) -\u003e \"Entity\":\n        \"\"\"🪣 Empty all props and children of the entity.\"\"\"\n        return self.__class__()\n\n    # TODO: Automatic updating based on props.\n\n    def update(self, other: \"Entity\") -\u003e \"Entity\":\n        \"\"\"🔄 Update the props of the entity.\"\"\"\n        return self\n\n\nclass Table(SModel, abc.ABC):\n    \"\"\"▦ The base for tables. All resources that are stored in the database.\n    Table MUST be subclassed and MUST NOT be instantiated directly.\n    [👤semio📚py💻semio🔖modeling🔖primitives🛠️table](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Table)\n    \"\"\"\n\n\nclass TableEntity(Entity, Table, abc.ABC):\n    \"\"\"▢ The base for table entities.\n    TableEntity MUST be subclassed and MUST NOT be instantiated directly.\n    [👤semio📚py💻semio🔖modeling🔖primitives🛠️tableentity](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/TableEntity)\n    \"\"\"\n\n    \"\"\"📛 The lowercase name of the table in the database.\"\"\"\n\n\n# endregion Primitives\n\n# region Graphql\n# [👤semio📚py💻semio🔖modeling🔖graphql](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql)\n# GraphQL node base classes for pydantic, sqlalchemy and relay integration.\n\n\nclass Node(graphene_pydantic.PydanticObjectType):\n    \"\"\"A base class for all nodes that are not a table in the database.\n    Node MUST expose the model via Meta.\n    [👤semio📚py💻semio🔖modeling🔖graphql🛠️node](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/Node)\n    \"\"\"\n\n    class Meta:\n        abstract = True\n\n    @classmethod\n    def __init_subclass_with_meta__(cls, model=None, **options):\n        if \"name\" not in options:\n            options[\"name\"] = model.__name__\n\n        super().__init_subclass_with_meta__(model=model, **options)\n\n\nclass InputNode(graphene_pydantic.PydanticInputObjectType):\n    \"\"\"A base class for all input nodes.\n    InputNode MUST expose the input model via Meta.\n    [👤semio📚py💻semio🔖modeling🔖graphql🛠️inputnode](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/InputNode)\n    \"\"\"\n\n    class Meta:\n        abstract = True\n\n\nclass RelayNode(graphene.relay.Node):\n    \"\"\"Relay-compliant GraphQL node interface.\n    RelayNode MUST expose the model via Meta.\n    [👤semio📚py💻semio🔖modeling🔖graphql🛠️relaynode](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/RelayNode)\n    \"\"\"\n\n    class Meta:\n        name = \"Node\"\n\n    @staticmethod\n    def to_global_id(type_, id):\n        return id\n\n    @staticmethod\n    def get_node_from_global_id(info, global_id, only_type=None):\n        entity = get(global_id)\n        return entity\n\n\nclass TableNode(graphene_pydantic.PydanticObjectType):\n    \"\"\"A base class for all nodes that are a table in the database.\n    It automatically excludes the fields that are defined in the table.\n    Resolvers to all @properties are added.\n    Child relationships are by default included.\n    TableNode MUST expose the model via Meta.\n    [👤semio📚py💻semio🔖modeling🔖graphql🛠️tablenode](semiorepo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/TableNode)\n    \"\"\"\n\n    class Meta:\n        abstract = True\n\n    @classmethod\n    def __init_subclass_with_meta__(cls, model=None, **options):\n        excludedFields = tuple(k for k, v in model.model_fields.items() if v.exclude or v.default_factory is not None)\n        if \"exclude_fields\" in options:\n            options[\"exclude_fields\"] += excludedFields",
+      "file_path": "/workspaces/semio/semio/py/semio.py",
+      "attachments": [],
+      "hook_event_name": "beforeReadFile",
+      "cursor_version": "2.6.19",
+      "workspace_roots": [
+        "/workspaces/semio"
+      ],
+      "user_email": "ueli.saluz@posteo.de",
+      "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/9c9573bc-7742-46ae-9c04-b0ebf0657575/9c9573bc-7742-46ae-9c04-b0ebf0657575.jsonl"
+    }
+  },
+  "response": {}
+}

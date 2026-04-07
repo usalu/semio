@@ -1,0 +1,13 @@
+{
+  "title": "Violation Tree Witness Alternatives",
+  "status": "closed",
+  "description": "The violation tree should use tree alternatives (branch navigation \u003c 1/N \u003e) when having multiple witnesses under a parent node, instead of showing all witnesses as flat children.",
+  "summary": "Modified ValidationTreeNodeView to use tree branch navigation (\u003c 1/N \u003e) when a node has multiple witness children. Non-witness children render normally while witnesses are navigable via alternatives. Added MultipleWitnessAlternatives story with 3 witnesses. Type-check, vitest (22/22), and storybook build all pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/950"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪0e0dcde5320342f096330fa33c9d8f79"
+  ]
+}

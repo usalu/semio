@@ -1,0 +1,15 @@
+{
+  "title": "Fix Coda Desktop White Screen in Devcontainer",
+  "status": "open",
+  "description": "Electron chrome-sandbox SUID binary not configured correctly in devcontainer causing FATAL crash. Fix permissions in post-create.sh and add ELECTRON_DISABLE_SANDBOX fallback in containerEnv.",
+  "summary": "Fixed three issues preventing coda-desktop dev from working in devcontainer: (1) Chromium SUID sandbox crash — added ELECTRON_DISABLE_SANDBOX=1 env var in dev script and containerEnv, with app.commandLine.appendSwitch('no-sandbox') in main.ts. (2) White screen from Vite dev server module loading race — Electron tried to load the page before Vite finished pre-bundling deps, causing ERR_INSUFFICIENT_RESOURCES. Added retry-with-backoff in main.ts loadURL. (3) Chrome-sandbox permissions — added post-create.sh step to fix root:4755 permissions after npm install. Also fixed fontconfig XML typo in /etc/fonts/local.conf.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/952"
+  },
+  "goal": "🎯r2603🎯runningnet",
+  "sessions": [
+    "⚪59b15f84d19549b3a44652875f6254e2",
+    "⚪94e2071ece2944539e7be5991321f0e0",
+    "⚪77707e9adef84a948223911c8062f8cd"
+  ]
+}

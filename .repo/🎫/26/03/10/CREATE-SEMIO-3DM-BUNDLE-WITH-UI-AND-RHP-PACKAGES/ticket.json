@@ -1,0 +1,13 @@
+{
+  "title": "Create Semio 3dm Bundle with Ui and Rhp Packages",
+  "status": "closed",
+  "description": "Create semio/3dm bundle with one npm package `ui` and one .NET package `rhp`. The ui displays a tree view from sketchpad in the side panel using semio js. It has actions to import kits and import models into the active Rhino document. When importing a model, use the layer structure: semio \u003e KITNAME \u003e Types \u003e TYPENAME \u003e Models \u003e MODELTAGS. The Rhino tree for the sidepanel is: Kits (Import) \u003e KIT \u003e Types \u003e TYPE \u003e Models \u003e Model (Import), Designs \u003e Design. Uses the react_rhino_connector plan and Speckle architecture as reference.",
+  "summary": "Fixed 3 compilation errors in Semio.Rhino bundle. (1) Removed Grasshopper GH_AssemblyInfo class (not a GH plugin). (2) Multi-targeted net8.0;net48 following gh pattern, added conditional compilation (#if NETFRAMEWORK) for WinForms/WebView2 SemioPanel and ShowSemioCommand. (3) Fixed Layer type collision (Semio.Layer vs Rhino.DocObjects.Layer) using RhinoLayer alias with global:: qualifier. Also fixed Rhino.FileIO namespace collision via global::, fixed Panels.RegisterPanel Icon argument, removed non-existent Layer.GetObjects() call, and fixed RhinoApp.ExeVersion to RhinoApp.Version. All 13 xUnit tests pass on net8.0. UI Vite build follows same pattern as other monorepo apps (pre-existing CSS resolution issue in semio/js/globals.css affects all apps equally).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/830"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013⚪17731714003765018135765194539217426713"
+  ]
+}

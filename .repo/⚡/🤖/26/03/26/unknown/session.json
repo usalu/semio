@@ -1,0 +1,56 @@
+{
+  "id": "unknown",
+  "uri": "repo://session/unknown",
+  "client": "kiro-cli",
+  "second": "2026-03-26T13:04:03Z",
+  "checkpoint": "9b87c7dd92b9d27dac24c166b9710b001d624028",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "9b87c7dd92b9d27dac24c166b9710b001d624028",
+        "client": "kiro-cli",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-03-26T13:04:03Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "9b87c7dd92b9d27dac24c166b9710b001d624028",
+        "client": "kiro-cli",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-03-26T13:04:07Z",
+        "session": "unknown"
+      },
+      "native": {
+        "event": {
+          "hook_event_name": "agentSpawn",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "9b87c7dd92b9d27dac24c166b9710b001d624028",
+        "client": "kiro-cli",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-03-26T13:04:12Z",
+        "session": "unknown"
+      },
+      "native": {
+        "event": {
+          "hook_event_name": "stop",
+          "cwd": "/workspaces/semio",
+          "assistant_response": "done"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

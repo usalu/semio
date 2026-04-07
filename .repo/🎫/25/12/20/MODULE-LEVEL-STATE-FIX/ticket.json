@@ -1,0 +1,6 @@
+{
+  "title": "Replaced module-level mutable state with HoverIntentContext using refs",
+  "status": "closed",
+  "description": "\"Fix Smell 4: Module-level mutable state (globalHoverClearTimeout, currentHoveredPieceGuid, isPanning, isDraggingNode) replaced with HoverIntentContext using refs\"",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
+}

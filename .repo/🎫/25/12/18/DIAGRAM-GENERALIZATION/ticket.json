@@ -1,0 +1,6 @@
+{
+  "title": "Generalize diagram component across apps",
+  "status": "closed",
+  "description": "Implement generalized diagram component and migrate Design/Kit/Quality; ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests pass.",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

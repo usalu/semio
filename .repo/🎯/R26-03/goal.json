@@ -1,0 +1,14 @@
+{
+  "title": "r26-03",
+  "description": "r26-03 release cycle",
+  "prompt": "Release cycle for Mar 2026",
+  "status": "open",
+  "dates": {
+    "due": "2026-03-31"
+  },
+  "client": "windsurf-chat",
+  "llm": "sonnet-4-5",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/38"
+  }
+}

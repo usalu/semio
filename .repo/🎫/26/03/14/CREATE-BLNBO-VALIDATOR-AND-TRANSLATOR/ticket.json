@@ -1,0 +1,13 @@
+{
+  "title": "Create Blnbo Validator and Translator",
+  "status": "closed",
+  "description": "Create/Refactor/Complete a validator and translator for blnbo (Berlin Building Code). Create a Go-based blnbo validator following the programming validator pattern. The validator reads translation JSON from stdin and outputs a report JSON to stdout. Rules include staircase-located (must be in separate stairwell) and building-height-limit (\u003c21m). Also refine the translation subagent specification.",
+  "summary": "Created blnbo (Berlin Building Code) Go validator and refined translation subagent. Validator reads translation JSON from stdin, validates staircase-located rule (§35 BauO Bln with 3 exemption clauses) and building-height-limit rule (§2 high-rise threshold 21m), outputs report JSON to stdout. All 16 tests pass. Updated coda.json target ID to ldrbmrtv.blnbo. Created blnbo.json config with translation schema and rule definitions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/876"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪17734948449070804297348334319761820163"
+  ]
+}

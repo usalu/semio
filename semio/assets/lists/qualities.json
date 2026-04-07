@@ -1,0 +1,1510 @@
+{
+  "semio": {
+    "TYPE": "VENDOR",
+    "area": {
+      "TYPE": "TAXONOMY",
+      "UNITS": ["m²", "ft²"],
+      "SYMBOL": "$A$",
+      "NAME": "Floor Area",
+      "TRANSLATIONS": {
+        "DE": "Grundfläche"
+      },
+      "gfa": {
+        "NAME": "Gross Floor Area",
+        "SYMBOL": "$A_{gfa}$",
+        "TRANSLATIONS": {
+          "DE": "Brutto-Grundfläche"
+        },
+        "nfa": {
+          "NAME": "Net Floor Area",
+          "SYMBOL": "$A_{nfa}$",
+          "TRANSLATIONS": {
+            "DE": "Netto-Raumfläche"
+          },
+          "usbl": {
+            "NAME": "Usable Floor Area",
+            "SYMBOL": "$A_{usbl}$",
+            "TRANSLATIONS": {
+              "DE": "Nutzungsfläche"
+            },
+            "liv-stay": {
+              "NAME": "Living And Staying Floor Area",
+              "SYMBOL": "$A_{liv}$",
+              "TRANSLATIONS": {
+                "DE": "Wohnen und Aufenthalt"
+              },
+              "liv-rm": {
+                "NAME": "Living Room Floor Area",
+                "SYMBOL": "$A_{liv-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Wohnzimmerfläche"
+                },
+                "liv": {
+                  "NAME": "Living Floor Area",
+                  "SYMBOL": "$A_{liv}$",
+                  "TRANSLATIONS": {
+                    "DE": "Wohnfläche"
+                  }
+                },
+                "kit": {
+                  "NAME": "Kitchen Floor Area",
+                  "SYMBOL": "$A_{kit}$",
+                  "TRANSLATIONS": {
+                    "DE": "Küchenfläche"
+                  }
+                },
+                "san": {
+                  "NAME": "Sanitary Floor Area",
+                  "SYMBOL": "$A_{san}$",
+                  "TRANSLATIONS": {
+                    "DE": "Sanitärfläche"
+                  }
+                },
+                "circ": {
+                  "NAME": "Circulation Floor Area",
+                  "SYMBOL": "$A_{circ}$",
+                  "TRANSLATIONS": {
+                    "DE": "Verkehrsfläche"
+                  }
+                },
+                "out-seat": {
+                  "NAME": "Outdoor Seating Floor Area",
+                  "SYMBOL": "$A_{out-seat}$",
+                  "TRANSLATIONS": {
+                    "DE": "Freisitzfläche"
+                  }
+                },
+                "stor": {
+                  "NAME": "Storage Floor Area",
+                  "SYMBOL": "$A_{stor}$",
+                  "TRANSLATIONS": {
+                    "DE": "Abstellraumfläche"
+                  }
+                }
+              },
+              "com-rm": {
+                "NAME": "Common Room Floor Area",
+                "SYMBOL": "$A_{com-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Gemeinschaftsraumfläche"
+                }
+              },
+              "brk-rm": {
+                "NAME": "Break Room Floor Area",
+                "SYMBOL": "$A_{brk-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Pausenraumfläche"
+                }
+              },
+              "wait-rm": {
+                "NAME": "Waiting Room Floor Area",
+                "SYMBOL": "$A_{wait-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Warteraumfläche"
+                }
+              },
+              "din-rm": {
+                "NAME": "Dining Room Floor Area",
+                "SYMBOL": "$A_{din-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Speiseraumfläche"
+                }
+              },
+              "det-rm": {
+                "NAME": "Detention Room Floor Area",
+                "SYMBOL": "$A_{det-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Haftraumfläche"
+                }
+              }
+            },
+            "ofc-work": {
+              "NAME": "Office Work Floor Area",
+              "SYMBOL": "$A_{ofc}$",
+              "TRANSLATIONS": {
+                "DE": "Büroarbeit"
+              },
+              "ofc-rm": {
+                "NAME": "Office Room Floor Area",
+                "SYMBOL": "$A_{ofc-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Büroraumfläche"
+                }
+              },
+              "open-ofc": {
+                "NAME": "Open Plan Office Floor Area",
+                "SYMBOL": "$A_{open-ofc}$",
+                "TRANSLATIONS": {
+                  "DE": "Großraumbürofläche"
+                }
+              },
+              "meet-rm": {
+                "NAME": "Meeting Room Floor Area",
+                "SYMBOL": "$A_{meet-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Besprechungsraumfläche"
+                }
+              },
+              "des-rm": {
+                "NAME": "Design Room Floor Area",
+                "SYMBOL": "$A_{des-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Konstruktionsraumfläche"
+                }
+              },
+              "cnt-rm": {
+                "NAME": "Counter Room Floor Area",
+                "SYMBOL": "$A_{cnt-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Schalterraumfläche"
+                }
+              },
+              "ctrl-rm": {
+                "NAME": "Control Room Floor Area",
+                "SYMBOL": "$A_{ctrl-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Kontrollraumfläche"
+                }
+              },
+              "sup-rm": {
+                "NAME": "Supervision Room Floor Area",
+                "SYMBOL": "$A_{sup-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Aufsichtsraumfläche"
+                }
+              },
+              "ofc-tech-rm": {
+                "NAME": "Office Technology Room Floor Area",
+                "SYMBOL": "$A_{ofc-tech}$",
+                "TRANSLATIONS": {
+                  "DE": "Bürotechnikraumfläche"
+                }
+              },
+              "other": {
+                "NAME": "Other Office Work Floor Area",
+                "SYMBOL": "$A_{other-ofc}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonstige Büroarbeitsfläche"
+                }
+              }
+            },
+            "prod-exp": {
+              "NAME": "Production Experiments Work Floor Area",
+              "SYMBOL": "$A_{prod}$",
+              "TRANSLATIONS": {
+                "DE": "Produktion, Hand- und Maschinenarbeit, Experimente"
+              },
+              "prod-hall": {
+                "NAME": "Production Hall Floor Area",
+                "SYMBOL": "$A_{prod-hall}$",
+                "TRANSLATIONS": {
+                  "DE": "Produktionshallenfläche"
+                }
+              },
+              "work": {
+                "NAME": "Workshop Floor Area",
+                "SYMBOL": "$A_{work}$",
+                "TRANSLATIONS": {
+                  "DE": "Werkstattfläche"
+                }
+              },
+              "tech-lab": {
+                "NAME": "Technology Lab Floor Area",
+                "SYMBOL": "$A_{tech-lab}$",
+                "TRANSLATIONS": {
+                  "DE": "Techniklaborfläche"
+                }
+              },
+              "phys-elec-lab": {
+                "NAME": "Physics Electrical Lab Floor Area",
+                "SYMBOL": "$A_{phys-lab}$",
+                "TRANSLATIONS": {
+                  "DE": "Physik- und Elektrolaborfläche"
+                }
+              },
+              "chem-bio-lab": {
+                "NAME": "Chemistry Biology Lab Floor Area",
+                "SYMBOL": "$A_{chem-lab}$",
+                "TRANSLATIONS": {
+                  "DE": "Chemie- und Biologielaborfläche"
+                }
+              },
+              "anim-rm": {
+                "NAME": "Animal Husbandry Room Floor Area",
+                "SYMBOL": "$A_{anim}$",
+                "TRANSLATIONS": {
+                  "DE": "Tierhaltungsraumfläche"
+                }
+              },
+              "plant-rm": {
+                "NAME": "Plant Cultivation Room Floor Area",
+                "SYMBOL": "$A_{plant}$",
+                "TRANSLATIONS": {
+                  "DE": "Pflanzenzuchtraumfläche"
+                }
+              },
+              "kit": {
+                "NAME": "Kitchen Floor Area",
+                "SYMBOL": "$A_{kit}$",
+                "TRANSLATIONS": {
+                  "DE": "Küchenfläche"
+                }
+              },
+              "spec-work-rm": {
+                "NAME": "Special Work Room Floor Area",
+                "SYMBOL": "$A_{spec-work}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonderarbeitsraumfläche"
+                }
+              }
+            },
+            "stor-dist-sales": {
+              "NAME": "Storage Distribution Sales Floor Area",
+              "SYMBOL": "$A_{stor-sales}$",
+              "TRANSLATIONS": {
+                "DE": "Lagern, Verteilen und Verkaufen"
+              },
+              "stor-rm": {
+                "NAME": "Storage Room Floor Area",
+                "SYMBOL": "$A_{stor-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Lagerraumfläche"
+                }
+              },
+              "coll-arch": {
+                "NAME": "Collection Archive Floor Area",
+                "SYMBOL": "$A_{arch}$",
+                "TRANSLATIONS": {
+                  "DE": "Sammlungs- und Archivfläche"
+                }
+              },
+              "cold-stor": {
+                "NAME": "Cold Storage Room Floor Area",
+                "SYMBOL": "$A_{cold-stor}$",
+                "TRANSLATIONS": {
+                  "DE": "Kühllagerraumfläche"
+                }
+              },
+              "recv-disp": {
+                "NAME": "Receiving Dispatch Room Floor Area",
+                "SYMBOL": "$A_{recv}$",
+                "TRANSLATIONS": {
+                  "DE": "Warenannahme- und Versandfläche"
+                }
+              },
+              "sales-rm": {
+                "NAME": "Sales Room Floor Area",
+                "SYMBOL": "$A_{sales}$",
+                "TRANSLATIONS": {
+                  "DE": "Verkaufsraumfläche"
+                }
+              },
+              "exh-rm": {
+                "NAME": "Exhibition Room Floor Area",
+                "SYMBOL": "$A_{exh}$",
+                "TRANSLATIONS": {
+                  "DE": "Ausstellungsraumfläche"
+                }
+              },
+              "other": {
+                "NAME": "Other Storage Distribution Sales Floor Area",
+                "SYMBOL": "$A_{other-stor}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonstige Lager-, Verteil- und Verkaufsfläche"
+                }
+              }
+            },
+            "edu-cult": {
+              "NAME": "Education Culture Instruction Floor Area",
+              "SYMBOL": "$A_{edu}$",
+              "TRANSLATIONS": {
+                "DE": "Bildung, Unterricht und Kultur"
+              },
+              "class-fix-seat": {
+                "NAME": "Class With Fixed Seating Floor Area",
+                "SYMBOL": "$A_{class}$",
+                "TRANSLATIONS": {
+                  "DE": "Hörsaalfläche"
+                }
+              },
+              "teach-prac": {
+                "NAME": "Teaching Practice Room Floor Area",
+                "SYMBOL": "$A_{teach}$",
+                "TRANSLATIONS": {
+                  "DE": "Unterrichts- und Übungsraumfläche"
+                }
+              },
+              "spec-class": {
+                "NAME": "Special Classroom Floor Area",
+                "SYMBOL": "$A_{spec-class}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonderunterrichtsraumfläche"
+                }
+              },
+              "lib": {
+                "NAME": "Library Room Floor Area",
+                "SYMBOL": "$A_{lib}$",
+                "TRANSLATIONS": {
+                  "DE": "Bibliotheks- und Lesesaalfläche"
+                }
+              },
+              "sport": {
+                "NAME": "Sports Room Floor Area",
+                "SYMBOL": "$A_{sport}$",
+                "TRANSLATIONS": {
+                  "DE": "Sportraumfläche"
+                }
+              },
+              "assm-rm": {
+                "NAME": "Assembly Room Floor Area",
+                "SYMBOL": "$A_{assm}$",
+                "TRANSLATIONS": {
+                  "DE": "Versammlungsraumfläche"
+                }
+              },
+              "stage-studio": {
+                "NAME": "Stage Studio Room Floor Area",
+                "SYMBOL": "$A_{stage}$",
+                "TRANSLATIONS": {
+                  "DE": "Bühnen- und Studioraumfläche"
+                }
+              },
+              "disp-rm": {
+                "NAME": "Display Room Floor Area",
+                "SYMBOL": "$A_{disp}$",
+                "TRANSLATIONS": {
+                  "DE": "Schau- und Vorführraumfläche"
+                }
+              },
+              "sacr-rm": {
+                "NAME": "Sacred Room Floor Area",
+                "SYMBOL": "$A_{sacr}$",
+                "TRANSLATIONS": {
+                  "DE": "Sakralraumfläche"
+                }
+              }
+            },
+            "heal-care": {
+              "NAME": "Healing And Care Floor Area",
+              "SYMBOL": "$A_{med}$",
+              "TRANSLATIONS": {
+                "DE": "Heilen und Pflegen"
+              },
+              "gen-med-equip": {
+                "NAME": "General Medical Equipment Room Floor Area",
+                "SYMBOL": "$A_{gen-med}$",
+                "TRANSLATIONS": {
+                  "DE": "Raum für allgemeine medizinische Ausstattung"
+                }
+              },
+              "spec-med-equip": {
+                "NAME": "Special Medical Equipment Room Floor Area",
+                "SYMBOL": "$A_{spec-med}$",
+                "TRANSLATIONS": {
+                  "DE": "Raum für spezielle medizinische Ausstattung"
+                }
+              },
+              "surg-rm": {
+                "NAME": "Surgical Room Floor Area",
+                "SYMBOL": "$A_{surg}$",
+                "TRANSLATIONS": {
+                  "DE": "Operationsraumfläche"
+                }
+              },
+              "rad-diag": {
+                "NAME": "Radiation Diagnostic Room Floor Area",
+                "SYMBOL": "$A_{rad-diag}$",
+                "TRANSLATIONS": {
+                  "DE": "Strahlendiagnostikraumfläche"
+                }
+              },
+              "rad-ther": {
+                "NAME": "Radiation Therapy Room Floor Area",
+                "SYMBOL": "$A_{rad-ther}$",
+                "TRANSLATIONS": {
+                  "DE": "Strahlentherapieraumfläche"
+                }
+              },
+              "rehab-physio": {
+                "NAME": "Rehabilitation Physiotherapy Floor Area",
+                "SYMBOL": "$A_{rehab}$",
+                "TRANSLATIONS": {
+                  "DE": "Rehabilitations- und Physiotherapiefläche"
+                }
+              },
+              "gen-pat-rm": {
+                "NAME": "General Patient Room Floor Area",
+                "SYMBOL": "$A_{gen-pat}$",
+                "TRANSLATIONS": {
+                  "DE": "Allgemeines Patientenzimmerfläche"
+                }
+              },
+              "spec-pat-rm": {
+                "NAME": "Special Patient Room Floor Area",
+                "SYMBOL": "$A_{spec-pat}$",
+                "TRANSLATIONS": {
+                  "DE": "Spezielles Patientenzimmerfläche"
+                }
+              },
+              "other": {
+                "NAME": "Other Healing And Care Floor Area",
+                "SYMBOL": "$A_{other-med}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonstige Heil- und Pflegefläche"
+                }
+              }
+            },
+            "other": {
+              "NAME": "Other Usable Floor Area",
+              "SYMBOL": "$A_{other-usbl}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Nutzungsfläche"
+              },
+              "san-rm": {
+                "NAME": "Sanitary Room Floor Area",
+                "SYMBOL": "$A_{san-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Sanitärraumfläche"
+                }
+              },
+              "cloak": {
+                "NAME": "Cloakroom Floor Area",
+                "SYMBOL": "$A_{cloak}$",
+                "TRANSLATIONS": {
+                  "DE": "Garderobenfläche"
+                }
+              },
+              "stor-rm": {
+                "NAME": "Storage Room Floor Area",
+                "SYMBOL": "$A_{stor-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Abstellraumfläche"
+                }
+              },
+              "veh-park": {
+                "NAME": "Vehicle Parking Floor Area",
+                "SYMBOL": "$A_{park}$",
+                "TRANSLATIONS": {
+                  "DE": "Fahrzeugabstellfläche"
+                }
+              },
+              "pass": {
+                "NAME": "Passenger Floor Area",
+                "SYMBOL": "$A_{pass}$",
+                "TRANSLATIONS": {
+                  "DE": "Personenverkehrsfläche"
+                }
+              },
+              "cent-tech": {
+                "NAME": "Central Technical Room Floor Area",
+                "SYMBOL": "$A_{cent-tech}$",
+                "TRANSLATIONS": {
+                  "DE": "Zentraler Technikraum"
+                }
+              },
+              "prot-rm": {
+                "NAME": "Protective Room Floor Area",
+                "SYMBOL": "$A_{prot}$",
+                "TRANSLATIONS": {
+                  "DE": "Schutzraumfläche"
+                }
+              },
+              "laund": {
+                "NAME": "Laundry Room Floor Area",
+                "SYMBOL": "$A_{laund}$",
+                "TRANSLATIONS": {
+                  "DE": "Wäschereiraumfläche"
+                }
+              },
+              "other": {
+                "NAME": "Other Floor Area",
+                "SYMBOL": "$A_{other}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonstige Nutzungsfläche"
+                }
+              }
+            }
+          },
+          "tech": {
+            "NAME": "Technical Floor Area",
+            "SYMBOL": "$A_{tech}$",
+            "TRANSLATIONS": {
+              "DE": "Technikfläche"
+            },
+            "waste-gas-water": {
+              "NAME": "Wastewater Gases Water Supply Floor Area",
+              "SYMBOL": "$A_{water}$",
+              "TRANSLATIONS": {
+                "DE": "Abwasser-, Gas- und Wasserversorgung"
+              }
+            },
+            "heat-hw": {
+              "NAME": "Heating Hot Water Floor Area",
+              "SYMBOL": "$A_{heat}$",
+              "TRANSLATIONS": {
+                "DE": "Heizung und Warmwasser"
+              }
+            },
+            "vent-ac": {
+              "NAME": "Ventilation Air Conditioning Floor Area",
+              "SYMBOL": "$A_{vent}$",
+              "TRANSLATIONS": {
+                "DE": "Lüftung und Klimatisierung"
+              }
+            },
+            "elec-pwr": {
+              "NAME": "Electrical Power Supply Floor Area",
+              "SYMBOL": "$A_{elec}$",
+              "TRANSLATIONS": {
+                "DE": "Stromversorgung"
+              }
+            },
+            "telecom": {
+              "NAME": "Telecommunications Floor Area",
+              "SYMBOL": "$A_{telecom}$",
+              "TRANSLATIONS": {
+                "DE": "Telekommunikation"
+              }
+            },
+            "elev-conv": {
+              "NAME": "Elevator Conveyor Systems Floor Area",
+              "SYMBOL": "$A_{elev}$",
+              "TRANSLATIONS": {
+                "DE": "Aufzugs- und Förderanlagen"
+              }
+            },
+            "other": {
+              "NAME": "Other Technical Floor Area",
+              "SYMBOL": "$A_{other-tech}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Technikfläche"
+              }
+            }
+          },
+          "circ": {
+            "NAME": "Circulation Floor Area",
+            "SYMBOL": "$A_{circ}$",
+            "TRANSLATIONS": {
+              "DE": "Verkehrsfläche"
+            },
+            "corr-hall": {
+              "NAME": "Corridor Hall Floor Area",
+              "SYMBOL": "$A_{corr}$",
+              "TRANSLATIONS": {
+                "DE": "Flur und Halle"
+              }
+            },
+            "stair": {
+              "NAME": "Stair Floor Area",
+              "SYMBOL": "$A_{stair}$",
+              "TRANSLATIONS": {
+                "DE": "Treppenraum"
+              }
+            },
+            "shaft-conv": {
+              "NAME": "Shaft For Conveyor System Floor Area",
+              "SYMBOL": "$A_{shaft}$",
+              "TRANSLATIONS": {
+                "DE": "Schacht für Förderanlage"
+              }
+            },
+            "veh-traf": {
+              "NAME": "Vehicle Traffic Floor Area",
+              "SYMBOL": "$A_{veh-traf}$",
+              "TRANSLATIONS": {
+                "DE": "Fahrzeugverkehr"
+              }
+            },
+            "other": {
+              "NAME": "Other Circulation Floor Area",
+              "SYMBOL": "$A_{other-circ}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Verkehrsfläche"
+              }
+            }
+          },
+          "const": {
+            "NAME": "Construction Floor Area",
+            "SYMBOL": "$A_{const}$",
+            "TRANSLATIONS": {
+              "DE": "Konstruktions-Grundfläche"
+            },
+            "ext-wall-const": {
+              "NAME": "Exterior Wall Construction Floor Area",
+              "SYMBOL": "$A_{ext-wall}$",
+              "TRANSLATIONS": {
+                "DE": "Außenwandkonstruktion"
+              }
+            },
+            "int-wall-const": {
+              "NAME": "Interior Wall Construction Floor Area",
+              "SYMBOL": "$A_{int-wall}$",
+              "TRANSLATIONS": {
+                "DE": "Innenwandkonstruktion"
+              }
+            },
+            "part-wall": {
+              "NAME": "Partition Wall Floor Area",
+              "SYMBOL": "$A_{part-wall}$",
+              "TRANSLATIONS": {
+                "DE": "Trennwandausbildung"
+              }
+            },
+            "col": {
+              "NAME": "Column Floor Area",
+              "SYMBOL": "$A_{col}$",
+              "TRANSLATIONS": {
+                "DE": "Stütze"
+              }
+            },
+            "shaft": {
+              "NAME": "Shaft Floor Area",
+              "SYMBOL": "$A_{shaft}$",
+              "TRANSLATIONS": {
+                "DE": "Schacht"
+              }
+            },
+            "beam": {
+              "NAME": "Beam Floor Area",
+              "SYMBOL": "$A_{beam}$",
+              "TRANSLATIONS": {
+                "DE": "Träger"
+              }
+            },
+            "other": {
+              "NAME": "Other Construction Floor Area",
+              "SYMBOL": "$A_{other-const}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Konstruktionsfläche"
+              }
+            }
+          }
+        },
+        "prop": {
+          "NAME": "Property Area",
+          "SYMBOL": "$A_{prop}$",
+          "TRANSLATIONS": {
+            "DE": "Grundstücksfläche"
+          },
+          "built": {
+            "NAME": "Built Up Area",
+            "SYMBOL": "$A_{built}$",
+            "TRANSLATIONS": {
+              "DE": "Bebaute Fläche"
+            }
+          },
+          "unbuilt": {
+            "NAME": "Unbuilt Area",
+            "SYMBOL": "$A_{unbuilt}$",
+            "TRANSLATIONS": {
+              "DE": "Unbebaute Fläche"
+            }
+          },
+          "out-fac": {
+            "NAME": "Outdoor Facility Area",
+            "SYMBOL": "$A_{out-fac}$",
+            "TRANSLATIONS": {
+              "DE": "Außenanlagenfläche"
+            },
+            "traf": {
+              "NAME": "Traffic Area",
+              "SYMBOL": "$A_{traf}$",
+              "TRANSLATIONS": {
+                "DE": "Verkehrsfläche"
+              }
+            },
+            "sidewalk": {
+              "NAME": "Sidewalk Area",
+              "SYMBOL": "$A_{sidewalk}$",
+              "TRANSLATIONS": {
+                "DE": "Gehwegfläche"
+              }
+            },
+            "drive": {
+              "NAME": "Driveway Area",
+              "SYMBOL": "$A_{drive}$",
+              "TRANSLATIONS": {
+                "DE": "Zufahrtsfläche"
+              }
+            },
+            "park-sp": {
+              "NAME": "Parking Space Area",
+              "SYMBOL": "$A_{park-sp}$",
+              "TRANSLATIONS": {
+                "DE": "Stellplatzfläche"
+              }
+            },
+            "bike-park": {
+              "NAME": "Bicycle Parking Area",
+              "SYMBOL": "$A_{bike-park}$",
+              "TRANSLATIONS": {
+                "DE": "Fahrradabstellfläche"
+              }
+            },
+            "turn": {
+              "NAME": "Turning Area",
+              "SYMBOL": "$A_{turn}$",
+              "TRANSLATIONS": {
+                "DE": "Wendeplatzfläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Traffic Area",
+              "SYMBOL": "$A_{other-traf}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Verkehrsfläche"
+              }
+            }
+          },
+          "green": {
+            "NAME": "Green Area",
+            "SYMBOL": "$A_{green}$",
+            "TRANSLATIONS": {
+              "DE": "Grünfläche"
+            },
+            "lawn": {
+              "NAME": "Lawn Area",
+              "SYMBOL": "$A_{lawn}$",
+              "TRANSLATIONS": {
+                "DE": "Rasenfläche"
+              }
+            },
+            "plant-bed": {
+              "NAME": "Planted Bed Area",
+              "SYMBOL": "$A_{plant-bed}$",
+              "TRANSLATIONS": {
+                "DE": "Pflanzbeetfläche"
+              }
+            },
+            "hedge": {
+              "NAME": "Hedge Area",
+              "SYMBOL": "$A_{hedge}$",
+              "TRANSLATIONS": {
+                "DE": "Heckenfläche"
+              }
+            },
+            "tree": {
+              "NAME": "Tree Area",
+              "SYMBOL": "$A_{tree}$",
+              "TRANSLATIONS": {
+                "DE": "Baumfläche"
+              }
+            },
+            "roof-green": {
+              "NAME": "Roof Greening Area",
+              "SYMBOL": "$A_{roof-green}$",
+              "TRANSLATIONS": {
+                "DE": "Dachbegrünungsfläche"
+              }
+            },
+            "fac-green": {
+              "NAME": "Facade Greening Area",
+              "SYMBOL": "$A_{fac-green}$",
+              "TRANSLATIONS": {
+                "DE": "Fassadenbegrünungsfläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Green Area",
+              "SYMBOL": "$A_{other-green}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Grünfläche"
+              }
+            }
+          },
+          "paved": {
+            "NAME": "Paved Area",
+            "SYMBOL": "$A_{paved}$",
+            "TRANSLATIONS": {
+              "DE": "Befestigte Fläche"
+            },
+            "terr": {
+              "NAME": "Terrace Area",
+              "SYMBOL": "$A_{terr}$",
+              "TRANSLATIONS": {
+                "DE": "Terrassenfläche"
+              }
+            },
+            "balc": {
+              "NAME": "Balcony Area",
+              "SYMBOL": "$A_{balc}$",
+              "TRANSLATIONS": {
+                "DE": "Balkonfläche"
+              }
+            },
+            "court": {
+              "NAME": "Courtyard Area",
+              "SYMBOL": "$A_{court}$",
+              "TRANSLATIONS": {
+                "DE": "Hoffläche"
+              }
+            },
+            "stor-util": {
+              "NAME": "Storage Utility Area",
+              "SYMBOL": "$A_{stor-util}$",
+              "TRANSLATIONS": {
+                "DE": "Lager- und Nutzfläche"
+              }
+            },
+            "play": {
+              "NAME": "Playground Area",
+              "SYMBOL": "$A_{play}$",
+              "TRANSLATIONS": {
+                "DE": "Spielplatzfläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Paved Area",
+              "SYMBOL": "$A_{other-paved}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige befestigte Fläche"
+              }
+            }
+          },
+          "tech-fac": {
+            "NAME": "Technical Facility Area",
+            "SYMBOL": "$A_{tech-fac}$",
+            "TRANSLATIONS": {
+              "DE": "Technische Anlagenfläche"
+            },
+            "waste-coll": {
+              "NAME": "Waste Collection Point Area",
+              "SYMBOL": "$A_{waste-coll}$",
+              "TRANSLATIONS": {
+                "DE": "Müllsammelplatzfläche"
+              }
+            },
+            "util-line": {
+              "NAME": "Utility Line Area",
+              "SYMBOL": "$A_{util-line}$",
+              "TRANSLATIONS": {
+                "DE": "Versorgungsleitungsfläche"
+              }
+            },
+            "storm-mgmt": {
+              "NAME": "Stormwater Management Area",
+              "SYMBOL": "$A_{storm}$",
+              "TRANSLATIONS": {
+                "DE": "Regenwasserbewirtschaftungsfläche"
+              }
+            },
+            "light-sys": {
+              "NAME": "Lighting System Area",
+              "SYMBOL": "$A_{light}$",
+              "TRANSLATIONS": {
+                "DE": "Beleuchtungsanlagenfläche"
+              }
+            },
+            "fence": {
+              "NAME": "Fence Enclosure Area",
+              "SYMBOL": "$A_{fence}$",
+              "TRANSLATIONS": {
+                "DE": "Zaun- und Einfriedungsfläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Technical Facility Area",
+              "SYMBOL": "$A_{other-tech-fac}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige technische Anlagenfläche"
+              }
+            }
+          },
+          "water": {
+            "NAME": "Water Area",
+            "SYMBOL": "$A_{water}$",
+            "TRANSLATIONS": {
+              "DE": "Wasserfläche"
+            },
+            "pond": {
+              "NAME": "Pond Area",
+              "SYMBOL": "$A_{pond}$",
+              "TRANSLATIONS": {
+                "DE": "Teichfläche"
+              }
+            },
+            "fountain": {
+              "NAME": "Fountain Area",
+              "SYMBOL": "$A_{fountain}$",
+              "TRANSLATIONS": {
+                "DE": "Brunnenfläche"
+              }
+            },
+            "storm-ret": {
+              "NAME": "Stormwater Retention Area",
+              "SYMBOL": "$A_{storm-ret}$",
+              "TRANSLATIONS": {
+                "DE": "Regenwasserrückhaltefläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Water Area",
+              "SYMBOL": "$A_{other-water}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Wasserfläche"
+              }
+            }
+          },
+          "other": {
+            "NAME": "Other Outdoor Facility Area",
+            "SYMBOL": "$A_{other-out}$",
+            "TRANSLATIONS": {
+              "DE": "Sonstige Außenanlagenfläche"
+            }
+          }
+        }
+      },
+      "vol": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["m³", "ft³"],
+        "SYMBOL": "$V$",
+        "NAME": "Volume",
+        "gv": {
+          "NAME": "Gross Volume",
+          "SYMBOL": "$V_{gv}$",
+          "nv": {
+            "NAME": "Net Volume",
+            "SYMBOL": "$V_{nv}$",
+            "TRANSLATIONS": {
+              "DE": "Netto-Rauminhalt"
+            }
+          },
+          "const-vol": {
+            "NAME": "Construction Volume",
+            "SYMBOL": "$V_{const}$",
+            "TRANSLATIONS": {
+              "DE": "Konstruktions-Rauminhalt"
+            }
+          }
+        }
+      },
+      "ppl": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["count"],
+        "SYMBOL": "$N$",
+        "NAME": "People",
+        "stat": {
+          "NAME": "Stationary People",
+          "SYMBOL": "$N_{stat}$",
+          "liv": {
+            "NAME": "Living People",
+            "SYMBOL": "$N_{liv}$",
+            "res": {
+              "NAME": "Residents",
+              "SYMBOL": "$N_{res}$",
+              "TRANSLATIONS": {
+                "DE": "Einwohner"
+              }
+            },
+            "guest": {
+              "NAME": "Guests",
+              "SYMBOL": "$N_{guest}$",
+              "TRANSLATIONS": {
+                "DE": "Gäste"
+              }
+            }
+          },
+          "work": {
+            "NAME": "Working People",
+            "SYMBOL": "$N_{work}$",
+            "ofc": {
+              "NAME": "Office Workers",
+              "SYMBOL": "$N_{ofc}$",
+              "TRANSLATIONS": {
+                "DE": "Büroangestellte"
+              }
+            },
+            "prod": {
+              "NAME": "Production Workers",
+              "SYMBOL": "$N_{prod}$",
+              "TRANSLATIONS": {
+                "DE": "Produktionsmitarbeiter"
+              }
+            },
+            "serv": {
+              "NAME": "Service Workers",
+              "SYMBOL": "$N_{serv}$",
+              "TRANSLATIONS": {
+                "DE": "Dienstleistungsmitarbeiter"
+              }
+            },
+            "edu": {
+              "NAME": "Education Workers",
+              "SYMBOL": "$N_{edu}$",
+              "TRANSLATIONS": {
+                "DE": "Bildungspersonal"
+              }
+            },
+            "health": {
+              "NAME": "Healthcare Workers",
+              "SYMBOL": "$N_{health}$",
+              "TRANSLATIONS": {
+                "DE": "Gesundheitspersonal"
+              }
+            },
+            "other": {
+              "NAME": "Other Workers",
+              "SYMBOL": "$N_{other-work}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Arbeitskräfte"
+              }
+            }
+          },
+          "stud": {
+            "NAME": "Students",
+            "SYMBOL": "$N_{stud}$",
+            "pupil": {
+              "NAME": "Pupils",
+              "SYMBOL": "$N_{pupil}$",
+              "TRANSLATIONS": {
+                "DE": "Schüler"
+              }
+            },
+            "stud": {
+              "NAME": "Students",
+              "SYMBOL": "$N_{stud}$",
+              "TRANSLATIONS": {
+                "DE": "Studenten"
+              }
+            }
+          },
+          "client": {
+            "NAME": "Clients",
+            "SYMBOL": "$N_{client}$",
+            "cust": {
+              "NAME": "Customers",
+              "SYMBOL": "$N_{cust}$",
+              "TRANSLATIONS": {
+                "DE": "Kunden"
+              }
+            },
+            "visit": {
+              "NAME": "Visitors",
+              "SYMBOL": "$N_{visit}$",
+              "TRANSLATIONS": {
+                "DE": "Besucher"
+              }
+            },
+            "pat": {
+              "NAME": "Patients",
+              "SYMBOL": "$N_{pat}$",
+              "TRANSLATIONS": {
+                "DE": "Patienten"
+              }
+            }
+          }
+        },
+        "mobile": {
+          "NAME": "Mobile People",
+          "SYMBOL": "$N_{mobile}$",
+          "visit": {
+            "NAME": "Mobile Visitors",
+            "SYMBOL": "$N_{mobile-visit}$",
+            "cust": {
+              "NAME": "Mobile Customers",
+              "SYMBOL": "$N_{mobile-cust}$",
+              "TRANSLATIONS": {
+                "DE": "Mobile Kunden"
+              }
+            },
+            "guest": {
+              "NAME": "Mobile Guests",
+              "SYMBOL": "$N_{mobile-guest}$",
+              "TRANSLATIONS": {
+                "DE": "Mobile Gäste"
+              }
+            },
+            "tourist": {
+              "NAME": "Tourists",
+              "SYMBOL": "$N_{tourist}$",
+              "TRANSLATIONS": {
+                "DE": "Touristen"
+              }
+            }
+          },
+          "emp": {
+            "NAME": "Mobile Employees",
+            "SYMBOL": "$N_{mobile-emp}$",
+            "mobile-work": {
+              "NAME": "Mobile Workers",
+              "SYMBOL": "$N_{mobile-work}$",
+              "TRANSLATIONS": {
+                "DE": "Mobile Arbeitskräfte"
+              }
+            },
+            "deliv": {
+              "NAME": "Delivery Personnel",
+              "SYMBOL": "$N_{deliv}$",
+              "TRANSLATIONS": {
+                "DE": "Lieferpersonal"
+              }
+            }
+          },
+          "stud": {
+            "NAME": "Mobile Students",
+            "SYMBOL": "$N_{mobile-stud}$",
+            "commute": {
+              "NAME": "Commuters",
+              "SYMBOL": "$N_{commute}$",
+              "TRANSLATIONS": {
+                "DE": "Pendler"
+              }
+            },
+            "exch": {
+              "NAME": "Exchange Students",
+              "SYMBOL": "$N_{exch}$",
+              "TRANSLATIONS": {
+                "DE": "Austauschstudenten"
+              }
+            }
+          }
+        }
+      },
+      "energy": {
+        "TYPE": "CLASSIFICATION",
+        "SYMBOL": "$E$",
+        "NAME": "Energy",
+        "prim-dem": {
+          "TYPE": "TAXONOMY",
+          "UNITS": ["kWh/m²a"],
+          "NAME": "Primary Energy Demand",
+          "SYMBOL": "$E_{prim}$",
+          "TRANSLATIONS": {
+            "DE": ""
+          },
+          "prim-heat": {
+            "NAME": "Primary Heating Energy Demand",
+            "SYMBOL": "$E_{prim-heat}$",
+            "TRANSLATIONS": {
+              "DE": ""
+            },
+            "final": {
+              "NAME": "Final Heating Energy Demand",
+              "SYMBOL": "$E_{final-heat}$",
+              "TRANSLATIONS": {
+                "DE": ""
+              },
+              "FACTOR": "Primary Heating Energy Factor",
+              "heat": {
+                "NAME": "Heating Energy Demand",
+                "SYMBOL": "$E_{heat}$",
+                "TRANSLATIONS": {
+                  "DE": ""
+                },
+                "FACTOR": "Heating Efficiency Factor",
+                "trans": {
+                  "NAME": "Transmission Heat Loss",
+                  "SYMBOL": "$Q_{trans}$",
+                  "TRANSLATIONS": {
+                    "DE": ""
+                  }
+                },
+                "final-vent": {
+                  "NAME": "Final Ventilation Heat Loss",
+                  "SYMBOL": "$Q_{final-vent}$",
+                  "TRANSLATIONS": {
+                    "DE": ""
+                  },
+                  "vent": {
+                    "NAME": "Ventilation Heat Loss",
+                    "SYMBOL": "$Q_{vent}$",
+                    "TRANSLATIONS": {
+                      "DE": ""
+                    },
+                    "FACTOR": "1-Ventilation Heat Recovery Factor"
+                  }
+                }
+              }
+            }
+          },
+          "prim-cool": {
+            "NAME": "Primary Cooling Energy Demand",
+            "SYMBOL": "$E_{prim-cool}$",
+            "TRANSLATIONS": {
+              "DE": ""
+            },
+            "final": {
+              "NAME": "Final Cooling Energy Demand",
+              "SYMBOL": "$E_{final-cool}$",
+              "TRANSLATIONS": {
+                "DE": ""
+              },
+              "FACTOR": "Primary Cooling Energy Factor",
+              "cool-energy": {
+                "NAME": "Cooling Energy Demand",
+                "SYMBOL": "$E_{cool}$",
+                "TRANSLATIONS": {
+                  "DE": ""
+                },
+                "FACTOR": "Cooling Efficiency Factor"
+              }
+            }
+          },
+          "prim-elec": {
+            "NAME": "Primary Electricity Energy Demand",
+            "SYMBOL": "$E_{prim-elec}$",
+            "TRANSLATIONS": {
+              "DE": ""
+            },
+            "elec": {
+              "NAME": "Electricity Energy Demand",
+              "SYMBOL": "$E_{elec}$",
+              "TRANSLATIONS": {
+                "DE": ""
+              },
+              "FACTOR": "Electricity Primary Energy Factor",
+              "tech-equip": {
+                "NAME": "Technical Equipment Energy Demand",
+                "SYMBOL": "$E_{tech-equip}$",
+                "TRANSLATIONS": {
+                  "DE": ""
+                }
+              }
+            }
+          }
+        },
+        "load": {
+          "TYPE": "CLASSIFICATION",
+          "SYMBOL": "$P$",
+          "NAME": "Load",
+          "heat": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Heating Load",
+            "SYMBOL": "$P_{heat}$",
+            "TRANSLATIONS": {
+              "DE": "Heizlast"
+            }
+          },
+          "cool": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Cooling Load",
+            "SYMBOL": "$P_{cool}$",
+            "TRANSLATIONS": {
+              "DE": "Kühllast"
+            }
+          },
+          "light": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Lighting Load",
+            "SYMBOL": "$P_{light}$",
+            "TRANSLATIONS": {
+              "DE": "Beleuchtungslast"
+            }
+          },
+          "vent": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Ventilation Load",
+            "SYMBOL": "$P_{vent}$",
+            "TRANSLATIONS": {
+              "DE": "Lüftungslast"
+            }
+          },
+          "hw": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Hot Water Load",
+            "SYMBOL": "$P_{hw}$",
+            "TRANSLATIONS": {
+              "DE": "Warmwasserlast"
+            }
+          }
+        }
+      },
+      "gwp": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["tCO₂e", "MtCO₂e"],
+        "SYMBOL": "$GWP$",
+        "NAME": "Global Warming Potential",
+        "embod": {
+          "NAME": "Embodied GWP",
+          "SYMBOL": "$GWP_{embod}$",
+          "const": {
+            "NAME": "Construction GWP",
+            "SYMBOL": "$GWP_{const}$",
+            "TRANSLATIONS": {
+              "DE": "Herstellung (Baukonstruktion)"
+            }
+          },
+          "tech-equip": {
+            "NAME": "Technical Equipment GWP",
+            "SYMBOL": "$GWP_{tech-equip}$",
+            "TRANSLATIONS": {
+              "DE": "Herstellung (Technische Anlagen)"
+            }
+          }
+        },
+        "oper": {
+          "NAME": "Operational GWP",
+          "SYMBOL": "$GWP_{oper}$",
+          "heat": {
+            "NAME": "Heating GWP",
+            "SYMBOL": "$GWP_{heat}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Heizung)"
+            }
+          },
+          "cool": {
+            "NAME": "Cooling GWP",
+            "SYMBOL": "$GWP_{cool}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Kühlung)"
+            }
+          },
+          "light": {
+            "NAME": "Lighting GWP",
+            "SYMBOL": "$GWP_{light}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Beleuchtung)"
+            }
+          },
+          "vent": {
+            "NAME": "Ventilation GWP",
+            "SYMBOL": "$GWP_{vent}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Lüftung)"
+            }
+          },
+          "hw": {
+            "NAME": "Hot Water GWP",
+            "SYMBOL": "$GWP_{hw}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Warmwasser)"
+            }
+          },
+          "other": {
+            "NAME": "Other GWP",
+            "SYMBOL": "$GWP_{other}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Sonstige)"
+            }
+          }
+        }
+      },
+      "costs": {
+        "TYPE": "CLASSIFICATION",
+        "SYMBOL": "$C$",
+        "NAME": "Costs",
+        "glcc": {
+          "TYPE": "TAXONOMY",
+          "NAME": "Global Life Cycle Costs",
+          "SYMBOL": "$C_{glcc}$",
+          "TRANSLATIONS": {
+            "DE": "Globale Lebenszykluskosten"
+          },
+          "UNITS": ["currency"],
+          "lcc": {
+            "NAME": "Life Cycle Costs",
+            "SYMBOL": "$C_{lcc}$",
+            "TRANSLATIONS": {
+              "DE": "Lebenszykluskosten"
+            },
+            "inv-const": {
+              "NAME": "Investment Costs Construction Phase",
+              "SYMBOL": "$C_{inv-const}$",
+              "TRANSLATIONS": {
+                "DE": "Investitionskosten in der Bauphase"
+              },
+              "land-costs": {
+                "NAME": "Land Costs",
+                "SYMBOL": "$C_{land}$",
+                "TRANSLATIONS": {
+                  "DE": "Grundstückskosten"
+                },
+                "land": {
+                  "NAME": "Land",
+                  "SYMBOL": "$C_{land-base}$",
+                  "TRANSLATIONS": {
+                    "DE": "Grundstück"
+                  },
+                  "land-val": {
+                    "NAME": "Land Value",
+                    "SYMBOL": "$C_{land-val}$",
+                    "TRANSLATIONS": {
+                      "DE": "Grundstückswert"
+                    }
+                  },
+                  "anc-land": {
+                    "NAME": "Ancillary Land Costs",
+                    "SYMBOL": "$C_{anc-land}$",
+                    "TRANSLATIONS": {
+                      "DE": "Grundstücksnebenkosten"
+                    }
+                  },
+                  "third-party": {
+                    "NAME": "Third Party Rights",
+                    "SYMBOL": "$C_{third-party}$",
+                    "TRANSLATIONS": {
+                      "DE": "Rechte Dritter"
+                    }
+                  },
+                  "comp": {
+                    "NAME": "Land Compensations",
+                    "SYMBOL": "$C_{comp}$",
+                    "TRANSLATIONS": {
+                      "DE": "Entschädigungen"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Land Costs",
+                    "SYMBOL": "$C_{other-land}$",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige Grundstückskosten"
+                    }
+                  }
+                }
+              },
+              "dev-costs": {
+                "NAME": "Development Costs",
+                "SYMBOL": "$C_{dev}$",
+                "TRANSLATIONS": {
+                  "DE": "Erschließungskosten"
+                },
+                "prep-meas": {
+                  "NAME": "Preparatory Measures",
+                  "SYMBOL": "$C_{prep}$",
+                  "TRANSLATIONS": {
+                    "DE": "Vorbereitende Maßnahmen"
+                  }
+                }
+              },
+              "bldg-struct": {
+                "NAME": "Building Structural Components",
+                "SYMBOL": "$C_{bldg-struct}$",
+                "TRANSLATIONS": {
+                  "DE": "Bauwerk - Baukonstruktionen"
+                }
+              },
+              "tech-sys": {
+                "NAME": "Technical Systems",
+                "SYMBOL": "$C_{tech-sys}$",
+                "TRANSLATIONS": {
+                  "DE": "Bauwerk - Technische Anlagen"
+                }
+              },
+              "out-fac": {
+                "NAME": "Outdoor Facilities And Open Spaces",
+                "SYMBOL": "$C_{out-fac}$",
+                "TRANSLATIONS": {
+                  "DE": "Außenanlagen und Freiflächen"
+                }
+              },
+              "equip-art": {
+                "NAME": "Equipment And Artworks",
+                "SYMBOL": "$C_{equip-art}$",
+                "TRANSLATIONS": {
+                  "DE": "Ausstattung und Kunstwerke"
+                }
+              },
+              "const-anc": {
+                "NAME": "Construction Ancillary Costs",
+                "SYMBOL": "$C_{const-anc}$",
+                "TRANSLATIONS": {
+                  "DE": "Baunebenkosten"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Expand Default Semio Diagram Story",
+  "status": "closed",
+  "description": "Create a semio UI Diagram component that renders a minimal absolute-placement preview of a design for mini-map usage. Use flattenDesign for absolute placements, draw clean center-to-center connection lines with filled circles for pieces on top, fit the drawing to the container size, and add a Storybook story for the Nakagin Capsule Tower using existing Metabolism assets. Extend existing checks in-place if needed and verify the semio/ui test and build flows relevant to this change.",
+  "summary": "Updated the default semio/ui Diagram Nakagin story so it now includes selection plus diff coverage for added, removed, and modified pieces and connections in one default example. Re-verified semio/ui type-check and Storybook build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/983"
+  },
+  "goal": "🎯elements",
+  "sessions": [
+    "⚪3aed9f79b499443c87525faed5f0dba4",
+    "⚪8d3218a3b2dc4b3bb69436413bbd5ba2",
+    "⚪5a11f3e80f164b1b81a8359670ffa1f1"
+  ]
+}

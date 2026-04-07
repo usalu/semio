@@ -1,0 +1,13 @@
+{
+  "title": "URI Uppercase Slug and No Whitespace",
+  "status": "closed",
+  "description": "repo: uri always have uppercase slug for everything dynamic inside the uri (e.g. file name, folder name, ticket title, etc). In the uri cant be a whitespace (but names can usually have them). Make sure to refactor and tests this.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/559"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms",
+  "sessions": [
+    "⚪1a1a212aee684a078bc08dfcca485927"
+  ]
+}

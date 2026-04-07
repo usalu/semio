@@ -1,0 +1,103 @@
+{
+  "title": "node-tests-fix",
+  "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
+  "llm": "OPUS",
+  "status": "closed",
+  "author": "Ueli Saluz <ueli.saluz@iek.uni-hannover.de>",
+  "date": {
+    "created": "2026-01-07T11:23:05Z"
+  },
+  "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
+  "checkpoints": [
+    {
+      "prompt": "Added non-empty tests for folders, files, and breachs; implemented GetFolders and GetFiles in RepoContext",
+      "date": {
+        "created": "2026-01-07T11:38:32Z"
+      },
+      "author": "Ueli Saluz <ueli.saluz@iek.uni-hannover.de>",
+      "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
+      "files": [
+        "./repo/cli/cli.go",
+        "./repo/cli/cli_test.go"
+      ],
+      "sections": [
+        {
+          "file": "./repo/cli/cli.go",
+          "section": "GraphQL Types",
+          "range": {
+            "start": {
+              "line": 45,
+              "column": 0
+            },
+            "end": {
+              "line": 585,
+              "column": 0
+            }
+          },
+          "definitions": [
+            "Ticket",
+            "GetPrompt",
+            "GetLLM",
+            "GetSummary",
+            "GetStatus",
+            "GetAuthor",
+            "GetCommit",
+            "GetCheckpoints",
+            "GetDateCreated",
+            "GetDateFinished",
+            "TicketCheckpoint"
+          ],
+          "metrics": {
+            "added": 18,
+            "removed": 0
+          }
+        },
+        {
+          "file": "./repo/cli/cli_test.go",
+          "section": "Collection Tests",
+          "range": {
+            "start": {
+              "line": 63,
+              "column": 0
+            },
+            "end": {
+              "line": 225,
+              "column": 0
+            }
+          },
+          "definitions": [
+            "TestBundlesNonEmpty",
+            "resp",
+            "TestContributorsNonEmpty",
+            "resp",
+            "TestTicketsNonEmpty",
+            "resp",
+            "TestPoliciesNonEmpty",
+            "resp",
+            "TestStatutesNonEmpty",
+            "resp",
+            "TestFoldersNonEmpty",
+            "resp",
+            "TestFilesNonEmpty",
+            "resp",
+            "TestBreachsNonEmpty",
+            "resp"
+          ],
+          "metrics": {
+            "added": 80,
+            "removed": 0
+          }
+        }
+      ],
+      "metrics": {
+        "files": 2,
+        "sections": 2,
+        "definitions": 27,
+        "lines": {
+          "added": 99,
+          "removed": 0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Summarize Command",
+  "status": "closed",
+  "description": "Introduce a new command summarize {{id|uri}} which creates a summary of the given entity. Use go embedded templates for every entity kind.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/712"
+  },
+  "goal": "🎯summarizecommand",
+  "sessions": [
+    "⚪1772149436930282547985114061061880388"
+  ]
+}

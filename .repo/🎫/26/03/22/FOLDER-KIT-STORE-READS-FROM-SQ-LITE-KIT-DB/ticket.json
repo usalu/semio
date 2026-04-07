@@ -1,0 +1,13 @@
+{
+  "title": "Folder Kit Store Reads From SQLite Kit Db",
+  "status": "closed",
+  "description": "Change FolderKitStore to read/write kit data from .semio/kit.db SQLite file instead of .semio/kit.json. Update KitFolderAdapter, desktop main.ts IPC handlers, and all consumers.",
+  "summary": "Changed FolderKitStore to read/write kit data from .semio/kit.db SQLite database instead of .semio/kit.json JSON file. Exported getSqlJs, sqliteToKit, kitToSqlite from @semio/js. Updated KitFolderAdapter interface to use Uint8Array binary data. Updated FolderKitStore.create(), save(), and reload() to use SQLite serialization via sql.js. Updated desktop main.ts IPC handlers to read/write .semio/kit.db as binary. Updated desktop preload.ts and renderer.tsx for binary kit data. Updated all 17 FolderKitStore tests for SQLite format. Fixed pre-existing circular dependency bug where module-level guid() calls in tutorial constants caused test suite failure (replaced with static IDs). All 17 FolderKitStore tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1016"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪9a11f01232e7424b8f92d65cab744ee2"
+  ]
+}

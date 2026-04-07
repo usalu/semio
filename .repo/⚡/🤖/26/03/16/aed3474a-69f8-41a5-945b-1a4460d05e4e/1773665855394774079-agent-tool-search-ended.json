@@ -1,0 +1,22 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T12:57:35Z",
+    "session": "aed3474a-69f8-41a5-945b-1a4460d05e4e"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "post_read_code",
+      "trajectory_id": "aed3474a-69f8-41a5-945b-1a4460d05e4e",
+      "timestamp": "2026-03-16T12:57:35.271111458Z",
+      "execution_id": "3ee1800b-6997-42bd-8952-238edfea93b7",
+      "tool_info": {
+        "file_path": "/workspaces/semio/semio/engine/package.json"
+      }
+    }
+  },
+  "response": {}
+}

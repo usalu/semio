@@ -1,0 +1,8 @@
+{
+  "title": "Fix D3 Simulation Update",
+  "status": "closed",
+  "summary": "Added aggressive logging to D3 simulation events and fixed broken drag handler logic.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/226"
+  }
+}

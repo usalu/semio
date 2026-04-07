@@ -1,0 +1,6 @@
+{
+  "title": "Fix store overfetching and overrendering in design app",
+  "status": "closed",
+  "description": "Fix store overfetching and overrendering in design app",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
+}

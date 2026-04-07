@@ -1,0 +1,17 @@
+{
+  "name": "@semio/assets",
+  "version": "1.0.0",
+  "type": "module",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "semio/assets",
+  "projectType": "library",
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "dependencies": {
+    "lucide-react": "^0.536.0"
+  },
+  "bundleKind": "assets"
+}

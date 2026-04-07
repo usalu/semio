@@ -1,0 +1,13 @@
+{
+  "title": "Fix Tool Searching Display Format",
+  "status": "closed",
+  "description": "All searching patterns with line numbers should be displayed like this: semio/js/sketchpad/Design.tsx#L532 for lines and semio/js/sketchpad/Design.tsx#L532-L771 for ranges instead of JSON outputs.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/657"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪6ed5c1ec2f9f4c1f87c224464f5d686a"
+  ]
+}

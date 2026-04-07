@@ -1,0 +1,10 @@
+{
+  "title": "Remove Floating Inline Comments",
+  "status": "closed",
+  "description": "Remove floating summary+spec comment lines that precede non-definition code (export, createRoot, global using, declare module, export default) across 8 files",
+  "summary": "Removed floating definition-level summary+spec comment lines before non-definition code across 8 files (20 comment lines total)",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/514"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repopolicymechanism"
+}

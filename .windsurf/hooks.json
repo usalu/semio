@@ -1,0 +1,64 @@
+{
+  "hooks": {
+    "post_cascade_response": [
+      {
+        "command": "./repo/cli/cli hook post_cascade_response windsurf-chat",
+        "show_output": false
+      }
+    ],
+    "post_mcp_tool_use": [
+      {
+        "command": "./repo/cli/cli hook post_mcp_tool_use windsurf-chat",
+        "show_output": false
+      }
+    ],
+    "post_read_code": [
+      {
+        "command": "./repo/cli/cli hook post_read_code windsurf-chat",
+        "show_output": false
+      }
+    ],
+    "post_setup_worktree": [
+      {
+        "command": "./repo/cli/cli hook post_setup_worktree windsurf-chat",
+        "show_output": false
+      }
+    ],
+    "post_write_code": [
+      {
+        "command": "./repo/cli/cli hook post_write_code windsurf-chat",
+        "show_output": false
+      }
+    ],
+    "pre_mcp_tool_use": [
+      {
+        "command": "./repo/cli/cli hook pre_mcp_tool_use windsurf-chat",
+        "show_output": false
+      }
+    ],
+    "pre_read_code": [
+      {
+        "command": "./repo/cli/cli hook pre_read_code windsurf-chat",
+        "show_output": false
+      }
+    ],
+    "pre_run_command": [
+      {
+        "command": "./repo/cli/cli hook pre_run_command windsurf-chat",
+        "show_output": true
+      }
+    ],
+    "pre_user_prompt": [
+      {
+        "command": "./repo/cli/cli hook pre_user_prompt windsurf-chat",
+        "show_output": false
+      }
+    ],
+    "pre_write_code": [
+      {
+        "command": "./repo/cli/cli hook pre_write_code windsurf-chat",
+        "show_output": false
+      }
+    ]
+  }
+}

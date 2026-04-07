@@ -1,0 +1,5 @@
+{
+  "title": "Toolbar Dropdown Subtool Alignment",
+  "status": "closed",
+  "summary": "Added five Design selection subtools so the Selection dropdown renders as a one-column five-row list (Select, Hand, Additive, Subtractive, Intersect), with updated labels and docs."
+}

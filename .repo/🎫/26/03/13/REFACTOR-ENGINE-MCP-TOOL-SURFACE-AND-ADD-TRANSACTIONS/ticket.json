@@ -1,0 +1,14 @@
+{
+  "title": "Refactor Engine MCP Tool Surface and Add Transactions",
+  "status": "closed",
+  "description": "In semio/engine, restrict MCP-exposed tools to start*, finish*, and sum_qu* variants and implement a single session-scoped global transaction mechanism with start_transaction, finalize_transaction, abort_transaction. Transaction must accumulate kit change entries with forward/backward diffs and abort must unwind all backward diffs in reverse order.",
+  "summary": "Added flat stateful engine MCP tools to create in-memory kits and exact designs, exposed current kit/design/type read tools, synced selections across transaction rollback, and extended the engine test to rebuild the exact Nakagin Capsule Tower design JSON with aborted draft changes and finalized writes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/868"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "🔀b246a0ee16a521dcd1034a05b47033ddfcd3916b⚪17734020362066338194571504100985805705",
+    "⚪615b38d98b4442f08c59479c16cda2b5"
+  ]
+}

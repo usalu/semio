@@ -1,0 +1,38 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T14:43:22Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Read",
+      "tool_input": {
+        "file_path": "/workspaces/elements/ui/.storybook/stories/Tree.stories.tsx",
+        "offset": 217,
+        "limit": 10
+      },
+      "tool_response": {
+        "type": "text",
+        "file": {
+          "filePath": "/workspaces/elements/ui/.storybook/stories/Tree.stories.tsx",
+          "content": "\nexport const ControlTreeStory: Story = {\n  args: { sections: [] },\n  render: () =\u003e \u003cControlTreeDemo /\u003e,\n};\n\n// #endregion 🔖Tree\n",
+          "numLines": 8,
+          "startLine": 217,
+          "totalLines": 224
+        }
+      },
+      "tool_use_id": "toolu_014Z4Lfiu5Lun4BATTWA7Ne8"
+    }
+  },
+  "response": {}
+}

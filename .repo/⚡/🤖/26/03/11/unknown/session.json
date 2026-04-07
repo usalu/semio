@@ -1,0 +1,1114 @@
+{
+  "id": "unknown",
+  "uri": "repo://s/unknown",
+  "contributor": "🧑‍💻ueli",
+  "client": "windsurf-chat",
+  "second": "2026-03-11T00:02:04Z",
+  "events": [
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰00⌚02⏱️04"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰00⌚02⏱️35"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "mcp0_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰00⌚03⏱️35"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰00⌚04⏱️37"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "find_by_name",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰00⌚05⏱️13"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰00⌚05⏱️59"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀5c0ab8b008efbe1510e11efe66a0fd119419a013",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰00⌚06⏱️30"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "mcp0_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚11⏱️34"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "name": "mcp0_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚13⏱️07"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "find_by_name",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚13⏱️43"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "name": "find_by_name",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚14⏱️23"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "find_by_name",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚14⏱️58"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "name": "find_by_name",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚15⏱️32"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "list_dir",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚16⏱️03"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "list_dir",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚17⏱️13"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "name": "list_dir",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚18⏱️13"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "code_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚18⏱️51"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "name": "code_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚19⏱️49"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚20⏱️26"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "mcp0_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚21⏱️20"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "name": "mcp0_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚22⏱️52"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "mcp0_ticket_open",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚23⏱️27"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.ended",
+        "name": "mcp0_ticket_open",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚24⏱️23"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚24⏱️58"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚25⏱️43"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚26⏱️28"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚27⏱️36"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚28⏱️08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚28⏱️08"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚28⏱️12"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚28⏱️18"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚29⏱️11"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚29⏱️11"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚30⏱️19"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚31⏱️03"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚31⏱️36"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚32⏱️15"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚33⏱️02"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚33⏱️43"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚34⏱️20"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚35⏱️24"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚35⏱️24"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚35⏱️56"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚37⏱️13"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚38⏱️05"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚38⏱️58"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚40⏱️29"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚41⏱️19"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚42⏱️32"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚43⏱️23"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.starting",
+        "name": "grep_search",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚44⏱️07"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚45⏱️54"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚47⏱️25"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚48⏱️06"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚49⏱️34"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚50⏱️33"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚50⏱️38"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚52⏱️23"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚54⏱️00"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚54⏱️05"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚54⏱️57"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚55⏱️44"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.code.edit.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚57⏱️05"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚57⏱️47"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚59⏱️09"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.tool.terminal.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰13⌚59⏱️51"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": null
+      },
+      "event": {
+        "checkpoint": "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️11⏰14⌚00⏱️46"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

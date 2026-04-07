@@ -1,0 +1,40 @@
+{
+  "id": "bb860385-9d99-4718-9e57-c2caa1d233c9",
+  "uri": "semiorepo://s/bb860385-9d99-4718-9e57-c2caa1d233c9",
+  "contributor": "🧑‍💻ueli",
+  "client": "copilot-chat",
+  "second": "2026-03-12T08:40:11Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "timestamp": "2026-03-12T08:40:11.014Z",
+          "hook_event_name": "SubagentStop",
+          "session_id": "bb860385-9d99-4718-9e57-c2caa1d233c9",
+          "agent_id": "9e2f70b5-6baf-4b80-92e8-54de8503ba77",
+          "agent_type": "default",
+          "stop_hook_active": false,
+          "cwd": "/workspaces/semio"
+        },
+        "response": {
+          "hookSpecificOutput": {
+            "additionalContext": "agent.ended acknowledged",
+            "hookEventName": "SubagentStop"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀68ae08219bbd3a68d8a72d460e05c86376d98380",
+        "client": "copilot-chat",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰08⌚40⏱️11",
+        "session": "⚪bb8603859d9947189e57c2caa1d233c9"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

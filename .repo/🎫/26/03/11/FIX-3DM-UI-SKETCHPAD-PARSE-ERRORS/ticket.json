@@ -1,0 +1,12 @@
+{
+  "title": "Fix 3dm-ui Sketchpad Parse Errors",
+  "status": "open",
+  "description": "Fix multiple parse errors in 3dm-ui sketchpad TSX files preventing vite from building: missing closing braces in functions, duplicate imports, malformed JSDoc comment blocks.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/843"
+  },
+  "goal": "🎯fix3dmuiparseerrors",
+  "sessions": [
+    "🔀763ae2bbf7112cf22509af849e13a331fa5e6d96⚪17732396524279775102246978293903652159"
+  ]
+}

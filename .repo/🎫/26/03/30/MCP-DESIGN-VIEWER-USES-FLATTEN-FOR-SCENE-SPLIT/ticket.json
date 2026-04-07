@@ -1,0 +1,11 @@
+{
+  "title": "Mcp Design Viewer Uses Flatten For Scene Split",
+  "status": "closed",
+  "description": "McpDesignViewer showed diagram-only because SemioDesign requires hasPlanes (pieces with plane+center). MCP payloads often ship raw kit designs without per-piece planes. Fix: apply flattenDesign(kit, guid) + applyDesignDiff like Storybook Design story, for design and scene surfaces. Export mcpEffectiveSurface for tests; add vitest describe for surface resolution.",
+  "summary": "Fix diagram-only MCP design viewer by making flattenDesign preserve computed root piece plane/center in pieceMap (previously overwritten when flatDesign.pieces was remapped from pieceMap). Added `mcpFlattenDesignForSemioSurface` helper that augments `kit.designs` when MCP kit shells omit the referenced design. Viewer uses helper for design/scene surfaces so SemioDesign's `hasPlanes` becomes true and the scene column renders. Added vitest coverage asserting flatten enables plane+center when kit omits design entry. Verified: `cd semio/ui \u0026\u0026 npm test` passed.",
+  "goal": "🎯designapp",
+  "sessions": [
+    "⚪edcaad2e13ce4593a99955e68f90539e",
+    "⚪e177027f7b8a4c30baeae9f727ba2afc"
+  ]
+}

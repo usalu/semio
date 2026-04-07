@@ -1,0 +1,28 @@
+{
+  "id": "sess-think",
+  "uri": "semiorepo://s/sess-think",
+  "contributor": "unknown",
+  "client": "cursor-chat",
+  "second": "2026-03-08T00:40:12Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "session_id": "sess-think",
+          "text": "Planning repo modifications"
+        }
+      },
+      "event": {
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️08⏰00⌚40⏱️12",
+        "session": "⚪sessthink"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

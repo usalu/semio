@@ -1,0 +1,14 @@
+{
+  "title": "Fix Coda Sidecar Startup Command",
+  "status": "closed",
+  "description": "Re-implement the welcome screen (create/open project) on the current simplified main.ts (HTTP-based MCP, no sidecar). Must not spawn any sidecar process. Add dialog and project IPC handlers, preload bridges, and WelcomePage component.",
+  "summary": "Fixed sidecar startup: changed SIDECAR_CMD from coda (non-existent binary) to uv with args run --active coda.py --sidecar. Set cwd to coda/engine/ resolved via app.getAppPath(). Used currentProjectPath instead of process.env.CODA_PROJECT in startSidecar(). Added sidecar.on error handler to prevent uncaught ENOENT crashes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/862"
+  },
+  "goal": "🎯testgoaljsonlifecycletest1773348901476808286",
+  "sessions": [
+    "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9⚪17733880089964321864650918673201653154",
+    "🔀b246a0ee16a521dcd1034a05b47033ddfcd3916b⚪17733994730915336348857591919973276098"
+  ]
+}

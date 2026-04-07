@@ -1,0 +1,38 @@
+{
+  "name": "@repo/server",
+  "version": "1.0.0",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "repo/server",
+  "projectType": "application",
+  "scripts": {
+    "dev": "next dev --port 8787",
+    "build": "next build",
+    "start": "next start --port 8787",
+    "worker": "tsx lib/worker.ts",
+    "migrate": "tsx lib/migrate.ts",
+    "test": "vitest run"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "bundleKind": "application",
+  "dependencies": {
+    "next": "^15.3.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "pg": "^8.16.0",
+    "pg-boss": "^10.3.2",
+    "zod": "^3.25.67",
+    "jose": "^6.0.11"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.6",
+    "@types/pg": "^8.15.4",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.1.6",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

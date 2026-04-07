@@ -1,0 +1,6 @@
+{
+  "title": "Consolidate Go Tests Into Main Test",
+  "status": "closed",
+  "description": "Consolidate all go tests into main_test.go",
+  "summary": "Consolidated repo-tooling Go tests into repo/cli/main_test.go, removed redundant _test.go files, fixed path/root assumptions in folder/file tool tests, and verified go test ./... passes."
+}

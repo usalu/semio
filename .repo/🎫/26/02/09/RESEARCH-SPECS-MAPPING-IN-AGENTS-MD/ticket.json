@@ -1,0 +1,10 @@
+{
+  "title": "Research Requirements Mapping in AGENTS.md",
+  "status": "closed",
+  "description": "Research the Business Logic and UI/UX sections of AGENTS.md to produce a structured mapping of which requirements belong to which files/bundles/folders/sections",
+  "summary": "Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their owning bundles/files with implementation-specificity analysis. Domain model requirements (Design through Stat, 16 sections) are clean. Repo CLI requirements (Code Hygiene, Tree, Tooling, Repo Tooling, Artifact Kind Derivation) are heavily implementation-specific. Detailed line ranges, primary files, and cleaning needs documented in ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/468"
+  },
+  "goal": "🎯r2602🎯updateddocs🎯updateddevdocs🎯updatedagentsmd"
+}

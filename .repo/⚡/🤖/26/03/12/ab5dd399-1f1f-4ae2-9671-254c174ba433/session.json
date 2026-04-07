@@ -1,0 +1,140 @@
+{
+  "id": "ab5dd399-1f1f-4ae2-9671-254c174ba433",
+  "uri": "semiorepo://s/ab5dd399-1f1f-4ae2-9671-254c174ba433",
+  "contributor": "🧑‍💻ueli",
+  "client": "windsurf-chat",
+  "second": "2026-03-12T21:20:34Z",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "ab5dd399-1f1f-4ae2-9671-254c174ba433",
+          "timestamp": "2026-03-12T21:20:34.202902414Z",
+          "execution_id": "61c4d0c7-9a7a-4d9d-b048-fac845fca7ee",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli💻main"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli💻main📌1📌47421"
+        ],
+        "second": "🎆26🌙03☀️12⏰21⌚20⏱️34",
+        "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "ab5dd399-1f1f-4ae2-9671-254c174ba433",
+          "timestamp": "2026-03-12T21:21:13.515098551Z",
+          "execution_id": "61c4d0c7-9a7a-4d9d-b048-fac845fca7ee",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli💻main"
+          }
+        ],
+        "kind": "agent.tool.search.starting",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli💻main📌1📌47421"
+        ],
+        "second": "🎆26🌙03☀️12⏰21⌚21⏱️13",
+        "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "ab5dd399-1f1f-4ae2-9671-254c174ba433",
+          "timestamp": "2026-03-12T21:21:22.450226657Z",
+          "execution_id": "61c4d0c7-9a7a-4d9d-b048-fac845fca7ee",
+          "tool_info": {
+            "file_path": "/workspaces/semio/repo/cli/main.go"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "definitions": [
+          {
+            "id": "🧰semiorepo⌨️cli💻main"
+          }
+        ],
+        "kind": "agent.tool.search.ended",
+        "parent": "",
+        "ranges": [
+          "🧰semiorepo⌨️cli💻main📌1📌47421"
+        ],
+        "second": "🎆26🌙03☀️12⏰21⌚21⏱️22",
+        "session": "⚪ab5dd3991f1f4ae29671254c174ba433"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "ab5dd399-1f1f-4ae2-9671-254c174ba433",
+          "timestamp": "2026-03-12T21:22:04.324031217Z",
+          "execution_id": "61c4d0c7-9a7a-4d9d-b048-fac845fca7ee",
+          "tool_info": {
+            "command_line": "go test -run TestCliE2E_TicketLifecycle_Syntaxes_NoManagement -count=1",
+            "cwd": "/workspaces/semio/repo/cli"
+          }
+        }
+      },
+      "event": {
+        "checkpoint": "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9",
+        "client": "windsurf-chat",
+        "contributor": "🧑‍💻ueli",
+        "files": [
+          "🧰semiorepo⌨️cli🥼maintest"
+        ],
+        "kind": "agent.tool.test.starting",
+        "parent": "",
+        "second": "🎆26🌙03☀️12⏰21⌚22⏱️04",
+        "session": "⚪ab5dd3991f1f4ae29671254c174ba433",
+        "tests": [
+          "🧰semiorepo⌨️cli🥼maintest🧪testclie2eticketlifecyclesyntaxesnomanagement"
+        ]
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

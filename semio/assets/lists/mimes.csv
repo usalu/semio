@@ -1,0 +1,32 @@
+MIME,Extension,Name,FullName
+model/gltf-binary,.glb,GLTF Binary,Graphics Library Transmission Format Binary
+model/gltf+json,.gltf,GLTF JSON,Graphics Library Transmission Format JSON
+model/stl,.stl,STL,Stereolithography
+model/obj,.obj,OBJ,Object File
+model/x-blender,.blend,Blender,Blender File
+model/vnd.3dm,.3dm,Rhino,Rhino 3D Model
+model/x-ifc,.ifc,IFC,Industry Foundation Classes
+model/acad,.dwg,DWG,Drawing
+model/dxf,.dxf,DXF,Drawing Exchange Format
+model/vnd.revit,.rvt,Revit,Revit Project
+model/vnd.speckle+json,.speckle,Speckle,Speckle Model
+image/png,.png,PNG,Portable Network Graphics
+image/jpeg,.jpg,JPEG,Joint Photographic Experts Group
+image/svg+xml,.svg,SVG,Scalable Vector Graphics
+image/gif,.gif,GIF,Graphics Interchange Format
+image/bmp,.bmp,BMP,Bitmap
+image/tiff,.tiff,TIFF,Tagged Image File Format
+application/pdf,.pdf,PDF,Portable Document Format
+application/zip,.zip,ZIP,Zip Archive
+application/json,.json,JSON,JavaScript Object Notation
+application/msword,.doc,Word,Microsoft Word Document
+application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,Word (OpenXML),Microsoft Word Document (OpenXML)
+application/vnd.ms-excel,.xls,Excel,Microsoft Excel Spreadsheet
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,Excel (OpenXML),Microsoft Excel Spreadsheet (OpenXML)
+application/vnd.ms-powerpoint,.ppt,PowerPoint,Microsoft PowerPoint Presentation
+application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx,PowerPoint (OpenXML),Microsoft PowerPoint Presentation (OpenXML)
+application/vnd.bcf+xml,.bcf,BCF,BIM Collaboration Format
+text/csv,.csv,CSV,Comma-Separated Values
+text/plain,.txt,Text,Plain Text File
+video/mp4,.mp4,MP4,MPEG-4 Video
+audio/mpeg,.mp3,MP3,MPEG-1 Audio Layer III

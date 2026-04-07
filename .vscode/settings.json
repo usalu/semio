@@ -1,0 +1,88 @@
+{
+  "playwright.reuseBrowser": false,
+  "playwright.showTrace": true,
+  "playwright.useTestServer": false,
+  "playwright.runOptions": {
+    "headless": true
+  },
+  "playwright.env": {
+    "PWDEBUG": "console"
+  },
+  "eslint.useFlatConfig": true,
+  "eslint.packageManager": "npm",
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.workingDirectories": [
+    {
+      "directory": "elements/ui",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "repo/vscode",
+      "changeProcessCWD": true
+    }
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "workbench.externalBrowser": "chrome",
+  "workbench.trustedDomains": [
+    "*"
+  ],
+  "remote.autoForwardPorts": true,
+  "remote.portsAttributes": {
+    "6274": {
+      "label": "MCP Inspector UI",
+      "onAutoForward": "openBrowser"
+    },
+    "6277": {
+      "label": "MCP Inspector Proxy",
+      "onAutoForward": "silent"
+    }
+  },
+  "mcp.servers": {
+    "playwright-test": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "playwright",
+        "run-test-mcp-server"
+      ]
+    },
+    "repo": {
+      "type": "stdio",
+      "command": "./repo/cli/cli",
+      "args": [
+        "mcp"
+      ]
+    },
+    "semio": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "semio/engine",
+        "run",
+        "main.py",
+        "--mcp-stdio"
+      ]
+    },
+    "coda": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "coda/engine",
+        "run",
+        "coda.py",
+        "--mcp-stdio"
+      ]
+    }
+  },
+  "chat.subagents.allowInvocationsFromSubagents": false,
+  "python.terminal.activateEnvironment": false
+}

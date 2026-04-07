@@ -1,0 +1,12 @@
+{
+  "title": "Remove Lowercase from Id System",
+  "status": "open",
+  "description": "Refactor the ID system to not lowercase everything while keeping all other constraints (stripping non-alphanumeric, trimming whitespace, etc). This affects Flat(), Normalize(), NormalizeLLMSlug(), NormalizeClientSlug(), StatuteIdValueToPath() and the vscode extension URI handling.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/759"
+  },
+  "goal": "🎯identity🎯idnormalization",
+  "sessions": [
+    "⚪17724728761998313068967389302261827660"
+  ]
+}

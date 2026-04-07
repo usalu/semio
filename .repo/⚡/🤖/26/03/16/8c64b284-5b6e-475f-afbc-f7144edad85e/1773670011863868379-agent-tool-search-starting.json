@@ -1,0 +1,22 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.file.read.starting",
+    "second": "2026-03-16T14:06:51Z",
+    "session": "8c64b284-5b6e-475f-afbc-f7144edad85e"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "pre_read_code",
+      "trajectory_id": "8c64b284-5b6e-475f-afbc-f7144edad85e",
+      "timestamp": "2026-03-16T14:06:51.723604723Z",
+      "execution_id": "dbbf90c6-c965-4826-a644-66ba4c5ec4c8",
+      "tool_info": {
+        "file_path": "/workspaces/semio/repo/cli/main.go"
+      }
+    }
+  },
+  "response": {}
+}

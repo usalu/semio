@@ -1,0 +1,13 @@
+{
+  "title": "Fix Hanging Go Tests",
+  "status": "closed",
+  "description": "Investigate and fix all hanging go tests in repo cli, including deadlocks and missing timeouts.",
+  "summary": "Fixed hanging Go tests by pruning expensive ticket/file traversal and reducing git-status scan cost; added regression tests for ignore matching, ticket traversal, and fingerprint behavior.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/793"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "🔀76a9acf9083071fee62fe4bd837a03ca2dc143b1⚪019ccaba1b7378b18098c5b732c774dc"
+  ]
+}

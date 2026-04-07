@@ -1,0 +1,152 @@
+export const createAttributeId = (guid: Guid): AttributeId => ({ guid });
+export const createLocationId = (guid: Guid): LocationId => ({ guid });
+export const createAuthorId = (guid: Guid): AuthorId => ({ guid });
+export const createFileId = (guid: Guid): FileId => ({ guid });
+export const createFolderId = (guid: Guid): FolderId => ({ guid });
+export const createBenchmarkId = (guid: Guid): BenchmarkId => ({ guid });
+export const createQualityId = (guid: Guid): QualityId => ({ guid });
+export const createPortId = (guid: Guid): PortId => ({ guid });
+export const createPropId = (guid: Guid): PropId => ({ guid });
+export const createModelId = (guid: Guid): ModelId => ({ guid });
+export const createConnectorId = (guid: Guid): ConnectorId => ({ guid });
+export const createTypeId = (guid: Guid): TypeId => ({ guid });
+export const createLayerId = (guid: Guid): LayerId => ({ guid });
+export const createPieceId = (guid: Guid): PieceId => ({ guid });
+export const createGroupId = (guid: Guid): GroupId => ({ guid });
+export const createConnectionId = (guid: Guid): ConnectionId => ({ guid });
+export const createStatId = (guid: Guid): StatId => ({ guid });
+export const createDesignId = (guid: Guid): DesignId => ({ guid });
+export const createKitId = (guid: Guid): KitId => ({ guid });
+export const createTagId = (guid: Guid): TagId => ({ guid });
+export const createConceptId = (guid: Guid): ConceptId => ({ guid });
+export const areSameAttributeId = (a: AttributeId, b: AttributeId): boolean => a.guid === b.guid;
+export const areSameLocationId = (a: LocationId, b: LocationId): boolean => a.guid === b.guid;
+export const areSameAuthorId = (a: AuthorId, b: AuthorId): boolean => a.guid === b.guid;
+export const areSameFileId = (a: FileId, b: FileId): boolean => a.guid === b.guid;
+export const areSameFolderId = (a: FolderId, b: FolderId): boolean => a.guid === b.guid;
+export const areSameBenchmarkId = (a: BenchmarkId, b: BenchmarkId): boolean => a.guid === b.guid;
+export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid === b.guid;
+export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.guid;
+export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
+export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.guid;
+export const areSameConnectorId = (a: ConnectorId, b: ConnectorId): boolean => a.guid === b.guid;
+export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.guid;
+export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.guid;
+export const areSamePieceId = (a: PieceId, b: PieceId): boolean => a.guid === b.guid;
+export const areSameGroupId = (a: GroupId, b: GroupId): boolean => a.guid === b.guid;
+export const areSameConnectionId = (a: ConnectionId, b: ConnectionId): boolean => a.guid === b.guid;
+export const areSameStatId = (a: StatId, b: StatId): boolean => a.guid === b.guid;
+export const areSameDesignId = (a: DesignId, b: DesignId): boolean => a.guid === b.guid;
+export const areSameKitId = (a: KitId, b: KitId): boolean => a.guid === b.guid;
+export const areSameTagId = (a: TagId, b: TagId): boolean => a.guid === b.guid;
+export const areSameConceptId = (a: ConceptId, b: ConceptId): boolean => a.guid === b.guid;
+export const getAttributeGuid = (id: AttributeId): Guid => id.guid;
+export const getLocationGuid = (id: LocationId): Guid => id.guid;
+export const getAuthorGuid = (id: AuthorId): Guid => id.guid;
+export const getFileGuid = (id: FileId): Guid => id.guid;
+export const getFolderGuid = (id: FolderId): Guid => id.guid;
+export const getBenchmarkGuid = (id: BenchmarkId): Guid => id.guid;
+export const getQualityGuid = (id: QualityId): Guid => id.guid;
+export const getPortGuid = (id: PortId): Guid => id.guid;
+export const getPropGuid = (id: PropId): Guid => id.guid;
+export const getModelGuid = (id: ModelId): Guid => id.guid;
+export const getConnectorGuid = (id: ConnectorId): Guid => id.guid;
+export const getTypeGuid = (id: TypeId): Guid => id.guid;
+export const getLayerGuid = (id: LayerId): Guid => id.guid;
+export const getPieceGuid = (id: PieceId): Guid => id.guid;
+export const getGroupGuid = (id: GroupId): Guid => id.guid;
+export const getConnectionGuid = (id: ConnectionId): Guid => id.guid;
+export const getStatGuid = (id: StatId): Guid => id.guid;
+export const getDesignGuid = (id: DesignId): Guid => id.guid;
+export const getKitGuid = (id: KitId): Guid => id.guid;
+export const getTagGuid = (id: TagId): Guid => id.guid;
+export const getConceptGuid = (id: ConceptId): Guid => id.guid;
+export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute));
+export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
+export const getAttributeDiff = (before: Attribute, after: Attribute): AttributeDiff => {
+export const inverseAttributeDiff = (original: Attribute, appliedDiff: AttributeDiff): AttributeDiff => {
+export const mergeAttributeDiff = (diff1: AttributeDiff, diff2: AttributeDiff): AttributeDiff => {
+export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attribute => {
+export const inverseAttributesDiff = (original: Attribute[], appliedDiff: AttributesDiff): AttributesDiff => {
+export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDiff): AttributesDiff => {
+export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): Attribute[] => {
+export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
+export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
+export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
+export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
+export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
+export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
+export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
+export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
+export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
+export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
+export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
+export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point));
+export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
+export const getPointDiff = (before: Point, after: Point): PointDiff => {
+export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => {
+export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => {
+export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
+export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector));
+export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
+export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
+export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => {
+export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => {
+export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
+export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane));
+export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
+export const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
+export const inversePortsDiff = (original: Port[], appliedDiff: PortsDiff): PortsDiff => {
+export const mergePortsDiff = (diff1: PortsDiff, diff2: PortsDiff): PortsDiff => {
+export const applyPortsDiff = (base: Port[], diff: PortsDiff): Port[] => {
+export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | undefined, allPorts: Port[]): boolean => {
+export const serializeProp = (prop: Prop): string => JSON.stringify(PropSchema.parse(prop));
+export const deserializeProp = (json: string): Prop => PropSchema.parse(JSON.parse(json));
+export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
+export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff => {
+export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
+export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
+export const serializeTag = (tag: Tag): string => JSON.stringify(TagSchema.parse(tag));
+export const deserializeTag = (json: string): Tag => TagSchema.parse(JSON.parse(json));
+export const getTagDiff = (before: Tag, after: Tag): TagDiff => {
+export const inverseTagDiff = (original: Tag, appliedDiff: TagDiff): TagDiff => {
+export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
+export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
+export const getTagsDiff = (before: Tag[], after: Tag[]): TagsDiff => {
+export const inverseTagsDiff = (original: Tag[], appliedDiff: TagsDiff): TagsDiff => {
+export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
+export const applyTagsDiff = (base: Tag[], diff: TagsDiff): Tag[] => {
+export const findTag = (tags: Tag[], guid: string): Tag => {
+export const serializeConcept = (concept: Concept): string => JSON.stringify(ConceptSchema.parse(concept));
+export const deserializeConcept = (json: string): Concept => ConceptSchema.parse(JSON.parse(json));
+export const getConceptDiff = (before: Concept, after: Concept): ConceptDiff => {
+export const inverseConceptDiff = (original: Concept, appliedDiff: ConceptDiff): ConceptDiff => {
+export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): ConceptDiff => {
+export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
+export const getConceptsDiff = (before: Concept[], after: Concept[]): ConceptsDiff => {
+export const inverseConceptsDiff = (original: Concept[], appliedDiff: ConceptsDiff): ConceptsDiff => {
+export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): ConceptsDiff => {
+export const applyConceptsDiff = (base: Concept[], diff: ConceptsDiff): Concept[] => {
+export const findConcept = (concepts: Concept[], guid: string): Concept => {
+export const serializeModel = (model: Model): string => JSON.stringify(ModelSchema.parse(model));
+export const deserializeModel = (json: string): Model => ModelSchema.parse(JSON.parse(json));
+export const getModelDiff = (before: Model, after: Model): ModelDiff => {
+export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): ModelDiff => {
+export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff => {
+export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
+export const areSameModel = (model: Model, other: Model): boolean => {
+export const findModel = (models: Model[], tagGuids: string[]): Model => {
+export const getAllTagGuidsFromModels = (models: Model[]): string[] => {
+export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Model | Connector, name: string, defaultValue?: string | null): string | null => {
+export const parseDesignIdFromVariant = (variant: string): string => {
+export const buildFileTree = (folders: Folder[], files: File[]): FileTreeNode[] => {
+export const createFileFromDataUri = (name: string, dataUri: string): File => {
+export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
+export const exportKit = async (kit: Kit): Promise<Blob> => {
+export const areKitsEqual = (a: Kit, b: Kit): boolean => {
+export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
+export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationResult => {
+export const serializeValidationResult = (result: ValidationResult): string => {
+export const parseValidationResult = (json: string): SerializableValidationResult => JSON.parse(json);
+export const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolean => {
+export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResult): boolean => {

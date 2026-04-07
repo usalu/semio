@@ -1,0 +1,13 @@
+{
+  "title": "Extend All Functions to Return Change Instead of Diff",
+  "status": "closed",
+  "description": "Currently all functions in semio return diffs. Extend all of them to return a change for undo/redo compatibility across all languages.",
+  "summary": "Extended all functions in semio to return Change instead of Diff across all languages (Go, TypeScript, Python, Rust, C#) for undo/redo compatibility.\n\nGo: Updated 12 Kit Change Helper functions to return KitChange.\nTypeScript: Added KitChange/DesignChange interfaces, updated 24+ functions, found and fixed 16 instances of apply*Diff losing base props/attributes/benchmarks when diff was empty, fixed quality.kind and quality.can_scale NOT NULL constraint violations in kitToSqlite, added type_prop table to SQLite schema for type-level props roundtrip, fixed sqliteToKit null-to-undefined conversion for file.size, file.hash, quality.kind, quality.defaultValue, quality.min, quality.max, benchmark.min, benchmark.max, stat.min, stat.max.\nPython: Already had getKitChange/getDesignChange.\nEngine.py: Added get_kit_change and get_design_change MCP tools.\nRust: Already had get_kit_change, get_design_change, flatten_design returning DesignChange.\nC#: Updated 17 KitSqlite functions from returning Kit to KitChange, renamed region KitSqliteDiff to KitSqliteChange.\n\nAll 17 TS tests pass, Go TestChange passes, all 11 Rust tests pass, C# compiles with 0 errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/869"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "🔀b9ca1e6831b41c4f8a849eea98d8eff6a525d256⚪17734036114327437554994243535203671166"
+  ]
+}

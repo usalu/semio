@@ -1,0 +1,60 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "name": "@semio/algorithms",
+  "version": "0.1.0",
+  "description": "semio · algorithms",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "dev": "storybook dev -p 6007 --exact-port --host 0.0.0.0 --no-open --debug",
+    "build": "storybook build",
+    "lint": "eslint --max-warnings 0 --config eslint.config.ts .",
+    "test": "vitest run --passWithNoTests --config ../../elements/ui/vitest.config.ts"
+  },
+  "targets": {
+    "lint": {
+      "command": "npm run lint",
+      "cwd": "semio/algorithms"
+    }
+  },
+  "dependencies": {
+    "@mdx-js/react": "^3.1.1",
+    "@semio/ui": "*",
+    "@semio/js": "*",
+    "@elements/ui": "*",
+    "@storybook/addon-docs": "^10.2.19",
+    "@storybook/addon-vitest": "^10.2.19",
+    "@storybook/react-vite": "^10.2.19",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "storybook": "^10.1.11"
+  },
+  "devDependencies": {
+    "@mdx-js/rollup": "^3.1.1",
+    "@types/node": "^25.0.8",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "rehype-autolink-headings": "^7.1.0",
+    "rehype-slug": "^6.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-mdx-frontmatter": "^5.2.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "semio/algorithms"
+  },
+  "bundleKind": "ui"
+}

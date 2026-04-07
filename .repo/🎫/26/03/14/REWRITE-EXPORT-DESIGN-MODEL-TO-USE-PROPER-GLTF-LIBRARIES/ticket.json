@@ -1,0 +1,12 @@
+{
+  "title": "Rewrite Export Design Model to Use Proper Gltf Libraries",
+  "status": "open",
+  "description": "Rewrite all export_design_model implementations to use proper glTF libraries instead of manual binary construction: @gltf-transform/core for TypeScript, trimesh for Python, SharpGLTF for C#, qmuntal/gltf for Go, gltf-rs/gltf for Rust.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/892"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "🔀bc8244f5cdf1436e870187d2d72a267bd75b8746⚪17735210974891350023092969367225034804"
+  ]
+}

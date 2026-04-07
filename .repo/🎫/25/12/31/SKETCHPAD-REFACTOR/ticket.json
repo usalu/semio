@@ -1,0 +1,6 @@
+{
+  "title": "SKETCHPAD-REFACTOR",
+  "status": "closed",
+  "description": "'Implement refactoring opportunities from REFACTOR-PLAN-SKETCHPAD.md: Create generic factories for event handlers, triadic hooks, selection diffs, and improve type safety across Home.tsx, Feedback.tsx, Type.tsx, Kit.tsx, and shared.ts'",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

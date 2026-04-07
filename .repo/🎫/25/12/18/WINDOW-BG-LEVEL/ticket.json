@@ -1,0 +1,6 @@
+{
+  "title": "Fix window background colors via useLevel",
+  "status": "closed",
+  "description": "\"Fix window background colors: Window component now provides LevelProvider level=window and uses bg-window; GoldenLayout chrome uses var(--window) instead of var(--base).\"",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

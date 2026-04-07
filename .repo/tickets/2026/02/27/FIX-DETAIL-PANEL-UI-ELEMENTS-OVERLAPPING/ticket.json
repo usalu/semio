@@ -1,0 +1,26 @@
+{
+  "title": "Fix Detail Panel UI Elements Overlapping",
+  "status": "closed",
+  "prompt": "UI elements in the detail panel are overlapping and dont match the old build source input. Systematically compare the old Design.Details.tsx.old with the current implementation, identify all overlapping/misaligned elements, and fix them.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/714"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-02-27T07:45:44.057099271Z",
+  "finished": "2026-03-05T13:26:26.985957661Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-27 07:45:44",
+        "finished": "2026-03-05 13:26:26"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "UI elements in the detail panel are overlapping and dont match the old build source input. Systematically compare the old Design.Details.tsx.old with the current implementation, identify all overlapping/misaligned elements, and fix them.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

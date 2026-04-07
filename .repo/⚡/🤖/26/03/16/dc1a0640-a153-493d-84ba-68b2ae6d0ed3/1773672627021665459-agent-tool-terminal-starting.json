@@ -1,0 +1,26 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "copilot-chat",
+    "contributor": "unknown",
+    "kind": "agent.tool.terminal.starting",
+    "second": "2026-03-16T14:50:26Z",
+    "session": "dc1a0640-a153-493d-84ba-68b2ae6d0ed3",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc1a0640-a153-493d-84ba-68b2ae6d0ed3.jsonl"
+  },
+  "native": {
+    "event": {
+      "timestamp": "2026-03-16T14:50:26.899Z",
+      "hook_event_name": "PreToolUse",
+      "session_id": "dc1a0640-a153-493d-84ba-68b2ae6d0ed3",
+      "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/dc1a0640-a153-493d-84ba-68b2ae6d0ed3.jsonl",
+      "tool_name": "get_terminal_output",
+      "tool_input": {
+        "id": "11716678-3d74-4e12-9290-a75fcb0204de"
+      },
+      "tool_use_id": "toolu_bdrk_01N53uvjfb8nBy8YSHM1Epi3__vscode-1773671759787",
+      "cwd": "/workspaces/semio"
+    }
+  },
+  "response": {}
+}

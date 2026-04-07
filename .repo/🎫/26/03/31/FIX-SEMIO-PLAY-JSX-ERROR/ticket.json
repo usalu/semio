@@ -1,0 +1,12 @@
+{
+  "title": "Fix Semio Play Jsx Error",
+  "status": "open",
+  "description": "Fix the JSX parsing error: Expected corresponding JSX closing tag for \u003cdiv\u003e at elements/ui/index.tsx:15924:10, causing semio play to not start.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1230"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪e5589f10cf404bdda7318f6e9a827007"
+  ]
+}

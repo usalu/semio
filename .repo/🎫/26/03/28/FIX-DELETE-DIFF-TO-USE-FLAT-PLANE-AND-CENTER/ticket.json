@@ -1,0 +1,13 @@
+{
+  "title": "Fix Delete Diff To Use Flat Plane And Center",
+  "status": "closed",
+  "description": "Fix deletePiecesAndConnectionsInDesign across all languages (JS/TS, Python, Go, Rust, C#) to use the flat plane and center from the flattened design instead of identity/zero for child pieces that become fixed when their parent connection is deleted. Update test fixture and assertions accordingly.",
+  "summary": "Fixed deletePiecesAndConnectionsInDesign across all 5 languages to use flat plane and center from the flattened design for child pieces that become fixed when parent connections are deleted. Previously all pieces jumped to origin (identity plane, zero center). Changes: TypeScript added kit parameter, calls flattenDesign, builds flat piece map. Python added kit parameter, calls flattenDesignDict, builds flat piece map. Go added kit parameter, calls FlattenDesign+ApplyDesignDiff; fixed FlattenDesign center comparison pointer aliasing bug by saving originalCenters before BFS. Rust added kit parameter, calls flatten_design, updated native_bridge.rs caller. C# added kit parameter, calls Kit.FlattenDesign; fixed FlattenDesign center rounding bug (Math.Round to integer instead of 6 decimals). Test fixture updated with correct non-zero values. All delete and flatten tests pass across all languages.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1162"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪a2c1c80a4e3146f6b323c0e3c0b9ebe9"
+  ]
+}

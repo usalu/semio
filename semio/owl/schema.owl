@@ -1,0 +1,1800 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:owl="http://www.w3.org/2002/07/owl#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns="https://example.org/semio#"
+>
+  <owl:Class rdf:about="https://example.org/semio#HiddenPiece">
+    <rdfs:label>HiddenPiece</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Piece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="Na3136df7986446b490e80502dd8ae081">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+          <owl:Restriction rdf:nodeID="Nd6c7714a143d4eaab7c90fb4eed596c3">
+            <owl:onProperty>
+              <owl:DatatypeProperty rdf:about="https://example.org/semio#isHidden">
+                <rdfs:label>isHidden</rdfs:label>
+                <rdfs:domain>
+                  <owl:Class rdf:nodeID="N57940030dd9c4ae9a2dc632a8fb3442e">
+                    <owl:unionOf rdf:parseType="Collection">
+                      <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+                      <rdf:Description rdf:about="https://example.org/semio#Layer"/>
+                    </owl:unionOf>
+                  </owl:Class>
+                </rdfs:domain>
+                <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+              </owl:DatatypeProperty>
+            </owl:onProperty>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#FlatDesign">
+    <rdfs:label>FlatDesign</rdfs:label>
+    <rdfs:comment>Design with no connections and only fixed pieces.</rdfs:comment>
+    <rdfs:comment>The flat design definition is represented as a sufficient and necessary condition: no connections and only fixed pieces.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Design"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N709680e99a0d456d8c4eed1ad67b77a7">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Design"/>
+          <owl:Class rdf:nodeID="N4611ff7c86f3472e81e4f350ea5ad302">
+            <owl:complementOf>
+              <owl:Restriction rdf:nodeID="N21c3bc4d51cb489a8709e9dc548708c5">
+                <owl:onProperty rdf:resource="https://example.org/semio#hasConnection"/>
+                <owl:someValuesFrom rdf:resource="https://example.org/semio#Connection"/>
+              </owl:Restriction>
+            </owl:complementOf>
+          </owl:Class>
+          <owl:Restriction rdf:nodeID="N8885a0debd594d0a98c404ca1c463a7f">
+            <owl:onProperty>
+              <owl:ObjectProperty rdf:about="https://example.org/semio#hasPiece">
+                <rdfs:label>hasPiece</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+                <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+              </owl:ObjectProperty>
+            </owl:onProperty>
+            <owl:allValuesFrom rdf:resource="https://example.org/semio#FixedPiece"/>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isQualityInKit">
+    <rdfs:label>isQualityInKit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Quality"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Kit"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#containsQuality">
+        <rdfs:label>containsQuality</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Quality"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#defaultSiUnit">
+    <rdfs:label>defaultSiUnit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Quality"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#description">
+    <rdfs:label>description</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasGrandchildDesign">
+    <rdfs:label>hasGrandchildDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:about="https://example.org/semio#hasChildDesign"/>
+      <rdf:Description rdf:about="https://example.org/semio#hasChildDesign"/>
+    </owl:propertyChainAxiom>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#createdByApp">
+    <rdfs:label>createdByApp</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#SemioRelease"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#pieceConnectedTo">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    <rdfs:label>pieceConnectedTo</rdfs:label>
+    <rdfs:comment>Direct piece-to-piece connectivity induced by a connection instance.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:subPropertyOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#pieceReachableFrom">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+        <rdfs:label>pieceReachableFrom</rdfs:label>
+        <rdfs:comment>Transitive reachability approximation over pieceConnectedTo.</rdfs:comment>
+        <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+      </owl:ObjectProperty>
+    </rdfs:subPropertyOf>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:nodeID="N21fd5767a71b4741b9eb705d792b2cdc">
+        <owl:inverseOf>
+          <owl:ObjectProperty rdf:about="https://example.org/semio#connectedPiece">
+            <rdfs:label>connectedPiece</rdfs:label>
+            <rdfs:comment>One endpoint piece of a connection.</rdfs:comment>
+            <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+            <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+            <rdfs:subPropertyOf rdf:resource="https://example.org/semio#hasIncidentPiece"/>
+          </owl:ObjectProperty>
+        </owl:inverseOf>
+      </rdf:Description>
+      <rdf:Description rdf:about="https://example.org/semio#connectingPiece"/>
+    </owl:propertyChainAxiom>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:nodeID="N8fc04641857e4c89956d958c3fd747e9">
+        <owl:inverseOf>
+          <owl:ObjectProperty rdf:about="https://example.org/semio#connectingPiece">
+            <rdfs:label>connectingPiece</rdfs:label>
+            <rdfs:comment>Other endpoint piece of a connection. The specification states no semantic difference from connectedPiece.</rdfs:comment>
+            <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+            <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+            <rdfs:subPropertyOf rdf:resource="https://example.org/semio#hasIncidentPiece"/>
+          </owl:ObjectProperty>
+        </owl:inverseOf>
+      </rdf:Description>
+      <rdf:Description rdf:about="https://example.org/semio#connectedPiece"/>
+    </owl:propertyChainAxiom>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#guid">
+    <rdfs:label>guid</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#VirtualType">
+    <rdfs:label>VirtualType</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Type"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N05930f24a9e44883a21c99f2630bf36e">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Type"/>
+          <owl:Restriction rdf:nodeID="Na74f2690d5e54c2f816fae67711ccaf6">
+            <owl:onProperty>
+              <owl:DatatypeProperty rdf:about="https://example.org/semio#isVirtual">
+                <rdfs:label>isVirtual</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+                <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+              </owl:DatatypeProperty>
+            </owl:onProperty>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+    <owl:disjointWith rdf:resource="https://example.org/semio#PhysicalType"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isPieceInDesign">
+    <rdfs:label>isPieceInDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+    <owl:inverseOf rdf:resource="https://example.org/semio#hasPiece"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#release">
+    <rdfs:label>release</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#SemioRelease"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#unit">
+    <rdfs:label>unit</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="N4c9fe2d1ab7b4421af44862f32f9757a">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Prop"/>
+          <rdf:Description rdf:about="https://example.org/semio#Stat"/>
+          <rdf:Description rdf:about="https://example.org/semio#Type"/>
+          <rdf:Description rdf:about="https://example.org/semio#Design"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#v">
+    <rdfs:label>v</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isModelOfType">
+    <rdfs:label>isModelOfType</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Model"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#hasModel">
+        <rdfs:label>hasModel</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Model"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#PrototypeType">
+    <rdfs:label>PrototypeType</rdfs:label>
+    <rdfs:comment>Type with no parent type.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Type"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="Ne3e97b22131b4c38842d150a88338302">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Type"/>
+          <owl:Class rdf:nodeID="N0750c91a98c64e06a73ae2d85d884f2c">
+            <owl:complementOf>
+              <owl:Restriction rdf:nodeID="Nc70a047d0f314ede87e984d568f4b925">
+                <owl:onProperty rdf:resource="https://example.org/semio#hasParentType"/>
+                <owl:someValuesFrom rdf:resource="https://example.org/semio#Type"/>
+              </owl:Restriction>
+            </owl:complementOf>
+          </owl:Class>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#yAxisY">
+    <rdfs:label>yAxisY</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#rotation">
+    <rdfs:label>rotation</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#Subtype">
+    <rdfs:label>Subtype</rdfs:label>
+    <rdfs:comment>Type that has a parent type.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Type"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N6e5d1282c80b49f99e5f9f6d93c5472a">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Type"/>
+          <owl:Restriction rdf:nodeID="N461e8f2506eb40f3812ad592080944f5">
+            <owl:onProperty>
+              <owl:ObjectProperty rdf:about="https://example.org/semio#hasParentType">
+                <rdfs:label>hasParentType</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+                <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+                <rdfs:subPropertyOf rdf:resource="https://example.org/semio#hasAncestorType"/>
+              </owl:ObjectProperty>
+            </owl:onProperty>
+            <owl:someValuesFrom rdf:resource="https://example.org/semio#Type"/>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#CenterOffsetApplicablePiece">
+    <rdfs:label>CenterOffsetApplicablePiece</rdfs:label>
+    <rdfs:comment>Selected fixed piece to which center offset is applied.</rdfs:comment>
+    <rdfs:comment>Matches the branch: fixed piece -&gt; Apply center offset.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#SelectedPiece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N37f4934326c643439b584b0f0c195cbd">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#SelectedPiece"/>
+          <rdf:Description rdf:about="https://example.org/semio#FixedPiece"/>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#license">
+    <rdfs:label>license</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isConceptInKit">
+    <rdfs:label>isConceptInKit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Concept"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Kit"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#containsConcept">
+        <rdfs:label>containsConcept</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Concept"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#PieceQuality">
+    <rdfs:label>PieceQuality</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Quality"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N2ef2ccafc30943c494e0d493cf6ad546">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <owl:Restriction rdf:nodeID="Nfd8599f01a8f4ec394ede903dca7ad87">
+            <owl:onProperty>
+              <owl:ObjectProperty rdf:about="https://example.org/semio#hasQualityKind">
+                <rdfs:label>hasQualityKind</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Quality"/>
+                <rdfs:range rdf:resource="https://example.org/semio#QualityKind"/>
+              </owl:ObjectProperty>
+            </owl:onProperty>
+            <owl:hasValue>
+              <owl:NamedIndividual rdf:about="https://example.org/semio#PieceKind">
+                <rdf:type rdf:resource="https://example.org/semio#QualityKind"/>
+                <rdfs:label>PieceKind</rdfs:label>
+              </owl:NamedIndividual>
+            </owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isFileInKit">
+    <rdfs:label>isFileInKit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#FileResource"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Kit"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#containsFile">
+        <rdfs:label>containsFile</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+        <rdfs:range rdf:resource="https://example.org/semio#FileResource"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#MirrorableType">
+    <rdfs:label>MirrorableType</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Type"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N2157dd5dec29464ca274d00aefc1cfbc">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Type"/>
+          <owl:Restriction rdf:nodeID="Nd84851573e814bd7b99ce4cd181e8b7f">
+            <owl:onProperty>
+              <owl:DatatypeProperty rdf:about="https://example.org/semio#canMirror">
+                <rdfs:label>canMirror</rdfs:label>
+                <rdfs:domain>
+                  <owl:Class rdf:nodeID="N39e36d3ee46f482ab8e4a1127bb1a353">
+                    <owl:unionOf rdf:parseType="Collection">
+                      <rdf:Description rdf:about="https://example.org/semio#Type"/>
+                      <rdf:Description rdf:about="https://example.org/semio#Design"/>
+                    </owl:unionOf>
+                  </owl:Class>
+                </rdfs:domain>
+                <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+              </owl:DatatypeProperty>
+            </owl:onProperty>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#yAxisZ">
+    <rdfs:label>yAxisZ</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasComponentMember">
+    <rdfs:label>hasComponentMember</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Component"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#memberOfComponent">
+        <rdfs:label>memberOfComponent</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Component"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#scale">
+    <rdfs:label>scale</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#ConnectorQuality">
+    <rdfs:label>ConnectorQuality</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Quality"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N53324e31223b4c46baebbba78fbdeecb">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <owl:Restriction rdf:nodeID="N2d2f65b0e8a845b596638a88b1c1ba5a">
+            <owl:onProperty rdf:resource="https://example.org/semio#hasQualityKind"/>
+            <owl:hasValue>
+              <owl:NamedIndividual rdf:about="https://example.org/semio#ConnectorKind">
+                <rdf:type rdf:resource="https://example.org/semio#QualityKind"/>
+                <rdfs:label>ConnectorKind</rdfs:label>
+              </owl:NamedIndividual>
+            </owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#gap">
+    <rdfs:label>gap</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasContribution">
+    <rdfs:label>hasContribution</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Artifact"/>
+    <rdfs:range rdf:resource="https://example.org/semio#AuthorContribution"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isDesignInKit">
+    <rdfs:label>isDesignInKit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Kit"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#containsDesign">
+        <rdfs:label>containsDesign</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isLayerInDesign">
+    <rdfs:label>isLayerInDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Layer"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#hasLayer">
+        <rdfs:label>hasLayer</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Layer"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#appVersion">
+    <rdfs:label>appVersion</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#SemioRelease"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#ParentConnectionOffsetApplicablePiece">
+    <rdfs:label>ParentConnectionOffsetApplicablePiece</rdfs:label>
+    <rdfs:comment>Selected linked root of a selection subtree to which drag offset is applied on the parent connection.</rdfs:comment>
+    <rdfs:comment>The drag algorithm classifies a selected linked piece with no selected ancestor as one whose parent connection receives the drag offset.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#SelectedPiece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N0810d28c49334fc8bf7c25932caf12fd">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#SelectedPiece"/>
+          <rdf:Description rdf:about="https://example.org/semio#LinkedPiece"/>
+          <owl:Class rdf:nodeID="N91aadbf1bfc045f3bf49fc08e1a360ac">
+            <owl:complementOf>
+              <owl:Restriction rdf:nodeID="N8b8ace417bc14da493b1cba9eadbd37c">
+                <owl:onProperty rdf:resource="https://example.org/semio#hasAncestorPiece"/>
+                <owl:someValuesFrom rdf:resource="https://example.org/semio#SelectedPiece"/>
+              </owl:Restriction>
+            </owl:complementOf>
+          </owl:Class>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#yAxisX">
+    <rdfs:label>yAxisX</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#isMaxExcluded">
+    <rdfs:label>isMaxExcluded</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="Nf6dd6fd4b8cb4ccc91d15442558305a8">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <rdf:Description rdf:about="https://example.org/semio#Benchmark"/>
+          <rdf:Description rdf:about="https://example.org/semio#Stat"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#connectorConnectedTo">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    <rdfs:label>connectorConnectedTo</rdfs:label>
+    <rdfs:comment>Direct connector-to-connector connectivity induced by a connection instance.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Connector"/>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:nodeID="Nf5feeadf718f46daa6bdf7e6308e2aa5">
+        <owl:inverseOf>
+          <owl:ObjectProperty rdf:about="https://example.org/semio#connectedConnector">
+            <rdfs:label>connectedConnector</rdfs:label>
+            <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+            <rdfs:range rdf:resource="https://example.org/semio#Connector"/>
+            <rdfs:subPropertyOf rdf:resource="https://example.org/semio#hasIncidentConnector"/>
+          </owl:ObjectProperty>
+        </owl:inverseOf>
+      </rdf:Description>
+      <rdf:Description rdf:about="https://example.org/semio#connectingConnector"/>
+    </owl:propertyChainAxiom>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:nodeID="N5a8326245f5147ba9f9a967f7dbaf462">
+        <owl:inverseOf>
+          <owl:ObjectProperty rdf:about="https://example.org/semio#connectingConnector">
+            <rdfs:label>connectingConnector</rdfs:label>
+            <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+            <rdfs:range rdf:resource="https://example.org/semio#Connector"/>
+            <rdfs:subPropertyOf rdf:resource="https://example.org/semio#hasIncidentConnector"/>
+          </owl:ObjectProperty>
+        </owl:inverseOf>
+      </rdf:Description>
+      <rdf:Description rdf:about="https://example.org/semio#connectedConnector"/>
+    </owl:propertyChainAxiom>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#centerV">
+    <rdfs:label>centerV</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:Ontology rdf:about="https://example.org/semio">
+    <rdfs:label>Semio ontology</rdfs:label>
+    <dcterms:description>OWL 2 ontology formalizing the Semio specification, including the SQL/JSON entities and derived notions such as connected, fixed, child, grandchild, and descendant.</dcterms:description>
+    <dcterms:source>Uploaded AGENTS.md Semio specification</dcterms:source>
+  </owl:Ontology>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#assignmentKit">
+    <rdfs:label>assignmentKit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#KitConceptAssignment"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Kit"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#altitude">
+    <rdfs:label>altitude</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Location"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#turn">
+    <rdfs:label>turn</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#name">
+    <rdfs:label>name</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#IgnoredSelectedPiece">
+    <rdfs:label>IgnoredSelectedPiece</rdfs:label>
+    <rdfs:comment>Selected piece ignored because it is a descendant of another selected piece.</rdfs:comment>
+    <rdfs:comment>Matches the branch: descendant of another selected piece -&gt; Ignore.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#SelectedPiece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="Nf39a363e6cbf4ecf9bf9c1230dcd650b">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#SelectedPiece"/>
+          <owl:Restriction rdf:nodeID="N3713b088f88d4b0f8f27b806c1890836">
+            <owl:onProperty>
+              <owl:ObjectProperty rdf:about="https://example.org/semio#hasAncestorPiece">
+                <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+                <rdfs:label>hasAncestorPiece</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+                <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+                <owl:inverseOf rdf:resource="https://example.org/semio#hasDescendantPiece"/>
+              </owl:ObjectProperty>
+            </owl:onProperty>
+            <owl:someValuesFrom rdf:resource="https://example.org/semio#SelectedPiece"/>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#ScalableType">
+    <rdfs:label>ScalableType</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Type"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="Ncaf6dfc7aa304d388946d34302b2b931">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Type"/>
+          <owl:Restriction rdf:nodeID="Nc30553d2ddb9426f8624533f31d42ad7">
+            <owl:onProperty>
+              <owl:DatatypeProperty rdf:about="https://example.org/semio#canScale">
+                <rdfs:label>canScale</rdfs:label>
+                <rdfs:domain>
+                  <owl:Class rdf:nodeID="Nf22e2726a0bf45e9bf409abb7abdc46f">
+                    <owl:unionOf rdf:parseType="Collection">
+                      <rdf:Description rdf:about="https://example.org/semio#Type"/>
+                      <rdf:Description rdf:about="https://example.org/semio#Design"/>
+                      <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+                    </owl:unionOf>
+                  </owl:Class>
+                </rdfs:domain>
+                <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+              </owl:DatatypeProperty>
+            </owl:onProperty>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#pointZ">
+    <rdfs:label>pointZ</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isGroupInDesign">
+    <rdfs:label>isGroupInDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Group"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#hasGroup">
+        <rdfs:label>hasGroup</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Group"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#directionX">
+    <rdfs:label>directionX</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#latitude">
+    <rdfs:label>latitude</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Location"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#key">
+    <rdfs:label>key</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="N87d350b7e1c54226ad4959d00867f7f1">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Attribute"/>
+          <rdf:Description rdf:about="https://example.org/semio#Prop"/>
+          <rdf:Description rdf:about="https://example.org/semio#Stat"/>
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasMirrorPlane">
+    <rdfs:label>hasMirrorPlane</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Plane"/>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#LockedPiece">
+    <rdfs:label>LockedPiece</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Piece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="Na13a4d4bcd82455f81674f171661cea5">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+          <owl:Restriction rdf:nodeID="Nd404f6bbf789442daf2c38518ec8d1ff">
+            <owl:onProperty>
+              <owl:DatatypeProperty rdf:about="https://example.org/semio#isLocked">
+                <rdfs:label>isLocked</rdfs:label>
+                <rdfs:domain>
+                  <owl:Class rdf:nodeID="N05028d9e8106464dbf7de5d8c545d26d">
+                    <owl:unionOf rdf:parseType="Collection">
+                      <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+                      <rdf:Description rdf:about="https://example.org/semio#Layer"/>
+                    </owl:unionOf>
+                  </owl:Class>
+                </rdfs:domain>
+                <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+              </owl:DatatypeProperty>
+            </owl:onProperty>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#shift">
+    <rdfs:label>shift</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#defaultValue">
+    <rdfs:label>defaultValue</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Quality"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#containsAttribute">
+    <rdfs:label>containsAttribute</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Attribute"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasProp">
+    <rdfs:label>hasProp</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Prop"/>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#DesignQuality">
+    <rdfs:label>DesignQuality</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Quality"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="Nab27ab47698f4fc3b89554560bce373e">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <owl:Restriction rdf:nodeID="Ncd6412fe278842aeb02102bc9d8b3455">
+            <owl:onProperty rdf:resource="https://example.org/semio#hasQualityKind"/>
+            <owl:hasValue>
+              <owl:NamedIndividual rdf:about="https://example.org/semio#DesignKind">
+                <rdf:type rdf:resource="https://example.org/semio#QualityKind"/>
+                <rdfs:label>DesignKind</rdfs:label>
+              </owl:NamedIndividual>
+            </owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#assignmentDesign">
+    <rdfs:label>assignmentDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#DesignConceptAssignment"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#u">
+    <rdfs:label>u</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#compatibleWithConnector">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    <rdfs:label>compatibleWithConnector</rdfs:label>
+    <rdfs:comment>Explicit or derived connector compatibility.</rdfs:comment>
+    <rdfs:comment>The specification's default rule 'no compatible ports means compatible with all' is a closed-world convention; under OWL's open-world semantics it is best treated as an application-level default unless fully asserted.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Connector"/>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:about="https://example.org/semio#hasPort"/>
+      <rdf:Description rdf:nodeID="N3f16fc2ed3a64c538a06ea0bd9ac96d3">
+        <owl:inverseOf>
+          <owl:ObjectProperty rdf:about="https://example.org/semio#compatibleWithPort">
+            <rdfs:label>compatibleWithPort</rdfs:label>
+            <rdfs:comment>Explicit compatible ports. Missing statements denote universal compatibility in the application semantics.</rdfs:comment>
+            <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+            <rdfs:range rdf:resource="https://example.org/semio#Port"/>
+          </owl:ObjectProperty>
+        </owl:inverseOf>
+      </rdf:Description>
+    </owl:propertyChainAxiom>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:about="https://example.org/semio#compatibleWithPort"/>
+      <rdf:Description rdf:nodeID="N4e6e903f48bb46b5bf6aa5d7068aa9c0">
+        <owl:inverseOf>
+          <owl:ObjectProperty rdf:about="https://example.org/semio#hasPort">
+            <rdfs:label>hasPort</rdfs:label>
+            <rdfs:comment>Connector's explicit port. Missing port denotes the default port under application semantics.</rdfs:comment>
+            <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+            <rdfs:range rdf:resource="https://example.org/semio#Port"/>
+          </owl:ObjectProperty>
+        </owl:inverseOf>
+      </rdf:Description>
+    </owl:propertyChainAxiom>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#directionZ">
+    <rdfs:label>directionZ</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#viewName">
+    <rdfs:label>viewName</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#tilt">
+    <rdfs:label>tilt</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#Subdesign">
+    <rdfs:label>Subdesign</rdfs:label>
+    <rdfs:comment>Design that has a parent design.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Design"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N9df114990c0646d093e0c8dc4b9f6b75">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Design"/>
+          <owl:Restriction rdf:nodeID="Nd8d05abda3a843c09c72c4c68b1b3c40">
+            <owl:onProperty>
+              <owl:ObjectProperty rdf:about="https://example.org/semio#hasParentDesign">
+                <rdfs:label>hasParentDesign</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+                <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+                <rdfs:subPropertyOf rdf:resource="https://example.org/semio#hasAncestorDesign"/>
+              </owl:ObjectProperty>
+            </owl:onProperty>
+            <owl:someValuesFrom rdf:resource="https://example.org/semio#Design"/>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#remoteUrl">
+    <rdfs:label>remoteUrl</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="N37fef41a800b49b4b3ddf4f4c8d92e3c">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Kit"/>
+          <rdf:Description rdf:about="https://example.org/semio#FileResource"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#anyURI"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#assignmentConcept">
+    <rdfs:label>assignmentConcept</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="Ncb8ccd518c334d9d932bdc6f2aa4f2fe">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#TypeConceptAssignment"/>
+          <rdf:Description rdf:about="https://example.org/semio#DesignConceptAssignment"/>
+          <rdf:Description rdf:about="https://example.org/semio#KitConceptAssignment"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="https://example.org/semio#Concept"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#definition">
+    <rdfs:label>definition</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="Naecc23248d0340e88a965e69aba7e568">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Attribute"/>
+          <rdf:Description rdf:about="https://example.org/semio#Benchmark"/>
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isTagInKit">
+    <rdfs:label>isTagInKit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Tag"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Kit"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#containsTag">
+        <rdfs:label>containsTag</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Tag"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isConnectorOfType">
+    <rdfs:label>isConnectorOfType</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#hasConnector">
+        <rdfs:label>hasConnector</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Connector"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isAuthorInKit">
+    <rdfs:label>isAuthorInKit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Author"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Kit"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#containsAuthor">
+        <rdfs:label>containsAuthor</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Author"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasActiveLayer">
+    <rdfs:label>hasActiveLayer</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Layer"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#pointY">
+    <rdfs:label>pointY</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#email">
+    <rdfs:label>email</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Author"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#imageUrl">
+    <rdfs:label>imageUrl</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#anyURI"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#taggedWithTag">
+    <rdfs:label>taggedWithTag</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Model"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Tag"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#availableCount">
+    <rdfs:label>availableCount</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#contributionAuthor">
+    <rdfs:label>contributionAuthor</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#AuthorContribution"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Author"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isConnectionInDesign">
+    <rdfs:label>isConnectionInDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#hasConnection">
+        <rdfs:label>hasConnection</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Connection"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#isTypeInKit">
+    <rdfs:label>isTypeInKit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Kit"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#containsType">
+        <rdfs:label>containsType</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#ScalableDesign">
+    <rdfs:label>ScalableDesign</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Design"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N8ea945fc9e0f4873a72a7e5423aedb30">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Design"/>
+          <owl:Restriction rdf:nodeID="N7110b6299c8c4fabac79455b0ba1938e">
+            <owl:onProperty rdf:resource="https://example.org/semio#canScale"/>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasGrandchildType">
+    <rdfs:label>hasGrandchildType</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:about="https://example.org/semio#hasChildType"/>
+      <rdf:Description rdf:about="https://example.org/semio#hasChildType"/>
+    </owl:propertyChainAxiom>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#hierarchyDepth">
+    <rdfs:label>hierarchyDepth</rdfs:label>
+    <rdfs:comment>Length of the shortest path to the next fixed piece. Usually computed externally.</rdfs:comment>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#xAxisZ">
+    <rdfs:label>xAxisZ</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#ConnectionQuality">
+    <rdfs:label>ConnectionQuality</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Quality"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N81c77965a89c4023a55a75c004396d97">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <owl:Restriction rdf:nodeID="N6c0b3a11037b4872913bff959a532dab">
+            <owl:onProperty rdf:resource="https://example.org/semio#hasQualityKind"/>
+            <owl:hasValue>
+              <owl:NamedIndividual rdf:about="https://example.org/semio#ConnectionKind">
+                <rdf:type rdf:resource="https://example.org/semio#QualityKind"/>
+                <rdfs:label>ConnectionKind</rdfs:label>
+              </owl:NamedIndividual>
+            </owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#GeneralQuality">
+    <rdfs:label>GeneralQuality</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Quality"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N461d65a35b694cf18a8f165eb2f9f17d">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <owl:Restriction rdf:nodeID="N4f5c2e7f5c3b46e9a6a8507bfb723b5b">
+            <owl:onProperty rdf:resource="https://example.org/semio#hasQualityKind"/>
+            <owl:hasValue>
+              <owl:NamedIndividual rdf:about="https://example.org/semio#GeneralKind">
+                <rdf:type rdf:resource="https://example.org/semio#QualityKind"/>
+                <rdfs:label>GeneralKind</rdfs:label>
+              </owl:NamedIndividual>
+            </owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasGroupMember">
+    <rdfs:label>hasGroupMember</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Group"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#ringT">
+    <rdfs:label>ringT</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasLocation">
+    <rdfs:label>hasLocation</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Location"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#longitude">
+    <rdfs:label>longitude</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Location"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#identifier">
+    <rdfs:label>identifier</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#updatedAt">
+    <rdfs:label>updatedAt</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#hasOrder">
+    <rdfs:label>hasOrder</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#contributionArtifact">
+    <rdfs:label>contributionArtifact</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#AuthorContribution"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Artifact"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#originY">
+    <rdfs:label>originY</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#TypeQuality">
+    <rdfs:label>TypeQuality</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Quality"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N7d1e0333af0f4790ae49e79c2c667fb9">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <owl:Restriction rdf:nodeID="N222e80f2fe29422e93f9831f0c4ae014">
+            <owl:onProperty rdf:resource="https://example.org/semio#hasQualityKind"/>
+            <owl:hasValue>
+              <owl:NamedIndividual rdf:about="https://example.org/semio#TypeKind">
+                <rdf:type rdf:resource="https://example.org/semio#QualityKind"/>
+                <rdfs:label>TypeKind</rdfs:label>
+              </owl:NamedIndividual>
+            </owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#measuresQuality">
+    <rdfs:label>measuresQuality</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="Nc08b21131c084b4fab5052f5bd6dda3d">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Prop"/>
+          <rdf:Description rdf:about="https://example.org/semio#Stat"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="https://example.org/semio#Quality"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#value">
+    <rdfs:label>value</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="Na18e7db660d24800b3c815ad5413a77e">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Attribute"/>
+          <rdf:Description rdf:about="https://example.org/semio#Prop"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasStat">
+    <rdfs:label>hasStat</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Stat"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#color">
+    <rdfs:label>color</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="N2c2b5ded473f4e1cb83ba308f3dd58d0">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+          <rdf:Description rdf:about="https://example.org/semio#Layer"/>
+          <rdf:Description rdf:about="https://example.org/semio#Group"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#directionY">
+    <rdfs:label>directionY</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#xAxisX">
+    <rdfs:label>xAxisX</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#assignmentType">
+    <rdfs:label>assignmentType</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#TypeConceptAssignment"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#centerU">
+    <rdfs:label>centerU</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#originX">
+    <rdfs:label>originX</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasGrandchildPiece">
+    <rdfs:label>hasGrandchildPiece</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+    <owl:propertyChainAxiom rdf:parseType="Collection">
+      <rdf:Description rdf:about="https://example.org/semio#hasChildPiece"/>
+      <rdf:Description rdf:about="https://example.org/semio#hasChildPiece"/>
+    </owl:propertyChainAxiom>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#icon">
+    <rdfs:label>icon</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#maxValue">
+    <rdfs:label>maxValue</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="N25fa53380c4947e488ba38cf881b8de7">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <rdf:Description rdf:about="https://example.org/semio#Benchmark"/>
+          <rdf:Description rdf:about="https://example.org/semio#Stat"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#pointX">
+    <rdfs:label>pointX</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#isMinExcluded">
+    <rdfs:label>isMinExcluded</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="N02a482e56b55488e9248eb302e91277d">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <rdf:Description rdf:about="https://example.org/semio#Benchmark"/>
+          <rdf:Description rdf:about="https://example.org/semio#Stat"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#formula">
+    <rdfs:label>formula</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Quality"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#MandatoryConnector">
+    <rdfs:label>MandatoryConnector</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Connector"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N0c85ace53e2f46dc93395e85f4122949">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Connector"/>
+          <owl:Restriction rdf:nodeID="Nd9d74942545841099ab028ed74d0e6e6">
+            <owl:onProperty>
+              <owl:DatatypeProperty rdf:about="https://example.org/semio#isMandatory">
+                <rdfs:label>isMandatory</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Connector"/>
+                <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+              </owl:DatatypeProperty>
+            </owl:onProperty>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#maxChildren">
+    <rdfs:label>maxChildren</rdfs:label>
+    <rdfs:comment>Maximum number of connections that can be connected. Defaults to 1. On connectors, this overrides the port-level value.</rdfs:comment>
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Port"/>
+          <rdf:Description rdf:about="https://example.org/semio#Connector"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#MirrorableDesign">
+    <rdfs:label>MirrorableDesign</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Design"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N151d299c43174489a0d81267809aa70c">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Design"/>
+          <owl:Restriction rdf:nodeID="Ne736ea69c4084672b57ab7fcb7e65eda">
+            <owl:onProperty rdf:resource="https://example.org/semio#canMirror"/>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#defaultImperialUnit">
+    <rdfs:label>defaultImperialUnit</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Quality"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#assignmentModel">
+    <rdfs:label>assignmentModel</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#ModelTagAssignment"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Model"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#variant">
+    <rdfs:label>variant</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#rise">
+    <rdfs:label>rise</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#createdAt">
+    <rdfs:label>createdAt</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#assignmentTag">
+    <rdfs:label>assignmentTag</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#ModelTagAssignment"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Tag"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#hasRank">
+    <rdfs:label>hasRank</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#AuthorContribution"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#path">
+    <rdfs:label>path</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="N903365027b2c4246af89b63b20733bb6">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#FileResource"/>
+          <rdf:Description rdf:about="https://example.org/semio#Layer"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#referencesFile">
+    <rdfs:label>referencesFile</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Model"/>
+    <rdfs:range rdf:resource="https://example.org/semio#FileResource"/>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#ProtoDesign">
+    <rdfs:label>ProtoDesign</rdfs:label>
+    <rdfs:comment>Design with no parent design.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Design"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N7f32ee7b9efa4f54997b8e3181fcea4d">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Design"/>
+          <owl:Class rdf:nodeID="Nc30e4144526a49e1a48cf27d7287e2b1">
+            <owl:complementOf>
+              <owl:Restriction rdf:nodeID="N2e59fcb7a83f4d0ea8acd12ab0941aa4">
+                <owl:onProperty rdf:resource="https://example.org/semio#hasParentDesign"/>
+                <owl:someValuesFrom rdf:resource="https://example.org/semio#Design"/>
+              </owl:Restriction>
+            </owl:complementOf>
+          </owl:Class>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#homepageUrl">
+    <rdfs:label>homepageUrl</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Kit"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#anyURI"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#minValue">
+    <rdfs:label>minValue</rdfs:label>
+    <rdfs:domain>
+      <owl:Class rdf:nodeID="Nd47252519a2d4398b31c124cfd197777">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Quality"/>
+          <rdf:Description rdf:about="https://example.org/semio#Benchmark"/>
+          <rdf:Description rdf:about="https://example.org/semio#Stat"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#xAxisY">
+    <rdfs:label>xAxisY</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#originZ">
+    <rdfs:label>originZ</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Plane"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasBenchmark">
+    <rdfs:label>hasBenchmark</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Quality"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Benchmark"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#instanceOfType">
+    <rdfs:label>instanceOfType</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasIncidentPiece">
+    <rdfs:label>hasIncidentPiece</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#SemioRelease">
+    <rdfs:label>SemioRelease</rdfs:label>
+    <rdfs:comment>Release metadata from the semio table.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Piece">
+    <rdfs:label>Piece</rdfs:label>
+    <rdfs:comment>Instance of either a Type or a Design.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:subClassOf>
+      <owl:Class rdf:nodeID="N0d536d9d162a44c39e99b79307586731">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#FixedPiece"/>
+          <rdf:Description rdf:about="https://example.org/semio#LinkedPiece"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:nodeID="N35f64cc18a8144b6b6f3b9d8a5f29497">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#TypeInstancePiece"/>
+          <rdf:Description rdf:about="https://example.org/semio#DesignInstancePiece"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction rdf:nodeID="N109864e888e94fbaaeac1cae43554470">
+        <owl:onProperty rdf:resource="https://example.org/semio#instanceOfType"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:maxQualifiedCardinality>
+        <owl:onClass rdf:resource="https://example.org/semio#Type"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction rdf:nodeID="N49dbdb637a6a4fd6954ad139ea750dec">
+        <owl:onProperty rdf:resource="https://example.org/semio#instanceOfDesign"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:maxQualifiedCardinality>
+        <owl:onClass rdf:resource="https://example.org/semio#Design"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasDescendantPiece">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+    <rdfs:label>hasDescendantPiece</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#TypeConceptAssignment">
+    <rdfs:label>TypeConceptAssignment</rdfs:label>
+    <rdfs:comment>Reified type-concept relation with ordering.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Kit">
+    <rdfs:label>Kit</rdfs:label>
+    <rdfs:comment>Collection of types, designs, qualities, files, authors, tags, concepts, and attributes.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Artifact"/>
+    <rdfs:subClassOf>
+      <owl:Class rdf:nodeID="N0910e9ac8c964cbaa76879b4201df69d">
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#StaticKit"/>
+          <rdf:Description rdf:about="https://example.org/semio#DynamicKit"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#DesignConceptAssignment">
+    <rdfs:label>DesignConceptAssignment</rdfs:label>
+    <rdfs:comment>Reified design-concept relation with ordering.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasChildType">
+    <rdfs:label>hasChildType</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+    <owl:inverseOf rdf:resource="https://example.org/semio#hasParentType"/>
+    <rdfs:subPropertyOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#hasDescendantType">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+        <rdfs:label>hasDescendantType</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+      </owl:ObjectProperty>
+    </rdfs:subPropertyOf>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#FixedPiece">
+    <rdfs:label>FixedPiece</rdfs:label>
+    <rdfs:comment>Piece with a plane.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Piece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N3be7a266b0b143f9abddac43ab3709b9">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+          <owl:Restriction rdf:nodeID="Nad0f2958e9ff4a1d989d70311cf789b4">
+            <owl:onProperty>
+              <owl:ObjectProperty rdf:about="https://example.org/semio#hasPlane">
+                <rdfs:label>hasPlane</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+                <rdfs:range rdf:resource="https://example.org/semio#Plane"/>
+              </owl:ObjectProperty>
+            </owl:onProperty>
+            <owl:someValuesFrom rdf:resource="https://example.org/semio#Plane"/>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+    <owl:disjointWith rdf:resource="https://example.org/semio#LinkedPiece"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Connection">
+    <rdfs:label>Connection</rdfs:label>
+    <rdfs:comment>3D link between two pieces with translation and rotation parameters.</rdfs:comment>
+    <rdfs:comment>The two pieces are called connected and connecting, but the specification states there is no semantic difference between them.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+    <rdfs:subClassOf>
+      <owl:Restriction rdf:nodeID="N49244017154144ca8c0010e879487d09">
+        <owl:onProperty rdf:resource="https://example.org/semio#connectedPiece"/>
+        <owl:someValuesFrom rdf:resource="https://example.org/semio#Piece"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction rdf:nodeID="N5be9d934cfe04bdba90ca593a0ab42d7">
+        <owl:onProperty rdf:resource="https://example.org/semio#connectingPiece"/>
+        <owl:someValuesFrom rdf:resource="https://example.org/semio#Piece"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction rdf:nodeID="Nf6b06a435df040fdaf7144b2518af165">
+        <owl:onProperty rdf:resource="https://example.org/semio#connectedConnector"/>
+        <owl:someValuesFrom rdf:resource="https://example.org/semio#Connector"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction rdf:nodeID="Na724ccace7e543e691984f569b9c7e23">
+        <owl:onProperty rdf:resource="https://example.org/semio#connectingConnector"/>
+        <owl:someValuesFrom rdf:resource="https://example.org/semio#Connector"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#DynamicKit">
+    <rdfs:label>DynamicKit</rdfs:label>
+    <rdfs:comment>A dynamic kit bound to a runtime.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Kit"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Plane">
+    <rdfs:label>Plane</rdfs:label>
+    <rdfs:comment>3D plane with origin, x-axis, and y-axis.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#LinkedPiece">
+    <rdfs:label>LinkedPiece</rdfs:label>
+    <rdfs:comment>Piece participating in at least one connection.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Piece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N2852d98d20314199a973c722041ea4f8">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+          <owl:Restriction rdf:nodeID="N2a7ae65a59474820a5d48a047591655c">
+            <owl:onProperty>
+              <owl:ObjectProperty rdf:about="https://example.org/semio#participatesInConnection">
+                <rdfs:label>participatesInConnection</rdfs:label>
+                <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+                <rdfs:range rdf:resource="https://example.org/semio#Connection"/>
+                <owl:inverseOf rdf:resource="https://example.org/semio#hasIncidentPiece"/>
+              </owl:ObjectProperty>
+            </owl:onProperty>
+            <owl:someValuesFrom rdf:resource="https://example.org/semio#Connection"/>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Component">
+    <rdfs:label>Component</rdfs:label>
+    <rdfs:comment>Connected component of pieces. Membership is typically asserted or computed externally.</rdfs:comment>
+    <rdfs:comment>OWL can capture component membership as an asserted relation and approximate graph reachability via pieceReachableFrom, but exact connected-component partitioning usually requires external computation.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasAncestorType">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+    <rdfs:label>hasAncestorType</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Type"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Type"/>
+    <owl:inverseOf rdf:resource="https://example.org/semio#hasDescendantType"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasChildDesign">
+    <rdfs:label>hasChildDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+    <owl:inverseOf rdf:resource="https://example.org/semio#hasParentDesign"/>
+    <rdfs:subPropertyOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#hasDescendantDesign">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+        <rdfs:label>hasDescendantDesign</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+      </owl:ObjectProperty>
+    </rdfs:subPropertyOf>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#KitConceptAssignment">
+    <rdfs:label>KitConceptAssignment</rdfs:label>
+    <rdfs:comment>Reified kit-concept relation with ordering.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#ModelTagAssignment">
+    <rdfs:label>ModelTagAssignment</rdfs:label>
+    <rdfs:comment>Reified model-tag relation with ordering.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Location">
+    <rdfs:label>Location</rdfs:label>
+    <rdfs:comment>Geospatial location with longitude, latitude, and altitude.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#StaticKit">
+    <rdfs:label>StaticKit</rdfs:label>
+    <rdfs:comment>A static kit stored as a ZIP archive containing .semio/kit.db.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Kit"/>
+    <owl:disjointWith rdf:resource="https://example.org/semio#DynamicKit"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Group">
+    <rdfs:label>Group</rdfs:label>
+    <rdfs:comment>Collection of pieces within a design.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#PhysicalType">
+    <rdfs:label>PhysicalType</rdfs:label>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Type"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N303dbd10a5eb42faa8401b8b92c5dc77">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Type"/>
+          <owl:Restriction rdf:nodeID="N28c782760c2c48bba95410bba53c373b">
+            <owl:onProperty rdf:resource="https://example.org/semio#isVirtual"/>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Entity">
+    <rdfs:label>Entity</rdfs:label>
+    <rdfs:comment>Top-level Semio entity.</rdfs:comment>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#instanceOfDesign">
+    <rdfs:label>instanceOfDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="https://example.org/semio#isSelected">
+    <rdfs:label>isSelected</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+  </owl:DatatypeProperty>
+  <owl:Class rdf:about="https://example.org/semio#AuthorContribution">
+    <rdfs:label>AuthorContribution</rdfs:label>
+    <rdfs:comment>Reified contribution relation with rank linking an author to a type or design.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Concept">
+    <rdfs:label>Concept</rdfs:label>
+    <rdfs:comment>Semantic grouping concept for kits, types, or designs.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Port">
+    <rdfs:label>Port</rdfs:label>
+    <rdfs:comment>Named connector port used for explicit compatibility control.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Attribute">
+    <rdfs:label>Attribute</rdfs:label>
+    <rdfs:comment>Metadata key with optional value and definition.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Benchmark">
+    <rdfs:label>Benchmark</rdfs:label>
+    <rdfs:comment>Performance benchmark within a quality.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Quality">
+    <rdfs:label>Quality</rdfs:label>
+    <rdfs:comment>Measurement definition with key, name, kind, units, range constraints, default value, and optional formula.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Design">
+    <rdfs:label>Design</rdfs:label>
+    <rdfs:comment>Undirected graph of pieces and connections with layers, groups, stats, props, concepts, and attributes.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Artifact"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#DesignInstancePiece">
+    <rdfs:label>DesignInstancePiece</rdfs:label>
+    <rdfs:comment>Piece instantiating a Design.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Piece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N71708d29d67846518edb10235792d33e">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+          <owl:Restriction rdf:nodeID="Nb5bb61530a8a4ccea5581c8a842d170a">
+            <owl:onProperty rdf:resource="https://example.org/semio#instanceOfDesign"/>
+            <owl:someValuesFrom rdf:resource="https://example.org/semio#Design"/>
+          </owl:Restriction>
+          <owl:Class rdf:nodeID="N8cbbd1fd2d5b44dc8f932f07d984e611">
+            <owl:complementOf>
+              <owl:Restriction rdf:nodeID="N7b5fe195747e4519bb092cd5b9ae9f9d">
+                <owl:onProperty rdf:resource="https://example.org/semio#instanceOfType"/>
+                <owl:someValuesFrom rdf:resource="https://example.org/semio#Type"/>
+              </owl:Restriction>
+            </owl:complementOf>
+          </owl:Class>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Type">
+    <rdfs:label>Type</rdfs:label>
+    <rdfs:comment>Reusable component with models, connectors, attributes, concepts, and authors.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Artifact"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#SelectedPiece">
+    <rdfs:label>SelectedPiece</rdfs:label>
+    <rdfs:comment>Workflow/UI selection state used by the dragging algorithm.</rdfs:comment>
+    <rdfs:comment>Selection is not part of the persistent Semio schema; it is introduced here to formalize the dragging algorithm discussed in the conversation.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Piece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="Nd387daaeadf44a08a4814a363652e86a">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+          <owl:Restriction rdf:nodeID="N6c5c794a976745cdbfb3ca299ab6dc1b">
+            <owl:onProperty rdf:resource="https://example.org/semio#isSelected"/>
+            <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:hasValue>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasChildPiece">
+    <rdfs:label>hasChildPiece</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+    <owl:inverseOf>
+      <owl:ObjectProperty rdf:about="https://example.org/semio#hasParentPiece">
+        <rdfs:label>hasParentPiece</rdfs:label>
+        <rdfs:domain rdf:resource="https://example.org/semio#Piece"/>
+        <rdfs:range rdf:resource="https://example.org/semio#Piece"/>
+        <rdfs:subPropertyOf rdf:resource="https://example.org/semio#hasAncestorPiece"/>
+      </owl:ObjectProperty>
+    </owl:inverseOf>
+    <rdfs:subPropertyOf rdf:resource="https://example.org/semio#hasDescendantPiece"/>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#Connector">
+    <rdfs:label>Connector</rdfs:label>
+    <rdfs:comment>Conceptual connection point with point, direction, optional port, compatibility, and metadata.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Layer">
+    <rdfs:label>Layer</rdfs:label>
+    <rdfs:comment>Organizational grouping within a design.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Tag">
+    <rdfs:label>Tag</rdfs:label>
+    <rdfs:comment>Kebab-cased name used to tag models.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#QualityKind">
+    <rdfs:label>QualityKind</rdfs:label>
+    <rdfs:comment>Enumeration of quality applicability kinds.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="Nbcf27802dad5403b868408e06562754a">
+        <owl:oneOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#GeneralKind"/>
+          <rdf:Description rdf:about="https://example.org/semio#DesignKind"/>
+          <rdf:Description rdf:about="https://example.org/semio#TypeKind"/>
+          <rdf:Description rdf:about="https://example.org/semio#PieceKind"/>
+          <rdf:Description rdf:about="https://example.org/semio#ConnectionKind"/>
+          <rdf:Description rdf:about="https://example.org/semio#ConnectorKind"/>
+        </owl:oneOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasAncestorDesign">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+    <rdfs:label>hasAncestorDesign</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Design"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Design"/>
+    <owl:inverseOf rdf:resource="https://example.org/semio#hasDescendantDesign"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="https://example.org/semio#hasIncidentConnector">
+    <rdfs:label>hasIncidentConnector</rdfs:label>
+    <rdfs:domain rdf:resource="https://example.org/semio#Connection"/>
+    <rdfs:range rdf:resource="https://example.org/semio#Connector"/>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="https://example.org/semio#Model">
+    <rdfs:label>Model</rdfs:label>
+    <rdfs:comment>Tagged URL to a resource.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Stat">
+    <rdfs:label>Stat</rdfs:label>
+    <rdfs:comment>Statistical measurement on a design referencing a quality.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#FileResource">
+    <rdfs:label>FileResource</rdfs:label>
+    <rdfs:comment>Local or remote file resource referenced by models or kits.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Author">
+    <rdfs:label>Author</rdfs:label>
+    <rdfs:comment>Named contributor with email.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Artifact">
+    <rdfs:label>Artifact</rdfs:label>
+    <rdfs:comment>Reusable or authored artifact such as a Kit, Type, or Design.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#Prop">
+    <rdfs:label>Prop</rdfs:label>
+    <rdfs:comment>Key-value pair referencing a quality with an optional unit.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Entity"/>
+  </owl:Class>
+  <owl:Class rdf:about="https://example.org/semio#TypeInstancePiece">
+    <rdfs:label>TypeInstancePiece</rdfs:label>
+    <rdfs:comment>Piece instantiating a Type.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="https://example.org/semio#Piece"/>
+    <owl:equivalentClass>
+      <owl:Class rdf:nodeID="N8d88fec85788490aa84bb428346eb37b">
+        <owl:intersectionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="https://example.org/semio#Piece"/>
+          <owl:Restriction rdf:nodeID="Nc4ddd06967d445f991444c3c3e1e0e69">
+            <owl:onProperty rdf:resource="https://example.org/semio#instanceOfType"/>
+            <owl:someValuesFrom rdf:resource="https://example.org/semio#Type"/>
+          </owl:Restriction>
+          <owl:Class rdf:nodeID="N99fbd67ed74e42a2a8def19e2aa4ecb2">
+            <owl:complementOf>
+              <owl:Restriction rdf:nodeID="N955b57043fcc49eeb2b97843148d08f8">
+                <owl:onProperty rdf:resource="https://example.org/semio#instanceOfDesign"/>
+                <owl:someValuesFrom rdf:resource="https://example.org/semio#Design"/>
+              </owl:Restriction>
+            </owl:complementOf>
+          </owl:Class>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+    <owl:disjointWith rdf:resource="https://example.org/semio#DesignInstancePiece"/>
+  </owl:Class>
+</rdf:RDF>

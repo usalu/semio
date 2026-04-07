@@ -1,0 +1,130 @@
+{
+  "qualities": [
+    {
+      "key": "semio.gwp.life-cycle",
+      "name": "Life Cycle Global Warming Potential",
+      "translation": {
+        "de": "Treibhauspotenzial des Lebenszyklus"
+      },
+      "description": "The life cycle global warming potential is the total greenhouse gas emissions associated with the life cycle of the whole building.",
+      "si": "kgCO2e",
+      "imperial": "lbCO2e",
+      "symbol": "GWP_{life-cycle}",
+      "formula": "Add ( Multiply ( semio.gwp.energy semio.time.life ) semio.gwp.construction )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.gwp.energy",
+      "name": "Energy Global Warming Potential",
+      "translation": {
+        "de": "Treibhauspotenzial der Energie"
+      },
+      "description": "The energy global warming potential is the total greenhouse gas emissions associated with the energy consumption of the whole building over a year.",
+      "si": "kgCO2e/a",
+      "imperial": "lbCO2e/yr",
+      "symbol": "GWP_{energy}",
+      "formula": "Add ( semio.gwp.heating semio.gwp.electricity semio.gwp.ventilation )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.gwp.heating",
+      "name": "Heating Global Warming Potential",
+      "translation": {
+        "de": "Heizung Treibhauspotenzial"
+      },
+      "description": "The heating global warming potential is the product of final heating energy demand and heating global warming potential factor.",
+      "si": "kgCO2e/a",
+      "imperial": "lbCO2e/yr",
+      "symbol": "GWP_h",
+      "formula": "Multiply ( semio.energy.demand.final.heating semio.factor.gwp.heating )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.factor.gwp.heating",
+      "name": "Heating Global Warming Potential Factor",
+      "translation": {
+        "de": "Wärme Treibhauspotenzial-Faktor"
+      },
+      "description": "The global warming potential factor per unit of heating energy.",
+      "si": "kgCO2e/kWh",
+      "imperial": "kgCO2e/kWh",
+      "symbol": "f_{h,GWP}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.gwp.electricity",
+      "name": "Electricity Global Warming Potential",
+      "translation": {
+        "de": "Strom Treibhauspotenzial"
+      },
+      "description": "The electricity global warming potential is the product of electricity energy demand and electricity global warming potential factor per year.",
+      "si": "kgCO2e/a",
+      "imperial": "lbCO2e/yr",
+      "symbol": "GWP_e",
+      "formula": "Multiply ( semio.energy.demand.electricity semio.factor.gwp.electricity )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.factor.gwp.electricity",
+      "name": "Electricity Global Warming Potential Factor",
+      "translation": {
+        "de": "Strom Treibhausfaktor"
+      },
+      "description": "The global warming potential factor per unit of electricity energy.",
+      "si": "kgCO2e/kWh",
+      "imperial": "kgCO2e/kWh",
+      "symbol": "f_{e,GWP}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.gwp.ventilation",
+      "name": "Ventilation Global Warming Potential",
+      "translation": {
+        "de": "Lüftungs-Treibhauspotenzial"
+      },
+      "description": "The ventilation global warming potential is the product of ventilation energy demand and electricity global warming potential factor for one year.",
+      "si": "kgCO2e/a",
+      "imperial": "lbCO2e/yr",
+      "symbol": "GWP_v",
+      "formula": "Multiply ( semio.energy.demand.final.ventilation semio.factor.gwp.electricity )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.gwp.construction",
+      "name": "Construction Global Warming Potential",
+      "translation": {
+        "de": "Treibhauspotenzial aller Bauteile"
+      },
+      "description": "The construction global warming potential is the total greenhouse gas emissions associated with the construction of the whole building.",
+      "si": "kgCO2e",
+      "imperial": "lbCO2e",
+      "symbol": "GWP_{construction}",
+      "formula": "Add ( semio.gwp.construction.building semio.gwp.construction.technical-equipment )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.gwp.construction.building",
+      "name": "Building Construction Global Warming Potential",
+      "translation": {
+        "de": "Treibhauspotenzial der Konstruktion"
+      },
+      "description": "The building construction global warming potential is the total greenhouse gas emissions associated with the construction of the building.",
+      "si": "kgCO2e",
+      "imperial": "lbCO2e",
+      "symbol": "GWP_{construction,building}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.gwp.construction.technical-equipment",
+      "name": "Technical Equipment Global Warming Potential",
+      "translation": {
+        "de": "Treibhauspotenzial der technischen Ausstattung"
+      },
+      "description": "The technical equipment global warming potential is the total greenhouse gas emissions associated with the technical equipment of the building.",
+      "si": "kgCO2e",
+      "imperial": "lbCO2e",
+      "symbol": "GWP_{construction,technical}",
+      "format": "#,##0.##"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "ms-vscode-remote.remote-containers",
+    "vscode-icons-team.vscode-icons",
+    "ms-playwright.playwright",
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit"
+  ],
+  "unwantedRecommendations": []
+}

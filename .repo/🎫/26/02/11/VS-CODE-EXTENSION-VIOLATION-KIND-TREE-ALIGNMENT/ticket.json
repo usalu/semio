@@ -1,0 +1,10 @@
+{
+  "title": "VS Code Extension Breach Kind Tree Alignment",
+  "status": "closed",
+  "description": "Align the VS Code extension's statute hierarchy with the CLI's nested tree structure (slash-separated paths, hash-separated titleized IDs). Update tests to reflect these changes.",
+  "summary": "Aligned VS Code extension breach tree with CLI policy tree output. Updated extension.ts to handle statute hierarchy and fix double emoji display. Extended extension.test.ts with new test suite for statute hierarchy.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/489"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"
+}

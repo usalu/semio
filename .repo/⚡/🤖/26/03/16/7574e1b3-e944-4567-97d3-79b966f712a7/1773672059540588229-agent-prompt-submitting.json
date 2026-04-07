@@ -1,0 +1,22 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "windsurf-chat",
+    "contributor": "unknown",
+    "kind": "agent.prompt.submitting",
+    "second": "2026-03-16T14:40:59Z",
+    "session": "7574e1b3-e944-4567-97d3-79b966f712a7"
+  },
+  "native": {
+    "event": {
+      "agent_action_name": "pre_user_prompt",
+      "trajectory_id": "7574e1b3-e944-4567-97d3-79b966f712a7",
+      "timestamp": "2026-03-16T14:40:59.410333668Z",
+      "execution_id": "2f27430f-777c-45fd-a591-e79d51c28f09",
+      "tool_info": {
+        "user_prompt": "Continue"
+      }
+    }
+  },
+  "response": {}
+}

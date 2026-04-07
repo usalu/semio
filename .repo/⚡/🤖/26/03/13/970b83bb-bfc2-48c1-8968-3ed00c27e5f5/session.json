@@ -1,0 +1,35 @@
+{
+  "id": "970b83bb-bfc2-48c1-8968-3ed00c27e5f5",
+  "uri": "semiorepo://s/970b83bb-bfc2-48c1-8968-3ed00c27e5f5",
+  "checkpoint": "1efa44848e9ec2b5680dd1a6f66b86c5267f2df9",
+  "contributor": "🧑‍💻ueli",
+  "client": "claude-code",
+  "second": "2026-03-13T07:27:45Z",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/970b83bb-bfc2-48c1-8968-3ed00c27e5f5.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "session_id": "970b83bb-bfc2-48c1-8968-3ed00c27e5f5",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/970b83bb-bfc2-48c1-8968-3ed00c27e5f5.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionStart",
+          "source": "startup"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9",
+        "client": "claude-code",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰07⌚27⏱️45",
+        "session": "⚪970b83bbbfc248c189683ed00c27e5f5",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/970b83bb-bfc2-48c1-8968-3ed00c27e5f5.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

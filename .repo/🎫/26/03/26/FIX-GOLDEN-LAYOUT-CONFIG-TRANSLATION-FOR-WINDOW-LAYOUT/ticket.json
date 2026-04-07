@@ -1,0 +1,12 @@
+{
+  "title": "Fix GoldenLayout Config Translation for Window Layout",
+  "status": "open",
+  "description": "Fix GoldenLayout init crash: UnreachableCase: undefined. The UIWindowLayout config uses kind/children/windowKindId but GoldenLayout expects type/content/componentType. Need to fix the config translation layer.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1105"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪d5cb54aac0fd417a992b87f4992dea1a"
+  ]
+}

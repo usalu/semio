@@ -1,0 +1,6 @@
+{
+  "title": "COMMENT-STRING-DETECT",
+  "status": "closed",
+  "description": "inside strings are wrongly identified as comments.",
+  "goal": "🎯aioptimizedrepo"
+}

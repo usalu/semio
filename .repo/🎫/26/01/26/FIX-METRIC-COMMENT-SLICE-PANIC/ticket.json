@@ -1,0 +1,8 @@
+{
+  "title": "Fix Metric Comment Slice Panic",
+  "status": "closed",
+  "summary": "Fix Go panic in metrics generation by adding defensive checks to common suffix and prefix calculation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/209"
+  }
+}

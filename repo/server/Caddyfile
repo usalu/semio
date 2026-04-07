@@ -1,0 +1,6 @@
+# Caddy reverse proxy config for semio repo server.
+# Replace {$DOMAIN} with your actual domain or use env var.
+
+{$DOMAIN:repo.semio.dev} {
+    reverse_proxy web:8787
+}

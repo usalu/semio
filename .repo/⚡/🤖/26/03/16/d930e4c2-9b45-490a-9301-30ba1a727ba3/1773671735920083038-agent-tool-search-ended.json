@@ -1,0 +1,37 @@
+{
+  "event": {
+    "checkpoint": "eb4eaa3f1abb740164078ea17c75a7c913caa277",
+    "client": "claude-code",
+    "contributor": "unknown",
+    "kind": "agent.file.read.ended",
+    "second": "2026-03-16T14:35:22Z",
+    "session": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+    "transcript": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl"
+  },
+  "native": {
+    "event": {
+      "session_id": "d930e4c2-9b45-490a-9301-30ba1a727ba3",
+      "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/d930e4c2-9b45-490a-9301-30ba1a727ba3.jsonl",
+      "cwd": "/workspaces/semio",
+      "permission_mode": "bypassPermissions",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Grep",
+      "tool_input": {
+        "pattern": "ChevronLeftIcon|ChevronRightIcon|ChevronLeft|ChevronRight",
+        "path": "/workspaces/elements/ui/elements.tsx",
+        "output_mode": "content",
+        "head_limit": 10
+      },
+      "tool_response": {
+        "mode": "content",
+        "numFiles": 0,
+        "filenames": [],
+        "content": "51:  ChevronLeftIcon,\n52:  ChevronRightIcon,\n1499:          \u003cChevronLeftIcon className=\"size-small\" /\u003e\n5085:          {loading ? \u003cSpinner size=\"small\" className=\"text-muted-foreground\" /\u003e : open ? \u003cChevronDownIcon className=\"size-[14px] flex-shrink-0\" /\u003e : \u003cChevronRightIcon className=\"size-[14px] flex-shrink-0\" /\u003e}\n5197:            {open ? \u003cChevronDownIcon className=\"size-[14px] flex-shrink-0\" /\u003e : \u003cChevronRightIcon className=\"size-[14px] flex-shrink-0\" /\u003e}\n5411:            {loading ? \u003cSpinner size=\"small\" className=\"text-muted-foreground\" /\u003e : open ? \u003cChevronDownIcon className=\"size-[14px] flex-shrink-0\" /\u003e : \u003cChevronRightIcon className=\"size-[14px] flex-shrink-0\" /\u003e}\n6225:                {open ? \u003cChevronDownIcon className={cn(\"size-[14px] flex-shrink-0\", classNames?.folderChevron)} /\u003e : \u003cChevronRightIcon className={cn(\"size-[14px] flex-shrink-0\", classNames?.folderChevron)} /\u003e}\n6482:  const icon = isOpen ? \u003cChevronDownIcon className=\"cursor-foldable\" /\u003e : \u003cChevronRightIcon className=\"cursor-foldable\" /\u003e;\n9891:        icon={Icon ? \u003cIcon size={16} /\u003e : \u003cChevronLeftIcon className=\"size-small\" /\u003e}\n9917:        icon={Icon ? \u003cIcon size={16} /\u003e : \u003cChevronRightIcon className=\"size-small\" /\u003e}",
+        "numLines": 10,
+        "appliedLimit": 10
+      },
+      "tool_use_id": "toolu_01UxpKmKRGZQ6WQyUG1eJMbM"
+    }
+  },
+  "response": {}
+}

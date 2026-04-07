@@ -1,0 +1,59 @@
+{
+  "id": "f706226e-e1e6-4458-8127-181a58d2fc63",
+  "uri": "semiorepo://s/f706226e-e1e6-4458-8127-181a58d2fc63",
+  "checkpoint": "23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+  "contributor": "🧑‍💻ueli",
+  "client": "claude-code",
+  "second": "2026-03-13T13:37:46Z",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/f706226e-e1e6-4458-8127-181a58d2fc63.jsonl",
+  "events": [
+    {
+      "native": {
+        "event": {
+          "session_id": "f706226e-e1e6-4458-8127-181a58d2fc63",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/f706226e-e1e6-4458-8127-181a58d2fc63.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionStart",
+          "source": "startup"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "claude-code",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.started",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰13⌚37⏱️46",
+        "session": "⚪f706226ee1e644588127181a58d2fc63",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/f706226e-e1e6-4458-8127-181a58d2fc63.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    },
+    {
+      "native": {
+        "event": {
+          "session_id": "f706226e-e1e6-4458-8127-181a58d2fc63",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/f706226e-e1e6-4458-8127-181a58d2fc63.jsonl",
+          "cwd": "/workspaces/semio",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        }
+      },
+      "event": {
+        "checkpoint": "🔀23ded79aa1516d89a72e21e6258cd22bbf7df88b",
+        "client": "claude-code",
+        "contributor": "🧑‍💻ueli",
+        "kind": "agent.ended",
+        "parent": "",
+        "second": "🎆26🌙03☀️13⏰22⌚25⏱️28",
+        "session": "⚪f706226ee1e644588127181a58d2fc63",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/f706226e-e1e6-4458-8127-181a58d2fc63.jsonl"
+      },
+      "response": {
+        "allowed": true
+      }
+    }
+  ]
+}

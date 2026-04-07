@@ -1,0 +1,59 @@
+{
+  "id": "3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9",
+  "uri": "repo://session/3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9",
+  "client": "copilot-chat",
+  "second": "2026-03-26T13:22:07Z",
+  "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-03-26T13:22:07Z",
+        "session": "3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T13:22:07.729Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9.jsonl",
+          "prompt": "continue",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "78c3e4ddf9e0346d8a98e09841199694ce1fb425",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-03-26T13:22:22Z",
+        "session": "3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9",
+        "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-03-26T13:22:22.012Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9",
+          "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/3d7d8e6a-ef32-4b58-aa71-3b4d41115ba9.jsonl",
+          "tool_name": "mcp_repo_search",
+          "tool_input": {
+            "query": "sketchpad revert deleted edits session"
+          },
+          "tool_use_id": "toolu_bdrk_0172YZQeRLZCCf7daKxGMmh9__vscode-1774519100614",
+          "cwd": "/workspaces/semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

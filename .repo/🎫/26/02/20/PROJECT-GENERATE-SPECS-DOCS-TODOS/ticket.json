@@ -1,0 +1,10 @@
+{
+  "title": "Project Generate Requirements Docs Todos",
+  "status": "closed",
+  "description": "Extend the CLI with project generate command for requirements, docs, and todos generation. Add project generate requirements|docs|todos subcommands. Generate SPECS.md, DOCS.md, TODOS.md files per project by scanning code entities (projects, bundles, folders, files, sections, definitions) and extracting their requirements, docs, and todos from README.md files and code comment blocks.",
+  "summary": "Implemented project generate requirements/docs/todos CLI commands with content-based extraction, 17 tests, zero license leaks",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/636"
+  },
+  "goal": "🎯cliinfra🎯repotooling"
+}

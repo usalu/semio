@@ -1,0 +1,15 @@
+{
+  "title": "Repo VSCode Extension",
+  "description": "Goal for Repo VSCode Extension",
+  "prompt": "Instructions for Repo VSCode Extension",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯aioptimizedrepo🎯repoclient",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/363"
+  }
+}

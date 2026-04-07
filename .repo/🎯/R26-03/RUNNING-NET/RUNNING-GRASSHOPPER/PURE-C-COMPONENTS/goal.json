@@ -1,0 +1,15 @@
+{
+  "title": "Pure C# Components",
+  "description": "Goal for Pure C# Components",
+  "prompt": "Instructions for Pure C# Components",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯r2603🎯runningnet🎯runninggrasshopper",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/368"
+  }
+}

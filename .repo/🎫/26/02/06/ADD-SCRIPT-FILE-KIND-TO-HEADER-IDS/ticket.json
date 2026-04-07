@@ -1,0 +1,10 @@
+{
+  "title": "Add Script File Kind To Header IDs",
+  "status": "closed",
+  "description": "Add 📜:script file kind. Derive file kind from header ID for code files. All .sh files are scripts. Extend tests.",
+  "summary": "Added 📜:script file kind to the header ID system. fileKindEmoji now returns 📜 for script kind. FileHeaderId reads code file content and overrides kind to script when the first line is a shebang. headerPolicy detects 📜 in file headers. Extended TestFileHeaderId with shebang and additional kind subtests. Added TestDeriveFileKind (32 cases) and TestFileKindEmoji (9 cases). Updated AGENTS.md and README.md documentation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/434"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism"
+}

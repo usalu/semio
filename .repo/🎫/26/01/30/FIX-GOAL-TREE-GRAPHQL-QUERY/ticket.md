@@ -1,0 +1,11 @@
+# Ticket
+
+## Todos
+
+## Changes
+
+## Log
+
+## Summary
+
+Fixed the `goal tree` command which failed with "Cannot query field 'data' on type 'Ticket'". The root cause was that the GraphQL query used a nested `data { goal parent }` structure, but the Ticket type had no `data` field. Added `goal` and `parent` fields to both the GraphQL schema and the Go ticketType resolver, updated the query to use direct fields, and fixed the formatGoalTree parser. Also added tests for `goal list`, `goal tree`, `ticket list`, `ticket tree`, and `contributor list` to TestCliE2E_MiscCommands_NoSideEffects in main_test.go.

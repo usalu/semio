@@ -1,0 +1,14 @@
+{
+  "title": "Zero Touch Devcontainer GitKraken Desktop",
+  "status": "open",
+  "description": "Windsurf MCP config at ~/.codeium/windsurf/mcp_config.json after rebuild.",
+  "summary": "Added zero-touch GitKraken Desktop onboarding by persisting GitKraken CLI workspace state in the devcontainer, installing the official gk CLI during post-create, bootstrapping the default Semio GitKraken workspace on post-attach, documenting the flow, and covering the attach bootstrap with regression tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/245"
+  },
+  "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
+  "sessions": [
+    "🔀1efa44848e9ec2b5680dd1a6f66b86c5267f2df9⚪019ce6389ede7580baab4e918e7c6903",
+    "🔀b246a0ee16a521dcd1034a05b47033ddfcd3916b⚪019ce6389ede7580baab4e918e7c6903"
+  ]
+}

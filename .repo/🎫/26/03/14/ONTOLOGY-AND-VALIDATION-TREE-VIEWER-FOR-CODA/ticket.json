@@ -1,0 +1,13 @@
+{
+  "title": "Ontology and Validation Tree Viewer for Coda",
+  "status": "closed",
+  "description": "Implement React tree viewer components for ontology visualization and validation result (data graph) visualization in the coda desktop app. Add Storybook stories for both general ontology trees and specific validation report trees.",
+  "summary": "Implemented OntologyTree and ValidationTree React components in renderer.tsx with full OWL class expression support. Added ClassAssertion to ValidationNodeKind. Created storybook stories for both: OntologyTree (NecessaryStaircaseInSeparateStairwell English ontology) and ValidationTree (Treppenraum_A validation report with full German instance data, plus incomplete data scenario with unknown truth values). Updated elements storybook config with @coda/desktop alias and coda stories glob. Storybook builds successfully.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/872"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "🔀35d98e0a276242f4c63c9eacb0f1cd76c444ca2c⚪17734465986498115375572403555970898542"
+  ]
+}

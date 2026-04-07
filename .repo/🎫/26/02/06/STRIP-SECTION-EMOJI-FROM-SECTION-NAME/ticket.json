@@ -1,0 +1,10 @@
+{
+  "title": "Strip Section Emoji From Section Name",
+  "status": "closed",
+  "description": "The 🔖 emoji in region markers like // #region 🔖Header should not be part of the parsed section name. Strip the emoji from the captured name in ParseSections, PolicySectionStartMatch, and PolicySectionEndMatch.",
+  "summary": "Stripped the 🔖 emoji from parsed section names in ParseSections, PolicySectionStartMatch, and PolicySectionEndMatch. The emoji is used as a visual decorator in region markers but was incorrectly included as part of the section name. Applied TrimPrefix after TrimSpace in all three extraction points. All section and policy tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/413"
+  },
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo🎯consistentsections"
+}

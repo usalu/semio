@@ -1,0 +1,37 @@
+{
+  "id": "ca8bf3f2-b744-480f-b510-48e062bd5f45",
+  "uri": "repo://session/ca8bf3f2-b744-480f-b510-48e062bd5f45",
+  "client": "cursor-chat",
+  "second": "2026-03-31T07:55:05Z",
+  "checkpoint": "22e751d91291ec25d703aa276fbcf2a47bd95deb",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "22e751d91291ec25d703aa276fbcf2a47bd95deb",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-03-31T07:55:05Z",
+        "session": "ca8bf3f2-b744-480f-b510-48e062bd5f45"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "ca8bf3f2-b744-480f-b510-48e062bd5f45",
+          "generation_id": "ca8bf3f2-b744-480f-b510-48e062bd5f45",
+          "model": "tab",
+          "file_path": "\\workspaces\\semio\\repo\\TODOS.md",
+          "content": "# 🔳 TODOs\n",
+          "hook_event_name": "beforeTabFileRead",
+          "cursor_version": "2.6.22",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "ueli.saluz@posteo.de",
+          "transcript_path": null
+        }
+      },
+      "response": {}
+    }
+  ]
+}

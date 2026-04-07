@@ -1,0 +1,10 @@
+{
+  "title": "Inline Requirements Migration",
+  "status": "closed",
+  "description": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new requirements statute for the code policy that validates requirements are implementation-agnostic and properly located. Bundle requirements go to .bundle.md files, folder requirements to .folder.md files, file requirements to header Requirements sections, section requirements under section starts, and definition requirements in language-native docstrings. Extend existing tests to cover the new statute.",
+  "summary": "Migrated requirements from AGENTS.md into distributed .bundle.md/.folder.md files with new code:requirements:implementation-syntax statute. Created requirementsPolicy, isSpecText, hasImplementationSyntax helpers, ScanComments spec exemptions. 11 new test subtests all passing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/467"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repopolicymechanism"
+}

@@ -1,0 +1,19 @@
+{
+  "extends": "../js/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@semio/sketchpad": ["."],
+      "@semio/sketchpad/*": ["./*"],
+      "@semio/js": ["../js"],
+      "@semio/js/*": ["../js/*"],
+      "@semio/studio": ["../studio"],
+      "@semio/studio/*": ["../studio/*"],
+      "@semio/ui": ["../ui"],
+      "@semio/ui/*": ["../ui/*"],
+      "@semio/assets": ["../assets"],
+      "@semio/assets/*": ["../assets/*"]
+    },
+    "types": ["react", "react-dom", "vite/client"]
+  }
+}
