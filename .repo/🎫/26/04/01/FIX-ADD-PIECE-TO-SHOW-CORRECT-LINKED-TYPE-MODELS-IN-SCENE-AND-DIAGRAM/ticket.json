@@ -1,0 +1,13 @@
+{
+  "title": "Fix Add Piece to Show Correct Linked Type Models in Scene and Diagram",
+  "status": "closed",
+  "description": "When adding a piece via the workbench Add Piece button, the piece should render with the correct linked type model in the scene window and show the correct node in the diagram. Currently a sphere/fallback shape is shown instead of the correct model.",
+  "summary": "Fixed three issues with addPiece functionality in sketchpad:\n\n1. **PieceMesh fallback rendering**: When a model blob URL is unavailable (file not loaded, type has no models, or file not found), PieceMesh now renders a Geometry component (box fallback) instead of returning null (invisible piece). This ensures pieces are always visible in the 3D scene.\n\n2. **Diagram crash on missing type**: The `designToNodesAndEdges` function used `findTypeInKit()` which throws on missing types, making the fallback code unreachable dead code. Replaced with a safe `.find()` lookup so the fallback type is properly used when a type isn't found in the kit.\n\n3. **Consistent piece creation**: Added missing `id_: pieceGuid` field to the diagram drop handler's piece creation, aligning it with the workbench button and scene drop handler patterns.\n\nAll 134 vitest tests pass. Build succeeds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1252"
+  },
+  "goal": "🎯sketchpad",
+  "sessions": [
+    "⚪a80e77a6f5c543758476941bbd8f263c"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Fix Chat and Settings Navbar Toggle Exclusivity",
+  "status": "closed",
+  "description": "Fix remaining issues with chat/settings navbar toggles: (1) PanelToggles returns null when no left/right tabs exist, hiding chat/settings toggles - they should always be visible, (2) expectOnlyLeftAndRightPanelTogglesInNavbar test incorrectly expects settingsToggleCount===0 and chatToggleCount===0 but verifyDesignNavbarSettingsIsAvailable expects them to be visible - update the test, (3) ensure only one of chat/settings/rightSidePanel can be active at a time via EXCLUSIVE_SIDE_PANEL_KEYS.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1234"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪837c66a70c554a5598aa9de80d355d75"
+  ]
+}

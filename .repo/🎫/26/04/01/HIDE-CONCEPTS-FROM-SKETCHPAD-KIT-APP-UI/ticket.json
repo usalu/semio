@@ -1,0 +1,13 @@
+{
+  "title": "Hide Concepts From Sketchpad Kit App UI",
+  "status": "closed",
+  "description": "Re-apply all concept hiding from Kit app UI after code was discarded. Remove concepts from: table rows, diagram nodes, toolbar filters, select-all, selection checks, diagram node data.",
+  "summary": "Re-applied all concept-hiding changes after code was discarded. 13 edits in semio/sketchpad/index.tsx: (1) useKitAppSelectAll - removed concepts from select-all action. (2) Two defaultConceptName useLabel hooks removed. (3) hasAnySelection - removed concepts check. (4) buildSelectionKit - removed selectedConceptGuids, concepts filtering, and concepts from returned kit. (5) KitDiagramNode interface - removed concepts field. (6) buildKitDiagramData items type - removed concepts from array type. (7-8) Type and design items - removed concepts mapping. (9) Diagram node data - removed concepts from data object. All 134 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1233"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪85c3f887efa249c498001bd72b5418c8"
+  ]
+}

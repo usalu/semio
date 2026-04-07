@@ -1,0 +1,14 @@
+{
+  "title": "Shared Layout Transition for Toolbar Container",
+  "status": "closed",
+  "description": "Implement a FLIP-based shared layout transition for the sketchpad toolbar container so switching tools/layers smoothly interpolates between previous and next bounds. Add a useSharedLayoutTransition hook and apply it to the toolbar zone elements.",
+  "summary": "Enhanced toolbar FLIP transitions to work across app switching by caching the last measured bounding rect per toolbar zone key. Updated `useSharedLayoutTransition` to accept `sharedKey` and use a module-level rect cache as the 'First' measurement when the element remounts. Rewired hooks for tools/settings zones to use stable keys `semio.sketchpad.toolbar.zone.tools` and `semio.sketchpad.toolbar.zone.settings`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1259"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a20ffd1b3efa47f5ace67701a078f284",
+    "⚪52ff747738cb4973af258ef047c35c0e"
+  ]
+}

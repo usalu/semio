@@ -1,0 +1,12 @@
+{
+  "title": "Fix Type Connector Ring Detail Panel",
+  "status": "open",
+  "description": "Fix the sketchpad type app detail panel ring control so the connector ring renders correctly in the right detail panel and shows the correct UI label and tooltip metadata. Update the existing tests in place and verify the relevant UI and sketchpad tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1268"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪c1d8e58f612f4d2890af76885b7afe2e"
+  ]
+}

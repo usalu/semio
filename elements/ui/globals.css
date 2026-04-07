@@ -596,18 +596,79 @@
     [data-slot="breadcrumb-separator"][class*="cursor-pointer"] {
       cursor: var(--cursor-pointer) !important;
     }
-
-    [data-slot="toolbar-zone"] [data-slot="toggle-group"],
-    [data-slot="toolbar-zone"] [data-slot="button-group"] {
-      border-width: 0;
-      height: 100%;
-    }
-
-    [data-slot="toolbar-zone"] [data-slot="toggle-group-item"],
-    [data-slot="toolbar-zone"] [data-slot="button-group-item"] {
-      height: 100%;
-    }
   }
+}
+
+/* Toolbar zone interactive element normalization.
+ * Placed outside @layer so it overrides Tailwind utility classes (border, divide, etc.)
+ * which live in @layer utilities and beat @layer base by cascade priority.
+ * Uses design tokens (--toolbar-*, --spacing-*, --text-*, --size-*) for all values. */
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) {
+  border-style: none;
+  height: 100%;
+}
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group"], [data-slot="button-group"]) > :not(:first-child) {
+  border-inline-start-width: 0;
+}
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]) {
+  height: 100%;
+  line-height: 1;
+  padding-block: var(--spacing-single);
+  padding-inline: var(--spacing-double);
+  gap: var(--spacing-single);
+  aspect-ratio: auto;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]) > span {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  white-space: nowrap;
+}
+
+[data-slot="toolbar-zone"] :is([data-slot="toggle-group-item"], [data-slot="button-group-item"]) svg {
+  width: var(--size-tiny);
+  height: var(--size-tiny);
+  flex-shrink: 0;
+}
+
+[data-slot="toolbar-zone"] [data-slot="action"] {
+  border-style: none;
+  height: 100%;
+  line-height: 1;
+  padding-block: var(--spacing-single);
+  padding-inline: var(--spacing-double);
+  gap: var(--spacing-single);
+  aspect-ratio: auto;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+[data-slot="toolbar-zone"] [data-slot="action"] > span {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  white-space: nowrap;
+}
+
+[data-slot="toolbar-zone"] [data-slot="action"] svg {
+  width: var(--size-tiny);
+  height: var(--size-tiny);
+  flex-shrink: 0;
+}
+
+/* Unify active-state visuals across all toolbar interactive elements. */
+[data-slot="toolbar-zone"] [data-slot="toggle-group-item"][data-state="on"] {
+  background-color: var(--active-base);
+  color: var(--active-foreground);
+}
+
+[data-slot="toolbar-zone"] [data-slot="toggle-group-item"][data-state="on"]:hover {
+  background-color: color-mix(in oklab, var(--active-base) 90%, black);
+  color: var(--active-foreground);
 }
 
 .dark {
@@ -1203,3 +1264,20 @@
   padding-top: 8px;
 }
 /* #endregion */
+
+/* #region 🔖TreeHoverPath */
+/* Tree hover path highlight: when a row is hovered, ancestor branch containers
+ * receive [data-tree-hover-path="branch"] and ancestor/active rows receive
+ * [data-tree-hover-path="row"]. Guide lines and elbows on the path are rendered
+ * 1.5× thicker in a brighter/darker theme-aware tone. */
+
+[data-tree-hover-path="branch"] > [data-slot="tree-guide"] [data-tree-guide-line] {
+  width: 1.5px !important;
+  background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
+}
+
+[data-tree-hover-path="row"] [data-slot="tree-branch-elbow"] {
+  height: 1.5px !important;
+  background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
+}
+/* #endregion 🔖TreeHoverPath */

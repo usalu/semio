@@ -1,0 +1,13 @@
+{
+  "title": "Remove Sub Tool Dropdown from Sketchbar Toolbar",
+  "status": "closed",
+  "description": "Remove all dropdown/toggle UI features that indicate sub-tools in the sketchbar toolbar since no tools currently have sub-tools. The selection group currently renders as kind=\"dropdown\" Toggle. Remove the subToolId/subToolLabelId/subToolIcon fields from PanelSection interface and all usages, remove the dropdown rendering branch for the selection group, remove the activeSubToolByGroup state and setSubTool callback, and remove the sub-tool filtering in the settings toolbar zone. All toolbar groups should render as kind=\"single\" Toggle consistently.",
+  "summary": "Removed all sub-tool dropdown/toggle UI from the sketchbar toolbar since no tools currently have sub-tools. Removed subToolId/subToolLabelId/subToolIcon fields from PanelSection interface, removed activeSubToolByGroup state and setSubTool callback, replaced selection group's dropdown Toggle with a simple single Toggle (consistent with all other groups), removed sub-tool filtering in the settings toolbar zone, cleaned up all addSection calls in both Kit and Type apps, removed subtool i18n translation blocks from both German and English translations, and updated areToolbarGroupsEquivalent comparison.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1257"
+  },
+  "goal": "🎯sketchpad",
+  "sessions": [
+    "⚪5549b0247dd44bbabc4d8141782a487f"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Fix Workbench Add Piece Type Model Linking",
+  "status": "closed",
+  "description": "Fix the sketchpad workbench \"Add Piece\" so that added pieces have the correct linked type models. Currently a sphere is created in the scene window instead of the correct 3D model. Need to fix: 1) correct node in diagram 2) correct model in scene 3) flattenDesign connection errors for missing pieces.",
+  "summary": "Fixed sketchpad workbench add-piece model rendering by making PieceMesh and TypeMesh render immediately from the resolved direct model URL while async blob URL loading continues in the background. Previously both components computed modelUrl but ignored it and stayed on fallback geometry until getFileBlobUrl resolved, which left newly added pieces showing the placeholder mesh. Also strengthened the embedded regression helper to require a concrete renderable URL, not just a linked kind model record.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1255"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪93e241a44b9b4d68b334f388fc721880",
+    "⚪33e0ade7018846f4b2f847c4f9357777"
+  ]
+}
